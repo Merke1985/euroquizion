@@ -233,13 +233,14 @@
         $('rres').textContent = ''; $('ranswer').textContent = '';
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Continue';
       }
+      $('rwhy').textContent = G.phase === 'reveal' && G.q && G.q.explain ? G.q.explain : '';   // why it is the odd one out, right under the video
       $('replay').disabled = G.phase !== 'guess' || !!G.sing;
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
         $('rres').textContent = resultText(G.song);
-        $('ranswer').textContent = G.q ? G.q.explain || G.q.text + ' ' + G.q.answer : '';
+        $('ranswer').textContent = G.q && !G.q.explain ? G.q.text + ' ' + G.q.answer : '';
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Next';
       }
       renderSing();

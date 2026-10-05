@@ -302,3 +302,7 @@ body.remote #briefcd{display:none}   /* the countdown already shows in the host'
 .pbrief .pl{width:68px;font-size:.78rem}
 .pbrief .char{width:52px;height:52px}
 body.remote #briefplayers,body.remote .brief h3{display:none}   /* the players already show on top of the host's own game */
+.why{color:var(--yellow);font-weight:800;font-size:1.1rem;margin:12px 0 0}
+.why:empty{display:none}
+.phone .why{margin:0;font-size:1rem}
+body.remote .host.ingame #rwhy{display:none}   /* shown in the host's own game below */

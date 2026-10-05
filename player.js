@@ -148,7 +148,9 @@
       var r = s.reveal || {};
       if (s.phase !== 'end') $('verdict').className = 'fb verdict ' + (m && m.got ? 'ok' : 'no');
       $('verdict').textContent = s.phase === 'end' ? $('verdict').textContent || 'Final scores' : (m && m.got ? 'Correct' : 'Incorrect');
-      $('rround').textContent = s.phase === 'end' ? '' : 'Song ' + s.round + ' of ' + s.total;
+      var why = s.phase === 'reveal' && s.q && s.q.explain;   // the odd-one-out reason takes the top line, right under the video
+      $('rround').textContent = s.phase === 'end' ? '' : why || 'Song ' + s.round + ' of ' + s.total;
+      $('rround').className = why ? 'why' : 'mute';
       // The end of the game: no song any more, just the scoreboard counting up (once).
       var end = s.phase === 'end';
       $('songcard').classList.toggle('hidden', end); $('pfinal').classList.toggle('hidden', !end);
@@ -174,7 +176,7 @@
         $('rpts').textContent = ptsText(mine ? mine.pts : 0);
         $('rpts').className = 'rpts ' + (mine ? 'ok' : 'no');
       }
-      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.explain || s.q.text + ' ' + s.q.answer : '';
+      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer && !s.q.explain ? s.q.text + ' ' + s.q.answer : '';
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';

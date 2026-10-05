@@ -179,7 +179,7 @@
       $('ropts').innerHTML = revealOptions(S.q, S.picked);
       $('rpts').textContent = (S.got ? S.pts : 0) + ((S.got ? S.pts : 0) === 1 ? ' point' : ' points');
       $('rpts').className = 'rpts ' + (S.got ? 'ok' : 'no');
-      $('ranswer').textContent = S.q.explain || S.q.text + ' ' + S.q.answer;
+      $('rwhy').textContent = S.q.explain || ''; $('ranswer').textContent = S.q.explain ? '' : S.q.text + ' ' + S.q.answer;
       $('rtitle').textContent = S.song[3];
       $('rmeta').textContent = S.song[2] + ' · ' + flag(S.song[1]) + ' ' + (countries[S.song[1]] || S.song[1]) + ' ' + S.song[0];
       $('rres').textContent = resultText(S.song);
