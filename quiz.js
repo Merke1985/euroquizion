@@ -125,7 +125,7 @@ function revealOptions(q, pick) {
 }
 // The Eurovision opening fanfare, streamed from YouTube like the songs: video id and how long it plays.
 // These were checked to play when embedded; the first one that works is used.
-var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'], ms: 5000 };
+var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'], ms: 19000 };   // the first clip lasts 18 seconds; the countdown runs one second longer
 // The three ways to score a correct answer, and the line that explains the selected one.
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 var SCORING_HELP = {
