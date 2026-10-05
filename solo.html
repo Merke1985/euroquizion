@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Douze Points – solo</title>
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 <main class="solo">
@@ -13,6 +13,8 @@
   <section id="v-setup" class="card">
     <h2>Play solo</h2>
     <p class="mute" style="margin:.4em 0 0">Just you against the clips. Answer before the time runs out.</p>
+    <label style="margin-top:16px">Your avatar</label>
+    <div id="chars" class="chargrid"></div>
     <div class="settings">
       <div><label for="s-rounds">Songs</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
       <div><label for="s-time">Guessing time</label><select id="s-time"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option></select></div>
@@ -71,6 +73,7 @@
 
   <section id="v-end" class="end hidden">
     <p class="mute" style="font-size:1.2rem;margin:0">Final score</p>
+    <div id="endchar" class="winchar"></div>
     <h1 id="final"></h1>
     <p id="endbest" class="mute" style="font-size:1.2rem;margin:0"></p>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
@@ -79,9 +82,10 @@
     </div>
   </section>
 </main>
-<script src="net.js?v=18"></script>
-<script src="match.js?v=18"></script>
-<script src="quiz.js?v=18"></script>
-<script src="solo.js?v=18"></script>
+<script src="net.js?v=19"></script>
+<script src="chars.js?v=19"></script>
+<script src="match.js?v=19"></script>
+<script src="quiz.js?v=19"></script>
+<script src="solo.js?v=19"></script>
 </body>
 </html>

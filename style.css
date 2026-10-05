@@ -150,3 +150,7 @@ button.opt.picked{border-color:var(--yellow);background:rgba(255,214,10,.22)}
 .answered .char{width:60px;height:60px;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,.14);opacity:.6;transition:box-shadow .2s,opacity .2s}
 .answered .pl.in .char{box-shadow:0 0 0 5px var(--ok);opacity:1}
 .answered .pl.off{opacity:.35}
+.solo #hud{display:flex;align-items:center;gap:8px}
+.solo #hud .char{width:30px;height:30px}
+.solo .chargrid{grid-template-columns:repeat(8,1fr);margin-bottom:4px}
+@media (max-width:600px){.solo .chargrid{grid-template-columns:repeat(4,1fr)}}

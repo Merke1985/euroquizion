@@ -390,7 +390,7 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=18').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=19').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });

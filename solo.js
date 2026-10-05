@@ -10,7 +10,24 @@
   function show(id) { ['v-setup', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   function cover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; } }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
-  function hud() { $('hud').textContent = S.phase === 'setup' ? '' : 'Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'; }
+  // The avatar is only for show in solo; the choice is remembered on this device.
+  var myChar = null;
+  try { myChar = localStorage.getItem('esc-solo-char'); } catch (e) {}
+  if (!CHAR_BY_ID[myChar]) myChar = CHARS[0].id;
+  function renderChars() {
+    $('chars').innerHTML = CHARS.map(function (c) {
+      return '<button type="button" data-char="' + c.id + '"' + (c.id === myChar ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
+    }).join('');
+  }
+  $('chars').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-char]');
+    if (!b) return;
+    myChar = b.getAttribute('data-char');
+    try { localStorage.setItem('esc-solo-char', myChar); } catch (err) {}
+    [].forEach.call($('chars').querySelectorAll('button'), function (x) { x.classList.toggle('mine', x === b); });
+  });
+  renderChars();
+  function hud() { $('hud').innerHTML = S.phase === 'setup' ? '' : charSvg(myChar) + esc('Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'); }
   function bestKey() { return 'esc-solo-best2-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
@@ -124,7 +141,7 @@
       show('v-end');
       var best = getBest(), isBest = S.score > best;
       if (isBest) { try { localStorage.setItem(bestKey(), S.score); } catch (e) {} }
-      $('final').textContent = S.score + ' points';
+      $('final').textContent = S.score + ' points'; $('endchar').innerHTML = charSvg(myChar);
       $('endbest').textContent = S.right + ' of ' + S.total + ' right. ' + (isBest ? (best ? 'A new personal best!' : '') : 'Your best is ' + best + '.');
       return;
     }
@@ -213,7 +230,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=18').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=19').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();
