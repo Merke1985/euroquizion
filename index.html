@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Douze Points – join</title>
-<link rel="stylesheet" href="style.css?v=21">
+<link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -47,6 +47,25 @@
     <p id="fb" class="fb"></p>
   </section>
 
+  <section id="v-sing" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="mute" id="sround"></div>
+    <h2 id="stitle"></h2>
+    <p class="mute" id="ssub" style="margin:0"></p>
+    <div class="bar"><i id="sbar"></i></div>
+    <div id="sopts" class="opts hidden"></div>
+    <div id="srec" class="hidden" style="display:flex;flex-direction:column;gap:12px">
+      <button class="btn big recbtn" id="srecbtn" type="button">Start recording</button>
+      <p id="srecstate" class="fb" style="text-align:center;margin:0"></p>
+      <audio id="sprev" class="hidden" controls style="width:100%"></audio>
+      <div id="srecdone" class="hidden" style="display:flex;gap:10px">
+        <button class="btn" id="ssend" type="button" style="flex:1">Send it</button>
+        <button class="btn alt" id="sredo" type="button" style="flex:1">Record again</button>
+      </div>
+      <button class="btn alt small" id="sskip" type="button" style="align-self:center">I’m not singing this one</button>
+    </div>
+    <p id="sfb" class="fb"></p>
+  </section>
+
   <section id="v-reveal" class="center hidden">
     <p id="verdict" class="fb" style="font-size:1.4rem"></p>
     <div id="ropts" class="opts"></div>
@@ -55,12 +74,12 @@
     <div><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>
-<script src="vendor/supabase.js?v=21"></script>
-<script src="config.js?v=21"></script>
-<script src="match.js?v=21"></script>
-<script src="quiz.js?v=21"></script>
-<script src="net.js?v=21"></script>
-<script src="chars.js?v=21"></script>
-<script src="player.js?v=21"></script>
+<script src="vendor/supabase.js?v=22"></script>
+<script src="config.js?v=22"></script>
+<script src="match.js?v=22"></script>
+<script src="quiz.js?v=22"></script>
+<script src="net.js?v=22"></script>
+<script src="chars.js?v=22"></script>
+<script src="player.js?v=22"></script>
 </body>
 </html>

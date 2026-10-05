@@ -8,3 +8,5 @@ A Jackbox-style Eurovision guessing game. The host screen (`host.html`) plays a 
 - No build step: serve the folder from any static host such as GitHub Pages.
 
 Try it locally: run `python3 -m http.server` in this folder and open `http://localhost:8000/host.html`.
+
+**Sing!** (host-only question type): players vote for one of four songs, listen, record up to 10 seconds on their phone, the recordings play one by one over the muted video, and everyone votes for the best. Recordings go straight from phone to host over the room connection and are not stored.

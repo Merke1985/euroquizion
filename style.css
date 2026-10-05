@@ -154,3 +154,6 @@ button.opt.picked{border-color:var(--yellow);background:rgba(255,214,10,.22)}
 .solo #hud .char{width:30px;height:30px}
 .solo .chargrid{grid-template-columns:repeat(8,1fr);margin-bottom:4px}
 @media (max-width:600px){.solo .chargrid{grid-template-columns:repeat(4,1fr)}}
+.recbtn.live{background:var(--bad);box-shadow:0 6px 0 #9c2f2f;animation:pulse .7s ease-in-out infinite alternate}
+.opt .char{width:1.8em;height:1.8em;flex:none;margin-right:.2em}
+select:disabled{opacity:.4}

@@ -12,9 +12,9 @@
   $('name').value = store.get('esc-name') || '';
   var k = new URLSearchParams(location.search).get('k');
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=21').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=22').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+  function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
   $('joinform').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -62,6 +62,7 @@
     var key = s.phase + ':' + s.round;
     if (s.phase !== 'guess') builtKey = '';
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
+    if (s.sing && s.phase !== 'reveal' && s.phase !== 'end' && s.phase !== 'lobby' && s.phase !== 'paused' && s.phase !== 'guess') { renderSing(s, m); return; }
     if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'You’re in!'; $('waitsub').textContent = 'Watch the big screen. The game starts soon.'; }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total; }
@@ -92,6 +93,15 @@
       $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null) : '';
       $('rpts').textContent = rev && m ? (m.got ? '+' + m.pts + ' points' : 'No points this time') : '';
       $('rpts').className = 'rpts ' + (m && m.got ? 'ok' : 'no');
+      if (rev && s.sing) {
+        // A Sing! round: show the votes instead of right or wrong.
+        var mine = (s.sing.result || []).filter(function (r) { return r.pid === pid; })[0];
+        $('verdict').className = 'fb ' + (mine ? 'ok' : 'no');
+        $('verdict').textContent = mine ? (mine.win ? 'Best singer!' : mine.votes + (mine.votes === 1 ? ' vote' : ' votes') + ' for you') : 'You didn’t sing this one';
+        $('ropts').innerHTML = (s.sing.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
+        $('rpts').textContent = mine ? '+' + mine.pts + ' points' : 'No points this time';
+        $('rpts').className = 'rpts ' + (mine ? 'ok' : 'no');
+      }
       $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.text + ' ' + s.q.answer : '';
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
@@ -101,6 +111,98 @@
       $('myrank').textContent = rank ? 'Place ' + rank + ' of ' + s.players.length : '';
     }
   }
+
+
+  // ---------- Sing! ----------
+  // Voting (for the song, then for the best singer) and recording up to 10 seconds of audio.
+  var REC_MAX = 10000, sKey = '', rec = null, recStream = null, recChunks = [], recBlob = null, recTick = null, recT0 = 0, recSent = '';
+  function recRelease() { if (recStream) { recStream.getTracks().forEach(function (t) { t.stop(); }); recStream = null; } }
+  function recReset() {
+    clearInterval(recTick);
+    if (rec && rec.state !== 'inactive') { try { rec.onstop = null; rec.stop(); } catch (e) {} }
+    rec = null; recBlob = null; recChunks = [];
+    $('srecbtn').textContent = 'Start recording'; $('srecbtn').classList.remove('live'); $('srecbtn').classList.remove('hidden');
+    $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = '';
+  }
+  function renderSing(s, m) {
+    var sg = s.sing, key = s.phase + ':' + s.round, fresh = key !== sKey;
+    sKey = key;
+    show('v-sing');
+    $('sround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Sing!';
+    var poll = s.phase === 'svote' || s.phase === 'sbest', recPhase = s.phase === 'srec' && !(m && m.in);
+    $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
+    if (fresh) { $('sfb').textContent = ''; $('sfb').className = 'fb'; if (s.phase !== 'srec') { recReset(); recRelease(); } }
+    var name = sg.song ? sg.song.title + ' – ' + sg.song.artist : '';
+    if (s.phase === 'svote') {
+      $('stitle').textContent = 'Which song shall we sing?'; $('ssub').textContent = 'Vote for one. The most votes wins.';
+      if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('');
+    } else if (s.phase === 'sbest') {
+      $('stitle').textContent = 'Who sang it best?'; $('ssub').textContent = 'You can’t vote for yourself.';
+      if (fresh) $('sopts').innerHTML = (sg.order || []).map(function (o, i) { return o.pid === pid ? '' : '<button type="button" class="opt" data-i="' + i + '">' + esc(o.name) + '</button>'; }).join('');
+    } else if (s.phase === 'srec') {
+      $('stitle').textContent = m && m.in ? 'Got it!' : 'Your turn to sing!';
+      $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to 10 seconds.';
+      if (fresh) { recReset(); recSent = ''; }
+    } else if (s.phase === 'splay') {
+      $('stitle').textContent = sg.now ? 'Now singing: ' + sg.now : 'Showtime!'; $('ssub').textContent = 'Listen on the big screen.';
+    } else {
+      $('stitle').textContent = 'We’re singing'; $('ssub').textContent = name ? name + '. Listen first, then it’s your turn.' : 'Get ready…';
+    }
+  }
+  $('sopts').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-i]');
+    if (!b || !net) return;
+    [].forEach.call($('sopts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
+    b.classList.add('picked');
+    net.send('poll', { pid: pid, choice: +b.getAttribute('data-i') });
+    $('sfb').className = 'fb close'; $('sfb').textContent = 'Vote in. You can still change it.';
+  });
+  function recStop() { clearInterval(recTick); if (rec && rec.state !== 'inactive') rec.stop(); }
+  $('srecbtn').addEventListener('click', function () {
+    if (rec && rec.state === 'recording') { recStop(); return; }
+    if (!navigator.mediaDevices || !window.MediaRecorder) { $('srecstate').className = 'fb no'; $('srecstate').textContent = 'This browser can’t record sound. You can still vote.'; return; }
+    $('srecstate').className = 'fb'; $('srecstate').textContent = 'Allow the microphone…';
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      recStream = stream; recChunks = []; recBlob = null;
+      var types = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'], mime = '';
+      for (var i = 0; i < types.length; i++) if (MediaRecorder.isTypeSupported(types[i])) { mime = types[i]; break; }
+      var opt = { audioBitsPerSecond: 32000 }; if (mime) opt.mimeType = mime;
+      rec = new MediaRecorder(stream, opt);
+      rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) recChunks.push(ev.data); };
+      rec.onstop = function () {
+        recBlob = new Blob(recChunks, { type: (rec && rec.mimeType) || mime || 'audio/webm' });
+        recRelease();
+        $('srecbtn').classList.add('hidden'); $('srecbtn').classList.remove('live');
+        $('sprev').src = URL.createObjectURL(recBlob); $('sprev').classList.remove('hidden'); $('srecdone').classList.remove('hidden');
+        $('srecstate').className = 'fb'; $('srecstate').textContent = 'Happy with it?';
+      };
+      rec.start(); recT0 = Date.now();
+      $('srecbtn').textContent = 'Stop'; $('srecbtn').classList.add('live'); $('srecstate').className = 'fb close';
+      recTick = setInterval(function () {
+        var left = REC_MAX - (Date.now() - recT0);
+        $('srecstate').textContent = 'Recording… ' + Math.max(0, Math.ceil(left / 1000)) + ' s left';
+        if (left <= 0) recStop();
+      }, 100);
+    }).catch(function () { $('srecstate').className = 'fb no'; $('srecstate').textContent = 'No access to the microphone. Allow it in your browser, or skip this one.'; });
+  });
+  $('sredo').addEventListener('click', recReset);
+  $('sskip').addEventListener('click', function () { recReset(); recRelease(); if (net) net.send('clip', { pid: pid, skip: true }); });
+  $('ssend').addEventListener('click', function () {
+    if (!recBlob || !net || recSent === sKey) return;
+    recSent = sKey; $('srecstate').className = 'fb'; $('srecstate').textContent = 'Sending…';
+    var fr = new FileReader();
+    fr.onload = function () {
+      // Sent in small pieces: the room connection has a size limit per message.
+      var b64 = String(fr.result).split(',')[1] || '', size = 40000, n = Math.max(1, Math.ceil(b64.length / size)), key = Math.random().toString(36).slice(2), i = 0;
+      if (n > 16) { recSent = ''; $('srecstate').className = 'fb no'; $('srecstate').textContent = 'That recording is too large. Please record again.'; return; }
+      var step = function () {
+        net.send('clip', { pid: pid, key: key, i: i, n: n, mime: recBlob.type, data: b64.slice(i * size, (i + 1) * size) });
+        if (++i < n) setTimeout(step, 120);
+      };
+      step();
+    };
+    fr.readAsDataURL(recBlob);
+  });
 
   function renderPicker(s, m) {
     var taken = {};
@@ -150,7 +252,9 @@
   });
 
   setInterval(function () {
-    if (!state || state.phase !== 'guess' || !state.total_ms) return;
-    $('pbar').style.transform = 'scaleX(' + Math.max(0, Math.min(1, (endsAt - Date.now()) / state.total_ms)) + ')';
+    if (!state) return;
+    var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
+    if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';
+    else if (state.sing) $('sbar').style.transform = 'scaleX(' + (state.phase === 'loading' || state.phase === 'splay' ? 0 : f) + ')';
   }, 100);
 })();
