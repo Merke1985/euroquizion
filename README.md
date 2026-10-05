@@ -1,4 +1,4 @@
-# Douze Points!
+# EuroQuizion
 
 A Jackbox-style Eurovision guessing game. The host screen (`host.html`) plays a random 15-second clip; players join on their phones (`index.html`) with a room code and answer a question about it: the country, artist, placement or title, as multiple choice or typed. `solo.html` is a one-device solo mode.
 
