@@ -724,8 +724,8 @@
     list().forEach(function (p) { p.score = 0; });
     briefStart();
   });
-  // Autoplay: with the box ticked, the answer stays up for 10 seconds and the next song starts by itself.
-  var AUTO_SECS = 10, autoTick = null, autoEnd = 0;
+  // Autoplay: with the box ticked, the answer stays up for 20 seconds and the next song starts by itself.
+  var AUTO_SECS = 20, autoTick = null, autoEnd = 0;
   try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; } catch (e) {}
   function autoStop() { clearInterval(autoTick); autoTick = null; $('autoleft').textContent = ''; }
   function autoStart() {
