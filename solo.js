@@ -68,7 +68,7 @@
     yt = new YT.Player('yt', {
       width: '100%', height: '100%',
       playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
-      events: { onReady: function () { ytReady = true; ready(); }, onError: function () { if (stage === 'probe' || stage === 'seek') badSong(); } }
+      events: { onReady: function () { ytReady = true; ready(); }, onError: function () { if (stage === 'probe' || stage === 'seek') { if (S.song) markBad(S.song[4]); badSong(); } } }
     });
   };
   var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);

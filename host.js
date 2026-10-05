@@ -83,12 +83,14 @@
     var ph = G.phase;
     if (!act.length || !act.every(isIn)) return;
     // A quiz question: tell everyone, count down from 5, then show the answer.
-    var wait = ph === 'guess' ? ALLIN_MS : 1200;
-    if (ph === 'guess') { if (G.revealAt) return; G.revealAt = Date.now() + wait; push(); }
+    var slow = ph === 'guess' || ph === 'svote' || ph === 'sbest';   // these say so on screen and count down from 5
+    var wait = slow ? ALLIN_MS : 1200;
+    if (slow) { if (G.revealAt) return; G.revealAt = Date.now() + wait; push(); }
     setTimeout(function () {
       var now = list().filter(function (x) { return !x.off; });
       if (G.phase !== ph) return;
-      if (!now.length || !now.every(isIn)) { if (ph === 'guess') { G.revealAt = 0; push(); } return; }
+      if (!now.length || !now.every(isIn)) { if (slow) { G.revealAt = 0; push(); } return; }
+      G.revealAt = 0;
       if (ph === 'guess') reveal();
       else if (ph === 'svote') singVoteEnd();
       else if (ph === 'srec') singPlayAll();
@@ -106,7 +108,7 @@
     if (G.phase === 'brief' || G.phase === 'intro') s.brief = G.brief;
     if (G.phase === 'intro') s.intro = INTRO.ids[0];
     if (G.phase === 'reveal' && autoTick) s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
-    if (G.revealAt && G.phase === 'guess') s.reveal_in = Math.max(0, G.revealAt - Date.now());
+    if (G.revealAt && (G.phase === 'guess' || G.phase === 'svote' || G.phase === 'sbest')) s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
@@ -302,8 +304,9 @@
   setInterval(function () {
     $('drawview').classList.toggle('hidden', !(G.draw && G.phase === 'guess'));
     $('briefcd').textContent = G.phase === 'intro' ? 'Starting in ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)) : '';
-    var cd = G.phase === 'guess' && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
-    $('allin').textContent = cd ? (list().length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
+    var voteCd = G.phase === 'svote' || G.phase === 'sbest';
+    var cd = (G.phase === 'guess' || voteCd) && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
+    $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
     var timed = G.phase === 'guess' || G.phase === 'dpick' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
@@ -314,7 +317,7 @@
       width: '100%', height: '100%',
       playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
       events: { onReady: function () { ytReady = true; ready(); }, onError: function () {
-        if (stage === 'probe' || stage === 'seek') badSong();
+        if (stage === 'probe' || stage === 'seek') { if (G.song) markBad(G.song[4]); badSong(); }
         else if (stage === 'intro' && ++introTry < INTRO.ids.length) { try { yt.loadVideoById(INTRO.ids[introTry]); } catch (e) {} }   // fanfare unavailable: try the spare
       } }
     });
@@ -472,9 +475,11 @@
     var ps = list().filter(function (p) { return !p.off; }).sort(function (a, b) { return a.pid < b.pid ? -1 : 1; });
     if (!ps.length) ps = list();
     if (!ps.length) { push(); loadSong(); return; }
-    var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
-    if (free.length < 4) { G.used = {}; free = G.pool.slice(); }
-    G.draw = { pid: ps[G.drawTurn++ % ps.length].pid, options: shuffle(free.slice()).slice(0, 4), chosen: null, id: Math.random().toString(36).slice(2, 8) };
+    var who = ps[G.drawTurn++ % ps.length].pid;
+    fourSongs(function (four) { drawStart2(who, four); });
+  }
+  function drawStart2(who, four) {
+    G.draw = { pid: who, options: four, chosen: null, id: Math.random().toString(36).slice(2, 8) };
     G.phase = 'dpick'; G.barMs = DRAW_PICK_MS; G.endsAt = Date.now() + DRAW_PICK_MS;
     drawClear($('drawview'));
     if (!REMOTE) { cover(true, '✏️', 'Draw!', false); masks(true); }
@@ -578,22 +583,64 @@
   function silence() {
     try { yt.mute(); yt.setVolume(0); } catch (e) {}
     if (!silenceTick) silenceTick = setInterval(function () {
-      if (G.sing && G.phase === 'splay') { try { yt.mute(); yt.setVolume(0); } catch (e) {} }
+      if (G.sing && (G.phase === 'splay' || G.sing.loop)) { try { yt.mute(); yt.setVolume(0); } catch (e) {} }
       else { clearInterval(silenceTick); silenceTick = null; }
     }, 150);
   }
-  function singPhase(phase, ms) { G.phase = phase; G.sing.in = {}; G.barMs = ms; G.endsAt = Date.now() + ms; clearTimeout(singTimer); }
-  function singStart() {
-    var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
-    if (free.length < 4) { G.used = {}; free = G.pool.slice(); }
-    G.sing = { options: shuffle(free.slice()).slice(0, 4), chosen: null, tried: {}, votes: {}, parts: {}, clips: {}, order: [], idx: -1, now: null, best: {}, result: null, in: {} };
+  function singPhase(phase, ms) { G.revealAt = 0; G.phase = phase; G.sing.in = {}; G.barMs = ms; G.endsAt = Date.now() + ms; clearTimeout(singTimer); }
+  // Sing! and Draw! let players choose a song, so the four on offer are tested first: each video is
+  // started muted in a tiny hidden player. Ones YouTube refuses are dropped (and remembered), so the
+  // song that wins the vote is the song that plays.
+  var probeRun = 0;
+  function probeSongs(cands, need, cb) {
+    var run = ++probeRun, ok = [], i = 0, active = 0, done = false, box = $('probebox'), all;
+    var finish = function () {
+      if (done) return; done = true; clearTimeout(all); box.innerHTML = '';
+      if (run !== probeRun) return;
+      cands.forEach(function (s) { if (ok.length < need && ok.indexOf(s) < 0 && !BAD_VIDEOS[s[4]]) ok.push(s); });   // not enough tested ones: top up with untested
+      cb(ok.slice(0, need));
+    };
+    var launch = function () {
+      while (!done && active < 4 && i < cands.length && ok.length + active < need) start(cands[i++]);
+      if (!done && !active) finish();
+    };
+    var start = function (song) {
+      active++;
+      var el = document.createElement('div'), settled = false, pl = null;
+      box.appendChild(el);
+      var settle = function (good) {
+        if (settled) return; settled = true; clearTimeout(to); active--;
+        try { pl.destroy(); } catch (e) {}
+        if (good) ok.push(song); else if (good === false) markBad(song[4]);
+        if (ok.length >= need) finish(); else launch();
+      };
+      var to = setTimeout(function () { settle(null); }, 6000);
+      try {
+        pl = new YT.Player(el, { width: 160, height: 90, videoId: song[4], playerVars: { autoplay: 1, mute: 1, controls: 0, playsinline: 1 },
+          events: { onReady: function (e) { try { e.target.mute(); e.target.playVideo(); } catch (x) {} }, onStateChange: function (e) { if (e.data === 1) settle(true); }, onError: function () { settle(false); } } });
+      } catch (e) { settle(null); }
+    };
+    all = setTimeout(finish, 12000);
+    launch();
+  }
+  function fourSongs(cb) {
+    var free = G.pool.filter(function (s) { return !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
+    if (free.length < 4) { G.used = {}; free = G.pool.filter(function (s) { return !BAD_VIDEOS[s[4]]; }); }
+    var cands = shuffle(free.slice()).slice(0, 12), round = G.round;
+    if (REMOTE || !ytReady || !window.YT || !YT.Player) { cb(cands.slice(0, 4)); return; }   // no player on this page: nothing to test with
+    G.phase = 'loading'; cover(true, '', 'Picking songs…', false); masks(true); push();
+    probeSongs(cands, 4, function (four) { if (G.round === round && G.phase === 'loading' && four.length) cb(four); else if (G.round === round && G.phase === 'loading') cb(cands.slice(0, 4)); });
+  }
+  function singStart() { fourSongs(singStart2); }
+  function singStart2(four) {
+    G.sing = { options: four, chosen: null, tried: {}, votes: {}, parts: {}, clips: {}, order: [], idx: -1, now: null, best: {}, result: null, in: {} };
     singPhase('svote', SING.vote);
     cover(true, '🎤', 'Sing!', false); masks(true);
     singTimer = setTimeout(singVoteEnd, SING.vote); push();
   }
   function singVoteEnd() {
     if (!G.sing || G.phase !== 'svote') return;
-    clearTimeout(singTimer);
+    clearTimeout(singTimer); G.revealAt = 0;
     var c = G.sing.options.map(function () { return 0; }), pid, top = [];
     for (pid in G.sing.votes) c[G.sing.votes[pid]]++;
     var max = Math.max.apply(null, c);
@@ -624,8 +671,8 @@
     if (!G.sing || G.phase !== 'splay') return;
     clearTimeout(singTimer); stopAudio();
     var pid = G.sing.order[++G.sing.idx];
-    // Everyone is heard twice, in the same order, before the vote (a single recording plays once).
-    if (!pid && G.sing.pass === 1 && G.sing.order.length > 1) { G.sing.pass = 2; G.sing.idx = 0; pid = G.sing.order[0]; }
+    // Everyone is heard twice, in the same order, before the vote.
+    if (!pid && G.sing.pass === 1 && G.sing.order.length) { G.sing.pass = 2; G.sing.idx = 0; pid = G.sing.order[0]; }
     if (!pid) { clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {} if (G.sing.order.length > 1) singBest(); else singReveal(); return; }
     G.sing.now = pid; cover(false); masks(false);
     // The song's video runs silently; the sound is the player's recording.
@@ -646,7 +693,7 @@
   }
   function singReveal() {
     if (!G.sing || G.phase === 'reveal') return;
-    clearTimeout(singTimer); stopAudio(); stopTimers();
+    clearTimeout(singTimer); stopAudio(); stopTimers(); G.revealAt = 0;
     var tally = {}, v, max = 0;
     G.sing.order.forEach(function (pid) { tally[pid] = 0; });
     for (v in G.sing.best) if (tally[G.sing.best[v]] != null) tally[G.sing.best[v]]++;
@@ -663,8 +710,22 @@
     G.phase = 'reveal'; stage = 'reveal'; G.sing.in = {}; G.sing.now = null;
     cover(false); masks(false);
     clearInterval(silenceTick); silenceTick = null;
-    try { if (G.sing.chosen != null) { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
+    // The winning recording keeps playing over the (silent) video, which jumps back to the same spot every time.
+    var best = G.sing.result.filter(function (r) { return r.win && G.sing.clips[r.pid]; })[0] || (G.sing.result.length === 1 && G.sing.clips[G.sing.result[0].pid] ? G.sing.result[0] : null);
+    if (best) { G.sing.loop = best.pid; winnerLoop(); }
+    else { try { if (G.sing.chosen != null) { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {} }
     push(); autoStart();
+  }
+  function winnerLoop() {
+    if (!G.sing || G.phase !== 'reveal' || !G.sing.loop) return;
+    clearTimeout(singTimer); stopAudio(); silence();
+    try { yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
+    silence();
+    var a = singAudio = new Audio(G.sing.clips[G.sing.loop]), done = false;
+    var again = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(winnerLoop, 900); };
+    a.onended = again; a.onerror = function () { done = true; };   // a broken recording is not retried forever
+    var pr = a.play(); if (pr && pr.catch) pr.catch(function () { done = true; });
+    singTimer = setTimeout(again, 13000);
   }
   // The host's "Continue" button moves a Sing! round along when someone is stuck.
   function singSkip() {
@@ -759,7 +820,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    stopTimers(); autoStop(); singClear(); G.draw = null; clearTimeout(drawTimer); clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
+    stopTimers(); autoStop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
   }
@@ -808,7 +869,7 @@
     // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
     autoEnd = Date.now() + (toEnd ? REMOTE ? (G.remain > 0 ? G.remain + 1 : 30) : 20 : +$('autolen').value) * 1000;
     var draw = function () {
-      if (toEnd && !REMOTE) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
+      if (toEnd && !REMOTE && !(G.sing && G.sing.loop)) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (G.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }

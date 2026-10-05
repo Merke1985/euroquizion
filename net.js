@@ -44,9 +44,18 @@ function resultText(s) {
   return ordinal(s[6]) + ' in ' + (s[8] ? 'semi-final ' + s[8] : 'the semi-final') + pts + ' · did not qualify';
 }
 // Songs matching a years range ("1956-1979") and a category (all, nq, final, win).
+// Videos YouTube refused to play in this browser (embedding blocked, removed, not available here).
+// They are remembered on this device and no longer offered.
+var BAD_VIDEOS = {};
+try { (JSON.parse(localStorage.getItem('esc-badvideos') || '[]') || []).forEach(function (id) { BAD_VIDEOS[id] = 1; }); } catch (e) {}
+function markBad(id) {
+  if (!id || BAD_VIDEOS[id]) return;
+  BAD_VIDEOS[id] = 1;
+  try { localStorage.setItem('esc-badvideos', JSON.stringify(Object.keys(BAD_VIDEOS).slice(-600))); } catch (e) {}
+}
 function poolFor(songs, eraValue, cat) {
   var era = eraValue.split('-').map(Number);
   return songs.filter(function (s) {
-    return s[0] >= era[0] && s[0] <= era[1] && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
+    return !BAD_VIDEOS[s[4]] && s[0] >= era[0] && s[0] <= era[1] && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
   });
 }

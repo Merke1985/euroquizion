@@ -327,3 +327,4 @@ select.mini{width:auto;padding:.3em .6em;font-size:.9rem;border-radius:10px}
 .voters.mute,.voters .mute{color:var(--mute);font-weight:600}
 .answered .pl.now .char{box-shadow:0 0 0 5px var(--yellow);opacity:1;transform:scale(1.15)}
 .answered .pl.now span{color:var(--yellow)}
+.probebox{position:fixed;left:0;bottom:0;width:4px;height:4px;overflow:hidden;opacity:0;pointer-events:none}

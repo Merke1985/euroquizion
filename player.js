@@ -73,7 +73,7 @@
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
     $('waitlabel').textContent = ing && s.round ? 'Song ' + s.round + ' of ' + s.total : '';
     if (s.phase !== 'end') endShown = false;
-    revealAt = s.phase === 'guess' && s.reveal_in ? Date.now() + s.reveal_in : 0;
+    revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
     // Inside the host's page: let it know once this player is in, so the lobby can open up.
     if (document.body.classList.contains('embed')) tellHeight();
@@ -547,7 +547,7 @@
 
   setInterval(function () {
     var cd = revealAt ? Math.max(0, Math.ceil((revealAt - Date.now()) / 1000)) : 0;
-    $('allin').textContent = cd ? (state && state.players.length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';
+    $('allin').textContent = cd ? (state && state.phase !== 'guess' ? 'Everyone has voted. Continuing in ' : state && state.players.length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';
     var nx = nextAt ? Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) : 0;
     if (nx && state) $('allin').textContent = (state.round >= state.total ? 'Final scores in ' : 'Playing next song in ') + clock(nx);   // same line as "All players answered"
 
