@@ -108,8 +108,8 @@
     if (G.revealAt && G.phase === 'guess') s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
-    if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options };
-    if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; }
+    if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
+    if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; }
     if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3], result: resultText(G.song) };
     return s;
   }
@@ -239,7 +239,7 @@
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
         $('rres').textContent = resultText(G.song);
-        $('ranswer').textContent = G.q ? G.q.text + ' ' + G.q.answer : '';
+        $('ranswer').textContent = G.q ? G.q.explain || G.q.text + ' ' + G.q.answer : '';
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Next';
       }
       renderSing();
@@ -388,7 +388,9 @@
   function beginGuess() {
     $('err').textContent = '';
     G.phase = 'guess'; G.barMs = G.guessMs; G.endsAt = Date.now() + G.guessMs;
-    playClip(); push();
+    if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, '?', '', false); }   // odd one out: no clip, only the four songs
+    else playClip();
+    push();
     endTimer = setTimeout(reveal, G.guessMs);
   }
   function reveal() {
@@ -746,7 +748,7 @@
     autoStart();
     if (!recovering) net.send('state', snapshot());
   });
-  $('replay').addEventListener('click', function () { if (G.phase === 'guess' && (stage === 'paused' || stage === 'clip')) playClip(); });
+  $('replay').addEventListener('click', function () { if (G.phase === 'guess' && !(G.q && G.q.noclip) && (stage === 'paused' || stage === 'clip')) playClip(); });
   $('skip').addEventListener('click', function () { if (G.sing) singSkip(); else reveal(); });
   $('next').addEventListener('click', goNext);
   function goNext() {

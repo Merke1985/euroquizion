@@ -174,7 +174,7 @@
         $('rpts').textContent = ptsText(mine ? mine.pts : 0);
         $('rpts').className = 'rpts ' + (mine ? 'ok' : 'no');
       }
-      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.text + ' ' + s.q.answer : '';
+      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.explain || s.q.text + ' ' + s.q.answer : '';
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';
@@ -352,7 +352,8 @@
     if (key !== clipKey) { clipKey = key; vPrepare(s.clip); return; }
     var ready = vStage === 'ready' || vStage === 'clip' || vStage === 'paused' || vStage === 'full';
     if (!ready) return;
-    if (s.phase === 'guess' && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }
+    if (s.phase === 'guess' && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; vCover(true, '?', ''); } }   // odd one out: nothing plays until the answer
+    else if (s.phase === 'guess' && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }
     else if (s.phase === 'reveal' && vPlayed !== 'full') { vPlayed = 'full'; vPlay(true); }
   }
 

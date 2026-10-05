@@ -12,12 +12,36 @@ function placeLabel(s) {
   return s[8] != null ? 'Did not qualify' : ordinal(s[6]) + ' place';
 }
 function pointsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
+// Odd one out: four songs by name, no clip. Three of them share a country or a year; the round's
+// song is the one that doesn't belong. Nothing else may tie the odd one to the group.
+function makeOdd(song, allSongs, countries) {
+  var label = function (s) { return s[3] + ' – ' + s[2]; };
+  var byYear = Math.random() < 0.5, tries = [byYear, !byYear], group = null, why = '';
+  for (var t = 0; t < 2 && !group; t++) {
+    var keyIdx = tries[t] ? 0 : 1, otherIdx = tries[t] ? 1 : 0, buckets = {};
+    allSongs.forEach(function (s) {
+      if (s[0] === song[0] || s[1] === song[1] || s[4] === song[4]) return;   // shares nothing with the odd one
+      (buckets[s[keyIdx]] = buckets[s[keyIdx]] || []).push(s);
+    });
+    var keys = shuffle(Object.keys(buckets));
+    for (var k = 0; k < keys.length && !group; k++) {
+      var seen = {}, got = [];
+      shuffle(buckets[keys[k]]).forEach(function (s) { if (got.length < 3 && !seen[s[otherIdx]]) { seen[s[otherIdx]] = 1; got.push(s); } });
+      if (got.length === 3) { group = got; why = tries[t] ? 'from ' + got[0][0] : 'from ' + (countries[got[0][1]] || got[0][1]); }
+    }
+  }
+  if (!group) return null;
+  var answer = label(song), opts = shuffle(group.map(label).concat([answer]));
+  return { subject: 'odd', type: 'mc', text: 'Which song is the odd one out?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer), noclip: true,
+    explain: 'Odd one out: ' + song[3] + '. The other three are all ' + why + '.' };
+}
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
+  if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 1 / 6)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title'];
   if (canPlace) kinds.push('place');
   if (canPoints) kinds.push('points');
-  var subject = subjectSetting === 'random' ? pick(kinds) : subjectSetting;
+  var subject = subjectSetting === 'random' || subjectSetting === 'odd' ? pick(kinds) : subjectSetting;
   if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
   var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting;
   if (subject === 'place' && song[8] != null) type = 'mc';         // "did not qualify" cannot be typed as a position

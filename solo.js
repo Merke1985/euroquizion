@@ -137,7 +137,9 @@
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');
-    playClip(); render(); if (!mc) $('guess').focus();
+    if (S.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, '?', ''); } else playClip();   // odd one out has no clip
+    $('replay').classList.toggle('hidden', !!S.q.noclip);
+    render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, S.guessMs);
   }
   function reveal() {
@@ -177,7 +179,7 @@
       $('ropts').innerHTML = revealOptions(S.q, S.picked);
       $('rpts').textContent = (S.got ? S.pts : 0) + ((S.got ? S.pts : 0) === 1 ? ' point' : ' points');
       $('rpts').className = 'rpts ' + (S.got ? 'ok' : 'no');
-      $('ranswer').textContent = S.q.text + ' ' + S.q.answer;
+      $('ranswer').textContent = S.q.explain || S.q.text + ' ' + S.q.answer;
       $('rtitle').textContent = S.song[3];
       $('rmeta').textContent = S.song[2] + ' · ' + flag(S.song[1]) + ' ' + (countries[S.song[1]] || S.song[1]) + ' ' + S.song[0];
       $('rres').textContent = resultText(S.song);
@@ -244,7 +246,7 @@
     S.round = 0; S.score = 0; S.right = 0; used = {}; fails = 0;
     startRound();
   });
-  $('replay').addEventListener('click', function () { if (S.phase === 'guess' && (stage === 'paused' || stage === 'clip')) playClip(); });
+  $('replay').addEventListener('click', function () { if (S.phase === 'guess' && !S.q.noclip && (stage === 'paused' || stage === 'clip')) playClip(); });
   $('skip').addEventListener('click', reveal);
   $('next').addEventListener('click', goNext);
   function goNext() {
