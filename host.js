@@ -571,10 +571,10 @@
   // A song round without a quiz question: vote for one of four songs, listen to it, record up to
   // 10 seconds on the phone, hear every recording over the muted video, then vote for the best.
   // Recordings travel phone -> host as chunks over the room connection and are never stored.
-  var SING = { vote: 20000, rec: 45000, best: 30000 }, singTimer = null, singAudio = null;
+  var SING = { vote: 20000, rec: 45000, best: 45000 }, singTimer = null, bestTimer = null, singAudio = null;
   function stopAudio() { if (singAudio) { try { singAudio.onended = singAudio.onerror = null; singAudio.pause(); } catch (e) {} singAudio = null; } }
   function singClear() {
-    clearTimeout(singTimer); stopAudio();
+    clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio();
     if (G.sing) Object.keys(G.sing.clips).forEach(function (k) { try { URL.revokeObjectURL(G.sing.clips[k]); } catch (e) {} });
     G.sing = null;
   }
@@ -584,7 +584,7 @@
   function silence() {
     try { yt.mute(); yt.setVolume(0); } catch (e) {}
     if (!silenceTick) silenceTick = setInterval(function () {
-      if (G.sing && (G.phase === 'splay' || G.sing.loop)) { try { yt.mute(); yt.setVolume(0); } catch (e) {} }
+      if (G.sing && (G.phase === 'splay' || G.phase === 'sbest' || G.sing.loop)) { try { yt.mute(); yt.setVolume(0); } catch (e) {} }
       else { clearInterval(silenceTick); silenceTick = null; }
     }, 150);
   }
@@ -669,11 +669,12 @@
     singNext();
   }
   function singNext() {
-    if (!G.sing || G.phase !== 'splay') return;
+    if (!G.sing || (G.phase !== 'splay' && G.phase !== 'sbest')) return;
     clearTimeout(singTimer); stopAudio();
     var pid = G.sing.order[++G.sing.idx];
-    // Everyone is heard twice, in the same order, before the vote.
-    if (!pid && G.sing.pass === 1 && G.sing.order.length) { G.sing.pass = 2; G.sing.idx = 0; pid = G.sing.order[0]; }
+    // Everyone is heard once; then the vote opens and the recordings keep going round in the same order.
+    if (!pid && G.phase === 'splay' && G.sing.order.length > 1) { singBest(); return; }
+    if (!pid && G.phase === 'sbest' && G.sing.order.length) { G.sing.idx = 0; pid = G.sing.order[0]; }
     if (!pid) { clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {} if (G.sing.order.length > 1) singBest(); else singReveal(); return; }
     G.sing.now = pid; cover(false); masks(false);
     // The song's video runs silently; the sound is the player's recording.
@@ -688,13 +689,13 @@
     push();
   }
   function singBest() {
-    singPhase('sbest', SING.best); G.sing.now = null;
-    cover(true, '🏆', '', false);
-    singTimer = setTimeout(singReveal, SING.best); push();
+    singPhase('sbest', SING.best); G.sing.now = null; G.sing.idx = -1; G.sing.pass = 2;
+    clearTimeout(bestTimer); bestTimer = setTimeout(singReveal, SING.best);
+    singNext();
   }
   function singReveal() {
     if (!G.sing || G.phase === 'reveal') return;
-    clearTimeout(singTimer); stopAudio(); stopTimers(); G.revealAt = 0;
+    clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio(); stopTimers(); G.revealAt = 0;
     var tally = {}, v, max = 0;
     G.sing.order.forEach(function (pid) { tally[pid] = 0; });
     for (v in G.sing.best) if (tally[G.sing.best[v]] != null) tally[G.sing.best[v]]++;
@@ -787,7 +788,7 @@
     else if (G.phase === 'slisten') t = 'Listen first: ' + name;
     else if (G.phase === 'srec') t = 'Sing it! Record up to 10 seconds on your phone';
     else if (G.phase === 'splay') t = (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + (players[sg.now] ? players[sg.now].name : '');
-    else if (G.phase === 'sbest') { t = 'Who sang it best? Vote on your phone'; opts = sg.order.map(function (pid) { var p = players[pid]; return p ? '<div class="opt">' + charSvg(p.char) + esc(p.name) + '</div>' : ''; }).join(''); }
+    else if (G.phase === 'sbest') { t = 'Who sang it best? Vote on your phone'; opts = sg.order.map(function (pid) { var p = players[pid]; return p ? '<div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">♪ singing now</span>' : '') + '</div>' : ''; }).join(''); }
     else if (G.phase === 'reveal') {
       var wins = (sg.result || []).filter(function (r) { return r.win; }).map(function (r) { return r.name; });
       $('ranswer').textContent = !sg.result || !sg.result.length ? 'Nobody sang this time' : wins.length ? 'Best singer: ' + wins.join(' & ') : 'Thanks for singing!';
