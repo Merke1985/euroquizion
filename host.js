@@ -714,7 +714,7 @@
     clearInterval(silenceTick); silenceTick = null;
     // The winning recording keeps playing over the (silent) video, which jumps back to the same spot every time.
     var best = G.sing.result.filter(function (r) { return r.win && G.sing.clips[r.pid]; })[0] || (G.sing.result.length === 1 && G.sing.clips[G.sing.result[0].pid] ? G.sing.result[0] : null);
-    if (best) { G.sing.loop = best.pid; winnerLoop(); }
+    if (best) { G.sing.loop = best.pid; G.sing.loopFails = 0; winnerLoop(); }
     else { try { if (G.sing.chosen != null) { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {} }
     push(); autoStart();
   }
@@ -725,8 +725,10 @@
     silence();
     var a = singAudio = new Audio(G.sing.clips[G.sing.loop]), done = false;
     var again = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(winnerLoop, 900); };
-    a.onended = again; a.onerror = function () { done = true; };   // a broken recording is not retried forever
-    var pr = a.play(); if (pr && pr.catch) pr.catch(function () { done = true; });
+    // A recording that will not start is tried again a few times, not forever.
+    var retry = function () { if (done) return; if (++G.sing.loopFails > 4) { done = true; return; } again(); };
+    a.onended = function () { G.sing.loopFails = 0; again(); }; a.onerror = retry;
+    var pr = a.play(); if (pr && pr.catch) pr.catch(retry);
     singTimer = setTimeout(again, 13000);
   }
   // The host's "Continue" button moves a Sing! round along when someone is stuck.
