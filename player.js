@@ -337,7 +337,9 @@
     $('pstage').classList.remove('audioonly');
     var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
     $('pstage').classList.toggle('hidden', !on);
-    $('chatbtn').classList.toggle('hidden', !(s.remote && m));   // sits in the header, top right
+    // The chat bar sits at the bottom of the screen in games without a shared screen.
+    var chatOn = !!(s.remote && m) && !(document.body.classList.contains('embed') && (s.phase === 'lobby' || s.phase === 'brief'));
+    $('chatbar').classList.toggle('hidden', !chatOn); document.body.classList.toggle('haschat', chatOn);
     if (!s.remote) return;
     ytLoad();
     if (!on) { if (vStage !== 'idle') { vStop(); vStage = 'idle'; clipKey = ''; } return; }
@@ -359,17 +361,21 @@
     var el = $('chatlog');
     el.innerHTML = chatLog.map(function (x) { return '<div class="msg' + (x.mine ? ' mine' : '') + '">' + charSvg(x.char) + '<div><b>' + esc(x.name) + '</b><span>' + esc(x.text) + '</span></div></div>'; }).join('');
     el.scrollTop = el.scrollHeight;
-    if (!chatOpen && c.pid !== pid) { $('chatdot').classList.remove('hidden'); $('chatbtn').classList.add('lit'); }
+    if (!chatOpen && c.pid !== pid) {
+      // A new message pops up just above the bar for a few seconds; the ring marks it as unread.
+      $('chatbtn').classList.add('lit');
+      var x = chatLog[chatLog.length - 1], pop = document.createElement('div');
+      pop.className = 'pop'; pop.innerHTML = charSvg(x.char) + '<span><b>' + esc(x.name) + '</b>' + esc(x.text) + '</span>';
+      $('chatpop').appendChild(pop);
+      while ($('chatpop').children.length > 3) $('chatpop').removeChild($('chatpop').firstChild);
+      setTimeout(function () { if (pop.parentNode) pop.parentNode.removeChild(pop); }, 5200);
+    }
   }
-  // The row holds the video and, when opened, the chat in its right half. The chat may stay open.
-  function rowUpdate() {
-    var noVideo = $('pstage').classList.contains('hidden');
-    $('stagerow').classList.toggle('chatopen', chatOpen); $('stagerow').classList.toggle('novideo', noVideo);
-    $('stagerow').classList.toggle('hidden', noVideo && !chatOpen);
-  }
+  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); }
   function chatToggle(open) {
-    chatOpen = open; $('chat').classList.toggle('hidden', !open); rowUpdate();
-    if (open) { $('chatdot').classList.add('hidden'); $('chatbtn').classList.remove('lit'); $('chatlog').scrollTop = $('chatlog').scrollHeight; $('chatin').focus(); }
+    chatOpen = open; $('chat').classList.toggle('hidden', !open);
+    if (open) $('chatpop').innerHTML = '';
+    if (open) { $('chatbtn').classList.remove('lit'); $('chatlog').scrollTop = $('chatlog').scrollHeight; }
   }
   $('chatbtn').addEventListener('click', function () { chatToggle(!chatOpen); });
   $('chatclose').addEventListener('click', function () { chatToggle(false); });

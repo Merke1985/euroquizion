@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>EuroQuizion – join</title>
-<link rel="stylesheet" href="style.css?v=54">
+<link rel="stylesheet" href="style.css?v=55">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
 <main class="phone">
-  <header><div class="logo">Euro<b>Quizion!</b></div><div class="hright"><div id="me" class="mute"></div><button id="chatbtn" class="chatbtn hidden" type="button" aria-label="Open chat"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/></svg><span id="chatdot" class="chatdot hidden"></span></button></div></header>
+  <header><div class="logo">Euro<b>Quizion!</b></div><div class="hright"><div id="me" class="mute"></div></div></header>
 
   <div id="stagerow" class="stagerow hidden">
     <div id="pstage" class="stage hidden">
@@ -18,11 +18,6 @@
       <div class="maskbar t" id="mt"></div><div class="maskbar b" id="mb"></div>
       <div class="cover" id="cover"><div class="q" id="covericon"></div><h2 id="covertext"></h2></div>
       <button class="btn hidden" id="tapplay" type="button">Tap to play</button>
-    </div>
-    <div id="chat" class="chat hidden" role="dialog" aria-label="Chat">
-      <div class="chathead"><strong>Chat</strong><button id="chatclose" class="chatx" type="button" aria-label="Close chat">×</button></div>
-      <div id="chatlog" class="chatlog"></div>
-      <form id="chatform" autocomplete="off"><input id="chatin" type="text" maxlength="200" placeholder="Message…" enterkeyhint="send"><button class="btn">Send</button></form>
     </div>
   </div>
 
@@ -108,12 +103,24 @@
     <div id="myscorebox"><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>
-<script src="vendor/supabase.js?v=54"></script>
-<script src="config.js?v=54"></script>
-<script src="match.js?v=54"></script>
-<script src="quiz.js?v=54"></script>
-<script src="net.js?v=54"></script>
-<script src="chars.js?v=54"></script>
-<script src="player.js?v=54"></script>
+<div id="chatbar" class="chatbar hidden">
+  <div id="chatpop" class="chatpop" aria-live="polite"></div>
+  <div id="chat" class="chatsheet hidden" role="dialog" aria-label="Conversation">
+    <div class="chathead"><strong>Chat</strong><button id="chatclose" class="chatx" type="button" aria-label="Close conversation">×</button></div>
+    <div id="chatlog" class="chatlog"></div>
+  </div>
+  <form id="chatform" autocomplete="off">
+    <button id="chatbtn" class="chatbtn" type="button" aria-label="Show the whole conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/></svg></button>
+    <input id="chatin" type="text" maxlength="200" placeholder="Message everyone…" enterkeyhint="send" aria-label="Message everyone">
+    <button class="btn">Send</button>
+  </form>
+</div>
+<script src="vendor/supabase.js?v=55"></script>
+<script src="config.js?v=55"></script>
+<script src="match.js?v=55"></script>
+<script src="quiz.js?v=55"></script>
+<script src="net.js?v=55"></script>
+<script src="chars.js?v=55"></script>
+<script src="player.js?v=55"></script>
 </body>
 </html>
