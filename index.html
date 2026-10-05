@@ -4,12 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Douze Points – join</title>
-<link rel="stylesheet" href="style.css?v=32">
+<link rel="stylesheet" href="style.css?v=34">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
 <main class="phone">
   <header><div class="logo">DOUZE <b>POINTS</b><i>!</i></div><div id="me" class="mute"></div></header>
+
+  <div id="pstage" class="stage hidden">
+    <div id="yt"></div>
+    <div class="shield"></div>
+    <div class="maskbar t" id="mt"></div><div class="maskbar b" id="mb"></div>
+    <div class="cover" id="cover"><div class="q" id="covericon"></div><h2 id="covertext"></h2></div>
+    <button class="btn hidden" id="tapplay" type="button">Tap to play</button>
+  </div>
 
   <section id="v-join" class="card">
     <h2 style="margin-bottom:16px">Join the game</h2>
@@ -20,9 +28,12 @@
       <p id="joinerr" class="fb no" style="margin:14px 0 0"></p>
     </form>
     <div class="or"><span>or</span></div>
-    <a class="btn alt big" href="host.html" style="display:block;text-align:center;text-decoration:none">Host a game</a>
+    <div id="hostlinks">
+    <a class="btn alt big" href="host.html" style="display:block;text-align:center;text-decoration:none">Host game with shared screen</a>
+    <a class="btn alt big" href="host.html?screen=0" style="display:block;text-align:center;text-decoration:none;margin-top:12px">Host game without screen</a>
     <a class="btn alt big" href="solo.html" style="display:block;text-align:center;text-decoration:none;margin-top:12px">Play solo</a>
-    <p class="mute" style="margin:12px 0 0;font-size:.9rem;text-align:center">Host on a TV or laptop everyone can see and hear, or play on your own.</p>
+    <p class="mute" style="margin:12px 0 0;font-size:.9rem;text-align:center">Shared screen: a TV or laptop plays the videos for everyone. Without screen: every phone plays its own video.</p>
+    </div>
     <p style="margin:18px 0 0;font-size:.8rem;text-align:center"><a href="credits.html" style="color:var(--mute)">Photo credits</a></p>
   </section>
 
@@ -71,15 +82,21 @@
     <div id="ropts" class="opts"></div>
     <p id="rpts" class="rpts"></p>
     <div class="card"><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta" style="margin:.5em 0 0"></p><p id="rres" class="res" style="margin:.4em 0 0"></p></div>
-    <div><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
+    <div id="myscorebox"><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>
-<script src="vendor/supabase.js?v=32"></script>
-<script src="config.js?v=32"></script>
-<script src="match.js?v=32"></script>
-<script src="quiz.js?v=32"></script>
-<script src="net.js?v=32"></script>
-<script src="chars.js?v=32"></script>
-<script src="player.js?v=32"></script>
+<button id="chatbtn" class="chatbtn hidden" type="button" aria-label="Open chat"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/></svg><span id="chatdot" class="chatdot hidden"></span></button>
+<div id="chat" class="chat hidden" role="dialog" aria-label="Chat">
+  <div class="chathead"><strong>Chat</strong><button id="chatclose" class="btn alt small" type="button">Close</button></div>
+  <div id="chatlog" class="chatlog"></div>
+  <form id="chatform" autocomplete="off"><input id="chatin" type="text" maxlength="200" placeholder="Say something…" enterkeyhint="send"><button class="btn">Send</button></form>
+</div>
+<script src="vendor/supabase.js?v=34"></script>
+<script src="config.js?v=34"></script>
+<script src="match.js?v=34"></script>
+<script src="quiz.js?v=34"></script>
+<script src="net.js?v=34"></script>
+<script src="chars.js?v=34"></script>
+<script src="player.js?v=34"></script>
 </body>
 </html>

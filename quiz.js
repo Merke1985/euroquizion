@@ -106,7 +106,7 @@ function revealOptions(q, pick) {
 // The three ways to score a correct answer, and the line that explains the selected one.
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 var SCORING_HELP = {
-  correct: 'Correct: every right answer scores a flat 12 points.',
+  correct: 'Basic: every right answer scores a flat 12 points.',
   speed: 'Speed: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
   order: 'Order: Eurovision style. The first player with the right answer gets 12 points, the second 10, then 8, 7, 6, 5, 4, 3, 2 and 1. Nobody with the right answer gets less than 1.'
 };

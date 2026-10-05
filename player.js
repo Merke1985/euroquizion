@@ -10,9 +10,11 @@
   try { want = sessionStorage.getItem('esc-char'); } catch (e) {}
 
   $('name').value = store.get('esc-name') || '';
-  var k = new URLSearchParams(location.search).get('k');
+  var qs = new URLSearchParams(location.search), k = qs.get('k');
+  // Inside the host's own page (a game without a shared screen) the hosting buttons make no sense.
+  if (qs.get('embed')) { document.body.classList.add('embed'); $('hostlinks').classList.add('hidden'); }
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=32').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=34').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
@@ -26,6 +28,7 @@
     net = escConnect(room);
     $('demo').classList.toggle('hidden', !net.demo);
     net.on('state', onState);
+    net.on('chat', chatAdd);
     net.on('result', onResult);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
@@ -48,10 +51,14 @@
   function me() { return state && state.players.filter(function (p) { return p.pid === pid; })[0]; }
 
   function onState(s) {
+    onState2(s);
+    remoteVideo(s);
+  }
+  function onState2(s) {
     state = s; clearTimeout(joinTimer);
     endsAt = Date.now() + (s.left || 0);
     var m = me();
-    $('me').innerHTML = (m ? charSvg(m.char) : '') + esc(name + (m ? ' · ' + m.score : ''));
+    $('me').innerHTML = (m ? charSvg(m.char) : '') + esc(name + (m && !s.hide ? ' · ' + m.score : ''));   // s.hide: totals stay secret until the end
     $('mychar').innerHTML = m ? charSvg(m.char) : '';
     $('changechar').classList.toggle('hidden', s.phase !== 'lobby');
     // Not in the game until a character is yours; the grid updates live as others pick.
@@ -65,6 +72,7 @@
     if (s.sing && s.phase !== 'reveal' && s.phase !== 'end' && s.phase !== 'lobby' && s.phase !== 'paused' && s.phase !== 'guess') { renderSing(s, m); return; }
     if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'You’re in!'; $('waitsub').textContent = 'Watch the big screen. The game starts soon.'; }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
+    else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total + '. Turn your sound on.'; }
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total; }
     else if (s.phase === 'guess') {
       var q = s.q || { type: 'open', text: 'Which song is this?', hint: 'Type the title…' };
@@ -106,6 +114,7 @@
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';
+      $('myscorebox').classList.toggle('hidden', !!s.hide);
       $('myscore').textContent = m ? m.score : 0;
       var rank = m ? s.players.filter(function (p) { return p.score > m.score; }).length + 1 : 0;
       $('myrank').textContent = rank ? 'Place ' + rank + ' of ' + s.players.length : '';
@@ -204,13 +213,109 @@
     fr.readAsDataURL(recBlob);
   });
 
+
+  // ---------- playing without a shared screen ----------
+  // Every phone plays the clip itself. The host only says which video and where to start; the
+  // phone loads it silently, reports when it is ready, and plays when the guessing starts.
+  var CLIP = 15, yt = null, ytWanted = false, ytReady = false, clipKey = '', clipStart = 0, vStage = 'idle', vPoll = null, vWatch = null, vPlayed = '';
+  function vCover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text || ''; } }
+  function vMasks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
+  function vStop() { clearInterval(vPoll); clearTimeout(vWatch); $('tapplay').classList.add('hidden'); try { if (yt && ytReady) yt.pauseVideo(); } catch (e) {} }
+  function ytLoad() {
+    if (ytWanted) return;
+    ytWanted = true;
+    window.onYouTubeIframeAPIReady = function () {
+      yt = new YT.Player('yt', { width: '100%', height: '100%',
+        playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
+        events: { onReady: function () { ytReady = true; if (state) remoteVideo(state); },
+          onError: function () { if (vStage === 'probe' || vStage === 'seek') { vStop(); vStage = 'bad'; if (net) net.send('ready', { pid: pid, key: clipKey, bad: true }); } } } });
+    };
+    var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
+  }
+  function vPrepare(clip) {
+    vStop(); vStage = 'probe'; vPlayed = '';
+    vCover(true, '♪', 'Selecting song'); vMasks(true);
+    yt.mute(); yt.loadVideoById(clip.id);
+    vWatch = setTimeout(function () { if (vStage === 'probe' || vStage === 'seek') { vStage = 'slow'; if (net) net.send('ready', { pid: pid, key: clipKey, slow: true }); } }, 10000);
+    vPoll = setInterval(function () {
+      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0;
+      if ((vStage === 'probe' || vStage === 'slow') && st === 1 && d > 0) {
+        clipStart = d < 45 ? 0 : Math.floor(15 + clip.frac * (d - 15 - 20 - CLIP));   // same spot on every phone
+        vStage = 'seek'; yt.seekTo(clipStart, true);
+      } else if (vStage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
+        clearInterval(vPoll); clearTimeout(vWatch); yt.pauseVideo(); vStage = 'ready';
+        if (net) net.send('ready', { pid: pid, key: clipKey });
+        if (state) remoteVideo(state);
+      }
+    }, 120);
+  }
+  function vPlay(full) {
+    clearInterval(vPoll); vStage = full ? 'full' : 'clip';
+    try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
+    vCover(false); vMasks(!full);
+    // Phones may refuse to start sound without a touch: offer a button if nothing is playing.
+    clearTimeout(vWatch);
+    vWatch = setTimeout(function () { try { if (yt.getPlayerState() !== 1) $('tapplay').classList.remove('hidden'); } catch (e) {} }, 1800);
+    if (full) return;
+    vPoll = setInterval(function () {
+      if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) { clearInterval(vPoll); yt.pauseVideo(); vStage = 'paused'; $('tapplay').classList.add('hidden'); if (state && state.phase === 'guess') vCover(true, '?', ''); }
+    }, 100);
+  }
+  $('tapplay').addEventListener('click', function () { $('tapplay').classList.add('hidden'); try { yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} });
+  function remoteVideo(s) {
+    var m = me(), on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
+    $('pstage').classList.toggle('hidden', !on);
+    $('chatbtn').classList.toggle('hidden', !(s.remote && m));
+    if (!s.remote) return;
+    ytLoad();
+    if (!on) { if (vStage !== 'idle') { vStop(); vStage = 'idle'; clipKey = ''; } return; }
+    if (!ytReady) return;
+    var key = s.clip.id + ':' + s.round;
+    if (key !== clipKey) { clipKey = key; vPrepare(s.clip); return; }
+    var ready = vStage === 'ready' || vStage === 'clip' || vStage === 'paused' || vStage === 'full';
+    if (!ready) return;
+    if (s.phase === 'guess' && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }
+    else if (s.phase === 'reveal' && vPlayed !== 'full') { vPlayed = 'full'; vPlay(true); }
+  }
+
+  // ---------- chat (games without a shared screen) ----------
+  var chatOpen = false, chatLog = [];
+  function chatAdd(c) {
+    if (!c || typeof c.text !== 'string' || !c.text.trim()) return;
+    chatLog.push({ name: String(c.name || '?').slice(0, 16), char: c.char, text: c.text.slice(0, 200), mine: c.pid === pid });
+    if (chatLog.length > 100) chatLog.shift();
+    var el = $('chatlog');
+    el.innerHTML = chatLog.map(function (x) { return '<div class="msg' + (x.mine ? ' mine' : '') + '">' + charSvg(x.char) + '<div><b>' + esc(x.name) + '</b><span>' + esc(x.text) + '</span></div></div>'; }).join('');
+    el.scrollTop = el.scrollHeight;
+    if (!chatOpen && c.pid !== pid) { $('chatdot').classList.remove('hidden'); $('chatbtn').classList.add('lit'); }
+  }
+  function chatToggle(open) {
+    chatOpen = open; $('chat').classList.toggle('hidden', !open);
+    if (open) { $('chatdot').classList.add('hidden'); $('chatbtn').classList.remove('lit'); $('chatlog').scrollTop = $('chatlog').scrollHeight; $('chatin').focus(); }
+  }
+  $('chatbtn').addEventListener('click', function () { chatToggle(!chatOpen); });
+  $('chatclose').addEventListener('click', function () { chatToggle(false); });
+  $('chatform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = $('chatin').value.trim(), m = me();
+    if (!t || !net || !m) return;
+    var c = { pid: pid, name: name, char: m.char, text: t.slice(0, 200) };
+    net.send('chat', c); chatAdd(c); $('chatin').value = '';
+  });
+
+  var pickKey = '';
   function renderPicker(s, m) {
     var taken = {};
     s.players.forEach(function (p) { if (p.pid !== pid && p.char) taken[p.char] = p.name; });
-    $('chars').innerHTML = CHARS.map(function (c) {
-      return '<button type="button" data-char="' + c.id + '"' + (taken[c.id] ? ' disabled title="Taken by ' + esc(taken[c.id]) + '"' : '') +
-        (m && m.char === c.id ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
-    }).join('');
+    // Only redraw when something changed, so the photos do not reload on every update.
+    var k = JSON.stringify(taken) + '|' + (m ? m.char : '');
+    if (k !== pickKey) {
+      pickKey = k;
+      $('chars').innerHTML = CHARS.map(function (c) {
+        return '<button type="button" data-char="' + c.id + '"' + (taken[c.id] ? ' disabled title="Taken by ' + esc(taken[c.id]) + '"' : '') +
+          (m && m.char === c.id ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
+      }).join('');
+    }
     var left = CHARS.filter(function (c) { return !taken[c.id]; }).length;
     $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All characters are taken, so this game is full.';
     if (want && taken[want]) want = null;
