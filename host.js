@@ -31,7 +31,12 @@
     var want = CHAR_BY_ID[m.char] ? m.char : null;
     var free = want && !list().some(function (x) { return x.char === want && x.pid !== m.pid; });
     if (!p) {
-      if (!free) { sayHello(); return; }   // not in yet: just show them which characters are left
+      if (!free) {
+        // No avatar chosen (or it is taken): hand out a random one that is still free.
+        var left = CHARS.filter(function (c) { return !list().some(function (x) { return x.char === c.id; }); });
+        if (!left.length) { sayHello(); return; }   // every avatar is in use: the game is full
+        want = pick(left).id; free = true;
+      }
       p = players[m.pid] = { pid: m.pid, name: nm, char: want, score: 0, got: false, pts: 0 };
       // Rehosting without a saved game on this device: rebuild it from what the phones remember.
       if (recovering) {
@@ -70,7 +75,8 @@
   });
   // Everyone who is still connected has answered: go to the answer.
   var ALLIN_MS = 5000;
-  function isIn(p) { return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null); }
+  function isIn(p) {
+    if (G.phase === 'brief') return !!(G.go && G.go[p.pid]); return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null); }
   function allIn() {
     var act = list().filter(function (x) { return !x.off; });
     var ph = G.phase;
@@ -96,6 +102,9 @@
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (hideScores()) s.hide = true;
+    if (G.phase === 'brief') s.brief = G.brief;
+    if (G.phase === 'intro') s.intro = INTRO.ids[0];
+    if (G.phase === 'reveal' && autoTick) s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
     if (G.revealAt && G.phase === 'guess') s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
@@ -168,9 +177,9 @@
   }, 3000);
 
   // ---------- rendering ----------
-  function show(id) { ['v-lobby', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
-  function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby'; }
+  function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   function boardHtml(showGot) {
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
@@ -186,8 +195,11 @@
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : 'Scores';
     $('newgame').classList.toggle('hidden', G.phase === 'lobby');
-    $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end');
+    $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief');
+    $('hostmain').classList.toggle('briefing', G.phase === 'brief');
+    if (window.selfSize) window.selfSize();
     if (G.phase === 'lobby') show('v-lobby');
+    else if (G.phase === 'brief') { show('v-brief'); renderBrief(); }
     else if (G.phase === 'end') {
       show('v-end');
       var top = ps[0];
@@ -210,6 +222,7 @@
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Continue';
       }
       $('replay').disabled = G.phase !== 'guess' || !!G.sing;
+      $('roundlabel').textContent = G.phase === 'intro' ? 'Here we go' : $('roundlabel').textContent;
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
@@ -261,9 +274,10 @@
   function countStop() { clearInterval(loadTick); loadT0 = 0; }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   setInterval(function () {
+    if (G.phase === 'intro') $('qtext').textContent = 'Starting in ' + Math.max(0, Math.ceil((G.endsAt - Date.now()) / 1000));
     var cd = G.phase === 'guess' && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
-    $('allin').textContent = cd ? 'All players answered. Revealing in ' + cd : '';
-    var timed = G.phase === 'guess' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
+    $('allin').textContent = cd ? (list().length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
+    var timed = G.phase === 'guess' || G.phase === 'intro' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
 
@@ -272,7 +286,10 @@
     yt = new YT.Player('yt', {
       width: '100%', height: '100%',
       playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
-      events: { onReady: function () { ytReady = true; ready(); }, onError: function () { if (stage === 'probe' || stage === 'seek') badSong(); } }
+      events: { onReady: function () { ytReady = true; ready(); }, onError: function () {
+        if (stage === 'probe' || stage === 'seek') badSong();
+        else if (stage === 'intro' && ++introTry < INTRO.ids.length) { try { yt.loadVideoById(INTRO.ids[introTry]); } catch (e) {} }   // fanfare unavailable: try the spare
+      } }
     });
   };
   if (REMOTE) {
@@ -282,8 +299,12 @@
     $('selfplay').src = './?k=' + room + '&embed=1'; $('selfplay').classList.remove('hidden');
     // The host first picks a name and an avatar; the lobby with the code and settings opens after that.
     document.body.classList.add('selfpending');
+    var selfH = 0;
+    window.selfSize = function () { $('selfplay').style.height = $('hostmain').classList.contains('ingame') || !selfH ? '' : selfH + 'px'; };
     window.addEventListener('message', function (e) {
-      if (e.origin !== location.origin || !e.data || e.data.esc !== 'joined') return;
+      if (e.origin !== location.origin || !e.data) return;
+      if (e.data.esc === 'h') { selfH = Math.max(90, Math.min(1400, +e.data.h || 0)); selfSize(); return; }
+      if (e.data.esc !== 'joined') return;
       document.body.classList.remove('selfpending'); $('selfnote').classList.remove('hidden');
     });
     var so = $('s-atype').querySelector('option[value="sing"]'); if (so) so.remove();   // Sing! needs the shared screen
@@ -416,6 +437,58 @@
     }
     G.ready[p.pid] = 1; remoteCheck();
   });
+
+
+  // ---------- before the first song ----------
+  // A briefing with the settings and the scoring; every player presses Ready. When all are ready the
+  // Eurovision fanfare plays under a countdown, and then the first song starts.
+  var introTimer = null, introTry = 0;
+  function optText(id) { var el = $(id); return el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''; }
+  function briefInfo() {
+    var sing = G.atype === 'sing';
+    var rows = [['Songs', G.total], ['Guessing time', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Category', optText('s-atype')]];
+    if (!sing) rows.push(['Answers', optText('s-subject')], ['Scoring', optText('s-scoring')]);
+    rows.push(['Show score', optText('s-show')]);
+    return { rows: rows, scoring: sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
+  }
+  function briefStart() {
+    stopTimers(); clearTimeout(introTimer);
+    G.phase = 'brief'; G.go = {}; G.brief = briefInfo(); push();
+  }
+  function briefCheck() {
+    if (G.phase !== 'brief') return;
+    var act = list().filter(function (x) { return !x.off; });
+    if (act.length && act.every(function (p) { return G.go[p.pid]; })) introStart();
+  }
+  function introStart() {
+    if (G.phase !== 'brief') return;
+    G.phase = 'intro'; G.barMs = INTRO.ms; G.endsAt = Date.now() + INTRO.ms; introTry = 0; stage = 'intro';
+    if (!REMOTE) {
+      cover(false); masks(false);
+      try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {}
+    }
+    push();
+    introTimer = setTimeout(function () {
+      if (G.phase !== 'intro') return;
+      try { if (!REMOTE) yt.pauseVideo(); } catch (e) {}
+      stage = 'idle'; startRound();
+    }, INTRO.ms);
+  }
+  net.on('go', function (m) {
+    var p = m && players[m.pid];
+    if (!p || G.phase !== 'brief') return;
+    G.go[p.pid] = 1; push(); briefCheck();
+  });
+  $('briefgo').addEventListener('click', introStart);
+  function renderBrief() {
+    var b = G.brief || briefInfo();
+    $('briefset').innerHTML = b.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
+    $('briefscore').textContent = b.scoring;
+    var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    $('briefplayers').innerHTML = ps.map(function (p) { return '<div class="pl' + (G.go[p.pid] ? ' in' : '') + (p.off ? ' off' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></div>'; }).join('') || '<span class="mute">No players yet</span>';
+    var n = ps.filter(function (p) { return G.go[p.pid]; }).length;
+    $('briefcount').textContent = ps.length ? '(' + n + ' of ' + ps.length + ' ready)' : '';
+  }
 
   // ---------- Sing! ----------
   // A song round without a quiz question: vote for one of four songs, listen to it, record up to
@@ -605,7 +678,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    stopTimers(); autoStop(); singClear(); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
+    stopTimers(); autoStop(); singClear(); clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
   }
@@ -635,7 +708,7 @@
     G.total = +$('s-rounds').value; G.guessMs = +$('s-time').value * 1000;
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; });
-    startRound();
+    briefStart();
   });
   // Autoplay: with the box ticked, the answer stays up for 10 seconds and the next song starts by itself.
   var AUTO_SECS = 10, autoTick = null, autoEnd = 0;
@@ -649,13 +722,15 @@
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (G.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Next song in ') + left;
+      $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Playing next song in ') + left;
     };
     draw(); autoTick = setInterval(draw, 200);
+    if (!recovering) net.send('state', snapshot());
   }
   $('auto').addEventListener('change', function () {
     try { localStorage.setItem('esc-auto', $('auto').checked ? '1' : '0'); } catch (e) {}
     autoStart();
+    if (!recovering) net.send('state', snapshot());
   });
   $('replay').addEventListener('click', function () { if (G.phase === 'guess' && (stage === 'paused' || stage === 'clip')) playClip(); });
   $('skip').addEventListener('click', function () { if (G.sing) singSkip(); else reveal(); });
@@ -667,11 +742,11 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=35').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=40').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=35').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=40').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
   render();
 })();

@@ -46,7 +46,7 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 .chargrid button:active .char{transform:scale(.92)}
 .chargrid button.mine .char{box-shadow:0 0 0 3px var(--yellow)}
 .chargrid button:disabled{cursor:not-allowed;opacity:.3;filter:grayscale(1)}
-.mychar .char{width:120px;height:120px}
+.mychar .char{width:52px;height:52px}
 .phone #me{display:flex;align-items:center;gap:8px}
 .phone #me .char{width:28px;height:28px}
 .chip .char{width:1.7em;height:1.7em;margin:-.2em 0 -.2em -.45em}
@@ -206,6 +206,25 @@ body.embed .phone{min-height:0;padding-top:12px}
 .phone .allin{text-align:center;margin:0}
 /* host without a screen: avatar first, lobby second */
 body.remote.selfpending .lobby{display:none}
-body.remote.selfpending .host:not(.ingame) .selfplay{order:-1}
-body.remote:not(.selfpending) .host:not(.ingame) .selfplay{height:300px}
+/* in the lobby the host's own name and avatar sit on top, in a frame just as tall as its content */
+body.remote .host:not(.ingame) .selfplay{order:-1;height:150px;border:0;border-radius:0}
 body.remote .host>header{order:-2}
+.avatarrow{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+/* ---------- briefing before the first song ---------- */
+.brief{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;flex:1;align-items:start}
+.brief h1{font-size:clamp(2rem,5vw,3.4rem);margin-bottom:14px}
+.briefset{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin:0}
+.briefset div{background:rgba(0,0,0,.22);border-radius:12px;padding:.55em .8em}
+.briefset dt{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);font-weight:700}
+.briefset dd{margin:0;font-weight:800;font-size:1.1rem}
+.briefscore{margin:14px 0 0;font-size:1.05rem;color:var(--yellow);font-weight:700}
+.phone .briefset dd{font-size:1rem}
+@media (max-width:820px){.brief{grid-template-columns:1fr}}
+body.remote .brief{grid-template-columns:1fr}
+body.remote .host.ingame #autoleft{display:none}   /* shown under the verdict in the host's own game instead */
+.solo #autoleft{margin:0}
+.avatarrow strong{font-size:1.25rem}
+body.embed .phone .center{justify-content:flex-start;gap:8px}
+body.embed .phone>header .logo{display:none}
+body.embed .phone>header{justify-content:flex-end;min-height:0}
+body.embed .phone{padding:4px 2px 12px;gap:10px}

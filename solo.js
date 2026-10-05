@@ -13,7 +13,7 @@
   // The avatar is only for show in solo; the choice is remembered on this device.
   var myChar = null;
   try { myChar = localStorage.getItem('esc-solo-char'); } catch (e) {}
-  if (!CHAR_BY_ID[myChar]) myChar = CHARS[0].id;
+  if (!CHAR_BY_ID[myChar]) myChar = CHARS[Math.floor(Math.random() * CHARS.length)].id;   // a random one until you choose
   function renderChars() {
     $('chars').innerHTML = CHARS.map(function (c) {
       return '<button type="button" data-char="' + c.id + '"' + (c.id === myChar ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
@@ -154,9 +154,9 @@
     $('guess').disabled = $('replay').disabled = $('skip').disabled = S.phase !== 'guess';
     if (rev) {
       $('verdict').className = 'fb ' + (S.got ? 'ok' : 'no');
-      $('verdict').textContent = S.got ? 'You got it!' : 'Not this time';
+      $('verdict').textContent = S.got ? 'Correct' : 'Incorrect';
       $('ropts').innerHTML = revealOptions(S.q, S.picked);
-      $('rpts').textContent = S.got ? '+' + S.pts + ' points' : 'No points this time';
+      $('rpts').textContent = (S.got ? S.pts : 0) + ((S.got ? S.pts : 0) === 1 ? ' point' : ' points');
       $('rpts').className = 'rpts ' + (S.got ? 'ok' : 'no');
       $('ranswer').textContent = S.q.text + ' ' + S.q.answer;
       $('rtitle').textContent = S.song[3];
@@ -211,7 +211,7 @@
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (S.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      $('autoleft').textContent = (S.round >= S.total ? 'Final scores in ' : 'Next song in ') + left;
+      $('autoleft').textContent = (S.round >= S.total ? 'Final scores in ' : 'Playing next song in ') + left;
     };
     draw(); autoTick = setInterval(draw, 200);
   }
@@ -234,7 +234,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=35').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=40').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

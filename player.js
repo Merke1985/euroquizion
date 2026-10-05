@@ -6,7 +6,7 @@
   try { pid = sessionStorage.getItem('esc-pid'); } catch (e) {}
   if (!pid) pid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   try { sessionStorage.setItem('esc-pid', pid); } catch (e) {}
-  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', builtKey = '', want = null, picking = false, hi = function () {};
+  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', builtKey = '', pickUntil = 0, want = null, picking = false, hi = function () {};
   try { want = sessionStorage.getItem('esc-char'); } catch (e) {}
 
   $('name').value = store.get('esc-name') || '';
@@ -14,10 +14,11 @@
   // Inside the host's own page (a game without a shared screen) the hosting buttons make no sense.
   if (qs.get('embed')) { document.body.classList.add('embed'); $('hostlinks').classList.add('hidden'); }
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=35').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=40').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
+  if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
     e.preventDefault();
     room = $('code').value.trim().toUpperCase(); name = $('name').value.trim();
@@ -48,41 +49,73 @@
     }, 7000);
   });
 
+  function ptsText(n) { return n + (n === 1 ? ' point' : ' points'); }
   function me() { return state && state.players.filter(function (p) { return p.pid === pid; })[0]; }
   if (document.body.classList.contains('embed') && $('code').value.length === 4 && $('name').value.trim()) setTimeout(function () { $('joinform').querySelector('button').click(); }, 0);
 
-  var revealAt = 0, toldParent = false;
+  var revealAt = 0, nextAt = 0, toldParent = false, lastH = 0;
+  // Inside the host's page the frame should be exactly as tall as its content while in the lobby.
+  function tellHeight() {
+    setTimeout(function () {
+      var mn = document.querySelector('main'), h = mn.offsetTop + mn.scrollHeight + 8;
+      if (Math.abs(h - lastH) > 4) { lastH = h; try { parent.postMessage({ esc: 'h', h: h }, location.origin); } catch (e) {} }
+    }, 60);
+  }
   function onState(s) {
     onState2(s);
     remoteVideo(s);
     revealAt = s.phase === 'guess' && s.reveal_in ? Date.now() + s.reveal_in : 0;
+    nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
     // Inside the host's page: let it know once this player is in, so the lobby can open up.
+    if (document.body.classList.contains('embed')) tellHeight();
     if (!toldParent && me() && document.body.classList.contains('embed')) { toldParent = true; try { parent.postMessage({ esc: 'joined' }, location.origin); } catch (e) {} }
   }
   function onState2(s) {
     state = s; clearTimeout(joinTimer);
     endsAt = Date.now() + (s.left || 0);
     var m = me();
-    $('me').innerHTML = (m ? charSvg(m.char) : '') + esc(name + (m && !s.hide ? ' · ' + m.score : ''));   // s.hide: totals stay secret until the end
-    $('mychar').innerHTML = m ? charSvg(m.char) : '';
-    $('changechar').classList.toggle('hidden', s.phase !== 'lobby');
-    // Not in the game until a character is yours; the grid updates live as others pick.
-    if (!m || picking) {
-      if (m && s.phase !== 'lobby') picking = false;
+    $('me').innerHTML = s.phase === 'lobby' ? '' : (m ? charSvg(m.char) : '') + esc(name + (m && !s.hide ? ' · ' + m.score : ''));   // s.hide: totals stay secret until the end
+    $('mychar').innerHTML = m && s.phase === 'lobby' ? charSvg(m.char) : '';   // the big avatar only belongs in the lobby
+    // In the lobby: a small avatar and your name on top, with an Edit button for both.
+    $('profile').classList.toggle('hidden', !(m && s.phase === 'lobby'));
+    $('myname').textContent = name;
+    // The host hands out a random free avatar on joining; "Select avatar" lets you change it in the lobby.
+    if (!m) {
+      var full = s.players.length >= CHARS.length;
+      show('v-wait'); $('waittitle').textContent = full ? 'This game is full' : 'Joining…'; $('waitsub').textContent = full ? 'All avatars are in use.' : '';
+      return;
+    }
+    if (m.char && want !== m.char && Date.now() > pickUntil) { want = m.char; try { sessionStorage.setItem('esc-char', want); } catch (e) {} }
+    if (picking) {
+      if (s.phase !== 'lobby') picking = false;
       else { renderPicker(s, m); show('v-pick'); return; }
     }
     var key = s.phase + ':' + s.round;
     if (s.phase !== 'guess') builtKey = '';
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
     if (s.sing && s.phase !== 'reveal' && s.phase !== 'end' && s.phase !== 'lobby' && s.phase !== 'paused' && s.phase !== 'guess') { renderSing(s, m); return; }
-    if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'You’re in!'; $('waitsub').textContent = 'Watch the big screen. The game starts soon.'; }
+    if (s.phase === 'brief') {
+      // The briefing before the first song: the settings, how scoring works, and a Ready button.
+      var b = s.brief || { rows: [], scoring: '' }, n = s.players.filter(function (p) { return p.in; }).length;
+      show('v-brief');
+      $('briefset').innerHTML = b.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
+      $('briefscore').textContent = b.scoring || '';
+      $('readybtn').classList.toggle('hidden', !!m.in);
+      $('briefwait').textContent = m.in ? 'You’re ready. Waiting for the others (' + n + ' of ' + s.players.length + ')…' : n + ' of ' + s.players.length + ' ready';
+      return;
+    }
+    if (s.phase === 'intro') { show('v-wait'); $('waittitle').textContent = 'Here we go!'; $('waitsub').textContent = 'Starting in ' + Math.max(1, Math.ceil((s.left || 0) / 1000)) + '…'; return; }
+    if (s.phase === 'lobby') {
+      var emb = document.body.classList.contains('embed');   // the host already sees the lobby around this frame
+      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : (s.remote ? 'The host will start the game soon.' : 'Watch the big screen. The game starts soon.');
+    }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total + '. Turn your sound on.'; }
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total; }
     else if (s.phase === 'guess') {
       var q = s.q || { type: 'open', text: 'Which song is this?', hint: 'Type the title…' };
-      if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct! +' + m.pts; $('waitsub').textContent = 'Waiting for the others…'; }
-      else if (m && m.done) { show('v-wait'); $('waittitle').textContent = 'Not this time'; $('waitsub').textContent = 'Your answer is locked in. Waiting for the others…'; }
+      if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct'; $('waitsub').textContent = ptsText(m.pts) + '. Waiting for the others…'; }
+      else if (m && m.done) { show('v-wait'); $('waittitle').textContent = 'Incorrect'; $('waitsub').textContent = 'Your answer is locked in. Waiting for the others…'; }
       else {
         show('v-guess'); $('roundlabel').textContent = 'Song ' + s.round + ' of ' + s.total;
         $('qtext').textContent = q.text;
@@ -101,10 +134,10 @@
       show('v-reveal');
       var r = s.reveal || {};
       $('verdict').className = 'fb ' + (m && m.got ? 'ok' : 'no');
-      $('verdict').textContent = s.phase === 'end' ? 'Game over!' : (m && m.got ? 'You got it!' : 'Not this time');
+      $('verdict').textContent = s.phase === 'end' ? 'Game over!' : (m && m.got ? 'Correct' : 'Incorrect');
       var rev = s.phase === 'reveal';
       $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null) : '';
-      $('rpts').textContent = rev && m ? (m.got ? '+' + m.pts + ' points' : 'No points this time') : '';
+      $('rpts').textContent = rev && m ? ptsText(m.got ? m.pts : 0) : '';
       $('rpts').className = 'rpts ' + (m && m.got ? 'ok' : 'no');
       if (rev && s.sing) {
         // A Sing! round: show the votes instead of right or wrong.
@@ -112,7 +145,7 @@
         $('verdict').className = 'fb ' + (mine ? 'ok' : 'no');
         $('verdict').textContent = mine ? (mine.win ? 'Best singer!' : mine.votes + (mine.votes === 1 ? ' vote' : ' votes') + ' for you') : 'You didn’t sing this one';
         $('ropts').innerHTML = (s.sing.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
-        $('rpts').textContent = mine ? '+' + mine.pts + ' points' : 'No points this time';
+        $('rpts').textContent = ptsText(mine ? mine.pts : 0);
         $('rpts').className = 'rpts ' + (mine ? 'ok' : 'no');
       }
       $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.text + ' ' + s.q.answer : '';
@@ -268,9 +301,16 @@
   }
   $('tapplay').addEventListener('click', function () { $('tapplay').classList.add('hidden'); try { yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} });
   function remoteVideo(s) {
-    var m = me(), on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
+    var m = me();
+    if (s.remote && m && s.phase === 'intro' && ytReady) {
+      $('pstage').classList.remove('hidden'); vCover(false); vMasks(false);
+      if (vStage !== 'intro') { vStage = 'intro'; clipKey = ''; try { yt.loadVideoById(s.intro || INTRO.ids[0]); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} }
+      return;
+    }
+    if (vStage === 'primed' && s.phase === 'brief') { try { if (yt.getPlayerState() === 1) yt.pauseVideo(); } catch (e) {} }
+    var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
     $('pstage').classList.toggle('hidden', !on);
-    $('chatbtn').classList.toggle('hidden', !(s.remote && m));
+    $('chatbtn').classList.toggle('hidden', !(s.remote && m) || (document.body.classList.contains('embed') && s.phase === 'lobby'));   // no room for it in the host's small lobby frame
     if (!s.remote) return;
     ytLoad();
     if (!on) { if (vStage !== 'idle') { vStop(); vStage = 'idle'; clipKey = ''; } return; }
@@ -309,30 +349,42 @@
   });
 
   var pickKey = '';
+  $('readybtn').addEventListener('click', function () {
+    if (!net) return;
+    net.send('go', { pid: pid });
+    $('readybtn').classList.add('hidden'); $('briefwait').textContent = 'You’re ready. Waiting for the others…';
+    // Without a shared screen this tap also wakes up the phone's own video player, so sound can start later.
+    if (state && state.remote && yt && ytReady) { try { yt.mute(); yt.loadVideoById(INTRO.ids[0]); vStage = 'primed'; } catch (e) {} }
+  });
   function renderPicker(s, m) {
     var taken = {};
     s.players.forEach(function (p) { if (p.pid !== pid && p.char) taken[p.char] = p.name; });
     // Only redraw when something changed, so the photos do not reload on every update.
-    var k = JSON.stringify(taken) + '|' + (m ? m.char : '');
+    var k = JSON.stringify(taken) + '|' + (m ? m.char : '') + '|' + (Date.now() < pickUntil ? want : '');
     if (k !== pickKey) {
       pickKey = k;
       $('chars').innerHTML = CHARS.map(function (c) {
         return '<button type="button" data-char="' + c.id + '"' + (taken[c.id] ? ' disabled title="Taken by ' + esc(taken[c.id]) + '"' : '') +
-          (m && m.char === c.id ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
+          ((Date.now() < pickUntil ? want : (m && m.char)) === c.id ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
       }).join('');
     }
     var left = CHARS.filter(function (c) { return !taken[c.id]; }).length;
-    $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All characters are taken, so this game is full.';
+    $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All other avatars are taken.';
     if (want && taken[want]) want = null;
   }
   $('chars').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-char]');
     if (!b || b.disabled) return;
-    want = b.getAttribute('data-char'); picking = false;
+    want = b.getAttribute('data-char'); pickUntil = Date.now() + 3000;   // give the host a moment to confirm; "Done" closes the editor
     try { sessionStorage.setItem('esc-char', want); } catch (err) {}
-    $('pickerr').textContent = ''; hi();
+    $('pickerr').textContent = ''; hi(); if (state) onState(state);
   });
-  $('changechar').addEventListener('click', function () { picking = true; if (state) onState(state); });
+  $('changechar').addEventListener('click', function () { picking = true; $('editname').value = name; if (state) onState(state); });
+  $('pickdone').addEventListener('click', function () {
+    var n = $('editname').value.trim().slice(0, 16);
+    if (n) { name = n; store.set('esc-name', name); $('name').value = name; }
+    picking = false; hi(); if (state) onState(state);
+  });
 
   function onResult(r) {
     if (r.pid !== pid) return;
@@ -363,7 +415,9 @@
 
   setInterval(function () {
     var cd = revealAt ? Math.max(0, Math.ceil((revealAt - Date.now()) / 1000)) : 0;
-    $('allin').textContent = cd ? 'All players answered. Revealing in ' + cd : '';
+    $('allin').textContent = cd ? (state && state.players.length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';
+    var nx = nextAt ? Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) : 0;
+    $('nextin').textContent = nx && state ? (state.round >= state.total ? 'Final scores in ' : 'Playing next song in ') + nx : '';
     if (!state) return;
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';

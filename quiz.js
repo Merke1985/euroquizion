@@ -103,6 +103,8 @@ function revealOptions(q, pick) {
     return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
   }).join('');
 }
+// The Eurovision opening fanfare, streamed from YouTube like the songs: video id and how long it plays.
+var INTRO = { ids: ['f0FIdLyawrQ', '0QbEOX6mJP4'], ms: 10000 };
 // The three ways to score a correct answer, and the line that explains the selected one.
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 var SCORING_HELP = {
