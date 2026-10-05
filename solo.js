@@ -28,7 +28,7 @@
   });
   renderChars();
   function hud() { $('hud').innerHTML = S.phase === 'setup' ? '' : charSvg(myChar) + esc('Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'); }
-  function bestKey() { return 'esc-solo-best2-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
+  function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
   function ready() {
@@ -193,6 +193,8 @@
     S.picked = +b.getAttribute('data-i'); S.pickMs = S.guessMs - (S.endsAt - Date.now());
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
+    // With speed scoring every second counts, so the first tap is final and goes straight to the answer.
+    if ($('s-scoring').value === 'speed') { reveal(); return; }
     $('confirm').classList.remove('hidden');
     $('fb').className = 'fb close'; $('fb').textContent = 'Answer held until the time is up.';
   });
@@ -232,7 +234,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=29').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=32').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

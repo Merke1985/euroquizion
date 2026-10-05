@@ -3,7 +3,7 @@
   var CLIP = 15;            // clip length in seconds
   var room = '', net, songs = [], countries = {}, chorus = {};
   var players = {};         // pid -> {pid,name,score,got,pts,last}
-  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'country', q: null, sing: null, barMs: 30000, scoring: 'speed' };
+  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'speed' };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
@@ -112,10 +112,10 @@
   function applyCfg(c) {
     if (c.era) G.era = c.era; if (c.cat) G.cat = c.cat;
     if (c.atype) G.atype = c.atype; if (c.subject) G.subject = c.subject; if (SCORING_HELP[c.scoring]) G.scoring = c.scoring;
-    $('s-scoring').value = G.scoring; scoreHelp();
+    $('s-scoring').value = G.scoring;
     if (G.subject === 'sing') { G.atype = 'sing'; G.subject = 'country'; }   // games saved before Sing! moved to Category
     $('s-era').value = G.era; $('s-cat').value = G.cat;
-    $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = G.atype === 'sing';
+    $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing'; scoreHelp();
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([20, 30, 45].indexOf(G.guessMs / 1000) >= 0) $('s-time').value = G.guessMs / 1000;
     buildPool();
@@ -431,11 +431,11 @@
     for (v in G.sing.best) if (tally[G.sing.best[v]] != null) tally[G.sing.best[v]]++;
     G.sing.order.forEach(function (pid) { max = Math.max(max, tally[pid]); });
     // 20 points for singing, 50 per vote, and 50 extra for the most votes.
-    // With "order" scoring the singers are ranked by votes instead: 12, 10, 8 ... (equal votes share a rank).
+    // Singers are ranked by votes and get 12, 10, 8 ... like a Eurovision scoreboard (equal votes share a rank).
     var ranked = G.sing.order.map(function (pid) { return tally[pid]; }).sort(function (a, b) { return b - a; });
     G.sing.result = G.sing.order.filter(function (pid) { return players[pid]; }).map(function (pid) {
       var p = players[pid], win = max > 0 && tally[pid] === max;
-      p.pts = G.scoring === 'order' ? (ESC_POINTS[ranked.indexOf(tally[pid])] || 1) : 20 + 50 * tally[pid] + (win ? 50 : 0);
+      p.pts = ESC_POINTS[ranked.indexOf(tally[pid])] || 1;
       p.score += p.pts; p.got = true;
       return { pid: pid, name: p.name, char: p.char, votes: tally[pid], win: win, pts: p.pts };
     }).sort(function (a, b) { return b.votes - a.votes; });
@@ -521,9 +521,11 @@
     if (G.phase === 'paused') render();
   }
   // Sing! is a category of its own: there is no question, so the Answers setting does not apply.
-  function singToggle() { $('s-subject').disabled = $('s-atype').value === 'sing'; }
+  function singToggle() { var on = $('s-atype').value === 'sing'; $('s-subject').disabled = on; $('s-scoring').disabled = on; scoreHelp(); }
   $('s-atype').addEventListener('change', singToggle);
-  function scoreHelp() { $('scorehelp').textContent = SCORING_HELP[$('s-scoring').value] || ''; }
+  function scoreHelp() {
+    $('scorehelp').textContent = $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (SCORING_HELP[$('s-scoring').value] || '');
+  }
   $('s-scoring').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
@@ -586,11 +588,11 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=29').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=32').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=29').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=32').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
   render();
 })();

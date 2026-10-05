@@ -91,11 +91,10 @@ function checkOpen(q, song, guess, countries) {
   for (i = 0; i < names.length; i++) { r = Match.check(guess, names[i]); better(names[i].length <= 3 && r !== 'ok' ? 'no' : r); }
   return best;
 }
-// Points for a correct answer: 100, plus a speed bonus of up to 50.
-// The full bonus holds for the first 3 seconds, then ticks down to 0 at the end of the guessing time.
-function scoreFor(elapsedMs, totalMs) {
-  var grace = 3000, left = Math.max(0, totalMs - Math.max(elapsedMs, grace));
-  return 100 + Math.round(50 * left / Math.max(1, totalMs - grace));
+// Speed scoring: a right answer within the first 3 seconds is worth 12 points.
+// After that it loses a point every second, down to a minimum of 1.
+function scoreFor(elapsedMs) {
+  return Math.max(1, 12 - Math.ceil(Math.max(0, elapsedMs - 3000) / 1000));
 }
 // The four options as shown at the reveal: the right one green, a wrong pick red.
 function revealOptions(q, pick) {
@@ -107,13 +106,13 @@ function revealOptions(q, pick) {
 // The three ways to score a correct answer, and the line that explains the selected one.
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 var SCORING_HELP = {
-  correct: 'Correct: every right answer scores a flat 100 points.',
-  speed: 'Speed: 100 points for a right answer, plus up to 50 for speed. The full bonus holds for 3 seconds, then ticks down.',
+  correct: 'Correct: every right answer scores a flat 12 points.',
+  speed: 'Speed: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
   order: 'Order: Eurovision style. The first player with the right answer gets 12 points, the second 10, then 8, 7, 6, 5, 4, 3, 2 and 1. Nobody with the right answer gets less than 1.'
 };
 // rank = how many players were right before this one (only used for "order").
 function pointsFor(scoring, elapsedMs, totalMs, rank) {
-  if (scoring === 'correct') return 100;
+  if (scoring === 'correct') return 12;
   if (scoring === 'order') return ESC_POINTS[rank] || 1;   // never lower than 1
   return scoreFor(elapsedMs, totalMs);
 }
