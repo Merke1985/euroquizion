@@ -12,26 +12,7 @@ function placeLabel(s) {
   return s[8] != null ? 'Did not qualify' : ordinal(s[6]) + ' place';
 }
 function pointsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-// A clip of the presenters: ask for the year, the host country or the presenters themselves.
-function makeHostQuestion(song, subjectSetting, typeSetting, countries) {
-  var subject = subjectSetting === 'country' || subjectSetting === 'artist' ? subjectSetting : pick(['year', 'country', 'artist']);
-  var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting === 'open' ? 'open' : 'mc';
-  var text = { year: 'Which year was this contest?', country: 'Which country hosted this contest?', artist: 'Who presented this contest?' }[subject];
-  var hint = { year: 'Type the year', country: 'Type the country…', artist: 'Type a presenter…' }[subject];
-  var answer = subject === 'year' ? String(song[0]) : subject === 'country' ? (countries[song[1]] || song[1]) : song[2];
-  var q = { subject: subject, type: type, text: text, hint: hint, answer: answer, options: null, correct: -1, host: true };
-  if (type !== 'mc') return q;
-  var opts = [answer], seen = {};
-  seen[answer.toLowerCase()] = 1;
-  var add = function (v) { v = String(v); if (v && opts.length < 4 && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); } };
-  var near = shuffle(HOST_CLIPS.filter(function (s) { return Math.abs(s[0] - song[0]) <= 8; })), all = shuffle(HOST_CLIPS.slice());
-  near.concat(all).forEach(function (s) { add(subject === 'year' ? s[0] : subject === 'country' ? countries[s[1]] : s[2]); });
-  if (subject === 'year') opts.sort(); else shuffle(opts);
-  q.options = opts; q.correct = opts.indexOf(answer);
-  return q;
-}
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
-  if (song.host) return makeHostQuestion(song, subjectSetting, typeSetting, countries);
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title'];
   if (canPlace) kinds.push('place');
@@ -87,7 +68,6 @@ function checkOpen(q, song, guess, countries) {
   var best = 'no', i, r;
   var better = function (r) { if (r === 'ok' || (r === 'close' && best === 'no')) best = r; };
   if (q.subject === 'title') return Match.check(guess, song[3]);
-  if (q.subject === 'year') { var yr = parseInt(String(guess).replace(/[^0-9]/g, ''), 10); return yr === song[0] ? 'ok' : Math.abs(yr - song[0]) <= 1 ? 'close' : 'no'; }
   if (q.subject === 'place' || q.subject === 'points') {
     var n = parseInt(String(guess).replace(/[^0-9]/g, ''), 10);
     if (isNaN(n)) return 'no';

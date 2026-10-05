@@ -527,9 +527,8 @@
   }
   function singPhase(phase, ms) { G.phase = phase; G.sing.in = {}; G.barMs = ms; G.endsAt = Date.now() + ms; clearTimeout(singTimer); }
   function singStart() {
-    var singPool = G.cat === 'hosts' ? poolFor(songs, G.era, 'all') : G.pool;   // you cannot sing along with the presenters
-    var free = singPool.filter(function (s) { return !G.used[s[4]]; });
-    if (free.length < 4) { G.used = {}; free = singPool.slice(); }
+    var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
+    if (free.length < 4) { G.used = {}; free = G.pool.slice(); }
     G.sing = { options: shuffle(free.slice()).slice(0, 4), chosen: null, tried: {}, votes: {}, parts: {}, clips: {}, order: [], idx: -1, now: null, best: {}, result: null, in: {} };
     singPhase('svote', SING.vote);
     cover(true, '🎤', 'Sing!', false); masks(true);
@@ -676,9 +675,8 @@
   }
   function ready() {
     if (!songs.length) return;
-    var ho = $('s-cat').querySelector('option[value="hosts"]'); if (ho) ho.hidden = ho.disabled = !HOST_CLIPS.length;   // only offered once the clips are loaded
     var n = buildPool();
-    $('songcount').textContent = G.cat === 'hosts' ? (n ? n + ' host clips in this selection. Questions are about the year, the host country or the presenters.' : 'No host clips for these years.') : n ? n + ' songs in this selection.' + (G.cat === 'nq' ? ' Semi-finals started in 2004, so non-qualifiers run from then on.' : '')
+    $('songcount').textContent = n ? n + ' songs in this selection.' + (G.cat === 'nq' ? ' Semi-finals started in 2004, so non-qualifiers run from then on.' : '')
       : 'No songs match this combination. Semi-finals only started in 2004, so there are no non-qualifiers before that.';
     $('start').disabled = !(ytReady && n);
     $('start').textContent = ytReady ? 'Start game' : 'Loading player…';
@@ -760,7 +758,7 @@
 
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
-    ready(); loadHosts(ready);
+    ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   fetch('chorus.json?v=43').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
