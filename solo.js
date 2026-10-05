@@ -220,24 +220,37 @@
     $('fb').className = 'fb close'; $('fb').textContent = 'Answer held until the time is up.';
   });
   $('confirm').addEventListener('click', function () { if (S.phase === 'guess' && S.picked >= 0) reveal(); });
-  // Autoplay: with the box ticked, the answer stays up for 20 seconds and the next song starts by itself.
-  var AUTO_SECS = 20, autoTick = null, autoEnd = 0;
-  try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; } catch (e) {}
+  // Autoplay: with the box ticked the next song starts by itself, after 10, 20 or 30 seconds or when
+  // the song that is playing has finished ("Until the end").
+  var autoTick = null, autoEnd = 0;
+  try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; var al = localStorage.getItem('esc-autolen'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
+  // Seconds left of the song that is playing, or null when that cannot be told right now.
+  function songLeft() {
+    try { var st = yt.getPlayerState(), d = yt.getDuration() || 0, t = yt.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {}
+    return null;
+  }
   function autoStop() { clearInterval(autoTick); autoTick = null; $('autoleft').textContent = ''; }
   function autoStart() {
     autoStop();
     if (!$('auto').checked || S.phase !== 'reveal') return;
-    autoEnd = Date.now() + AUTO_SECS * 1000;
+    var toEnd = $('autolen').value === 'end';
+    // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
+    autoEnd = Date.now() + (toEnd ? 20 : +$('autolen').value) * 1000;
     var draw = function () {
+      if (toEnd) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (S.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      $('autoleft').textContent = (S.round >= S.total ? 'Final scores in ' : 'Playing next song in ') + left;
+      $('autoleft').textContent = (S.round >= S.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
     };
     draw(); autoTick = setInterval(draw, 200);
   }
   $('auto').addEventListener('change', function () {
     try { localStorage.setItem('esc-auto', $('auto').checked ? '1' : '0'); } catch (e) {}
+    autoStart();
+  });
+  $('autolen').addEventListener('change', function () {
+    try { localStorage.setItem('esc-autolen', $('autolen').value); } catch (e) {}
     autoStart();
   });
   $('start').addEventListener('click', function () {

@@ -112,6 +112,8 @@ function drawPaint(cv, m) {
   c.stroke();
 }
 function songLabel(s) { return s[3] + ' – ' + s[2]; }
+// Autoplay countdown: plain seconds, or minutes:seconds when the rest of the song is still long.
+function clock(secs) { return secs < 60 ? String(secs) : Math.floor(secs / 60) + ':' + ('0' + secs % 60).slice(-2); }
 // Checks a typed answer. Returns 'ok', 'close' or 'no'.
 function checkOpen(q, song, guess, countries) {
   var best = 'no', i, r;

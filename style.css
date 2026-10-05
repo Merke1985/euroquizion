@@ -315,3 +315,6 @@ body.remote .host.ingame #rwhy{display:none}   /* shown in the host's own game b
 .drawtools button.on{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow)}
 .drawtools button.wide{width:auto;border-radius:999px;padding:0 14px;background:var(--card);color:var(--ink)}
 .phone #pdraw{max-height:38vh;width:auto;max-width:100%;align-self:center}
+.autorow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.solo .autorow{justify-content:flex-start}
+select.mini{width:auto;padding:.3em .6em;font-size:.9rem;border-radius:10px}

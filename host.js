@@ -438,7 +438,7 @@
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
     if (!G.draw) G.q = makeQuestion(G.song, G.subject, G.atype, songs, countries);
-    G.clip = { id: G.song[4], frac: Math.random() }; G.ready = {}; G.badVotes = 0;
+    G.clip = { id: G.song[4], frac: Math.random() }; G.ready = {}; G.badVotes = 0; G.remain = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);
   }
@@ -497,6 +497,7 @@
       if (++fails < 6) { G.round--; startRound(); }
       return;
     }
+    if (m.rem > 0 && m.rem < 900) G.remain = Math.max(G.remain || 0, +m.rem);   // how long the song still runs from the clip start
     G.ready[p.pid] = 1; remoteCheck();
   });
 
@@ -776,25 +777,39 @@
     list().forEach(function (p) { p.score = 0; });
     briefStart();
   });
-  // Autoplay: with the box ticked, the answer stays up for 20 seconds and the next song starts by itself.
-  var AUTO_SECS = 20, autoTick = null, autoEnd = 0;
-  try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; } catch (e) {}
+  // Autoplay: with the box ticked the next song starts by itself, after 10, 20 or 30 seconds or when
+  // the song that is playing has finished ("Until the end").
+  var autoTick = null, autoEnd = 0;
+  try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; var al = localStorage.getItem('esc-autolen'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
+  // Seconds left of the song that is playing, or null when that cannot be told right now.
+  function songLeft() {
+    try { var st = yt.getPlayerState(), d = yt.getDuration() || 0, t = yt.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {}
+    return null;
+  }
   function autoStop() { clearInterval(autoTick); autoTick = null; $('autoleft').textContent = ''; }
   function autoStart() {
     autoStop();
     if (!$('auto').checked || G.phase !== 'reveal') return;
-    autoEnd = Date.now() + AUTO_SECS * 1000;
+    var toEnd = $('autolen').value === 'end';
+    // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
+    autoEnd = Date.now() + (toEnd ? REMOTE ? (G.remain > 0 ? G.remain + 1 : 30) : 20 : +$('autolen').value) * 1000;
     var draw = function () {
+      if (toEnd && !REMOTE) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (G.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Playing next song in ') + left;
+      $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
     };
     draw(); autoTick = setInterval(draw, 200);
     if (!recovering) net.send('state', snapshot());
   }
   $('auto').addEventListener('change', function () {
     try { localStorage.setItem('esc-auto', $('auto').checked ? '1' : '0'); } catch (e) {}
+    autoStart();
+    if (!recovering) net.send('state', snapshot());
+  });
+  $('autolen').addEventListener('change', function () {
+    try { localStorage.setItem('esc-autolen', $('autolen').value); } catch (e) {}
     autoStart();
     if (!recovering) net.send('state', snapshot());
   });
