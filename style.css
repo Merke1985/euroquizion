@@ -232,6 +232,11 @@ body.embed .phone{padding:4px 2px 12px;gap:10px}
 .phone.ingame .allin{display:block;min-height:1.4em;text-align:left}
 .phone.ingame .center{justify-content:flex-start;text-align:left;gap:14px}
 .phone.ingame #waittitle,.phone.ingame #qtext,.phone.ingame .verdict{font-size:1.5rem;font-weight:900;line-height:1.05;letter-spacing:-.02em;min-height:2.1em;margin:0}
+/* the verdict and the points for this question share the two lines the question had */
+.phone.ingame .verdict{min-height:0}
+.phone.ingame .vblock{min-height:3.15rem}
+.vblock .rpts{font-size:1.15rem;line-height:1.2;margin:.1em 0 0}
+.solo .rpts{font-size:1.2rem;margin:.1em 0 0}
 .phone.ingame #waitlabel,.phone.ingame #rround,.phone.ingame #roundlabel{min-height:1.2em}
 .verdict{font-size:1.4rem}
 .barspace{height:10px}
@@ -247,3 +252,4 @@ body.embed .phone{padding:4px 2px 12px;gap:10px}
 .endhead{display:flex;align-items:center;gap:18px;justify-content:center;min-height:5rem;flex-wrap:wrap}
 .endhead .winchar .char{width:84px;height:84px}
 .phone .finalboard{width:100%}
+body.remote .host.ingame #allin{display:none}   /* already shown in the game below */
