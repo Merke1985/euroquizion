@@ -93,30 +93,6 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
   q.options = opts; q.correct = opts.indexOf(answer);
   return q;
 }
-// Still frame instead of a clip: YouTube keeps three frames of every video (at roughly a quarter, half and
-// three quarters). The question gets one of them; nothing plays until the answer.
-function withStill(q, mode) {
-  if (q && mode === 'still' && !q.noclip) { q.still = 1 + Math.floor(Math.random() * 3); q.noclip = true; }
-  return q;
-}
-// Shows frame n of the video in img, trying the other two if that one is missing (a missing frame comes
-// back as a tiny grey placeholder). live() says whether the frame is still wanted; fail() runs if none load.
-function showStill(img, id, n, live, fail) {
-  var order = [n, n % 3 + 1, (n + 1) % 3 + 1], i = 0, tok = img._tok = (img._tok || 0) + 1;
-  var next = function () {
-    if (img._tok !== tok) return;
-    if (i >= order.length) { img.classList.add('hidden'); if (live()) fail(); return; }
-    var probe = new Image(), k = order[i++];
-    probe.onload = function () {
-      if (img._tok !== tok || !live()) return;
-      if (probe.naturalWidth > 200) { img.src = probe.src; img.classList.remove('hidden'); } else next();
-    };
-    probe.onerror = next;
-    probe.src = 'https://i.ytimg.com/vi/' + id + '/hq' + k + '.jpg';
-  };
-  next();
-}
-function hideStill(img) { img._tok = (img._tok || 0) + 1; img.classList.add('hidden'); }
 // Checks a typed answer. Returns 'ok', 'close' or 'no'.
 function checkOpen(q, song, guess, countries) {
   var best = 'no', i, r;

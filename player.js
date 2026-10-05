@@ -341,7 +341,6 @@
     }
     if (vStage === 'primed' && s.phase === 'brief') { try { if (yt.getPlayerState() === 1) yt.pauseVideo(); } catch (e) {} }
     $('pstage').classList.remove('audioonly');
-    if (s.phase !== 'guess') hideStill($('still'));
     var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
     $('pstage').classList.toggle('hidden', !on);
     // The chat bar sits at the bottom of the screen in games without a shared screen.
@@ -355,8 +354,7 @@
     if (key !== clipKey) { clipKey = key; vPrepare(s.clip); return; }
     var ready = vStage === 'ready' || vStage === 'clip' || vStage === 'paused' || vStage === 'full';
     if (!ready) return;
-    if (s.phase === 'guess' && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; vCover(true, '?', '');
-      if (s.q.still) showStill($('still'), s.clip.id, s.q.still, function () { return !!state && state.phase === 'guess' && state.round === s.round; }, function () { vPlayed = 'clip'; vPlay(false); }); } }   // odd one out: nothing plays until the answer
+    if (s.phase === 'guess' && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; vCover(true, '?', ''); } }   // odd one out: nothing plays until the answer
     else if (s.phase === 'guess' && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }
     else if (s.phase === 'reveal' && vPlayed !== 'full') { vPlayed = 'full'; vPlay(true); }
   }

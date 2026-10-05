@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EuroQuizion – host</title>
-<link rel="stylesheet" href="style.css?v=63">
+<link rel="stylesheet" href="style.css?v=64">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -53,8 +53,6 @@
           <option value="random" selected>All</option><option value="country">Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="points">Points</option><option value="title">Song title</option><option value="year">Year</option><option value="odd">Odd one out</option></select></div>
         <div><label for="s-scoring">Scoring</label><select id="s-scoring">
           <option value="correct">Basic</option><option value="speed" selected>Speed</option><option value="order">Order</option></select></div>
-        <div><label for="s-clip">Clip</label><select id="s-clip">
-          <option value="video" selected>Video</option><option value="still">Still frame</option></select></div>
         <div><label for="s-show">Show score</label><select id="s-show">
           <option value="always" selected>Always</option><option value="end">At the end of the round</option></select></div>
         <p class="mute" id="scorehelp" style="margin:-4px 0 0;font-size:.9rem;grid-column:1/-1"></p>
@@ -85,7 +83,7 @@
         <div id="yt"></div>
         <div class="shield"></div>
         <div class="maskbar t" id="mt"></div><div class="maskbar b" id="mb"></div>
-        <div class="cover" id="cover"><div class="q" id="covericon">?</div><h2 id="covertext">Selecting song</h2></div><img id="still" class="still hidden" alt="">
+        <div class="cover" id="cover"><div class="q" id="covericon">?</div><h2 id="covertext">Selecting song</h2></div>
       </div>
       <p id="rwhy" class="why"></p>
       <button class="btn alt small remoteonly" id="boardbtn" type="button">Scores</button>
@@ -125,13 +123,13 @@
     <button class="btn big" id="again">Play another game</button>
   </section>
 </main>
-<script src="vendor/supabase.js?v=63"></script>
-<script src="vendor/qrcode.js?v=63"></script>
-<script src="config.js?v=63"></script>
-<script src="net.js?v=63"></script>
-<script src="chars.js?v=63"></script>
-<script src="match.js?v=63"></script>
-<script src="quiz.js?v=63"></script>
-<script src="host.js?v=63"></script>
+<script src="vendor/supabase.js?v=64"></script>
+<script src="vendor/qrcode.js?v=64"></script>
+<script src="config.js?v=64"></script>
+<script src="net.js?v=64"></script>
+<script src="chars.js?v=64"></script>
+<script src="match.js?v=64"></script>
+<script src="quiz.js?v=64"></script>
+<script src="host.js?v=64"></script>
 </body>
 </html>

@@ -306,4 +306,3 @@ body.remote #briefplayers,body.remote .brief h3{display:none}   /* the players a
 .why:empty{display:none}
 .phone .why{margin:0;font-size:1rem}
 body.remote .host.ingame #rwhy{display:none}   /* shown in the host's own game below */
-.still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:5;background:#000}
