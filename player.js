@@ -65,7 +65,7 @@
     onState2(s);
     remoteVideo(s);
     // During a game the screen keeps one fixed skeleton, so nothing jumps between question, waiting and answer.
-    var ing = !!me() && ['lobby', 'brief', 'end'].indexOf(s.phase) < 0;
+    var ing = !!me() && ['lobby', 'brief', 'intro', 'end'].indexOf(s.phase) < 0;
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
@@ -101,17 +101,18 @@
     if (s.phase !== 'guess') builtKey = '';
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
     if (s.sing && s.phase !== 'reveal' && s.phase !== 'end' && s.phase !== 'lobby' && s.phase !== 'paused' && s.phase !== 'guess') { renderSing(s, m); return; }
-    if (s.phase === 'brief') {
+    if (s.phase === 'brief' || s.phase === 'intro') {
       // The briefing before the first song: the settings, how scoring works, and a Ready button.
       var b = s.brief || { rows: [], scoring: '' }, n = s.players.filter(function (p) { return p.in; }).length;
       show('v-brief');
       $('briefset').innerHTML = b.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
       $('briefscore').textContent = b.scoring || '';
-      $('readybtn').classList.toggle('hidden', !!m.in);
-      $('briefwait').textContent = m.in ? 'You’re ready. Waiting for the others (' + n + ' of ' + s.players.length + ')…' : n + ' of ' + s.players.length + ' ready';
+      var intro = s.phase === 'intro';
+      $('readybtn').classList.toggle('hidden', !!m.in || intro);
+      $('briefwait').className = intro ? 'briefcd' : 'mute';
+      $('briefwait').textContent = intro ? 'Starting in ' + Math.max(1, Math.ceil((s.left || 0) / 1000)) : m.in ? 'You’re ready. Waiting for the others (' + n + ' of ' + s.players.length + ')…' : n + ' of ' + s.players.length + ' ready';
       return;
     }
-    if (s.phase === 'intro') { show('v-wait'); $('waittitle').textContent = 'Here we go!'; $('waitsub').textContent = 'Starting in ' + Math.max(1, Math.ceil((s.left || 0) / 1000)) + '…'; return; }
     if (s.phase === 'lobby') {
       var emb = document.body.classList.contains('embed');   // the host already sees the lobby around this frame
       show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : (s.remote ? 'The host will start the game soon.' : 'Watch the big screen. The game starts soon.');
@@ -327,11 +328,12 @@
   function remoteVideo(s) {
     var m = me();
     if (s.remote && m && s.phase === 'intro' && ytReady) {
-      $('pstage').classList.remove('hidden'); vCover(false); vMasks(false);
+      $('pstage').classList.remove('hidden'); $('pstage').classList.add('audioonly');   // the fanfare is sound only
       if (vStage !== 'intro') { vStage = 'intro'; clipKey = ''; try { yt.loadVideoById(INTRO.ids[introTry] || INTRO.ids[0]); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} }
       return;
     }
     if (vStage === 'primed' && s.phase === 'brief') { try { if (yt.getPlayerState() === 1) yt.pauseVideo(); } catch (e) {} }
+    $('pstage').classList.remove('audioonly');
     var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
     $('pstage').classList.toggle('hidden', !on);
     $('chatbtn').classList.toggle('hidden', !(s.remote && m) || (document.body.classList.contains('embed') && (s.phase === 'lobby' || s.phase === 'brief')));   // no room for it in the host's small lobby frame
@@ -444,6 +446,7 @@
     if (nx && state) $('allin').textContent = (state.round >= state.total ? 'Final scores in ' : 'Playing next song in ') + nx;   // same line as "All players answered"
 
     if (!state) return;
+    if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';
     else if (state.sing) $('sbar').style.transform = 'scaleX(' + (state.phase === 'loading' || state.phase === 'splay' ? 0 : f) + ')';

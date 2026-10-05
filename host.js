@@ -102,7 +102,7 @@
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (hideScores()) s.hide = true;
-    if (G.phase === 'brief') s.brief = G.brief;
+    if (G.phase === 'brief' || G.phase === 'intro') s.brief = G.brief;
     if (G.phase === 'intro') s.intro = INTRO.ids[0];
     if (G.phase === 'reveal' && autoTick) s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
     if (G.revealAt && G.phase === 'guess') s.reveal_in = Math.max(0, G.revealAt - Date.now());
@@ -197,12 +197,15 @@
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : 'Scores';
     $('newgame').classList.toggle('hidden', G.phase === 'lobby');
-    $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief');
-    $('hostmain').classList.toggle('briefing', G.phase === 'brief');
+    $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro');
+    $('hostmain').classList.toggle('briefing', G.phase === 'brief' || G.phase === 'intro');
+    // The fanfare is sound only: its player stays out of sight (but not display:none, or it would not play).
+    $('v-game').classList.toggle('audioonly', G.phase === 'intro');
+    if (G.phase === 'intro') $('v-game').classList.remove('hidden');
     if (window.selfSize) window.selfSize();
     if (G.phase !== 'end') endShown = false;
     if (G.phase === 'lobby') show('v-lobby');
-    else if (G.phase === 'brief') { show('v-brief'); renderBrief(); }
+    else if (G.phase === 'brief' || G.phase === 'intro') { show('v-brief'); renderBrief(); }
     else if (G.phase === 'end') {
       show('v-end');
       // Count the scores up once; the winner is only named when the counting is done.
@@ -231,7 +234,6 @@
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Continue';
       }
       $('replay').disabled = G.phase !== 'guess' || !!G.sing;
-      $('roundlabel').textContent = G.phase === 'intro' ? 'Here we go' : $('roundlabel').textContent;
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
@@ -242,6 +244,7 @@
       }
       renderSing();
     }
+    if (G.phase === 'intro') $('v-game').classList.remove('hidden');
   }
   // The question (and, for multiple choice, the four options) on the big screen.
   function renderQuestion() {
@@ -283,10 +286,10 @@
   function countStop() { clearInterval(loadTick); loadT0 = 0; }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   setInterval(function () {
-    if (G.phase === 'intro') $('qtext').textContent = 'Starting in ' + Math.max(0, Math.ceil((G.endsAt - Date.now()) / 1000));
+    $('briefcd').textContent = G.phase === 'intro' ? 'Starting in ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)) : '';
     var cd = G.phase === 'guess' && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
     $('allin').textContent = cd ? (list().length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
-    var timed = G.phase === 'guess' || G.phase === 'intro' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
+    var timed = G.phase === 'guess' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
 
@@ -472,6 +475,7 @@
   function introStart() {
     if (G.phase !== 'brief') return;
     G.phase = 'intro'; G.barMs = INTRO.ms; G.endsAt = Date.now() + INTRO.ms; introTry = 0; stage = 'intro';
+    list().forEach(function (p) { G.go[p.pid] = 1; });
     if (!REMOTE) {
       cover(false); masks(false);
       try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {}
@@ -496,6 +500,7 @@
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     $('briefplayers').innerHTML = ps.map(function (p) { return '<div class="pl' + (G.go[p.pid] ? ' in' : '') + (p.off ? ' off' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></div>'; }).join('') || '<span class="mute">No players yet</span>';
     var n = ps.filter(function (p) { return G.go[p.pid]; }).length;
+    $('briefgo').classList.toggle('hidden', G.phase === 'intro'); $('briefhint').classList.toggle('hidden', G.phase === 'intro');
     $('briefcount').textContent = ps.length ? '(' + n + ' of ' + ps.length + ' ready)' : '';
   }
 

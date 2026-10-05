@@ -263,3 +263,7 @@ body.embed .phone.compact .avatarrow strong{font-size:1.05rem}
 body.embed .demo{display:none}
 body.embed{background:transparent}   /* the host page behind the frame provides the background */
 body.remote .brief>.card{display:none}   /* the settings and scoring already show in the host's own game above */
+.audioonly{position:absolute!important;left:0;top:0;width:4px!important;height:4px!important;min-height:0!important;overflow:hidden;opacity:0;pointer-events:none;display:block!important}
+.briefcd{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:900;color:var(--yellow);margin:0 0 14px;text-align:left}
+.briefcd:empty{display:none}
+.phone .briefcd{text-align:center;margin:0}
