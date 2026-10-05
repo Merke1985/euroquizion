@@ -296,3 +296,9 @@ body.remote #briefcd{display:none}   /* the countdown already shows in the host'
 .soloprofile strong{font-size:1.1rem}
 .solo #hud span{font-size:.85rem;line-height:1.25;white-space:nowrap}
 .solo #hud b{color:var(--ink)}
+/* fanfare is sound only: the video row takes no room, the players fill the top instead */
+.stagerow.flat{position:absolute;width:4px;height:4px;aspect-ratio:auto}
+.pbrief{margin:0;justify-content:center;gap:10px 12px}
+.pbrief .pl{width:68px;font-size:.78rem}
+.pbrief .char{width:52px;height:52px}
+body.remote #briefplayers,body.remote .brief h3{display:none}   /* the players already show on top of the host's own game */

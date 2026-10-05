@@ -108,6 +108,10 @@
       show('v-brief');
       $('briefset').innerHTML = b.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
       $('briefscore').textContent = b.scoring || '';
+      // Everyone in the room on top, with a green ring once they are ready.
+      $('pbrief').innerHTML = s.players.slice().sort(function (x, y) { return x.name.localeCompare(y.name); }).map(function (p) {
+        return '<div class="pl' + (p.in || s.phase === 'intro' ? ' in' : '') + (p.off ? ' off' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></div>';
+      }).join('');
       var intro = s.phase === 'intro';
       $('readybtn').classList.toggle('hidden', !!m.in || intro);
       $('briefwait').className = intro ? 'briefcd' : 'mute';
@@ -371,7 +375,7 @@
       setTimeout(function () { if (pop.parentNode) pop.parentNode.removeChild(pop); }, 5200);
     }
   }
-  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); }
+  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly')); }
   function chatToggle(open) {
     chatOpen = open; $('chat').classList.toggle('hidden', !open);
     if (open) $('chatpop').innerHTML = '';
