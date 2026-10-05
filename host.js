@@ -103,9 +103,9 @@
     else { G.phase = 'paused'; G.round = (phase === 'reveal' || phase === 'paused') ? round : round - 1; }
   }
   function applyCfg(c) {
-    if (c.era) G.era = c.era; if (c.cat) G.cat = c.cat; if (typeof c.showVideo === 'boolean') G.showVideo = c.showVideo;
+    if (c.era) G.era = c.era; if (c.cat) G.cat = c.cat;
     if (c.atype) G.atype = c.atype; if (c.subject) G.subject = c.subject;
-    $('s-era').value = G.era; $('s-cat').value = G.cat; $('s-video').checked = G.showVideo;
+    $('s-era').value = G.era; $('s-cat').value = G.cat;
     $('s-atype').value = G.atype; $('s-subject').value = G.subject;
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([20, 30, 45].indexOf(G.guessMs / 1000) >= 0) $('s-time').value = G.guessMs / 1000;
@@ -283,7 +283,7 @@
     clearInterval(poll);
     stage = 'clip';
     yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
-    if (G.showVideo) cover(false); else cover(true, '♪', 'Listen closely…', true);
+    cover(false);   // the video is always visible during the clip
     poll = setInterval(function () {
       if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
@@ -355,7 +355,7 @@
   $('start').addEventListener('click', function () {
     G.era = $('s-era').value; G.cat = $('s-cat').value; G.atype = $('s-atype').value; G.subject = $('s-subject').value;
     if (!buildPool()) return;
-    G.total = +$('s-rounds').value; G.guessMs = +$('s-time').value * 1000; G.showVideo = $('s-video').checked;
+    G.total = +$('s-rounds').value; G.guessMs = +$('s-time').value * 1000;
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; });
     startRound();
@@ -390,7 +390,7 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=19').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=20').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });

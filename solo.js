@@ -99,7 +99,7 @@
   function playClip() {
     clearInterval(poll); stage = 'clip';
     yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
-    if (S.showVideo) cover(false); else cover(true, '♪', 'Listen closely…');
+    cover(false);   // the video is always visible during the clip
     poll = setInterval(function () {
       if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
@@ -217,7 +217,7 @@
   });
   $('start').addEventListener('click', function () {
     ready(); if (!pool.length) return;
-    S.showVideo = $('s-video').checked; S.round = 0; S.score = 0; S.right = 0; used = {}; fails = 0;
+    S.round = 0; S.score = 0; S.right = 0; used = {}; fails = 0;
     startRound();
   });
   $('replay').addEventListener('click', function () { if (S.phase === 'guess' && (stage === 'paused' || stage === 'clip')) playClip(); });
@@ -230,7 +230,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=19').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=20').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();
