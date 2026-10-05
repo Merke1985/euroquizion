@@ -50,24 +50,30 @@
     if (!p || G.phase !== 'guess' || p.got || p.done || !G.q) return;
     var res, mc = G.q.type === 'mc';
     if (mc) {
-      // Multiple choice: the answer is only held. It can be changed until the time is up,
-      // and nobody learns whether it was right before the reveal.
+      // Multiple choice: the answer is held and can still be changed. Nobody learns whether
+      // it was right before the reveal, which comes once everyone has an answer in.
       if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
-      p.pick = m.choice; p.pickFrac = Math.max(0, (G.endsAt - Date.now()) / G.guessMs);
-      push(); return;
+      p.pick = m.choice; p.pickMs = G.guessMs - (G.endsAt - Date.now());
+      push(); allIn(); return;
     }
     res = checkOpen(G.q, G.song, m.text, countries);
     if (res === 'ok') {
-      var frac = Math.max(0, (G.endsAt - Date.now()) / G.guessMs);
-      p.pts = Math.round((500 + 500 * frac) / 10) * 10; p.score += p.pts; p.got = true;
+      p.pts = scoreFor(G.guessMs - (G.endsAt - Date.now()), G.guessMs); p.score += p.pts; p.got = true;
     }
     net.send('result', { pid: p.pid, res: res });
     if (res === 'ok' || mc) {
-      push();
-      var act = list().filter(function (x) { return !x.off; });
-      if (act.length && act.every(function (x) { return x.got || x.done; })) setTimeout(function () { if (G.phase === 'guess') reveal(); }, 900);
+      push(); allIn();
     }
   });
+  // Everyone who is still connected has answered: go to the answer.
+  function isIn(p) { return p.got || p.pick != null; }
+  function allIn() {
+    var act = list().filter(function (x) { return !x.off; });
+    if (act.length && act.every(isIn)) setTimeout(function () {
+      var now = list().filter(function (x) { return !x.off; });
+      if (G.phase === 'guess' && now.length && now.every(isIn)) reveal();
+    }, 1200);
+  }
 
   function list() { return Object.keys(players).map(function (k) { return players[k]; }).sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); }); }
   function snapshot() {
@@ -144,7 +150,7 @@
   function show(id) { ['v-lobby', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   function boardHtml(showGot) {
     return list().map(function (p) {
-      return '<li class="' + (showGot && p.got ? 'got ' : '') + (G.phase === 'guess' && p.pick != null ? 'picked ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + p.score +
+      return '<li class="' + (showGot && p.got ? 'got ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + p.score +
         (showGot && p.got ? '<span class="pts">+' + p.pts + '</span>' : '') + '</span></li>';
     }).join('') || '<li class="mute">No players yet</li>';
   }
@@ -164,7 +170,7 @@
     } else {
       show('v-game');
       $('roundlabel').textContent = 'Song ' + G.round + ' / ' + G.total;
-      renderQuestion();
+      renderQuestion(); renderAnswered();
       var between = G.phase === 'reveal' || G.phase === 'paused';
       $('guessui').classList.toggle('hidden', between);
       $('revealui').classList.toggle('hidden', !between);
@@ -193,6 +199,16 @@
     $('qopts').innerHTML = on && q.options ? q.options.map(function (o, i) {
       return '<div class="opt' + (G.phase === 'reveal' ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
     }).join('') : '';
+  }
+  // Everyone's character under the video, with a green ring once their answer is in.
+  function renderAnswered() {
+    var on = G.phase === 'guess';
+    $('answered').classList.toggle('hidden', !on);
+    if (!on) return;
+    var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    $('answered').innerHTML = ps.map(function (p) {
+      return '<div class="pl' + (isIn(p) ? ' in' : '') + (p.off ? ' off' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></div>';
+    }).join('');
   }
   function cover(on, icon, text, pulse) {
     $('cover').classList.toggle('hidden', !on);
@@ -286,7 +302,7 @@
     stopTimers(); G.phase = 'reveal'; stage = 'reveal';
     // Multiple choice is scored now, from the answer each player was holding.
     if (G.q && G.q.type === 'mc') list().forEach(function (p) {
-      if (p.pick === G.q.correct) { p.pts = Math.round((500 + 500 * (p.pickFrac || 0)) / 10) * 10; p.score += p.pts; p.got = true; }
+      if (p.pick === G.q.correct) { p.pts = scoreFor(p.pickMs, G.guessMs); p.score += p.pts; p.got = true; }
     });
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
@@ -374,7 +390,7 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=16').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=18').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });

@@ -3,7 +3,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var CLIP = 15, COUNT = 5;
   var songs = [], countries = {}, pool = [], used = {};
-  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, q: null, picked: -1, pickFrac: 0, got: false, pts: 0, endsAt: 0, showVideo: true };
+  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, q: null, picked: -1, pickMs: 0, got: false, pts: 0, endsAt: 0, showVideo: true };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
   var loadT0 = 0, loadTick = null, clipReady = false;
 
@@ -11,7 +11,7 @@
   function cover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; } }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   function hud() { $('hud').textContent = S.phase === 'setup' ? '' : 'Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'; }
-  function bestKey() { return 'esc-solo-best-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value].join('|'); }
+  function bestKey() { return 'esc-solo-best2-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
   function ready() {
@@ -107,7 +107,7 @@
     stopTimers(); S.phase = 'reveal'; stage = 'reveal';
     // Multiple choice is scored now, from the answer that was being held.
     if (S.q.type === 'mc' && S.picked === S.q.correct && !S.got) {
-      S.pts = Math.round((500 + 500 * S.pickFrac) / 10) * 10; S.score += S.pts; S.right++; S.got = true;
+      S.pts = scoreFor(S.pickMs, S.guessMs); S.score += S.pts; S.right++; S.got = true;
     }
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
@@ -135,8 +135,11 @@
     $('guess').disabled = $('replay').disabled = $('skip').disabled = S.phase !== 'guess';
     if (rev) {
       $('verdict').className = 'fb ' + (S.got ? 'ok' : 'no');
-      $('verdict').textContent = S.got ? 'You got it! +' + S.pts : 'Not this time';
-      $('ranswer').textContent = S.q.text + ' ' + S.q.answer + (S.q.type === 'mc' && S.picked >= 0 && !S.got ? ' (you said ' + S.q.options[S.picked] + ')' : '');
+      $('verdict').textContent = S.got ? 'You got it!' : 'Not this time';
+      $('ropts').innerHTML = revealOptions(S.q, S.picked);
+      $('rpts').textContent = S.got ? '+' + S.pts + ' points' : 'No points this time';
+      $('rpts').className = 'rpts ' + (S.got ? 'ok' : 'no');
+      $('ranswer').textContent = S.q.text + ' ' + S.q.answer;
       $('rtitle').textContent = S.song[3];
       $('rmeta').textContent = S.song[2] + ' · ' + flag(S.song[1]) + ' ' + (countries[S.song[1]] || S.song[1]) + ' ' + S.song[0];
       $('rres').textContent = resultText(S.song);
@@ -160,8 +163,7 @@
     $('guess').focus();
   });
   function win() {
-    var frac = Math.max(0, (S.endsAt - Date.now()) / S.guessMs);
-    S.pts = Math.round((500 + 500 * frac) / 10) * 10; S.score += S.pts; S.right++; S.got = true;
+    S.pts = scoreFor(S.guessMs - (S.endsAt - Date.now()), S.guessMs); S.score += S.pts; S.right++; S.got = true;
     reveal();
   }
   // Multiple choice: a tap holds the answer (it can still be changed). The answer shows
@@ -169,7 +171,7 @@
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
     if (!b || S.phase !== 'guess') return;
-    S.picked = +b.getAttribute('data-i'); S.pickFrac = Math.max(0, (S.endsAt - Date.now()) / S.guessMs);
+    S.picked = +b.getAttribute('data-i'); S.pickMs = S.guessMs - (S.endsAt - Date.now());
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
     $('confirm').classList.remove('hidden');
@@ -211,7 +213,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=16').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=18').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

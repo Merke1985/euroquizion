@@ -81,7 +81,7 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 .note{background:rgba(45,226,230,.14);border:1px solid var(--cyan);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-weight:600}
 .players{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
 .game{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(240px,1fr);gap:24px;flex:1;align-items:start}
-.stage{position:relative;aspect-ratio:16/9;max-height:46vh;width:100%;border-radius:20px;overflow:hidden;background:#000;border:1px solid var(--line)}
+.stage{position:relative;aspect-ratio:16/9;max-height:41vh;width:100%;border-radius:20px;overflow:hidden;background:#000;border:1px solid var(--line)}
 .stage #yt,.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .shield{position:absolute;inset:0;z-index:2}
 .maskbar{position:absolute;left:0;right:0;height:17%;background:#07042a;z-index:3}
@@ -103,7 +103,6 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 .board{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
 .board li{display:flex;justify-content:space-between;gap:10px;padding:.6em .9em;border-radius:12px;background:rgba(0,0,0,.25);font-weight:700}
 .board li.got{outline:2px solid var(--ok)}
-.board li.picked{outline:2px solid var(--yellow)}
 .board li.off{opacity:.45}
 .board .pts{color:var(--ok);font-size:.85em;margin-left:.5em}
 .end{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
@@ -119,6 +118,14 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 .opt.right b{color:inherit}
 .opt.right{background:var(--ok);color:#06331a;border-color:transparent}
 .opt.dim{opacity:.4}
+.opt.wrong{background:var(--bad);color:#3a0606;border-color:transparent}
+.opt.wrong b{color:inherit}
+.opts:empty{display:none}
+.rpts{font-size:1.5rem;font-weight:900;margin:.5em 0 0;text-align:center}
+.rpts.ok{color:var(--ok)}.rpts.no{color:var(--mute)}
+.rpts:empty{display:none}
+.phone #ropts{text-align:left}
+.solo .rpts{text-align:left}
 button.opt{cursor:pointer;width:100%;color:var(--ink)}
 button.opt:disabled{cursor:default}
 button.opt.picked{border-color:var(--yellow);background:rgba(255,214,10,.22)}
@@ -138,3 +145,8 @@ button.opt.picked{border-color:var(--yellow);background:rgba(255,214,10,.22)}
 .autobox .check{font-size:.95rem;white-space:nowrap}
 .autobox #autoleft{min-height:1.3em;font-weight:700;color:var(--yellow)}
 .solo .autobox{align-items:flex-start}
+.answered{display:flex;flex-wrap:wrap;gap:12px 18px;margin-top:18px}
+.answered .pl{display:flex;flex-direction:column;align-items:center;gap:6px;width:76px;font-weight:700;font-size:.85rem;text-align:center;line-height:1.1;overflow-wrap:anywhere}
+.answered .char{width:60px;height:60px;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,.14);opacity:.6;transition:box-shadow .2s,opacity .2s}
+.answered .pl.in .char{box-shadow:0 0 0 5px var(--ok);opacity:1}
+.answered .pl.off{opacity:.35}

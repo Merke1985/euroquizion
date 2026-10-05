@@ -67,3 +67,16 @@ function checkOpen(q, song, guess, countries) {
   for (i = 0; i < names.length; i++) { r = Match.check(guess, names[i]); better(names[i].length <= 3 && r !== 'ok' ? 'no' : r); }
   return best;
 }
+// Points for a correct answer: 100, plus a speed bonus of up to 50.
+// The full bonus holds for the first 3 seconds, then ticks down to 0 at the end of the guessing time.
+function scoreFor(elapsedMs, totalMs) {
+  var grace = 3000, left = Math.max(0, totalMs - Math.max(elapsedMs, grace));
+  return 100 + Math.round(50 * left / Math.max(1, totalMs - grace));
+}
+// The four options as shown at the reveal: the right one green, a wrong pick red.
+function revealOptions(q, pick) {
+  if (!q || !q.options) return '';
+  return q.options.map(function (o, i) {
+    return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
+  }).join('');
+}
