@@ -271,7 +271,7 @@
     poll = setInterval(function () {
       if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
-        if (G.phase === 'guess') cover(true, '?', G.q ? G.q.text : '', false);
+        if (G.phase === 'guess') cover(true, '?', '', false);   // the question itself stays below the video
       }
     }, 100);
   }
@@ -374,7 +374,7 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=15').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=16').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
