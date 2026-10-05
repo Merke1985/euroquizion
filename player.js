@@ -323,7 +323,7 @@
   var CLIP = 15, yt = null, ytWanted = false, ytReady = false, clipKey = '', clipStart = 0, vStage = 'idle', vPoll = null, vWatch = null, vPlayed = '';
   function vCover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text || ''; } }
   function vMasks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
-  function vStop() { clearInterval(vPoll); clearTimeout(vWatch); $('tapplay').classList.add('hidden'); try { if (yt && ytReady) yt.pauseVideo(); } catch (e) {} }
+  function vStop() { if (vAdOn) vAd(false); clearInterval(vPoll); clearTimeout(vWatch); $('tapplay').classList.add('hidden'); try { if (yt && ytReady) yt.pauseVideo(); } catch (e) {} }
   function ytLoad() {
     if (ytWanted) return;
     ytWanted = true;
@@ -343,17 +343,33 @@
     vCover(true, '♪', 'Selecting song'); vMasks(true);
     yt.mute(); yt.loadVideoById(clip.id);
     vWatch = setTimeout(function () { if (vStage === 'probe' || vStage === 'seek') { vStage = 'slow'; if (net) net.send('ready', { pid: pid, key: clipKey, slow: true }); } }, 10000);
+    var seekAt = 0, loadAt = Date.now(), got = false;
+    vAd(false);
+    // An ad before the video cannot be skipped from here: keep jumping until the real video is at the
+    // right spot, and uncover the player so the ad can be skipped by hand.
     vPoll = setInterval(function () {
-      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0;
-      if ((vStage === 'probe' || vStage === 'slow') && st === 1 && d > 0) {
-        clipStart = d < 45 ? 0 : Math.floor(15 + clip.frac * (d - 15 - 20 - CLIP));   // same spot on every phone
-        vStage = 'seek'; yt.seekTo(clipStart, true);
-      } else if (vStage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
-        clearInterval(vPoll); clearTimeout(vWatch); yt.pauseVideo(); vStage = 'ready';
+      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      if (st !== 1 || d <= 0) return;
+      if (d < 100 && late < 40000) { if (late > 2500) vAd(true); return; }   // shorter than any song
+      var cs = d < 45 ? 0 : Math.floor(15 + clip.frac * (d - 15 - 20 - CLIP));   // same spot on every phone
+      if (!got || cs !== clipStart) { got = true; clipStart = cs; seekAt = 0; }
+      if (t >= clipStart && t < clipStart + 5) {
+        clearInterval(vPoll); clearTimeout(vWatch); yt.pauseVideo(); vStage = 'ready'; vAd(false);
         if (net) net.send('ready', { pid: pid, key: clipKey, rem: Math.round(d - clipStart) });
         if (state) remoteVideo(state);
+      } else if (Date.now() - seekAt > 1500) {
+        seekAt = Date.now(); yt.seekTo(clipStart, true);
+        if (late > 6000) vAd(true);
       }
     }, 120);
+  }
+  var vAdOn = false;
+  function vAd(on) {
+    if (on === vAdOn) return;
+    vAdOn = on;
+    document.querySelector('#pstage .shield').classList.toggle('hidden', on);
+    if (on) { vCover(false); $('mb').classList.add('hidden'); $('tapplay').classList.add('hidden'); }
+    $('adnote').textContent = on ? AD_TEXT : '';
   }
   function vPlay(full) {
     clearInterval(vPoll); vStage = full ? 'full' : 'clip';

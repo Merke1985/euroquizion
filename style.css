@@ -336,3 +336,4 @@ select.mini{width:auto;padding:.3em .6em;font-size:.9rem;border-radius:10px}
 .host .opts.votelist .opt{padding:.45em .9em;font-size:1.05rem}
 .opt.singing{border-color:var(--yellow);background:rgba(255,214,10,.2)}
 .opt .note{color:var(--yellow);font-size:.85rem;font-weight:700;margin-left:auto;white-space:nowrap}
+#adnote:empty{display:none}

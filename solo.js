@@ -96,20 +96,40 @@
     stage = 'probe';
     cover(true, '', 'Selecting song'); countStart(); masks(true);
     yt.mute(); yt.loadVideoById(S.song[4]);
-    watchdog = setTimeout(badSong, 12000);
+    adNote(false);
+    var frac = Math.random(), seekAt = 0, loadAt = Date.now();
+    watchdog = setTimeout(function wd() {
+      var s0 = -1; try { s0 = yt.getPlayerState(); } catch (e) {}
+      if ((s0 === 1 || s0 === 3) && Date.now() - loadAt < 75000) { watchdog = setTimeout(wd, 4000); return; }   // something is playing (an ad?): wait
+      badSong();
+    }, 12000);
+    // See host.js: an ad before the video cannot be skipped from here, so the jump is repeated until
+    // the real video is at the right spot, and the player is uncovered so the ad can be skipped by hand.
     poll = setInterval(function () {
-      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0;
-      if (stage === 'probe' && st === 1 && d > 0) {
-        clipStart = d < 45 ? 0 : Math.floor(15 + Math.random() * (d - 15 - 20 - CLIP));
-        stage = 'seek'; yt.seekTo(clipStart, true);
-      } else if (stage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
-        clearInterval(poll); clearTimeout(watchdog); fails = 0;
+      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      if (st !== 1 || d <= 0) return;
+      if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }
+      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - CLIP));
+      if (stage === 'probe' || cs !== clipStart) { clipStart = cs; stage = 'seek'; seekAt = 0; }
+      if (t >= clipStart && t < clipStart + 5) {
+        clearInterval(poll); clearTimeout(watchdog); fails = 0; adNote(false);
         yt.pauseVideo(); stage = 'ready'; clipReady = true;
+      } else if (Date.now() - seekAt > 1500) {
+        seekAt = Date.now(); yt.seekTo(clipStart, true);
+        if (late > 6000) adNote(true);
       }
     }, 120);
   }
+  var adShown = false;
+  function adNote(on) {
+    if (on === adShown) return;
+    adShown = on;
+    document.querySelector('#v-game .shield').classList.toggle('hidden', on);
+    if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
+    else if ($('err').textContent === AD_TEXT) $('err').textContent = '';
+  }
   function badSong() {
-    stopTimers(); fails++;
+    stopTimers(); fails++; adNote(false);
     if (fails >= 6) {
       stage = 'idle'; countStop(); cover(true, '!', 'Videos won’t start');
       $('err').textContent = 'YouTube isn’t playing anything. Check your connection and try again.';

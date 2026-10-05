@@ -355,28 +355,51 @@
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
     yt.mute(); yt.loadVideoById(G.song[4]);
-    watchdog = setTimeout(badSong, 12000);
-    // Wait until the video really plays, then jump to a random point.
+    adNote(false);
+    var frac = Math.random(), seekAt = 0, loadAt = Date.now();
+    // Give up after 12 seconds of nothing. While something is playing (an ad, usually) wait longer.
+    watchdog = setTimeout(function wd() {
+      var s0 = -1; try { s0 = yt.getPlayerState(); } catch (e) {}
+      if ((s0 === 1 || s0 === 3) && Date.now() - loadAt < 75000) { watchdog = setTimeout(wd, 4000); return; }
+      badSong();
+    }, 12000);
+    // Wait until the video really plays, then jump to a random point. YouTube sometimes puts an ad first:
+    // it cannot be skipped or detected from here, only noticed (the jump does not take, or what plays is
+    // far too short to be a song). Then the player is uncovered so the ad can be skipped on the screen,
+    // and the jump is repeated until the real video is at the right spot.
     poll = setInterval(function () {
-      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0;
-      if (stage === 'probe' && st === 1 && d > 0) {
-        clipStart = d < 45 ? 0 : Math.floor(15 + Math.random() * (d - 15 - 20 - CLIP));
-        if (G.sing) {
-          // Sing! wants the chorus: an exact start from chorus.json if the song has one, otherwise the
-          // stretch where a three-minute Eurovision song usually reaches its first chorus.
-          var known = chorus[G.song[4]];
-          if (typeof known === 'number' && known < d - 5) clipStart = Math.max(0, Math.floor(known));
-          else if (d >= 110) clipStart = Math.floor(45 + Math.random() * 30);
-        }
-        stage = 'seek'; yt.seekTo(clipStart, true);
-      } else if (stage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
-        clearInterval(poll); clearTimeout(watchdog); fails = 0;
+      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      if (st !== 1 || d <= 0) return;
+      if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }   // shorter than any song
+      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - CLIP));
+      if (G.sing) {
+        // Sing! wants the chorus: an exact start from chorus.json if the song has one, otherwise the
+        // stretch where a three-minute Eurovision song usually reaches its first chorus.
+        var known = chorus[G.song[4]];
+        if (typeof known === 'number' && known < d - 5) cs = Math.max(0, Math.floor(known));
+        else if (d >= 110) cs = Math.floor(45 + frac * 30);
+      }
+      if (stage === 'probe' || cs !== clipStart) { clipStart = cs; stage = 'seek'; seekAt = 0; }
+      if (t >= clipStart && t < clipStart + 5) {
+        clearInterval(poll); clearTimeout(watchdog); fails = 0; adNote(false);
         yt.pauseVideo(); stage = 'ready'; clipReady = true;   // the countdown starts the clip
+      } else if (Date.now() - seekAt > 1500) {
+        seekAt = Date.now(); yt.seekTo(clipStart, true);
+        if (late > 6000) adNote(true);
       }
     }, 120);
   }
+  // An ad seems to be playing: show the player (title bar stays masked) so it can be skipped by hand.
+  var adShown = false;
+  function adNote(on) {
+    if (on === adShown) return;
+    adShown = on;
+    document.querySelector('#v-game .shield').classList.toggle('hidden', on);
+    if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
+    else if ($('err').textContent === AD_TEXT) $('err').textContent = '';
+  }
   function badSong() {
-    stopTimers(); fails++;
+    stopTimers(); fails++; adNote(false);
     if (fails >= 6) {
       stage = 'idle'; countStop(); cover(true, '!', 'Videos won’t start', false);
       $('err').textContent = 'YouTube isn’t playing anything. Check your connection, or click “Show answer” and try the next song.';
