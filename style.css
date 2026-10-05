@@ -35,6 +35,19 @@ label{display:block;font-weight:700;font-size:.85rem;margin:0 0 6px;color:var(--
 .phone .huge{font-size:2.4rem}
 .or{display:flex;align-items:center;gap:12px;margin:20px 0 16px;color:var(--mute);font-size:.85rem;text-transform:uppercase;letter-spacing:.08em}
 .or:before,.or:after{content:'';flex:1;height:1px;background:var(--line)}
+.chargrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.chargrid button{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.72rem;font-weight:700;line-height:1.15;text-align:center}
+.chargrid .char{width:100%;height:auto;border-radius:50%;box-shadow:0 0 0 3px transparent;transition:transform .1s}
+.chargrid button:active .char{transform:scale(.92)}
+.chargrid button.mine .char{box-shadow:0 0 0 3px var(--yellow)}
+.chargrid button:disabled{cursor:not-allowed;opacity:.3;filter:grayscale(1)}
+.mychar .char{width:120px;height:120px}
+.phone #me{display:flex;align-items:center;gap:8px}
+.phone #me .char{width:28px;height:28px}
+.chip .char{width:1.7em;height:1.7em;margin:-.2em 0 -.2em -.45em}
+.board .who{display:flex;align-items:center;gap:.5em;min-width:0}
+.board .char{width:1.8em;height:1.8em;flex:none}
+.winchar .char{width:clamp(120px,18vw,200px);height:auto}
 .fb{min-height:1.5em;font-weight:800}
 .fb.ok{color:var(--ok)} .fb.close{color:var(--yellow)} .fb.no{color:var(--bad)}
 .score{font-size:3rem;font-weight:900;color:var(--yellow)}

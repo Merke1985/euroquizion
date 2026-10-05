@@ -24,7 +24,14 @@
     <p class="mute" style="margin:12px 0 0;font-size:.9rem;text-align:center">Best on a TV or laptop that everyone can see and hear.</p>
   </section>
 
-  <section id="v-wait" class="center hidden"><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p></section>
+  <section id="v-pick" class="hidden">
+    <h2>Pick your character</h2>
+    <p class="mute" style="margin:.4em 0 14px">Each one can only be taken once.</p>
+    <div id="chars" class="chargrid"></div>
+    <p id="pickerr" class="fb no" style="margin:14px 0 0"></p>
+  </section>
+
+  <section id="v-wait" class="center hidden"><div id="mychar" class="mychar"></div><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p><button class="btn alt small hidden" id="changechar" style="align-self:center">Change character</button></section>
 
   <section id="v-guess" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="mute" id="roundlabel"></div>
@@ -46,6 +53,7 @@
 <script src="vendor/supabase.js"></script>
 <script src="config.js"></script>
 <script src="net.js"></script>
+<script src="chars.js"></script>
 <script src="player.js"></script>
 </body>
 </html>

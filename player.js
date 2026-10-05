@@ -6,14 +6,15 @@
   try { pid = sessionStorage.getItem('esc-pid'); } catch (e) {}
   if (!pid) pid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   try { sessionStorage.setItem('esc-pid', pid); } catch (e) {}
-  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '';
+  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', want = null, picking = false, hi = function () {};
+  try { want = sessionStorage.getItem('esc-char'); } catch (e) {}
 
   $('name').value = store.get('esc-name') || '';
   var k = new URLSearchParams(location.search).get('k');
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-wait', 'v-guess', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+  function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
   $('joinform').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -27,9 +28,9 @@
     net.on('state', onState);
     net.on('result', onResult);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
-    var hi = function () {
+    hi = function () {
       var m = me();
-      net.send('hi', { pid: pid, name: name, score: m ? m.score : null,
+      net.send('hi', { pid: pid, name: name, char: want, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
     net.on('_open', hi);
@@ -50,7 +51,14 @@
     state = s; clearTimeout(joinTimer);
     endsAt = Date.now() + (s.left || 0);
     var m = me();
-    $('me').textContent = name + (m ? ' · ' + m.score : '');
+    $('me').innerHTML = (m ? charSvg(m.char) : '') + esc(name + (m ? ' · ' + m.score : ''));
+    $('mychar').innerHTML = m ? charSvg(m.char) : '';
+    $('changechar').classList.toggle('hidden', s.phase !== 'lobby');
+    // Not in the game until a character is yours; the grid updates live as others pick.
+    if (!m || picking) {
+      if (m && s.phase !== 'lobby') picking = false;
+      else { renderPicker(s, m); show('v-pick'); return; }
+    }
     var key = s.phase + ':' + s.round;
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
     if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'You’re in!'; $('waitsub').textContent = 'Watch the big screen. The game starts soon.'; }
@@ -76,6 +84,26 @@
       $('myrank').textContent = rank ? 'Place ' + rank + ' of ' + s.players.length : '';
     }
   }
+
+  function renderPicker(s, m) {
+    var taken = {};
+    s.players.forEach(function (p) { if (p.pid !== pid && p.char) taken[p.char] = p.name; });
+    $('chars').innerHTML = CHARS.map(function (c) {
+      return '<button type="button" data-char="' + c.id + '"' + (taken[c.id] ? ' disabled title="Taken by ' + esc(taken[c.id]) + '"' : '') +
+        (m && m.char === c.id ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
+    }).join('');
+    var left = CHARS.filter(function (c) { return !taken[c.id]; }).length;
+    $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All characters are taken, so this game is full.';
+    if (want && taken[want]) want = null;
+  }
+  $('chars').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-char]');
+    if (!b || b.disabled) return;
+    want = b.getAttribute('data-char'); picking = false;
+    try { sessionStorage.setItem('esc-char', want); } catch (err) {}
+    $('pickerr').textContent = ''; hi();
+  });
+  $('changechar').addEventListener('click', function () { picking = true; if (state) onState(state); });
 
   function onResult(r) {
     if (r.pid !== pid) return;

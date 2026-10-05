@@ -1,6 +1,6 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var CLIP = 10;            // clip length in seconds
+  var CLIP = 15;            // clip length in seconds
   var room = '', net, songs = [], countries = {};
   var players = {};         // pid -> {pid,name,score,got,pts,last}
   var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all' };
@@ -26,8 +26,12 @@
     if (!m || !m.pid) return;
     var p = players[m.pid], isNew = !p;
     var nm = String(m.name || '').slice(0, 16) || 'Player';
+    // Every character belongs to one player per room; first come, first served.
+    var want = CHAR_BY_ID[m.char] ? m.char : null;
+    var free = want && !list().some(function (x) { return x.char === want && x.pid !== m.pid; });
     if (!p) {
-      p = players[m.pid] = { pid: m.pid, name: nm, score: 0, got: false, pts: 0 };
+      if (!free) { sayHello(); return; }   // not in yet: just show them which characters are left
+      p = players[m.pid] = { pid: m.pid, name: nm, char: want, score: 0, got: false, pts: 0 };
       // Rehosting without a saved game on this device: rebuild it from what the phones remember.
       if (recovering) {
         if (typeof m.score === 'number' && m.score > 0) p.score = Math.floor(m.score);
@@ -35,9 +39,12 @@
       }
     }
     var changed = isNew || p.name !== nm || p.off;
+    if (free && want !== p.char && (G.phase === 'lobby' || !p.char)) { p.char = want; changed = true; }
     p.name = nm; p.last = Date.now(); p.off = false;
     if (changed) push();
   });
+  var helloAt = 0;
+  function sayHello() { if (recovering || Date.now() - helloAt < 700) return; helloAt = Date.now(); net.send('state', snapshot()); }
   net.on('guess', function (m) {
     var p = m && players[m.pid];
     if (!p || G.phase !== 'guess' || p.got) return;
@@ -69,7 +76,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, left: Math.max(0, G.endsAt - Date.now()),
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, score: p.score, got: p.got, pts: p.pts }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, pts: p.pts }; }) };
     if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3], result: resultText(G.song) };
     return s;
   }
@@ -80,7 +87,7 @@
     try {
       localStorage.setItem(SAVE, JSON.stringify({ t: Date.now(), phase: G.phase, round: G.round, total: G.total, guessMs: G.guessMs,
         era: G.era, cat: G.cat, showVideo: G.showVideo, used: Object.keys(G.used),
-        players: list().map(function (p) { return { pid: p.pid, name: p.name, score: p.score }; }) }));
+        players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score }; }) }));
     } catch (e) {}
   }
   // Put a game back between rounds: an interrupted round is simply played again.
@@ -109,7 +116,7 @@
     var s = null;
     try { s = JSON.parse(localStorage.getItem(SAVE) || 'null'); } catch (e) {}
     if (s && Date.now() - s.t < 24 * 3600 * 1000) {
-      (s.players || []).forEach(function (p) { players[p.pid] = { pid: p.pid, name: p.name, score: p.score || 0, got: false, pts: 0, last: 0, off: true }; });
+      (s.players || []).forEach(function (p) { players[p.pid] = { pid: p.pid, name: p.name, char: p.char, score: p.score || 0, got: false, pts: 0, last: 0, off: true }; });
       G.total = s.total; G.guessMs = s.guessMs; (s.used || []).forEach(function (id) { G.used[id] = 1; });
       resumeAt(s.phase, s.round); applyCfg(s);
       if (G.phase !== 'lobby') note('Game ' + room + ' restored.');
@@ -135,13 +142,13 @@
   function show(id) { ['v-lobby', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   function boardHtml(showGot) {
     return list().map(function (p) {
-      return '<li class="' + (showGot && p.got ? 'got ' : '') + (p.off ? 'off' : '') + '"><span>' + esc(p.name) + '</span><span>' + p.score +
+      return '<li class="' + (showGot && p.got ? 'got ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + p.score +
         (showGot && p.got ? '<span class="pts">+' + p.pts + '</span>' : '') + '</span></li>';
     }).join('') || '<li class="mute">No players yet</li>';
   }
   function render() {
     var ps = list();
-    $('players').innerHTML = ps.map(function (p) { return '<span class="chip' + (p.off ? ' off' : '') + '">' + esc(p.name) + '</span>'; }).join('') || '<span class="mute">Waiting for players…</span>';
+    $('players').innerHTML = ps.map(function (p) { return '<span class="chip' + (p.off ? ' off' : '') + '">' + charSvg(p.char) + esc(p.name) + '</span>'; }).join('') || '<span class="mute">Waiting for players…</span>';
     $('pcount').textContent = ps.length ? '(' + ps.length + ')' : '';
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('newgame').classList.toggle('hidden', G.phase === 'lobby');
@@ -150,6 +157,7 @@
       show('v-end');
       var top = ps[0];
       $('winner').textContent = top ? top.name + ' · ' + top.score + ' points' : 'Nobody?!';
+      $('winchar').innerHTML = top ? charSvg(top.char) : '';
       $('final').innerHTML = boardHtml(false);
     } else {
       show('v-game');
