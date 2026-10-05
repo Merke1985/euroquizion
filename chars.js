@@ -6,7 +6,14 @@ var FACE = function (x, y, s, mood) {
   return '<circle cx="' + (x - 5 * s) + '" cy="' + y + '" r="' + 1.9 * s + '" fill="#1b1340"/><circle cx="' + (x + 5 * s) + '" cy="' + y + '" r="' + 1.9 * s + '" fill="#1b1340"/>' +
     '<path d="' + mouth + '" fill="none" stroke="#1b1340" stroke-width="' + 1.8 * s + '" stroke-linecap="round"/>';
 };
+// Artist photos come from Wikimedia Commons under Creative Commons licences; see credits.html.
+function commons(file) { return 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(file) + '?width=330'; }
 var CHARS = [
+  { id: 'kaarija', name: 'Käärijä', file: 'Käärijä esiintymässä Louhela Jam -tapahtumassa (Vantaa, 2023) – 01 (cropped) (cropped).jpg', by: 'Sanni Penttinen', lic: 'CC BY 4.0', licUrl: 'https://creativecommons.org/licenses/by/4.0' },
+  { id: 'loreen', name: 'Loreen', file: 'Loreen - Melodifestivalen 2023, Malmö 118 (cropped).jpg', by: 'Jonatan Svensson Glad', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0' },
+  { id: 'verka', name: 'Verka Serduchka', file: 'Verka Serduchka 2017 1 (cropped).jpg', by: 'Serecki', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0' },
+  { id: 'logan', name: 'Johnny Logan', file: 'Johnny Logan - NDR Hafengeburtstag 2017 20.jpg', by: 'Frank Schwichtenberg', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0' },
+  { id: 'conchita', name: 'Conchita Wurst', file: 'Conchita Wurst at Berlinale 2026-6.jpg', by: 'Elena Ternovaja', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0' },
   { id: 'disco', name: 'Disco Ball', bg: ['#6a3df0', '#2de2e6'], art:
     '<path d="M32 6v10" stroke="#fff" stroke-width="2"/><circle cx="32" cy="35" r="19" fill="#eef1ff"/>' +
     '<path d="M13 35h38M16 25h32M16 45h32M32 16v38M22 19c-4 10-4 22 0 32M42 19c4 10 4 22 0 32" fill="none" stroke="#a9b2e8" stroke-width="1.6"/>' +
@@ -68,6 +75,7 @@ var charSeq = 0;
 function charSvg(id) {
   var c = CHAR_BY_ID[id];
   if (!c) return '';
+  if (c.file) return '<img class="char" src="' + commons(c.file) + '" alt="' + c.name + '" style="object-position:' + (c.pos || '50% 20%') + '">';
   var u = c.id + '-' + (++charSeq);   // unique ids, so a copy inside a hidden section never breaks the others
   return '<svg class="char" viewBox="0 0 64 64" role="img" aria-label="' + c.name + '"><defs><linearGradient id="cg-' + u + '" x1="0" y1="0" x2="1" y2="1">' +
     '<stop offset="0" stop-color="' + c.bg[0] + '"/><stop offset="1" stop-color="' + c.bg[1] + '"/></linearGradient>' +

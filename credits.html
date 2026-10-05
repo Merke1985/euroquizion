@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Douze Points – photo credits</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="credits">
+  <div class="logo" style="font-size:1.4rem;margin-bottom:20px">DOUZE <b>POINTS</b><i>!</i></div>
+  <h1 style="font-size:2rem;margin-bottom:10px">Photo credits</h1>
+  <p class="mute">The artist photos used as player characters come from Wikimedia Commons and are used under the Creative Commons licences listed below. They are shown cropped to a circle and are otherwise unchanged. This is a fan-made game and is not affiliated with or endorsed by the artists or the Eurovision Song Contest.</p>
+  <ul id="list" style="list-style:none;padding:0;margin:24px 0"></ul>
+  <p><a href="./">Back to the game</a></p>
+</main>
+<script src="chars.js"></script>
+<script>
+document.getElementById('list').innerHTML = CHARS.filter(function (c) { return c.file; }).map(function (c) {
+  var page = 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(c.file.replace(/ /g, '_'));
+  return '<li>' + charSvg(c.id) + '<div><strong>' + c.name + '</strong><br>Photo by ' + c.by + ', <a href="' + c.licUrl + '" target="_blank" rel="noopener">' + c.lic + '</a>, via <a href="' + page + '" target="_blank" rel="noopener">Wikimedia Commons</a></div></li>';
+}).join('');
+</script>
+</body>
+</html>
