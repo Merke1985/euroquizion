@@ -133,7 +133,7 @@
     S.phase = 'guess'; S.endsAt = Date.now() + S.guessMs;
     $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
     var mc = S.q.type === 'mc';
-    $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = (S.q.subject === 'place' || S.q.subject === 'points') ? 'numeric' : 'text';
+    $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = (S.q.subject === 'place' || S.q.subject === 'points' || S.q.subject === 'year') ? 'numeric' : 'text';
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');

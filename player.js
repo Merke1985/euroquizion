@@ -137,7 +137,7 @@
         if (builtKey !== key) {   // build the question once per song, so typing is never wiped
           builtKey = key;
           $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
-          $('guess').placeholder = q.hint || ''; $('guess').inputMode = (q.subject === 'place' || q.subject === 'points') ? 'numeric' : 'text';
+          $('guess').placeholder = q.hint || ''; $('guess').inputMode = (q.subject === 'place' || q.subject === 'points' || q.subject === 'year') ? 'numeric' : 'text';
           $('opts').innerHTML = mc ? q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
           if (!mc) $('guess').focus();
         }
