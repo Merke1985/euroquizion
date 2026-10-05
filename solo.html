@@ -12,14 +12,18 @@
 
   <section id="v-setup" class="card">
     <h2>Play solo</h2>
-    <p class="mute" style="margin:.4em 0 0">Just you against the clips. Type the title before the time runs out.</p>
+    <p class="mute" style="margin:.4em 0 0">Just you against the clips. Answer before the time runs out.</p>
     <div class="settings">
-      <div><label for="s-rounds">Rounds</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+      <div><label for="s-rounds">Songs</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
       <div><label for="s-time">Guessing time</label><select id="s-time"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option></select></div>
       <div><label for="s-era">Years</label><select id="s-era">
         <option value="1956-2100" selected>All years</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
-      <div><label for="s-cat">Songs</label><select id="s-cat">
+      <div><label for="s-cat">Entries</label><select id="s-cat">
         <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
+      <div><label for="s-atype">Answer type</label><select id="s-atype">
+        <option value="mc" selected>Multiple choice</option><option value="open">Open</option><option value="mix">Mix</option></select></div>
+      <div><label for="s-subject">Question</label><select id="s-subject">
+        <option value="country" selected>Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="title">Song title</option><option value="random">Random</option></select></div>
       <label class="check"><input type="checkbox" id="s-video" checked> Show video during the clip</label>
     </div>
     <button class="btn big" id="start" style="width:100%" disabled>Loading songs…</button>
@@ -36,6 +40,8 @@
     </div>
     <div id="guessui">
       <div class="bar" style="margin-top:14px"><i id="tbar"></i></div>
+      <h2 id="qtext" style="margin-top:14px"></h2>
+      <div id="opts" class="opts hidden"></div>
       <form id="guessform" autocomplete="off" class="sologuess">
         <input id="guess" type="text" maxlength="80" placeholder="Type the title…" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
         <button class="btn">Guess!</button>
@@ -49,7 +55,7 @@
     <div id="revealui" class="reveal hidden">
       <p id="verdict" class="fb" style="font-size:1.3rem"></p>
       <div class="under">
-        <div><h2 id="rtitle"></h2><p id="rmeta"></p><p id="rres" class="res"></p></div>
+        <div><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta"></p><p id="rres" class="res"></p></div>
         <button class="btn big" id="next">Next</button>
       </div>
     </div>
@@ -68,6 +74,7 @@
 </main>
 <script src="net.js"></script>
 <script src="match.js"></script>
+<script src="quiz.js"></script>
 <script src="solo.js"></script>
 </body>
 </html>

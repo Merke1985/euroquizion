@@ -22,6 +22,10 @@
         <div><p class="mute" style="margin:0">and enter this code</p><div class="codebig" id="codebig">····</div></div>
         <div class="qr" id="qr"></div>
       </div>
+      <div class="lobbyplayers">
+        <h3>Players <span class="mute" id="pcount"></span></h3>
+        <div class="players" id="players" style="margin-top:12px"></div>
+      </div>
       <div class="rehost">
         <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
         <form id="rehostform" class="hidden" autocomplete="off">
@@ -34,15 +38,18 @@
     </div>
     <div class="card">
       <p class="note hidden" id="note"></p>
-      <h3>Players <span class="mute" id="pcount"></span></h3>
-      <div class="players" id="players" style="margin-top:12px"></div>
+      <h3>Game settings</h3>
       <div class="settings">
-        <div><label for="s-rounds">Rounds</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+        <div><label for="s-rounds">Songs</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
         <div><label for="s-time">Guessing time</label><select id="s-time"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option></select></div>
         <div><label for="s-era">Years</label><select id="s-era">
           <option value="1956-2100" selected>All years</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
-        <div><label for="s-cat">Songs</label><select id="s-cat">
+        <div><label for="s-cat">Entries</label><select id="s-cat">
           <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
+        <div><label for="s-atype">Answer type</label><select id="s-atype">
+          <option value="mc" selected>Multiple choice</option><option value="open">Open</option><option value="mix">Mix</option></select></div>
+        <div><label for="s-subject">Question</label><select id="s-subject">
+          <option value="country" selected>Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="title">Song title</option><option value="random">Random</option></select></div>
         <label class="check"><input type="checkbox" id="s-video" checked> Show video during the clip</label>
       </div>
       <button class="btn big" id="start" style="width:100%" disabled>Loading songs…</button>
@@ -61,16 +68,17 @@
       <div id="guessui">
         <div class="bar" style="margin-top:14px"><i id="tbar"></i></div>
         <div class="under">
-          <h2 id="roundlabel"></h2>
+          <div><div class="mute" id="roundlabel" style="font-weight:700"></div><h2 id="qtext"></h2></div>
           <div style="display:flex;gap:10px">
             <button class="btn alt" id="replay">Play again</button>
             <button class="btn alt" id="skip">Show answer</button>
           </div>
         </div>
       </div>
+      <div id="qopts" class="opts"></div>
       <div id="revealui" class="reveal hidden">
         <div class="under">
-          <div><h2 id="rtitle"></h2><p id="rmeta"></p><p id="rres" class="res"></p></div>
+          <div><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta"></p><p id="rres" class="res"></p></div>
           <button class="btn big" id="next">Next</button>
         </div>
       </div>
@@ -93,6 +101,7 @@
 <script src="net.js"></script>
 <script src="chars.js"></script>
 <script src="match.js"></script>
+<script src="quiz.js"></script>
 <script src="host.js"></script>
 </body>
 </html>

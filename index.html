@@ -37,18 +37,19 @@
 
   <section id="v-guess" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="mute" id="roundlabel"></div>
-    <h2>Which song is this?</h2>
+    <h2 id="qtext">Which song is this?</h2>
     <div class="bar"><i id="pbar"></i></div>
     <form id="guessform" autocomplete="off">
       <input id="guess" type="text" maxlength="80" placeholder="Type the title…" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
       <button class="btn big" style="width:100%;margin-top:12px">Guess!</button>
     </form>
+    <div id="opts" class="opts hidden"></div>
     <p id="fb" class="fb"></p>
   </section>
 
   <section id="v-reveal" class="center hidden">
     <p id="verdict" class="fb" style="font-size:1.4rem"></p>
-    <div class="card"><h2 id="rtitle"></h2><p id="rmeta" style="margin:.5em 0 0"></p><p id="rres" class="res" style="margin:.4em 0 0"></p></div>
+    <div class="card"><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta" style="margin:.5em 0 0"></p><p id="rres" class="res" style="margin:.4em 0 0"></p></div>
     <div><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>

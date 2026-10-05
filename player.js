@@ -6,7 +6,7 @@
   try { pid = sessionStorage.getItem('esc-pid'); } catch (e) {}
   if (!pid) pid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   try { sessionStorage.setItem('esc-pid', pid); } catch (e) {}
-  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', want = null, picking = false, hi = function () {};
+  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', builtKey = '', want = null, picking = false, hi = function () {};
   try { want = sessionStorage.getItem('esc-char'); } catch (e) {}
 
   $('name').value = store.get('esc-name') || '';
@@ -60,15 +60,27 @@
       else { renderPicker(s, m); show('v-pick'); return; }
     }
     var key = s.phase + ':' + s.round;
+    if (s.phase !== 'guess') builtKey = '';
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
     if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'You’re in!'; $('waitsub').textContent = 'Watch the big screen. The game starts soon.'; }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
-    else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Round ' + s.round + ' of ' + s.total; }
+    else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total; }
     else if (s.phase === 'guess') {
+      var q = s.q || { type: 'open', text: 'Which song is this?', hint: 'Type the title…' };
       if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct! +' + m.pts; $('waitsub').textContent = 'Waiting for the others…'; }
+      else if (m && m.done) { show('v-wait'); $('waittitle').textContent = 'Not this time'; $('waitsub').textContent = 'Your answer is locked in. Waiting for the others…'; }
       else {
-        show('v-guess'); $('roundlabel').textContent = 'Round ' + s.round + ' of ' + s.total;
-        if (fresh) { $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb'; $('guess').focus(); }
+        show('v-guess'); $('roundlabel').textContent = 'Song ' + s.round + ' of ' + s.total;
+        $('qtext').textContent = q.text;
+        var mc = q.type === 'mc';
+        $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
+        if (builtKey !== key) {   // build the question once per song, so typing is never wiped
+          builtKey = key;
+          $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
+          $('guess').placeholder = q.hint || ''; $('guess').inputMode = q.subject === 'place' ? 'numeric' : 'text';
+          $('opts').innerHTML = mc ? q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
+          if (!mc) $('guess').focus();
+        }
       }
     }
     else if (s.phase === 'reveal' || s.phase === 'end') {
@@ -76,6 +88,7 @@
       var r = s.reveal || {};
       $('verdict').className = 'fb ' + (m && m.got ? 'ok' : 'no');
       $('verdict').textContent = s.phase === 'end' ? 'Game over!' : (m && m.got ? 'You got it! +' + m.pts : 'Not this time');
+      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.text + ' ' + s.q.answer : '';
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';
@@ -115,6 +128,14 @@
     $('guess').focus();
   }
 
+  // Multiple choice: one tap, then the answer is locked in.
+  $('opts').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-i]');
+    if (!b || b.disabled || !net) return;
+    [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.disabled = true; });
+    b.classList.add('picked');
+    net.send('guess', { pid: pid, choice: +b.getAttribute('data-i') });
+  });
   $('guessform').addEventListener('submit', function (e) {
     e.preventDefault();
     var t = $('guess').value.trim();

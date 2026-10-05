@@ -3,15 +3,15 @@
   var $ = function (id) { return document.getElementById(id); };
   var CLIP = 15, COUNT = 5;
   var songs = [], countries = {}, pool = [], used = {};
-  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, got: false, pts: 0, endsAt: 0, showVideo: true };
+  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, q: null, picked: -1, got: false, pts: 0, endsAt: 0, showVideo: true };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
   var loadT0 = 0, loadTick = null, clipReady = false;
 
   function show(id) { ['v-setup', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   function cover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; } }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
-  function hud() { $('hud').textContent = S.phase === 'setup' ? '' : 'Round ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'; }
-  function bestKey() { return 'esc-solo-best-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value].join('|'); }
+  function hud() { $('hud').textContent = S.phase === 'setup' ? '' : 'Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'; }
+  function bestKey() { return 'esc-solo-best-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
   function ready() {
@@ -24,7 +24,7 @@
     $('start').disabled = !(ytReady && pool.length);
     $('start').textContent = ytReady ? 'Start' : 'Loading player…';
   }
-  ['s-era', 's-cat', 's-rounds', 's-time'].forEach(function (id) { $(id).addEventListener('change', ready); });
+  ['s-era', 's-cat', 's-rounds', 's-time', 's-atype', 's-subject'].forEach(function (id) { $(id).addEventListener('change', ready); });
 
   window.onYouTubeIframeAPIReady = function () {
     yt = new YT.Player('yt', {
@@ -54,6 +54,7 @@
     var free = pool.filter(function (s) { return !used[s[4]]; });
     if (!free.length) { used = {}; free = pool; }
     S.song = free[Math.floor(Math.random() * free.length)]; used[S.song[4]] = 1;
+    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries); S.picked = -1;
     stage = 'probe';
     cover(true, '', 'Selecting song'); countStart(); masks(true);
     yt.mute(); yt.loadVideoById(S.song[4]);
@@ -85,7 +86,7 @@
     poll = setInterval(function () {
       if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
-        if (S.phase === 'guess') cover(true, '?', 'Which song was this?');
+        if (S.phase === 'guess') cover(true, '?', S.q.text);
       }
     }, 100);
   }
@@ -93,7 +94,11 @@
     $('err').textContent = '';
     S.phase = 'guess'; S.endsAt = Date.now() + S.guessMs;
     $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
-    playClip(); render(); $('guess').focus();
+    var mc = S.q.type === 'mc';
+    $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = S.q.subject === 'place' ? 'numeric' : 'text';
+    $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
+    $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
+    playClip(); render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, S.guessMs);
   }
   function reveal() {
@@ -120,12 +125,13 @@
     }
     show('v-game');
     var rev = S.phase === 'reveal';
-    $('guessui').classList.toggle('hidden', rev);
+    $('guessui').classList.toggle('hidden', S.phase !== 'guess');   // nothing to answer while the next song loads
     $('revealui').classList.toggle('hidden', !rev);
     $('guess').disabled = $('replay').disabled = $('skip').disabled = S.phase !== 'guess';
     if (rev) {
       $('verdict').className = 'fb ' + (S.got ? 'ok' : 'no');
       $('verdict').textContent = S.got ? 'You got it! +' + S.pts : 'Not this time';
+      $('ranswer').textContent = S.q.text + ' ' + S.q.answer + (S.q.type === 'mc' && S.picked >= 0 && !S.got ? ' (you said ' + S.q.options[S.picked] + ')' : '');
       $('rtitle').textContent = S.song[3];
       $('rmeta').textContent = S.song[2] + ' · ' + flag(S.song[1]) + ' ' + (countries[S.song[1]] || S.song[1]) + ' ' + S.song[0];
       $('rres').textContent = resultText(S.song);
@@ -141,16 +147,24 @@
     e.preventDefault();
     var t = $('guess').value.trim();
     if (!t || S.phase !== 'guess') return;
-    var res = Match.check(t, S.song[3]);
-    if (res === 'ok') {
-      var frac = Math.max(0, (S.endsAt - Date.now()) / S.guessMs);
-      S.pts = Math.round((500 + 500 * frac) / 10) * 10; S.score += S.pts; S.right++; S.got = true;
-      reveal(); return;
-    }
+    var res = checkOpen(S.q, S.song, t, countries);
+    if (res === 'ok') { win(); return; }
     $('fb').className = 'fb ' + (res === 'close' ? 'close' : 'no');
     $('fb').textContent = res === 'close' ? 'So close! Check your spelling.' : 'Nope, that’s not it. Try again!';
     if (res !== 'close') $('guess').value = '';
     $('guess').focus();
+  });
+  function win() {
+    var frac = Math.max(0, (S.endsAt - Date.now()) / S.guessMs);
+    S.pts = Math.round((500 + 500 * frac) / 10) * 10; S.score += S.pts; S.right++; S.got = true;
+    reveal();
+  }
+  // Multiple choice: one tap decides.
+  $('opts').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-i]');
+    if (!b || S.phase !== 'guess') return;
+    S.picked = +b.getAttribute('data-i');
+    if (S.picked === S.q.correct) win(); else reveal();
   });
   $('start').addEventListener('click', function () {
     ready(); if (!pool.length) return;
