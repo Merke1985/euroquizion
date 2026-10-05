@@ -312,7 +312,7 @@
     window.selfSize = function () { $('selfplay').style.height = $('hostmain').classList.contains('ingame') || !selfH ? '' : selfH + 'px'; };
     window.addEventListener('message', function (e) {
       if (e.origin !== location.origin || !e.data) return;
-      if (e.data.esc === 'h') { selfH = Math.max(90, Math.min(1400, +e.data.h || 0)); selfSize(); return; }
+      if (e.data.esc === 'h') { selfH = Math.max(48, Math.min(1400, +e.data.h || 0)); selfSize(); return; }
       if (e.data.esc !== 'joined') return;
       document.body.classList.remove('selfpending'); $('selfnote').classList.remove('hidden');
     });

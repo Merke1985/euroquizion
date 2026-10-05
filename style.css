@@ -207,7 +207,7 @@ body.embed .phone{min-height:0;padding-top:12px}
 /* host without a screen: avatar first, lobby second */
 body.remote.selfpending .lobby{display:none}
 /* in the lobby the host's own name and avatar sit on top, in a frame just as tall as its content */
-body.remote .host:not(.ingame) .selfplay{order:-1;height:150px;border:0;border-radius:0}
+body.remote .host:not(.ingame) .selfplay{order:-1;height:56px;border:0;border-radius:0}
 body.remote .host>header{order:-2}
 .avatarrow{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
 /* ---------- briefing before the first song ---------- */
@@ -253,3 +253,12 @@ body.embed .phone{padding:4px 2px 12px;gap:10px}
 .endhead .winchar .char{width:84px;height:84px}
 .phone .finalboard{width:100%}
 body.remote .host.ingame #allin{display:none}   /* already shown in the game below */
+/* host's own row in the online lobby: just a pill around avatar, name and Edit */
+body.embed .phone.compact{padding:2px;gap:0}
+body.embed .phone.compact>header,body.embed .phone.compact #waitlabel,body.embed .phone.compact #waittitle,body.embed .phone.compact #waitsub,body.embed .phone.compact .allin{display:none}
+body.embed .phone.compact .center{gap:0}
+body.embed .phone.compact .avatarrow{display:inline-flex;align-self:flex-start;flex-wrap:nowrap;gap:10px;border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 5px;background:var(--card)}
+body.embed .phone.compact .mychar .char{width:38px;height:38px}
+body.embed .phone.compact .avatarrow strong{font-size:1.05rem}
+body.embed .demo{display:none}
+body.embed{background:transparent}   /* the host page behind the frame provides the background */

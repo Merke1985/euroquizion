@@ -67,6 +67,8 @@
     // During a game the screen keeps one fixed skeleton, so nothing jumps between question, waiting and answer.
     var ing = !!me() && ['lobby', 'brief', 'end'].indexOf(s.phase) < 0;
     document.querySelector('main').classList.toggle('ingame', ing);
+    // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
+    document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
     $('waitlabel').textContent = ing && s.round ? 'Song ' + s.round + ' of ' + s.total : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = s.phase === 'guess' && s.reveal_in ? Date.now() + s.reveal_in : 0;
