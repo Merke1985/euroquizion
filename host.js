@@ -567,12 +567,16 @@
       try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {}
     }
     push();
-    introTimer = setTimeout(function () {
-      if (G.phase !== 'intro') return;
-      try { if (!REMOTE) yt.pauseVideo(); } catch (e) {}
-      stage = 'idle'; startRound();
-    }, INTRO.ms);
+    introTimer = setTimeout(introEnd, INTRO.ms);
   }
+  // The fanfare is over, or the host pressed "Start now": on to the first song.
+  function introEnd() {
+    if (G.phase !== 'intro') return;
+    clearTimeout(introTimer);
+    try { if (!REMOTE) yt.pauseVideo(); } catch (e) {}
+    stage = 'idle'; startRound();
+  }
+  $('introgo').addEventListener('click', introEnd);
   net.on('go', function (m) {
     var p = m && players[m.pid];
     if (!p || G.phase !== 'brief') return;
@@ -586,6 +590,7 @@
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     $('briefplayers').innerHTML = ps.map(function (p) { return '<div class="pl' + (G.go[p.pid] ? ' in' : '') + (p.off ? ' off' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></div>'; }).join('') || '<span class="mute">No players yet</span>';
     var n = ps.filter(function (p) { return G.go[p.pid]; }).length;
+    $('introgo').classList.toggle('hidden', G.phase !== 'intro');
     $('briefgo').classList.toggle('hidden', G.phase === 'intro'); $('briefhint').classList.toggle('hidden', G.phase === 'intro');
     $('briefcount').textContent = ps.length ? '(' + n + ' of ' + ps.length + ' ready)' : '';
   }
