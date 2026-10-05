@@ -3,7 +3,7 @@
   var CLIP = 15;            // clip length in seconds
   var room = '', net, songs = [], countries = {}, chorus = {};
   var players = {};         // pid -> {pid,name,score,got,pts,last}
-  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'country', q: null, sing: null, barMs: 30000 };
+  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'country', q: null, sing: null, barMs: 30000, scoring: 'speed' };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
@@ -58,7 +58,8 @@
     }
     res = checkOpen(G.q, G.song, m.text, countries);
     if (res === 'ok') {
-      p.pts = scoreFor(G.guessMs - (G.endsAt - Date.now()), G.guessMs); p.score += p.pts; p.got = true;
+      var before = list().filter(function (x) { return x.got; }).length;
+      p.pts = pointsFor(G.scoring, G.guessMs - (G.endsAt - Date.now()), G.guessMs, before); p.score += p.pts; p.got = true;
     }
     net.send('result', { pid: p.pid, res: res });
     if (res === 'ok' || mc) {
@@ -83,7 +84,7 @@
   function list() { return Object.keys(players).map(function (k) { return players[k]; }).sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); }); }
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: Math.max(0, G.endsAt - Date.now()),
-      cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject },
+      cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring },
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
     if (G.sing) s.sing = singSnapshot();
     // Phones get the question and the options, never which option is right (until the reveal).
@@ -98,7 +99,7 @@
   function save() {
     try {
       localStorage.setItem(SAVE, JSON.stringify({ t: Date.now(), phase: G.phase, round: G.round, total: G.total, guessMs: G.guessMs,
-        era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, used: Object.keys(G.used),
+        era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, used: Object.keys(G.used),
         players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score }; }) }));
     } catch (e) {}
   }
@@ -110,7 +111,8 @@
   }
   function applyCfg(c) {
     if (c.era) G.era = c.era; if (c.cat) G.cat = c.cat;
-    if (c.atype) G.atype = c.atype; if (c.subject) G.subject = c.subject;
+    if (c.atype) G.atype = c.atype; if (c.subject) G.subject = c.subject; if (SCORING_HELP[c.scoring]) G.scoring = c.scoring;
+    $('s-scoring').value = G.scoring; scoreHelp();
     if (G.subject === 'sing') { G.atype = 'sing'; G.subject = 'country'; }   // games saved before Sing! moved to Category
     $('s-era').value = G.era; $('s-cat').value = G.cat;
     $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = G.atype === 'sing';
@@ -325,9 +327,10 @@
     if (G.phase !== 'guess') return;
     stopTimers(); G.phase = 'reveal'; stage = 'reveal';
     // Multiple choice is scored now, from the answer each player was holding.
-    if (G.q && G.q.type === 'mc') list().forEach(function (p) {
-      if (p.pick === G.q.correct) { p.pts = scoreFor(p.pickMs, G.guessMs); p.score += p.pts; p.got = true; }
-    });
+    // For "order" scoring the right answers are ranked by when they were put in.
+    if (G.q && G.q.type === 'mc') list().filter(function (p) { return p.pick === G.q.correct; })
+      .sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); })
+      .forEach(function (p, rank) { p.pts = pointsFor(G.scoring, p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     push(); autoStart();
@@ -428,9 +431,12 @@
     for (v in G.sing.best) if (tally[G.sing.best[v]] != null) tally[G.sing.best[v]]++;
     G.sing.order.forEach(function (pid) { max = Math.max(max, tally[pid]); });
     // 20 points for singing, 50 per vote, and 50 extra for the most votes.
+    // With "order" scoring the singers are ranked by votes instead: 12, 10, 8 ... (equal votes share a rank).
+    var ranked = G.sing.order.map(function (pid) { return tally[pid]; }).sort(function (a, b) { return b - a; });
     G.sing.result = G.sing.order.filter(function (pid) { return players[pid]; }).map(function (pid) {
       var p = players[pid], win = max > 0 && tally[pid] === max;
-      p.pts = 20 + 50 * tally[pid] + (win ? 50 : 0); p.score += p.pts; p.got = true;
+      p.pts = G.scoring === 'order' ? (ESC_POINTS[ranked.indexOf(tally[pid])] || 0) : 20 + 50 * tally[pid] + (win ? 50 : 0);
+      p.score += p.pts; p.got = true;
       return { pid: pid, name: p.name, char: p.char, votes: tally[pid], win: win, pts: p.pts };
     }).sort(function (a, b) { return b.votes - a.votes; });
     G.phase = 'reveal'; stage = 'reveal'; G.sing.in = {}; G.sing.now = null;
@@ -517,6 +523,8 @@
   // Sing! is a category of its own: there is no question, so the Answers setting does not apply.
   function singToggle() { $('s-subject').disabled = $('s-atype').value === 'sing'; }
   $('s-atype').addEventListener('change', singToggle);
+  function scoreHelp() { $('scorehelp').textContent = SCORING_HELP[$('s-scoring').value] || ''; }
+  $('s-scoring').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
     stopTimers(); autoStop(); singClear(); clearInterval(loadTick); loadT0 = 0; stage = 'idle';
@@ -541,7 +549,7 @@
     if (c.length === 4) location.href = location.pathname + '?room=' + c;
   });
   $('start').addEventListener('click', function () {
-    G.era = $('s-era').value; G.cat = $('s-cat').value; G.atype = $('s-atype').value; G.subject = $('s-subject').value;
+    G.era = $('s-era').value; G.cat = $('s-cat').value; G.atype = $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-scoring').value;
     if (!buildPool()) return;
     G.total = +$('s-rounds').value; G.guessMs = +$('s-time').value * 1000;
     G.round = 0; G.used = {}; fails = 0; note('');
@@ -578,11 +586,11 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=27').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=28').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=27').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=28').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
   render();
 })();

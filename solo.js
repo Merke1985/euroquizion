@@ -28,7 +28,7 @@
   });
   renderChars();
   function hud() { $('hud').innerHTML = S.phase === 'setup' ? '' : charSvg(myChar) + esc('Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'); }
-  function bestKey() { return 'esc-solo-best2-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value].join('|'); }
+  function bestKey() { return 'esc-solo-best2-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
   function ready() {
@@ -41,7 +41,9 @@
     $('start').disabled = !(ytReady && pool.length);
     $('start').textContent = ytReady ? 'Start' : 'Loading player…';
   }
-  ['s-era', 's-cat', 's-rounds', 's-time', 's-atype', 's-subject'].forEach(function (id) { $(id).addEventListener('change', ready); });
+  function scoreHelp() { $('scorehelp').textContent = SCORING_HELP[$('s-scoring').value] || ''; }
+  $('s-scoring').addEventListener('change', scoreHelp); scoreHelp();
+  ['s-era', 's-cat', 's-rounds', 's-time', 's-atype', 's-subject', 's-scoring'].forEach(function (id) { $(id).addEventListener('change', ready); });
 
   window.onYouTubeIframeAPIReady = function () {
     yt = new YT.Player('yt', {
@@ -124,7 +126,7 @@
     stopTimers(); S.phase = 'reveal'; stage = 'reveal';
     // Multiple choice is scored now, from the answer that was being held.
     if (S.q.type === 'mc' && S.picked === S.q.correct && !S.got) {
-      S.pts = scoreFor(S.pickMs, S.guessMs); S.score += S.pts; S.right++; S.got = true;
+      S.pts = pointsFor($('s-scoring').value, S.pickMs, S.guessMs, 0); S.score += S.pts; S.right++; S.got = true;
     }
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
@@ -180,7 +182,7 @@
     $('guess').focus();
   });
   function win() {
-    S.pts = scoreFor(S.guessMs - (S.endsAt - Date.now()), S.guessMs); S.score += S.pts; S.right++; S.got = true;
+    S.pts = pointsFor($('s-scoring').value, S.guessMs - (S.endsAt - Date.now()), S.guessMs, 0); S.score += S.pts; S.right++; S.got = true;
     reveal();
   }
   // Multiple choice: a tap holds the answer (it can still be changed). The answer shows
@@ -230,7 +232,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=27').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=28').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

@@ -104,3 +104,16 @@ function revealOptions(q, pick) {
     return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
   }).join('');
 }
+// The three ways to score a correct answer, and the line that explains the selected one.
+var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
+var SCORING_HELP = {
+  correct: 'Correct: every right answer scores a flat 100 points.',
+  speed: 'Speed: 100 points for a right answer, plus up to 50 for speed. The full bonus holds for 3 seconds, then ticks down.',
+  order: 'Order: Eurovision style. The first player with the right answer gets 12 points, the second 10, then 8, 7, 6, 5, 4, 3, 2 and 1.'
+};
+// rank = how many players were right before this one (only used for "order").
+function pointsFor(scoring, elapsedMs, totalMs, rank) {
+  if (scoring === 'correct') return 100;
+  if (scoring === 'order') return ESC_POINTS[rank] || 0;
+  return scoreFor(elapsedMs, totalMs);
+}
