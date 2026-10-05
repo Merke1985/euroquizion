@@ -349,6 +349,7 @@
     // right spot, and uncover the player so the ad can be skipped by hand.
     vPoll = setInterval(function () {
       var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      if (late > 6000) vAd(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) vAd(true); return; }   // shorter than any song
       var cs = d < 45 ? 0 : Math.floor(15 + clip.frac * (d - 15 - 20 - CLIP));   // same spot on every phone

@@ -107,6 +107,7 @@
     // the real video is at the right spot, and the player is uncovered so the ad can be skipped by hand.
     poll = setInterval(function () {
       var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      if (late > 6000) adNote(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }
       var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - CLIP));
