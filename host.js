@@ -113,7 +113,7 @@
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; }
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
-      s.draw = { pid: G.draw.pid, name: dp ? dp.name : '?', options: G.phase === 'dpick' ? G.draw.options.map(songLabel) : null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
+      s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: G.phase === 'dpick' ? G.draw.options.map(songLabel) : null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
     }
     if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3], result: resultText(G.song) };
     return s;
@@ -385,7 +385,7 @@
       if (alt < 0) { fails = 6; badSong(); return; }
       G.sing.tried[alt] = 1; G.sing.chosen = alt; push(); loadSong(G.sing.options[alt]); return;
     }
-    if (G.draw) { G.round--; startRound(); return; }   // the chosen song will not play: start this drawing round over
+    if (G.draw) { fails = 0; stage = 'idle'; clipReady = true; return; }   // Draw! does not need the video: carry on, the drawing starts after the countdown
     loadSong();
   }
   function playClip() {
@@ -474,7 +474,7 @@
     if (!ps.length) { push(); loadSong(); return; }
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (free.length < 4) { G.used = {}; free = G.pool.slice(); }
-    G.draw = { pid: ps[G.drawTurn++ % ps.length].pid, options: shuffle(free.slice()).slice(0, 4), chosen: null };
+    G.draw = { pid: ps[G.drawTurn++ % ps.length].pid, options: shuffle(free.slice()).slice(0, 4), chosen: null, id: Math.random().toString(36).slice(2, 8) };
     G.phase = 'dpick'; G.barMs = DRAW_PICK_MS; G.endsAt = Date.now() + DRAW_PICK_MS;
     drawClear($('drawview'));
     if (!REMOTE) { cover(true, '✏️', 'Draw!', false); masks(true); }
@@ -498,7 +498,7 @@
   net.on('ready', function (m) {
     var p = m && players[m.pid];
     if (!REMOTE || !p || G.phase !== 'loading' || !G.clip || m.key !== G.clip.id + ':' + G.round) return;
-    if (m.bad) {
+    if (m.bad && !G.draw) {
       // The video will not play on that phone: take another song (a few times at most).
       if (++fails < 6) { G.round--; startRound(); }
       return;

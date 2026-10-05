@@ -101,6 +101,8 @@
     }
     var key = s.phase + ':' + s.round;
     if (s.phase !== 'guess') builtKey = '';
+    if (!s.draw) dKey = '';
+    if (!s.sing) sKey = '';
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
     if (s.sing && s.phase !== 'reveal' && s.phase !== 'end' && s.phase !== 'lobby' && s.phase !== 'paused' && s.phase !== 'guess') { renderSing(s, m); return; }
     if (s.phase === 'brief' || s.phase === 'intro') {
@@ -128,14 +130,14 @@
       if (s.draw.pid === pid) {
         show('v-draw'); $('dround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Draw!';
         $('dtitle').textContent = 'Pick a song to draw'; $('dopts').classList.remove('hidden'); $('dpad').classList.add('hidden');
-        if (dKey !== key) { dKey = key; $('dopts').innerHTML = (s.draw.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join(''); }
+        if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; $('dopts').innerHTML = (s.draw.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join(''); }
       } else { show('v-wait'); $('waittitle').textContent = s.draw.name + ' is drawing next'; $('waitsub').textContent = 'Choosing a song…'; }
     }
     else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'You draw: ' + s.draw.song : s.draw.name + ' is about to draw.'; }
     else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) {
       show('v-draw'); $('dround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Draw!';
       $('dtitle').textContent = 'Draw: ' + s.draw.song; $('dopts').classList.add('hidden'); $('dpad').classList.remove('hidden');
-      if (dKey !== key) { dKey = key; padReset(); }
+      if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; padReset(); }
     }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Turn your sound on.'; }
@@ -519,7 +521,11 @@
     var b = e.target.closest('button[data-i]');
     if (!b || !net) return;
     [].forEach.call($('dopts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); x.disabled = true; });
-    b.classList.add('picked'); net.send('draw', { pid: pid, pick: +b.getAttribute('data-i') });
+    b.classList.add('picked');
+    var pk = +b.getAttribute('data-i'), dk = dKey;
+    net.send('draw', { pid: pid, pick: pk });
+    // Repeat a few times in case the message gets lost on the way; the host only takes the first one.
+    [700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (dKey === dk && state && state.phase === 'dpick' && net) net.send('draw', { pid: pid, pick: pk }); }, ms); });
   });
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
