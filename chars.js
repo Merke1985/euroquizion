@@ -9,7 +9,7 @@ var CHARS = [
   { id: 'conchita', name: 'Conchita Wurst', file: 'Conchita Wurst, ESC2014 Meet & Greet 12 (crop).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0' },
   { id: 'abba', name: 'ABBA', file: 'ABBA - TopPop 1974 5.png', by: 'AVRO / Beeld & Geluid', lic: 'CC BY-SA 3.0 NL', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0/nl/deed.en', pos: '50% 30%' },
   { id: 'maneskin', name: 'Måneskin', file: 'Maneskin 2018.jpg', by: 'Paolo Santambrogio', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 30%' },
-  { id: 'lordi', name: 'Lordi', file: 'Lordi Metal Frenzy 2025 10.jpg', by: 'Stefan Bollmann', lic: 'free use with attribution', licUrl: '', pos: '50% 30%' }
+  { id: 'lordi', name: 'Lordi', file: 'Mr lordi hrh-2.jpg', by: 'Tktt (cropped by -Majestic- and Bff)', lic: 'public domain', licUrl: '', pos: '50% 25%' }
 ];
 var CHAR_BY_ID = {};
 CHARS.forEach(function (c) { CHAR_BY_ID[c.id] = c; });
