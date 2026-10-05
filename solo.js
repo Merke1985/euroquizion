@@ -47,7 +47,7 @@
   $('editname').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pickSave(); } });
   profile();
   function hud() { $('hud').innerHTML = S.phase === 'setup' ? '' : charSvg(myChar) + '<span><b>' + esc(who()) + '</b><br>' + esc('Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points') + '</span>'; }
-  function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
+  function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value, $('s-clip').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
   function ready() {
@@ -62,7 +62,7 @@
   }
   function scoreHelp() { $('scorehelp').textContent = SCORING_HELP[$('s-scoring').value] || ''; }
   $('s-scoring').addEventListener('change', scoreHelp); scoreHelp();
-  ['s-era', 's-cat', 's-rounds', 's-time', 's-atype', 's-subject', 's-scoring'].forEach(function (id) { $(id).addEventListener('change', ready); });
+  ['s-era', 's-cat', 's-rounds', 's-time', 's-atype', 's-subject', 's-scoring', 's-clip'].forEach(function (id) { $(id).addEventListener('change', ready); });
 
   window.onYouTubeIframeAPIReady = function () {
     yt = new YT.Player('yt', {
@@ -92,7 +92,7 @@
     var free = pool.filter(function (s) { return !used[s[4]]; });
     if (!free.length) { used = {}; free = pool; }
     S.song = free[Math.floor(Math.random() * free.length)]; used[S.song[4]] = 1;
-    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries); S.picked = -1;
+    S.q = withStill(makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries), $('s-clip').value); S.picked = -1;
     stage = 'probe';
     cover(true, '', 'Selecting song'); countStart(); masks(true);
     yt.mute(); yt.loadVideoById(S.song[4]);
@@ -137,7 +137,10 @@
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');
-    if (S.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, '?', ''); } else playClip();   // odd one out has no clip
+    if (S.q.noclip) {   // odd one out has no clip; a still frame shows one picture from the video
+      clearInterval(poll); stage = 'paused'; cover(true, '?', '');
+      if (S.q.still) { var sq = S.q; showStill($('still'), S.song[4], sq.still, function () { return S.phase === 'guess' && S.q === sq; }, function () { sq.noclip = false; sq.still = 0; $('replay').classList.remove('hidden'); playClip(); }); }
+    } else playClip();
     $('replay').classList.toggle('hidden', !!S.q.noclip);
     render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, S.guessMs);
@@ -187,7 +190,7 @@
     }
   }
   setInterval(function () {
-    if (S.phase !== 'guess') return;
+    if (S.phase !== 'guess') { if (!$('still').classList.contains('hidden')) hideStill($('still')); return; }
     $('tbar').style.transform = 'scaleX(' + Math.max(0, Math.min(1, (S.endsAt - Date.now()) / S.guessMs)) + ')';
   }, 100);
 
