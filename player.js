@@ -70,6 +70,7 @@
       $('verdict').textContent = s.phase === 'end' ? 'Game over!' : (m && m.got ? 'You got it! +' + m.pts : 'Not this time');
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
+      $('rres').textContent = (s.phase === 'reveal' && r.result) || '';
       $('myscore').textContent = m ? m.score : 0;
       var rank = m ? s.players.filter(function (p) { return p.score > m.score; }).length + 1 : 0;
       $('myrank').textContent = rank ? 'Place ' + rank + ' of ' + s.players.length : '';

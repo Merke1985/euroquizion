@@ -54,12 +54,23 @@
     }
   });
 
+  // How the entry did: "3rd place · 245 points", or its semi-final result if it did not qualify.
+  function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function resultText(s) {
+    if (!s) return '';
+    if (s[9] === 'cancelled') return 'Contest cancelled in 2020, so no result';
+    if (s[9] === 'dq') return 'Qualified, but disqualified before the final';
+    if (s[6] == null) return '';
+    var pts = s[7] == null ? '' : ' · ' + s[7] + (s[7] === 1 ? ' point' : ' points');
+    if (s[8] == null) return (s[6] === 1 ? 'Winner' : ordinal(s[6]) + ' place') + pts;
+    return ordinal(s[6]) + ' in ' + (s[8] ? 'semi-final ' + s[8] : 'the semi-final') + pts + ' · did not qualify';
+  }
   function list() { return Object.keys(players).map(function (k) { return players[k]; }).sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); }); }
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, left: Math.max(0, G.endsAt - Date.now()),
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo },
       players: list().map(function (p) { return { pid: p.pid, name: p.name, score: p.score, got: p.got, pts: p.pts }; }) };
-    if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3] };
+    if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3], result: resultText(G.song) };
     return s;
   }
   function push() { if (!recovering) net.send('state', snapshot()); save(); render(); }
@@ -151,12 +162,14 @@
         cover(true, '↻', 'Game restored', false);
         $('rtitle').textContent = G.round ? 'Round ' + G.round + ' of ' + G.total + ' done' : 'Ready for round 1';
         $('rmeta').textContent = G.round >= G.total ? 'Only the final scores are left.' : 'Press continue when everyone is back.';
+        $('rres').textContent = '';
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Continue';
       }
       $('replay').disabled = $('skip').disabled = G.phase !== 'guess';
       if (G.phase === 'reveal') {
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
+        $('rres').textContent = resultText(G.song);
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Next';
       }
     }

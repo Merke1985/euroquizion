@@ -80,6 +80,8 @@ label{display:block;font-weight:700;font-size:.85rem;margin:0 0 6px;color:var(--
 .reveal .btn{flex:none}
 .reveal h2{font-size:clamp(2rem,4.5vw,3.6rem);color:var(--yellow)}
 .reveal p{font-size:1.4rem;margin:.3em 0 0}
+.res{color:var(--cyan);font-weight:700}
+.res:empty{display:none}
 .board{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
 .board li{display:flex;justify-content:space-between;gap:10px;padding:.6em .9em;border-radius:12px;background:rgba(0,0,0,.25);font-weight:700}
 .board li.got{outline:2px solid var(--ok)}
