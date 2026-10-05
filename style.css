@@ -109,3 +109,10 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 .end .board li:first-child{background:var(--yellow);color:#221a00;font-size:1.25em}
 @media (max-width:820px){.lobby,.game{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+
+/* ---------- solo ---------- */
+.solo{max-width:860px;margin:0 auto;padding:20px 16px 40px;min-height:100vh;display:flex;flex-direction:column;gap:16px}
+.solo>header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sologuess{display:flex;gap:10px;margin:14px 0 4px}
+.sologuess input{flex:1;min-width:0}
+.solo .reveal .under{flex-wrap:wrap}

@@ -61,17 +61,6 @@
     }
   });
 
-  // How the entry did: "3rd place · 245 points", or its semi-final result if it did not qualify.
-  function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
-  function resultText(s) {
-    if (!s) return '';
-    if (s[9] === 'cancelled') return 'Contest cancelled in 2020, so no result';
-    if (s[9] === 'dq') return 'Qualified, but disqualified before the final';
-    if (s[6] == null) return '';
-    var pts = s[7] == null ? '' : ' · ' + s[7] + (s[7] === 1 ? ' point' : ' points');
-    if (s[8] == null) return (s[6] === 1 ? 'Winner' : ordinal(s[6]) + ' place') + pts;
-    return ordinal(s[6]) + ' in ' + (s[8] ? 'semi-final ' + s[8] : 'the semi-final') + pts + ' · did not qualify';
-  }
   function list() { return Object.keys(players).map(function (k) { return players[k]; }).sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); }); }
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, left: Math.max(0, G.endsAt - Date.now()),
@@ -283,10 +272,7 @@
 
   // ---------- buttons ----------
   function buildPool() {
-    var era = G.era.split('-').map(Number), cat = G.cat;
-    G.pool = songs.filter(function (s) {
-      return s[0] >= era[0] && s[0] <= era[1] && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
-    });
+    G.pool = poolFor(songs, G.era, G.cat);
     return G.pool.length;
   }
   function ready() {

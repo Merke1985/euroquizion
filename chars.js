@@ -13,7 +13,7 @@ var CHARS = [
   { id: 'loreen', name: 'Loreen', file: 'Loreen - Melodifestivalen 2023, Malmö 118 (cropped).jpg', by: 'Jonatan Svensson Glad', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0' },
   { id: 'verka', name: 'Verka Serduchka', file: 'Verka Serduchka 2017 1 (cropped).jpg', by: 'Serecki', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0' },
   { id: 'logan', name: 'Johnny Logan', file: 'Johnny Logan - NDR Hafengeburtstag 2017 20.jpg', by: 'Frank Schwichtenberg', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0' },
-  { id: 'conchita', name: 'Conchita Wurst', file: 'Conchita Wurst at Berlinale 2026-6.jpg', by: 'Elena Ternovaja', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0' },
+  { id: 'conchita', name: 'Conchita Wurst', file: 'Conchita Wurst, ESC2014 Meet & Greet 12 (crop).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0' },
   { id: 'disco', name: 'Disco Ball', bg: ['#6a3df0', '#2de2e6'], art:
     '<path d="M32 6v10" stroke="#fff" stroke-width="2"/><circle cx="32" cy="35" r="19" fill="#eef1ff"/>' +
     '<path d="M13 35h38M16 25h32M16 45h32M32 16v38M22 19c-4 10-4 22 0 32M42 19c4 10 4 22 0 32" fill="none" stroke="#a9b2e8" stroke-width="1.6"/>' +

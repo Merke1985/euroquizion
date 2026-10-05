@@ -31,3 +31,22 @@ function flag(code) {
   if (!/^[a-z]{2}$/.test(code) || code === 'yu' || code === 'cs') return '';
   return String.fromCodePoint(0x1F1E6 + code.charCodeAt(0) - 97, 0x1F1E6 + code.charCodeAt(1) - 97);
 }
+
+// How the entry did: "3rd place · 245 points", or its semi-final result if it did not qualify.
+function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function resultText(s) {
+  if (!s) return '';
+  if (s[9] === 'cancelled') return 'Contest cancelled in 2020, so no result';
+  if (s[9] === 'dq') return 'Qualified, but disqualified before the final';
+  if (s[6] == null) return '';
+  var pts = s[7] == null ? '' : ' · ' + s[7] + (s[7] === 1 ? ' point' : ' points');
+  if (s[8] == null) return (s[6] === 1 ? 'Winner' : ordinal(s[6]) + ' place') + pts;
+  return ordinal(s[6]) + ' in ' + (s[8] ? 'semi-final ' + s[8] : 'the semi-final') + pts + ' · did not qualify';
+}
+// Songs matching a years range ("1956-1979") and a category (all, nq, final, win).
+function poolFor(songs, eraValue, cat) {
+  var era = eraValue.split('-').map(Number);
+  return songs.filter(function (s) {
+    return s[0] >= era[0] && s[0] <= era[1] && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
+  });
+}

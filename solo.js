@@ -1,0 +1,171 @@
+// Solo mode: one device plays the clip and takes the guesses. No room, no connection.
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var CLIP = 15, COUNT = 5;
+  var songs = [], countries = {}, pool = [], used = {};
+  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, got: false, pts: 0, endsAt: 0, showVideo: true };
+  var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
+  var loadT0 = 0, loadTick = null, clipReady = false;
+
+  function show(id) { ['v-setup', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+  function cover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; } }
+  function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
+  function hud() { $('hud').textContent = S.phase === 'setup' ? '' : 'Round ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'; }
+  function bestKey() { return 'esc-solo-best-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value].join('|'); }
+  function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
+
+  function ready() {
+    if (!songs.length) return;
+    pool = poolFor(songs, $('s-era').value, $('s-cat').value);
+    S.total = +$('s-rounds').value; S.guessMs = +$('s-time').value * 1000;
+    $('songcount').textContent = pool.length ? pool.length + ' songs in this selection.'
+      : 'No songs match this combination. Semi-finals only started in 2004, so there are no non-qualifiers before that.';
+    var b = getBest(); $('best').textContent = b ? 'Your best with these settings: ' + b + ' points.' : '';
+    $('start').disabled = !(ytReady && pool.length);
+    $('start').textContent = ytReady ? 'Start' : 'Loading player…';
+  }
+  ['s-era', 's-cat', 's-rounds', 's-time'].forEach(function (id) { $(id).addEventListener('change', ready); });
+
+  window.onYouTubeIframeAPIReady = function () {
+    yt = new YT.Player('yt', {
+      width: '100%', height: '100%',
+      playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
+      events: { onReady: function () { ytReady = true; ready(); }, onError: function () { if (stage === 'probe' || stage === 'seek') badSong(); } }
+    });
+  };
+  var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
+
+  function stopTimers() { clearInterval(poll); clearTimeout(watchdog); clearTimeout(endTimer); }
+  function countStop() { clearInterval(loadTick); loadT0 = 0; }
+  function countStart() {
+    clipReady = false;
+    if (loadT0) return;
+    loadT0 = Date.now(); clearInterval(loadTick);
+    var draw = function () {
+      var left = COUNT - Math.floor((Date.now() - loadT0) / 1000);
+      if (left >= 1) { $('covericon').textContent = left; $('covertext').textContent = 'Selecting song'; }
+      else if (clipReady) { countStop(); beginGuess(); }
+      else { $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…'; }
+    };
+    draw(); loadTick = setInterval(draw, 100);
+  }
+  function loadSong() {
+    stopTimers();
+    var free = pool.filter(function (s) { return !used[s[4]]; });
+    if (!free.length) { used = {}; free = pool; }
+    S.song = free[Math.floor(Math.random() * free.length)]; used[S.song[4]] = 1;
+    stage = 'probe';
+    cover(true, '', 'Selecting song'); countStart(); masks(true);
+    yt.mute(); yt.loadVideoById(S.song[4]);
+    watchdog = setTimeout(badSong, 12000);
+    poll = setInterval(function () {
+      var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0;
+      if (stage === 'probe' && st === 1 && d > 0) {
+        clipStart = d < 45 ? 0 : Math.floor(15 + Math.random() * (d - 15 - 20 - CLIP));
+        stage = 'seek'; yt.seekTo(clipStart, true);
+      } else if (stage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
+        clearInterval(poll); clearTimeout(watchdog); fails = 0;
+        yt.pauseVideo(); stage = 'ready'; clipReady = true;
+      }
+    }, 120);
+  }
+  function badSong() {
+    stopTimers(); fails++;
+    if (fails >= 6) {
+      stage = 'idle'; countStop(); cover(true, '!', 'Videos won’t start');
+      $('err').textContent = 'YouTube isn’t playing anything. Check your connection and try again.';
+      S.phase = 'guess'; S.endsAt = Date.now(); render(); return;
+    }
+    loadSong();
+  }
+  function playClip() {
+    clearInterval(poll); stage = 'clip';
+    yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
+    if (S.showVideo) cover(false); else cover(true, '♪', 'Listen closely…');
+    poll = setInterval(function () {
+      if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) {
+        clearInterval(poll); yt.pauseVideo(); stage = 'paused';
+        if (S.phase === 'guess') cover(true, '?', 'Which song was this?');
+      }
+    }, 100);
+  }
+  function beginGuess() {
+    $('err').textContent = '';
+    S.phase = 'guess'; S.endsAt = Date.now() + S.guessMs;
+    $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
+    playClip(); render(); $('guess').focus();
+    endTimer = setTimeout(reveal, S.guessMs);
+  }
+  function reveal() {
+    if (S.phase !== 'guess') return;
+    stopTimers(); S.phase = 'reveal'; stage = 'reveal';
+    cover(false); masks(false);
+    try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
+    render();
+  }
+  function startRound() {
+    S.round++; S.phase = 'loading'; S.got = false; S.pts = 0;
+    render(); loadSong();
+  }
+  function render() {
+    hud();
+    if (S.phase === 'setup') { show('v-setup'); return; }
+    if (S.phase === 'end') {
+      show('v-end');
+      var best = getBest(), isBest = S.score > best;
+      if (isBest) { try { localStorage.setItem(bestKey(), S.score); } catch (e) {} }
+      $('final').textContent = S.score + ' points';
+      $('endbest').textContent = S.right + ' of ' + S.total + ' right. ' + (isBest ? (best ? 'A new personal best!' : '') : 'Your best is ' + best + '.');
+      return;
+    }
+    show('v-game');
+    var rev = S.phase === 'reveal';
+    $('guessui').classList.toggle('hidden', rev);
+    $('revealui').classList.toggle('hidden', !rev);
+    $('guess').disabled = $('replay').disabled = $('skip').disabled = S.phase !== 'guess';
+    if (rev) {
+      $('verdict').className = 'fb ' + (S.got ? 'ok' : 'no');
+      $('verdict').textContent = S.got ? 'You got it! +' + S.pts : 'Not this time';
+      $('rtitle').textContent = S.song[3];
+      $('rmeta').textContent = S.song[2] + ' · ' + flag(S.song[1]) + ' ' + (countries[S.song[1]] || S.song[1]) + ' ' + S.song[0];
+      $('rres').textContent = resultText(S.song);
+      $('next').textContent = S.round >= S.total ? 'Final score' : 'Next';
+    }
+  }
+  setInterval(function () {
+    if (S.phase !== 'guess') return;
+    $('tbar').style.transform = 'scaleX(' + Math.max(0, Math.min(1, (S.endsAt - Date.now()) / S.guessMs)) + ')';
+  }, 100);
+
+  $('guessform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = $('guess').value.trim();
+    if (!t || S.phase !== 'guess') return;
+    var res = Match.check(t, S.song[3]);
+    if (res === 'ok') {
+      var frac = Math.max(0, (S.endsAt - Date.now()) / S.guessMs);
+      S.pts = Math.round((500 + 500 * frac) / 10) * 10; S.score += S.pts; S.right++; S.got = true;
+      reveal(); return;
+    }
+    $('fb').className = 'fb ' + (res === 'close' ? 'close' : 'no');
+    $('fb').textContent = res === 'close' ? 'So close! Check your spelling.' : 'Nope, that’s not it. Try again!';
+    if (res !== 'close') $('guess').value = '';
+    $('guess').focus();
+  });
+  $('start').addEventListener('click', function () {
+    ready(); if (!pool.length) return;
+    S.showVideo = $('s-video').checked; S.round = 0; S.score = 0; S.right = 0; used = {}; fails = 0;
+    startRound();
+  });
+  $('replay').addEventListener('click', function () { if (S.phase === 'guess' && (stage === 'paused' || stage === 'clip')) playClip(); });
+  $('skip').addEventListener('click', reveal);
+  $('next').addEventListener('click', function () {
+    if (S.phase !== 'reveal') return;
+    if (S.round >= S.total) { try { yt.stopVideo(); } catch (e) {} S.phase = 'end'; render(); } else startRound();
+  });
+  $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
+
+  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+    .catch(function () { $('start').textContent = 'Could not load songs'; });
+  render();
+})();
