@@ -681,8 +681,10 @@
     if (typeof m.data !== 'string' || !(m.n >= 1 && m.n <= 16) || !(m.i >= 0 && m.i < m.n)) return;
     var part = G.sing.parts[p.pid];
     if (!part || part.key !== m.key) part = G.sing.parts[p.pid] = { key: m.key, n: m.n, got: 0, data: [], mime: String(m.mime || 'audio/webm').slice(0, 60) };
+    if (part.done) return;   // a repeat of a recording that already arrived
     if (part.data[m.i] == null) { part.data[m.i] = m.data; part.got++; }
     if (part.got !== part.n) return;
+    part.done = true;
     try {
       var bin = atob(part.data.join('')), u = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);

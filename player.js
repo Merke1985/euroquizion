@@ -225,6 +225,7 @@
     $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
     if (fresh) { $('sfb').textContent = ''; $('sfb').className = 'fb'; if (s.phase !== 'srec') { recReset(); recRelease(); } }
     var name = sg.song ? sg.song.title + ' – ' + sg.song.artist : '';
+    if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
     if (s.phase === 'svote') {
       $('stitle').textContent = 'Which song shall we sing?'; $('ssub').textContent = 'Vote for one. The most votes wins.';
       if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('');
@@ -246,9 +247,13 @@
     if (!b || !net) return;
     [].forEach.call($('sopts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
-    net.send('poll', { pid: pid, choice: +b.getAttribute('data-i') });
-    $('sfb').className = 'fb close'; $('sfb').textContent = 'Vote in. You can still change it.';
+    var choice = +b.getAttribute('data-i'), vk = sKey, seq = ++voteSeq;
+    net.send('poll', { pid: pid, choice: choice });
+    // Messages over the room connection can get lost, so the vote is repeated a few times (the host just overwrites it).
+    [700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (seq === voteSeq && sKey === vk && net) net.send('poll', { pid: pid, choice: choice }); }, ms); });
+    $('sfb').className = 'fb close'; $('sfb').textContent = 'Sending your vote…';
   });
+  var voteSeq = 0, sendTry = null;
   function recStop() { clearInterval(recTick); if (rec && rec.state !== 'inactive') rec.stop(); }
   $('srecbtn').addEventListener('click', function () {
     if (rec && rec.state === 'recording') { recStop(); return; }
@@ -287,11 +292,22 @@
       // Sent in small pieces: the room connection has a size limit per message.
       var b64 = String(fr.result).split(',')[1] || '', size = 40000, n = Math.max(1, Math.ceil(b64.length / size)), key = Math.random().toString(36).slice(2), i = 0;
       if (n > 16) { recSent = ''; $('srecstate').className = 'fb no'; $('srecstate').textContent = 'That recording is too large. Please record again.'; return; }
+      var mime = recBlob.type, sk = sKey, tries = 0;
       var step = function () {
-        net.send('clip', { pid: pid, key: key, i: i, n: n, mime: recBlob.type, data: b64.slice(i * size, (i + 1) * size) });
-        if (++i < n) setTimeout(step, 120);
+        if (sKey !== sk || !net) return;
+        net.send('clip', { pid: pid, key: key, i: i, n: n, mime: mime, data: b64.slice(i * size, (i + 1) * size) });
+        if (++i < n) setTimeout(step, 150);
       };
       step();
+      // The host confirms through the game state. No confirmation: send everything again, twice at most.
+      clearInterval(sendTry);
+      sendTry = setInterval(function () {
+        var mm = me();
+        if (sKey !== sk || !state || state.phase !== 'srec' || (mm && mm.in)) { clearInterval(sendTry); return; }
+        if (i < n) return;   // still sending
+        if (++tries > 2) { clearInterval(sendTry); recSent = ''; $('srecstate').className = 'fb no'; $('srecstate').textContent = 'Your recording did not arrive. Tap “Send it” to try again.'; return; }
+        $('srecstate').textContent = 'Still sending…'; i = 0; step();
+      }, 4000);
     };
     fr.readAsDataURL(recBlob);
   });
