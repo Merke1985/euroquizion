@@ -33,9 +33,10 @@
 
   function ready() {
     if (!songs.length) return;
+    var ho = $('s-cat').querySelector('option[value="hosts"]'); if (ho) ho.hidden = ho.disabled = !HOST_CLIPS.length;
     pool = poolFor(songs, $('s-era').value, $('s-cat').value);
     S.total = +$('s-rounds').value; S.guessMs = +$('s-time').value * 1000;
-    $('songcount').textContent = pool.length ? pool.length + ' songs in this selection.'
+    $('songcount').textContent = $('s-cat').value === 'hosts' ? (pool.length ? pool.length + ' host clips in this selection. Questions are about the year, the host country or the presenters.' : 'No host clips for these years.') : pool.length ? pool.length + ' songs in this selection.'
       : 'No songs match this combination. Semi-finals only started in 2004, so there are no non-qualifiers before that.';
     var b = getBest(); $('best').textContent = b ? 'Your best with these settings: ' + b + ' points.' : '';
     $('start').disabled = !(ytReady && pool.length);
@@ -114,7 +115,7 @@
     S.phase = 'guess'; S.endsAt = Date.now() + S.guessMs;
     $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
     var mc = S.q.type === 'mc';
-    $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = (S.q.subject === 'place' || S.q.subject === 'points') ? 'numeric' : 'text';
+    $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = (S.q.subject === 'place' || S.q.subject === 'points' || S.q.subject === 'year') ? 'numeric' : 'text';
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');
@@ -234,7 +235,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); loadHosts(ready); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

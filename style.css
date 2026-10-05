@@ -267,3 +267,4 @@ body.remote .brief>.card{display:none}   /* the settings and scoring already sho
 .briefcd{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:900;color:var(--yellow);margin:0 0 14px;text-align:left}
 .briefcd:empty{display:none}
 .phone .briefcd{text-align:center;margin:0}
+body.remote #briefcd{display:none}   /* the countdown already shows in the host's own game above */
