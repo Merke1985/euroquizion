@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Douze Points – host</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="demo" class="demo hidden">Demomodus – spelers kunnen alleen meedoen vanuit een ander tabblad in deze browser. Vul config.js in om met telefoons te spelen.</div>
+<main class="host">
+  <header>
+    <div class="logo" style="font-size:1.6rem">DOUZE <b>POINTS</b><i>!</i></div>
+    <div class="roomtag"><span class="mute" id="joinhint"></span><code id="roomcode">····</code></div>
+  </header>
+
+  <section id="v-lobby" class="lobby">
+    <div class="join">
+      <p class="mute" style="font-size:1.3rem;margin:0">Pak je telefoon en ga naar</p>
+      <p class="url" id="joinurl"></p>
+      <div class="joinrow">
+        <div><p class="mute" style="margin:0">en vul deze code in</p><div class="codebig" id="codebig">····</div></div>
+        <div class="qr" id="qr"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Spelers <span class="mute" id="pcount"></span></h3>
+      <div class="players" id="players" style="margin-top:12px"></div>
+      <div class="settings">
+        <div><label for="s-rounds">Rondes</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+        <div><label for="s-time">Raadtijd</label><select id="s-time"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option></select></div>
+        <div style="grid-column:1/-1"><label for="s-era">Periode</label><select id="s-era">
+          <option value="1956-2100" selected>Alle jaren</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – nu</option></select></div>
+        <label class="check"><input type="checkbox" id="s-video" checked> Beeld tonen tijdens het fragment</label>
+      </div>
+      <button class="btn big" id="start" style="width:100%" disabled>Liedjes laden…</button>
+      <p class="mute" id="songcount" style="margin:12px 0 0;font-size:.9rem"></p>
+    </div>
+  </section>
+
+  <section id="v-game" class="game hidden">
+    <div>
+      <div class="stage">
+        <div id="yt"></div>
+        <div class="shield"></div>
+        <div class="maskbar t" id="mt"></div><div class="maskbar b" id="mb"></div>
+        <div class="cover" id="cover"><div class="q" id="covericon">?</div><h2 id="covertext">Fragment laden…</h2></div>
+      </div>
+      <div id="guessui">
+        <div class="bar" style="margin-top:14px"><i id="tbar"></i></div>
+        <div class="under">
+          <h2 id="roundlabel"></h2>
+          <div style="display:flex;gap:10px">
+            <button class="btn alt" id="replay">Nog een keer</button>
+            <button class="btn alt" id="skip">Toon antwoord</button>
+          </div>
+        </div>
+      </div>
+      <div id="revealui" class="reveal hidden">
+        <div class="under">
+          <div><h2 id="rtitle"></h2><p id="rmeta"></p></div>
+          <button class="btn big" id="next">Volgende</button>
+        </div>
+      </div>
+      <p id="err" class="fb no"></p>
+    </div>
+    <aside class="card"><h3>Stand</h3><ol class="board" id="board"></ol></aside>
+  </section>
+
+  <section id="v-end" class="end hidden">
+    <p class="mute" style="font-size:1.3rem;margin:0">And the winner is…</p>
+    <h1 id="winner"></h1>
+    <ol class="board" id="final"></ol>
+    <button class="btn big" id="again">Nog een potje</button>
+  </section>
+</main>
+<script src="vendor/supabase.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="config.js"></script>
+<script src="net.js"></script>
+<script src="match.js"></script>
+<script src="host.js"></script>
+</body>
+</html>
