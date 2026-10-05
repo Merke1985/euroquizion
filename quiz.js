@@ -118,3 +118,26 @@ function pointsFor(scoring, elapsedMs, totalMs, rank) {
   if (scoring === 'order') return ESC_POINTS[rank] || 1;   // never lower than 1
   return scoreFor(elapsedMs, totalMs);
 }
+// The final scoreboard, Eurovision style: every score counts up point by point over 5 seconds.
+// A row's border turns yellow when that player's total is reached; the winner turns green at the end.
+var finalRun = null;
+function finalBoard(el, players, mePid, onDone) {
+  clearInterval(finalRun);
+  var ps = players.slice().sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); });
+  var max = ps.length ? ps[0].score : 0, T = 5000, t0 = Date.now();
+  el.innerHTML = ps.map(function (p, i) {
+    return '<li data-i="' + i + '"' + (p.pid === mePid ? ' class="me"' : '') + '><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="num">0</span></li>';
+  }).join('') || '<li class="mute">No players</li>';
+  var rows = el.querySelectorAll('li[data-i]');
+  var tick = function () {
+    var f = Math.min(1, (Date.now() - t0) / T), cur = Math.floor(max * f), done = f >= 1;
+    ps.forEach(function (p, i) {
+      var v = done ? p.score : Math.min(p.score, cur);
+      rows[i].querySelector('.num').textContent = v;
+      if (done && max > 0 && p.score === max) { rows[i].classList.remove('reached'); rows[i].classList.add('winner'); }
+      else if (v >= p.score && (max > p.score || done)) rows[i].classList.add('reached');
+    });
+    if (done) { clearInterval(finalRun); finalRun = null; if (onDone) onDone(ps.filter(function (p) { return max > 0 && p.score === max; })); }
+  };
+  tick(); finalRun = setInterval(tick, 40);
+}

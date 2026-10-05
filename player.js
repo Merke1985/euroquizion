@@ -14,7 +14,7 @@
   // Inside the host's own page (a game without a shared screen) the hosting buttons make no sense.
   if (qs.get('embed')) { document.body.classList.add('embed'); $('hostlinks').classList.add('hidden'); }
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=40').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=41').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
@@ -53,7 +53,7 @@
   function me() { return state && state.players.filter(function (p) { return p.pid === pid; })[0]; }
   if (document.body.classList.contains('embed') && $('code').value.length === 4 && $('name').value.trim()) setTimeout(function () { $('joinform').querySelector('button').click(); }, 0);
 
-  var revealAt = 0, nextAt = 0, toldParent = false, lastH = 0;
+  var revealAt = 0, nextAt = 0, toldParent = false, lastH = 0, endShown = false;
   // Inside the host's page the frame should be exactly as tall as its content while in the lobby.
   function tellHeight() {
     setTimeout(function () {
@@ -64,6 +64,11 @@
   function onState(s) {
     onState2(s);
     remoteVideo(s);
+    // During a game the screen keeps one fixed skeleton, so nothing jumps between question, waiting and answer.
+    var ing = !!me() && ['lobby', 'brief', 'end'].indexOf(s.phase) < 0;
+    document.querySelector('main').classList.toggle('ingame', ing);
+    $('waitlabel').textContent = ing && s.round ? 'Song ' + s.round + ' of ' + s.total : '';
+    if (s.phase !== 'end') endShown = false;
     revealAt = s.phase === 'guess' && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
     // Inside the host's page: let it know once this player is in, so the lobby can open up.
@@ -110,8 +115,8 @@
       show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : (s.remote ? 'The host will start the game soon.' : 'Watch the big screen. The game starts soon.');
     }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
-    else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total + '. Turn your sound on.'; }
-    else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Song ' + s.round + ' of ' + s.total; }
+    else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Turn your sound on.'; }
+    else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = ''; }
     else if (s.phase === 'guess') {
       var q = s.q || { type: 'open', text: 'Which song is this?', hint: 'Type the title…' };
       if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct'; $('waitsub').textContent = ptsText(m.pts) + '. Waiting for the others…'; }
@@ -133,8 +138,21 @@
     else if (s.phase === 'reveal' || s.phase === 'end') {
       show('v-reveal');
       var r = s.reveal || {};
-      $('verdict').className = 'fb ' + (m && m.got ? 'ok' : 'no');
-      $('verdict').textContent = s.phase === 'end' ? 'Game over!' : (m && m.got ? 'Correct' : 'Incorrect');
+      if (s.phase !== 'end') $('verdict').className = 'fb verdict ' + (m && m.got ? 'ok' : 'no');
+      $('verdict').textContent = s.phase === 'end' ? $('verdict').textContent || 'Final scores' : (m && m.got ? 'Correct' : 'Incorrect');
+      $('rround').textContent = s.phase === 'end' ? '' : 'Song ' + s.round + ' of ' + s.total;
+      // The end of the game: no song any more, just the scoreboard counting up (once).
+      var end = s.phase === 'end';
+      $('songcard').classList.toggle('hidden', end); $('pfinal').classList.toggle('hidden', !end);
+      if (end && !endShown) {
+        endShown = true; $('verdict').className = 'fb verdict'; $('verdict').textContent = 'Final scores';
+        finalBoard($('pfinal'), s.players, pid, function (wins) {
+          var iWon = wins.some(function (w) { return w.pid === pid; });
+          $('verdict').className = 'fb verdict ' + (iWon ? 'ok' : '');
+          $('verdict').textContent = !wins.length ? 'Nobody scored' : iWon ? (wins.length > 1 ? 'You share the win!' : 'You win!') : wins.map(function (w) { return w.name; }).join(' & ') + (wins.length > 1 ? ' win!' : ' wins!');
+        });
+      }
+      if (!end) endShown = false;
       var rev = s.phase === 'reveal';
       $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null) : '';
       $('rpts').textContent = rev && m ? ptsText(m.got ? m.pts : 0) : '';
@@ -142,7 +160,7 @@
       if (rev && s.sing) {
         // A Sing! round: show the votes instead of right or wrong.
         var mine = (s.sing.result || []).filter(function (r) { return r.pid === pid; })[0];
-        $('verdict').className = 'fb ' + (mine ? 'ok' : 'no');
+        $('verdict').className = 'fb verdict ' + (mine ? 'ok' : 'no');
         $('verdict').textContent = mine ? (mine.win ? 'Best singer!' : mine.votes + (mine.votes === 1 ? ' vote' : ' votes') + ' for you') : 'You didn’t sing this one';
         $('ropts').innerHTML = (s.sing.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
         $('rpts').textContent = ptsText(mine ? mine.pts : 0);
@@ -152,7 +170,7 @@
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';
-      $('myscorebox').classList.toggle('hidden', !!s.hide);
+      $('myscorebox').classList.toggle('hidden', !!s.hide || end);
       $('myscore').textContent = m ? m.score : 0;
       var rank = m ? s.players.filter(function (p) { return p.score > m.score; }).length + 1 : 0;
       $('myrank').textContent = rank ? 'Place ' + rank + ' of ' + s.players.length : '';
@@ -417,7 +435,8 @@
     var cd = revealAt ? Math.max(0, Math.ceil((revealAt - Date.now()) / 1000)) : 0;
     $('allin').textContent = cd ? (state && state.players.length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';
     var nx = nextAt ? Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) : 0;
-    $('nextin').textContent = nx && state ? (state.round >= state.total ? 'Final scores in ' : 'Playing next song in ') + nx : '';
+    if (nx && state) $('allin').textContent = (state.round >= state.total ? 'Final scores in ' : 'Playing next song in ') + nx;   // same line as "All players answered"
+
     if (!state) return;
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';

@@ -177,6 +177,8 @@
   }, 3000);
 
   // ---------- rendering ----------
+  var endShown = false;
+  function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
@@ -198,14 +200,21 @@
     $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief');
     $('hostmain').classList.toggle('briefing', G.phase === 'brief');
     if (window.selfSize) window.selfSize();
+    if (G.phase !== 'end') endShown = false;
     if (G.phase === 'lobby') show('v-lobby');
     else if (G.phase === 'brief') { show('v-brief'); renderBrief(); }
     else if (G.phase === 'end') {
       show('v-end');
-      var top = ps[0];
-      $('winner').textContent = top ? top.name + ' · ' + top.score + ' points' : 'Nobody?!';
-      $('winchar').innerHTML = top ? charSvg(top.char) : '';
-      $('final').innerHTML = boardHtml(false);
+      // Count the scores up once; the winner is only named when the counting is done.
+      if (!endShown) {
+        endShown = true;
+        $('endlead').textContent = 'Final scores'; $('winner').textContent = '…'; $('winchar').innerHTML = '';
+        finalBoard($('final'), ps, null, function (wins) {
+          $('endlead').textContent = wins.length ? 'And the winner is…' : 'Final scores';
+          $('winner').textContent = wins.length ? wins.map(function (w) { return w.name; }).join(' & ') + ' · ' + ptsLabel(wins[0].score) : 'Nobody scored';
+          $('winchar').innerHTML = wins.length === 1 ? charSvg(wins[0].char) : '';
+        });
+      }
     } else {
       show('v-game');
       $('roundlabel').textContent = 'Song ' + G.round + ' / ' + G.total;
@@ -742,11 +751,11 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=40').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=41').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=40').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=41').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
   render();
 })();

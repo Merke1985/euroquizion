@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Douze Points – host</title>
-<link rel="stylesheet" href="style.css?v=40">
+<link rel="stylesheet" href="style.css?v=41">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -115,20 +115,19 @@
   <iframe id="selfplay" class="selfplay hidden" title="Your own game" allow="autoplay; microphone"></iframe>
 
   <section id="v-end" class="end hidden">
-    <p class="mute" style="font-size:1.3rem;margin:0">And the winner is…</p>
-    <div id="winchar" class="winchar"></div>
-    <h1 id="winner"></h1>
-    <ol class="board" id="final"></ol>
+    <p class="mute" style="font-size:1.3rem;margin:0" id="endlead">Final scores</p>
+    <div class="endhead"><div id="winchar" class="winchar"></div><h1 id="winner"></h1></div>
+    <ol class="board finalboard" id="final"></ol>
     <button class="btn big" id="again">Play another game</button>
   </section>
 </main>
-<script src="vendor/supabase.js?v=40"></script>
-<script src="vendor/qrcode.js?v=40"></script>
-<script src="config.js?v=40"></script>
-<script src="net.js?v=40"></script>
-<script src="chars.js?v=40"></script>
-<script src="match.js?v=40"></script>
-<script src="quiz.js?v=40"></script>
-<script src="host.js?v=40"></script>
+<script src="vendor/supabase.js?v=41"></script>
+<script src="vendor/qrcode.js?v=41"></script>
+<script src="config.js?v=41"></script>
+<script src="net.js?v=41"></script>
+<script src="chars.js?v=41"></script>
+<script src="match.js?v=41"></script>
+<script src="quiz.js?v=41"></script>
+<script src="host.js?v=41"></script>
 </body>
 </html>

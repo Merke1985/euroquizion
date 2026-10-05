@@ -228,3 +228,22 @@ body.embed .phone .center{justify-content:flex-start;gap:8px}
 body.embed .phone>header .logo{display:none}
 body.embed .phone>header{justify-content:flex-end;min-height:0}
 body.embed .phone{padding:4px 2px 12px;gap:10px}
+/* ---------- a steady phone layout during a game ---------- */
+.phone.ingame .allin{display:block;min-height:1.4em;text-align:left}
+.phone.ingame .center{justify-content:flex-start;text-align:left;gap:14px}
+.phone.ingame #waittitle,.phone.ingame #qtext,.phone.ingame .verdict{font-size:1.5rem;font-weight:900;line-height:1.05;letter-spacing:-.02em;min-height:2.1em;margin:0}
+.phone.ingame #waitlabel,.phone.ingame #rround,.phone.ingame #roundlabel{min-height:1.2em}
+.verdict{font-size:1.4rem}
+.barspace{height:10px}
+.phone.ingame .rpts{text-align:left}
+/* ---------- final scoreboard ---------- */
+.finalboard{width:min(560px,100%);gap:8px;text-align:left}
+.finalboard li{border:3px solid var(--line);background:linear-gradient(90deg,#1b0f6b,#2a1890);font-size:1.15rem;align-items:center;padding:.5em .8em;transition:border-color .25s,box-shadow .25s}
+.finalboard .num{min-width:2.6em;text-align:center;background:#fff;color:#14094f;border-radius:8px;padding:.15em .4em;font-weight:900;font-variant-numeric:tabular-nums}
+.finalboard li.reached{border-color:var(--yellow)}
+.finalboard li.winner{border-color:var(--ok);box-shadow:0 0 0 3px rgba(61,220,132,.35)}
+.finalboard li.me .who{text-decoration:underline;text-underline-offset:4px}
+.end .finalboard li:first-child{background:linear-gradient(90deg,#1b0f6b,#2a1890);color:var(--ink);font-size:1.15rem}
+.endhead{display:flex;align-items:center;gap:18px;justify-content:center;min-height:5rem;flex-wrap:wrap}
+.endhead .winchar .char{width:84px;height:84px}
+.phone .finalboard{width:100%}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Douze Points – join</title>
-<link rel="stylesheet" href="style.css?v=40">
+<link rel="stylesheet" href="style.css?v=41">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -58,7 +58,7 @@
     <p id="briefwait" class="mute" style="text-align:center;margin:0"></p>
   </section>
 
-  <section id="v-wait" class="center hidden"><div class="avatarrow hidden" id="profile"><div id="mychar" class="mychar"></div><strong id="myname"></strong><button class="btn alt small" id="changechar" type="button">Edit</button></div><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p></section>
+  <section id="v-wait" class="center hidden"><div class="avatarrow hidden" id="profile"><div id="mychar" class="mychar"></div><strong id="myname"></strong><button class="btn alt small" id="changechar" type="button">Edit</button></div><div class="mute" id="waitlabel"></div><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p></section>
 
   <section id="v-guess" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="mute" id="roundlabel"></div>
@@ -92,11 +92,13 @@
   </section>
 
   <section id="v-reveal" class="center hidden">
-    <p id="verdict" class="fb" style="font-size:1.4rem"></p>
-    <p id="nextin" class="allin"></p>
+    <div class="mute" id="rround"></div>
+    <p id="verdict" class="fb verdict"></p>
+    <div class="barspace"></div>
     <div id="ropts" class="opts"></div>
     <p id="rpts" class="rpts"></p>
-    <div class="card"><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta" style="margin:.5em 0 0"></p><p id="rres" class="res" style="margin:.4em 0 0"></p></div>
+    <ol id="pfinal" class="board finalboard hidden"></ol>
+    <div class="card" id="songcard"><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta" style="margin:.5em 0 0"></p><p id="rres" class="res" style="margin:.4em 0 0"></p></div>
     <div id="myscorebox"><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>
@@ -106,12 +108,12 @@
   <div id="chatlog" class="chatlog"></div>
   <form id="chatform" autocomplete="off"><input id="chatin" type="text" maxlength="200" placeholder="Say something…" enterkeyhint="send"><button class="btn">Send</button></form>
 </div>
-<script src="vendor/supabase.js?v=40"></script>
-<script src="config.js?v=40"></script>
-<script src="match.js?v=40"></script>
-<script src="quiz.js?v=40"></script>
-<script src="net.js?v=40"></script>
-<script src="chars.js?v=40"></script>
-<script src="player.js?v=40"></script>
+<script src="vendor/supabase.js?v=41"></script>
+<script src="config.js?v=41"></script>
+<script src="match.js?v=41"></script>
+<script src="quiz.js?v=41"></script>
+<script src="net.js?v=41"></script>
+<script src="chars.js?v=41"></script>
+<script src="player.js?v=41"></script>
 </body>
 </html>
