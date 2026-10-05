@@ -321,7 +321,7 @@
       if (p.pick === G.q.correct) { p.pts = scoreFor(p.pickMs, G.guessMs); p.score += p.pts; p.got = true; }
     });
     cover(false); masks(false);
-    try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
+    try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     push(); autoStart();
   }
   function startRound() {
@@ -341,6 +341,16 @@
     clearTimeout(singTimer); stopAudio();
     if (G.sing) Object.keys(G.sing.clips).forEach(function (k) { try { URL.revokeObjectURL(G.sing.clips[k]); } catch (e) {} });
     G.sing = null;
+  }
+  // YouTube sometimes comes back with sound after a seek, so during playback of the recordings the
+  // video is silenced repeatedly: muted and at volume 0.
+  var silenceTick = null;
+  function silence() {
+    try { yt.mute(); yt.setVolume(0); } catch (e) {}
+    if (!silenceTick) silenceTick = setInterval(function () {
+      if (G.sing && G.phase === 'splay') { try { yt.mute(); yt.setVolume(0); } catch (e) {} }
+      else { clearInterval(silenceTick); silenceTick = null; }
+    }, 150);
   }
   function singPhase(phase, ms) { G.phase = phase; G.sing.in = {}; G.barMs = ms; G.endsAt = Date.now() + ms; clearTimeout(singTimer); }
   function singStart() {
@@ -384,10 +394,12 @@
     if (!G.sing || G.phase !== 'splay') return;
     clearTimeout(singTimer); stopAudio();
     var pid = G.sing.order[++G.sing.idx];
-    if (!pid) { try { yt.pauseVideo(); } catch (e) {} if (G.sing.order.length > 1) singBest(); else singReveal(); return; }
+    if (!pid) { clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {} if (G.sing.order.length > 1) singBest(); else singReveal(); return; }
     G.sing.now = pid; cover(false); masks(false);
     // The song's video runs silently; the sound is the player's recording.
-    try { yt.mute(); yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
+    silence();
+    try { yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
+    silence();
     var a = singAudio = new Audio(G.sing.clips[pid]), done = false;
     var fin = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(singNext, 900); };
     a.onended = fin; a.onerror = fin;
@@ -415,7 +427,8 @@
     }).sort(function (a, b) { return b.votes - a.votes; });
     G.phase = 'reveal'; stage = 'reveal'; G.sing.in = {}; G.sing.now = null;
     cover(false); masks(false);
-    try { if (G.sing.chosen != null) { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } } catch (e) {}
+    clearInterval(silenceTick); silenceTick = null;
+    try { if (G.sing.chosen != null) { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
     push(); autoStart();
   }
   // The host's "Continue" button moves a Sing! round along when someone is stuck.
@@ -557,7 +570,7 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=23').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=25').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });

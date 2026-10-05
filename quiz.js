@@ -42,9 +42,22 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
     for (var i = 1; i <= 26; i++) n.push(i);
     shuffle(n).forEach(function (x) { add(ordinal(x) + ' place'); });
   } else {
-    var idx = subject === 'title' ? 3 : 2;
-    shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 8; })).forEach(function (s) { add(s[idx]); });
-    shuffle(allSongs.slice()).forEach(function (s) { add(s[idx]); });
+    var idx = subject === 'title' ? 3 : 2, tiers = [];
+    if (subject === 'artist') {
+      // A man is only offered next to men, a woman next to women, and a group next to groups (or acts we cannot place).
+      var g = song[11], solo = g === 'm' || g === 'f';
+      tiers.push(function (s) { return solo ? s[11] === g : (s[11] !== 'm' && s[11] !== 'f'); });
+    } else {
+      // A title in, say, French is only offered next to French titles, topped up with English ones if needed.
+      var lang = song[10];
+      if (lang) tiers.push(function (s) { return s[10] === lang; });
+      if (lang && lang !== 'english') tiers.push(function (s) { return s[10] === 'english'; });
+    }
+    tiers.push(function () { return true; });
+    tiers.forEach(function (ok) {
+      shuffle(allSongs.filter(function (s) { return ok(s) && Math.abs(s[0] - song[0]) <= 8; })).forEach(function (s) { add(s[idx]); });
+      shuffle(allSongs.filter(ok)).forEach(function (s) { add(s[idx]); });
+    });
   }
   if (subject === 'place' || subject === 'points') opts.sort(function (a, b) { var x = parseInt(a, 10), y = parseInt(b, 10); return (isNaN(x) ? 999 : x) - (isNaN(y) ? 999 : y); }); else shuffle(opts);
   q.options = opts; q.correct = opts.indexOf(answer);
