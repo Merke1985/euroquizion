@@ -201,3 +201,11 @@ body.embed .phone{min-height:0;padding-top:12px}
 .msg.mine span{background:var(--pink);border-radius:14px 4px 14px 14px}
 #chatform{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
 #chatform input{flex:1;min-width:0}
+.allin{margin:.3em 0 0;font-weight:800;color:var(--yellow);font-size:1.15rem}
+.allin:empty{display:none}
+.phone .allin{text-align:center;margin:0}
+/* host without a screen: avatar first, lobby second */
+body.remote.selfpending .lobby{display:none}
+body.remote.selfpending .host:not(.ingame) .selfplay{order:-1}
+body.remote:not(.selfpending) .host:not(.ingame) .selfplay{height:300px}
+body.remote .host>header{order:-2}

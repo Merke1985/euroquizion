@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Douze Points – host</title>
-<link rel="stylesheet" href="style.css?v=34">
+<link rel="stylesheet" href="style.css?v=35">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -16,6 +16,7 @@
 
   <section id="v-lobby" class="lobby">
     <div class="join">
+      <p class="note hidden" id="selfnote">You’re in. Share the code below, then start whenever you like.</p>
       <p class="mute" style="font-size:1.3rem;margin:0" id="joinlead">Grab your phone and go to</p>
       <p class="url" id="joinurl"></p>
       <div class="joinrow">
@@ -73,7 +74,7 @@
       <div id="guessui">
         <div class="bar" style="margin-top:14px"><i id="tbar"></i></div>
         <div class="under">
-          <div><div class="mute" id="roundlabel" style="font-weight:700"></div><h2 id="qtext"></h2></div>
+          <div><div class="mute" id="roundlabel" style="font-weight:700"></div><h2 id="qtext"></h2><p id="allin" class="allin"></p></div>
           <div style="display:flex;gap:10px">
             <button class="btn alt" id="replay">Play again</button>
             <button class="btn alt" id="skip">Show answer</button>
@@ -107,13 +108,13 @@
     <button class="btn big" id="again">Play another game</button>
   </section>
 </main>
-<script src="vendor/supabase.js?v=34"></script>
-<script src="vendor/qrcode.js?v=34"></script>
-<script src="config.js?v=34"></script>
-<script src="net.js?v=34"></script>
-<script src="chars.js?v=34"></script>
-<script src="match.js?v=34"></script>
-<script src="quiz.js?v=34"></script>
-<script src="host.js?v=34"></script>
+<script src="vendor/supabase.js?v=35"></script>
+<script src="vendor/qrcode.js?v=35"></script>
+<script src="config.js?v=35"></script>
+<script src="net.js?v=35"></script>
+<script src="chars.js?v=35"></script>
+<script src="match.js?v=35"></script>
+<script src="quiz.js?v=35"></script>
+<script src="host.js?v=35"></script>
 </body>
 </html>

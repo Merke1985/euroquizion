@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Douze Points – join</title>
-<link rel="stylesheet" href="style.css?v=34">
+<link rel="stylesheet" href="style.css?v=35">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -19,6 +19,8 @@
     <button class="btn hidden" id="tapplay" type="button">Tap to play</button>
   </div>
 
+  <p id="allin" class="allin"></p>
+
   <section id="v-join" class="card">
     <h2 style="margin-bottom:16px">Join the game</h2>
     <form id="joinform" autocomplete="off">
@@ -30,9 +32,10 @@
     <div class="or"><span>or</span></div>
     <div id="hostlinks">
     <a class="btn alt big" href="host.html" style="display:block;text-align:center;text-decoration:none">Host game with shared screen</a>
-    <a class="btn alt big" href="host.html?screen=0" style="display:block;text-align:center;text-decoration:none;margin-top:12px">Host game without screen</a>
+    <a class="btn alt big" href="host.html?screen=0" style="display:block;text-align:center;text-decoration:none;margin-top:12px">Host game</a>
     <a class="btn alt big" href="solo.html" style="display:block;text-align:center;text-decoration:none;margin-top:12px">Play solo</a>
-    <p class="mute" style="margin:12px 0 0;font-size:.9rem;text-align:center">Shared screen: a TV or laptop plays the videos for everyone. Without screen: every phone plays its own video.</p>
+    <p class="mute" style="margin:14px 0 0;font-size:.9rem"><strong style="color:var(--ink)">Shared screen:</strong> one device plays the videos for everyone. Ideal for local play or streaming through Discord.</p>
+    <p class="mute" style="margin:8px 0 0;font-size:.9rem"><strong style="color:var(--ink)">Host game (online):</strong> meant for playing against friends. Videos will play on your own device.</p>
     </div>
     <p style="margin:18px 0 0;font-size:.8rem;text-align:center"><a href="credits.html" style="color:var(--mute)">Photo credits</a></p>
   </section>
@@ -91,12 +94,12 @@
   <div id="chatlog" class="chatlog"></div>
   <form id="chatform" autocomplete="off"><input id="chatin" type="text" maxlength="200" placeholder="Say something…" enterkeyhint="send"><button class="btn">Send</button></form>
 </div>
-<script src="vendor/supabase.js?v=34"></script>
-<script src="config.js?v=34"></script>
-<script src="match.js?v=34"></script>
-<script src="quiz.js?v=34"></script>
-<script src="net.js?v=34"></script>
-<script src="chars.js?v=34"></script>
-<script src="player.js?v=34"></script>
+<script src="vendor/supabase.js?v=35"></script>
+<script src="config.js?v=35"></script>
+<script src="match.js?v=35"></script>
+<script src="quiz.js?v=35"></script>
+<script src="net.js?v=35"></script>
+<script src="chars.js?v=35"></script>
+<script src="player.js?v=35"></script>
 </body>
 </html>

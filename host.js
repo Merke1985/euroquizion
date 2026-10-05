@@ -4,7 +4,7 @@
   var room = '', net, songs = [], countries = {}, chorus = {};
   var REMOTE = new URLSearchParams(location.search).get('screen') === '0';   // a game without a shared screen
   var players = {};         // pid -> {pid,name,score,got,pts,last}
-  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'speed', showScore: 'always' };
+  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'speed', showScore: 'always', revealAt: 0 };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
@@ -69,18 +69,24 @@
     }
   });
   // Everyone who is still connected has answered: go to the answer.
+  var ALLIN_MS = 5000;
   function isIn(p) { return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null); }
   function allIn() {
     var act = list().filter(function (x) { return !x.off; });
     var ph = G.phase;
-    if (act.length && act.every(isIn)) setTimeout(function () {
+    if (!act.length || !act.every(isIn)) return;
+    // A quiz question: tell everyone, count down from 5, then show the answer.
+    var wait = ph === 'guess' ? ALLIN_MS : 1200;
+    if (ph === 'guess') { if (G.revealAt) return; G.revealAt = Date.now() + wait; push(); }
+    setTimeout(function () {
       var now = list().filter(function (x) { return !x.off; });
-      if (G.phase !== ph || !now.length || !now.every(isIn)) return;
+      if (G.phase !== ph) return;
+      if (!now.length || !now.every(isIn)) { if (ph === 'guess') { G.revealAt = 0; push(); } return; }
       if (ph === 'guess') reveal();
       else if (ph === 'svote') singVoteEnd();
       else if (ph === 'srec') singPlayAll();
       else if (ph === 'sbest') singReveal();
-    }, 1200);
+    }, wait);
   }
 
   function list() { return Object.keys(players).map(function (k) { return players[k]; }).sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); }); }
@@ -90,6 +96,7 @@
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (hideScores()) s.hide = true;
+    if (G.revealAt && G.phase === 'guess') s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options };
@@ -254,6 +261,8 @@
   function countStop() { clearInterval(loadTick); loadT0 = 0; }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   setInterval(function () {
+    var cd = G.phase === 'guess' && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
+    $('allin').textContent = cd ? 'All players answered. Revealing in ' + cd : '';
     var timed = G.phase === 'guess' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
@@ -271,6 +280,12 @@
     document.body.classList.add('remote');
     $('joinlead').textContent = 'Let the others join on their phone at';
     $('selfplay').src = './?k=' + room + '&embed=1'; $('selfplay').classList.remove('hidden');
+    // The host first picks a name and an avatar; the lobby with the code and settings opens after that.
+    document.body.classList.add('selfpending');
+    window.addEventListener('message', function (e) {
+      if (e.origin !== location.origin || !e.data || e.data.esc !== 'joined') return;
+      document.body.classList.remove('selfpending'); $('selfnote').classList.remove('hidden');
+    });
     var so = $('s-atype').querySelector('option[value="sing"]'); if (so) so.remove();   // Sing! needs the shared screen
   } else {
     var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
@@ -345,7 +360,7 @@
   }
   function reveal() {
     if (G.phase !== 'guess') return;
-    stopTimers(); G.phase = 'reveal'; stage = 'reveal';
+    stopTimers(); G.phase = 'reveal'; stage = 'reveal'; G.revealAt = 0;
     // Multiple choice is scored now, from the answer each player was holding.
     // For "order" scoring the right answers are ranked by when they were put in.
     if (G.q && G.q.type === 'mc') list().filter(function (p) { return p.pick === G.q.correct; })
@@ -358,7 +373,7 @@
   function startRound() {
     G.round++; G.phase = 'loading';
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
-    G.q = null; singClear();
+    G.q = null; G.revealAt = 0; singClear();
     if (G.atype === 'sing' && !REMOTE) { singStart(); return; }
     push(); loadSong();
   }
@@ -652,11 +667,11 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=34').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=35').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=34').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=35').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
   render();
 })();

@@ -14,7 +14,7 @@
   // Inside the host's own page (a game without a shared screen) the hosting buttons make no sense.
   if (qs.get('embed')) { document.body.classList.add('embed'); $('hostlinks').classList.add('hidden'); }
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=34').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=35').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
@@ -49,10 +49,15 @@
   });
 
   function me() { return state && state.players.filter(function (p) { return p.pid === pid; })[0]; }
+  if (document.body.classList.contains('embed') && $('code').value.length === 4 && $('name').value.trim()) setTimeout(function () { $('joinform').querySelector('button').click(); }, 0);
 
+  var revealAt = 0, toldParent = false;
   function onState(s) {
     onState2(s);
     remoteVideo(s);
+    revealAt = s.phase === 'guess' && s.reveal_in ? Date.now() + s.reveal_in : 0;
+    // Inside the host's page: let it know once this player is in, so the lobby can open up.
+    if (!toldParent && me() && document.body.classList.contains('embed')) { toldParent = true; try { parent.postMessage({ esc: 'joined' }, location.origin); } catch (e) {} }
   }
   function onState2(s) {
     state = s; clearTimeout(joinTimer);
@@ -357,6 +362,8 @@
   });
 
   setInterval(function () {
+    var cd = revealAt ? Math.max(0, Math.ceil((revealAt - Date.now()) / 1000)) : 0;
+    $('allin').textContent = cd ? 'All players answered. Revealing in ' + cd : '';
     if (!state) return;
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';
