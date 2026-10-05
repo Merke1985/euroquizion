@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Douze Points – host</title>
-<link rel="stylesheet" href="style.css?v=25">
+<link rel="stylesheet" href="style.css?v=27">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -47,9 +47,9 @@
         <div><label for="s-cat">Entries</label><select id="s-cat">
           <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
         <div><label for="s-atype">Category</label><select id="s-atype">
-          <option value="mc" selected>Multiple choice</option><option value="open">Open</option><option value="mix">Mix</option></select></div>
+          <option value="mc" selected>Multiple choice</option><option value="open">Open</option><option value="mix">Mix</option><option value="sing">Sing!</option></select></div>
         <div><label for="s-subject">Answers</label><select id="s-subject">
-          <option value="country" selected>Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="points">Points</option><option value="title">Song title</option><option value="random">Random</option><option value="sing">Sing!</option></select></div>
+          <option value="country" selected>Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="points">Points</option><option value="title">Song title</option><option value="random">Random</option></select></div>
       </div>
       <button class="btn big" id="start" style="width:100%" disabled>Loading songs…</button>
       <p class="mute" id="songcount" style="margin:12px 0 0;font-size:.9rem"></p>
@@ -99,13 +99,13 @@
     <button class="btn big" id="again">Play another game</button>
   </section>
 </main>
-<script src="vendor/supabase.js?v=25"></script>
-<script src="vendor/qrcode.js?v=25"></script>
-<script src="config.js?v=25"></script>
-<script src="net.js?v=25"></script>
-<script src="chars.js?v=25"></script>
-<script src="match.js?v=25"></script>
-<script src="quiz.js?v=25"></script>
-<script src="host.js?v=25"></script>
+<script src="vendor/supabase.js?v=27"></script>
+<script src="vendor/qrcode.js?v=27"></script>
+<script src="config.js?v=27"></script>
+<script src="net.js?v=27"></script>
+<script src="chars.js?v=27"></script>
+<script src="match.js?v=27"></script>
+<script src="quiz.js?v=27"></script>
+<script src="host.js?v=27"></script>
 </body>
 </html>

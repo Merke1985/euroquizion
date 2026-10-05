@@ -1,7 +1,7 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var CLIP = 15;            // clip length in seconds
-  var room = '', net, songs = [], countries = {};
+  var room = '', net, songs = [], countries = {}, chorus = {};
   var players = {};         // pid -> {pid,name,score,got,pts,last}
   var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'country', q: null, sing: null, barMs: 30000 };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
@@ -111,8 +111,9 @@
   function applyCfg(c) {
     if (c.era) G.era = c.era; if (c.cat) G.cat = c.cat;
     if (c.atype) G.atype = c.atype; if (c.subject) G.subject = c.subject;
+    if (G.subject === 'sing') { G.atype = 'sing'; G.subject = 'country'; }   // games saved before Sing! moved to Category
     $('s-era').value = G.era; $('s-cat').value = G.cat;
-    $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-atype').disabled = G.subject === 'sing';
+    $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = G.atype === 'sing';
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([20, 30, 45].indexOf(G.guessMs / 1000) >= 0) $('s-time').value = G.guessMs / 1000;
     buildPool();
@@ -271,6 +272,13 @@
       var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0;
       if (stage === 'probe' && st === 1 && d > 0) {
         clipStart = d < 45 ? 0 : Math.floor(15 + Math.random() * (d - 15 - 20 - CLIP));
+        if (G.sing) {
+          // Sing! wants the chorus: an exact start from chorus.json if the song has one, otherwise the
+          // stretch where a three-minute Eurovision song usually reaches its first chorus.
+          var known = chorus[G.song[4]];
+          if (typeof known === 'number' && known < d - 5) clipStart = Math.max(0, Math.floor(known));
+          else if (d >= 110) clipStart = Math.floor(45 + Math.random() * 30);
+        }
         stage = 'seek'; yt.seekTo(clipStart, true);
       } else if (stage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
         clearInterval(poll); clearTimeout(watchdog); fails = 0;
@@ -328,7 +336,7 @@
     G.round++; G.phase = 'loading';
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; singClear();
-    if (G.subject === 'sing') { singStart(); return; }
+    if (G.atype === 'sing') { singStart(); return; }
     push(); loadSong();
   }
   // ---------- Sing! ----------
@@ -506,9 +514,9 @@
     $('start').textContent = ytReady ? 'Start game' : 'Loading player…';
     if (G.phase === 'paused') render();
   }
-  // Sing! has no multiple choice or open setting: there is nothing to answer.
-  function singToggle() { $('s-atype').disabled = $('s-subject').value === 'sing'; }
-  $('s-subject').addEventListener('change', singToggle);
+  // Sing! is a category of its own: there is no question, so the Answers setting does not apply.
+  function singToggle() { $('s-subject').disabled = $('s-atype').value === 'sing'; }
+  $('s-atype').addEventListener('change', singToggle);
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
     stopTimers(); autoStop(); singClear(); clearInterval(loadTick); loadT0 = 0; stage = 'idle';
@@ -570,10 +578,11 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=25').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=27').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
+  fetch('chorus.json?v=27').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
   render();
 })();

@@ -12,7 +12,7 @@
   $('name').value = store.get('esc-name') || '';
   var k = new URLSearchParams(location.search).get('k');
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=25').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=27').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 

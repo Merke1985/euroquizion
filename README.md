@@ -10,3 +10,5 @@ A Jackbox-style Eurovision guessing game. The host screen (`host.html`) plays a 
 Try it locally: run `python3 -m http.server` in this folder and open `http://localhost:8000/host.html`.
 
 **Sing!** (host-only question type): players vote for one of four songs, listen, record up to 10 seconds on their phone, the recordings play one by one over the muted video, and everyone votes for the best. Recordings go straight from phone to host over the room connection and are not stored.
+
+`chorus.json` maps a YouTube video ID to the second where the chorus starts, e.g. `{"3FsVeMz1F5c": 38}`. Sing! starts its clip there; songs without an entry start between 0:45 and 1:15.
