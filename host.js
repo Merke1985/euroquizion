@@ -435,7 +435,7 @@
     var ranked = G.sing.order.map(function (pid) { return tally[pid]; }).sort(function (a, b) { return b - a; });
     G.sing.result = G.sing.order.filter(function (pid) { return players[pid]; }).map(function (pid) {
       var p = players[pid], win = max > 0 && tally[pid] === max;
-      p.pts = G.scoring === 'order' ? (ESC_POINTS[ranked.indexOf(tally[pid])] || 0) : 20 + 50 * tally[pid] + (win ? 50 : 0);
+      p.pts = G.scoring === 'order' ? (ESC_POINTS[ranked.indexOf(tally[pid])] || 1) : 20 + 50 * tally[pid] + (win ? 50 : 0);
       p.score += p.pts; p.got = true;
       return { pid: pid, name: p.name, char: p.char, votes: tally[pid], win: win, pts: p.pts };
     }).sort(function (a, b) { return b.votes - a.votes; });
@@ -586,11 +586,11 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=28').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=29').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=28').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=29').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   restore();
   render();
 })();

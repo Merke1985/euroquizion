@@ -232,7 +232,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=28').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=29').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();
