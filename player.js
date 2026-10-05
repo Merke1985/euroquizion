@@ -334,7 +334,7 @@
     if (vStage === 'primed' && s.phase === 'brief') { try { if (yt.getPlayerState() === 1) yt.pauseVideo(); } catch (e) {} }
     var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
     $('pstage').classList.toggle('hidden', !on);
-    $('chatbtn').classList.toggle('hidden', !(s.remote && m) || (document.body.classList.contains('embed') && s.phase === 'lobby'));   // no room for it in the host's small lobby frame
+    $('chatbtn').classList.toggle('hidden', !(s.remote && m) || (document.body.classList.contains('embed') && (s.phase === 'lobby' || s.phase === 'brief')));   // no room for it in the host's small lobby frame
     if (!s.remote) return;
     ytLoad();
     if (!on) { if (vStage !== 'idle') { vStop(); vStage = 'idle'; clipKey = ''; } return; }

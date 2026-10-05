@@ -262,3 +262,4 @@ body.embed .phone.compact .mychar .char{width:38px;height:38px}
 body.embed .phone.compact .avatarrow strong{font-size:1.05rem}
 body.embed .demo{display:none}
 body.embed{background:transparent}   /* the host page behind the frame provides the background */
+body.remote .brief>.card{display:none}   /* the settings and scoring already show in the host's own game above */
