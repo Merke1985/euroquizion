@@ -241,7 +241,7 @@
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (S.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      $('autoleft').textContent = (S.round >= S.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
+      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (S.round >= S.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
     };
     draw(); autoTick = setInterval(draw, 200);
   }

@@ -107,7 +107,7 @@
     if (hideScores()) s.hide = true;
     if (G.phase === 'brief' || G.phase === 'intro') s.brief = G.brief;
     if (G.phase === 'intro') s.intro = INTRO.ids[0];
-    if (G.phase === 'reveal' && autoTick) s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
+    if (G.phase === 'reveal' && autoTick && $('autolen').value !== 'end') s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
     if (G.revealAt && (G.phase === 'guess' || G.phase === 'svote' || G.phase === 'sbest')) s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
@@ -873,7 +873,7 @@
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (G.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
+      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
     };
     draw(); autoTick = setInterval(draw, 200);
     if (!recovering) net.send('state', snapshot());
