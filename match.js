@@ -1,4 +1,4 @@
-// Soepele antwoordcontrole: negeert hoofdletters, accenten, leestekens en kleine typfouten.
+// Forgiving answer check: ignores case, accents, punctuation and small typos.
 (function (root) {
   var SPECIAL = { 'ß': 'ss', 'ø': 'o', 'æ': 'ae', 'œ': 'oe', 'đ': 'd', 'ł': 'l', 'ð': 'd', 'þ': 'th', 'ı': 'i', 'ħ': 'h' };
   function norm(s) {
@@ -27,7 +27,7 @@
     return prev[b.length];
   }
   function tol(n) { return n <= 3 ? 0 : n <= 6 ? 1 : n <= 12 ? 2 : 3; }
-  // Geeft 'ok', 'close' of 'no'
+  // Returns 'ok', 'close' or 'no'
   function check(guess, title) {
     var g = norm(guess), best = 'no';
     if (!g) return 'no';
@@ -36,7 +36,7 @@
       var v = vs[i], t = tol(v.length);
       var d = Math.min(lev(g, v), lev(g.replace(/ /g, ''), v.replace(/ /g, '')));
       if (d <= t) return 'ok';
-      // titel staat letterlijk in een langer antwoord ("abba waterloo")
+      // title appears literally inside a longer answer ("abba waterloo")
       if (v.length >= 4 && (' ' + g + ' ').indexOf(' ' + v + ' ') >= 0) return 'ok';
       if (v.length > 3 && (d <= t + 2 || (g.length >= 4 && v.indexOf(g) >= 0))) best = 'close';
     }

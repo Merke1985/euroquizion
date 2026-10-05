@@ -1,10 +1,10 @@
 # Douze Points!
 
-Eurovisie-raadspel in Jackbox-stijl. Het hostscherm (`host.html`) speelt een willekeurig fragment van 10 seconden; spelers doen mee op hun telefoon (`index.html`) met een kamercode en typen de titel.
+A Jackbox-style Eurovision guessing game. The host screen (`host.html`) plays a random 10-second clip; players join on their phones (`index.html`) with a room code and type the song title.
 
-- `songs.json` – 1699 inzendingen (1956–2023, incl. halve finales) met YouTube-video-ID. Bron: Spijkervet/eurovision-dataset.
-- `config.js` – Supabase-URL en publishable key. Leeg = demomodus (alleen tabbladen in dezelfde browser).
-- `match.js` – soepele antwoordcontrole (accenten, leestekens, typfouten).
-- Geen build-stap: zet de map op een statische host zoals GitHub Pages.
+- `songs.json` – 1699 entries (1956–2023, including semi-finals) with YouTube video IDs. Source: Spijkervet/eurovision-dataset.
+- `config.js` – Supabase URL and public key. Empty = demo mode (tabs in the same browser only).
+- `match.js` – forgiving answer check (accents, punctuation, typos).
+- No build step: serve the folder from any static host such as GitHub Pages.
 
-Lokaal proberen: `python3 -m http.server` in deze map en open `http://localhost:8000/host.html`.
+Try it locally: run `python3 -m http.server` in this folder and open `http://localhost:8000/host.html`.

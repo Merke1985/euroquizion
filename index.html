@@ -1,36 +1,36 @@
 <!doctype html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Douze Points – meedoen</title>
+<title>Douze Points – join</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="demo" class="demo hidden">Demomodus – werkt alleen tussen tabbladen in deze browser</div>
+<div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
 <main class="phone">
   <header><div class="logo">DOUZE <b>POINTS</b><i>!</i></div><div id="me" class="mute"></div></header>
 
   <section id="v-join" class="card">
-    <h2 style="margin-bottom:16px">Doe mee</h2>
+    <h2 style="margin-bottom:16px">Join the game</h2>
     <form id="joinform" autocomplete="off">
-      <div class="field"><label for="code">Kamercode</label><input id="code" type="text" maxlength="4" inputmode="text" autocapitalize="characters" placeholder="ABCD" required></div>
-      <div class="field"><label for="name">Je naam</label><input id="name" type="text" maxlength="16" placeholder="Bijv. Loreen" required></div>
-      <button class="btn big" style="width:100%">Meedoen</button>
+      <div class="field"><label for="code">Room code</label><input id="code" type="text" maxlength="4" inputmode="text" autocapitalize="characters" placeholder="ABCD" required></div>
+      <div class="field"><label for="name">Your name</label><input id="name" type="text" maxlength="16" placeholder="E.g. Loreen" required></div>
+      <button class="btn big" style="width:100%">Join</button>
       <p id="joinerr" class="fb no" style="margin:14px 0 0"></p>
     </form>
-    <p class="mute" style="margin:18px 0 0;font-size:.9rem">Zelf een spel starten? <a href="host.html" style="color:var(--cyan)">Open het hostscherm</a> op een tv of laptop.</p>
+    <p class="mute" style="margin:18px 0 0;font-size:.9rem">Want to start a game yourself? <a href="host.html" style="color:var(--cyan)">Open the host screen</a> on a TV or laptop.</p>
   </section>
 
   <section id="v-wait" class="center hidden"><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p></section>
 
   <section id="v-guess" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="mute" id="roundlabel"></div>
-    <h2>Welk liedje is dit?</h2>
+    <h2>Which song is this?</h2>
     <div class="bar"><i id="pbar"></i></div>
     <form id="guessform" autocomplete="off">
-      <input id="guess" type="text" maxlength="80" placeholder="Typ de titel…" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
-      <button class="btn big" style="width:100%;margin-top:12px">Raad!</button>
+      <input id="guess" type="text" maxlength="80" placeholder="Type the title…" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
+      <button class="btn big" style="width:100%;margin-top:12px">Guess!</button>
     </form>
     <p id="fb" class="fb"></p>
   </section>
@@ -38,7 +38,7 @@
   <section id="v-reveal" class="center hidden">
     <p id="verdict" class="fb" style="font-size:1.4rem"></p>
     <div class="card"><h2 id="rtitle"></h2><p id="rmeta" style="margin:.5em 0 0"></p></div>
-    <div><div class="mute">Jouw score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
+    <div><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>
 <script src="vendor/supabase.js"></script>

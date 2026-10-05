@@ -1,4 +1,4 @@
-// Dunne verbindingslaag: Supabase Realtime (broadcast) of, zonder config, BroadcastChannel.
+// Thin connection layer: Supabase Realtime (broadcast) or, without config, BroadcastChannel.
 var EVENTS = ['hi', 'guess', 'state', 'result'];
 function escConnect(room) {
   var cfg = window.ESC_CONFIG || {}, handlers = {};

@@ -1,7 +1,7 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-  // Per tabblad een eigen speler-id; blijft bewaard bij verversen.
+  // One player id per tab; survives a refresh.
   var pid = null;
   try { pid = sessionStorage.getItem('esc-pid'); } catch (e) {}
   if (!pid) pid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -29,12 +29,12 @@
     var hi = function () { net.send('hi', { pid: pid, name: name }); };
     net.on('_open', hi);
     clearInterval(hiTimer); hiTimer = setInterval(hi, 4000);
-    show('v-wait'); $('waittitle').textContent = 'Verbinden…'; $('waitsub').textContent = 'Kamer ' + room;
+    show('v-wait'); $('waittitle').textContent = 'Connecting…'; $('waitsub').textContent = 'Room ' + room;
     clearTimeout(joinTimer);
     joinTimer = setTimeout(function () {
       if (state) return;
       clearInterval(hiTimer); show('v-join');
-      $('joinerr').textContent = 'Geen spel gevonden met code ' + room + '. Klopt de code?';
+      $('joinerr').textContent = 'No game found with code ' + room + '. Is the code right?';
     }, 7000);
   });
 
@@ -47,12 +47,12 @@
     $('me').textContent = name + (m ? ' · ' + m.score : '');
     var key = s.phase + ':' + s.round;
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
-    if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'Je doet mee!'; $('waitsub').textContent = 'Kijk naar het grote scherm. Het spel begint zo.'; }
-    else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Oren open…'; $('waitsub').textContent = 'Ronde ' + s.round + ' van ' + s.total; }
+    if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'You’re in!'; $('waitsub').textContent = 'Watch the big screen. The game starts soon.'; }
+    else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Round ' + s.round + ' of ' + s.total; }
     else if (s.phase === 'guess') {
-      if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Goed! +' + m.pts; $('waitsub').textContent = 'Even wachten op de rest…'; }
+      if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct! +' + m.pts; $('waitsub').textContent = 'Waiting for the others…'; }
       else {
-        show('v-guess'); $('roundlabel').textContent = 'Ronde ' + s.round + ' van ' + s.total;
+        show('v-guess'); $('roundlabel').textContent = 'Round ' + s.round + ' of ' + s.total;
         if (fresh) { $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb'; $('guess').focus(); }
       }
     }
@@ -60,21 +60,21 @@
       show('v-reveal');
       var r = s.reveal || {};
       $('verdict').className = 'fb ' + (m && m.got ? 'ok' : 'no');
-      $('verdict').textContent = s.phase === 'end' ? 'Afgelopen!' : (m && m.got ? 'Goed geraden! +' + m.pts : 'Helaas, niet geraden');
+      $('verdict').textContent = s.phase === 'end' ? 'Game over!' : (m && m.got ? 'You got it! +' + m.pts : 'Not this time');
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('myscore').textContent = m ? m.score : 0;
       var rank = m ? s.players.filter(function (p) { return p.score > m.score; }).length + 1 : 0;
-      $('myrank').textContent = rank ? 'Plek ' + rank + ' van ' + s.players.length : '';
+      $('myrank').textContent = rank ? 'Place ' + rank + ' of ' + s.players.length : '';
     }
   }
 
   function onResult(r) {
     if (r.pid !== pid) return;
     var fb = $('fb');
-    if (r.res === 'ok') return; // state-update volgt
+    if (r.res === 'ok') return; // a state update follows
     fb.className = 'fb ' + (r.res === 'close' ? 'close' : 'no');
-    fb.textContent = r.res === 'close' ? 'Bijna! Kijk nog eens naar je spelling.' : 'Nee, dat is het niet. Probeer opnieuw!';
+    fb.textContent = r.res === 'close' ? 'So close! Check your spelling.' : 'Nope, that’s not it. Try again!';
     if (r.res !== 'close') $('guess').value = '';
     $('guess').focus();
   }

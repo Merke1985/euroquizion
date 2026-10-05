@@ -1,12 +1,12 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var CLIP = 10;            // seconden fragment
+  var CLIP = 10;            // clip length in seconds
   var room = '', net, songs = [], countries = {};
   var players = {};         // pid -> {pid,name,score,got,pts,last}
   var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
-  // ---------- kamer ----------
+  // ---------- room ----------
   var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   for (var i = 0; i < 4; i++) room += A[Math.floor(Math.random() * A.length)];
   var joinUrl = new URL('./?k=' + room, location.href).href;
@@ -20,7 +20,7 @@
   net.on('hi', function (m) {
     if (!m || !m.pid) return;
     var p = players[m.pid], isNew = !p;
-    var nm = String(m.name || '').slice(0, 16) || 'Speler';
+    var nm = String(m.name || '').slice(0, 16) || 'Player';
     if (!p) p = players[m.pid] = { pid: m.pid, name: nm, score: 0, got: false, pts: 0 };
     var changed = isNew || p.name !== nm || p.off;
     p.name = nm; p.last = Date.now(); p.off = false;
@@ -56,41 +56,56 @@
     net.send('state', snapshot()); if (ch) render();
   }, 3000);
 
-  // ---------- weergave ----------
+  // ---------- rendering ----------
   function show(id) { ['v-lobby', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   function boardHtml(showGot) {
     return list().map(function (p) {
       return '<li class="' + (showGot && p.got ? 'got ' : '') + (p.off ? 'off' : '') + '"><span>' + esc(p.name) + '</span><span>' + p.score +
         (showGot && p.got ? '<span class="pts">+' + p.pts + '</span>' : '') + '</span></li>';
-    }).join('') || '<li class="mute">Nog geen spelers</li>';
+    }).join('') || '<li class="mute">No players yet</li>';
   }
   function render() {
     var ps = list();
-    $('players').innerHTML = ps.map(function (p) { return '<span class="chip' + (p.off ? ' off' : '') + '">' + esc(p.name) + '</span>'; }).join('') || '<span class="mute">Wachten op spelers…</span>';
+    $('players').innerHTML = ps.map(function (p) { return '<span class="chip' + (p.off ? ' off' : '') + '">' + esc(p.name) + '</span>'; }).join('') || '<span class="mute">Waiting for players…</span>';
     $('pcount').textContent = ps.length ? '(' + ps.length + ')' : '';
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     if (G.phase === 'lobby') show('v-lobby');
     else if (G.phase === 'end') {
       show('v-end');
       var top = ps[0];
-      $('winner').textContent = top ? top.name + ' · ' + top.score + ' punten' : 'Niemand?!';
+      $('winner').textContent = top ? top.name + ' · ' + top.score + ' points' : 'Nobody?!';
       $('final').innerHTML = boardHtml(false);
     } else {
       show('v-game');
-      $('roundlabel').textContent = 'Ronde ' + G.round + ' / ' + G.total;
+      $('roundlabel').textContent = 'Round ' + G.round + ' / ' + G.total;
       $('guessui').classList.toggle('hidden', G.phase === 'reveal');
       $('revealui').classList.toggle('hidden', G.phase !== 'reveal');
       $('replay').disabled = $('skip').disabled = G.phase !== 'guess';
       if (G.phase === 'reveal') {
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
-        $('next').textContent = G.round >= G.total ? 'Eindstand' : 'Volgende';
+        $('next').textContent = G.round >= G.total ? 'Final scores' : 'Next';
       }
     }
   }
-  function cover(on, icon, text, pulse) {
+  function cover(on, icon, text, pulse, loading) {
     $('cover').classList.toggle('hidden', !on);
+    $('loadbar').classList.toggle('hidden', !(on && loading));
     if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; $('covericon').classList.toggle('pulse', !!pulse); }
+  }
+  // Loading bar: the real load time is unknown, so it eases towards the end based on
+  // how long earlier songs took, and jumps to full once the clip is ready.
+  var loadT0 = 0, avgLoad = 3500, loadTick = null;
+  function loadBarStart() {
+    if (!loadT0) loadT0 = Date.now();
+    clearInterval(loadTick);
+    var draw = function () { $('lbar').style.transform = 'scaleX(' + (0.94 * (1 - Math.exp(-2.6 * (Date.now() - loadT0) / avgLoad))).toFixed(3) + ')'; };
+    draw(); loadTick = setInterval(draw, 80);
+  }
+  function loadBarDone() {
+    clearInterval(loadTick);
+    if (loadT0) avgLoad = Math.max(1200, Math.min(12000, 0.5 * avgLoad + 0.5 * (Date.now() - loadT0)));
+    loadT0 = 0; $('lbar').style.transform = 'scaleX(1)';
   }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   setInterval(function () {
@@ -116,25 +131,25 @@
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
     stage = 'probe';
-    cover(true, '♪', 'Fragment laden…', true); masks(true);
+    cover(true, '♪', 'Selecting song', true, true); loadBarStart(); masks(true);
     yt.mute(); yt.loadVideoById(G.song[4]);
     watchdog = setTimeout(badSong, 12000);
-    // Wacht tot de video echt speelt, spring dan naar een willekeurig punt.
+    // Wait until the video really plays, then jump to a random point.
     poll = setInterval(function () {
       var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0;
       if (stage === 'probe' && st === 1 && d > 0) {
         clipStart = d < 45 ? 0 : Math.floor(15 + Math.random() * (d - 15 - 20 - CLIP));
         stage = 'seek'; yt.seekTo(clipStart, true);
       } else if (stage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
-        clearInterval(poll); clearTimeout(watchdog); fails = 0; beginGuess();
+        clearInterval(poll); clearTimeout(watchdog); fails = 0; loadBarDone(); beginGuess();
       }
     }, 120);
   }
   function badSong() {
     stopTimers(); fails++;
     if (fails >= 6) {
-      stage = 'idle'; cover(true, '!', 'Video’s willen niet starten', false);
-      $('err').textContent = 'YouTube speelt niets af. Controleer je internet of klik op “Toon antwoord” en probeer de volgende ronde.';
+      stage = 'idle'; loadBarDone(); cover(true, '!', 'Videos won’t start', false);
+      $('err').textContent = 'YouTube isn’t playing anything. Check your connection, or click “Show answer” and try the next round.';
       G.phase = 'guess'; G.endsAt = Date.now(); push(); return;
     }
     loadSong();
@@ -143,11 +158,11 @@
     clearInterval(poll);
     stage = 'clip';
     yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
-    if (G.showVideo) cover(false); else cover(true, '♪', 'Luister goed…', true);
+    if (G.showVideo) cover(false); else cover(true, '♪', 'Listen closely…', true);
     poll = setInterval(function () {
       if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
-        if (G.phase === 'guess') cover(true, '?', 'Welk liedje was dit?', false);
+        if (G.phase === 'guess') cover(true, '?', 'Which song was this?', false);
       }
     }, 100);
   }
@@ -170,10 +185,10 @@
     push(); loadSong();
   }
 
-  // ---------- knoppen ----------
+  // ---------- buttons ----------
   function ready() {
     if (!ytReady || !songs.length) return;
-    $('start').disabled = false; $('start').textContent = 'Start het spel';
+    $('start').disabled = false; $('start').textContent = 'Start game';
   }
   $('start').addEventListener('click', function () {
     var era = $('s-era').value.split('-').map(Number);
@@ -193,8 +208,8 @@
 
   fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
-    $('songcount').textContent = songs.length + ' inzendingen, van 1956 t/m ' + Math.max.apply(null, songs.map(function (s) { return s[0]; })) + ', inclusief halve finales.';
+    $('songcount').textContent = songs.length + ' entries, 1956–' + Math.max.apply(null, songs.map(function (s) { return s[0]; })) + ', including semi-finals.';
     ready();
-  }).catch(function () { $('start').textContent = 'Liedjes laden mislukt'; });
+  }).catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();
