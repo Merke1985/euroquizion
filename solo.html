@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>EuroQuizion – solo</title>
-<link rel="stylesheet" href="style.css?v=56">
+<link rel="stylesheet" href="style.css?v=57">
 </head>
 <body>
 <main class="solo">
@@ -13,8 +13,13 @@
   <section id="v-setup" class="card">
     <h2>Play solo</h2>
     <p class="mute" style="margin:.4em 0 0">Just you against the clips. Answer before the time runs out.</p>
-    <label style="margin-top:16px">Select avatar</label>
-    <div id="chars" class="chargrid"></div>
+    <div class="avatarrow soloprofile" id="profile"><div id="mychar" class="mychar"></div><strong id="myname"></strong><button class="btn alt small" id="changechar" type="button">Edit</button></div>
+    <div id="pickbox" class="hidden">
+      <div class="field" style="margin:14px 0"><label for="editname">Your name</label><input id="editname" type="text" maxlength="16"></div>
+      <label>Avatar</label>
+      <div id="chars" class="chargrid"></div>
+      <button class="btn" id="pickdone" type="button" style="width:100%;margin:12px 0 4px">Done</button>
+    </div>
     <div class="settings">
       <div><label for="s-rounds">Songs</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
       <div><label for="s-time">Guessing time</label><select id="s-time"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option></select></div>
@@ -76,6 +81,7 @@
   <section id="v-end" class="end hidden">
     <p class="mute" style="font-size:1.2rem;margin:0">Final score</p>
     <div id="endchar" class="winchar"></div>
+    <p id="endname" style="font-size:1.4rem;font-weight:800;margin:0"></p>
     <h1 id="final"></h1>
     <p id="endbest" class="mute" style="font-size:1.2rem;margin:0"></p>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
@@ -84,10 +90,10 @@
     </div>
   </section>
 </main>
-<script src="net.js?v=56"></script>
-<script src="chars.js?v=56"></script>
-<script src="match.js?v=56"></script>
-<script src="quiz.js?v=56"></script>
-<script src="solo.js?v=56"></script>
+<script src="net.js?v=57"></script>
+<script src="chars.js?v=57"></script>
+<script src="match.js?v=57"></script>
+<script src="quiz.js?v=57"></script>
+<script src="solo.js?v=57"></script>
 </body>
 </html>

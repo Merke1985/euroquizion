@@ -290,3 +290,9 @@ body.remote .brief>.card{display:none}   /* the settings and scoring already sho
 .briefcd:empty{display:none}
 .phone .briefcd{text-align:center;margin:0}
 body.remote #briefcd{display:none}   /* the countdown already shows in the host's own game above */
+
+.soloprofile{justify-content:flex-start;gap:12px;margin:16px 0 4px}
+.soloprofile .mychar .char{width:44px;height:44px}
+.soloprofile strong{font-size:1.1rem}
+.solo #hud span{font-size:.85rem;line-height:1.25;white-space:nowrap}
+.solo #hud b{color:var(--ink)}

@@ -25,9 +25,28 @@
     myChar = b.getAttribute('data-char');
     try { localStorage.setItem('esc-solo-char', myChar); } catch (err) {}
     [].forEach.call($('chars').querySelectorAll('button'), function (x) { x.classList.toggle('mine', x === b); });
+    $('mychar').innerHTML = charSvg(myChar);
   });
   renderChars();
-  function hud() { $('hud').innerHTML = S.phase === 'setup' ? '' : charSvg(myChar) + esc('Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points'); }
+  // Name and avatar sit in one small row with an Edit button, like on the other screens.
+  var myName = '';
+  try { myName = localStorage.getItem('esc-name') || ''; } catch (e) {}
+  function who() { return myName || 'Player'; }
+  function profile() { $('mychar').innerHTML = charSvg(myChar); $('myname').textContent = who(); }
+  function pickOpen(on) {
+    $('pickbox').classList.toggle('hidden', !on); $('changechar').classList.toggle('hidden', on);
+    if (on) { $('editname').value = myName; }
+  }
+  function pickSave() {
+    var n = $('editname').value.trim().slice(0, 16);
+    if (n) { myName = n; try { localStorage.setItem('esc-name', n); } catch (e) {} }
+    profile(); pickOpen(false);
+  }
+  $('changechar').addEventListener('click', function () { pickOpen(true); });
+  $('pickdone').addEventListener('click', pickSave);
+  $('editname').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pickSave(); } });
+  profile();
+  function hud() { $('hud').innerHTML = S.phase === 'setup' ? '' : charSvg(myChar) + '<span><b>' + esc(who()) + '</b><br>' + esc('Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points') + '</span>'; }
   function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
@@ -143,7 +162,7 @@
       show('v-end');
       var best = getBest(), isBest = S.score > best;
       if (isBest) { try { localStorage.setItem(bestKey(), S.score); } catch (e) {} }
-      $('final').textContent = S.score + ' points'; $('endchar').innerHTML = charSvg(myChar);
+      $('final').textContent = S.score + ' points'; $('endchar').innerHTML = charSvg(myChar); $('endname').textContent = who();
       $('endbest').textContent = S.right + ' of ' + S.total + ' right. ' + (isBest ? (best ? 'A new personal best!' : '') : 'Your best is ' + best + '.');
       return;
     }
@@ -221,6 +240,7 @@
   });
   $('start').addEventListener('click', function () {
     ready(); if (!pool.length) return;
+    if (!$('pickbox').classList.contains('hidden')) pickSave();
     S.round = 0; S.score = 0; S.right = 0; used = {}; fails = 0;
     startRound();
   });
