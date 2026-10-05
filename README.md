@@ -14,3 +14,5 @@ Try it locally: run `python3 -m http.server` in this folder and open `http://loc
 `chorus.json` maps a YouTube video ID to the second where the chorus starts, e.g. `{"3FsVeMz1F5c": 38}`. Sing! starts its clip there; songs without an entry start between 0:45 and 1:15.
 
 **Without a shared screen**: `host.html?screen=0` runs a game where every phone plays its own video. The host's phone shows a slim control strip above their own game, and players get a chat. Sing! is not available in this mode.
+
+`hosts.json` holds, per contest year, the host city and country, the presenters and one to three YouTube clips of them. Entries → Hosts plays those clips and asks for the year, the host country or the presenters.
