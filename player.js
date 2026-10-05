@@ -14,7 +14,7 @@
   // Inside the host's own page (a game without a shared screen) the hosting buttons make no sense.
   if (qs.get('embed')) { document.body.classList.add('embed'); $('hostlinks').classList.add('hidden'); }
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=41').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=42').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
@@ -273,6 +273,7 @@
   // ---------- playing without a shared screen ----------
   // Every phone plays the clip itself. The host only says which video and where to start; the
   // phone loads it silently, reports when it is ready, and plays when the guessing starts.
+  var introTry = 0;
   var CLIP = 15, yt = null, ytWanted = false, ytReady = false, clipKey = '', clipStart = 0, vStage = 'idle', vPoll = null, vWatch = null, vPlayed = '';
   function vCover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text || ''; } }
   function vMasks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
@@ -284,7 +285,10 @@
       yt = new YT.Player('yt', { width: '100%', height: '100%',
         playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
         events: { onReady: function () { ytReady = true; if (state) remoteVideo(state); },
-          onError: function () { if (vStage === 'probe' || vStage === 'seek') { vStop(); vStage = 'bad'; if (net) net.send('ready', { pid: pid, key: clipKey, bad: true }); } } } });
+          onError: function () {
+            // The fanfare video refuses to play here: try the next spare.
+            if ((vStage === 'intro' || vStage === 'primed') && ++introTry < INTRO.ids.length) { try { yt.loadVideoById(INTRO.ids[introTry]); if (vStage === 'intro') { yt.unMute(); yt.playVideo(); } } catch (e) {} return; }
+            if (vStage === 'probe' || vStage === 'seek') { vStop(); vStage = 'bad'; if (net) net.send('ready', { pid: pid, key: clipKey, bad: true }); } } } });
     };
     var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
   }
@@ -322,7 +326,7 @@
     var m = me();
     if (s.remote && m && s.phase === 'intro' && ytReady) {
       $('pstage').classList.remove('hidden'); vCover(false); vMasks(false);
-      if (vStage !== 'intro') { vStage = 'intro'; clipKey = ''; try { yt.loadVideoById(s.intro || INTRO.ids[0]); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} }
+      if (vStage !== 'intro') { vStage = 'intro'; clipKey = ''; try { yt.loadVideoById(INTRO.ids[introTry] || INTRO.ids[0]); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} }
       return;
     }
     if (vStage === 'primed' && s.phase === 'brief') { try { if (yt.getPlayerState() === 1) yt.pauseVideo(); } catch (e) {} }
