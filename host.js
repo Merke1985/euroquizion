@@ -265,7 +265,13 @@
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
     var on = G.phase === 'guess' || (G.sing && (G.phase === 'svote' || G.phase === 'srec' || G.phase === 'sbest'));
-    $('answered').classList.toggle('hidden', !on);
+    var play = G.sing && G.phase === 'splay';
+    $('answered').classList.toggle('hidden', !on && !play);
+    if (play) {
+      // The singers in playing order; the one being heard right now lights up.
+      $('answered').innerHTML = G.sing.order.map(function (pid) { var p = players[pid]; return p ? '<div class="pl' + (pid === G.sing.now ? ' now' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></div>' : ''; }).join('');
+      return;
+    }
     if (!on) return;
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     $('answered').innerHTML = ps.map(function (p) {
@@ -611,13 +617,15 @@
     if (!G.sing || G.phase !== 'srec') return;
     clearTimeout(singTimer);
     G.sing.order = shuffle(Object.keys(G.sing.clips).filter(function (pid) { return players[pid]; }));
-    G.sing.idx = -1; G.phase = 'splay'; G.sing.in = {};
+    G.sing.idx = -1; G.sing.pass = 1; G.phase = 'splay'; G.sing.in = {};
     singNext();
   }
   function singNext() {
     if (!G.sing || G.phase !== 'splay') return;
     clearTimeout(singTimer); stopAudio();
     var pid = G.sing.order[++G.sing.idx];
+    // Everyone is heard twice, in the same order, before the vote (a single recording plays once).
+    if (!pid && G.sing.pass === 1 && G.sing.order.length > 1) { G.sing.pass = 2; G.sing.idx = 0; pid = G.sing.order[0]; }
     if (!pid) { clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {} if (G.sing.order.length > 1) singBest(); else singReveal(); return; }
     G.sing.now = pid; cover(false); masks(false);
     // The song's video runs silently; the sound is the player's recording.
@@ -699,18 +707,24 @@
     return { options: G.phase === 'svote' ? sg.options.map(function (o) { return o[3] + ' – ' + o[2]; }) : null,
       song: chosen ? { title: chosen[3], artist: chosen[2] } : null,
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
-      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result };
+      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1,
+      tally: G.phase === 'svote' ? sg.options.map(function (o, i) { var n = 0, k; for (k in sg.votes) if (sg.votes[k] === i) n++; return n; }) : null };
   }
   function renderSing() {
     var sg = G.sing;
     $('skip').textContent = sg && G.phase !== 'reveal' ? 'Continue' : 'Show answer';
     if (!sg) return;
     var song = sg.chosen != null ? sg.options[sg.chosen] : null, name = song ? song[3] + ' – ' + song[2] : '', t = '', opts = '';
-    if (G.phase === 'svote') { t = 'Sing! Vote for the song'; opts = sg.options.map(function (o, i) { return '<div class="opt"><b>' + 'ABCD'[i] + '.</b> ' + esc(o[3] + ' – ' + o[2]) + '</div>'; }).join(''); }
+    if (G.phase === 'svote') { t = 'Sing! Vote for the song'; opts = sg.options.map(function (o, i) {
+      // Under each song: who voted for it so far.
+      var who = list().filter(function (p) { return sg.votes[p.pid] === i; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+      return '<div class="optcol"><div class="opt"><b>' + 'ABCD'[i] + '.</b> ' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters">' +
+        (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (p) { return '<span>' + charSvg(p.char) + esc(p.name) + '</span>'; }).join('') : '<span class="mute">No votes yet</span>') + '</div></div>';
+    }).join(''); }
     else if (G.phase === 'loading') t = 'We’re singing: ' + name;
     else if (G.phase === 'slisten') t = 'Listen first: ' + name;
     else if (G.phase === 'srec') t = 'Sing it! Record up to 10 seconds on your phone';
-    else if (G.phase === 'splay') t = 'Now singing: ' + (players[sg.now] ? players[sg.now].name : '');
+    else if (G.phase === 'splay') t = (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + (players[sg.now] ? players[sg.now].name : '');
     else if (G.phase === 'sbest') { t = 'Who sang it best? Vote on your phone'; opts = sg.order.map(function (pid) { var p = players[pid]; return p ? '<div class="opt">' + charSvg(p.char) + esc(p.name) + '</div>' : ''; }).join(''); }
     else if (G.phase === 'reveal') {
       var wins = (sg.result || []).filter(function (r) { return r.win; }).map(function (r) { return r.name; });

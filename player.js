@@ -228,7 +228,8 @@
     if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
     if (s.phase === 'svote') {
       $('stitle').textContent = 'Which song shall we sing?'; $('ssub').textContent = 'Vote for one. The most votes wins.';
-      if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('');
+      if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<div class="optcol"><button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button><div class="voters" data-t="' + i + '"></div></div>'; }).join('');
+      [].forEach.call($('sopts').querySelectorAll('.voters'), function (el) { var n = (sg.tally || [])[+el.getAttribute('data-t')] || 0; el.textContent = n ? n + (n === 1 ? ' vote' : ' votes') : 'No votes yet'; el.classList.toggle('mute', !n); });
     } else if (s.phase === 'sbest') {
       $('stitle').textContent = 'Who sang it best?'; $('ssub').textContent = 'You can’t vote for yourself.';
       if (fresh) $('sopts').innerHTML = (sg.order || []).map(function (o, i) { return o.pid === pid ? '' : '<button type="button" class="opt" data-i="' + i + '">' + esc(o.name) + '</button>'; }).join('');
@@ -237,7 +238,7 @@
       $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to 10 seconds.';
       if (fresh) { recReset(); recSent = ''; }
     } else if (s.phase === 'splay') {
-      $('stitle').textContent = sg.now ? 'Now singing: ' + sg.now : 'Showtime!'; $('ssub').textContent = 'Listen on the big screen.';
+      $('stitle').textContent = sg.now ? (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + sg.now : 'Showtime!'; $('ssub').textContent = 'Listen on the big screen.';
     } else {
       $('stitle').textContent = 'We’re singing'; $('ssub').textContent = name ? name + '. Listen first, then it’s your turn.' : 'Get ready…';
     }

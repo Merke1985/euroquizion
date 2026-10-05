@@ -318,3 +318,12 @@ body.remote .host.ingame #rwhy{display:none}   /* shown in the host's own game b
 .autorow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .solo .autorow{justify-content:flex-start}
 select.mini{width:auto;padding:.3em .6em;font-size:.9rem;border-radius:10px}
+/* Sing!: votes under each song, and the singer who is being heard */
+.optcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.voters{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.9rem;font-weight:700;padding:0 6px;min-height:1.6em}
+.voters b{color:var(--yellow)}
+.voters span{display:inline-flex;align-items:center;gap:5px}
+.voters .char{width:22px;height:22px;border-radius:50%}
+.voters.mute,.voters .mute{color:var(--mute);font-weight:600}
+.answered .pl.now .char{box-shadow:0 0 0 5px var(--yellow);opacity:1;transform:scale(1.15)}
+.answered .pl.now span{color:var(--yellow)}
