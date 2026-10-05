@@ -64,6 +64,7 @@
   function onState(s) {
     onState2(s);
     remoteVideo(s);
+    rowUpdate();
     // During a game the screen keeps one fixed skeleton, so nothing jumps between question, waiting and answer.
     var ing = !!me() && ['lobby', 'brief', 'intro', 'end'].indexOf(s.phase) < 0;
     document.querySelector('main').classList.toggle('ingame', ing);
@@ -336,7 +337,7 @@
     $('pstage').classList.remove('audioonly');
     var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
     $('pstage').classList.toggle('hidden', !on);
-    $('chatbtn').classList.toggle('hidden', !(s.remote && m) || (document.body.classList.contains('embed') && (s.phase === 'lobby' || s.phase === 'brief')));   // no room for it in the host's small lobby frame
+    $('chatbtn').classList.toggle('hidden', !(s.remote && m));   // sits in the header, top right
     if (!s.remote) return;
     ytLoad();
     if (!on) { if (vStage !== 'idle') { vStop(); vStage = 'idle'; clipKey = ''; } return; }
@@ -360,8 +361,14 @@
     el.scrollTop = el.scrollHeight;
     if (!chatOpen && c.pid !== pid) { $('chatdot').classList.remove('hidden'); $('chatbtn').classList.add('lit'); }
   }
+  // The row holds the video and, when opened, the chat in its right half. The chat may stay open.
+  function rowUpdate() {
+    var noVideo = $('pstage').classList.contains('hidden');
+    $('stagerow').classList.toggle('chatopen', chatOpen); $('stagerow').classList.toggle('novideo', noVideo);
+    $('stagerow').classList.toggle('hidden', noVideo && !chatOpen);
+  }
   function chatToggle(open) {
-    chatOpen = open; $('chat').classList.toggle('hidden', !open);
+    chatOpen = open; $('chat').classList.toggle('hidden', !open); rowUpdate();
     if (open) { $('chatdot').classList.add('hidden'); $('chatbtn').classList.remove('lit'); $('chatlog').scrollTop = $('chatlog').scrollHeight; $('chatin').focus(); }
   }
   $('chatbtn').addEventListener('click', function () { chatToggle(!chatOpen); });

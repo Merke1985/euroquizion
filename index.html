@@ -4,19 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>EuroQuizion – join</title>
-<link rel="stylesheet" href="style.css?v=50">
+<link rel="stylesheet" href="style.css?v=52">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
 <main class="phone">
-  <header><div class="logo">Euro<b>Quizion!</b></div><div id="me" class="mute"></div></header>
+  <header><div class="logo">Euro<b>Quizion!</b></div><div class="hright"><div id="me" class="mute"></div><button id="chatbtn" class="chatbtn hidden" type="button" aria-label="Open chat"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/></svg><span id="chatdot" class="chatdot hidden"></span></button></div></header>
 
-  <div id="pstage" class="stage hidden">
-    <div id="yt"></div>
-    <div class="shield"></div>
-    <div class="maskbar t" id="mt"></div><div class="maskbar b" id="mb"></div>
-    <div class="cover" id="cover"><div class="q" id="covericon"></div><h2 id="covertext"></h2></div>
-    <button class="btn hidden" id="tapplay" type="button">Tap to play</button>
+  <div id="stagerow" class="stagerow hidden">
+    <div id="pstage" class="stage hidden">
+      <div id="yt"></div>
+      <div class="shield"></div>
+      <div class="maskbar t" id="mt"></div><div class="maskbar b" id="mb"></div>
+      <div class="cover" id="cover"><div class="q" id="covericon"></div><h2 id="covertext"></h2></div>
+      <button class="btn hidden" id="tapplay" type="button">Tap to play</button>
+    </div>
+    <div id="chat" class="chat hidden" role="dialog" aria-label="Chat">
+      <div class="chathead"><strong>Chat</strong><button id="chatclose" class="chatx" type="button" aria-label="Close chat">×</button></div>
+      <div id="chatlog" class="chatlog"></div>
+      <form id="chatform" autocomplete="off"><input id="chatin" type="text" maxlength="200" placeholder="Message…" enterkeyhint="send"><button class="btn">Send</button></form>
+    </div>
   </div>
 
   <p id="allin" class="allin"></p>
@@ -101,18 +108,12 @@
     <div id="myscorebox"><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>
-<button id="chatbtn" class="chatbtn hidden" type="button" aria-label="Open chat"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/></svg><span id="chatdot" class="chatdot hidden"></span></button>
-<div id="chat" class="chat hidden" role="dialog" aria-label="Chat">
-  <div class="chathead"><strong>Chat</strong><button id="chatclose" class="btn alt small" type="button">Close</button></div>
-  <div id="chatlog" class="chatlog"></div>
-  <form id="chatform" autocomplete="off"><input id="chatin" type="text" maxlength="200" placeholder="Say something…" enterkeyhint="send"><button class="btn">Send</button></form>
-</div>
-<script src="vendor/supabase.js?v=50"></script>
-<script src="config.js?v=50"></script>
-<script src="match.js?v=50"></script>
-<script src="quiz.js?v=50"></script>
-<script src="net.js?v=50"></script>
-<script src="chars.js?v=50"></script>
-<script src="player.js?v=50"></script>
+<script src="vendor/supabase.js?v=52"></script>
+<script src="config.js?v=52"></script>
+<script src="match.js?v=52"></script>
+<script src="quiz.js?v=52"></script>
+<script src="net.js?v=52"></script>
+<script src="chars.js?v=52"></script>
+<script src="player.js?v=52"></script>
 </body>
 </html>
