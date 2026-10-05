@@ -3,7 +3,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var CLIP = 15, COUNT = 5;
   var songs = [], countries = {}, pool = [], used = {};
-  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, q: null, picked: -1, got: false, pts: 0, endsAt: 0, showVideo: true };
+  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, q: null, picked: -1, pickFrac: 0, got: false, pts: 0, endsAt: 0, showVideo: true };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
   var loadT0 = 0, loadTick = null, clipReady = false;
 
@@ -98,12 +98,17 @@
     $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = S.q.subject === 'place' ? 'numeric' : 'text';
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
+    $('confirm').classList.add('hidden');
     playClip(); render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, S.guessMs);
   }
   function reveal() {
     if (S.phase !== 'guess') return;
     stopTimers(); S.phase = 'reveal'; stage = 'reveal';
+    // Multiple choice is scored now, from the answer that was being held.
+    if (S.q.type === 'mc' && S.picked === S.q.correct && !S.got) {
+      S.pts = Math.round((500 + 500 * S.pickFrac) / 10) * 10; S.score += S.pts; S.right++; S.got = true;
+    }
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
     render();
@@ -159,13 +164,18 @@
     S.pts = Math.round((500 + 500 * frac) / 10) * 10; S.score += S.pts; S.right++; S.got = true;
     reveal();
   }
-  // Multiple choice: one tap decides.
+  // Multiple choice: a tap holds the answer (it can still be changed). The answer shows
+  // when the time is up, or straight away with "Confirm answer".
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
     if (!b || S.phase !== 'guess') return;
-    S.picked = +b.getAttribute('data-i');
-    if (S.picked === S.q.correct) win(); else reveal();
+    S.picked = +b.getAttribute('data-i'); S.pickFrac = Math.max(0, (S.endsAt - Date.now()) / S.guessMs);
+    [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
+    b.classList.add('picked');
+    $('confirm').classList.remove('hidden');
+    $('fb').className = 'fb close'; $('fb').textContent = 'Answer held until the time is up.';
   });
+  $('confirm').addEventListener('click', function () { if (S.phase === 'guess' && S.picked >= 0) reveal(); });
   $('start').addEventListener('click', function () {
     ready(); if (!pool.length) return;
     S.showVideo = $('s-video').checked; S.round = 0; S.score = 0; S.right = 0; used = {}; fails = 0;
@@ -179,7 +189,7 @@
   });
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=13').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=14').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

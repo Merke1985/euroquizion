@@ -12,7 +12,7 @@
   $('name').value = store.get('esc-name') || '';
   var k = new URLSearchParams(location.search).get('k');
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=13').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=14').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
@@ -88,7 +88,8 @@
       var r = s.reveal || {};
       $('verdict').className = 'fb ' + (m && m.got ? 'ok' : 'no');
       $('verdict').textContent = s.phase === 'end' ? 'Game over!' : (m && m.got ? 'You got it! +' + m.pts : 'Not this time');
-      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.text + ' ' + s.q.answer : '';
+      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer ? s.q.text + ' ' + s.q.answer +
+        (m && !m.got && m.pick != null && s.q.options ? ' (you said ' + s.q.options[m.pick] + ')' : '') : '';
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';
@@ -128,12 +129,13 @@
     $('guess').focus();
   }
 
-  // Multiple choice: one tap, then the answer is locked in.
+  // Multiple choice: a tap holds the answer; whether it was right only shows at the reveal.
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
     if (!b || b.disabled || !net) return;
-    [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.disabled = true; });
+    [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
+    $('fb').className = 'fb close'; $('fb').textContent = 'Answer held. You can change it until the time is up.';
     net.send('guess', { pid: pid, choice: +b.getAttribute('data-i') });
   });
   $('guessform').addEventListener('submit', function (e) {

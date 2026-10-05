@@ -50,10 +50,13 @@
     if (!p || G.phase !== 'guess' || p.got || p.done || !G.q) return;
     var res, mc = G.q.type === 'mc';
     if (mc) {
-      // Multiple choice: one answer, then it is locked in.
-      if (typeof m.choice !== 'number') return;
-      res = m.choice === G.q.correct ? 'ok' : 'no'; p.done = true;
-    } else res = checkOpen(G.q, G.song, m.text, countries);
+      // Multiple choice: the answer is only held. It can be changed until the time is up,
+      // and nobody learns whether it was right before the reveal.
+      if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
+      p.pick = m.choice; p.pickFrac = Math.max(0, (G.endsAt - Date.now()) / G.guessMs);
+      push(); return;
+    }
+    res = checkOpen(G.q, G.song, m.text, countries);
     if (res === 'ok') {
       var frac = Math.max(0, (G.endsAt - Date.now()) / G.guessMs);
       p.pts = Math.round((500 + 500 * frac) / 10) * 10; p.score += p.pts; p.got = true;
@@ -70,7 +73,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, left: Math.max(0, G.endsAt - Date.now()),
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, pts: p.pts }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; }
@@ -141,7 +144,7 @@
   function show(id) { ['v-lobby', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
   function boardHtml(showGot) {
     return list().map(function (p) {
-      return '<li class="' + (showGot && p.got ? 'got ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + p.score +
+      return '<li class="' + (showGot && p.got ? 'got ' : '') + (G.phase === 'guess' && p.pick != null ? 'picked ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + p.score +
         (showGot && p.got ? '<span class="pts">+' + p.pts + '</span>' : '') + '</span></li>';
     }).join('') || '<li class="mute">No players yet</li>';
   }
@@ -281,13 +284,17 @@
   function reveal() {
     if (G.phase !== 'guess') return;
     stopTimers(); G.phase = 'reveal'; stage = 'reveal';
+    // Multiple choice is scored now, from the answer each player was holding.
+    if (G.q && G.q.type === 'mc') list().forEach(function (p) {
+      if (p.pick === G.q.correct) { p.pts = Math.round((500 + 500 * (p.pickFrac || 0)) / 10) * 10; p.score += p.pts; p.got = true; }
+    });
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
     push();
   }
   function startRound() {
     G.round++; G.phase = 'loading';
-    list().forEach(function (p) { p.got = false; p.done = false; p.pts = 0; });
+    list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null;
     push(); loadSong();
   }
@@ -346,7 +353,7 @@
   });
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=13').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=14').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });

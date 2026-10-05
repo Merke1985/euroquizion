@@ -103,6 +103,7 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 .board{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
 .board li{display:flex;justify-content:space-between;gap:10px;padding:.6em .9em;border-radius:12px;background:rgba(0,0,0,.25);font-weight:700}
 .board li.got{outline:2px solid var(--ok)}
+.board li.picked{outline:2px solid var(--yellow)}
 .board li.off{opacity:.45}
 .board .pts{color:var(--ok);font-size:.85em;margin-left:.5em}
 .end{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
@@ -120,7 +121,7 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 .opt.dim{opacity:.4}
 button.opt{cursor:pointer;width:100%;color:var(--ink)}
 button.opt:disabled{cursor:default}
-button.opt.picked{border-color:var(--yellow)}
+button.opt.picked{border-color:var(--yellow);background:rgba(255,214,10,.22)}
 .phone .opts,.solo .opts{grid-template-columns:1fr}
 .host .opts{grid-template-columns:repeat(4,1fr);margin-top:28px}
 .host .opts:empty{display:none}
