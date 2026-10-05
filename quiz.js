@@ -1,7 +1,7 @@
 // Builds the question for a song: what is asked (country, artist, placement or title)
 // and how it is answered (multiple choice or typed). Shared by the host screen and solo mode.
-var Q_TEXT = { title: 'Which song is this?', artist: 'Who performs this song?', country: 'Which country sent this song?', place: 'Where did this song finish?' };
-var Q_HINT = { title: 'Type the title…', artist: 'Type the artist…', country: 'Type the country…', place: 'Type the position, e.g. 5' };
+var Q_TEXT = { title: 'Which song is this?', artist: 'Who performs this song?', country: 'Which country sent this song?', place: 'Where did this song finish?', points: 'How many points did this song get?' };
+var Q_HINT = { title: 'Type the title…', artist: 'Type the artist…', country: 'Type the country…', place: 'Type the position, e.g. 5', points: 'Type the number of points' };
 var COUNTRY_ALIASES = { gb: ['UK', 'Great Britain', 'Britain', 'England'], nl: ['Holland', 'The Netherlands', 'Nederland'], cz: ['Czech Republic'], ba: ['Bosnia', 'Bosnia and Herzegovina'],
   mk: ['Macedonia', 'FYR Macedonia'], cs: ['Serbia and Montenegro'], md: ['Moldavia'], tr: ['Türkiye', 'Turkiye'], by: ['Belorussia'], ru: ['Russian Federation'] };
 function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
@@ -11,13 +11,17 @@ function placeLabel(s) {
   if (s[6] == null) return null;
   return s[8] != null ? 'Did not qualify' : ordinal(s[6]) + ' place';
 }
+function pointsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
-  var canPlace = placeLabel(song) != null;
-  var subject = subjectSetting === 'random' ? pick(canPlace ? ['country', 'artist', 'place', 'title'] : ['country', 'artist', 'title']) : subjectSetting;
-  if (subject === 'place' && !canPlace) subject = 'country';       // no known result (1956, 2020, a few others)
+  var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
+  var kinds = ['country', 'artist', 'title'];
+  if (canPlace) kinds.push('place');
+  if (canPoints) kinds.push('points');
+  var subject = subjectSetting === 'random' ? pick(kinds) : subjectSetting;
+  if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
   var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting;
   if (subject === 'place' && song[8] != null) type = 'mc';         // "did not qualify" cannot be typed as a position
-  var answer = subject === 'title' ? song[3] : subject === 'artist' ? song[2] : subject === 'country' ? (countries[song[1]] || song[1]) : placeLabel(song);
+  var answer = subject === 'title' ? song[3] : subject === 'artist' ? song[2] : subject === 'country' ? (countries[song[1]] || song[1]) : subject === 'points' ? pointsLabel(song[7]) : placeLabel(song);
   var q = { subject: subject, type: type, text: Q_TEXT[subject], hint: Q_HINT[subject], answer: answer, options: null, correct: -1 };
   if (type !== 'mc') return q;
   var opts = [answer], seen = {};
@@ -27,6 +31,11 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
     // Prefer countries that took part that year, so every option is plausible.
     shuffle(allSongs.filter(function (s) { return s[0] === song[0]; })).forEach(function (s) { add(countries[s[1]]); });
     shuffle(Object.keys(countries)).forEach(function (c) { add(countries[c]); });
+  } else if (subject === 'points') {
+    // Wrong options are the real score scaled up or down, so they stay believable for that year's voting system.
+    var p = song[7];
+    shuffle([0.35, 0.5, 0.65, 0.8, 1.25, 1.5, 1.8, 2.3]).forEach(function (f) { var v = Math.round(p * f); if (v !== p) add(pointsLabel(v)); });
+    for (var k = 1; opts.length < 4; k++) { add(pointsLabel(p + k)); if (p - k >= 0) add(pointsLabel(p - k)); }
   } else if (subject === 'place') {
     if (song[0] >= 2004 && song[0] !== 2020) add('Did not qualify');
     var n = [];
@@ -37,7 +46,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
     shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 8; })).forEach(function (s) { add(s[idx]); });
     shuffle(allSongs.slice()).forEach(function (s) { add(s[idx]); });
   }
-  if (subject === 'place') opts.sort(function (a, b) { return (parseInt(a, 10) || 99) - (parseInt(b, 10) || 99); }); else shuffle(opts);
+  if (subject === 'place' || subject === 'points') opts.sort(function (a, b) { var x = parseInt(a, 10), y = parseInt(b, 10); return (isNaN(x) ? 999 : x) - (isNaN(y) ? 999 : y); }); else shuffle(opts);
   q.options = opts; q.correct = opts.indexOf(answer);
   return q;
 }
@@ -46,10 +55,12 @@ function checkOpen(q, song, guess, countries) {
   var best = 'no', i, r;
   var better = function (r) { if (r === 'ok' || (r === 'close' && best === 'no')) best = r; };
   if (q.subject === 'title') return Match.check(guess, song[3]);
-  if (q.subject === 'place') {
+  if (q.subject === 'place' || q.subject === 'points') {
     var n = parseInt(String(guess).replace(/[^0-9]/g, ''), 10);
     if (isNaN(n)) return 'no';
-    return n === song[6] ? 'ok' : Math.abs(n - song[6]) <= 2 ? 'close' : 'no';
+    if (q.subject === 'place') return n === song[6] ? 'ok' : Math.abs(n - song[6]) <= 2 ? 'close' : 'no';
+    // Points have to be exact; within 10% (or 5 points) counts as close.
+    return n === song[7] ? 'ok' : Math.abs(n - song[7]) <= Math.max(5, song[7] * 0.1) ? 'close' : 'no';
   }
   if (q.subject === 'artist') {
     var parts = [song[2]].concat(song[2].split(/\s+(?:&|feat\.?|ft\.?|x|and|with|vs\.?)\s+|,\s+/i));

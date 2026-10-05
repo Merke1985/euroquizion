@@ -112,7 +112,7 @@
     S.phase = 'guess'; S.endsAt = Date.now() + S.guessMs;
     $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
     var mc = S.q.type === 'mc';
-    $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = S.q.subject === 'place' ? 'numeric' : 'text';
+    $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = (S.q.subject === 'place' || S.q.subject === 'points') ? 'numeric' : 'text';
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');
@@ -230,7 +230,7 @@
   }
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json?v=22').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=23').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

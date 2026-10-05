@@ -493,7 +493,7 @@
     $('start').textContent = ytReady ? 'Start game' : 'Loading player…';
     if (G.phase === 'paused') render();
   }
-  // Sing! has no answer type: there is nothing to answer.
+  // Sing! has no multiple choice or open setting: there is nothing to answer.
   function singToggle() { $('s-atype').disabled = $('s-subject').value === 'sing'; }
   $('s-subject').addEventListener('change', singToggle);
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
@@ -557,7 +557,7 @@
   }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=22').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=23').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
