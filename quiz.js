@@ -93,6 +93,25 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
   q.options = opts; q.correct = opts.indexOf(answer);
   return q;
 }
+// Draw!: one player draws a song on their phone, the others guess. Lines travel as small batches of
+// points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
+var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
+var DRAW_HELP = 'Draw!: players take turns drawing a song. The first to guess it gets 12 points, the next 10, then 8, 7, 6 and so on. The drawer gets 12 when someone guesses it.';
+var DRAW_COLORS = ['#111111', '#e11d48', '#2563eb', '#16a34a', '#f59e0b', '#ffffff'];   // the last one is the eraser
+function drawClear(cv) { var c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, DRAW_W, DRAW_H); }
+function drawPaint(cv, m) {
+  if (!m) return;
+  if (m.clear) { drawClear(cv); return; }
+  var p = m.p, c = cv.getContext('2d');
+  if (!p || p.length < 2) return;
+  c.strokeStyle = c.fillStyle = DRAW_COLORS[m.c] || DRAW_COLORS[0];
+  c.lineWidth = Math.max(2, Math.min(40, +m.w || 6)); c.lineCap = c.lineJoin = 'round';
+  if (p.length === 2) { c.beginPath(); c.arc(p[0], p[1], c.lineWidth / 2, 0, 7); c.fill(); return; }
+  c.beginPath(); c.moveTo(p[0], p[1]);
+  for (var i = 2; i + 1 < p.length; i += 2) c.lineTo(p[i], p[i + 1]);
+  c.stroke();
+}
+function songLabel(s) { return s[3] + ' – ' + s[2]; }
 // Checks a typed answer. Returns 'ok', 'close' or 'no'.
 function checkOpen(q, song, guess, countries) {
   var best = 'no', i, r;

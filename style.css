@@ -306,3 +306,12 @@ body.remote #briefplayers,body.remote .brief h3{display:none}   /* the players a
 .why:empty{display:none}
 .phone .why{margin:0;font-size:1rem}
 body.remote .host.ingame #rwhy{display:none}   /* shown in the host's own game below */
+/* ---------- Draw! ---------- */
+.drawcanvas{width:100%;aspect-ratio:4/3;height:auto;background:#fff;border-radius:14px;border:1px solid var(--line);display:block}
+.drawcanvas.pad{touch-action:none;cursor:crosshair}
+.drawview{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);height:100%;aspect-ratio:4/3;background:#fff;z-index:5}
+.drawtools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.drawtools button{width:38px;height:38px;border-radius:50%;border:3px solid var(--line);cursor:pointer;color:#111;font-weight:800;padding:0}
+.drawtools button.on{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow)}
+.drawtools button.wide{width:auto;border-radius:999px;padding:0 14px;background:var(--card);color:var(--ink)}
+.phone #pdraw{max-height:38vh;width:auto;max-width:100%;align-self:center}

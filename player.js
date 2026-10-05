@@ -16,7 +16,7 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -30,6 +30,7 @@
     $('demo').classList.toggle('hidden', !net.demo);
     net.on('state', onState);
     net.on('chat', chatAdd);
+    net.on('draw', function (d) { if (d && state && state.draw && d.pid === state.draw.pid && d.pid !== pid && typeof d.pick !== 'number') drawPaint($('pdraw'), d); });
     net.on('result', onResult);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
@@ -122,6 +123,20 @@
       var emb = document.body.classList.contains('embed');   // the host already sees the lobby around this frame
       show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : (s.remote ? 'The host will start the game soon.' : 'Watch the big screen. The game starts soon.');
     }
+    else if (s.phase === 'dpick' && s.draw) {
+      // Draw!: the drawer picks one of four songs, everyone else waits.
+      if (s.draw.pid === pid) {
+        show('v-draw'); $('dround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Draw!';
+        $('dtitle').textContent = 'Pick a song to draw'; $('dopts').classList.remove('hidden'); $('dpad').classList.add('hidden');
+        if (dKey !== key) { dKey = key; $('dopts').innerHTML = (s.draw.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join(''); }
+      } else { show('v-wait'); $('waittitle').textContent = s.draw.name + ' is drawing next'; $('waitsub').textContent = 'Choosing a song…'; }
+    }
+    else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'You draw: ' + s.draw.song : s.draw.name + ' is about to draw.'; }
+    else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) {
+      show('v-draw'); $('dround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Draw!';
+      $('dtitle').textContent = 'Draw: ' + s.draw.song; $('dopts').classList.add('hidden'); $('dpad').classList.remove('hidden');
+      if (dKey !== key) { dKey = key; padReset(); }
+    }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Turn your sound on.'; }
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = ''; }
@@ -131,6 +146,8 @@
       else if (m && m.done) { show('v-wait'); $('waittitle').textContent = 'Incorrect'; $('waitsub').textContent = 'Your answer is locked in. Waiting for the others…'; }
       else {
         show('v-guess'); $('roundlabel').textContent = 'Song ' + s.round + ' of ' + s.total;
+        $('pdraw').classList.toggle('hidden', !s.draw);
+        if (s.draw && builtKey !== key) drawClear($('pdraw'));
         $('qtext').textContent = q.text;
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
@@ -147,7 +164,7 @@
       show('v-reveal');
       var r = s.reveal || {};
       if (s.phase !== 'end') $('verdict').className = 'fb verdict ' + (m && m.got ? 'ok' : 'no');
-      $('verdict').textContent = s.phase === 'end' ? $('verdict').textContent || 'Final scores' : (m && m.got ? 'Correct' : 'Incorrect');
+      $('verdict').textContent = s.phase === 'end' ? $('verdict').textContent || 'Final scores' : (s.draw && s.draw.pid === pid ? (m && m.got ? 'They got it!' : 'Nobody guessed it') : m && m.got ? 'Correct' : 'Incorrect');
       var why = s.phase === 'reveal' && s.q && s.q.explain;   // the odd-one-out reason takes the top line, right under the video
       $('rround').textContent = s.phase === 'end' ? '' : why || 'Song ' + s.round + ' of ' + s.total;
       $('rround').className = why ? 'why' : 'mute';
@@ -378,7 +395,7 @@
       setTimeout(function () { if (pop.parentNode) pop.parentNode.removeChild(pop); }, 5200);
     }
   }
-  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly')); }
+  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly') || !!(state && state.draw && state.phase === 'guess')); }
   function chatToggle(open) {
     chatOpen = open; $('chat').classList.toggle('hidden', !open);
     if (open) $('chatpop').innerHTML = '';
@@ -443,12 +460,58 @@
   }
 
   // Multiple choice: a tap holds the answer; whether it was right only shows at the reveal.
+  // ---------- Draw!: the drawer's pad ----------
+  var dKey = '', padColor = 0, padWidth = 6, padBuf = [], padDown = false, padLast = null, padTick = null;
+  function padTools() {
+    $('dtools').innerHTML = DRAW_COLORS.map(function (c, i) {
+      return '<button type="button" data-c="' + i + '" class="' + (i === padColor ? 'on' : '') + '" style="background:' + c + '" aria-label="' + (i === DRAW_COLORS.length - 1 ? 'Eraser' : 'Colour') + '">' + (i === DRAW_COLORS.length - 1 ? '⌫' : '') + '</button>';
+    }).join('') + '<button type="button" data-w="1" class="wide">' + (padWidth > 6 ? 'Thick' : 'Thin') + '</button><button type="button" data-clear="1" class="wide">Clear</button>';
+  }
+  function padSend(m) { m.pid = pid; if (net) net.send('draw', m); }
+  function padFlush() {
+    if (padBuf.length < 2) return;
+    var m = { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: padBuf };
+    padSend(m); padBuf = padDown && padLast ? [padLast[0], padLast[1]] : [];   // the next batch continues from the last point
+  }
+  function padReset() { padBuf = []; padDown = false; padLast = null; drawClear($('dcanvas')); padTools(); clearInterval(padTick); padTick = setInterval(function () { if (padBuf.length > 2) padFlush(); }, 120); }
+  function padPoint(e) { var r = $('dcanvas').getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * DRAW_W), Math.round((e.clientY - r.top) / r.height * DRAW_H)]; }
+  function padLocal(a, b) { drawPaint($('dcanvas'), { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: b ? [a[0], a[1], b[0], b[1]] : [a[0], a[1]] }); }
+  $('dcanvas').addEventListener('pointerdown', function (e) {
+    if (!state || state.phase !== 'guess') return;
+    e.preventDefault(); try { $('dcanvas').setPointerCapture(e.pointerId); } catch (x) {}
+    padDown = true; padLast = padPoint(e); padBuf = [padLast[0], padLast[1]]; padLocal(padLast);
+  });
+  $('dcanvas').addEventListener('pointermove', function (e) {
+    if (!padDown) return;
+    e.preventDefault(); var p = padPoint(e);
+    if (Math.abs(p[0] - padLast[0]) + Math.abs(p[1] - padLast[1]) < 3) return;
+    padLocal(padLast, p); padLast = p; padBuf.push(p[0], p[1]);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { $('dcanvas').addEventListener(ev, function () {
+    if (!padDown) return;
+    padDown = false; if (padBuf.length >= 2) { var m = { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: padBuf }; padSend(m); } padBuf = [];
+  }); });
+  $('dtools').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-c')) padColor = +b.getAttribute('data-c');
+    else if (b.hasAttribute('data-w')) padWidth = padWidth > 6 ? 6 : 14;
+    else if (b.hasAttribute('data-clear')) { drawClear($('dcanvas')); padSend({ clear: 1 }); }
+    padTools();
+  });
+  $('dopts').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-i]');
+    if (!b || !net) return;
+    [].forEach.call($('dopts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); x.disabled = true; });
+    b.classList.add('picked'); net.send('draw', { pid: pid, pick: +b.getAttribute('data-i') });
+  });
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
     if (!b || b.disabled || !net) return;
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
-    $('fb').className = 'fb close'; $('fb').textContent = 'Answer in. You can still change it until everyone has answered.';
+    var final = !!(state && state.draw);   // Draw!: the first guess counts
+    if (final) [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.disabled = true; });
+    $('fb').className = 'fb close'; $('fb').textContent = final ? 'Answer in. No changing this one!' : 'Answer in. You can still change it until everyone has answered.';
     net.send('guess', { pid: pid, choice: +b.getAttribute('data-i') });
   });
   $('guessform').addEventListener('submit', function (e) {
@@ -468,6 +531,7 @@
     if (!state) return;
     if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
+    if (state.draw && (state.phase === 'dpick' || state.phase === 'guess')) $('dbar').style.transform = 'scaleX(' + f + ')';
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';
     else if (state.sing) $('sbar').style.transform = 'scaleX(' + (state.phase === 'loading' || state.phase === 'splay' ? 0 : f) + ')';
   }, 100);

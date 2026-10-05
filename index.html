@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>EuroQuizion – join</title>
-<link rel="stylesheet" href="style.css?v=64">
+<link rel="stylesheet" href="style.css?v=65">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -67,12 +67,24 @@
     <div class="mute" id="roundlabel"></div>
     <h2 id="qtext">Which song is this?</h2>
     <div class="bar"><i id="pbar"></i></div>
+    <canvas id="pdraw" class="drawcanvas hidden" width="800" height="600"></canvas>
     <form id="guessform" autocomplete="off">
       <input id="guess" type="text" maxlength="80" placeholder="Type the title…" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
       <button class="btn big" style="width:100%;margin-top:12px">Guess!</button>
     </form>
     <div id="opts" class="opts hidden"></div>
     <p id="fb" class="fb"></p>
+  </section>
+
+  <section id="v-draw" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+    <div class="mute" id="dround"></div>
+    <h2 id="dtitle"></h2>
+    <div class="bar"><i id="dbar"></i></div>
+    <div id="dopts" class="opts hidden"></div>
+    <div id="dpad" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+      <canvas id="dcanvas" class="drawcanvas pad" width="800" height="600"></canvas>
+      <div class="drawtools" id="dtools"></div>
+    </div>
   </section>
 
   <section id="v-sing" class="hidden" style="display:flex;flex-direction:column;gap:14px">
@@ -116,12 +128,12 @@
     <button class="btn">Send</button>
   </form>
 </div>
-<script src="vendor/supabase.js?v=64"></script>
-<script src="config.js?v=64"></script>
-<script src="match.js?v=64"></script>
-<script src="quiz.js?v=64"></script>
-<script src="net.js?v=64"></script>
-<script src="chars.js?v=64"></script>
-<script src="player.js?v=64"></script>
+<script src="vendor/supabase.js?v=65"></script>
+<script src="config.js?v=65"></script>
+<script src="match.js?v=65"></script>
+<script src="quiz.js?v=65"></script>
+<script src="net.js?v=65"></script>
+<script src="chars.js?v=65"></script>
+<script src="player.js?v=65"></script>
 </body>
 </html>
