@@ -3,12 +3,17 @@
   var CLIP = 10;            // clip length in seconds
   var room = '', net, songs = [], countries = {};
   var players = {};         // pid -> {pid,name,score,got,pts,last}
-  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true };
+  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 30000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all' };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
+  // The room code lives in the address bar, so refreshing the page rehosts the same game.
   var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  for (var i = 0; i < 4; i++) room += A[Math.floor(Math.random() * A.length)];
+  var asked = (new URLSearchParams(location.search).get('room') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+  var resumed = asked.length === 4, recovering = false, adopted = false;
+  if (resumed) room = asked; else for (var i = 0; i < 4; i++) room += A[Math.floor(Math.random() * A.length)];
+  try { history.replaceState(null, '', location.pathname + '?room=' + room); } catch (e) {}
+  var SAVE = 'esc-host-' + room;
   var joinUrl = new URL('./?k=' + room, location.href).href;
   $('roomcode').textContent = room; $('codebig').textContent = room;
   $('joinurl').textContent = joinUrl.replace(/^https?:\/\//, '').replace(/\?k=.*$/, '');
@@ -21,7 +26,14 @@
     if (!m || !m.pid) return;
     var p = players[m.pid], isNew = !p;
     var nm = String(m.name || '').slice(0, 16) || 'Player';
-    if (!p) p = players[m.pid] = { pid: m.pid, name: nm, score: 0, got: false, pts: 0 };
+    if (!p) {
+      p = players[m.pid] = { pid: m.pid, name: nm, score: 0, got: false, pts: 0 };
+      // Rehosting without a saved game on this device: rebuild it from what the phones remember.
+      if (recovering) {
+        if (typeof m.score === 'number' && m.score > 0) p.score = Math.floor(m.score);
+        if (!adopted && m.last && m.last.round > 0) adopt(m.last);
+      }
+    }
     var changed = isNew || p.name !== nm || p.off;
     p.name = nm; p.last = Date.now(); p.off = false;
     if (changed) push();
@@ -45,15 +57,67 @@
   function list() { return Object.keys(players).map(function (k) { return players[k]; }).sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); }); }
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, left: Math.max(0, G.endsAt - Date.now()),
+      cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo },
       players: list().map(function (p) { return { pid: p.pid, name: p.name, score: p.score, got: p.got, pts: p.pts }; }) };
     if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3] };
     return s;
   }
-  function push() { net.send('state', snapshot()); render(); }
+  function push() { if (!recovering) net.send('state', snapshot()); save(); render(); }
+
+  // ---------- save & restore ----------
+  function save() {
+    try {
+      localStorage.setItem(SAVE, JSON.stringify({ t: Date.now(), phase: G.phase, round: G.round, total: G.total, guessMs: G.guessMs,
+        era: G.era, cat: G.cat, showVideo: G.showVideo, used: Object.keys(G.used),
+        players: list().map(function (p) { return { pid: p.pid, name: p.name, score: p.score }; }) }));
+    } catch (e) {}
+  }
+  // Put a game back between rounds: an interrupted round is simply played again.
+  function resumeAt(phase, round) {
+    if (phase === 'end') { G.phase = 'end'; G.round = round; }
+    else if (phase === 'lobby' || !round) { G.phase = 'lobby'; G.round = 0; }
+    else { G.phase = 'paused'; G.round = (phase === 'reveal' || phase === 'paused') ? round : round - 1; }
+  }
+  function applyCfg(c) {
+    if (c.era) G.era = c.era; if (c.cat) G.cat = c.cat; if (typeof c.showVideo === 'boolean') G.showVideo = c.showVideo;
+    $('s-era').value = G.era; $('s-cat').value = G.cat; $('s-video').checked = G.showVideo;
+    if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
+    if ([20, 30, 45].indexOf(G.guessMs / 1000) >= 0) $('s-time').value = G.guessMs / 1000;
+    buildPool();
+  }
+  function adopt(last) {
+    adopted = true;
+    G.total = +last.total || 10; G.guessMs = +last.total_ms || 30000;
+    resumeAt(last.phase, +last.round);
+    applyCfg(last.cfg || {});
+    note('Game ' + room + ' restored from the players’ phones.');
+  }
+  function note(t) { $('note').textContent = t; $('note').classList.toggle('hidden', !t); }
+  function restore() {
+    if (!resumed) return;
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem(SAVE) || 'null'); } catch (e) {}
+    if (s && Date.now() - s.t < 24 * 3600 * 1000) {
+      (s.players || []).forEach(function (p) { players[p.pid] = { pid: p.pid, name: p.name, score: p.score || 0, got: false, pts: 0, last: 0, off: true }; });
+      G.total = s.total; G.guessMs = s.guessMs; (s.used || []).forEach(function (id) { G.used[id] = 1; });
+      resumeAt(s.phase, s.round); applyCfg(s);
+      if (G.phase !== 'lobby') note('Game ' + room + ' restored.');
+    } else {
+      // Nothing saved here (other device or browser): listen to the phones for a few seconds first.
+      recovering = true;
+      note('Looking for game ' + room + '…');
+      setTimeout(function () {
+        recovering = false;
+        if (!adopted) note('Rehosting room ' + room + '. No running game was found, so this is a fresh lobby. Players who are still connected will appear here.');
+        push();
+      }, 6000);
+    }
+    net.send('sync', {});
+  }
   setInterval(function () {
     var now = Date.now(), ch = false;
     list().forEach(function (p) { var off = now - p.last > 12000; if (off !== !!p.off) { p.off = off; ch = true; } });
-    net.send('state', snapshot()); if (ch) render();
+    if (!recovering) net.send('state', snapshot()); if (ch) render();
   }, 3000);
 
   // ---------- rendering ----------
@@ -69,6 +133,7 @@
     $('players').innerHTML = ps.map(function (p) { return '<span class="chip' + (p.off ? ' off' : '') + '">' + esc(p.name) + '</span>'; }).join('') || '<span class="mute">Waiting for players…</span>';
     $('pcount').textContent = ps.length ? '(' + ps.length + ')' : '';
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
+    $('newgame').classList.toggle('hidden', G.phase === 'lobby');
     if (G.phase === 'lobby') show('v-lobby');
     else if (G.phase === 'end') {
       show('v-end');
@@ -78,8 +143,16 @@
     } else {
       show('v-game');
       $('roundlabel').textContent = 'Round ' + G.round + ' / ' + G.total;
-      $('guessui').classList.toggle('hidden', G.phase === 'reveal');
-      $('revealui').classList.toggle('hidden', G.phase !== 'reveal');
+      var between = G.phase === 'reveal' || G.phase === 'paused';
+      $('guessui').classList.toggle('hidden', between);
+      $('revealui').classList.toggle('hidden', !between);
+      $('next').disabled = !(ytReady && songs.length);
+      if (G.phase === 'paused') {
+        cover(true, '↻', 'Game restored', false);
+        $('rtitle').textContent = G.round ? 'Round ' + G.round + ' of ' + G.total + ' done' : 'Ready for round 1';
+        $('rmeta').textContent = G.round >= G.total ? 'Only the final scores are left.' : 'Press continue when everyone is back.';
+        $('next').textContent = G.round >= G.total ? 'Final scores' : 'Continue';
+      }
       $('replay').disabled = $('skip').disabled = G.phase !== 'guess';
       if (G.phase === 'reveal') {
         $('rtitle').textContent = G.song[3];
@@ -186,30 +259,66 @@
   }
 
   // ---------- buttons ----------
-  function ready() {
-    if (!ytReady || !songs.length) return;
-    $('start').disabled = false; $('start').textContent = 'Start game';
+  function buildPool() {
+    var era = G.era.split('-').map(Number), cat = G.cat;
+    G.pool = songs.filter(function (s) {
+      return s[0] >= era[0] && s[0] <= era[1] && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
+    });
+    return G.pool.length;
   }
+  function ready() {
+    if (!songs.length) return;
+    var n = buildPool();
+    $('songcount').textContent = n ? n + ' songs in this selection.' + (G.cat === 'nq' ? ' Semi-finals started in 2004, so non-qualifiers run from then on.' : '')
+      : 'No songs match this combination. Semi-finals only started in 2004, so there are no non-qualifiers before that.';
+    $('start').disabled = !(ytReady && n);
+    $('start').textContent = ytReady ? 'Start game' : 'Loading player…';
+    if (G.phase === 'paused') render();
+  }
+  ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
+  function toLobby() {
+    stopTimers(); clearInterval(loadTick); loadT0 = 0; stage = 'idle';
+    try { yt.stopVideo(); } catch (e) {}
+    G.phase = 'lobby'; G.round = 0; G.song = null; note(''); push();
+  }
+  // "Start new game" asks for a second click so a slip of the mouse cannot end a running game.
+  var armed = null;
+  $('newgame').addEventListener('click', function () {
+    var b = $('newgame');
+    if (G.phase === 'end' || armed) { clearTimeout(armed); armed = null; b.textContent = 'Start new game'; toLobby(); return; }
+    b.textContent = 'End this game? Click again';
+    armed = setTimeout(function () { armed = null; b.textContent = 'Start new game'; }, 4000);
+  });
+  $('rehostbtn').addEventListener('click', function () {
+    $('rehostform').classList.toggle('hidden'); $('rehosthelp').classList.toggle('hidden');
+    if (!$('rehostform').classList.contains('hidden')) $('rehostcode').focus();
+  });
+  $('rehostform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var c = $('rehostcode').value.toUpperCase().replace(/[^A-Z]/g, '');
+    if (c.length === 4) location.href = location.pathname + '?room=' + c;
+  });
   $('start').addEventListener('click', function () {
-    var era = $('s-era').value.split('-').map(Number);
-    G.pool = songs.filter(function (s) { return s[0] >= era[0] && s[0] <= era[1]; });
+    G.era = $('s-era').value; G.cat = $('s-cat').value;
+    if (!buildPool()) return;
     G.total = +$('s-rounds').value; G.guessMs = +$('s-time').value * 1000; G.showVideo = $('s-video').checked;
-    G.round = 0; G.used = {}; fails = 0;
+    G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; });
     startRound();
   });
   $('replay').addEventListener('click', function () { if (G.phase === 'guess' && (stage === 'paused' || stage === 'clip')) playClip(); });
   $('skip').addEventListener('click', reveal);
   $('next').addEventListener('click', function () {
-    if (G.phase !== 'reveal') return;
+    if (G.phase !== 'reveal' && G.phase !== 'paused') return;
+    note('');
     if (G.round >= G.total) { try { yt.stopVideo(); } catch (e) {} G.phase = 'end'; push(); } else startRound();
   });
-  $('again').addEventListener('click', function () { G.phase = 'lobby'; G.round = 0; G.song = null; push(); });
+  $('again').addEventListener('click', toLobby);
 
   fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
-    $('songcount').textContent = songs.length + ' entries, 1956–' + Math.max.apply(null, songs.map(function (s) { return s[0]; })) + ', including semi-finals.';
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
+  restore();
   render();
 })();

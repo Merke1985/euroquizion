@@ -33,6 +33,8 @@ label{display:block;font-weight:700;font-size:.85rem;margin:0 0 6px;color:var(--
 .phone #code{text-transform:uppercase;letter-spacing:.3em;font-weight:900;font-size:1.6rem;text-align:center}
 .phone .center{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center}
 .phone .huge{font-size:2.4rem}
+.or{display:flex;align-items:center;gap:12px;margin:20px 0 16px;color:var(--mute);font-size:.85rem;text-transform:uppercase;letter-spacing:.08em}
+.or:before,.or:after{content:'';flex:1;height:1px;background:var(--line)}
 .fb{min-height:1.5em;font-weight:800}
 .fb.ok{color:var(--ok)} .fb.close{color:var(--yellow)} .fb.no{color:var(--bad)}
 .score{font-size:3rem;font-weight:900;color:var(--yellow)}
@@ -52,6 +54,11 @@ label{display:block;font-weight:700;font-size:.85rem;margin:0 0 6px;color:var(--
 .settings{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
 .check{display:flex;gap:.6em;align-items:center;font-weight:600;grid-column:1/-1;text-transform:none;letter-spacing:0;font-size:1rem;color:var(--ink)}
 .check input{width:1.2em;height:1.2em;accent-color:var(--pink)}
+.rehost{margin-top:28px}
+.rehost form{display:flex;gap:10px;margin-top:12px;max-width:420px}
+.rehost input{text-transform:uppercase;letter-spacing:.3em;font-weight:900;text-align:center}
+.btn.small{padding:.55em 1.1em;font-size:.95rem;box-shadow:inset 0 0 0 2px var(--line)}
+.note{background:rgba(45,226,230,.14);border:1px solid var(--cyan);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-weight:600}
 .players{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
 .game{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(240px,1fr);gap:24px;flex:1;align-items:start}
 .stage{position:relative;aspect-ratio:16/9;max-height:62vh;width:100%;border-radius:20px;overflow:hidden;background:#000;border:1px solid var(--line)}

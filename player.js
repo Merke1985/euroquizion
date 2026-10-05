@@ -26,8 +26,14 @@
     $('demo').classList.toggle('hidden', !net.demo);
     net.on('state', onState);
     net.on('result', onResult);
-    var hi = function () { net.send('hi', { pid: pid, name: name }); };
+    // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
+    var hi = function () {
+      var m = me();
+      net.send('hi', { pid: pid, name: name, score: m ? m.score : null,
+        last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
+    };
     net.on('_open', hi);
+    net.on('sync', hi);
     clearInterval(hiTimer); hiTimer = setInterval(hi, 4000);
     show('v-wait'); $('waittitle').textContent = 'Connecting…'; $('waitsub').textContent = 'Room ' + room;
     clearTimeout(joinTimer);
@@ -48,6 +54,7 @@
     var key = s.phase + ':' + s.round;
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
     if (s.phase === 'lobby') { show('v-wait'); $('waittitle').textContent = 'You’re in!'; $('waitsub').textContent = 'Watch the big screen. The game starts soon.'; }
+    else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = 'Round ' + s.round + ' of ' + s.total; }
     else if (s.phase === 'guess') {
       if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct! +' + m.pts; $('waitsub').textContent = 'Waiting for the others…'; }

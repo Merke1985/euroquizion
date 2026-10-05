@@ -11,7 +11,7 @@
 <main class="host">
   <header>
     <div class="logo" style="font-size:1.6rem">DOUZE <b>POINTS</b><i>!</i></div>
-    <div class="roomtag"><span class="mute" id="joinhint"></span><code id="roomcode">····</code></div>
+    <div class="roomtag"><button class="btn alt small hidden" id="newgame">Start new game</button><span class="mute" id="joinhint"></span><code id="roomcode">····</code></div>
   </header>
 
   <section id="v-lobby" class="lobby">
@@ -22,15 +22,26 @@
         <div><p class="mute" style="margin:0">and enter this code</p><div class="codebig" id="codebig">····</div></div>
         <div class="qr" id="qr"></div>
       </div>
+      <div class="rehost">
+        <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
+        <form id="rehostform" class="hidden" autocomplete="off">
+          <input id="rehostcode" type="text" maxlength="4" placeholder="CODE" aria-label="Room code of the game to rehost" autocapitalize="characters" required>
+          <button class="btn">Rehost</button>
+        </form>
+        <p class="mute hidden" id="rehosthelp" style="margin:10px 0 0;max-width:420px">Lost the host screen? Enter the old room code to pick the game up again with the same players and scores.</p>
+      </div>
     </div>
     <div class="card">
+      <p class="note hidden" id="note"></p>
       <h3>Players <span class="mute" id="pcount"></span></h3>
       <div class="players" id="players" style="margin-top:12px"></div>
       <div class="settings">
         <div><label for="s-rounds">Rounds</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
         <div><label for="s-time">Guessing time</label><select id="s-time"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option></select></div>
-        <div style="grid-column:1/-1"><label for="s-era">Era</label><select id="s-era">
+        <div><label for="s-era">Years</label><select id="s-era">
           <option value="1956-2100" selected>All years</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
+        <div><label for="s-cat">Songs</label><select id="s-cat">
+          <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
         <label class="check"><input type="checkbox" id="s-video" checked> Show video during the clip</label>
       </div>
       <button class="btn big" id="start" style="width:100%" disabled>Loading songs…</button>
