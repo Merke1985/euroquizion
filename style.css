@@ -328,3 +328,9 @@ select.mini{width:auto;padding:.3em .6em;font-size:.9rem;border-radius:10px}
 .answered .pl.now .char{box-shadow:0 0 0 5px var(--yellow);opacity:1;transform:scale(1.15)}
 .answered .pl.now span{color:var(--yellow)}
 .probebox{position:fixed;left:0;bottom:0;width:4px;height:4px;overflow:hidden;opacity:0;pointer-events:none}
+.host .opts.votelist{grid-template-columns:1fr;gap:8px;margin-top:18px}
+.host .opts.votelist .optcol{flex-direction:row;align-items:center;gap:14px}
+.host .opts.votelist .opt{flex:0 1 46%;min-width:0}
+.host .opts.votelist .voters{flex:1;font-size:1rem;padding:0}
+.host .opts.votelist .voters .char{width:28px;height:28px}
+.host .opts.votelist .opt{padding:.45em .9em;font-size:1.05rem}

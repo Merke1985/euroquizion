@@ -263,10 +263,11 @@
     $('qopts').innerHTML = on && q.options ? q.options.map(function (o, i) {
       return '<div class="opt' + (G.phase === 'reveal' ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
     }).join('') : '';
+    $('qopts').classList.remove('votelist');
   }
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
-    var on = G.phase === 'guess' || (G.sing && (G.phase === 'svote' || G.phase === 'srec' || G.phase === 'sbest'));
+    var on = G.phase === 'guess' || (G.sing && (G.phase === 'srec' || G.phase === 'sbest'));   // during the song vote the voters show behind each song instead
     var play = G.sing && G.phase === 'splay';
     $('answered').classList.toggle('hidden', !on && !play);
     if (play) {
@@ -793,6 +794,7 @@
       opts = (sg.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + charSvg(r.char) + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
+    $('qopts').classList.toggle('votelist', G.phase === 'svote');   // the song vote: one song per row, its voters behind it
   }
 
 
