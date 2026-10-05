@@ -290,7 +290,7 @@
     });
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
-    push();
+    push(); autoStart();
   }
   function startRound() {
     G.round++; G.phase = 'loading';
@@ -315,7 +315,7 @@
   }
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    stopTimers(); clearInterval(loadTick); loadT0 = 0; stage = 'idle';
+    stopTimers(); autoStop(); clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
   }
@@ -344,16 +344,37 @@
     list().forEach(function (p) { p.score = 0; });
     startRound();
   });
+  // Autoplay: with the box ticked, the answer stays up for 10 seconds and the next song starts by itself.
+  var AUTO_SECS = 10, autoTick = null, autoEnd = 0;
+  try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; } catch (e) {}
+  function autoStop() { clearInterval(autoTick); autoTick = null; $('autoleft').textContent = ''; }
+  function autoStart() {
+    autoStop();
+    if (!$('auto').checked || G.phase !== 'reveal') return;
+    autoEnd = Date.now() + AUTO_SECS * 1000;
+    var draw = function () {
+      var left = Math.ceil((autoEnd - Date.now()) / 1000);
+      if (G.phase !== 'reveal') { autoStop(); return; }
+      if (left <= 0) { autoStop(); goNext(); return; }
+      $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Next song in ') + left;
+    };
+    draw(); autoTick = setInterval(draw, 200);
+  }
+  $('auto').addEventListener('change', function () {
+    try { localStorage.setItem('esc-auto', $('auto').checked ? '1' : '0'); } catch (e) {}
+    autoStart();
+  });
   $('replay').addEventListener('click', function () { if (G.phase === 'guess' && (stage === 'paused' || stage === 'clip')) playClip(); });
   $('skip').addEventListener('click', reveal);
-  $('next').addEventListener('click', function () {
+  $('next').addEventListener('click', goNext);
+  function goNext() {
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;
-    note('');
+    autoStop(); note('');
     if (G.round >= G.total) { try { yt.stopVideo(); } catch (e) {} G.phase = 'end'; push(); } else startRound();
-  });
+  }
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json?v=14').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=15').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });

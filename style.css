@@ -134,3 +134,7 @@ button.opt.picked{border-color:var(--yellow);background:rgba(255,214,10,.22)}
 .sologuess{display:flex;gap:10px;margin:14px 0 4px}
 .sologuess input{flex:1;min-width:0}
 .solo .reveal .under{flex-wrap:wrap}
+.autobox{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+.autobox .check{font-size:.95rem;white-space:nowrap}
+.autobox #autoleft{min-height:1.3em;font-weight:700;color:var(--yellow)}
+.solo .autobox{align-items:flex-start}
