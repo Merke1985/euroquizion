@@ -182,25 +182,26 @@
       }
     }
   }
-  function cover(on, icon, text, pulse, loading) {
+  function cover(on, icon, text, pulse) {
     $('cover').classList.toggle('hidden', !on);
-    $('loadbar').classList.toggle('hidden', !(on && loading));
     if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; $('covericon').classList.toggle('pulse', !!pulse); }
   }
-  // Loading bar: the real load time is unknown, so it eases towards the end based on
-  // how long earlier songs took, and jumps to full once the clip is ready.
-  var loadT0 = 0, avgLoad = 3500, loadTick = null;
-  function loadBarStart() {
-    if (!loadT0) loadT0 = Date.now();
-    clearInterval(loadTick);
-    var draw = function () { $('lbar').style.transform = 'scaleX(' + (0.94 * (1 - Math.exp(-2.6 * (Date.now() - loadT0) / avgLoad))).toFixed(3) + ')'; };
-    draw(); loadTick = setInterval(draw, 80);
+  // Countdown: the video loads muted behind the cover while 5..1 counts down.
+  // The clip starts as soon as both the countdown and the loading are done.
+  var COUNT = 5, loadT0 = 0, loadTick = null, clipReady = false;
+  function countStart() {
+    clipReady = false;
+    if (loadT0) return;                 // a replacement for a broken video keeps the running countdown
+    loadT0 = Date.now(); clearInterval(loadTick);
+    var draw = function () {
+      var left = COUNT - Math.floor((Date.now() - loadT0) / 1000);
+      if (left >= 1) { $('covericon').textContent = left; $('covertext').textContent = 'Selecting song'; }
+      else if (clipReady) { countStop(); beginGuess(); }
+      else { $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…'; }
+    };
+    draw(); loadTick = setInterval(draw, 100);
   }
-  function loadBarDone() {
-    clearInterval(loadTick);
-    if (loadT0) avgLoad = Math.max(1200, Math.min(12000, 0.5 * avgLoad + 0.5 * (Date.now() - loadT0)));
-    loadT0 = 0; $('lbar').style.transform = 'scaleX(1)';
-  }
+  function countStop() { clearInterval(loadTick); loadT0 = 0; }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   setInterval(function () {
     if (G.phase !== 'guess') return;
@@ -225,7 +226,7 @@
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
     stage = 'probe';
-    cover(true, '♪', 'Selecting song', true, true); loadBarStart(); masks(true);
+    cover(true, '', 'Selecting song', false); countStart(); masks(true);
     yt.mute(); yt.loadVideoById(G.song[4]);
     watchdog = setTimeout(badSong, 12000);
     // Wait until the video really plays, then jump to a random point.
@@ -235,14 +236,15 @@
         clipStart = d < 45 ? 0 : Math.floor(15 + Math.random() * (d - 15 - 20 - CLIP));
         stage = 'seek'; yt.seekTo(clipStart, true);
       } else if (stage === 'seek' && st === 1 && t >= clipStart && t < clipStart + 5) {
-        clearInterval(poll); clearTimeout(watchdog); fails = 0; loadBarDone(); beginGuess();
+        clearInterval(poll); clearTimeout(watchdog); fails = 0;
+        yt.pauseVideo(); stage = 'ready'; clipReady = true;   // the countdown starts the clip
       }
     }, 120);
   }
   function badSong() {
     stopTimers(); fails++;
     if (fails >= 6) {
-      stage = 'idle'; loadBarDone(); cover(true, '!', 'Videos won’t start', false);
+      stage = 'idle'; countStop(); cover(true, '!', 'Videos won’t start', false);
       $('err').textContent = 'YouTube isn’t playing anything. Check your connection, or click “Show answer” and try the next round.';
       G.phase = 'guess'; G.endsAt = Date.now(); push(); return;
     }
