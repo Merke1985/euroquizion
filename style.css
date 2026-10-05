@@ -113,15 +113,16 @@ img.char{aspect-ratio:1/1;object-fit:cover;border-radius:50%;background:#2a2060;
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
 
 .opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
-.opt{display:flex;align-items:center;gap:.7em;padding:.7em 1em;border-radius:14px;background:var(--card);border:2px solid var(--line);font-weight:800;font-size:1.15rem;text-align:left;min-width:0;overflow-wrap:anywhere}
-.opt b{flex:none;width:1.9em;height:1.9em;border-radius:50%;display:grid;place-items:center;background:var(--yellow);color:#221a00;font-size:.85em}
+.opt{display:flex;align-items:center;gap:.4em;padding:.7em 1em;border-radius:14px;background:var(--card);border:2px solid var(--line);font-weight:800;font-size:1.15rem;text-align:left;min-width:0;overflow-wrap:anywhere}
+.opt b{flex:none;color:var(--yellow)}
+.opt.right b{color:inherit}
 .opt.right{background:var(--ok);color:#06331a;border-color:transparent}
 .opt.dim{opacity:.4}
 button.opt{cursor:pointer;width:100%;color:var(--ink)}
 button.opt:disabled{cursor:default}
 button.opt.picked{border-color:var(--yellow)}
 .phone .opts,.solo .opts{grid-template-columns:1fr}
-.host .opts{grid-template-columns:repeat(4,1fr);margin-top:12px}
+.host .opts{grid-template-columns:repeat(4,1fr);margin-top:28px}
 .host .opts:empty{display:none}
 .host .opt{font-size:1.05rem;padding:.6em .8em}
 .answerline{color:var(--mute);font-weight:700;font-size:1.05rem!important;margin:0 0 .2em!important}

@@ -97,7 +97,7 @@
     var mc = S.q.type === 'mc';
     $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = S.q.subject === 'place' ? 'numeric' : 'text';
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
-    $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
+    $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
     playClip(); render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, S.guessMs);
   }
@@ -179,7 +179,7 @@
   });
   $('again').addEventListener('click', function () { S.phase = 'setup'; S.round = 0; ready(); render(); });
 
-  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
+  fetch('songs.json?v=13').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
   render();
 })();

@@ -12,7 +12,7 @@
   $('name').value = store.get('esc-name') || '';
   var k = new URLSearchParams(location.search).get('k');
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  fetch('songs.json?v=13').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   function show(id) { ['v-join', 'v-pick', 'v-wait', 'v-guess', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
 
@@ -78,7 +78,7 @@
           builtKey = key;
           $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
           $('guess').placeholder = q.hint || ''; $('guess').inputMode = q.subject === 'place' ? 'numeric' : 'text';
-          $('opts').innerHTML = mc ? q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
+          $('opts').innerHTML = mc ? q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
           if (!mc) $('guess').focus();
         }
       }

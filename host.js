@@ -188,7 +188,7 @@
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'reveal');
     $('qtext').textContent = on && G.phase === 'guess' ? q.text : '';
     $('qopts').innerHTML = on && q.options ? q.options.map(function (o, i) {
-      return '<div class="opt' + (G.phase === 'reveal' ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div>';
+      return '<div class="opt' + (G.phase === 'reveal' ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
     }).join('') : '';
   }
   function cover(on, icon, text, pulse) {
@@ -346,7 +346,7 @@
   });
   $('again').addEventListener('click', toLobby);
 
-  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('songs.json?v=13').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
