@@ -571,3 +571,8 @@ body.embed .phone.compact #lobbystart{width:auto!important;font-size:.95rem;padd
 /* tie roulette: the lit bar */
 .opt.rolling{background:var(--yellow);color:#221a00;box-shadow:0 0 0 3px rgba(255,214,10,.4),0 8px 24px -8px rgba(255,214,10,.8);transform:scale(1.015)}
 .opt.rolling b{background:rgba(0,0,0,.15);color:inherit}
+
+/* host lobby: the name always shows under the avatar, on its own line */
+.lobbyplayers .chip{display:flex;align-items:center;width:96px;overflow:visible}
+.lobbyplayers .chip .char{flex:none}
+.lobbyplayers .chip .pname{display:block;width:100%;font-size:1.05rem;font-weight:700;color:var(--ink);line-height:1.15;text-align:center;overflow-wrap:anywhere}
