@@ -78,7 +78,9 @@
   // Everyone who is still connected has answered: go to the answer.
   var ALLIN_MS = 3000, VOTE_MS = 5000;   // quiz answers: 3, 2, 1; Sing! votes keep 5 seconds
   function isIn(p) {
-    if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]); return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
+    if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]);
+    if (G.phase === 'dall') return !!(G.gallery && G.gallery.items[p.pid] && G.gallery.items[p.pid].done);   // finished drawing
+    return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
   function allIn() {
     var act = list().filter(function (x) { return !x.off; });
     var ph = G.phase;
@@ -116,9 +118,14 @@
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
+    if (G.gallery && G.phase === 'dall') {
+      // Everyone draws at once: each player gets their own four songs.
+      s.gallery = { id: G.gallery.id, opts: {}, chosen: {}, done: {} };
+      Object.keys(G.gallery.items).forEach(function (k) { var it = G.gallery.items[k]; s.gallery.opts[k] = it.options.map(songLabel); if (it.chosen != null) s.gallery.chosen[k] = it.chosen; if (it.done) s.gallery.done[k] = 1; });
+    }
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
-      s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: G.phase === 'dpick' ? G.draw.options.map(songLabel) : null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
+      s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
     }
     if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3], result: resultText(G.song) };
     return s;
@@ -194,7 +201,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dpick' || G.phase === 'loading'))))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading'))))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   // ---------- Ladder scoring: everyone on one ladder ----------
@@ -248,7 +255,7 @@
     }).join('') || '<span class="mute">Waiting for players…</span>';
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
     $('pcount').textContent = ps.length ? '(' + (G.phase === 'lobby' || G.phase === 'intro' ? nr + ' of ' + ps.length + ' ready' : ps.length) + ')' : '';
-    $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
+    $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal' || G.phase === 'dall');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
     renderLadder();
     $('endgame').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'intro' || G.phase === 'paused' || G.phase === 'end');
@@ -318,7 +325,7 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
-    $('qtext').textContent = on ? q.text : G.phase === 'dpick' ? (dp ? dp.name : 'Someone') + ' is choosing a song to draw' : '';
+    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
@@ -382,7 +389,7 @@
     var voteCd = G.phase === 'svote' || G.phase === 'sbest';
     var cd = (G.phase === 'guess' || voteCd) && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
     $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
-    var timed = G.phase === 'guess' || G.phase === 'dpick' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
+    var timed = G.phase === 'guess' || G.phase === 'dall' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
 
@@ -541,12 +548,12 @@
   }
   function beginGuess() {
     $('err').textContent = '';
-    var ms = G.draw ? DRAW_MS : isPair() ? PAIR_MS : G.guessMs;
+    var ms = G.draw ? DRAW_GUESS_MS : isPair() ? PAIR_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
     if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
     if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, G.draw ? '✏️' : '?', '', false); }   // odd one out and Draw!: no clip
     else playClip();
-    push();
+    push(); if (G.draw) drawSend();
     endTimer = setTimeout(reveal, ms);
   }
   // Shared screen: before the answer, everyone's avatar drops in behind the answer they picked, one by one
@@ -589,10 +596,10 @@
       });
       right = [];
     }
-    right.forEach(function (p, rank) { p.pts = pointsFor(G.draw || G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
-    // Draw!: the first to guess gets 12, then 10, 8…; the drawer gets 12 as soon as anyone guessed it.
+    right.forEach(function (p, rank) { p.pts = G.draw ? 1 : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
+    // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
-    if (artist && right.length) { artist.pts = 12; artist.score += 12; artist.got = true; }
+    if (artist && right.length) { artist.pts = right.length; artist.score += right.length; artist.got = true; }
     if (!REMOTE && G.q) Music.ding();   // the right answer lights up
     cover(false); masks(false);
     // The video carries on from where the clip stopped (it only jumps back if it somehow is not at the clip).
@@ -612,16 +619,20 @@
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
-    // Party mixes everything: most rounds are quiz questions, with a Sing! or Draw! round thrown in now
-    // and then (never two of those in a row, and Sing! only with a shared screen).
+    // Drawings that are still waiting to be guessed come first.
+    if (G.gallery && G.gallery.queue.length) { if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } drawNext(); return; }
+    G.gallery = null;
+    // Party: four quiz questions, then a Sing! or a Draw! round, then four quiz questions again, and so on
+    // (Sing! only with a shared screen, and neither without at least two players).
     if (G.atype === 'party') {
-      var special = REMOTE ? ['draw'] : ['sing', 'draw'], can = G.round > 1 && G.mode === 'mc' && list().filter(function (p) { return !p.off; }).length >= 2;
-      G.mode = can && Math.random() < 0.4 ? pick(special) : 'mc';
+      var special = REMOTE ? ['draw'] : ['sing', 'draw'], can = list().filter(function (p) { return !p.off; }).length >= 2;
+      if (can && (G.quizRun || 0) >= 4) { G.mode = pick(special); G.quizRun = 0; }
+      else { G.mode = 'mc'; G.quizRun = (G.quizRun || 0) + 1; }
     } else G.mode = G.atype;
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     if (md === 'sing' && !REMOTE) { singStart(); return; }
-    if (md === 'draw') { drawStart(); return; }
+    if (md === 'draw') { drawAll(); return; }
     push(); loadSong();
   }
 
@@ -650,44 +661,79 @@
   function remoteGo() {
     if (G.phase !== 'loading') return;
     clearTimeout(remoteTimer);
-    var ms = G.draw ? DRAW_MS : G.guessMs;
+    var ms = G.draw ? DRAW_GUESS_MS : G.guessMs;
     G.guessAt = Date.now();
-    G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
+    G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push(); if (G.draw) drawSend();
     endTimer = setTimeout(reveal, ms);
   }
 
   // ---------- Draw! ----------
-  // Players take turns. The drawer picks one of four songs and draws it on their phone; the lines show
-  // live on the big screen and on the other phones, and everyone else guesses which of the four it is.
-  var drawTimer = null;
-  function drawStart() {
-    var ps = list().filter(function (p) { return !p.off; }).sort(function (a, b) { return a.pid < b.pid ? -1 : 1; });
-    if (!ps.length) ps = list();
-    if (!ps.length) { push(); loadSong(); return; }
-    var who = ps[G.drawTurn++ % ps.length].pid;
-    fourSongs(function (four) { drawStart2(who, four); });
-  }
-  function drawStart2(who, four) {
-    G.draw = { pid: who, options: four, chosen: null, id: Math.random().toString(36).slice(2, 8) };
-    G.phase = 'dpick'; G.barMs = DRAW_PICK_MS; G.endsAt = Date.now() + DRAW_PICK_MS;
-    drawClear($('drawview'));
-    if (!REMOTE) { cover(true, '✏️', 'Draw!', false); masks(true); }
-    clearTimeout(drawTimer); drawTimer = setTimeout(function () { drawPicked(Math.floor(Math.random() * G.draw.options.length)); }, DRAW_PICK_MS);
+  // Everyone draws at the same time: each player gets four songs of their own, picks one and draws it
+  // on their phone, all within a minute. The host keeps the lines. After that every drawing is a
+  // question for the others, one by one, with the artist's four songs as the answers.
+  var drawTimer = null, DRAW_GUESS_MS = 20000;
+  function drawFallback() { G.gallery = null; G.draw = null; G.phase = 'loading'; push(); loadSong(); }   // nothing to guess: a quiz question instead
+  function drawAll() {
+    var ps = list().filter(function (p) { return !p.off; });
+    if (ps.length < 2) ps = list();
+    var free = G.pool.filter(function (s) { return !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
+    if (free.length < ps.length * 4) free = G.pool.filter(function (s) { return !BAD_VIDEOS[s[4]]; });
+    if (ps.length < 2 || free.length < 4) { drawFallback(); return; }
+    var cands = shuffle(free.slice()), items = {};
+    ps.forEach(function (p, i) {
+      var four = []; for (var k = 0; k < 4; k++) four.push(cands[(i * 4 + k) % cands.length]);
+      items[p.pid] = { options: four, chosen: null, done: 0, strokes: [] };
+    });
+    G.gallery = { id: Math.random().toString(36).slice(2, 8), items: items, queue: [] };
+    G.draw = null; G.q = null; G.phase = 'dall'; G.barMs = DRAW_MS; G.endsAt = Date.now() + DRAW_MS;
+    if (!REMOTE) { cover(true, '✏️', 'Everyone is drawing', false); masks(true); }
+    clearTimeout(drawTimer); drawTimer = setTimeout(drawAllEnd, DRAW_MS + 800);   // a moment extra for the last lines to come in
     push();
   }
-  function drawPicked(i) {
-    if (!G.draw || G.phase !== 'dpick' || !G.draw.options[i]) return;
+  // Everyone who is still there has finished (or passed): no need to wait out the minute.
+  function drawAllCheck() {
+    if (G.phase !== 'dall' || !G.gallery) return;
+    var act = list().filter(function (p) { return !p.off && G.gallery.items[p.pid]; });
+    if (act.length && act.every(function (p) { return G.gallery.items[p.pid].done; })) { clearTimeout(drawTimer); drawTimer = setTimeout(drawAllEnd, 1200); }
+  }
+  function drawAllEnd() {
+    if (G.phase !== 'dall' || !G.gallery) return;
     clearTimeout(drawTimer);
-    G.draw.chosen = i;
-    var labels = G.draw.options.map(songLabel), dp = players[G.draw.pid];
-    G.q = { subject: 'draw', type: 'mc', text: 'What is ' + (dp ? dp.name : 'the artist') + ' drawing?', hint: '', options: labels, correct: i, answer: labels[i], noclip: true };
+    var g = G.gallery;
+    g.queue = shuffle(Object.keys(g.items).filter(function (k) { var it = g.items[k]; return players[k] && it.chosen != null && !it.skip && it.strokes.length; }));
+    if (!g.queue.length) { drawFallback(); return; }
+    // every drawing is a song of its own: a game never stops halfway through the drawings
+    if (G.total < ENDLESS && G.round - 1 + g.queue.length > G.total) G.total = G.round - 1 + g.queue.length;
+    drawNext();
+  }
+  function drawNext() {
+    var g = G.gallery, k = g.queue.shift(), it = g.items[k], dp = players[k];
+    if (!it || !dp) { if (g.queue.length) drawNext(); else drawFallback(); return; }
+    G.draw = { pid: k, options: it.options, chosen: it.chosen, id: g.id + k, strokes: it.strokes };
+    var labels = it.options.map(songLabel);
+    G.q = { subject: 'draw', type: 'mc', text: 'What did ' + dp.name + ' draw?', hint: '', options: labels, correct: it.chosen, answer: labels[it.chosen], noclip: true };
+    drawClear($('drawview')); it.strokes.forEach(function (m) { drawPaint($('drawview'), m); });
     G.phase = 'loading'; push();
-    loadSong(G.draw.options[i]);
+    loadSong(it.options[it.chosen]);
+  }
+  // The phones get the drawing as a few packets of lines (twice, in case one is still switching screens).
+  function drawSend() {
+    var d = G.draw; if (!d) return;
+    var go = function () {
+      if (G.draw !== d || G.phase !== 'guess') return;
+      for (var i = 0; i < d.strokes.length; i += 30) net.send('draw', { pid: d.pid, id: d.id, first: i === 0, batch: d.strokes.slice(i, i + 30) });
+    };
+    setTimeout(go, 350); setTimeout(go, 2600);
   }
   net.on('draw', function (m) {
-    if (!m || !G.draw || m.pid !== G.draw.pid) return;
-    if (typeof m.pick === 'number') { drawPicked(m.pick); return; }
-    if (G.phase === 'guess') drawPaint($('drawview'), m);
+    var g = G.gallery, it = m && g && g.items[m.pid];
+    if (!it || G.phase !== 'dall' || m.batch) return;
+    if (typeof m.pick === 'number') { if (it.chosen == null && it.options[m.pick]) { it.chosen = m.pick; push(); } return; }
+    if (m.skip) { if (!it.done) { it.skip = 1; it.done = 1; push(); drawAllCheck(); } return; }   // "I'm not drawing"
+    if (m.done) { if (!it.done) { it.done = 1; push(); drawAllCheck(); } return; }
+    if (it.chosen == null || it.done) return;
+    if (m.clear) it.strokes = [];
+    else if (m.p && m.p.length >= 2 && it.strokes.length < 4000) it.strokes.push({ c: m.c, w: m.w, p: m.p });
   });
   net.on('ready', function (m) {
     var p = m && players[m.pid];
@@ -1083,7 +1129,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    G.ladderWon = false; list().forEach(function (p) { p.rung = 0; p.moved = ''; });
+    G.ladderWon = false; G.gallery = null; list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
@@ -1126,7 +1172,7 @@
     G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quizRun = 0;
     G.brief = briefInfo(); introStart();
     return true;
   }

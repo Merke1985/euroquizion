@@ -6,7 +6,7 @@
 <title>EuroQuizion – solo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=141">
+<link rel="stylesheet" href="style.css?v=143">
 </head>
 <body>
 <main class="solo">
@@ -23,6 +23,8 @@
       <button class="btn" id="pickdone" type="button" style="width:100%;margin:12px 0 4px">Done</button>
     </div>
     <div class="settings">
+      <div style="grid-column:1/-1"><label for="s-subject">Category</label><select id="s-subject">
+        <option value="random" selected>All</option><option value="facts">Song facts</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option></select></div>
       <div><label for="s-rounds">Songs</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
       <div><label for="s-time">Video time</label><select id="s-time"><option value="5">5 sec</option><option value="10">10 sec</option><option value="15" selected>15 sec</option><option value="30">30 sec</option></select></div>
       <div><label for="s-era">Years</label><select id="s-era">
@@ -31,8 +33,6 @@
         <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
       <div class="hidden"><label for="s-atype">Category</label><select id="s-atype">
         <option value="mc" selected>Multiple choice</option></select></div>
-      <div style="grid-column:1/-1"><label for="s-subject">Category</label><select id="s-subject">
-        <option value="random" selected>All</option><option value="facts">Song facts</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option></select></div>
         <div style="grid-column:1/-1"><label for="s-scoring">Scoring</label><select id="s-scoring">
           <option value="correct" selected>Standard</option><option value="speed">Speedy</option></select>
           <p class="mute" id="scorehelp" style="margin:8px 0 0;font-size:.9rem"></p></div>
@@ -86,11 +86,11 @@
     </div>
   </section>
 </main>
-<script src="net.js?v=141"></script>
-<script src="music.js?v=141"></script>
-<script src="chars.js?v=141"></script>
-<script src="match.js?v=141"></script>
-<script src="quiz.js?v=141"></script>
-<script src="solo.js?v=141"></script>
+<script src="net.js?v=143"></script>
+<script src="music.js?v=143"></script>
+<script src="chars.js?v=143"></script>
+<script src="match.js?v=143"></script>
+<script src="quiz.js?v=143"></script>
+<script src="solo.js?v=143"></script>
 </body>
 </html>

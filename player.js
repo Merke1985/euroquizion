@@ -16,7 +16,7 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.draw && (state.phase === 'dpick' || state.phase === 'loading'))))); }   // no music on the start page; only under clip-less questions in online games
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -30,7 +30,8 @@
     $('demo').classList.toggle('hidden', !net.demo);
     net.on('state', onState);
     net.on('chat', chatAdd);
-    net.on('draw', function (d) { if (d && state && state.draw && d.pid === state.draw.pid && d.pid !== pid && typeof d.pick !== 'number') drawPaint($('pdraw'), d); });
+    // A finished drawing comes from the host as packets of lines, when it is that drawing's turn to be guessed.
+    net.on('draw', function (d) { if (!d || !d.batch || !state || !state.draw || d.pid !== state.draw.pid) return; if (d.first) drawClear($('pdraw')); d.batch.forEach(function (m) { drawPaint($('pdraw'), m); }); });
     net.on('result', onResult);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
@@ -101,7 +102,7 @@
     }
     var key = s.phase + ':' + s.round;
     if (s.phase !== 'guess') builtKey = '';
-    if (!s.draw) dKey = '';
+    if (!s.gallery && !s.draw) dKey = '';
     if (!s.sing) sKey = '';
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
     if (fresh && s.phase === 'reveal' && s.remote && !s.sing && m) Music.ding();   // no shared screen: every phone plays the reveal sound itself
@@ -133,20 +134,17 @@
       $('lobbystart').classList.remove('hidden'); $('lobbystart').disabled = !s.all_ready;   // always there, greyed out until everyone is ready
       show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? 'Everyone is ready. Anyone can start the game.' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. Start unlocks when everyone is ready.';
     }
-    else if (s.phase === 'dpick' && s.draw) {
-      // Draw!: the drawer picks one of four songs, everyone else waits.
-      if (s.draw.pid === pid) {
-        show('v-draw'); $('dround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Draw!';
-        $('dtitle').textContent = 'Pick a song to draw'; $('dopts').classList.remove('hidden'); $('dpad').classList.add('hidden');
-        if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; $('dopts').innerHTML = (s.draw.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join(''); }
-      } else { show('v-wait'); $('waittitle').textContent = s.draw.name + ' is drawing next'; $('waitsub').textContent = 'Choosing a song…'; }
+    else if (s.phase === 'dall' && s.gallery) {
+      // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
+      var go = s.gallery.opts[pid];
+      if (dKey !== s.gallery.id) { dKey = s.gallery.id; padPicked = -1; padDone = false; padReset(); $('dopts').innerHTML = (go || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join(''); }
+      var gc = s.gallery.chosen[pid] != null ? s.gallery.chosen[pid] : padPicked;
+      if (!go) { show('v-wait'); $('waittitle').textContent = 'Everyone is drawing'; $('waitsub').textContent = 'You can guess the drawings in a moment.'; }
+      else if (s.gallery.done[pid] || padDone) { show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
+      else { show('v-draw'); $('dround').textContent = 'Draw!'; drawView(go, gc); }
     }
-    else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'You draw: ' + s.draw.song : s.draw.name + ' is about to draw.'; }
-    else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) {
-      show('v-draw'); $('dround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Draw!';
-      $('dtitle').textContent = 'Draw: ' + s.draw.song; $('dopts').classList.add('hidden'); $('dpad').classList.remove('hidden');
-      if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; padReset(); }
-    }
+    else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'Your drawing is next.' : 'Next: a drawing by ' + s.draw.name + '.'; }
+    else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) { show('v-wait'); $('waittitle').textContent = 'Your drawing!'; $('waitsub').textContent = 'The others are guessing what it is.'; }
     else if (s.phase === 'picks') { show('v-wait'); $('waittitle').textContent = 'Answers are in'; $('waitsub').textContent = 'Watch the big screen.'; }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Turn your sound on.'; }
@@ -540,6 +538,18 @@
 
   // Multiple choice: a tap holds the answer; whether it was right only shows at the reveal.
   // ---------- Draw!: the drawer's pad ----------
+  var padPicked = -1, padDone = false, padSkipped = false;
+  // The pad screen: first the four songs (and a way out), then the canvas.
+  function drawView(go, gc) {
+    var picked = gc >= 0 && !!go[gc];
+    $('dtitle').textContent = picked ? 'Draw: ' + go[gc] : 'Pick a song to draw';
+    $('dopts').classList.toggle('hidden', picked); $('dpass').classList.toggle('hidden', picked); $('dpad').classList.toggle('hidden', !picked);
+  }
+  // Tell the host a few times, in case a message gets lost; it only takes the first.
+  function drawTell(m) { var dk = dKey; m.pid = pid; [0, 700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (dKey === dk && state && state.phase === 'dall' && net) net.send('draw', m); }, ms); }); }
+  function drawFinish(skip) { padFlush(); padDone = true; padSkipped = !!skip; drawTell(skip ? { skip: 1 } : { done: 1 }); show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
+  $('dpass').addEventListener('click', function () { drawFinish(true); });
+  $('ddone').addEventListener('click', function () { drawFinish(false); });
   var dKey = '', padColor = 0, padWidth = 6, padBuf = [], padDown = false, padLast = null, padTick = null;
   function padTools() {
     $('dtools').innerHTML = DRAW_COLORS.map(function (c, i) {
@@ -556,7 +566,7 @@
   function padPoint(e) { var r = $('dcanvas').getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * DRAW_W), Math.round((e.clientY - r.top) / r.height * DRAW_H)]; }
   function padLocal(a, b) { drawPaint($('dcanvas'), { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: b ? [a[0], a[1], b[0], b[1]] : [a[0], a[1]] }); }
   $('dcanvas').addEventListener('pointerdown', function (e) {
-    if (!state || state.phase !== 'guess') return;
+    if (!state || state.phase !== 'dall' || padDone) return;
     e.preventDefault(); try { $('dcanvas').setPointerCapture(e.pointerId); } catch (x) {}
     padDown = true; padLast = padPoint(e); padBuf = [padLast[0], padLast[1]]; padLocal(padLast);
   });
@@ -580,12 +590,9 @@
   $('dopts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
     if (!b || !net) return;
-    [].forEach.call($('dopts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); x.disabled = true; });
-    b.classList.add('picked');
-    var pk = +b.getAttribute('data-i'), dk = dKey;
-    net.send('draw', { pid: pid, pick: pk });
-    // Repeat a few times in case the message gets lost on the way; the host only takes the first one.
-    [700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (dKey === dk && state && state.phase === 'dpick' && net) net.send('draw', { pid: pid, pick: pk }); }, ms); });
+    padPicked = +b.getAttribute('data-i'); padSkipped = false;
+    drawTell({ pick: padPicked });
+    if (state && state.gallery) drawView(state.gallery.opts[pid] || [], padPicked);   // straight to the pad
   });
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
@@ -616,7 +623,7 @@
     if (!state) return;
     if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
-    if (state.draw && (state.phase === 'dpick' || state.phase === 'guess')) $('dbar').style.transform = 'scaleX(' + f + ')';
+    if (state.gallery && state.phase === 'dall') $('dbar').style.transform = 'scaleX(' + f + ')';
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';
     else if (state.sing) $('sbar').style.transform = 'scaleX(' + (state.phase === 'loading' || state.phase === 'splay' ? 0 : f) + ')';
   }, 100);
