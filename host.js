@@ -376,7 +376,7 @@
     // Until that reveal the video itself is kept invisible, so not even a flash of it can give the song away.
     var dShow = !!G.draw && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal'), dSide = !!G.draw && G.phase === 'reveal';
     $('drawview').classList.toggle('hidden', !dShow); $('drawview').classList.toggle('side', dSide);
-    var stg = document.querySelector('#v-game .stage'); stg.classList.toggle('withdraw', dSide); stg.classList.toggle('novideo', !!G.draw && G.phase !== 'reveal');
+    var stg = document.querySelector('#v-game .stage'); stg.classList.toggle('withdraw', dSide); stg.classList.toggle('novideo', (!!G.draw || !!(G.q && G.q.noclip)) && G.phase !== 'reveal');   // no clip in this question: not a glimpse of the video before the answer
     $('briefcd').textContent = '';
     if (G.phase === 'intro') { $('start').disabled = false; $('start').textContent = 'Start now · ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)); }
     var voteCd = G.phase === 'svote' || G.phase === 'sbest';
@@ -438,6 +438,7 @@
     // A two-clip question: the first song loads in the main player, the second in the spare one. The
     // song shown at the reveal is the one that is the right answer.
     stageEl().classList.remove('second'); pairTag(''); pairStep = 0; loadedId = G.song[4];
+    stageEl().classList.toggle('novideo', noClipQ());   // no clip in this question: the video stays invisible until the answer
     if (isPair()) {
       var pr = G.q.pair, second = pr[1][4];
       loadedId = pr[0][4]; G.used[pr[0][4]] = 1; G.used[pr[1][4]] = 1; G.song = pr[G.q.correct];
@@ -460,6 +461,9 @@
     // and the jump is repeated until the real video is at the right spot.
     poll = setInterval(function () {
       var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      // A question without a clip (odd one out, Draw!) never shows the player before the answer. If the
+      // video is slow or behind an ad, the question simply starts; the video is only needed at the reveal.
+      if (noClipQ() && late > 6000) { clearInterval(poll); clearTimeout(watchdog); fails = 0; try { yt.pauseVideo(); } catch (e) {} stage = 'ready'; clipReady = true; return; }
       if (late > 6000) adNote(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }   // shorter than any song
@@ -483,7 +487,9 @@
   }
   // An ad seems to be playing: show the player (title bar stays masked) so it can be skipped by hand.
   var adShown = false;
+  function noClipQ() { return !!G.draw || !!(G.q && G.q.noclip); }
   function adNote(on) {
+    if (on && noClipQ()) return;   // never uncover the video of a question that has no clip
     if (on === adShown) return;
     adShown = on;
     document.querySelector('#v-game .shield').classList.toggle('hidden', on);
@@ -629,7 +635,7 @@
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
     if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', songs, countries, { cat: G.cat });
-    G.clip = { id: G.song[4], frac: Math.random() }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
+    G.clip = { id: G.song[4], frac: Math.random(), noclip: !!G.draw || !!(G.q && G.q.noclip) }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);
   }

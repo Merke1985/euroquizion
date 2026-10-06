@@ -115,6 +115,7 @@
     cover(true, '', 'Selecting song'); countStart(); masks(true);
     // A two-clip question: the first song in the main player, the second in the spare one (see host.js).
     stageEl().classList.remove('second'); pairTag(''); pairStep = 0; loadedId = S.song[4];
+    stageEl().classList.toggle('novideo', !!S.q.noclip);   // odd one out: the video stays invisible until the answer
     if (isPair()) {
       var pr = S.q.pair, second = pr[1][4];
       loadedId = pr[0][4]; used[pr[0][4]] = 1; used[pr[1][4]] = 1; S.song = pr[S.q.correct];
@@ -134,6 +135,8 @@
     // the real video is at the right spot, and the player is uncovered so the ad can be skipped by hand.
     poll = setInterval(function () {
       var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      // Odd one out has no clip: never show the player before the answer. Slow or behind an ad: just start.
+      if (S.q && S.q.noclip && late > 6000) { clearInterval(poll); clearTimeout(watchdog); fails = 0; try { yt.pauseVideo(); } catch (e) {} stage = 'ready'; clipReady = true; return; }
       if (late > 6000) adNote(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }
@@ -150,6 +153,7 @@
   }
   var adShown = false;
   function adNote(on) {
+    if (on && S.q && S.q.noclip) return;   // never uncover the video of a question that has no clip
     if (on === adShown) return;
     adShown = on;
     document.querySelector('#v-game .shield').classList.toggle('hidden', on);
@@ -227,6 +231,7 @@
     render(); loadSong();
   }
   function render() {
+    stageEl().classList.toggle('novideo', !!(S.q && S.q.noclip) && S.phase !== 'reveal' && S.phase !== 'end');
     hud();
     if (S.phase === 'setup' || S.phase === 'end') { $('ctrl').classList.add('hidden'); $('next').classList.add('hidden'); }
     if (S.phase === 'setup') { show('v-setup'); return; }

@@ -367,6 +367,8 @@
     // right spot, and uncover the player so the ad can be skipped by hand.
     vPoll = setInterval(function () {
       var st = yt.getPlayerState(), t = yt.getCurrentTime() || 0, d = yt.getDuration() || 0, late = Date.now() - loadAt;
+      // A question without a clip never shows the player before the answer: slow or behind an ad, just carry on.
+      if (clip.noclip && late > 6000) { clearInterval(vPoll); clearTimeout(vWatch); try { yt.pauseVideo(); } catch (e) {} vStage = 'ready'; if (net) net.send('ready', { pid: pid, key: clipKey }); if (state) remoteVideo(state); return; }
       if (late > 6000) vAd(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) vAd(true); return; }   // shorter than any song
@@ -384,6 +386,7 @@
   }
   var vAdOn = false;
   function vAd(on) {
+    if (on && state && state.clip && state.clip.noclip) return;   // never uncover the video of a question that has no clip
     if (on === vAdOn) return;
     vAdOn = on;
     document.querySelector('#pstage .shield').classList.toggle('hidden', on);
@@ -451,7 +454,7 @@
       setTimeout(function () { if (pop.parentNode) pop.parentNode.removeChild(pop); }, 5200);
     }
   }
-  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('pstage').classList.toggle('novideo', !!(state && state.draw && state.phase !== 'reveal')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly') || !!(state && state.draw && state.phase === 'guess')); }
+  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('pstage').classList.toggle('novideo', !!(state && (state.draw || (state.clip && state.clip.noclip)) && state.phase !== 'reveal')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly') || !!(state && state.draw && state.phase === 'guess')); }
   function chatToggle(open) {
     chatOpen = open; $('chat').classList.toggle('hidden', !open);
     if (open) $('chatpop').innerHTML = '';
