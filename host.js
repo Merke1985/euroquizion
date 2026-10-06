@@ -623,7 +623,17 @@
     } else {
     try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     }
-    push(); autoStart();
+    push(); autoStart(); revealWatch();
+  }
+  // At the answer: while an ad is playing instead of the song, the player can be clicked (Skip ad).
+  var revealTick = null;
+  function revealWatch() {
+    clearInterval(revealTick);
+    var sh = document.querySelector('#v-game .shield');
+    revealTick = setInterval(function () {
+      if (G.phase !== 'reveal') { clearInterval(revealTick); sh.classList.toggle('hidden', adShown); return; }
+      sh.classList.toggle('hidden', !REMOTE && !G.sing && !(isPair() && G.q.correct === 1) && revealHold(yt, clipStart) === 'ad');
+    }, 400);
   }
   function startRound() {
     G.round++; G.phase = 'loading';
@@ -1207,10 +1217,20 @@
     var toEnd = $('autolen').value === 'end';
     // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
     autoEnd = Date.now() + (toEnd ? REMOTE ? (G.remain > 0 ? Math.max(5, G.remain + 1 - (G.q && G.q.noclip ? 0 : Math.min(clipSecs(), (Date.now() - (G.guessAt || Date.now())) / 1000))) : 30) : 20 : +$('autolen').value) * 1000;
+    var t0 = Date.now(), last = t0, held = false;
     var draw = function () {
+      if (G.phase !== 'reveal') { autoStop(); return; }
+      // An ad in front of the song (or the song has not started yet): the countdown waits for it.
+      var now = Date.now(), hold = REMOTE || G.sing || (isPair() && G.q.correct === 1) ? '' : revealHold(yt, clipStart);
+      if (hold && now - t0 < (hold === 'ad' ? 120000 : 12000)) {
+        autoEnd = toEnd ? now + 20000 : autoEnd + (now - last); last = now; held = true;
+        $('autoleft').textContent = hold === 'ad' ? 'Waiting for the ad to finish' : '';
+        return;
+      }
+      last = now;
+      if (held) { held = false; if (!recovering) net.send('state', snapshot()); }
       if (toEnd && !REMOTE && !(G.sing && G.sing.loop)) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
-      if (G.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
       if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (lastSong() ? 'Final scores in ' : 'Playing next song in ') + clock(left);
     };

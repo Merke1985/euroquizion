@@ -339,7 +339,7 @@
   var yt = null, ytWanted = false, ytReady = false, clipKey = '', clipStart = 0, vStage = 'idle', vPoll = null, vWatch = null, vPlayed = '';
   function vCover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text || ''; } }
   function vMasks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
-  function vStop() { if (vAdOn) vAd(false); clearInterval(vPoll); clearTimeout(vWatch); $('tapplay').classList.add('hidden'); try { if (yt && ytReady) yt.pauseVideo(); } catch (e) {} }
+  function vStop() { if (vAdOn) vAd(false); document.querySelector('#pstage .shield').classList.remove('hidden'); clearInterval(vPoll); clearTimeout(vWatch); $('tapplay').classList.add('hidden'); try { if (yt && ytReady) yt.pauseVideo(); } catch (e) {} }
   function ytLoad() {
     if (ytWanted) return;
     ytWanted = true;
@@ -405,7 +405,15 @@
     // Phones may refuse to start sound without a touch: offer a button if nothing is playing.
     clearTimeout(vWatch);
     vWatch = setTimeout(function () { try { if (yt.getPlayerState() !== 1) $('tapplay').classList.remove('hidden'); } catch (e) {} }, 1800);
-    if (full) return;
+    if (full) {
+      // while an ad plays instead of the song, the player can be tapped (Skip ad)
+      var sh = document.querySelector('#pstage .shield');
+      vPoll = setInterval(function () {
+        if (vStage !== 'full') { clearInterval(vPoll); sh.classList.toggle('hidden', vAdOn); return; }
+        sh.classList.toggle('hidden', revealHold(yt, clipStart) === 'ad');
+      }, 400);
+      return;
+    }
     vPoll = setInterval(function () {
       if ((yt.getCurrentTime() || 0) >= clipStart + clipSecs()) { clearInterval(vPoll); yt.pauseVideo(); vStage = 'paused'; $('tapplay').classList.add('hidden'); if (state && state.phase === 'guess') vCover(true, '?', ''); }
     }, 100);

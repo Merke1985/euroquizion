@@ -354,3 +354,14 @@ function finalBoard(el, players, mePid, onDone, sound) {
 }
 
 HOST_SCORING_HELP.ladder = SCORING_HELP.ladder;
+
+// At the answer: is something other than the song in the player? 'ad' = what plays is far too short to be
+// a song, or is not at the spot that was asked for (YouTube put an ad in front); 'wait' = nothing plays yet.
+function revealHold(yt, clipStart) {
+  try {
+    var st = yt.getPlayerState(), d = yt.getDuration() || 0, t = yt.getCurrentTime() || 0;
+    if (st === 1 && d > 0 && (d < 100 || t < clipStart - 3)) return 'ad';
+    if (st === 3 || st === -1 || st === 5) return 'wait';
+  } catch (e) {}
+  return '';
+}

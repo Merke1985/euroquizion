@@ -230,7 +230,17 @@
     } else {
     try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}   // carries on from where the clip stopped
     }
-    render(); autoStart();
+    render(); autoStart(); revealWatch();
+  }
+  // At the answer: while an ad is playing instead of the song, the player can be clicked (Skip ad).
+  var revealTick = null;
+  function revealWatch() {
+    clearInterval(revealTick);
+    var sh = document.querySelector('#v-game .shield');
+    revealTick = setInterval(function () {
+      if (S.phase !== 'reveal') { clearInterval(revealTick); sh.classList.toggle('hidden', adShown); return; }
+      sh.classList.toggle('hidden', !(isPair() && S.q.correct === 1) && revealHold(yt, clipStart) === 'ad');
+    }, 400);
   }
   function startRound() {
     yt2.pause(); stageEl().classList.remove('second'); pairTag('');
@@ -318,10 +328,19 @@
     var toEnd = $('autolen').value === 'end';
     // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
     autoEnd = Date.now() + (toEnd ? 20 : +$('autolen').value) * 1000;
+    var t0 = Date.now(), last = t0;
     var draw = function () {
+      if (S.phase !== 'reveal') { autoStop(); return; }
+      // An ad in front of the song (or the song has not started yet): the countdown waits for it.
+      var now = Date.now(), hold = isPair() && S.q.correct === 1 ? '' : revealHold(yt, clipStart);
+      if (hold && now - t0 < (hold === 'ad' ? 120000 : 12000)) {
+        autoEnd = toEnd ? now + 20000 : autoEnd + (now - last); last = now;
+        $('autoleft').textContent = hold === 'ad' ? 'Waiting for the ad to finish' : '';
+        return;
+      }
+      last = now;
       if (toEnd) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
-      if (S.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
       if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (S.round >= S.total ? 'Final score in ' : 'Next song in ') + clock(left);
     };
