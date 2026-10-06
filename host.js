@@ -169,7 +169,7 @@
     if (['country', 'artist', 'title', 'year', 'place'].indexOf(G.subject) >= 0) G.subject = 'facts';   // these are one category now   // the points question was removed
     if (G.phase === 'lobby' || G.phase === 'end') G.go = {};   // games saved before Sing! moved to Category
     $('s-era').value = G.era; $('s-cat').value = G.cat;
-    $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip'; scoreHelp();
+    $('s-atype').value = G.robin ? 'robin' : G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip'; scoreHelp();
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([5, 10, 15, 30].indexOf(G.guessMs / 1000 - AFTER) < 0) G.guessMs = (15 + AFTER) * 1000;   // games saved with the old Guessing time setting
     $('s-time').value = G.guessMs / 1000 - AFTER;
@@ -1443,19 +1443,24 @@
     if (G.phase === 'paused') render();
   }
   // Sing! is a category of its own: there is no question, so the Answers setting does not apply.
+  var lastType = 'mc';
   function singToggle() { var on = $('s-atype').value === 'sing' || $('s-atype').value === 'draw' || $('s-atype').value === 'quip'; $('s-subject').disabled = on; $('s-scoring').disabled = on;
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
-    if (lo) lo.disabled = party;
+    var robin = $('s-atype').value === 'robin';
+    if (lo) lo.disabled = party || robin;
+    if (robin && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
     if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
     var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
     var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
     $('s-rounds').disabled = lad; $('s-show').disabled = lad;
     // Rounds and the spin for the years belong to a plain quiz
-    var plainQ = $('s-atype').value === 'mc' && !lad, so = $('s-era').querySelector('option[value="spin"]');
-    $('s-parts').disabled = !plainQ; if (!plainQ) $('s-parts').value = '1';
-    if (so) so.disabled = !plainQ; if (!plainQ && $('s-era').value === 'spin') { $('s-era').value = '1956-2100'; G.era = '1956-2100'; ready(); }
+    // Round Robin: several rounds, each with its own era from the spin. Rounds only counts there, and
+    // the Era setting has nothing to choose then.
+    $('s-parts').disabled = !robin; $('s-era').disabled = robin;
+    if (robin && lastType !== 'robin') { $('s-parts').value = '4'; $('s-rounds').value = '5'; }   // picked just now: four rounds of five songs to start from
+    lastType = $('s-atype').value;
     scoreHelp(); }
   // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
   function winnersLock() {
@@ -1467,7 +1472,7 @@
   $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Round Robin: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
@@ -1510,14 +1515,13 @@
   function ytReadyOrRemote() { return REMOTE || ytReady; }
   function beginGame() {
     if (G.phase !== 'lobby') return false;
-    G.era = $('s-era').value; G.cat = $('s-cat').value; G.atype = $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-scoring').value; G.showScore = $('s-show').value;
+    G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-scoring').value; G.showScore = $('s-show').value;
     if (!ytReadyOrRemote() || !buildPool()) return false;
     // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
     // round gets its own decade, picked by a spin; a decade that has been played is out of the draw.
-    var plain = G.atype === 'mc' && G.scoring !== 'ladder';
-    G.per = +$('s-rounds').value; G.parts = plain ? +$('s-parts').value || 1 : 1;
-    G.eraSpin = plain && G.era === 'spin'; G.eraNow = ''; G.eraUsed = []; G.part = null; G.partDone = {};
-    if (G.era === 'spin') buildPool();
+    if (G.robin) { G.era = '1956-2100'; if (G.scoring === 'ladder') G.scoring = 'correct'; buildPool(); }
+    G.per = +$('s-rounds').value; G.parts = G.robin ? +$('s-parts').value || 1 : 1;
+    G.eraSpin = G.robin; G.eraNow = ''; G.eraUsed = []; G.part = null; G.partDone = {};
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');

@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=178">
+<link rel="stylesheet" href="style.css?v=180">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -47,11 +47,11 @@
       <h3>Game settings</h3>
       <div class="settings">
         <div><label for="s-atype">Game type</label><select id="s-atype">
-          <option value="mc" selected>Quiz</option><option value="party">Party</option></select></div>
+          <option value="mc" selected>Quiz</option><option value="robin">Round Robin</option><option value="party">Party</option></select></div>
         <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
         <div><label for="s-rounds">Songs per round</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
         <div><label for="s-era">Era</label><select id="s-era">
-          <option value="1956-2100" selected>All eras</option><option value="spin">Spin a new era each round</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
+          <option value="1956-2100" selected>All eras</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
         <div><label for="s-cat">Entries</label><select id="s-cat">
           <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
         <div><label for="s-scoring">Scoring</label><select id="s-scoring">
@@ -135,14 +135,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=178"></script>
-<script src="vendor/qrcode.js?v=178"></script>
-<script src="config.js?v=178"></script>
-<script src="net.js?v=178"></script>
-<script src="music.js?v=178"></script>
-<script src="chars.js?v=178"></script>
-<script src="match.js?v=178"></script>
-<script src="quiz.js?v=178"></script>
-<script src="host.js?v=178"></script>
+<script src="vendor/supabase.js?v=180"></script>
+<script src="vendor/qrcode.js?v=180"></script>
+<script src="config.js?v=180"></script>
+<script src="net.js?v=180"></script>
+<script src="music.js?v=180"></script>
+<script src="chars.js?v=180"></script>
+<script src="match.js?v=180"></script>
+<script src="quiz.js?v=180"></script>
+<script src="host.js?v=180"></script>
 </body>
 </html>
