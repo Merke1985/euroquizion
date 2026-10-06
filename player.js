@@ -388,6 +388,7 @@
     vAdOn = on;
     document.querySelector('#pstage .shield').classList.toggle('hidden', on);
     if (on) { vCover(false); $('mb').classList.add('hidden'); $('tapplay').classList.add('hidden'); if (net) net.send('ready', { pid: pid, key: clipKey, ad: true }); }
+    else $('mb').classList.remove('hidden');   // the bottom mask comes back: it hides the caption with the country
     $('adnote').textContent = on ? AD_TEXT : '';
   }
   function vPlay(full) {

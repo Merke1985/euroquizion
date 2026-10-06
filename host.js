@@ -487,7 +487,11 @@
     adShown = on;
     document.querySelector('#v-game .shield').classList.toggle('hidden', on);
     if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
-    else if ($('err').textContent === AD_TEXT) $('err').textContent = '';
+    else {
+      // the wait is over: put back the bottom mask (it hides the caption with the country) and clear the note
+      $('mb').classList.remove('hidden');
+      if ($('err').textContent === AD_TEXT) $('err').textContent = '';
+    }
     render();   // shows or hides the Skip button
   }
   var stuck = false;   // six songs in a row would not play
