@@ -695,3 +695,12 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 
 .host .voters span{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .host .voters span .char{flex:none}
+
+/* the title card before a party round */
+.cover.funcard{background:radial-gradient(circle at 50% 40%,#ff2e88,#7a1fa8 55%,#0b0633 100%)}
+.cover.funcard .q{animation:funpop .7s cubic-bezier(.2,1.6,.4,1) both}
+.cover.funcard h2{font-size:clamp(2.4rem,7vw,5rem);font-weight:900;color:#fff;letter-spacing:.01em;animation:funpop .7s .12s cubic-bezier(.2,1.6,.4,1) both;text-shadow:0 4px 0 rgba(0,0,0,.25)}
+@keyframes funpop{0%{transform:scale(.2) rotate(-12deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+.funsub{font-size:1.25rem;font-weight:700;margin:6px 0 0;color:var(--ink);grid-column:1/-1;width:100%}
+.host .opts:has(.funsub){display:block}
+@media (prefers-reduced-motion:reduce){.cover.funcard .q,.cover.funcard h2{animation:none}}

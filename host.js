@@ -124,6 +124,7 @@
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
+    if (G.phase === 'fun' && G.fun) s.fun = { icon: G.fun.icon, title: G.fun.title, sub: G.fun.sub };
     if (G.phase === 'part' && G.part) s.part = { n: G.part.n, of: G.part.of, spin: !!G.part.eras, label: G.part.done ? G.part.label : '' };
     if (G.quips && G.phase === 'qall') {
       s.quips = { id: G.quips.id, prompts: {}, done: {} };
@@ -218,7 +219,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part'))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun'))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -399,6 +400,7 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
+    if (G.phase === 'fun' && G.fun) { $('qtext').textContent = 'Party round: ' + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
       var pt = G.part, head = pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
       $('qtext').textContent = pt.eras ? (pt.done ? head + ': ' + pt.label : head + ': which era will it be?') : head;
@@ -781,9 +783,10 @@
     } else G.mode = G.atype;
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
-    if (md === 'sing' && !REMOTE) { singStart(); return; }
-    if (md === 'draw') { drawAll(); return; }
-    if (md === 'quip') { quipAll(); return; }
+    // A party round is announced first, so nobody is surprised by what is asked of them.
+    if (md === 'sing' && !REMOTE) { funIntro('sing', singStart); return; }
+    if (md === 'draw') { funIntro('draw', drawAll); return; }
+    if (md === 'quip') { funIntro('quip', quipAll); return; }
     push(); loadSong();
   }
 
@@ -875,6 +878,28 @@
     G.phase = 'loading'; push();
     loadSong(it.options[it.chosen]);
   }
+  // ---------- the title card before a party round ----------
+  var FUN = {
+    quip: { icon: '💬', title: 'Quip!', sub: 'A song plays with a question about it. Write the funniest answer on your phone, then vote for the best one.' },
+    draw: { icon: '🎨', title: 'Draw!', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
+    sing: { icon: '🎤', title: 'Sing!', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
+  };
+  var funTimer = null;
+  function funIntro(kind, then) {
+    var f = FUN[kind];
+    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub };
+    G.phase = 'fun'; G.barMs = 0;
+    if (!REMOTE) {
+      try { yt.pauseVideo(); } catch (e) {}
+      cover(true, f.icon, f.title, false); masks(true); $('cover').classList.add('funcard');
+      [0, 140, 280].forEach(function (ms, i) { setTimeout(function () { if (G.phase === 'fun') Music.plop(i * 3); }, ms); });
+      setTimeout(function () { if (G.phase === 'fun') Music.ding(); }, 460);
+    }
+    push();
+    clearTimeout(funTimer);
+    funTimer = setTimeout(function () { if (G.phase !== 'fun') return; $('cover').classList.remove('funcard'); G.fun = null; G.phase = 'loading'; then(); }, 4200);
+  }
+
   // ---------- rounds, and the spin for the years ----------
   var ERAS = [['1956-1969', '1956 – 1969'], ['1970-1979', 'The 70s'], ['1980-1989', 'The 80s'], ['1990-1999', 'The 90s'], ['2000-2009', 'The 2000s'], ['2010-2019', 'The 2010s'], ['2020-2100', 'The 2020s']];
   var partTimer = null;
@@ -1514,7 +1539,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
+    G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(funTimer); $('cover').classList.remove('funcard'); G.fun = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
