@@ -5,7 +5,7 @@
   var room = '', net, songs = [], countries = {}, chorus = {};
   var REMOTE = new URLSearchParams(location.search).get('screen') === '0';   // a game without a shared screen
   var players = {};         // pid -> {pid,name,score,got,pts,last}
-  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 20000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'speed', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0 };
+  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 20000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'speed', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0, go: {} };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
@@ -189,7 +189,7 @@
   // ---------- rendering ----------
   var endShown = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(id === 'v-lobby' || (id === 'v-brief' && G.phase === 'brief')); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(id === 'v-lobby' || (id === 'v-game' && !REMOTE && G.phase === 'guess' && !!G.q && !!G.q.noclip)); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   function boardHtml(showGot) {
@@ -494,6 +494,7 @@
     // Draw!: the first to guess gets 12, then 10, 8…; the drawer gets 12 as soon as anyone guessed it.
     var artist = G.draw && players[G.draw.pid];
     if (artist && right.length) { artist.pts = 12; artist.score += 12; artist.got = true; }
+    if (!REMOTE && G.q) Music.ding();   // the right answer lights up
     cover(false); masks(false);
     try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     push(); autoStart();
@@ -612,6 +613,7 @@
   function introStart() {
     if (G.phase !== 'lobby') return;
     stopTimers(); clearTimeout(introTimer);
+    if (!G.go) G.go = {};
     G.phase = 'intro'; G.barMs = INTRO.ms; G.endsAt = Date.now() + INTRO.ms; introTry = 0; stage = 'intro';
     list().forEach(function (p) { G.go[p.pid] = 1; });
     if (!REMOTE) {

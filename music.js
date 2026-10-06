@@ -101,5 +101,19 @@ var Music = (function () {
       o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.22);
     } catch (e) {}
   }
-  return { blip: blip, plop: plop, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  // The right answer is revealed: a bright two-note "ta-daa" with a little shimmer on top.
+  function ding() {
+    try {
+      if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
+      if (ctx.state === 'suspended') ctx.resume();
+      var t = ctx.currentTime + 0.02;
+      [[79, 0, 0.18, 'triangle', 0.26], [84, 0.13, 0.7, 'triangle', 0.28], [88, 0.13, 0.7, 'sine', 0.14], [96, 0.16, 0.5, 'sine', 0.06]].forEach(function (n) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = n[3]; o.frequency.value = hz(n[0]);
+        g.gain.setValueAtTime(0.0001, t + n[1]); g.gain.exponentialRampToValueAtTime(n[4], t + n[1] + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + n[2]);
+        o.connect(g); g.connect(ctx.destination); o.start(t + n[1]); o.stop(t + n[1] + n[2] + 0.05);
+      });
+    } catch (e) {}
+  }
+  return { blip: blip, plop: plop, ding: ding, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

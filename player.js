@@ -16,7 +16,7 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(id === 'v-join' && !document.body.classList.contains('embed')); }   // menu music on the start page only
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-join' && !document.body.classList.contains('embed')) || !!(state && state.remote && state.phase === 'guess' && state.q && state.q.noclip)); }   // menu music on the start page only
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   Music.want(!document.body.classList.contains('embed'));   // the start page is showing
@@ -105,6 +105,7 @@
     if (!s.draw) dKey = '';
     if (!s.sing) sKey = '';
     var fresh = key !== lastPhaseKey; lastPhaseKey = key;
+    if (fresh && s.phase === 'reveal' && s.remote && !s.sing && m) Music.ding();   // no shared screen: every phone plays the reveal sound itself
     if (s.sing && s.phase !== 'reveal' && s.phase !== 'end' && s.phase !== 'lobby' && s.phase !== 'paused' && s.phase !== 'guess') { renderSing(s, m); return; }
     if (s.phase === 'brief' || s.phase === 'intro') {
       // The briefing before the first song: the settings, how scoring works, and a Ready button.
