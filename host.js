@@ -61,7 +61,8 @@
       // Multiple choice: the answer is held and can still be changed. Nobody learns whether
       // it was right before the reveal, which comes once everyone has an answer in.
       if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
-      if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;   // Draw!: the drawer does not guess, and a first guess is final
+      if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;
+      if (G.best && (G.best.pids[m.choice] === m.pid || p.pick != null)) return;   // best drawing: not your own, and a vote is final   // Draw!: the drawer does not guess, and a first guess is final
       p.pick = m.choice; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now());
       push(); allIn(); return;
     }
@@ -123,6 +124,7 @@
       s.gallery = { id: G.gallery.id, opts: {}, chosen: {}, done: {} };
       Object.keys(G.gallery.items).forEach(function (k) { var it = G.gallery.items[k]; s.gallery.opts[k] = it.options.map(songLabel); if (it.chosen != null) s.gallery.chosen[k] = it.chosen; if (it.done) s.gallery.done[k] = 1; });
     }
+    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
       s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
@@ -310,6 +312,12 @@
       // "Continue" moves a Sing! round along; otherwise the button only appears when YouTube will not play anything.
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
       $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck));
+      if (G.phase === 'reveal' && G.best) {
+        var bw = (G.best.wins || []).map(function (i) { return players[G.best.pids[i]]; }).filter(Boolean).map(function (p) { return p.name; });
+        $('rtitle').textContent = bw.length ? 'Best drawing: ' + bw.join(' & ') : 'Nobody voted';
+        $('rmeta').textContent = bw.length ? '+' + BEST_PTS + ' bonus points' : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
+        $('next').textContent = lastSong() ? 'Final scores' : 'Next';
+      }
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
@@ -331,7 +339,7 @@
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
       var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
       if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
-      return '<div class="optcol"><div class="opt' + (rev ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div><div class="voters">' +
+      return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b>' + esc(o) + '</div><div class="voters">' +
         who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '">' + charSvg(p.char) + esc(p.name) + (rev && p.got && i === q.correct ? ' <b>+' + p.pts + '</b>' : '') + '</span>'; }).join('') + '</div></div>';
     }).join('') : '';
     G.plopped = null;   // the pop-in only plays once
@@ -385,6 +393,7 @@
     // Until that reveal the video itself is kept invisible, so not even a flash of it can give the song away.
     var dShow = !!G.draw && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal'), dSide = !!G.draw && G.phase === 'reveal';
     $('drawview').classList.toggle('hidden', !dShow); $('drawview').classList.toggle('side', dSide);
+    bestRender();
     var stg = document.querySelector('#v-game .stage'); stg.classList.toggle('withdraw', dSide); stg.classList.toggle('novideo', (!!G.draw || !!(G.q && G.q.noclip)) && G.phase !== 'reveal');   // no clip in this question: not a glimpse of the video before the answer
     $('briefcd').textContent = '';
     if (G.phase === 'intro') { $('start').disabled = false; $('start').textContent = 'Start now · ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)); }
@@ -592,7 +601,17 @@
     var right = G.q && G.q.type === 'mc' ? list().filter(function (p) { return p.pick === G.q.correct && !(G.draw && p.pid === G.draw.pid); })
       .sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); }) : [];
     // Speed scoring on a two-clip question only starts counting when the second clip begins.
-    if (ladderGame() && !G.draw) {
+    if (G.best) {
+      // Best drawing: the votes are counted, the drawing with the most gets the bonus (a tie: all of them).
+      right = [];
+      var tally = G.best.pids.map(function () { return 0; });
+      list().forEach(function (p) { if (p.pick != null && tally[p.pick] != null) tally[p.pick]++; });
+      var top = Math.max.apply(null, tally), tops = [];
+      tally.forEach(function (n, i) { if (top > 0 && n === top) tops.push(i); });
+      G.best.tally = tally; G.best.wins = tops; G.q.correct = tops.length ? tops[0] : -1;
+      tops.forEach(function (i) { var w = players[G.best.pids[i]]; if (w) { w.pts = BEST_PTS; w.score += BEST_PTS; w.got = true; } });
+    }
+    if (ladderGame() && !G.draw && !G.best) {
       // Ladder: up a rung for a right answer, half a rung down for a wrong one or none. The score is what the last whole rung is worth.
       list().forEach(function (p) {
         if (p.rung == null) p.rung = Math.max(0, LADDER.indexOf(p.score));   // a restored game only knows the score
@@ -611,7 +630,8 @@
     cover(false); masks(false);
     // The video carries on from where the clip stopped (it only jumps back if it somehow is not at the clip).
     clearTimeout(pairTimer); pairTag('');
-    if (isPair()) {
+    if (G.best) { cover(true, '🏆', '', false); }   // no song with this one
+    else if (isPair()) {
       // the song that was the right answer plays on, from where its clip stopped
       var second = G.q.correct === 1;
       stageEl().classList.toggle('second', second);
@@ -630,24 +650,30 @@
   function revealWatch() {
     clearInterval(revealTick);
     var sh = document.querySelector('#v-game .shield');
+    sh.classList.add('hidden');
     revealTick = setInterval(function () {
       if (G.phase !== 'reveal') { clearInterval(revealTick); sh.classList.toggle('hidden', adShown); return; }
-      sh.classList.toggle('hidden', !REMOTE && !G.sing && !(isPair() && G.q.correct === 1) && revealHold(yt, clipStart) === 'ad');
+      sh.classList.add('hidden');   // the whole time the answer is up: an ad cannot always be told apart from the song
     }, 400);
   }
   function startRound() {
     G.round++; G.phase = 'loading';
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
-    G.q = null; G.revealAt = 0; singClear(); G.draw = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
+    G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
     // Drawings that are still waiting to be guessed come first.
     if (G.gallery && G.gallery.queue.length) { if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } drawNext(); return; }
+    if (G.gallery && G.gallery.vote && drawVote()) return;   // and to finish: which drawing was the best?
     G.gallery = null;
     // Party: four quiz questions, then a Sing! or a Draw! round, then four quiz questions again, and so on
     // (Sing! only with a shared screen, and neither without at least two players).
     if (G.atype === 'party') {
       var special = REMOTE ? ['draw'] : ['sing', 'draw'], can = list().filter(function (p) { return !p.off; }).length >= 2;
-      if (can && (G.quizRun || 0) >= 4) { G.mode = pick(special); G.quizRun = 0; }
+      if (can && (G.quizRun || 0) >= 4) {
+        // take turns, so a game of ten songs has both: four questions, one of them, four questions, the other
+        var other = special.filter(function (x) { return x !== G.lastSpecial; });
+        G.mode = G.lastSpecial = pick(other.length ? other : special); G.quizRun = 0;
+      }
       else { G.mode = 'mc'; G.quizRun = (G.quizRun || 0) + 1; }
     } else G.mode = G.atype;
     var md = roundMode();
@@ -726,7 +752,12 @@
     g.queue = shuffle(Object.keys(g.items).filter(function (k) { var it = g.items[k]; return players[k] && it.chosen != null && !it.skip && it.strokes.length; }));
     if (!g.queue.length) { drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody made a drawing this time, so here is a quiz question instead.'; return; }
     // every drawing is a song of its own: a game never stops halfway through the drawings
-    if (G.total < ENDLESS && G.round - 1 + g.queue.length > G.total) G.total = G.round - 1 + g.queue.length;
+    g.shown = g.queue.slice();
+    g.vote = g.queue.length >= 2 && list().filter(function (p) { return !p.off; }).length >= 3;   // enough to choose from, and enough voters
+    var need = G.round - 1 + g.queue.length + (g.vote ? 1 : 0);
+    // In a Party game the whole Draw! round counts as one song, so the game is made that much longer.
+    if (G.atype === 'party' && G.total < ENDLESS) G.total += g.queue.length + (g.vote ? 1 : 0) - 1;
+    else if (G.total < ENDLESS && need > G.total) G.total = need;
     drawNext();
   }
   function drawNext() {
@@ -738,6 +769,39 @@
     drawClear($('drawview')); it.strokes.forEach(function (m) { drawPaint($('drawview'), m); });
     G.phase = 'loading'; push();
     loadSong(it.options[it.chosen]);
+  }
+  // After the last drawing: everyone votes for the best one (not their own). All drawings are on the
+  // screen side by side; the phones get them as small pictures on the buttons.
+  var BEST_MS = 25000, BEST_PTS = 3, bestKey = '';
+  function drawVote() {
+    var g = G.gallery; g.vote = false;
+    var pids = (g.shown || []).filter(function (k) { return players[k] && g.items[k]; });
+    if (pids.length < 2) return false;
+    stopTimers(); G.draw = null; G.song = null; G.clip = null;
+    G.best = { id: g.id, pids: pids, tally: null, wins: null };
+    G.q = { subject: 'best', type: 'mc', text: 'Which drawing is the best?', hint: '', options: pids.map(function (k) { return players[k].name; }), correct: -1, answer: '', noclip: true };
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '🏆', '', false); masks(true); stageEl().classList.add('novideo'); }
+    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = BEST_MS; G.endsAt = Date.now() + BEST_MS; push();
+    var b = G.best, go = function () {
+      if (G.best !== b || G.phase !== 'guess') return;
+      pids.forEach(function (k, n) { var st = g.items[k].strokes; for (var i = 0; i < st.length; i += 30) net.send('draw', { best: b.id, i: n, first: i === 0, batch: st.slice(i, i + 30) }); });
+    };
+    setTimeout(go, 350); setTimeout(go, 2600);
+    endTimer = setTimeout(reveal, BEST_MS);
+    return true;
+  }
+  // The drawings side by side on the big screen; the winner lights up at the answer.
+  function bestRender() {
+    var el = $('bestview'), on = !!G.best && !!G.gallery && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
+    el.classList.toggle('hidden', !on);
+    if (!on) { bestKey = ''; return; }
+    if (bestKey !== G.best.id + ':' + G.round) {
+      bestKey = G.best.id + ':' + G.round;
+      el.innerHTML = G.best.pids.map(function (k, i) { return '<div class="tile"><canvas width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas><span><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b> ' + esc(players[k] ? players[k].name : '?') + '</span></div>'; }).join('');
+      el.className = 'bestview n' + Math.min(8, G.best.pids.length);
+      [].forEach.call(el.querySelectorAll('canvas'), function (cv, i) { var it = G.gallery.items[G.best.pids[i]]; drawClear(cv); (it ? it.strokes : []).forEach(function (m) { drawPaint(cv, m); }); });
+    }
+    [].forEach.call(el.querySelectorAll('.tile'), function (t, i) { t.classList.toggle('win', G.phase === 'reveal' && !!G.best.wins && G.best.wins.indexOf(i) >= 0); t.classList.toggle('lose', G.phase === 'reveal' && !!G.best.wins && G.best.wins.indexOf(i) < 0); });
   }
   // The phones get the drawing as a few packets of lines (twice, in case one is still switching screens).
   function drawSend() {
@@ -1135,6 +1199,8 @@
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     if (lo) lo.disabled = party;
     if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
+    // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
+    var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
     var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
     $('s-rounds').disabled = lad; $('s-show').disabled = lad; scoreHelp(); }
   // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
@@ -1152,7 +1218,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    G.ladderWon = false; G.gallery = null; list().forEach(function (p) { p.rung = 0; p.moved = ''; });
+    G.ladderWon = false; G.gallery = null; G.best = null; list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
@@ -1195,7 +1261,7 @@
     G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quizRun = 0;
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quizRun = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }

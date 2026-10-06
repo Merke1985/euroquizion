@@ -635,3 +635,22 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @keyframes scribble{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-7px,3px) rotate(-12deg)}50%{transform:translate(2px,-2px) rotate(6deg)}75%{transform:translate(-4px,4px) rotate(-8deg)}}
 @keyframes busychar{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
 @media (prefers-reduced-motion:reduce){.answered .pen,.answered .pl.busy .char{animation:none}}
+
+/* Draw!: the vote for the best drawing */
+.bestview{position:absolute;inset:0;z-index:6;display:grid;gap:10px;padding:10px;grid-template-columns:repeat(2,1fr);align-content:center;justify-items:center;background:radial-gradient(circle at 50% 40%,#3b1fa8,#0b0633 70%)}
+.bestview.n3,.bestview.n4{grid-template-columns:repeat(4,1fr)}.bestview.n3{grid-template-columns:repeat(3,1fr)}
+.bestview.n5,.bestview.n6,.bestview.n7,.bestview.n8{grid-template-columns:repeat(4,1fr)}
+.bestview .tile{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0;min-width:0;width:100%;transition:transform .3s,opacity .3s}
+.bestview canvas{width:100%;max-height:100%;aspect-ratio:4/3;background:#fff;border-radius:10px;box-shadow:0 0 0 3px rgba(255,255,255,.2);min-height:0;object-fit:contain}
+.bestview .tile span{font-weight:800;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bestview .tile span b{color:var(--yellow)}
+.bestview .tile.win canvas{box-shadow:0 0 0 5px var(--ok),0 0 26px 4px rgba(61,220,132,.6)}
+.bestview .tile.win{transform:scale(1.04)}
+.bestview .tile.lose{opacity:.45}
+.opts.bestgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.opt.bestopt{flex-direction:column;align-items:stretch;gap:6px;padding:8px;text-align:center;display:flex}
+.opt.bestopt canvas{width:100%;aspect-ratio:4/3;background:#fff;border-radius:8px;pointer-events:none}
+.opt.bestopt b{align-self:center}
+.bestview{grid-auto-rows:minmax(0,1fr)}
+.bestview .tile{height:100%;justify-content:center}
+.bestview canvas{width:auto;height:calc(100% - 28px);max-width:100%}

@@ -31,7 +31,9 @@
     net.on('state', onState);
     net.on('chat', chatAdd);
     // A finished drawing comes from the host as packets of lines, when it is that drawing's turn to be guessed.
-    net.on('draw', function (d) { if (!d || !d.batch || !state || !state.draw || d.pid !== state.draw.pid) return; if (d.first) drawClear($('pdraw')); d.batch.forEach(function (m) { drawPaint($('pdraw'), m); }); });
+    net.on('draw', function (d) {
+      if (d && d.batch && d.best) { bestTake(d); return; }
+      if (!d || !d.batch || !state || !state.draw || d.pid !== state.draw.pid) return; if (d.first) drawClear($('pdraw')); d.batch.forEach(function (m) { drawPaint($('pdraw'), m); }); });
     net.on('result', onResult);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
@@ -164,7 +166,14 @@
           builtKey = key;
           $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
           $('guess').placeholder = q.hint || ''; $('guess').inputMode = (q.subject === 'place' || q.subject === 'points' || q.subject === 'year') ? 'numeric' : 'text';
-          $('opts').innerHTML = mc ? q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
+          var bq = q.subject === 'best' && s.best;   // best drawing: a small picture on every button, and your own cannot be picked
+          $('opts').innerHTML = mc ? q.options.map(function (o, i) {
+            var own = bq && s.best.pids[i] === pid;
+            return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b>' + esc(o) + (own ? ' (yours)' : '') + '</button>';
+          }).join('') : '';
+          $('opts').classList.toggle('bestgrid', !!bq);
+          if (bq) bestPaint();
+
           if (!mc) $('guess').focus();
         }
       }
@@ -179,7 +188,7 @@
       $('rround').className = why ? 'why' : 'mute';
       // The end of the game: no song any more, just the scoreboard counting up (once).
       var end = s.phase === 'end';
-      $('songcard').classList.toggle('hidden', end); $('pfinal').classList.toggle('hidden', !end);
+      $('songcard').classList.toggle('hidden', end || !!s.best); $('pfinal').classList.toggle('hidden', !end);
       if (end && !endShown) {
         endShown = true; $('verdict').className = 'fb verdict'; $('verdict').textContent = 'Final scores';
         finalBoard($('pfinal'), s.players, pid, function (wins) {
@@ -204,6 +213,16 @@
         $('ropts').innerHTML = (s.sing.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
         $('rpts').textContent = ptsText(mine ? mine.pts : 0);
         $('rpts').className = 'rpts ' + (mine ? 'ok' : 'no');
+      }
+      if (rev && s.best) {
+        // Best drawing: the votes per drawing, and the winning picture.
+        var bw = s.best.wins || [], iw = bw.some(function (i) { return s.best.pids[i] === pid; });
+        var bn = bw.map(function (i) { return s.q.options[i]; });
+        $('verdict').className = 'fb verdict ' + (iw ? 'ok' : '');
+        $('verdict').textContent = !bw.length ? 'Nobody voted' : iw ? 'Your drawing won! +' + s.best.pts : 'Best drawing: ' + bn.join(' & ');
+        $('ropts').innerHTML = s.q.options.map(function (o, i) { var n = (s.best.tally || [])[i] || 0; return '<div class="opt' + (bw.indexOf(i) >= 0 ? ' right' : ' dim') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otext">' + esc(o) + '</span><span class="mark">' + n + (n === 1 ? ' vote' : ' votes') + '</span></div>'; }).join('');
+        if (fresh && bw.length) { try { var tc = document.createElement('canvas'); tc.width = DRAW_W; tc.height = DRAW_H; drawClear(tc); (bestStore.items[bw[0]] || []).forEach(function (m2) { drawPaint(tc, m2); }); $('rdraw').src = tc.toDataURL('image/png'); } catch (e) {} }
+        $('rdraw').classList.toggle('hidden', !bw.length);
       }
       $('ranswer').textContent = '';   // the green bar already says it
       $('rtitle').textContent = r.title || '';
@@ -407,10 +426,10 @@
     vWatch = setTimeout(function () { try { if (yt.getPlayerState() !== 1) $('tapplay').classList.remove('hidden'); } catch (e) {} }, 1800);
     if (full) {
       // while an ad plays instead of the song, the player can be tapped (Skip ad)
-      var sh = document.querySelector('#pstage .shield');
+      var sh = document.querySelector('#pstage .shield'); sh.classList.add('hidden');
       vPoll = setInterval(function () {
         if (vStage !== 'full') { clearInterval(vPoll); sh.classList.toggle('hidden', vAdOn); return; }
-        sh.classList.toggle('hidden', revealHold(yt, clipStart) === 'ad');
+        sh.classList.add('hidden');
       }, 400);
       return;
     }
@@ -551,6 +570,18 @@
 
   // Multiple choice: a tap holds the answer; whether it was right only shows at the reveal.
   // ---------- Draw!: the drawer's pad ----------
+  // Best drawing: the drawings come in as packets of lines; they are kept, and painted on the buttons.
+  var bestStore = { id: '', items: {} };
+  function bestTake(d) {
+    if (bestStore.id !== d.best) bestStore = { id: d.best, items: {} };
+    if (d.first || !bestStore.items[d.i]) bestStore.items[d.i] = [];
+    bestStore.items[d.i] = bestStore.items[d.i].concat(d.batch);
+    var cv = $('opts').querySelector('canvas[data-g="' + d.i + '"]');
+    if (cv) { if (d.first) drawClear(cv); d.batch.forEach(function (m) { drawPaint(cv, m); }); }
+  }
+  function bestPaint() {
+    [].forEach.call($('opts').querySelectorAll('canvas[data-g]'), function (cv) { drawClear(cv); (bestStore.items[+cv.getAttribute('data-g')] || []).forEach(function (m) { drawPaint(cv, m); }); });
+  }
   var padPicked = -1, padDone = false, padSkipped = false;
   // The pad screen: first the four songs (and a way out), then the canvas.
   function drawView(go, gc) {
@@ -612,9 +643,9 @@
     if (!b || b.disabled || !net) return;
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
-    var final = !!(state && state.draw);   // Draw!: the first guess counts
+    var final = !!(state && (state.draw || state.best));   // Draw!: the first guess counts, and so does a vote
     if (final) [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.disabled = true; });
-    $('fb').className = 'fb close'; $('fb').textContent = final ? 'Answer in. No changing this one!' : 'Answer in. You can still change it until everyone has answered.';
+    $('fb').className = 'fb close'; $('fb').textContent = state && state.best ? 'Vote in!' : final ? 'Answer in. No changing this one!' : 'Answer in. You can still change it until everyone has answered.';
     net.send('guess', { pid: pid, choice: +b.getAttribute('data-i') });
   });
   $('guessform').addEventListener('submit', function (e) {

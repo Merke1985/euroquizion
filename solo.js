@@ -237,9 +237,10 @@
   function revealWatch() {
     clearInterval(revealTick);
     var sh = document.querySelector('#v-game .shield');
+    sh.classList.add('hidden');
     revealTick = setInterval(function () {
       if (S.phase !== 'reveal') { clearInterval(revealTick); sh.classList.toggle('hidden', adShown); return; }
-      sh.classList.toggle('hidden', !(isPair() && S.q.correct === 1) && revealHold(yt, clipStart) === 'ad');
+      sh.classList.add('hidden');   // the whole time the answer is up: an ad cannot always be told apart from the song
     }, 400);
   }
   function startRound() {

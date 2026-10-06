@@ -195,8 +195,8 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // Draw!: one player draws a song on their phone, the others guess. Lines travel as small batches of
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
-var PARTY_HELP = 'Party: a mix of everything. Four quiz questions, then a Sing! or Draw! round, and so on.';
-var DRAW_HELP = 'Draw!: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it.';
+var PARTY_HELP = 'Party: a mix of everything. Four quiz questions, then Sing! or Draw!, four more questions, then the other one, and so on. With 10 songs you get both.';
+var DRAW_HELP = 'Draw!: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it. At the end everyone votes for the best drawing, which earns 3 bonus points.';
 var DRAW_COLORS = ['#111111', '#e11d48', '#2563eb', '#16a34a', '#f59e0b', '#ffffff'];   // the last one is the eraser
 function drawClear(cv) { var c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, DRAW_W, DRAW_H); }
 function drawPaint(cv, m) {
