@@ -135,7 +135,7 @@
       s.gallery = { id: G.gallery.id, opts: {}, chosen: {}, done: {} };
       Object.keys(G.gallery.items).forEach(function (k) { var it = G.gallery.items[k]; s.gallery.opts[k] = it.options.map(songLabel); if (it.chosen != null) s.gallery.chosen[k] = it.chosen; if (it.done) s.gallery.done[k] = 1; });
     }
-    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { quip: !!G.best.quip, win_pts: G.best.quip ? QUIP_WIN : BEST_PTS * partyX(), id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
+    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { bluff: !!G.best.bluff, quip: !!G.best.quip, win_pts: G.best.quip ? QUIP_WIN : BEST_PTS * partyX(), id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
       s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
@@ -381,8 +381,9 @@
       if (G.phase === 'reveal' && G.best) {
         var bw = (G.best.wins || []).map(function (i) { return players[G.best.pids[i]]; }).filter(Boolean).map(function (p) { return p.name; });
         if (G.best.quip) bw = (G.best.wins || []).map(function (i) { var w = players[G.best.pids[i]]; return w ? w.name : QUIP_HOUSE; });
-        $('rtitle').textContent = bw.length ? (G.best.quip ? 'Favourite answer: ' : 'Best drawing: ') + bw.join(' & ') : 'Nobody voted';
-        $('rmeta').textContent = bw.length ? (G.best.quip ? (G.best.per || 1) + (G.best.per === 1 ? ' point' : ' points') + ' per vote' : '+' + BEST_PTS * partyX() + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
+        if (G.best.bluff) bw = [G.q.options[G.best.real]];
+        $('rtitle').textContent = bw.length ? (G.best.bluff ? 'It means: ' : G.best.quip ? 'Favourite answer: ' : 'Best drawing: ') + bw.join(' & ') : 'Nobody voted';
+        $('rmeta').textContent = bw.length ? (G.best.bluff ? '12 points for finding it, 4 for every player you fool' : G.best.quip ? (G.best.per || 1) + (G.best.per === 1 ? ' point' : ' points') + ' per vote' : '+' + BEST_PTS * partyX() + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
         $('next').textContent = lastSong() ? 'Final scores' : 'Next';
       }
       if (G.phase === 'reveal' && G.song) {
@@ -687,6 +688,15 @@
       var top = Math.max.apply(null, tally), tops = [];
       tally.forEach(function (n, i) { if (top > 0 && n === top) tops.push(i); });
       G.best.tally = tally; G.best.wins = tops; G.q.correct = tops.length ? tops[0] : -1;
+      if (G.best.bluff) {
+        // Bluff!: 12 points for finding the real meaning, 4 for every player who falls for your fake.
+        var realI = G.best.real;
+        G.best.wins = [realI]; G.q.correct = realI;
+        list().forEach(function (p) { if (p.pick === realI) { p.pts = (p.pts || 0) + 12; p.got = true; } });
+        G.best.pids.forEach(function (k, i) { var w = players[k]; if (w && tally[i]) { w.pts = (w.pts || 0) + tally[i] * 4; w.got = true; } });
+        list().forEach(function (p) { if (p.pts) p.score += p.pts; });
+        G.q.reveal = G.q.options.map(function (o, i) { var w = players[G.best.pids[i]]; return o + '  —  ' + (i === realI ? 'the real meaning' : w ? w.name + '’s bluff' : ''); });
+      } else
       if (G.best.quip) {
         // Quip!: every vote is worth the same; how much depends on the size of the group, so that an answer
         // everyone else votes for comes to about 12 points. The names come out now.
@@ -779,7 +789,8 @@
         // The four songs in between are quiz questions, one of which (the 2nd, 3rd or 4th) is a Quip!.
         G.quizRun = (G.quizRun || 0) + 1;
         if (G.quizRun === 1) G.quipSlot = 2 + Math.floor(Math.random() * 3);
-        G.mode = G.quizRun === G.quipSlot ? 'quip' : 'mc';
+        // the small party round in between: Quip! and Bluff! take turns
+        if (G.quizRun === G.quipSlot) { G.mode = G.lastSmall === 'quip' ? 'bluff' : 'quip'; G.lastSmall = G.mode; } else G.mode = 'mc';
       }
     } else G.mode = G.atype;
     var md = roundMode();
@@ -788,6 +799,7 @@
     if (md === 'sing' && !REMOTE) { funIntro('sing', singStart); return; }
     if (md === 'draw') { funIntro('draw', drawAll); return; }
     if (md === 'quip') { funIntro('quip', quipAll); return; }
+    if (md === 'bluff') { funIntro('bluff', bluffAll); return; }
     push(); loadSong();
   }
 
@@ -884,6 +896,7 @@
   var FUN = {
     quip: { icon: '💬', title: 'Quip!', sub: 'A song plays with a question about it. Write the funniest answer on your phone, then vote for the best one.' },
     draw: { icon: '🎨', title: 'Draw!', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
+    bluff: { icon: '🤥', title: 'Bluff!', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
     sing: { icon: '🎤', title: 'Sing!', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
   var funTimer = null;
@@ -944,14 +957,32 @@
     G.phase = 'loading'; push(); loadSong();
   }
   // The song is ready (called where a quiz question would start): hand out the question and play.
+  // Bluff!: the same round, but the question is what a title in another language means. Everyone makes up
+  // a translation; the real one is mixed in, and everyone tries to find it. Hard languages go first.
+  var EASY_LANG = { english: 1, french: 1, german: 1, dutch: 1, spanish: 1, italian: 1 };
+  function bluffAll() {
+    var can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
+    if (!can.length) can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !BAD_VIDEOS[s[4]]; });
+    if (!can.length) { quipAll(); return; }   // nothing to translate in this selection: a Quip! instead
+    var hard = can.filter(function (s) { return !EASY_LANG[String(s[10]).toLowerCase()]; });
+    G.bluffSong = pick(hard.length ? hard : can);
+    G.quipLoad = true; G.quips = null; G.draw = null; G.best = null; G.q = null;
+    G.phase = 'loading'; push(); loadSong(G.bluffSong);
+  }
   function quipWrite() {
     G.quipLoad = false;
+    var ln, items = {}, bluff = null;
+    if (G.bluffSong) {
+      bluff = { real: TITLE_EN[G.bluffSong[4]], title: G.bluffSong[3] }; G.bluffSong = null;
+      ln = { p: 'What does “' + bluff.title + '” mean? Make up a translation to fool the others.', h: bluff.real };
+    } else {
     // no question twice in one game, until they have all been used
     if (!G.quipUsed || G.quipUsed.length >= QUIPS.length) G.quipUsed = [];
-    var left = QUIPS.filter(function (x) { return G.quipUsed.indexOf(x.p) < 0; }), ln = pick(left), items = {};
+    var left = QUIPS.filter(function (x) { return G.quipUsed.indexOf(x.p) < 0; }); ln = pick(left);
     G.quipUsed.push(ln.p);
+    }
     list().filter(function (p) { return !p.off; }).forEach(function (p) { items[p.pid] = { prompt: ln.p, text: '', done: 0 }; });
-    G.quips = { id: Math.random().toString(36).slice(2, 8), items: items, line: ln };
+    G.quips = { id: Math.random().toString(36).slice(2, 8), items: items, line: ln, bluff: bluff };
     G.guessAt = Date.now(); G.phase = 'qall'; G.barMs = QUIP_MS; G.endsAt = Date.now() + QUIP_MS;
     $('err').textContent = '';
     if (!REMOTE) {
@@ -973,6 +1004,21 @@
     clearTimeout(quipTimer);
     var g = G.quips, opts = [];
     Object.keys(g.items).forEach(function (k) { if (players[k] && g.items[k].text) opts.push({ pid: k, text: g.items[k].text }); });
+    if (g.bluff && opts.length) {
+      // Bluff!: the made-up translations (not the real one, and no two the same) plus the real meaning
+      var norm = function (t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, ''); }, seen = {}; seen[norm(g.bluff.real)] = 1;
+      opts = opts.filter(function (o) { var n = norm(o.text); if (!n || seen[n]) return false; seen[n] = 1; return true; });
+      if (opts.length) {
+        opts = shuffle(opts.slice(0, 11).concat([{ pid: null, text: g.bluff.real }]));
+        stopTimers();
+        G.best = { quip: true, bluff: true, id: g.id, pids: opts.map(function (o) { return o.pid; }), real: opts.map(function (o) { return o.pid; }).indexOf(null), tally: null, wins: null };
+        G.q = { subject: 'bluff', type: 'mc', text: 'What does “' + g.bluff.title + '” really mean?', hint: '', options: opts.map(function (o) { return o.text; }), correct: -1, answer: '' };
+        var bms = list().filter(function (p) { return !p.off; }).length >= 2 ? QUIP_VOTE_MS : 7000;
+        G.phase = 'guess'; G.barMs = bms; G.endsAt = Date.now() + bms; push();
+        endTimer = setTimeout(reveal, bms);
+        return;
+      }
+    }
     if (!opts.length) { G.quips = null; drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody wrote anything this time, so here is a quiz question instead.'; return; }
     // Playing alone, the one answer gets a house answer next to it; with more players only their own answers count.
     if (opts.length < 2 && list().filter(function (p) { return !p.off; }).length < 2) opts.push({ pid: null, text: g.line.h });
@@ -1419,6 +1465,7 @@
   // ---------- test bots ----------
   // Up to four pretend players for trying things out on the shared screen. They live on this page and
   // do what a phone would do: get ready, answer, draw a scribble, write a line, vote.
+  var BOT_BLUFFS = ['My Heart Is Yours', 'Dance With Me Tonight', 'The Last Summer', 'Tell Me Why', 'Under the Stars', 'I Will Wait for You', 'A Little Bit of Love', 'Do Not Go Away', 'Song of the Sea', 'When the Morning Comes', 'One More Night', 'The Girl from the Village'];
   var bots = [], BOT_LINES = ['Beep boop, douze points', 'Even my circuits felt that', '404: talent not found', 'More glitter. Always more glitter.', 'My sensors detect a key change', 'Does not compute, but I love it', 'I was promised a wind machine', 'Zero points from the robot jury'];
   function botScribble() {
     var lines = [];
@@ -1479,7 +1526,7 @@
         if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(can) });
       }
       else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { H.draw({ pid: pid, pick: Math.floor(Math.random() * 4) }); H.draw({ pid: pid, lines: botScribble() }); H.draw({ pid: pid, done: 1 }); }
-      else if (ph === 'qall') H.quip({ pid: pid, text: pick(BOT_LINES) });
+      else if (ph === 'qall') H.quip({ pid: pid, text: pick(G.quips && G.quips.bluff ? BOT_BLUFFS : BOT_LINES) });
       else if (ph === 'svote' && G.sing) H.poll({ pid: pid, choice: Math.floor(Math.random() * G.sing.options.length) });
       else if (ph === 'srec') H.clip({ pid: pid, skip: true });   // bots do not sing
       else if (ph === 'sbest' && G.sing) { var others = []; G.sing.order.forEach(function (o, i) { if (o !== pid) others.push(i); }); if (others.length) H.poll({ pid: pid, choice: pick(others) }); }
@@ -1591,7 +1638,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastSmall = window.FIRST_SMALL === 'bluff' ? 'quip' : ''; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }

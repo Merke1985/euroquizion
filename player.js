@@ -249,8 +249,8 @@
         var bw = s.best.wins || [], iw = bw.some(function (i) { return s.best.pids[i] === pid; }), qz = !!s.best.quip, shownOpts = (qz && s.q.reveal) || s.q.options;
         var bn = bw.map(function (i) { return qz ? (shownOpts[i].split('  —  ')[1] || '') : s.q.options[i]; });
         var myI = s.best.pids.indexOf(pid);
-        $('verdict').className = 'fb verdict ' + (iw ? 'ok' : '');
-        $('verdict').textContent = qz ? (myI >= 0 ? (iw ? 'Your answer won! +' : 'Your answer: +') + (m ? m.pts || 0 : 0) : s.q.text) : !bw.length ? 'Nobody voted' : iw ? 'Your drawing won! +' + s.best.win_pts : 'Best drawing: ' + bn.join(' & ');
+        $('verdict').className = 'fb verdict ' + (iw || (s.best.bluff && m && m.pts) ? 'ok' : '');
+        $('verdict').textContent = s.best.bluff ? (m && m.pts ? '+' + m.pts + (m.pick === bw[0] ? ' · you found it!' : ' · your bluff worked') : m && m.pick != null ? 'Fooled!' : s.q.text) : qz ? (myI >= 0 ? (iw ? 'Your answer won! +' : 'Your answer: +') + (m ? m.pts || 0 : 0) : s.q.text) : !bw.length ? 'Nobody voted' : iw ? 'Your drawing won! +' + s.best.win_pts : 'Best drawing: ' + bn.join(' & ');
         $('ropts').innerHTML = shownOpts.map(function (o, i) { var n = (s.best.tally || [])[i] || 0; return '<div class="opt' + (bw.indexOf(i) >= 0 ? ' right' : ' dim') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otext">' + esc(o) + '</span><span class="mark">' + n + (n === 1 ? ' vote' : ' votes') + '</span></div>'; }).join('');
         if (fresh && bw.length && !qz) { try { var tc = document.createElement('canvas'); tc.width = DRAW_W; tc.height = DRAW_H; drawClear(tc); (bestStore.items[bw[0]] || []).forEach(function (m2) { drawPaint(tc, m2); }); $('rdraw').src = tc.toDataURL('image/png'); } catch (e) {} }
         $('rdraw').classList.toggle('hidden', !bw.length || qz);
