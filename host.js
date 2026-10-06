@@ -192,7 +192,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && G.phase === 'guess' && !!G.q && !!G.q.noclip)); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (G.atype === 'draw' && (G.phase === 'dpick' || G.phase === 'loading'))))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   function boardHtml(showGot) {
@@ -333,7 +333,11 @@
   function countStop() { clearInterval(loadTick); loadT0 = 0; }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   setInterval(function () {
-    $('drawview').classList.toggle('hidden', !(G.draw && G.phase === 'guess'));
+    // Draw!: the drawing fills the stage while it is being made; at the reveal it sits beside the playing video.
+    // Until that reveal the video itself is kept invisible, so not even a flash of it can give the song away.
+    var dShow = !!G.draw && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal'), dSide = !!G.draw && G.phase === 'reveal';
+    $('drawview').classList.toggle('hidden', !dShow); $('drawview').classList.toggle('side', dSide);
+    var stg = document.querySelector('#v-game .stage'); stg.classList.toggle('withdraw', dSide); stg.classList.toggle('novideo', !!G.draw && G.phase !== 'reveal');
     $('briefcd').textContent = '';
     if (G.phase === 'intro') { $('start').disabled = false; $('start').textContent = 'Start now · ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)); }
     var voteCd = G.phase === 'svote' || G.phase === 'sbest';
@@ -511,6 +515,7 @@
     G.round++; G.phase = 'loading';
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
+    if (!REMOTE && (G.atype === 'sing' || G.atype === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     if (G.atype === 'sing' && !REMOTE) { singStart(); return; }
     if (G.atype === 'draw') { drawStart(); return; }
     push(); loadSong();

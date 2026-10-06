@@ -16,7 +16,7 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && state.phase === 'guess' && state.q && state.q.noclip)); }   // no music on the start page; only under clip-less questions in online games
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.draw && (state.phase === 'dpick' || state.phase === 'loading'))))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -192,6 +192,9 @@
       }
       if (!end) endShown = false;
       var rev = s.phase === 'reveal';
+      // Draw!: the finished drawing stays in view at the reveal (the drawer's own pad, or what the others saw).
+      if (rev && s.draw && fresh) { try { $('rdraw').src = $(s.draw.pid === pid ? 'dcanvas' : 'pdraw').toDataURL('image/png'); } catch (e) {} }
+      $('rdraw').classList.toggle('hidden', !(rev && s.draw));
       $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null, s.draw && s.draw.pid === pid ? null : m ? (m.got ? m.pts : 0) : null) : '';
       $('rpts').textContent = '';
       $('rpts').className = 'rpts ' + (m && m.got ? 'ok' : 'no');
@@ -447,7 +450,7 @@
       setTimeout(function () { if (pop.parentNode) pop.parentNode.removeChild(pop); }, 5200);
     }
   }
-  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly') || !!(state && state.draw && state.phase === 'guess')); }
+  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('pstage').classList.toggle('novideo', !!(state && state.draw && state.phase !== 'reveal')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly') || !!(state && state.draw && state.phase === 'guess')); }
   function chatToggle(open) {
     chatOpen = open; $('chat').classList.toggle('hidden', !open);
     if (open) $('chatpop').innerHTML = '';

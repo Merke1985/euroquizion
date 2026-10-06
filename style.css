@@ -576,3 +576,9 @@ body.embed .phone.compact #lobbystart{width:auto!important;font-size:.95rem;padd
 .lobbyplayers .chip{display:flex;align-items:center;width:96px;overflow:visible}
 .lobbyplayers .chip .char{flex:none}
 .lobbyplayers .chip .pname{display:block;width:100%;font-size:1.05rem;font-weight:700;color:var(--ink);line-height:1.15;text-align:center;overflow-wrap:anywhere}
+
+/* Draw!: no video until the reveal; then the drawing beside the video */
+.stage.novideo #yt,.stage.novideo iframe,#pstage.novideo #yt,#pstage.novideo iframe{opacity:0}
+.stage.withdraw #yt,.stage.withdraw iframe{width:62%}
+.drawview.side{left:auto;right:0;top:50%;transform:translateY(-50%);height:auto;width:38%;max-height:100%;border-radius:0 14px 14px 0}
+.rdraw{width:100%;max-height:26vh;object-fit:contain;background:#fff;border-radius:12px;display:block}
