@@ -1472,7 +1472,7 @@
   $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Round Robin: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
