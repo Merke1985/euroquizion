@@ -1460,10 +1460,11 @@
   }, 400);
 
   // ---------- buttons ----------
-  // "Leave out a country" (Advanced settings): its songs are not played, and it does not turn up among
-  // the wrong answers either.
-  function playSongs() { return G.skip ? songs.filter(function (s) { return s[1] !== G.skip; }) : songs; }
-  function playCountries() { if (!G.skip) return countries; var c = {}, k; for (k in countries) if (k !== G.skip) c[k] = countries[k]; return c; }
+  // "Leave out" (Advanced settings): Israel, Russia or both can be kept out of a game. Their songs are
+  // not played, and they do not turn up among the wrong answers either.
+  function skipped(code) { return !!G.skip && G.skip.split(',').indexOf(code) >= 0; }   // G.skip: '', 'il', 'ru' or 'il,ru'
+  function playSongs() { return G.skip ? songs.filter(function (s) { return !skipped(s[1]); }) : songs; }
+  function playCountries() { if (!G.skip) return countries; var c = {}, k; for (k in countries) if (!skipped(k)) c[k] = countries[k]; return c; }
   $('s-skip').addEventListener('change', function () { G.skip = $('s-skip').value; try { localStorage.setItem('esc-skip', G.skip); } catch (e) {} ready(); });
   function buildPool() {
     G.pool = poolFor(playSongs(), G.eraNow || (G.era === 'spin' ? '1956-2100' : G.era), G.cat);   // eraNow: the years this round was dealt by the spin
@@ -1639,9 +1640,7 @@
 
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
-    // the countries for "Leave out a country", by name
-    $('s-skip').innerHTML = '<option value="">None</option>' + Object.keys(countries).sort(function (a, b) { return countries[a].localeCompare(countries[b]); }).map(function (k) { return '<option value="' + esc(k) + '">' + esc(countries[k]) + '</option>'; }).join('');
-    try { var sk = localStorage.getItem('esc-skip'); if (sk && countries[sk]) { $('s-skip').value = sk; G.skip = sk; } } catch (e) {}
+    try { var sk = localStorage.getItem('esc-skip'); if (sk && $('s-skip').querySelector('option[value="' + sk + '"]')) { $('s-skip').value = sk; G.skip = sk; } } catch (e) {}
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   fetch('chorus.json?v=43').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
