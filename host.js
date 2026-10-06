@@ -810,7 +810,10 @@
   // The song is ready (called where a quiz question would start): hand out the question and play.
   function quipWrite() {
     G.quipLoad = false;
-    var ln = pick(QUIPS), items = {};
+    // no question twice in one game, until they have all been used
+    if (!G.quipUsed || G.quipUsed.length >= QUIPS.length) G.quipUsed = [];
+    var left = QUIPS.filter(function (x) { return G.quipUsed.indexOf(x.p) < 0; }), ln = pick(left), items = {};
+    G.quipUsed.push(ln.p);
     list().filter(function (p) { return !p.off; }).forEach(function (p) { items[p.pid] = { prompt: ln.p, text: '', done: 0 }; });
     G.quips = { id: Math.random().toString(36).slice(2, 8), items: items, line: ln };
     G.guessAt = Date.now(); G.phase = 'qall'; G.barMs = QUIP_MS; G.endsAt = Date.now() + QUIP_MS;
@@ -1357,7 +1360,7 @@
     G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }

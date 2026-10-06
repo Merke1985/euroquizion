@@ -401,5 +401,22 @@ var QUIPS = [
   { p: 'What did the neighbours say about the rehearsals?', h: 'We preferred the drilling' },
   { p: 'What is this act\'s rider (backstage demands)?', h: 'Forty towels and a fog machine' },
   { p: 'Why does this song deserve douze points?', h: 'Somebody has to explain it to the others' },
-  { p: 'What is the dance move in this song called?', h: 'The confused windmill' }
+  { p: 'What is the dance move in this song called?', h: 'The confused windmill' },
+  // a bit cheekier
+  { p: 'What is this singer like on a first date?', h: 'Brings their own wind machine' },
+  { p: 'What happened at the afterparty?', h: 'Nobody is allowed to say' },
+  { p: 'What is this song actually a very thin excuse for?', h: 'Taking the shirt off' },
+  { p: 'Who is this song secretly about?', h: 'The Swedish head of delegation' },
+  { p: 'What did this act get up to in the hotel?', h: 'Room service. So much room service.' },
+  { p: 'Write this singer\'s dating profile in one line', h: 'Loves long walks and key changes' },
+  { p: 'What is hiding under that costume?', h: 'A second, worse costume' },
+  { p: 'What is the worst thing to whisper to someone during this song?', h: 'This reminds me of my ex' },
+  { p: 'Where should you definitely not play this song?', h: 'At your grandmother\'s funeral' },
+  { p: 'What did the singer text their ex right after this?', h: 'Did you see me on TV? Thought so.' },
+  { p: 'How many drinks does this song need before it sounds good?', h: 'Twelve. Douze, even.' },
+  { p: 'What is this song the perfect soundtrack for?', h: 'A walk of shame through Malmö' },
+  { p: 'What is the backing singer doing with the lead singer after the show?', h: 'Splitting the taxi. Allegedly.' },
+  { p: 'What is the real reason the trousers are that tight?', h: 'They shrank in the hotel sauna' },
+  { p: 'Which bad decision does this song make you want to make?', h: 'Texting someone at 3 a.m.' },
+  { p: 'What would the bedroom version of this song be called?', h: 'Nul Points' }
 ];
