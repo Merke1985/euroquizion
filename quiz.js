@@ -131,7 +131,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
     if (pq) return pq;
   }
   if (subjectSetting === 'higher' || subjectSetting === 'newer') subjectSetting = 'random';
-  if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 1 / 6)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
+  if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 1 / 8)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
   if (canPlace && !winners) kinds.push('place');
