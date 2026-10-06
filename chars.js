@@ -13,7 +13,8 @@ var CHARS = [
   { id: 'rybak', name: 'Alexander Rybak', file: 'Alexander Rybak during Eurovision 2009.jpg', by: 'Daniel Kruczynski', lic: 'CC BY-SA 2.0', licUrl: 'https://creativecommons.org/licenses/by-sa/2.0', pos: '50% 20%', face: [54, 54], zoom: 1.15 },
   { id: 'joost', name: 'Joost Klein', file: 'Joost Klein Press Event 2024 (cropped) B.jpg', by: 'VDanDesign', lic: 'CC BY 4.0', licUrl: 'https://creativecommons.org/licenses/by/4.0', pos: '50% 10%' },
   { id: 'tyler', name: 'Bonnie Tyler', file: 'Bonnie Tyler, ESC2013 press conference 02 (cropped).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0', pos: '50% 30%' },
-  { id: 'duncan', name: 'Duncan Laurence', file: 'Duncan Laurence with the 2019 Eurovision Trophy (cropped2).jpg', by: 'Martin Fjellanger, EuroVisionary', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 20%' }
+  { id: 'duncan', name: 'Duncan Laurence', file: 'Duncan Laurence with the 2019 Eurovision Trophy (cropped2).jpg', by: 'Martin Fjellanger, EuroVisionary', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 20%' },
+  { id: 'emmy', name: 'Emmy', file: 'Emmy LEP 2025.png', by: 'escdiscord', lic: 'CC BY-SA 2.0', licUrl: 'https://creativecommons.org/licenses/by-sa/2.0', pos: '50% 10%' }
 ];
 var CHAR_BY_ID = {};
 CHARS.forEach(function (c) { CHAR_BY_ID[c.id] = c; });
