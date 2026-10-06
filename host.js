@@ -1,11 +1,11 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var AFTER = 5;            // seconds to answer after the clip has ended
-  function clipSecs() { return Math.max(5, Math.round(G.guessMs / 1000) - AFTER); }   // clip length (the Video time setting)
+  function clipSecs() { return Math.max(5, Math.round(G.guessMs / 1000) - AFTER); }   // clip length (the Video length setting)
   var room = '', net, songs = [], countries = {}, chorus = {};
   var REMOTE = new URLSearchParams(location.search).get('screen') === '0';   // a game without a shared screen
   var players = {};         // pid -> {pid,name,score,got,pts,last}
-  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 20000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'correct', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0, go: {} };
+  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 25000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'correct', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0, go: {} };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
@@ -26,6 +26,7 @@
   $('demo').classList.toggle('hidden', !net.demo);
   net.on('hi', function (m) {
     if (!m || !m.pid) return;
+    if (m.bye) { var gone = players[m.pid]; if (gone && !gone.off) { gone.off = true; gone.last = 0; push(); allIn(); drawAllCheck(); } return; }   // that phone closed the page
     var p = players[m.pid], isNew = !p;
     var nm = String(m.name || '').slice(0, 16) || 'Player';
     // Every character belongs to one player per room; first come, first served.
@@ -48,7 +49,7 @@
     var changed = isNew || p.name !== nm || p.off;
     if (free && want !== p.char && (G.phase === 'lobby' || !p.char)) { p.char = want; changed = true; }
     p.name = nm; p.last = Date.now(); p.off = false;
-    if (changed) push();
+    if (changed) push(); else if (m.back) sayHello();   // back from the background: here is how things stand
     remoteCheck();
   });
   var helloAt = 0;
@@ -195,11 +196,16 @@
     }
     net.send('sync', {});
   }
+  var beatAt = 0;
   setInterval(function () {
     var now = Date.now(), ch = false;
-    list().forEach(function (p) { var off = now - p.last > 12000; if (off !== !!p.off) { p.off = off; ch = true; } });
-    if (!recovering) net.send('state', snapshot()); if (ch) render();
-  }, 3000);
+    list().forEach(function (p) { var off = now - p.last > 25000; if (off !== !!p.off) { p.off = off; ch = true; } });
+    if (ch) { push(); return; }
+    // The state goes out whenever something changes; this repeat only repairs a message that got lost.
+    // Every device in the room receives it, so: not without players, and less often while nothing is at stake.
+    var calm = G.phase === 'lobby' || G.phase === 'reveal' || G.phase === 'end' || G.phase === 'paused';
+    if (!recovering && list().length && now - beatAt >= (calm ? 10000 : 5000) - 500) { beatAt = now; net.send('state', snapshot()); }
+  }, 2500);
 
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
@@ -819,9 +825,11 @@
     if (typeof m.pick === 'number') { if (it.chosen == null && it.options[m.pick]) { it.chosen = m.pick; push(); } return; }
     if (m.skip) { if (!it.done) { it.skip = 1; it.done = 1; push(); drawAllCheck(); } return; }   // "I'm not drawing"
     if (m.done) { if (!it.done) { it.done = 1; push(); drawAllCheck(); } return; }
-    if (it.chosen == null || it.done) return;
-    if (m.clear) it.strokes = [];
-    else if (m.p && m.p.length >= 2 && it.strokes.length < 4000) it.strokes.push({ c: m.c, w: m.w, p: m.p });
+    if (it.chosen == null || it.done || !m.lines) return;
+    m.lines.forEach(function (l) {   // a bundle of lines (and maybe a 'clear') in the order they were made
+      if (l.clear) it.strokes = [];
+      else if (l.p && l.p.length >= 2 && it.strokes.length < 4000) it.strokes.push({ c: l.c, w: l.w, p: l.p });
+    });
   });
   net.on('ready', function (m) {
     var p = m && players[m.pid];
@@ -847,7 +855,7 @@
   function optText(id) { var el = $(id); return el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''; }
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw';
-    var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.total], ['Video time', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
+    var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.total], ['Video length', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
     if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', optText('s-scoring')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };

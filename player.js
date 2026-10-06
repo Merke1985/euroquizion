@@ -6,7 +6,7 @@
   try { pid = sessionStorage.getItem('esc-pid'); } catch (e) {}
   if (!pid) pid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   try { sessionStorage.setItem('esc-pid', pid); } catch (e) {}
-  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', builtKey = '', pickUntil = 0, want = null, picking = false, hi = function () {};
+  var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', builtKey = '', pickUntil = 0, want = null, picking = false, hi = function () {}, hiHooked = false;
   try { want = sessionStorage.getItem('esc-char'); } catch (e) {}
 
   $('name').value = store.get('esc-name') || '';
@@ -43,7 +43,14 @@
     };
     net.on('_open', hi);
     net.on('sync', hi);
-    clearInterval(hiTimer); hiTimer = setInterval(hi, 4000);
+    clearInterval(hiTimer); hiTimer = setInterval(hi, 10000);   // a sign of life for the host; every phone in the room receives it too, so not too often
+    if (!hiHooked) {
+      hiHooked = true;
+      // back from another app or a locked screen: say hello at once, and ask for the current state
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && net && hi) { net.send('hi', { pid: pid, name: name, char: want, score: (me() || {}).score, back: 1 }); } });
+      // leaving: tell the host, so nobody waits for this phone
+      window.addEventListener('pagehide', function () { if (net) net.send('hi', { pid: pid, bye: 1 }); });
+    }
     show('v-wait'); $('waittitle').textContent = 'Connecting…'; $('waitsub').textContent = 'Room ' + room;
     clearTimeout(joinTimer);
     joinTimer = setTimeout(function () {
@@ -363,7 +370,7 @@
   // Every phone plays the clip itself. The host only says which video and where to start; the
   // phone loads it silently, reports when it is ready, and plays when the guessing starts.
   var introTry = 0;
-  function clipSecs() { return Math.max(5, Math.round(((state && state.total_ms) || 20000) / 1000) - 5); }   // the host's Video time setting
+  function clipSecs() { return Math.max(5, Math.round(((state && state.total_ms) || 20000) / 1000) - 5); }   // the host's Video length setting
   var yt = null, ytWanted = false, ytReady = false, clipKey = '', clipStart = 0, vStage = 'idle', vPoll = null, vWatch = null, vPlayed = '';
   function vCover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text || ''; } }
   function vMasks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
@@ -600,7 +607,7 @@
   }
   // Tell the host a few times, in case a message gets lost; it only takes the first.
   function drawTell(m) { var dk = dKey; m.pid = pid; [0, 700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (dKey === dk && state && state.phase === 'dall' && net) net.send('draw', m); }, ms); }); }
-  function drawFinish(skip) { padFlush(); padDone = true; padSkipped = !!skip; drawTell(skip ? { skip: 1 } : { done: 1 }); show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
+  function drawFinish(skip) { padFlush(); padShip(); padDone = true; padSkipped = !!skip; drawTell(skip ? { skip: 1 } : { done: 1 }); show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
   $('dpass').addEventListener('click', function () { drawFinish(true); });
   $('ddone').addEventListener('click', function () { drawFinish(false); });
   var dKey = '', padColor = 0, padWidth = 6, padBuf = [], padDown = false, padLast = null, padTick = null;
@@ -609,13 +616,21 @@
       return '<button type="button" data-c="' + i + '" class="' + (i === padColor ? 'on' : '') + '" style="background:' + c + '" aria-label="' + (i === DRAW_COLORS.length - 1 ? 'Eraser' : 'Colour') + '">' + (i === DRAW_COLORS.length - 1 ? '⌫' : '') + '</button>';
     }).join('') + '<button type="button" data-w="1" class="wide">' + (padWidth > 6 ? 'Thick' : 'Thin') + '</button><button type="button" data-clear="1" class="wide">Clear</button>';
   }
-  function padSend(m) { m.pid = pid; if (net) net.send('draw', m); }
+  // Nobody watches the drawing live, so the lines are not sent one by one: they are collected and go
+  // out together every second and a half (and at once when time is nearly up, or on Done).
+  var padOut = [], padOutAt = 0;
+  function padSend(m) { padOut.push(m); }
+  function padShip() { if (!padOut.length || !net) return; net.send('draw', { pid: pid, lines: padOut }); padOut = []; padOutAt = Date.now(); }
+  setInterval(function () {
+    if (!padOut.length || !state || state.phase !== 'dall') return;
+    if (Date.now() - padOutAt > 1500 || endsAt - Date.now() < 2500) padShip();
+  }, 300);
   function padFlush() {
     if (padBuf.length < 2) return;
     var m = { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: padBuf };
     padSend(m); padBuf = padDown && padLast ? [padLast[0], padLast[1]] : [];   // the next batch continues from the last point
   }
-  function padReset() { padBuf = []; padDown = false; padLast = null; drawClear($('dcanvas')); padTools(); clearInterval(padTick); padTick = setInterval(function () { if (padBuf.length > 2) padFlush(); }, 120); }
+  function padReset() { padOut = []; padBuf = []; padDown = false; padLast = null; drawClear($('dcanvas')); padTools(); clearInterval(padTick); padTick = setInterval(function () { if (padBuf.length > 2) padFlush(); }, 400); }
   function padPoint(e) { var r = $('dcanvas').getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * DRAW_W), Math.round((e.clientY - r.top) / r.height * DRAW_H)]; }
   function padLocal(a, b) { drawPaint($('dcanvas'), { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: b ? [a[0], a[1], b[0], b[1]] : [a[0], a[1]] }); }
   $('dcanvas').addEventListener('pointerdown', function (e) {
