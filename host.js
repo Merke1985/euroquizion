@@ -339,7 +339,7 @@
   }
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
-    var on = G.sing && (G.phase === 'srec' || G.phase === 'sbest');   // quiz rounds show who has answered in the score panel instead   // during the song vote the voters show behind each song instead
+    var dall = G.phase === 'dall' && !!G.gallery, on = dall || (G.sing && (G.phase === 'srec' || G.phase === 'sbest'));   // quiz rounds show who has answered in the score panel instead   // during the song vote the voters show behind each song instead
     var play = G.sing && G.phase === 'splay';
     $('answered').classList.toggle('hidden', !on && !play);
     if (play) {
@@ -350,7 +350,9 @@
     if (!on) return;
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     $('answered').innerHTML = ps.map(function (p) {
-      return '<div class="pl' + (isIn(p) ? ' in' : '') + (p.off ? ' off' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></div>';
+      // Draw!: a scribbling pencil on everyone who is still drawing, a green ring once they are done
+      var pen = dall && !isIn(p) && G.gallery.items[p.pid] ? '<i class="pen" aria-hidden="true">✏️</i>' : '';
+      return '<div class="pl' + (isIn(p) ? ' in' : '') + (p.off ? ' off' : '') + (pen ? ' busy' : '') + '">' + charSvg(p.char) + pen + '<span>' + esc(p.name) + '</span></div>';
     }).join('');
   }
   function cover(on, icon, text, pulse) {

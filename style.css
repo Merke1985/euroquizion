@@ -624,3 +624,14 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* 13 avatars: two rows in solo */
 .solo .chargrid{grid-template-columns:repeat(7,1fr)}
 @media (max-width:600px){.solo .chargrid{grid-template-columns:repeat(5,1fr)}}
+
+/* Draw!: at the answer the drawing sits on the left and the video on the right (where YouTube's skip button is) */
+.stage.withdraw #yt,.stage.withdraw iframe{left:auto;right:0}
+.drawview.side{left:0;right:auto;border-radius:14px 0 0 14px}
+/* Draw!: who is still drawing */
+.answered .pl{position:relative}
+.answered .pl.busy .char{opacity:1;animation:busychar 1.2s ease-in-out infinite}
+.answered .pen{position:absolute;right:2px;top:26px;font-style:normal;font-size:1.5rem;line-height:1;animation:scribble .7s ease-in-out infinite;transform-origin:20% 90%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+@keyframes scribble{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-7px,3px) rotate(-12deg)}50%{transform:translate(2px,-2px) rotate(6deg)}75%{transform:translate(-4px,4px) rotate(-8deg)}}
+@keyframes busychar{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.answered .pen,.answered .pl.busy .char{animation:none}}
