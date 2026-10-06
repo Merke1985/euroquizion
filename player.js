@@ -568,7 +568,7 @@
     var cd = revealAt ? Math.max(0, Math.ceil((revealAt - Date.now()) / 1000)) : 0;
     $('allin').textContent = cd ? (state && state.phase !== 'guess' ? 'Everyone has voted. Continuing in ' : state && state.players.length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';
     var nx = nextAt ? Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) : 0;
-    if (nx && state) $('allin').textContent = (state.round >= state.total ? 'Final scores in ' : 'Playing next song in ') + clock(nx);   // same line as "All players answered"
+    $('rnext').textContent = nx && state ? (state.round >= state.total ? 'Final scores in ' : 'Next song in ') + clock(nx) : '';   // same line as "All players answered"
 
     if (!state) return;
     if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));

@@ -47,7 +47,7 @@
   $('pickdone').addEventListener('click', pickSave);
   $('editname').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pickSave(); } });
   profile();
-  function hud() { $('hud').innerHTML = S.phase === 'setup' ? '' : charSvg(myChar) + '<span><b>' + esc(who()) + '</b><br>' + esc('Song ' + S.round + ' / ' + S.total + ' · ' + S.score + ' points') + '</span>'; }
+  function hud() { $('hud').innerHTML = ''; }   // nothing in the top right any more
   function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 
@@ -267,7 +267,7 @@
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (S.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (S.round >= S.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
+      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (S.round >= S.total ? 'Final score in ' : 'Next song in ') + clock(left);
     };
     draw(); autoTick = setInterval(draw, 200);
   }

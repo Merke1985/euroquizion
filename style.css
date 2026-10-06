@@ -427,3 +427,12 @@ body.remote .host.ingame .songinfo{display:none}
 .solo .rq{font-size:1.25rem;margin-top:10px;color:var(--ink)}
 .solo .reveal{margin-top:0}
 .fb.verdict:not(.ok):not(.no){color:var(--ink)}
+
+/* the question on the left, "next song in…" on the right of the same line */
+.qrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.qrow>:first-child{flex:1;min-width:0;margin:0}
+.nextin{flex:none;font-size:.9rem;font-weight:700;color:var(--yellow);white-space:nowrap}
+.nextin:empty{display:none}
+.solo .qrow{margin-top:10px}.solo .qrow .rq{margin-top:0}
+.vblock:has(.verdict:empty){display:block}
+.vblock:has(.verdict:empty):has(.nextin:empty){display:none}
