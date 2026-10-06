@@ -500,3 +500,11 @@ body.remote .host.ingame>header .brand .logo{display:none}
 .host #allin{margin-top:10px;font-size:1.05rem}
 .phone #allinq{text-align:left;min-height:0}
 .phone #allinq:empty{display:none}
+
+/* final scores: one player counts up at a time */
+.finalboard li{will-change:transform}
+.finalboard li.counting{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(255,214,10,.35);background:linear-gradient(90deg,#2a1890,#4326c9)}
+.finalboard li.counting .num{background:var(--yellow)}
+.finalboard li.reached{border-color:var(--line)}
+.finalboard li.winner{border:6px solid var(--yellow);box-shadow:0 0 0 4px rgba(255,214,10,.3),0 10px 40px -8px rgba(255,214,10,.6);font-size:1.35rem;padding:.6em .8em;background:linear-gradient(90deg,#3a1fb0,#6a2bd0)}
+.finalboard li.winner .num{background:var(--yellow)}

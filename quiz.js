@@ -216,26 +216,58 @@ function pointsFor(scoring, elapsedMs, totalMs, rank) {
   if (scoring === 'order') return ESC_POINTS[rank] || 1;   // never lower than 1
   return scoreFor(elapsedMs, totalMs);
 }
-// The final scoreboard, Eurovision style: every score counts up point by point over 5 seconds.
-// A row's border turns yellow when that player's total is reached; the winner turns green at the end.
-var finalRun = null;
-function finalBoard(el, players, mePid, onDone) {
-  clearInterval(finalRun);
-  var ps = players.slice().sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); });
-  var max = ps.length ? ps[0].score : 0, T = 5000, t0 = Date.now();
-  el.innerHTML = ps.map(function (p, i) {
-    return '<li data-i="' + i + '"' + (p.pid === mePid ? ' class="me"' : '') + '><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="num">0</span></li>';
+// The final scoreboard. One player at a time, in random order: their row lights up and the score counts up
+// point by point with a ping per step; then the row slides to its place in the ranking. When everyone has
+// been counted the winner gets a big border. sound: play the pings (host screen, or phones playing online).
+var finalRun = 0;
+function finalBoard(el, players, mePid, onDone, sound) {
+  var run = ++finalRun, live = function () { return run === finalRun; };
+  var ps = players.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+  var max = 0; ps.forEach(function (p) { if (p.score > max) max = p.score; });
+  el.innerHTML = ps.map(function (p) {
+    return '<li data-pid="' + esc(p.pid) + '"' + (p.pid === mePid ? ' class="me"' : '') + '><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="num">0</span></li>';
   }).join('') || '<li class="mute">No players</li>';
-  var rows = el.querySelectorAll('li[data-i]');
-  var tick = function () {
-    var f = Math.min(1, (Date.now() - t0) / T), cur = Math.floor(max * f), done = f >= 1;
-    ps.forEach(function (p, i) {
-      var v = done ? p.score : Math.min(p.score, cur);
-      rows[i].querySelector('.num').textContent = v;
-      if (done && max > 0 && p.score === max) { rows[i].classList.remove('reached'); rows[i].classList.add('winner'); }
-      else if (v >= p.score && (max > p.score || done)) rows[i].classList.add('reached');
-    });
-    if (done) { clearInterval(finalRun); finalRun = null; if (onDone) onDone(ps.filter(function (p) { return max > 0 && p.score === max; })); }
+  var rows = {}, val = {};
+  [].forEach.call(el.querySelectorAll('li[data-pid]'), function (li) { rows[li.getAttribute('data-pid')] = li; });
+  ps.forEach(function (p) { val[p.pid] = 0; });
+  // Put the rows in ranking order and let them glide from where they were.
+  var resort = function () {
+    var before = {}, pid;
+    for (pid in rows) before[pid] = rows[pid].getBoundingClientRect().top;
+    ps.slice().sort(function (a, b) { return val[b.pid] - val[a.pid] || a.name.localeCompare(b.name); }).forEach(function (p) { el.appendChild(rows[p.pid]); });
+    for (pid in rows) (function (li, dy) {
+      if (!dy) return;
+      li.style.transition = 'none'; li.style.transform = 'translateY(' + dy + 'px)';
+      li.getBoundingClientRect();
+      li.style.transition = 'transform .45s cubic-bezier(.2,.9,.3,1)'; li.style.transform = '';
+    })(rows[pid], before[pid] - rows[pid].getBoundingClientRect().top);
   };
-  tick(); finalRun = setInterval(tick, 40);
+  var order = shuffle(ps.slice()), k = 0;
+  var finish = function () {
+    if (!live()) return;
+    var wins = ps.filter(function (p) { return max > 0 && p.score === max; });
+    wins.forEach(function (p) { rows[p.pid].classList.remove('reached'); rows[p.pid].classList.add('winner'); });
+    if (onDone) onDone(wins);
+  };
+  var next = function () {
+    if (!live()) return;
+    if (k >= order.length) { setTimeout(finish, 500); return; }
+    var p = order[k++], li = rows[p.pid], num = li.querySelector('.num'), total = p.score;
+    li.classList.add('counting');
+    // one point per step; long scores speed up so nobody waits more than about three seconds
+    var gap = total > 0 ? Math.max(18, Math.min(90, 2800 / total)) : 0, v = 0, lastPing = 0;
+    var step = function () {
+      if (!live()) return;
+      if (v >= total) {
+        li.classList.remove('counting'); li.classList.add('reached'); val[p.pid] = total;
+        setTimeout(function () { if (!live()) return; resort(); setTimeout(next, 650); }, 300);
+        return;
+      }
+      v++; num.textContent = v;
+      if (sound && window.Music && Date.now() - lastPing > 45) { lastPing = Date.now(); Music.ping(v, total); }
+      setTimeout(step, gap);
+    };
+    setTimeout(step, total > 0 ? 350 : 500);
+  };
+  setTimeout(next, 600);
 }

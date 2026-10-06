@@ -187,7 +187,7 @@
   }, 3000);
 
   // ---------- rendering ----------
-  var endShown = false;
+  var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(id === 'v-lobby' || (id === 'v-game' && !REMOTE && G.phase === 'guess' && !!G.q && !!G.q.noclip)); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
@@ -222,7 +222,8 @@
     $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro');
     $('hostmain').classList.toggle('briefing', G.phase === 'brief' || G.phase === 'intro');
     // The fanfare is sound only: its player stays out of sight (but not display:none, or it would not play).
-    $('v-game').classList.toggle('audioonly', G.phase === 'intro');
+    if (G.phase !== 'end' && endFanfare) { endFanfare = false; try { yt.stopVideo(); } catch (e) {} }
+    $('v-game').classList.toggle('audioonly', G.phase === 'intro' || endFanfare);
     if (G.phase === 'intro') $('v-game').classList.remove('hidden');
     if (window.selfSize) window.selfSize();
     if (G.phase !== 'end') endShown = false;
@@ -238,7 +239,9 @@
           $('endlead').textContent = wins.length ? 'And the winner is…' : 'Final scores';
           $('winner').textContent = wins.length ? wins.map(function (w) { return w.name; }).join(' & ') + ' · ' + ptsLabel(wins[0].score) : 'Nobody scored';
           $('winchar').innerHTML = wins.length === 1 ? charSvg(wins[0].char) : '';
-        });
+          // the fanfare once more for the winner (sound only)
+          if (!REMOTE && wins.length && G.phase === 'end') { endFanfare = true; introTry = 0; stage = 'intro'; $('v-game').classList.remove('hidden'); $('v-game').classList.add('audioonly'); try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} }
+        }, true);
       }
     } else {
       show('v-game');

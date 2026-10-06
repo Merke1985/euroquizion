@@ -115,5 +115,16 @@ var Music = (function () {
       });
     } catch (e) {}
   }
-  return { blip: blip, plop: plop, ding: ding, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  // Counting up a score: a short ping that climbs in pitch as the number gets closer to the total.
+  function ping(v, total) {
+    try {
+      if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
+      if (ctx.state === 'suspended') ctx.resume();
+      var t = ctx.currentTime + 0.005, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = 700 + 900 * (total ? v / total : 0);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.14, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.08);
+    } catch (e) {}
+  }
+  return { blip: blip, plop: plop, ding: ding, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();
