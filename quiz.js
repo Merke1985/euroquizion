@@ -126,12 +126,12 @@ function SecondPlayer(elId) {
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   var pairOk = !!(opt && opt.pair), winners = !!(opt && opt.cat === 'win');   // only winners in play: every placing question would answer itself
   if (winners && (subjectSetting === 'place' || subjectSetting === 'higher')) subjectSetting = 'random';
-  if (pairOk && (subjectSetting === 'higher' || subjectSetting === 'newer' || (subjectSetting === 'random' && Math.random() < 0.2))) {
+  if (pairOk && (subjectSetting === 'higher' || subjectSetting === 'newer' || (subjectSetting === 'random' && Math.random() < 0.25))) {   // 12.5% each for higher/lower and newer
     var pk = subjectSetting === 'random' ? (winners ? 'newer' : pick(['higher', 'newer'])) : subjectSetting, pq = makePair(song, pk, allSongs, countries) || (subjectSetting === 'higher' ? makePair(song, 'newer', allSongs, countries) : null);
     if (pq) return pq;
   }
   if (subjectSetting === 'higher' || subjectSetting === 'newer') subjectSetting = 'random';
-  if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 1 / 8)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
+  if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 2 / 15)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
   if (canPlace && !winners) kinds.push('place');
