@@ -185,7 +185,7 @@
   }
   function render() {
     hud();
-    if (S.phase === 'setup' || S.phase === 'end') $('ctrl').classList.add('hidden');
+    if (S.phase === 'setup' || S.phase === 'end') { $('ctrl').classList.add('hidden'); $('next').classList.add('hidden'); }
     if (S.phase === 'setup') { show('v-setup'); return; }
     if (S.phase === 'end') {
       show('v-end');
@@ -201,7 +201,7 @@
     $('revealui').classList.toggle('hidden', !rev);
     $('guess').disabled = $('skip').disabled = S.phase !== 'guess';
     $('skip').classList.toggle('hidden', !(stuck && S.phase === 'guess'));   // only when YouTube will not play anything
-    $('ctrl').classList.remove('hidden'); $('next').disabled = !rev;
+    $('ctrl').classList.remove('hidden'); $('next').classList.remove('hidden'); $('next').disabled = !rev;
     if (rev) {
       $('rq').textContent = S.q.text;   // the question stays where it was, so the bars do not move
       $('ropts').innerHTML = revealOptions(S.q, S.picked, S.got ? S.pts : 0);

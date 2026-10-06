@@ -436,3 +436,12 @@ body.remote .host.ingame .songinfo{display:none}
 .solo .qrow{margin-top:10px}.solo .qrow .rq{margin-top:0}
 .vblock:has(.verdict:empty){display:block}
 .vblock:has(.verdict:empty):has(.nextin:empty){display:none}
+
+/* Next on the top right; autoplay stays in the middle */
+.host .ctrl{display:grid;grid-template-columns:1fr auto auto 1fr;justify-items:center}
+.host .ctrl .check{grid-column:2;grid-row:1}
+.host .ctrl select.mini{grid-column:3;grid-row:1}
+.host .ctrl #next{grid-column:4;grid-row:1;justify-self:end}
+.host .ctrl .autoleft{grid-column:1;grid-row:1;justify-self:end}
+.topnext{height:32px;font-size:.85rem;font-weight:600;padding:0 18px;box-shadow:none;min-width:84px}
+.topnext:active{transform:scale(.97);box-shadow:none}
