@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=93">
+<link rel="stylesheet" href="style.css?v=94">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -29,6 +29,7 @@
       <div class="lobbyplayers">
         <h3>Players <span class="mute" id="pcount"></span></h3>
         <div class="players" id="players" style="margin-top:12px"></div>
+        <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. The game starts when all rings are green, or press Start.</p>
       </div>
       <div class="rehost">
         <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
@@ -75,8 +76,7 @@
       <p id="briefcd" class="briefcd"></p>
       <h3>Players <span class="mute" id="briefcount"></span></h3>
       <div id="briefplayers" class="answered"></div>
-      <p class="mute" id="briefhint" style="margin:18px 0 12px">Everyone presses <strong>Ready</strong> on their phone. The game starts when all rings are green.</p>
-      <button class="btn alt" id="briefgo" type="button">Start without waiting</button>
+      <p class="mute hidden" id="briefhint"></p><button class="hidden" id="briefgo" type="button"></button>
       <button class="btn big hidden" id="introgo" type="button">Start now</button>
     </div>
   </section>
@@ -120,14 +120,14 @@
   </section>
 </main>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=93"></script>
-<script src="vendor/qrcode.js?v=93"></script>
-<script src="config.js?v=93"></script>
-<script src="net.js?v=93"></script>
-<script src="music.js?v=93"></script>
-<script src="chars.js?v=93"></script>
-<script src="match.js?v=93"></script>
-<script src="quiz.js?v=93"></script>
-<script src="host.js?v=93"></script>
+<script src="vendor/supabase.js?v=94"></script>
+<script src="vendor/qrcode.js?v=94"></script>
+<script src="config.js?v=94"></script>
+<script src="net.js?v=94"></script>
+<script src="music.js?v=94"></script>
+<script src="chars.js?v=94"></script>
+<script src="match.js?v=94"></script>
+<script src="quiz.js?v=94"></script>
+<script src="host.js?v=94"></script>
 </body>
 </html>

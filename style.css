@@ -481,3 +481,19 @@ body.remote .host.ingame>header .brand .logo{display:none}
 @media (prefers-reduced-motion:reduce){.voters .plop{animation:none}}
 .host .stage{max-height:31vh}
 .host .opts.votelist{gap:6px;margin-top:10px}
+
+.chip.rdy{box-shadow:0 0 0 3px var(--ok);border-color:transparent}
+.btn.small#lobbyready{box-shadow:none}
+
+/* host: taller video, slimmer score panel, answer bars as wide as the video with the pickers inside on the right */
+.host .game{grid-template-columns:minmax(0,1fr) 250px}
+.host .stage{max-height:44vh}
+.host .opts.votelist .optcol{position:relative;display:block}
+.host .opts.votelist .opt{width:100%;padding-right:46%}
+.host .opts.votelist .voters{position:absolute;right:8px;top:50%;transform:translateY(-50%);max-width:44%;justify-content:flex-end;flex-wrap:nowrap;overflow:hidden}
+.host .opts.votelist .opt.right+.voters span{background:rgba(0,0,0,.18);color:#052e16}
+.host .opts.votelist .opt.right+.voters span b{color:#052e16}
+.host .board li{padding:.45em .7em;font-size:.95rem}
+@media (max-width:820px){.host .game{grid-template-columns:1fr}}
+.board li.ans .char{box-shadow:0 0 0 3px var(--ok)}
+.board li .char{border-radius:50%;transition:box-shadow .2s}

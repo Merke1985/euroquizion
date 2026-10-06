@@ -124,7 +124,9 @@
     }
     if (s.phase === 'lobby') {
       var emb = document.body.classList.contains('embed');   // the host already sees the lobby around this frame
-      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : (s.remote ? 'The host will start the game soon.' : 'Watch the big screen. The game starts soon.');
+      var nrdy = s.players.filter(function (p) { return p.in; }).length;
+      $('lobbyready').classList.toggle('hidden', !!m.in); $('lobbyready').disabled = false;
+      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. The game starts when everyone is ready.';
     }
     else if (s.phase === 'dpick' && s.draw) {
       // Draw!: the drawer picks one of four songs, everyone else waits.
@@ -451,6 +453,7 @@
   });
 
   var pickKey = '';
+  $('lobbyready').addEventListener('click', function () { if (!net) return; $('lobbyready').disabled = true; net.send('go', { pid: pid }); setTimeout(function () { if (net && state && state.phase === 'lobby') net.send('go', { pid: pid }); }, 1200); });
   $('readybtn').addEventListener('click', function () {
     if (!net) return;
     net.send('go', { pid: pid });

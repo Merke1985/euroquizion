@@ -78,7 +78,7 @@
   // Everyone who is still connected has answered: go to the answer.
   var ALLIN_MS = 5000;
   function isIn(p) {
-    if (G.phase === 'brief') return !!(G.go && G.go[p.pid]); return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
+    if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]); return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
   function allIn() {
     var act = list().filter(function (x) { return !x.off; });
     var ph = G.phase;
@@ -196,7 +196,7 @@
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li class="' + (showGot && p.got && !hide ? 'got ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + (hide ? '?' : p.score +
+      return '<li class="' + (showGot && p.got && !hide ? 'got ' : '') + (G.phase === 'guess' && isIn(p) ? 'ans ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + (hide ? '?' : p.score +
         (showGot && p.got ? '<span class="pts">+' + p.pts + '</span>' : '')) + '</span></li>';
     }).join('') || '<li class="mute">No players yet</li>';
   }
@@ -209,9 +209,10 @@
     if (fresh && G.phase === 'lobby') Music.blip();
     $('players').innerHTML = ps.map(function (p) {
       var age = nowT - joinSeen[p.pid], pop = age < 700;
-      return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' + charSvg(p.char) + esc(p.name) + '</span>';
+      return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + (G.phase === 'lobby' && G.go && G.go[p.pid] ? ' rdy' : '') + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' + charSvg(p.char) + esc(p.name) + '</span>';
     }).join('') || '<span class="mute">Waiting for players…</span>';
-    $('pcount').textContent = ps.length ? '(' + ps.length + ')' : '';
+    var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
+    $('pcount').textContent = ps.length ? '(' + (G.phase === 'lobby' ? nr + ' of ' + ps.length + ' ready' : ps.length) + ')' : '';
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : 'Scores';
     $('newgame').classList.toggle('hidden', G.phase === 'lobby');
@@ -290,7 +291,7 @@
   }
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
-    var on = G.phase === 'guess' || (G.sing && (G.phase === 'srec' || G.phase === 'sbest'));   // during the song vote the voters show behind each song instead
+    var on = G.sing && (G.phase === 'srec' || G.phase === 'sbest');   // quiz rounds show who has answered in the score panel instead   // during the song vote the voters show behind each song instead
     var play = G.sing && G.phase === 'splay';
     $('answered').classList.toggle('hidden', !on && !play);
     if (play) {
@@ -602,13 +603,15 @@
     stopTimers(); clearTimeout(introTimer);
     G.phase = 'brief'; G.go = {}; G.brief = briefInfo(); push();
   }
+  // Everyone presses Ready in the lobby; when all connected players are ready the game starts by itself.
   function briefCheck() {
-    if (G.phase !== 'brief') return;
+    if (G.phase !== 'lobby') return;
     var act = list().filter(function (x) { return !x.off; });
-    if (act.length && act.every(function (p) { return G.go[p.pid]; })) introStart();
+    if (act.length && act.every(function (p) { return G.go[p.pid]; })) beginGame();
   }
   function introStart() {
-    if (G.phase !== 'brief') return;
+    if (G.phase !== 'lobby') return;
+    stopTimers(); clearTimeout(introTimer);
     G.phase = 'intro'; G.barMs = INTRO.ms; G.endsAt = Date.now() + INTRO.ms; introTry = 0; stage = 'intro';
     list().forEach(function (p) { G.go[p.pid] = 1; });
     if (!REMOTE) {
@@ -628,10 +631,11 @@
   $('introgo').addEventListener('click', introEnd);
   net.on('go', function (m) {
     var p = m && players[m.pid];
-    if (!p || G.phase !== 'brief') return;
+    if (!p || G.phase !== 'lobby') return;
+    if (!G.go) G.go = {};
     G.go[p.pid] = 1; push(); briefCheck();
   });
-  $('briefgo').addEventListener('click', introStart);
+
   function renderBrief() {
     var b = G.brief || briefInfo();
     $('briefset').innerHTML = b.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('');
@@ -904,6 +908,7 @@
   function toLobby() {
     clearTimeout(picksTimer); stopTimers(); autoStop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
+    G.go = {};
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
   }
   // "Start new game" asks for a second click so a slip of the mouse cannot end a running game.
@@ -926,14 +931,19 @@
     var c = $('rehostcode').value.toUpperCase().replace(/[^A-Z]/g, '');
     if (c.length === 4) location.href = location.pathname + '?room=' + c + (REMOTE ? '&screen=0' : '');
   });
-  $('start').addEventListener('click', function () {
+  // Take the settings as they stand and start: the fanfare first, then song 1.
+  function ytReadyOrRemote() { return REMOTE || ytReady; }
+  function beginGame() {
+    if (G.phase !== 'lobby') return false;
     G.era = $('s-era').value; G.cat = $('s-cat').value; G.atype = $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-scoring').value; G.showScore = $('s-show').value;
-    if (!buildPool()) return;
+    if (!ytReadyOrRemote() || !buildPool()) return false;
     G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; });
-    briefStart();
-  });
+    G.brief = briefInfo(); introStart();
+    return true;
+  }
+  $('start').addEventListener('click', beginGame);
   // Autoplay: with the box ticked the next song starts by itself, after 10, 20 or 30 seconds or when
   // the song that is playing has finished ("Until the end").
   var autoTick = null, autoEnd = 0;
