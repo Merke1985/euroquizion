@@ -64,7 +64,6 @@
       if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
       if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;
       if (G.best && (G.best.pids[m.choice] === m.pid || p.pick != null)) return;
-      if (G.best && G.best.quip && G.best.pids.indexOf(m.pid) >= 0) return;   // Quip!: the two authors do not vote   // best drawing: not your own, and a vote is final   // Draw!: the drawer does not guess, and a first guess is final
       p.pick = m.choice; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now());
       push(); allIn(); return;
     }
@@ -84,7 +83,6 @@
     if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]);
     if (G.phase === 'dall') return !!(G.gallery && G.gallery.items[p.pid] && G.gallery.items[p.pid].done);
     if (G.phase === 'qall') return !!(G.quips && (!G.quips.items[p.pid] || G.quips.items[p.pid].done));   // answer sent (or no line to finish)
-    if (G.best && G.best.quip && G.best.pids.indexOf(p.pid) >= 0) return true;   // the authors only watch   // finished drawing
     return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
   function allIn() {
     var act = list().filter(function (x) { return !x.off; });
@@ -120,7 +118,7 @@
     if (G.revealAt && (G.phase === 'guess' || G.phase === 'svote' || G.phase === 'sbest')) s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (G.phase === 'lobby') s.all_ready = allReady();
     if (G.phase === 'reveal' && lastSong()) s.last = true;
-    if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
+    if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'qall' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
@@ -217,7 +215,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'qall'))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading'))))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   // ---------- Ladder scoring: everyone on one ladder ----------
@@ -348,14 +346,14 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
-    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' ? 'Everyone is writing an answer!' : '';
+    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' && G.quips ? G.quips.line.p : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
       var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
       if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
       return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b>' + esc(o) + '</div><div class="voters">' +
-        who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '">' + charSvg(p.char) + esc(p.name) + (rev && p.got && i === q.correct ? ' <b>+' + p.pts + '</b>' : '') + '</span>'; }).join('') + '</div></div>';
+        who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '">' + charSvg(p.char) + esc(p.name) + (rev && p.got && i === q.correct && !G.best ? ' <b>+' + p.pts + '</b>' : '') + '</span>'; }).join('') + '</div></div>';
     }).join('') : '';
     G.plopped = null;   // the pop-in only plays once
     $('qopts').classList.toggle('votelist', !!(on && q.options));
@@ -466,7 +464,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', songs, countries, { pair: true, cat: G.cat });
+    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', songs, countries, { pair: true, cat: G.cat });
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
     // A two-clip question: the first song loads in the main player, the second in the spare one. The
@@ -578,6 +576,7 @@
     }, 100);
   }
   function beginGuess() {
+    if (G.quipLoad) { quipWrite(); return; }   // Quip!: the clip comes with a question to write an answer to
     $('err').textContent = '';
     var ms = G.draw ? drawGuessMs() : isPair() ? PAIR_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
@@ -650,7 +649,8 @@
     cover(false); masks(false);
     // The video carries on from where the clip stopped (it only jumps back if it somehow is not at the clip).
     clearTimeout(pairTimer); pairTag('');
-    if (G.best) { cover(true, G.best.quip ? '💬' : '🏆', '', false); }   // no song with this one
+    if (G.best && G.best.quip) { /* the song is already playing: it simply carries on, now without the masks */ }
+    else if (G.best) { cover(true, '🏆', '', false); }   // no song with this one
     else if (isPair()) {
       // the song that was the right answer plays on, from where its clip stopped
       var second = G.q.correct === 1;
@@ -681,8 +681,7 @@
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
-    if (G.quips && G.quips.queue.length) { quipNext(); return; }   // answers that are still waiting for their vote
-    G.quips = null;
+    G.quips = null; G.quipLoad = false; clearTimeout(quipTimer);
     // Drawings that are still waiting to be guessed come first.
     if (G.gallery && G.gallery.queue.length) { if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } drawNext(); return; }
     if (G.gallery && G.gallery.vote && drawVote()) return;   // and to finish: which drawing was the best?
@@ -715,7 +714,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', songs, countries, { cat: G.cat });
+    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', songs, countries, { cat: G.cat });
     G.clip = { id: G.song[4], frac: Math.random(), noclip: !!G.draw || !!(G.q && G.q.noclip) }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);
@@ -731,6 +730,7 @@
   function remoteGo() {
     if (G.phase !== 'loading') return;
     clearTimeout(remoteTimer);
+    if (G.quipLoad) { quipWrite(); return; }
     var ms = G.draw ? drawGuessMs() : G.guessMs;
     G.guessAt = Date.now();
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push(); if (G.draw) drawSend();
@@ -794,22 +794,28 @@
     loadSong(it.options[it.chosen]);
   }
   // ---------- Quip! ----------
-  // Everyone finishes a line on their phone (a minute for it). The players are paired up on the same
-  // line; a player without an opponent plays against the house answer. Then every pair is a vote.
+  // A song plays, and with it comes a question about that song. Everyone writes their funniest answer
+  // on their phone while the clip runs on; then all answers are shown without names and everyone
+  // votes for the best one (not their own).
   var quipTimer = null;
   function quipAll() {
-    var ps = shuffle(list().filter(function (p) { return !p.off; }));
-    if (!ps.length) { drawFallback(); return; }
-    var lines = shuffle(QUIPS.slice()), items = {}, pairs = [];
-    for (var i = 0; i < ps.length; i += 2) {
-      var ln = lines[(i / 2) % lines.length], a = ps[i], b = ps[i + 1] || null;
-      items[a.pid] = { prompt: ln.p, text: '', done: 0 }; if (b) items[b.pid] = { prompt: ln.p, text: '', done: 0 };
-      pairs.push({ line: ln, a: a.pid, b: b ? b.pid : null });
+    G.quipLoad = true; G.quips = null; G.draw = null; G.best = null; G.q = null;
+    G.phase = 'loading'; push(); loadSong();
+  }
+  // The song is ready (called where a quiz question would start): hand out the question and play.
+  function quipWrite() {
+    G.quipLoad = false;
+    var ln = pick(QUIPS), items = {};
+    list().filter(function (p) { return !p.off; }).forEach(function (p) { items[p.pid] = { prompt: ln.p, text: '', done: 0 }; });
+    G.quips = { id: Math.random().toString(36).slice(2, 8), items: items, line: ln };
+    G.guessAt = Date.now(); G.phase = 'qall'; G.barMs = QUIP_MS; G.endsAt = Date.now() + QUIP_MS;
+    $('err').textContent = '';
+    if (!REMOTE) {
+      // the clip plays on while everyone writes (the title stays masked until the answer)
+      clearInterval(poll); stage = 'clip';
+      try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
+      cover(false); masks(true);
     }
-    G.quips = { id: Math.random().toString(36).slice(2, 8), items: items, pairs: pairs, queue: [] };
-    G.draw = null; G.best = null; G.q = null; G.song = null; G.clip = null;
-    G.phase = 'qall'; G.barMs = QUIP_MS; G.endsAt = Date.now() + QUIP_MS;
-    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '💬', 'Everyone is writing', false); masks(true); stageEl().classList.add('novideo'); }
     clearTimeout(quipTimer); quipTimer = setTimeout(quipAllEnd, QUIP_MS + 800);
     push();
   }
@@ -821,39 +827,24 @@
   function quipAllEnd() {
     if (G.phase !== 'qall' || !G.quips) return;
     clearTimeout(quipTimer);
-    var g = G.quips;
-    // A pair needs at least one written answer; an empty side is filled in by the house.
-    g.queue = g.pairs.map(function (pr) {
-      var ta = g.items[pr.a].text, tb = pr.b ? g.items[pr.b].text : '';
-      if (!ta && !tb) return null;
-      var opts = [];
-      if (ta) opts.push({ pid: pr.a, text: ta });
-      if (tb) opts.push({ pid: pr.b, text: tb });
-      if (opts.length < 2) opts.push({ pid: null, text: pr.line.h });
-      return { prompt: pr.line.p, opts: shuffle(opts) };
-    }).filter(Boolean);
-    if (!g.queue.length) { G.quips = null; drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody wrote anything this time, so here is a quiz question instead.'; return; }
-    var need = G.round - 1 + g.queue.length;
-    if (G.atype === 'party' && G.total < ENDLESS) G.total += g.queue.length - 1;   // in a Party game the whole round counts as one song
-    else if (G.total < ENDLESS && need > G.total) G.total = need;
-    quipNext();
-  }
-  function quipNext() {
-    var g = G.quips, m = g.queue.shift();
-    stopTimers(); G.draw = null; G.song = null; G.clip = null;
-    G.best = { quip: true, id: g.id + ':' + G.round, pids: m.opts.map(function (o) { return o.pid; }), tally: null, wins: null };
-    G.q = { subject: 'quip', type: 'mc', text: m.prompt, hint: '', options: m.opts.map(function (o) { return o.text; }), correct: -1, answer: '', noclip: true };
-    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '💬', '', false); masks(true); stageEl().classList.add('novideo'); }
-    // nobody left to vote (a very small game): only show the answers for a moment
-    var voters = list().filter(function (p) { return !p.off && G.best.pids.indexOf(p.pid) < 0; }).length, ms = voters ? QUIP_VOTE_MS : 7000;
-    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
+    var g = G.quips, opts = [];
+    Object.keys(g.items).forEach(function (k) { if (players[k] && g.items[k].text) opts.push({ pid: k, text: g.items[k].text }); });
+    if (!opts.length) { G.quips = null; drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody wrote anything this time, so here is a quiz question instead.'; return; }
+    if (opts.length < 2) opts.push({ pid: null, text: g.line.h });   // a single answer plays against the house
+    opts = shuffle(opts).slice(0, 12);
+    stopTimers();
+    G.best = { quip: true, id: g.id, pids: opts.map(function (o) { return o.pid; }), tally: null, wins: null };
+    G.q = { subject: 'quip', type: 'mc', text: g.line.p, hint: '', options: opts.map(function (o) { return o.text; }), correct: -1, answer: '' };
+    // nobody who could vote for someone else's answer (a game on your own): only show the answers for a moment
+    var canVote = list().filter(function (p) { return !p.off; }).length >= 2, ms = canVote ? QUIP_VOTE_MS : 7000;
+    G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
     endTimer = setTimeout(reveal, ms);
   }
   net.on('quip', function (m) {
     var it = m && G.quips && G.phase === 'qall' && G.quips.items[m.pid];
     if (!it || it.done) return;
     var t = String(m.text || '').replace(/\s+/g, ' ').trim().slice(0, 70);
-    if (!t && !m.pass) return;
+    if (!t) return;
     it.text = t; it.done = 1; push(); quipAllCheck();
   });
   // After the last drawing: everyone votes for the best one (not their own). All drawings are on the

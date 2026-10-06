@@ -373,45 +373,33 @@ function revealHold(yt, clipStart) {
 }
 
 // ---------- Quip! ----------
-// Everyone gets a line to finish; two answers go head to head and the rest of the room votes.
-// 'h' is the house answer, used when a player has nobody to play against.
-var QUIP_HELP = 'Quip!: everyone gets a line to finish. Two answers go head to head and the others vote. Every vote is 1 point, and the favourite gets 3 more.';
-var QUIP_MS = 60000, QUIP_VOTE_MS = 20000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
+// A song plays and everyone answers a question about it; then the room votes for the best answer.
+// 'h' is the house answer, used when only one player wrote something.
+var QUIP_HELP = 'Quip!: a song plays, with a question about it. Everyone writes their funniest answer, then the room votes for the best one. Every vote is 1 point, and the favourite gets 3 more.';
+var QUIP_MS = 60000, QUIP_VOTE_MS = 25000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
 var QUIPS = [
-  { p: 'The worst possible title for a Eurovision song', h: 'Nul Points (Extended Mix)' },
-  { p: 'What the wind machine is really thinking', h: 'I carried that key change' },
-  { p: 'A country that should enter Eurovision but never will', h: 'The Moon' },
-  { p: 'The real reason the United Kingdom got zero points', h: 'They sang the weather forecast' },
-  { p: 'What the commentator says when the song is truly terrible', h: 'Well. That happened.' },
-  { p: 'The strangest thing ever lowered onto a Eurovision stage', h: 'A fully working sauna' },
-  { p: 'A rejected Eurovision slogan', h: 'Come Together, Leave Confused' },
-  { p: 'What the backing dancers whisper to each other mid-song', h: 'Left. No, your other left.' },
-  { p: 'The secret ingredient of every winning song', h: 'Three key changes and a cape' },
-  { p: 'What is actually inside the trophy', h: 'Leftover glitter' },
-  { p: 'A terrible prop to bring on stage', h: 'A live goose with opinions' },
-  { p: 'Our spokesperson opens with: "Good evening Europe, …"', h: '…we would like our points back' },
-  { p: 'A new rule that would make Eurovision better', h: 'Every song must mention soup' },
-  { p: 'What the jury writes in the margin of the scoresheet', h: 'Nice hat. Shame about the song.' },
-  { p: 'The title of the Eurovision song about your last holiday', h: 'Lost My Luggage (In Your Heart)' },
-  { p: 'Why the host changed outfits fourteen times', h: 'The first thirteen caught fire' },
-  { p: 'A lyric that rhymes with "fire"', h: 'My love is like a deep fat fryer' },
-  { p: 'The worst thing to shout during the quiet part of a ballad', h: 'Is this the interval act?' },
-  { p: 'What really happens in the green room', h: 'Competitive snack hoarding' },
-  { p: 'A Eurovision act made up of your family', h: 'Gran and the Remote Controls' },
-  { p: 'The next big Eurovision staging gimmick', h: 'Singing inside a giant kettle' },
-  { p: 'What twelve points should really be called', h: 'A full dozen of approval' },
-  { p: 'How to guarantee last place', h: 'Forget which country you are from' },
-  { p: 'The name of a Eurovision band of office workers', h: 'Reply All' },
-  { p: 'What the pyrotechnics guy does on his day off', h: 'Lights candles very dramatically' },
-  { p: 'A song title that would win in 1965 and lose today', h: 'Tra-La-La Goes My Bicycle' },
-  { p: 'The most Eurovision way to end a relationship', h: 'A key change and a costume reveal' },
-  { p: 'What the postcard before our song should show', h: 'Us, stuck in traffic' },
-  { p: 'An honest name for the voting sequence', h: 'Two Hours of Neighbours' },
-  { p: 'The Eurovision song about doing the dishes', h: 'Rise Like a Sponge' },
-  { p: 'What the winner says first when handed the trophy', h: 'Is it dishwasher safe?' },
-  { p: 'A dance move that should be banned from the stage', h: 'The confused windmill' },
-  { p: 'The theme of next year\'s interval act', h: 'A tribute to stage smoke' },
-  { p: 'Why the song is exactly three minutes long', h: 'The glitter runs out after that' },
-  { p: 'A new Eurovision award nobody wants to win', h: 'Most Enthusiastic Miming' },
-  { p: 'What the cameraman was told just before going live', h: 'Whatever you do, find the drummer' }
+  { p: 'What is this song really about?', h: 'Losing the car keys, with feeling' },
+  { p: 'Give this song a better title', h: 'Three Minutes of This' },
+  { p: 'What is the singer thinking right now?', h: 'Did I leave the oven on?' },
+  { p: 'What did the TV commentator say during this performance?', h: 'Well. That is certainly a choice.' },
+  { p: 'What did the jury write on the scoresheet?', h: 'Nice hat. Shame about the rest.' },
+  { p: 'Describe this performance in three words', h: 'Glitter, smoke, panic' },
+  { p: 'What goes wrong ten seconds from now?', h: 'A key change nobody asked for' },
+  { p: 'What was the director\'s one instruction for this act?', h: 'More wind. No, more.' },
+  { p: 'Which product is this performance secretly an advert for?', h: 'Extra-strong hairspray' },
+  { p: 'What is the backing dancer thinking?', h: 'Left. No, the other left.' },
+  { p: 'Translate the lyrics (wrong answers only)', h: 'My goat has left me for the sea' },
+  { p: 'What should this act have brought on stage?', h: 'A live goose with opinions' },
+  { p: 'Write the first line of the newspaper review', h: 'Europe will need a moment.' },
+  { p: 'What did the singer\'s mum say afterwards?', h: 'You looked warm enough, at least' },
+  { p: 'What is the honest name for this genre?', h: 'Sad disco for tall people' },
+  { p: 'What was this song called before the record label stepped in?', h: 'Untitled Demo 4 (Final) (Really Final)' },
+  { p: 'What did the delegation promise the singer for doing this?', h: 'A sandwich and a taxi home' },
+  { p: 'What would make this performance twice as good?', h: 'A trampoline' },
+  { p: 'What is the camera operator muttering?', h: 'Just stand still for one second' },
+  { p: 'Finish the sentence: "Good evening Europe, this song is…"', h: '…longer than it looks' },
+  { p: 'What did the neighbours say about the rehearsals?', h: 'We preferred the drilling' },
+  { p: 'What is this act\'s rider (backstage demands)?', h: 'Forty towels and a fog machine' },
+  { p: 'Why does this song deserve douze points?', h: 'Somebody has to explain it to the others' },
+  { p: 'What is the dance move in this song called?', h: 'The confused windmill' }
 ];

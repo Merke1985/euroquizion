@@ -16,7 +16,7 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || state.phase === 'qall' || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -151,7 +151,6 @@
       else if (s.quips.done[pid] || quipSent) { show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
       else { show('v-quip'); $('qprompt').textContent = qp; }
     }
-    else if (s.phase === 'guess' && s.best && s.best.quip && s.best.pids.indexOf(pid) >= 0) { show('v-wait'); $('waittitle').textContent = 'Your answer is up!'; $('waitsub').textContent = 'The others are voting.'; }
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -184,7 +183,7 @@
           $('guess').placeholder = q.hint || ''; $('guess').inputMode = (q.subject === 'place' || q.subject === 'points' || q.subject === 'year') ? 'numeric' : 'text';
           var bq = q.subject === 'best' && s.best;   // best drawing: a small picture on every button, and your own cannot be picked
           $('opts').innerHTML = mc ? q.options.map(function (o, i) {
-            var own = bq && s.best.pids[i] === pid;
+            var own = !!s.best && s.best.pids[i] === pid;   // your own drawing or answer cannot be picked
             return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b>' + esc(o) + (own ? ' (yours)' : '') + '</button>';
           }).join('') : '';
           $('opts').classList.toggle('bestgrid', !!bq);
@@ -204,7 +203,7 @@
       $('rround').className = why ? 'why' : 'mute';
       // The end of the game: no song any more, just the scoreboard counting up (once).
       var end = s.phase === 'end';
-      $('songcard').classList.toggle('hidden', end || !!s.best); $('pfinal').classList.toggle('hidden', !end);
+      $('songcard').classList.toggle('hidden', end || (!!s.best && !s.best.quip));   // Quip! is about a song, so that one shows it $('pfinal').classList.toggle('hidden', !end);
       if (end && !endShown) {
         endShown = true; $('verdict').className = 'fb verdict'; $('verdict').textContent = 'Final scores';
         finalBoard($('pfinal'), s.players, pid, function (wins) {
@@ -473,7 +472,7 @@
     }
     if (vStage === 'primed' && s.phase === 'brief') { try { if (yt.getPlayerState() === 1) yt.pauseVideo(); } catch (e) {} }
     $('pstage').classList.remove('audioonly');
-    var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'reveal'));
+    var on = !!(s.remote && s.clip && m && (s.phase === 'loading' || s.phase === 'guess' || s.phase === 'qall' || s.phase === 'reveal'));
     $('pstage').classList.toggle('hidden', !on);
     // The chat bar sits at the bottom of the screen in games without a shared screen.
     var chatOn = !!(s.remote && m) && !(document.body.classList.contains('embed') && (s.phase === 'lobby' || s.phase === 'brief'));
@@ -487,7 +486,7 @@
     var ready = vStage === 'ready' || vStage === 'clip' || vStage === 'paused' || vStage === 'full';
     if (!ready) return;
     if (s.phase === 'guess' && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; vCover(true, '?', ''); } }   // odd one out: nothing plays until the answer
-    else if (s.phase === 'guess' && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }
+    else if ((s.phase === 'guess' || s.phase === 'qall') && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }   // qall: Quip!, the clip plays while you write
     else if (s.phase === 'reveal' && vPlayed !== 'full') { vPlayed = 'full'; vPlay(true); }
   }
 
