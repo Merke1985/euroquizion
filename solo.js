@@ -156,7 +156,7 @@
     var mc = S.q.type === 'mc';
     $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = (S.q.subject === 'place' || S.q.subject === 'points' || S.q.subject === 'year') ? 'numeric' : 'text';
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
-    $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
+    $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');
     if (S.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, '?', ''); } else playClip();   // odd one out has no clip
     $('replay').classList.toggle('hidden', !!S.q.noclip);

@@ -269,7 +269,7 @@
     var dp = G.draw && players[G.draw.pid];
     $('qtext').textContent = on && G.phase === 'guess' ? q.text : G.phase === 'dpick' ? (dp ? dp.name : 'Someone') + ' is choosing a song to draw' : '';
     $('qopts').innerHTML = on && q.options ? q.options.map(function (o, i) {
-      return '<div class="opt' + (G.phase === 'reveal' ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
+      return '<div class="opt' + (G.phase === 'reveal' ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div>';
     }).join('') : '';
     $('qopts').classList.remove('votelist');
   }
@@ -820,7 +820,7 @@
     if (G.phase === 'svote') { t = 'Sing! Vote for the song'; opts = sg.options.map(function (o, i) {
       // Under each song: who voted for it so far.
       var who = list().filter(function (p) { return sg.votes[p.pid] === i; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
-      return '<div class="optcol"><div class="opt"><b>' + 'ABCD'[i] + '.</b> ' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters">' +
+      return '<div class="optcol"><div class="opt"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters">' +
         (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (p) { return '<span>' + charSvg(p.char) + esc(p.name) + '</span>'; }).join('') : '<span class="mute">No votes yet</span>') + '</div></div>';
     }).join(''); }
     else if (G.phase === 'loading') t = 'We’re singing: ' + name;

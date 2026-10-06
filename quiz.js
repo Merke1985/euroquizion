@@ -158,7 +158,7 @@ function scoreFor(elapsedMs) {
 function revealOptions(q, pick) {
   if (!q || !q.options) return '';
   return q.options.map(function (o, i) {
-    return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</div>';
+    return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div>';
   }).join('');
 }
 // The Eurovision opening fanfare, streamed from YouTube like the songs: video id and how long it plays.

@@ -131,7 +131,7 @@
       if (s.draw.pid === pid) {
         show('v-draw'); $('dround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Draw!';
         $('dtitle').textContent = 'Pick a song to draw'; $('dopts').classList.remove('hidden'); $('dpad').classList.add('hidden');
-        if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; $('dopts').innerHTML = (s.draw.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join(''); }
+        if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; $('dopts').innerHTML = (s.draw.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join(''); }
       } else { show('v-wait'); $('waittitle').textContent = s.draw.name + ' is drawing next'; $('waitsub').textContent = 'Choosing a song…'; }
     }
     else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'You draw: ' + s.draw.song : s.draw.name + ' is about to draw.'; }
@@ -158,7 +158,7 @@
           builtKey = key;
           $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
           $('guess').placeholder = q.hint || ''; $('guess').inputMode = (q.subject === 'place' || q.subject === 'points' || q.subject === 'year') ? 'numeric' : 'text';
-          $('opts').innerHTML = mc ? q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button>'; }).join('') : '';
+          $('opts').innerHTML = mc ? q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
           if (!mc) $('guess').focus();
         }
       }
@@ -231,7 +231,7 @@
     if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
     if (s.phase === 'svote') {
       $('stitle').textContent = 'Which song shall we sing?'; $('ssub').textContent = 'Vote for one. The most votes wins.';
-      if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<div class="optcol"><button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '.</b> ' + esc(o) + '</button><div class="voters" data-t="' + i + '"></div></div>'; }).join('');
+      if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<div class="optcol"><button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button><div class="voters" data-t="' + i + '"></div></div>'; }).join('');
       [].forEach.call($('sopts').querySelectorAll('.voters'), function (el) { var n = (sg.tally || [])[+el.getAttribute('data-t')] || 0; el.textContent = n ? n + (n === 1 ? ' vote' : ' votes') : 'No votes yet'; el.classList.toggle('mute', !n); });
     } else if (s.phase === 'sbest') {
       $('stitle').textContent = 'Who sang it best?'; $('ssub').textContent = 'You can’t vote for yourself.';
