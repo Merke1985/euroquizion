@@ -326,7 +326,7 @@
     renderLadder();
     $('endgame').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'intro' || G.phase === 'paused' || G.phase === 'end');
     $('newgame').classList.toggle('hidden', !(G.phase === 'intro' || G.phase === 'paused'));   // not while a game is playing: only during the countdown and after a restore
-    $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? (G.parts > 1 && G.per ? 'Round ' + (Math.floor((G.round - 1) / G.per) + 1) + ' / ' + G.parts + ' · Song ' + ((G.round - 1) % G.per + 1) + ' / ' + G.per : 'Song ' + G.round + ofTotal(' / ')) : '';
+    $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? (G.parts > 1 && G.partN ? 'Round ' + G.partN + ' / ' + G.parts + ' · Song ' + (G.round - (G.partStart || 1) + 1) + (ladderGame() ? '' : ' / ' + G.per) : 'Song ' + G.round + ofTotal(' / ')) : '';
     var noCtrl = G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end';
     $('ctrl').classList.toggle('hidden', noCtrl); $('next').classList.toggle('hidden', noCtrl);
     $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro');
@@ -661,10 +661,11 @@
     picksTimer = setTimeout(step, 500);
   }
   function roundMode() { return G.atype === 'party' ? (G.mode || 'mc') : G.atype; }   // what this round is: quiz ('mc'), 'sing' or 'draw'
-  function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder'; }
+  // (a Ladder game in several rounds ends on an ordinary scoreboard: the rounds added up)
+  function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder' && !(G.phase === 'end' && G.partLadder); }
   var ENDLESS = 9999;   // Ladder has no song limit: it runs until someone is at the top
   function ofTotal(sep) { return G.total >= ENDLESS ? '' : sep + G.total; }
-  function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame()); }
+  function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
   function reveal() {
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
@@ -746,7 +747,14 @@
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
     G.quips = null; G.quipLoad = false; clearTimeout(quipTimer);
     // A new round of the quiz starts here: say so, and spin for its years if that is how this game is played.
-    if ((G.parts > 1 || G.eraSpin) && G.per && (G.round - 1) % G.per === 0 && !(G.partDone || {})[G.round]) { partIntro(); return; }
+    // On the Ladder a round is over when someone reaches the top: what everyone's rung is worth goes to
+    // their total, and all are back on the ground for the next round.
+    if (G.partLadder && G.ladderWon) {
+      list().forEach(function (p) { p.bank = (p.bank || 0) + LADDER[Math.floor(p.rung || 0)]; p.rung = 0; p.score = 0; p.moved = ''; });
+      G.ladderWon = false; G.partNext = true;
+    }
+    var due = ladderGame() ? !!G.partNext : !!G.per && (G.round - 1) % G.per === 0 && !(G.partDone || {})[G.round];
+    if ((G.parts > 1 || G.eraSpin) && due) { partIntro(); return; }
     startRound2();
   }
   function startRound2() {
@@ -872,7 +880,8 @@
   var partTimer = null;
   function partIntro() {
     G.partDone = G.partDone || {}; G.partDone[G.round] = 1;
-    var n = Math.floor((G.round - 1) / G.per) + 1;
+    G.partNext = false; G.partN = (G.partN || 0) + 1; G.partStart = G.round;
+    var n = G.partN;
     G.part = { n: n, of: G.parts, eras: null, roll: -1, done: false, label: '' };
     G.phase = 'part'; G.barMs = 0;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, String(n), G.parts > 1 ? 'Round ' + n + ' of ' + G.parts : 'Spinning the era', false); masks(true); }
@@ -1470,8 +1479,7 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
-    if (lo) lo.disabled = party || robin;
-    if (robin && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
+    if (lo) lo.disabled = party;
     if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
     var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
@@ -1480,9 +1488,9 @@
     // Rounds and the spin for the years belong to a plain quiz
     // Round Robin: several rounds, each with its own era from the spin. Rounds only counts there, and
     // the Era setting has nothing to choose then.
-    $('s-parts').disabled = !robin; $('s-era').disabled = robin;
+    $('s-parts').disabled = party; $('s-era').disabled = robin;   // rounds: for Quiz and Through the Years, with any scoring
     if (robin && lastType !== 'robin') { $('s-parts').value = '4'; $('s-rounds').value = '5'; }   // picked just now: four rounds of five songs to start from
-    if (!robin) $('s-parts').value = '1';   // every other game type is one round
+    if ((!robin && lastType === 'robin') || party) $('s-parts').value = '1';   // back from Through the Years, or Party: one round
     lastType = $('s-atype').value;
     scoreHelp(); }
   // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
@@ -1542,8 +1550,10 @@
     if (!ytReadyOrRemote() || !buildPool()) return false;
     // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
     // round gets its own decade, picked by a spin; a decade that has been played is out of the draw.
-    if (G.robin) { G.era = '1956-2100'; if (G.scoring === 'ladder') G.scoring = 'correct'; buildPool(); }
-    G.per = +$('s-rounds').value; G.parts = G.robin ? +$('s-parts').value || 1 : 1;
+    if (G.robin) { G.era = '1956-2100'; buildPool(); }
+    G.per = +$('s-rounds').value; G.parts = G.atype === 'mc' ? +$('s-parts').value || 1 : 1;
+    G.partLadder = G.atype === 'mc' && G.scoring === 'ladder' && G.parts > 1; G.partN = 0; G.partNext = true; G.partStart = 1;
+    list().forEach(function (p) { p.bank = 0; });
     G.eraSpin = G.robin; G.eraNow = ''; G.eraUsed = []; G.part = null; G.partDone = {};
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
@@ -1614,7 +1624,11 @@
   function goNext() {
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;
     autoStop(); note('');
-    if (lastSong()) { try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push(); } else startRound();   // nobody is 'ready' for the next game yet
+    if (lastSong()) {
+      // a Ladder game in rounds: the last round is added to what was banked before
+      if (G.partLadder) list().forEach(function (p) { p.score = (p.bank || 0) + LADDER[Math.floor(p.rung || 0)]; });
+      try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push();
+    } else startRound();   // nobody is 'ready' for the next game yet
   }
   $('again').addEventListener('click', toLobby);
 
