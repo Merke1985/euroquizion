@@ -1,9 +1,10 @@
 // Solo mode: one device plays the clip and takes the guesses. No room, no connection.
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var CLIP = 15, COUNT = 5;
+  var COUNT = 5, AFTER = 5;   // countdown before the clip; seconds to answer after it
+  function clipSecs() { return Math.max(5, Math.round(S.guessMs / 1000) - AFTER); }
   var songs = [], countries = {}, pool = [], used = {};
-  var S = { phase: 'setup', round: 0, total: 10, guessMs: 30000, score: 0, right: 0, song: null, q: null, picked: -1, pickMs: 0, got: false, pts: 0, endsAt: 0, showVideo: true };
+  var S = { phase: 'setup', round: 0, total: 10, guessMs: 20000, score: 0, right: 0, song: null, q: null, picked: -1, pickMs: 0, got: false, pts: 0, endsAt: 0, showVideo: true };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
   var loadT0 = 0, loadTick = null, clipReady = false;
 
@@ -53,7 +54,7 @@
   function ready() {
     if (!songs.length) return;
     pool = poolFor(songs, $('s-era').value, $('s-cat').value);
-    S.total = +$('s-rounds').value; S.guessMs = +$('s-time').value * 1000;
+    S.total = +$('s-rounds').value; S.guessMs = (+$('s-time').value + AFTER) * 1000;
     $('songcount').textContent = pool.length ? pool.length + ' songs in this selection.'
       : 'No songs match this combination. Semi-finals only started in 2004, so there are no non-qualifiers before that.';
     var b = getBest(); $('best').textContent = b ? 'Your best with these settings: ' + b + ' points.' : '';
@@ -110,7 +111,7 @@
       if (late > 6000) adNote(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }
-      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - CLIP));
+      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - clipSecs()));
       if (stage === 'probe' || cs !== clipStart) { clipStart = cs; stage = 'seek'; seekAt = 0; }
       if (t >= clipStart && t < clipStart + 5) {
         clearInterval(poll); clearTimeout(watchdog); fails = 0; adNote(false);
@@ -143,7 +144,7 @@
     yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
     cover(false);   // the video is always visible during the clip
     poll = setInterval(function () {
-      if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) {
+      if ((yt.getCurrentTime() || 0) >= clipStart + clipSecs()) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
         if (S.phase === 'guess') cover(true, '?', '');   // the question itself stays below the video
       }

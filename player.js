@@ -321,7 +321,8 @@
   // Every phone plays the clip itself. The host only says which video and where to start; the
   // phone loads it silently, reports when it is ready, and plays when the guessing starts.
   var introTry = 0;
-  var CLIP = 15, yt = null, ytWanted = false, ytReady = false, clipKey = '', clipStart = 0, vStage = 'idle', vPoll = null, vWatch = null, vPlayed = '';
+  function clipSecs() { return Math.max(5, Math.round(((state && state.total_ms) || 20000) / 1000) - 5); }   // the host's Video time setting
+  var yt = null, ytWanted = false, ytReady = false, clipKey = '', clipStart = 0, vStage = 'idle', vPoll = null, vWatch = null, vPlayed = '';
   function vCover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text || ''; } }
   function vMasks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   function vStop() { if (vAdOn) vAd(false); clearInterval(vPoll); clearTimeout(vWatch); $('tapplay').classList.add('hidden'); try { if (yt && ytReady) yt.pauseVideo(); } catch (e) {} }
@@ -353,7 +354,7 @@
       if (late > 6000) vAd(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) vAd(true); return; }   // shorter than any song
-      var cs = d < 45 ? 0 : Math.floor(15 + clip.frac * (d - 15 - 20 - CLIP));   // same spot on every phone
+      var cs = d < 45 ? 0 : Math.floor(15 + clip.frac * (d - 15 - 20 - clipSecs()));   // same spot on every phone
       if (!got || cs !== clipStart) { got = true; clipStart = cs; seekAt = 0; }
       if (t >= clipStart && t < clipStart + 5) {
         clearInterval(vPoll); clearTimeout(vWatch); yt.pauseVideo(); vStage = 'ready'; vAd(false);
@@ -382,7 +383,7 @@
     vWatch = setTimeout(function () { try { if (yt.getPlayerState() !== 1) $('tapplay').classList.remove('hidden'); } catch (e) {} }, 1800);
     if (full) return;
     vPoll = setInterval(function () {
-      if ((yt.getCurrentTime() || 0) >= clipStart + CLIP) { clearInterval(vPoll); yt.pauseVideo(); vStage = 'paused'; $('tapplay').classList.add('hidden'); if (state && state.phase === 'guess') vCover(true, '?', ''); }
+      if ((yt.getCurrentTime() || 0) >= clipStart + clipSecs()) { clearInterval(vPoll); yt.pauseVideo(); vStage = 'paused'; $('tapplay').classList.add('hidden'); if (state && state.phase === 'guess') vCover(true, '?', ''); }
     }, 100);
   }
   $('tapplay').addEventListener('click', function () { $('tapplay').classList.add('hidden'); try { yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} });

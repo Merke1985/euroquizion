@@ -1,6 +1,6 @@
 # EuroQuizion
 
-A Jackbox-style Eurovision guessing game. The host screen (`host.html`) plays a random 15-second clip; players join on their phones (`index.html`) with a room code and answer a question about it: the country, artist, placement or title, as multiple choice or typed. `solo.html` is a one-device solo mode.
+A Jackbox-style Eurovision guessing game. The host screen (`host.html`) plays a random clip (5 to 30 seconds, set by the host); players join on their phones (`index.html`) with a room code and answer a question about it: the country, artist, placement or title, as multiple choice or typed. `solo.html` is a one-device solo mode.
 
 - `songs.json` – 1808 entries (1956–2026, including semi-finals) with YouTube video IDs, placing and points. Sources: Spijkervet/eurovision-dataset (1956–2023); the official Eurovision YouTube playlists and Wikipedia results (2024–2026).
 - `config.js` – Supabase URL and public key. Empty = demo mode (tabs in the same browser only).
