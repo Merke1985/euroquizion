@@ -520,3 +520,27 @@ body.remote .host.ingame>header .brand .logo{display:none}
 .lobbyplayers .chip.rdy .char{box-shadow:0 0 0 4px var(--ok)}
 .lobbyplayers .chip.off{opacity:.4}
 .lobbyplayers .players{margin-top:14px!important}
+
+/* phone lobby: avatar and name on top with two edit buttons, a big Ready button at the bottom */
+.phone #v-wait.lobbyview{justify-content:flex-start;gap:14px}
+.phone #v-wait.lobbyview .avatarrow{flex-direction:column;gap:8px}
+.phone #v-wait.lobbyview .mychar .char{width:96px;height:96px}
+.editrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.editrow .btn{box-shadow:inset 0 0 0 1px var(--line);font-size:.85rem;padding:.5em 1em}
+.phone #v-wait.lobbyview #waittitle{font-size:1.6rem;margin-top:8px}
+.readybtn{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:center;gap:.6em;font-size:1.35rem;padding:.9em 1em;background:var(--surface2);box-shadow:inset 0 0 0 2px var(--line)}
+.readybtn .tick{width:1.25em;height:1.25em;border-radius:7px;box-shadow:inset 0 0 0 2px #fff;display:grid;place-items:center;font-size:.9em;font-weight:800}
+.readybtn.on{background:var(--ok);color:#052e16;box-shadow:0 6px 0 #1f9a57}
+.readybtn.on .tick{background:#052e16;color:var(--ok);box-shadow:none}
+.readybtn.on .tick:before{content:"✓"}
+.readybtn:active{transform:translateY(2px)}
+/* in the host's own frame everything stays on one compact line */
+body.embed .phone.compact #v-wait.lobbyview{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px}
+body.embed .phone.compact #v-wait.lobbyview .avatarrow{flex-direction:row}
+body.embed .phone.compact #v-wait.lobbyview .mychar .char{width:38px;height:38px}
+body.embed .phone.compact .readybtn{margin:0;width:auto;font-size:.95rem;padding:.5em 1.1em;box-shadow:inset 0 0 0 2px var(--line)}
+body.embed .phone.compact .readybtn.on{box-shadow:none}
+
+/* everyone ready: settings locked while the fanfare counts down */
+.lobby.locked .settings{opacity:.5}
+.lobby.locked #rehostbtn{display:none}

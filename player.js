@@ -122,10 +122,14 @@
       $('briefwait').textContent = intro ? 'Starting in ' + Math.max(1, Math.ceil((s.left || 0) / 1000)) : m.in ? 'You’re ready. Waiting for the others (' + n + ' of ' + s.players.length + ')…' : n + ' of ' + s.players.length + ' ready';
       return;
     }
+    $('v-wait').classList.toggle('lobbyview', s.phase === 'lobby');
+    if (s.phase !== 'lobby') $('lobbyready').classList.add('hidden');
     if (s.phase === 'lobby') {
       var emb = document.body.classList.contains('embed');   // the host already sees the lobby around this frame
       var nrdy = s.players.filter(function (p) { return p.in; }).length;
-      $('lobbyready').classList.toggle('hidden', !!m.in); $('lobbyready').disabled = false;
+      // The big Ready button at the bottom: press to check it, press again to take it back.
+      $('lobbyready').classList.remove('hidden'); $('lobbyready').classList.toggle('on', !!m.in); $('lobbyready').setAttribute('aria-pressed', m.in ? 'true' : 'false');
+      $('lobbyreadytext').textContent = m.in ? 'Ready!' : 'Ready';
       show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. The game starts when everyone is ready.';
     }
     else if (s.phase === 'dpick' && s.draw) {
@@ -453,7 +457,15 @@
   });
 
   var pickKey = '';
-  $('lobbyready').addEventListener('click', function () { if (!net) return; $('lobbyready').disabled = true; net.send('go', { pid: pid }); setTimeout(function () { if (net && state && state.phase === 'lobby') net.send('go', { pid: pid }); }, 1200); });
+  var readySeq = 0;
+  $('lobbyready').addEventListener('click', function () {
+    if (!net || !state || state.phase !== 'lobby') return;
+    var mm = me(), off = !!(mm && mm.in), msg = { pid: pid, off: off };
+    $('lobbyready').classList.toggle('on', !off); $('lobbyreadytext').textContent = off ? 'Ready' : 'Ready!';
+    var seq = ++readySeq;
+    net.send('go', msg);
+    setTimeout(function () { var m2 = me(); if (seq === readySeq && net && state && state.phase === 'lobby' && m2 && !!m2.in === off) net.send('go', msg); }, 1200);   // in case the first one got lost
+  });
   $('readybtn').addEventListener('click', function () {
     if (!net) return;
     net.send('go', { pid: pid });
@@ -484,7 +496,17 @@
     try { sessionStorage.setItem('esc-char', want); } catch (err) {}
     $('pickerr').textContent = ''; hi(); if (state) onState(state);
   });
-  $('changechar').addEventListener('click', function () { picking = true; $('editname').value = name; if (state) onState(state); });
+  // Two separate edit screens: one for the name, one for the avatar.
+  function pickOpen(mode) {
+    picking = true; $('editname').value = name;
+    $('picktitle').textContent = mode === 'name' ? 'Your name' : 'Your avatar';
+    $('pickname').classList.toggle('hidden', mode !== 'name');
+    $('pickavnote').classList.toggle('hidden', mode === 'name'); $('chars').classList.toggle('hidden', mode === 'name');
+    if (state) onState(state);
+    if (mode === 'name') { try { $('editname').focus(); $('editname').select(); } catch (e) {} }
+  }
+  $('changechar').addEventListener('click', function () { pickOpen('avatar'); });
+  $('changename').addEventListener('click', function () { pickOpen('name'); });
   $('pickdone').addEventListener('click', function () {
     var n = $('editname').value.trim().slice(0, 16);
     if (n) { name = n; store.set('esc-name', name); $('name').value = name; }

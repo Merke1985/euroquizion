@@ -6,7 +6,7 @@
 <title>EuroQuizion – join</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=105">
+<link rel="stylesheet" href="style.css?v=107">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -46,10 +46,9 @@
   </section>
 
   <section id="v-pick" class="hidden">
-    <h2>Your name and avatar</h2>
-    <div class="field" style="margin:14px 0"><label for="editname">Your name</label><input id="editname" type="text" maxlength="16"></div>
-    <label>Avatar</label>
-    <p class="mute" style="margin:0 0 12px;font-size:.9rem">Only one player can use each avatar.</p>
+    <h2 id="picktitle">Your name</h2>
+    <div class="field" id="pickname" style="margin:14px 0"><label for="editname">Your name</label><input id="editname" type="text" maxlength="16"></div>
+    <p class="mute" id="pickavnote" style="margin:10px 0 12px;font-size:.9rem">Only one player can use each avatar.</p>
     <div id="chars" class="chargrid"></div>
     <p id="pickerr" class="fb no" style="margin:14px 0 0"></p>
     <button class="btn big" id="pickdone" type="button" style="width:100%;margin-top:6px">Done</button>
@@ -64,7 +63,7 @@
     <p id="briefwait" class="mute" style="text-align:center;margin:0"></p>
   </section>
 
-  <section id="v-wait" class="center hidden"><div class="avatarrow hidden" id="profile"><div id="mychar" class="mychar"></div><strong id="myname"></strong><button class="btn alt small" id="changechar" type="button">Edit</button><button class="btn small" id="lobbyready" type="button">Ready</button></div><div class="mute" id="waitlabel"></div><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p></section>
+  <section id="v-wait" class="center hidden"><div class="avatarrow hidden" id="profile"><div id="mychar" class="mychar"></div><strong id="myname"></strong><div class="editrow"><button class="btn alt small" id="changename" type="button">Edit name</button><button class="btn alt small" id="changechar" type="button">Change avatar</button></div></div><div class="mute" id="waitlabel"></div><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p><button class="btn big readybtn hidden" id="lobbyready" type="button" aria-pressed="false"><span class="tick"></span><span id="lobbyreadytext">Ready</span></button></section>
 
   <section id="v-guess" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="mute" id="roundlabel"></div>
@@ -132,13 +131,13 @@
     <button class="btn">Send</button>
   </form>
 </div>
-<script src="vendor/supabase.js?v=105"></script>
-<script src="config.js?v=105"></script>
-<script src="match.js?v=105"></script>
-<script src="quiz.js?v=105"></script>
-<script src="net.js?v=105"></script>
-<script src="music.js?v=105"></script>
-<script src="chars.js?v=105"></script>
-<script src="player.js?v=105"></script>
+<script src="vendor/supabase.js?v=107"></script>
+<script src="config.js?v=107"></script>
+<script src="match.js?v=107"></script>
+<script src="quiz.js?v=107"></script>
+<script src="net.js?v=107"></script>
+<script src="music.js?v=107"></script>
+<script src="chars.js?v=107"></script>
+<script src="player.js?v=107"></script>
 </body>
 </html>
