@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=113">
+<link rel="stylesheet" href="style.css?v=114">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -31,7 +31,7 @@
         <div class="players" id="players" style="margin-top:12px"></div>
         <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. When all rings are green, anyone can start the game from their phone.</p>
       </div>
-      <div class="rehost">
+      <div class="rehost hidden">
         <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
         <form id="rehostform" class="hidden" autocomplete="off">
           <input id="rehostcode" type="text" maxlength="4" placeholder="CODE" aria-label="Room code of the game to rehost" autocapitalize="characters" required>
@@ -121,14 +121,14 @@
   </section>
 </main>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=113"></script>
-<script src="vendor/qrcode.js?v=113"></script>
-<script src="config.js?v=113"></script>
-<script src="net.js?v=113"></script>
-<script src="music.js?v=113"></script>
-<script src="chars.js?v=113"></script>
-<script src="match.js?v=113"></script>
-<script src="quiz.js?v=113"></script>
-<script src="host.js?v=113"></script>
+<script src="vendor/supabase.js?v=114"></script>
+<script src="vendor/qrcode.js?v=114"></script>
+<script src="config.js?v=114"></script>
+<script src="net.js?v=114"></script>
+<script src="music.js?v=114"></script>
+<script src="chars.js?v=114"></script>
+<script src="match.js?v=114"></script>
+<script src="quiz.js?v=114"></script>
+<script src="host.js?v=114"></script>
 </body>
 </html>
