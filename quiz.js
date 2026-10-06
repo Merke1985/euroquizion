@@ -68,14 +68,16 @@ function makeMistake(song, allSongs, countries, winners) {
     explain: 'The mistake: ' + f.k.toLowerCase() + '. ' + fix };
 }
 // Two-clip questions: two songs are played one after the other (10 seconds each) and the players pick one.
-// "higher": both from the same contest and at most three places apart; which finished higher?
+// "higher": both from the same contest, four to eight places apart; which finished higher?
 // "newer": at most three years apart; which is the newer song?
 var PAIR_CLIP = 10, PAIR_MS = (PAIR_CLIP * 2 + 5) * 1000;
 function makePair(song, kind, allSongs, countries) {
   var inFinal = function (s) { return s[6] != null && s[8] == null && s[9] !== 'cancelled' && s[9] !== 'dq'; }, other;
   if (kind === 'higher') {
     if (!inFinal(song)) { song = shuffle(allSongs.filter(function (s) { return s[0] === song[0] && inFinal(s) && !BAD_VIDEOS[s[4]]; }))[0]; if (!song) return null; }   // not a finalist: take one from the same contest
-    other = shuffle(allSongs.filter(function (s) { return s[0] === song[0] && s[4] !== song[4] && inFinal(s) && s[6] !== song[6] && Math.abs(s[6] - song[6]) <= 3 && !BAD_VIDEOS[s[4]]; }))[0];
+    // Four to eight places apart: close enough to need thought, far enough to be fair. Small contests fall back to any gap of two or more.
+    var near = function (lo, hi) { return shuffle(allSongs.filter(function (s) { var gap = Math.abs(s[6] - song[6]); return s[0] === song[0] && s[4] !== song[4] && inFinal(s) && gap >= lo && gap <= hi && !BAD_VIDEOS[s[4]]; }))[0]; };
+    other = near(4, 8) || near(2, 30);
   } else {
     other = shuffle(allSongs.filter(function (s) { return s[0] !== song[0] && Math.abs(s[0] - song[0]) <= 3 && !BAD_VIDEOS[s[4]]; }))[0];
   }
