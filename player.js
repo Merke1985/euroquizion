@@ -371,7 +371,7 @@
     if (on === vAdOn) return;
     vAdOn = on;
     document.querySelector('#pstage .shield').classList.toggle('hidden', on);
-    if (on) { vCover(false); $('mb').classList.add('hidden'); $('tapplay').classList.add('hidden'); }
+    if (on) { vCover(false); $('mb').classList.add('hidden'); $('tapplay').classList.add('hidden'); if (net) net.send('ready', { pid: pid, key: clipKey, ad: true }); }
     $('adnote').textContent = on ? AD_TEXT : '';
   }
   function vPlay(full) {

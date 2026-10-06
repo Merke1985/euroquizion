@@ -255,7 +255,10 @@
       $('rwhy').textContent = G.phase === 'reveal' && G.q && G.q.explain ? G.q.explain : '';   // why it is the odd one out, right under the video
       // "Continue" moves a Sing! round along; otherwise the button only appears when YouTube will not play anything.
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
-      $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck));
+      var adWait = adShown && G.phase === 'loading';   // waiting on an ad: offer a way out
+      if (adWait) $('skip').disabled = false;
+      $('skip').textContent = adWait ? 'Skip this song' : $('skip').textContent;
+      $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck || adWait));
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
@@ -372,7 +375,9 @@
     // Give up after 12 seconds of nothing. While something is playing (an ad, usually) wait longer.
     watchdog = setTimeout(function wd() {
       var s0 = -1; try { s0 = yt.getPlayerState(); } catch (e) {}
-      if ((s0 === 1 || s0 === 3) && Date.now() - loadAt < 75000) { watchdog = setTimeout(wd, 4000); return; }
+      // An ad (or a very slow start): leave plenty of time to watch or skip it. A real refusal by YouTube
+      // comes in as an error and moves on at once; the Skip button is there for anything else.
+      if ((adShown || s0 === 1 || s0 === 3) && Date.now() - loadAt < 120000) { watchdog = setTimeout(wd, 4000); return; }
       badSong();
     }, 12000);
     // Wait until the video really plays, then jump to a random point. YouTube sometimes puts an ad first:
@@ -396,7 +401,7 @@
       if (t >= clipStart && t < clipStart + 5) {
         clearInterval(poll); clearTimeout(watchdog); fails = 0; adNote(false);
         yt.pauseVideo(); stage = 'ready'; clipReady = true;   // the countdown starts the clip
-      } else if (Date.now() - seekAt > 1500) {
+      } else if (Date.now() - seekAt > 2500) {
         seekAt = Date.now(); yt.seekTo(clipStart, true);
         if (late > 6000) adNote(true);
       }
@@ -410,6 +415,7 @@
     document.querySelector('#v-game .shield').classList.toggle('hidden', on);
     if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
     else if ($('err').textContent === AD_TEXT) $('err').textContent = '';
+    render();   // shows or hides the Skip button
   }
   var stuck = false;   // six songs in a row would not play
   function badSong() {
@@ -486,7 +492,7 @@
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
     if (!G.draw) G.q = makeQuestion(G.song, G.subject, G.atype, songs, countries);
-    G.clip = { id: G.song[4], frac: Math.random() }; G.ready = {}; G.badVotes = 0; G.remain = 0;
+    G.clip = { id: G.song[4], frac: Math.random() }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);
   }
@@ -542,6 +548,10 @@
   net.on('ready', function (m) {
     var p = m && players[m.pid];
     if (!REMOTE || !p || G.phase !== 'loading' || !G.clip || m.key !== G.clip.id + ':' + G.round) return;
+    if (m.ad) {   // that phone is stuck behind an ad: give everyone up to a minute before starting without it
+      if (!G.adWait) { G.adWait = 1; clearTimeout(remoteTimer); remoteTimer = setTimeout(remoteGo, Math.max(0, 60000 - (Date.now() - remoteT0))); push(); }
+      return;
+    }
     if (m.bad && !G.draw) {
       // The video will not play on that phone: take another song (a few times at most).
       if (++fails < 6) { G.round--; startRound(); }
@@ -936,7 +946,7 @@
     autoStart();
     if (!recovering) net.send('state', snapshot());
   });
-  $('skip').addEventListener('click', function () { if (G.sing) singSkip(); else reveal(); });
+  $('skip').addEventListener('click', function () { if (adShown && G.phase === 'loading' && !G.sing && !G.draw) { fails = 0; badSong(); } else if (G.sing) singSkip(); else reveal(); });
   $('next').addEventListener('click', goNext);
   function goNext() {
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;

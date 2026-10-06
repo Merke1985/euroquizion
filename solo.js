@@ -101,7 +101,9 @@
     var frac = Math.random(), seekAt = 0, loadAt = Date.now();
     watchdog = setTimeout(function wd() {
       var s0 = -1; try { s0 = yt.getPlayerState(); } catch (e) {}
-      if ((s0 === 1 || s0 === 3) && Date.now() - loadAt < 75000) { watchdog = setTimeout(wd, 4000); return; }   // something is playing (an ad?): wait
+      // An ad (or a very slow start): leave plenty of time to watch or skip it. A real refusal by YouTube
+      // comes in as an error and moves on at once; the Skip button is there for anything else.
+      if ((adShown || s0 === 1 || s0 === 3) && Date.now() - loadAt < 120000) { watchdog = setTimeout(wd, 4000); return; }
       badSong();
     }, 12000);
     // See host.js: an ad before the video cannot be skipped from here, so the jump is repeated until
@@ -116,7 +118,7 @@
       if (t >= clipStart && t < clipStart + 5) {
         clearInterval(poll); clearTimeout(watchdog); fails = 0; adNote(false);
         yt.pauseVideo(); stage = 'ready'; clipReady = true;
-      } else if (Date.now() - seekAt > 1500) {
+      } else if (Date.now() - seekAt > 2500) {
         seekAt = Date.now(); yt.seekTo(clipStart, true);
         if (late > 6000) adNote(true);
       }
@@ -129,6 +131,7 @@
     document.querySelector('#v-game .shield').classList.toggle('hidden', on);
     if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
     else if ($('err').textContent === AD_TEXT) $('err').textContent = '';
+    $('adskip').classList.toggle('hidden', !on);
   }
   var stuck = false;
   function badSong() {
@@ -283,6 +286,7 @@
     startRound();
   });
   $('skip').addEventListener('click', reveal);
+  $('adskip').addEventListener('click', function () { if (adShown && S.phase === 'loading') { fails = 0; badSong(); } });
   $('next').addEventListener('click', goNext);
   function goNext() {
     if (S.phase !== 'reveal') return;
