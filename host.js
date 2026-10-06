@@ -215,7 +215,8 @@
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : 'Scores';
     $('newgame').classList.toggle('hidden', G.phase === 'lobby');
-    $('ctrl').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end');
+    var noCtrl = G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end';
+    $('ctrl').classList.toggle('hidden', noCtrl); $('next').classList.toggle('hidden', noCtrl);
     $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro');
     $('hostmain').classList.toggle('briefing', G.phase === 'brief' || G.phase === 'intro');
     // The fanfare is sound only: its player stays out of sight (but not display:none, or it would not play).

@@ -445,3 +445,24 @@ body.remote .host.ingame .songinfo{display:none}
 .host .ctrl .autoleft{grid-column:1;grid-row:1;justify-self:end}
 .topnext{height:32px;font-size:.85rem;font-weight:600;padding:0 18px;box-shadow:none;min-width:84px}
 .topnext:active{transform:scale(.97);box-shadow:none}
+
+/* one top line: logo, autoplay, seconds, Next */
+.solo>header,.host>header{flex-wrap:nowrap;gap:8px;align-items:center}
+header .ctrl,.host header .ctrl{display:flex;flex:1;min-width:0;justify-content:center;flex-wrap:nowrap;gap:6px;margin:0}
+header .ctrl .check,header .ctrl select.mini{min-width:0;flex:0 1 auto}
+header .ctrl select.mini{text-overflow:ellipsis}
+.host .ctrl .check,.host .ctrl select.mini,.host .ctrl .autoleft{grid-column:auto;grid-row:auto}
+.host>header .roomtag{flex:none}
+.wideonly{display:inline}
+@media (max-width:600px){
+  .wideonly{display:none}
+  .solo>header .logo{font-size:1.05rem}
+  header .ctrl .check,header .ctrl select.mini,.topnext{font-size:.78rem;padding:0 10px}
+  .topnext{min-width:0}
+}
+/* online hosting: the top line stays, without logo and room code */
+body.remote .host.ingame>header{display:flex}
+body.remote .host.ingame>header .logo,body.remote .host.ingame>header #joinhint,body.remote .host.ingame>header #roomcode{display:none}
+header .ctrl .check{flex:none}
+header .ctrl select.mini{flex:0 1 auto;max-width:150px}
+@media (max-width:600px){header .ctrl .check,header .ctrl select.mini{padding:0 8px}header .ctrl select.mini{max-width:104px}}
