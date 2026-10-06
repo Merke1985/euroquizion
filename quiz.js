@@ -1,6 +1,6 @@
 // Builds the question for a song: what is asked (country, artist, placement or title)
 // and how it is answered (multiple choice or typed). Shared by the host screen and solo mode.
-var Q_TEXT = { title: 'Which song is this?', artist: 'Who performs this song?', country: 'Which country sent this song?', place: 'Where did this song finish?', points: 'How many points did this song get?', year: 'Which year is this song from?' };
+var Q_TEXT = { title: 'Which song is this?', artist: 'Who performs this song?', country: 'Which country sent this song?', place: 'Where did this song finish in the final?', points: 'How many points did this song get?', year: 'Which year is this song from?' };
 var Q_HINT = { title: 'Type the title…', artist: 'Type the artist…', country: 'Type the country…', place: 'Type the position, e.g. 5', points: 'Type the number of points', year: 'Type the year, e.g. 2012' };
 var COUNTRY_ALIASES = { gb: ['UK', 'Great Britain', 'Britain', 'England'], nl: ['Holland', 'The Netherlands', 'Nederland'], cz: ['Czech Republic'], ba: ['Bosnia', 'Bosnia and Herzegovina'],
   mk: ['Macedonia', 'FYR Macedonia'], cs: ['Serbia and Montenegro'], md: ['Moldavia'], tr: ['Türkiye', 'Turkiye'], by: ['Belorussia'], ru: ['Russian Federation'] };
@@ -39,9 +39,9 @@ function makeOdd(song, allSongs, countries) {
 // country, the artist, the title and whether it reached the final (for years without semi-finals, or
 // where that is unclear, the year takes its place). The wrong one is made believable: a country from
 // the same contest, an artist of the same kind, a title in the same language.
-function makeMistake(song, allSongs, countries) {
+function makeMistake(song, allSongs, countries, winners) {
   var cname = function (c) { return countries[c] || c; };
-  var semis = song[0] >= 2004 && song[0] !== 2020 && song[9] !== 'dq' && song[9] !== 'cancelled';
+  var semis = !winners && song[0] >= 2004 && song[0] !== 2020 && song[9] !== 'dq' && song[9] !== 'cancelled';
   var qualified = !(song[5] === 1 || song[8] != null);
   var facts = [
     { k: 'Country', v: cname(song[1]) },
@@ -122,18 +122,19 @@ function SecondPlayer(elId) {
   self.left = function () { try { var st = p.getPlayerState(), d = p.getDuration() || 0, t = p.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {} return null; };
 }
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
-  var pairOk = !!(opt && opt.pair);
+  var pairOk = !!(opt && opt.pair), winners = !!(opt && opt.cat === 'win');   // only winners in play: every placing question would answer itself
+  if (winners && (subjectSetting === 'place' || subjectSetting === 'higher')) subjectSetting = 'random';
   if (pairOk && (subjectSetting === 'higher' || subjectSetting === 'newer' || (subjectSetting === 'random' && Math.random() < 0.2))) {
-    var pk = subjectSetting === 'random' ? pick(['higher', 'newer']) : subjectSetting, pq = makePair(song, pk, allSongs, countries) || (subjectSetting === 'higher' ? makePair(song, 'newer', allSongs, countries) : null);
+    var pk = subjectSetting === 'random' ? (winners ? 'newer' : pick(['higher', 'newer'])) : subjectSetting, pq = makePair(song, pk, allSongs, countries) || (subjectSetting === 'higher' ? makePair(song, 'newer', allSongs, countries) : null);
     if (pq) return pq;
   }
   if (subjectSetting === 'higher' || subjectSetting === 'newer') subjectSetting = 'random';
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 1 / 6)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
-  if (canPlace) kinds.push('place');
+  if (canPlace && !winners) kinds.push('place');
   var subject = subjectSetting === 'random' || subjectSetting === 'odd' ? pick(kinds) : subjectSetting;
-  if (subject === 'mistake') return makeMistake(song, allSongs, countries);
+  if (subject === 'mistake') return makeMistake(song, allSongs, countries, winners);
   if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
   var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting;
   if (subject === 'place' && song[8] != null) type = 'mc';         // "did not qualify" cannot be typed as a position
@@ -255,8 +256,8 @@ function revealOptions(q, pick, pts) {
   var mine = pts != null, none = mine && (pick == null || pick < 0 || !q.options[pick]);
   return shown.map(function (o, i) {
     var tag = '';
-    if (mine && i === pick) tag = i === q.correct ? '<span class="mark">✓ +' + pts + '</span>' : '<span class="mark">✗ 0</span>';
-    else if (none && i === q.correct) tag = '<span class="mark none">No answer · 0</span>';
+    if (mine && i === pick) tag = i === q.correct ? '<span class="mark">✓ +' + pts + '</span>' : '<span class="mark">✗ ' + (pts < 0 ? '−' + (-pts) : 0) + '</span>';   // Ladder: a wrong answer costs points
+    else if (none && i === q.correct) tag = '<span class="mark none">No answer · ' + (pts < 0 ? '−' + (-pts) : 0) + '</span>';
     return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '</b><span class="otext">' + esc(o) + '</span>' + tag + '</div>';
   }).join('');
 }
@@ -267,9 +268,11 @@ var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'],
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',
-  speed: 'Speed: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
-  order: 'Order: Eurovision style. The first player with the right answer gets 12 points, the second 10, then 8, 7, 6, 5, 4, 3, 2 and 1. Nobody with the right answer gets less than 1.'
+  speed: 'Speedy: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
+  ladder: 'Ladder: everyone climbs the same ladder. A right answer takes you one rung up, a wrong answer or no answer one rung down. The rungs are worth 1, 2, 3, 4, 5, 6, 7, 8, 10 and 12 points, and the first player to reach the top wins.'
 };
+// The ladder: rung 0 is the ground, rung 10 the top. Each rung is worth a Eurovision score.
+var LADDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
 // rank = how many players were right before this one (only used for "order").
 function pointsFor(scoring, elapsedMs, totalMs, rank) {
   if (scoring === 'correct') return 12;

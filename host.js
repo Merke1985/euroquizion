@@ -111,6 +111,7 @@
     if (G.phase === 'reveal' && autoTick && $('autolen').value !== 'end') s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
     if (G.revealAt && (G.phase === 'guess' || G.phase === 'svote' || G.phase === 'sbest')) s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (G.phase === 'lobby') s.all_ready = allReady();
+    if (G.phase === 'reveal' && lastSong()) s.last = true;
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
@@ -195,6 +196,37 @@
   function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (G.atype === 'draw' && (G.phase === 'dpick' || G.phase === 'loading'))))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
+  // ---------- Ladder scoring: everyone on one ladder ----------
+  // The rungs are drawn once; each player is a small avatar that keeps its element, so a change of
+  // rung is a glide up or down instead of a redraw.
+  var RUNG_H = 34;
+  function renderLadder() {
+    var el = $('ladder'), on = ladderGame() && !hideScores() && G.phase !== 'lobby' && G.phase !== 'end';
+    el.classList.toggle('hidden', !on); $('board').classList.toggle('hidden', on);
+    if (!on) return;
+    if (!el.firstChild) {
+      var html = '<div class="rails"></div>';
+      for (var r = LADDER.length - 1; r >= 0; r--) html += '<div class="rung' + (r === LADDER.length - 1 ? ' top' : '') + '" style="bottom:' + (r * RUNG_H) + 'px"><span>' + (r ? LADDER[r] : 'Start') + '</span></div>';
+      el.innerHTML = html + '<div class="climbers"></div>';
+      el.style.height = (LADDER.length * RUNG_H + 8) + 'px';
+    }
+    var box = el.querySelector('.climbers'), seen = {}, byRung = {};
+    var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    ps.forEach(function (p) { var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)); (byRung[r] = byRung[r] || []).push(p); });
+    var room = Math.max(60, el.clientWidth - 64);
+    ps.forEach(function (p) {
+      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), gap = Math.min(34, room / Math.max(1, mates.length));
+      var n = box.querySelector('[data-pid="' + p.pid + '"]');
+      if (!n) { n = document.createElement('div'); n.className = 'climber'; n.setAttribute('data-pid', p.pid); n.innerHTML = charSvg(p.char) + '<b></b>'; n.style.bottom = '0px'; n.style.left = '56px'; box.appendChild(n); n.getBoundingClientRect(); }
+      n.querySelector('b').textContent = p.name; n.title = p.name;
+      n.style.bottom = (r * RUNG_H + 2) + 'px'; n.style.left = (56 + i * gap) + 'px'; n.style.zIndex = 10 + i;
+      n.classList.toggle('off', !!p.off);
+      n.classList.toggle('up', G.phase === 'reveal' && p.moved === 'up'); n.classList.toggle('down', G.phase === 'reveal' && p.moved === 'down');
+      n.classList.toggle('ans', G.phase === 'guess' && isIn(p)); n.classList.toggle('won', r === LADDER.length - 1);
+      seen[p.pid] = 1;
+    });
+    [].forEach.call(box.querySelectorAll('.climber'), function (n) { if (!seen[n.getAttribute('data-pid')]) n.remove(); });
+  }
   function boardHtml(showGot) {
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
@@ -216,7 +248,8 @@
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
     $('pcount').textContent = ps.length ? '(' + (G.phase === 'lobby' || G.phase === 'intro' ? nr + ' of ' + ps.length + ' ready' : ps.length) + ')' : '';
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
-    $('boardtitle').textContent = hideScores() ? 'Scores at the end' : 'Scores';
+    $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
+    renderLadder();
     $('newgame').classList.toggle('hidden', !(G.phase === 'intro' || G.phase === 'paused'));   // not while a game is playing: only during the countdown and after a restore
     $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? 'Song ' + G.round + ' / ' + G.total : '';
     var noCtrl = G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end';
@@ -273,7 +306,7 @@
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
         $('rres').textContent = resultText(G.song);
         $('ranswer').textContent = '';   // the green bar already says it
-        $('next').textContent = G.round >= G.total ? 'Final scores' : 'Next';
+        $('next').textContent = lastSong() ? 'Final scores' : 'Next';
       }
       renderSing();
     }
@@ -397,7 +430,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, G.atype, songs, countries, { pair: true });
+    G.q = G.sing ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, G.atype, songs, countries, { pair: true, cat: G.cat });
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
     // A two-clip question: the first song loads in the main player, the second in the spare one. The
@@ -518,6 +551,8 @@
     };
     picksTimer = setTimeout(step, 500);
   }
+  function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder'; }
+  function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame()); }
   function reveal() {
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
@@ -528,6 +563,17 @@
     var right = G.q && G.q.type === 'mc' ? list().filter(function (p) { return p.pick === G.q.correct && !(G.draw && p.pid === G.draw.pid); })
       .sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); }) : [];
     // Speed scoring on a two-clip question only starts counting when the second clip begins.
+    if (ladderGame() && !G.draw) {
+      // Ladder: up a rung for a right answer, down a rung for a wrong one or none. The score is what the rung is worth.
+      list().forEach(function (p) {
+        if (p.rung == null) p.rung = Math.max(0, LADDER.indexOf(p.score));   // a restored game only knows the score
+        var ok = right.indexOf(p) >= 0, before = LADDER[p.rung || 0];
+        p.rung = Math.max(0, Math.min(LADDER.length - 1, (p.rung || 0) + (ok ? 1 : -1)));
+        p.score = LADDER[p.rung]; p.pts = p.score - before; p.got = ok; p.moved = ok ? 'up' : 'down';
+        if (p.rung === LADDER.length - 1) G.ladderWon = true;   // someone reached the top: this was the last song
+      });
+      right = [];
+    }
     right.forEach(function (p, rank) { p.pts = pointsFor(G.draw ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
     // Draw!: the first to guess gets 12, then 10, 8…; the drawer gets 12 as soon as anyone guessed it.
     var artist = G.draw && players[G.draw.pid];
@@ -566,7 +612,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    if (!G.draw) G.q = makeQuestion(G.song, G.subject, G.atype, songs, countries);
+    if (!G.draw) G.q = makeQuestion(G.song, G.subject, G.atype, songs, countries, { cat: G.cat });
     G.clip = { id: G.song[4], frac: Math.random() }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);
@@ -1002,6 +1048,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
+    G.ladderWon = false; list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
@@ -1035,7 +1082,7 @@
     if (!ytReadyOrRemote() || !buildPool()) return false;
     G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; });
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false;
     G.brief = briefInfo(); introStart();
     return true;
   }
@@ -1062,7 +1109,7 @@
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (G.phase !== 'reveal') { autoStop(); return; }
       if (left <= 0) { autoStop(); goNext(); return; }
-      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (G.round >= G.total ? 'Final scores in ' : 'Playing next song in ') + clock(left);
+      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (lastSong() ? 'Final scores in ' : 'Playing next song in ') + clock(left);
     };
     draw(); autoTick = setInterval(draw, 200);
     if (!recovering) net.send('state', snapshot());
@@ -1082,7 +1129,7 @@
   function goNext() {
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;
     autoStop(); note('');
-    if (G.round >= G.total) { try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push(); } else startRound();   // nobody is 'ready' for the next game yet
+    if (lastSong()) { try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push(); } else startRound();   // nobody is 'ready' for the next game yet
   }
   $('again').addEventListener('click', toLobby);
 

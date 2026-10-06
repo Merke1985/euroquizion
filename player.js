@@ -195,7 +195,7 @@
       // Draw!: the finished drawing stays in view at the reveal (the drawer's own pad, or what the others saw).
       if (rev && s.draw && fresh) { try { $('rdraw').src = $(s.draw.pid === pid ? 'dcanvas' : 'pdraw').toDataURL('image/png'); } catch (e) {} }
       $('rdraw').classList.toggle('hidden', !(rev && s.draw));
-      $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null, s.draw && s.draw.pid === pid ? null : m ? (m.got ? m.pts : 0) : null) : '';
+      $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null, s.draw && s.draw.pid === pid ? null : m ? (m.pts || 0) : null) : '';
       $('rpts').textContent = '';
       $('rpts').className = 'rpts ' + (m && m.got ? 'ok' : 'no');
       if (rev && s.sing) {
@@ -607,7 +607,7 @@
     $('allin').textContent = cd && !inGuess ? 'Everyone has voted. Continuing in ' + cd : '';
     $('allinq').textContent = cd && inGuess ? (state.players.length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // below the answer bars
     var nx = nextAt ? Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) : 0;
-    $('rnext').textContent = nx && state ? (state.round >= state.total ? 'Final scores in ' : 'Next song in ') + clock(nx) : '';   // same line as "All players answered"
+    $('rnext').textContent = nx && state ? (state.round >= state.total || state.last ? 'Final scores in ' : 'Next song in ') + clock(nx) : '';   // same line as "All players answered"
 
     if (!state) return;
     if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));
