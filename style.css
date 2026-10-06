@@ -560,3 +560,9 @@ body.embed .phone.compact .readybtn.on{box-shadow:none}
 .phone #v-wait.lobbyview #waitsub{order:4;margin:0}
 .phone #v-wait.lobbyview .avatarrow{order:0}
 body.embed .phone.compact #lobbystart{width:auto!important;font-size:.95rem;padding:.5em 1.1em;box-shadow:none}
+
+/* score panel: name | total | +points, each in a fixed column */
+.host aside .board li{display:grid;grid-template-columns:minmax(0,1fr) auto 2.6em;align-items:center;gap:6px}
+.host aside .board .who{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.host aside .board .tot{text-align:right;font-variant-numeric:tabular-nums;min-width:2ch}
+.host aside .board .pts{margin:0;text-align:left;font-variant-numeric:tabular-nums}

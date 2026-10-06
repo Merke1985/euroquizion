@@ -199,8 +199,7 @@
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li class="' + (showGot && p.got && !hide ? 'got ' : '') + (G.phase === 'guess' && isIn(p) ? 'ans ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span>' + (hide ? '?' : p.score +
-        (showGot && p.got ? '<span class="pts">+' + p.pts + '</span>' : '')) + '</span></li>';
+      return '<li class="' + (showGot && p.got && !hide ? 'got ' : '') + (G.phase === 'guess' && isIn(p) ? 'ans ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
