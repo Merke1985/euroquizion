@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=180">
+<link rel="stylesheet" href="style.css?v=181">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -63,6 +63,8 @@
         <div><label for="s-time">Video length</label><select id="s-time"><option value="5">5 sec</option><option value="10">10 sec</option><option value="20" selected>20 sec</option><option value="30">30 sec</option></select></div>
         <div><label for="s-show">Show score</label><select id="s-show">
           <option value="always" selected>Always</option><option value="end">At the end of the round</option></select></div>
+        <div><label for="s-auto">Autoplay next song</label><select id="s-auto"><option value="1" selected>On</option><option value="0">Off</option></select></div>
+        <div><label for="s-autolen">Next song after</label><select id="s-autolen"><option value="10">10 sec</option><option value="20" selected>20 sec</option><option value="30">30 sec</option><option value="end">Complete song</option></select></div>
         </div></details>
         <p class="mute" id="scorehelp" style="margin:-4px 0 0;font-size:.9rem;grid-column:1/-1"></p>
       </div>
@@ -135,14 +137,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=180"></script>
-<script src="vendor/qrcode.js?v=180"></script>
-<script src="config.js?v=180"></script>
-<script src="net.js?v=180"></script>
-<script src="music.js?v=180"></script>
-<script src="chars.js?v=180"></script>
-<script src="match.js?v=180"></script>
-<script src="quiz.js?v=180"></script>
-<script src="host.js?v=180"></script>
+<script src="vendor/supabase.js?v=181"></script>
+<script src="vendor/qrcode.js?v=181"></script>
+<script src="config.js?v=181"></script>
+<script src="net.js?v=181"></script>
+<script src="music.js?v=181"></script>
+<script src="chars.js?v=181"></script>
+<script src="match.js?v=181"></script>
+<script src="quiz.js?v=181"></script>
+<script src="host.js?v=181"></script>
 </body>
 </html>

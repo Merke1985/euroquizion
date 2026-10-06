@@ -319,7 +319,7 @@
     var locked = G.phase === 'intro';
     [].forEach.call($('v-lobby').querySelectorAll('.settings select'), function (el) { el.disabled = locked; });
     $('v-lobby').classList.toggle('locked', locked);
-    if (!locked) { singToggle(); winnersLock(); }   // gives Answers and Scoring back unless Sing! or Draw! greys them out
+    if (!locked) { singToggle(); winnersLock(); autoMirror(); }   // gives Answers and Scoring back unless Sing! or Draw! greys them out
     if (!locked && G.phase === 'lobby' && $('start').textContent.indexOf('Start now') === 0) ready();
     if (G.phase === 'lobby' || G.phase === 'intro') show('v-lobby');
     else if (G.phase === 'brief') { show('v-brief'); renderBrief(); }
@@ -1533,7 +1533,14 @@
   // Autoplay: with the box ticked the next song starts by itself, after 10, 20 or 30 seconds or when
   // the song that is playing has finished ("Until the end").
   var autoTick = null, autoEnd = 0;
-  try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; var al = localStorage.getItem('esc-autolen'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
+  // Autoplay is on by default, 20 seconds after the answer. It can be set in the lobby (Advanced
+  // settings) and on the bar during the game; the two always show the same.
+  $('auto').checked = true; $('autolen').value = '20';
+  try { $('auto').checked = localStorage.getItem('esc-auto2') !== '0'; var al = localStorage.getItem('esc-autolen2'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
+  function autoMirror() { $('s-auto').value = $('auto').checked ? '1' : '0'; $('s-autolen').value = $('autolen').value; $('s-autolen').disabled = !$('auto').checked; }
+  autoMirror();
+  $('s-auto').addEventListener('change', function () { $('auto').checked = $('s-auto').value === '1'; $('auto').dispatchEvent(new Event('change')); });
+  $('s-autolen').addEventListener('change', function () { $('autolen').value = $('s-autolen').value; $('autolen').dispatchEvent(new Event('change')); });
   // Seconds left of the song that is playing, or null when that cannot be told right now.
   function songLeft() {
     if (isPair() && G.q.correct === 1) return yt2.left();
@@ -1568,12 +1575,14 @@
     if (!recovering) net.send('state', snapshot());
   }
   $('auto').addEventListener('change', function () {
-    try { localStorage.setItem('esc-auto', $('auto').checked ? '1' : '0'); } catch (e) {}
+    try { localStorage.setItem('esc-auto2', $('auto').checked ? '1' : '0'); } catch (e) {}
+    autoMirror();
     autoStart();
     if (!recovering) net.send('state', snapshot());
   });
   $('autolen').addEventListener('change', function () {
-    try { localStorage.setItem('esc-autolen', $('autolen').value); } catch (e) {}
+    try { localStorage.setItem('esc-autolen2', $('autolen').value); } catch (e) {}
+    autoMirror();
     autoStart();
     if (!recovering) net.send('state', snapshot());
   });
