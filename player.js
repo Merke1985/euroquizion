@@ -250,6 +250,8 @@
       $('stitle').textContent = m && m.in ? 'Got it!' : 'Your turn to sing!';
       $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to 10 seconds.';
       if (fresh) { recReset(); recSent = ''; }
+    } else if (s.phase === 'sroll') {
+      $('stitle').textContent = 'It’s a tie!'; $('ssub').textContent = 'Watch the big screen: the roulette decides.';
     } else if (s.phase === 'splay') {
       $('stitle').textContent = sg.now ? (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + sg.now : 'Showtime!'; $('ssub').textContent = 'Listen on the big screen.';
     } else {

@@ -741,9 +741,25 @@
     for (pid in G.sing.votes) c[G.sing.votes[pid]]++;
     var max = Math.max.apply(null, c);
     c.forEach(function (n, i) { if (n === max) top.push(i); });
-    G.sing.chosen = pick(top); G.sing.tried[G.sing.chosen] = 1;
-    G.phase = 'loading'; G.sing.in = {}; push();
-    loadSong(G.sing.options[G.sing.chosen]);
+    var chosen = pick(top);
+    var go = function () {
+      if (!G.sing) return;
+      G.sing.chosen = chosen; G.sing.tried[chosen] = 1; G.sing.roll = null;
+      G.phase = 'loading'; G.sing.in = {}; push();
+      loadSong(G.sing.options[chosen]);
+    };
+    if (top.length < 2) { go(); return; }
+    // A tie: a roulette like a party-game minigame picker. The light jumps between the tied songs, fast at
+    // first and slower and slower, and stops on the winner.
+    G.phase = 'sroll'; G.sing.in = {}; G.sing.tied = top; G.barMs = 0;
+    var hops = 16 + Math.floor(Math.random() * top.length), start = (top.indexOf(chosen) - (hops % top.length) + top.length * 8) % top.length, n = 0;
+    var hop = function () {
+      if (!G.sing || G.phase !== 'sroll') return;
+      G.sing.roll = top[(start + n) % top.length]; Music.plop(n); render();
+      if (n >= hops) { G.sing.rollDone = true; Music.ding(); render(); singTimer = setTimeout(go, 1400); return; }
+      n++; singTimer = setTimeout(hop, 70 + Math.pow(n / hops, 2.4) * 520);
+    };
+    G.sing.rollDone = false; push(); singTimer = setTimeout(hop, 500);
   }
   function singListen() {
     G.phase = 'slisten'; G.barMs = clipSecs() * 1000; G.endsAt = Date.now() + G.barMs;
@@ -846,6 +862,7 @@
   function singSkip() {
     if (!G.sing) return;
     if (G.phase === 'svote') singVoteEnd();
+    else if (G.phase === 'sroll') return;   // the roulette finishes by itself
     else if (G.phase === 'slisten') { clearInterval(poll); try { yt.pauseVideo(); } catch (e) {} singRecord(); }
     else if (G.phase === 'srec') singPlayAll();
     else if (G.phase === 'splay') singNext();
@@ -892,7 +909,14 @@
     $('skip').textContent = sg && G.phase !== 'reveal' ? 'Continue' : 'Show answer';
     if (!sg) return;
     var song = sg.chosen != null ? sg.options[sg.chosen] : null, name = song ? song[3] + ' – ' + song[2] : '', t = '', opts = '';
-    if (G.phase === 'svote') { t = 'Sing! Vote for the song'; opts = sg.options.map(function (o, i) {
+    if (G.phase === 'sroll') {
+      t = sg.rollDone ? 'We’re singing: ' + (sg.options[sg.roll][3] + ' – ' + sg.options[sg.roll][2]) : 'It’s a tie!';
+      opts = sg.options.map(function (o, i) {
+        var tied = sg.tied.indexOf(i) >= 0, n = 0, k; for (k in sg.votes) if (sg.votes[k] === i) n++;
+        return '<div class="optcol"><div class="opt' + (i === sg.roll ? (sg.rollDone ? ' right' : ' rolling') : tied ? '' : ' dim') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters"><b>' + n + (n === 1 ? ' vote' : ' votes') + '</b></div></div>';
+      }).join('');
+    }
+    else if (G.phase === 'svote') { t = 'Sing! Vote for the song'; opts = sg.options.map(function (o, i) {
       // Under each song: who voted for it so far.
       var who = list().filter(function (p) { return sg.votes[p.pid] === i; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
       return '<div class="optcol"><div class="opt"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters">' +
@@ -909,7 +933,7 @@
       opts = (sg.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + charSvg(r.char) + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
-    $('qopts').classList.toggle('votelist', G.phase === 'svote');   // the song vote: one song per row, its voters behind it
+    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll');   // the song vote: one song per row, its voters behind it
   }
 
 
