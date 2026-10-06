@@ -273,6 +273,12 @@ function revealOptions(q, pick, pts) {
 var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'], ms: 19000 };   // the first clip lasts 18 seconds; the countdown runs one second longer
 // The three ways to score a correct answer, and the line that explains the selected one.
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
+// With several players Speedy goes by who was first; solo it goes by the clock.
+var HOST_SCORING_HELP = {
+  correct: 'Standard: every right answer scores a flat 12 points.',
+  speed: 'Speedy: the first player with the right answer scores 12 points, the second 10, the third 8, then 7, 6, 5, 4, 3, 2 and 1.',
+  ladder: ''
+};
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',
   speed: 'Speedy: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
@@ -346,3 +352,5 @@ function finalBoard(el, players, mePid, onDone, sound) {
   };
   setTimeout(next, 600);
 }
+
+HOST_SCORING_HELP.ladder = SCORING_HELP.ladder;

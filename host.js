@@ -5,7 +5,7 @@
   var room = '', net, songs = [], countries = {}, chorus = {};
   var REMOTE = new URLSearchParams(location.search).get('screen') === '0';   // a game without a shared screen
   var players = {};         // pid -> {pid,name,score,got,pts,last}
-  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 20000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'speed', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0, go: {} };
+  var G = { phase: 'lobby', round: 0, total: 10, guessMs: 20000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'correct', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0, go: {} };
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
@@ -583,7 +583,7 @@
       });
       right = [];
     }
-    right.forEach(function (p, rank) { p.pts = pointsFor(G.draw ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
+    right.forEach(function (p, rank) { p.pts = pointsFor(G.draw || G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
     // Draw!: the first to guess gets 12, then 10, 8…; the drawer gets 12 as soon as anyone guessed it.
     var artist = G.draw && players[G.draw.pid];
     if (artist && right.length) { artist.pts = 12; artist.score += 12; artist.got = true; }
@@ -1059,7 +1059,7 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     if (lo) lo.disabled = party;
-    if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'speed';
+    if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
     var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
     $('s-rounds').disabled = lad; $('s-show').disabled = lad; scoreHelp(); }
   // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
@@ -1072,7 +1072,7 @@
   $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
