@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=171">
+<link rel="stylesheet" href="style.css?v=172">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -30,6 +30,7 @@
         <h3>Players <span class="mute" id="pcount"></span></h3>
         <div class="players" id="players" style="margin-top:12px"></div>
         <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. When all rings are green, anyone can start the game from their phone.</p>
+        <p id="botrow" class="hidden" style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt small" id="botadd" type="button">Add a test bot</button><button class="btn alt small hidden" id="botclear" type="button">Remove bots</button></p>
       </div>
       <div class="rehost hidden">
         <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
@@ -129,14 +130,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=171"></script>
-<script src="vendor/qrcode.js?v=171"></script>
-<script src="config.js?v=171"></script>
-<script src="net.js?v=171"></script>
-<script src="music.js?v=171"></script>
-<script src="chars.js?v=171"></script>
-<script src="match.js?v=171"></script>
-<script src="quiz.js?v=171"></script>
-<script src="host.js?v=171"></script>
+<script src="vendor/supabase.js?v=172"></script>
+<script src="vendor/qrcode.js?v=172"></script>
+<script src="config.js?v=172"></script>
+<script src="net.js?v=172"></script>
+<script src="music.js?v=172"></script>
+<script src="chars.js?v=172"></script>
+<script src="match.js?v=172"></script>
+<script src="quiz.js?v=172"></script>
+<script src="host.js?v=172"></script>
 </body>
 </html>

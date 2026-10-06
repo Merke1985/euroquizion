@@ -23,6 +23,8 @@
   try { var q = qrcode(0, 'M'); q.addData(joinUrl); q.make(); $('qr').innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('qr').classList.add('hidden'); }
 
   net = escConnect(room);
+  // The handlers are also kept here, so the test bots (further down) can act exactly like a phone would.
+  var H = {}, netOn = net.on; net.on = function (e, f) { H[e] = f; netOn(e, f); };
   $('demo').classList.toggle('hidden', !net.demo);
   net.on('hi', function (m) {
     if (!m || !m.pid) return;
@@ -1277,6 +1279,65 @@
     $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest');   // the song vote: one song per row, its voters behind it
   }
 
+
+  // ---------- test bots ----------
+  // Up to four pretend players for trying things out on the shared screen. They live on this page and
+  // do what a phone would do: get ready, answer, draw a scribble, write a line, vote.
+  var bots = [], BOT_LINES = ['Beep boop, douze points', 'Even my circuits felt that', '404: talent not found', 'More glitter. Always more glitter.', 'My sensors detect a key change', 'Does not compute, but I love it', 'I was promised a wind machine', 'Zero points from the robot jury'];
+  function botScribble() {
+    var lines = [];
+    for (var s = 0; s < 4; s++) {
+      var x = 100 + Math.random() * 600, y = 100 + Math.random() * 400, p = [Math.round(x), Math.round(y)];
+      for (var i = 0; i < 14; i++) { x = Math.max(20, Math.min(780, x + (Math.random() - 0.5) * 160)); y = Math.max(20, Math.min(580, y + (Math.random() - 0.5) * 160)); p.push(Math.round(x), Math.round(y)); }
+      lines.push({ c: Math.floor(Math.random() * 5), w: Math.random() < 0.5 ? 6 : 14, p: p });
+    }
+    return lines;
+  }
+  function botAdd() {
+    if (REMOTE || bots.length >= 4 || G.phase !== 'lobby') return;
+    var used = {}; list().forEach(function (p) { used[p.char] = 1; });
+    var free = CHARS.filter(function (c) { return !used[c.id]; })[0], n = 1;
+    while (list().some(function (p) { return p.name === 'Bot ' + n; })) n++;
+    var pid = 'bot' + n + '-' + Math.random().toString(36).slice(2, 7);
+    H.hi({ pid: pid, name: 'Bot ' + n, char: free ? free.id : null });
+    if (!players[pid]) return;
+    players[pid].bot = true; bots.push({ pid: pid, key: '', at: 0, done: false });
+    H.go({ pid: pid });
+    botButtons();
+  }
+  function botClear() {
+    bots.forEach(function (b) { delete players[b.pid]; if (G.go) delete G.go[b.pid]; });
+    bots = []; botButtons(); push();
+  }
+  function botButtons() {
+    $('botrow').classList.toggle('hidden', REMOTE);
+    $('botadd').disabled = bots.length >= 4; $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of 4)' : 'Add a test bot';
+    $('botclear').classList.toggle('hidden', !bots.length);
+  }
+  $('botadd').addEventListener('click', botAdd); $('botclear').addEventListener('click', botClear); botButtons();
+  setInterval(function () {
+    bots = bots.filter(function (b) { return players[b.pid]; });
+    bots.forEach(function (b) {
+      var p = players[b.pid], ph = G.phase, pid = b.pid;
+      p.last = Date.now(); p.off = false;   // a bot never drops out
+      if (ph === 'lobby') { b.key = ''; if (!(G.go && G.go[pid])) H.go({ pid: pid }); return; }
+      // one action per step of the game, after a short random think
+      var key = ph + ':' + G.round + ':' + (G.best ? G.best.id : '') + (G.draw ? G.draw.id : '');
+      if (b.key !== key) { b.key = key; b.at = Date.now() + 1200 + Math.random() * 3500; b.done = false; }
+      if (b.done || Date.now() < b.at) return;
+      b.done = true;
+      if (ph === 'guess' && G.q && G.q.options) {
+        var can = []; G.q.options.forEach(function (o, i) { if (!(G.best && G.best.pids[i] === pid)) can.push(i); });
+        var smart = !G.best && G.q.correct >= 0 && Math.random() < 0.5;   // right about half the time
+        if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(can) });
+      }
+      else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { H.draw({ pid: pid, pick: Math.floor(Math.random() * 4) }); H.draw({ pid: pid, lines: botScribble() }); H.draw({ pid: pid, done: 1 }); }
+      else if (ph === 'qall') H.quip({ pid: pid, text: pick(BOT_LINES) });
+      else if (ph === 'svote' && G.sing) H.poll({ pid: pid, choice: Math.floor(Math.random() * G.sing.options.length) });
+      else if (ph === 'srec') H.clip({ pid: pid, skip: true });   // bots do not sing
+      else if (ph === 'sbest' && G.sing) { var others = []; G.sing.order.forEach(function (o, i) { if (o !== pid) others.push(i); }); if (others.length) H.poll({ pid: pid, choice: pick(others) }); }
+    });
+  }, 400);
 
   // ---------- buttons ----------
   function buildPool() {
