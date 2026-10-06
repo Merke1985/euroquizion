@@ -195,6 +195,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // Draw!: one player draws a song on their phone, the others guess. Lines travel as small batches of
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
+var PARTY_HELP = 'Party: a mix of everything. Mostly quiz questions, with a Sing! or Draw! round in between.';
 var DRAW_HELP = 'Draw!: players take turns drawing a song. The first to guess it gets 12 points, the next 10, then 8, 7, 6 and so on. The drawer gets 12 when someone guesses it.';
 var DRAW_COLORS = ['#111111', '#e11d48', '#2563eb', '#16a34a', '#f59e0b', '#ffffff'];   // the last one is the eraser
 function drawClear(cv) { var c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, DRAW_W, DRAW_H); }

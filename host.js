@@ -194,7 +194,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (G.atype === 'draw' && (G.phase === 'dpick' || G.phase === 'loading'))))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dpick' || G.phase === 'loading'))))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   // ---------- Ladder scoring: everyone on one ladder ----------
@@ -267,7 +267,7 @@
     var locked = G.phase === 'intro';
     [].forEach.call($('v-lobby').querySelectorAll('.settings select'), function (el) { el.disabled = locked; });
     $('v-lobby').classList.toggle('locked', locked);
-    if (!locked) singToggle();   // gives Answers and Scoring back unless Sing! or Draw! greys them out
+    if (!locked) { singToggle(); winnersLock(); }   // gives Answers and Scoring back unless Sing! or Draw! greys them out
     if (!locked && G.phase === 'lobby' && $('start').textContent.indexOf('Start now') === 0) ready();
     if (G.phase === 'lobby' || G.phase === 'intro') show('v-lobby');
     else if (G.phase === 'brief') { show('v-brief'); renderBrief(); }
@@ -431,7 +431,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, G.atype, songs, countries, { pair: true, cat: G.cat });
+    G.q = G.sing ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', songs, countries, { pair: true, cat: G.cat });
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
     // A two-clip question: the first song loads in the main player, the second in the spare one. The
@@ -552,6 +552,7 @@
     };
     picksTimer = setTimeout(step, 500);
   }
+  function roundMode() { return G.atype === 'party' ? (G.mode || 'mc') : G.atype; }   // what this round is: quiz ('mc'), 'sing' or 'draw'
   function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder'; }
   var ENDLESS = 9999;   // Ladder has no song limit: it runs until someone is at the top
   function ofTotal(sep) { return G.total >= ENDLESS ? '' : sep + G.total; }
@@ -600,9 +601,16 @@
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
-    if (!REMOTE && (G.atype === 'sing' || G.atype === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
-    if (G.atype === 'sing' && !REMOTE) { singStart(); return; }
-    if (G.atype === 'draw') { drawStart(); return; }
+    // Party mixes everything: most rounds are quiz questions, with a Sing! or Draw! round thrown in now
+    // and then (never two of those in a row, and Sing! only with a shared screen).
+    if (G.atype === 'party') {
+      var special = REMOTE ? ['draw'] : ['sing', 'draw'], can = G.round > 1 && G.mode === 'mc' && list().filter(function (p) { return !p.off; }).length >= 2;
+      G.mode = can && Math.random() < 0.4 ? pick(special) : 'mc';
+    } else G.mode = G.atype;
+    var md = roundMode();
+    if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
+    if (md === 'sing' && !REMOTE) { singStart(); return; }
+    if (md === 'draw') { drawStart(); return; }
     push(); loadSong();
   }
 
@@ -615,7 +623,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    if (!G.draw) G.q = makeQuestion(G.song, G.subject, G.atype, songs, countries, { cat: G.cat });
+    if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', songs, countries, { cat: G.cat });
     G.clip = { id: G.song[4], frac: Math.random() }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);
@@ -697,7 +705,7 @@
     var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.total], ['Video time', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
     if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', optText('s-scoring')]);
     rows.push(['Show score', optText('s-show')]);
-    return { rows: rows, scoring: G.atype === 'draw' ? DRAW_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
+    return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
   }
   function briefStart() {
     stopTimers(); clearTimeout(introTimer);
@@ -1043,12 +1051,23 @@
   }
   // Sing! is a category of its own: there is no question, so the Answers setting does not apply.
   function singToggle() { var on = $('s-atype').value === 'sing' || $('s-atype').value === 'draw'; $('s-subject').disabled = on; $('s-scoring').disabled = on;
+    // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
+    var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
+    if (lo) lo.disabled = party;
+    if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'speed';
     var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
     $('s-rounds').disabled = lad; $('s-show').disabled = lad; scoreHelp(); }
+  // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
+  function winnersLock() {
+    var win = $('s-cat').value === 'win', o = $('s-subject').querySelector('option[value="higher"]');
+    if (o) o.disabled = win;
+    if (win && $('s-subject').value === 'higher') $('s-subject').value = 'random';
+  }
+  $('s-cat').addEventListener('change', winnersLock); winnersLock();
   $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (SCORING_HELP[$('s-scoring').value] || '')) + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
@@ -1088,7 +1107,7 @@
     G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false;
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc';
     G.brief = briefInfo(); introStart();
     return true;
   }

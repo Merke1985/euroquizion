@@ -61,6 +61,13 @@
     $('start').disabled = !(ytReady && pool.length);
     $('start').textContent = ytReady ? 'Start' : 'Loading player…';
   }
+  // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
+  function winnersLock() {
+    var win = $('s-cat').value === 'win', o = $('s-subject').querySelector('option[value="higher"]');
+    if (o) o.disabled = win;
+    if (win && $('s-subject').value === 'higher') $('s-subject').value = 'random';
+  }
+  $('s-cat').addEventListener('change', winnersLock); winnersLock();
   function scoreHelp() { $('scorehelp').textContent = SCORING_HELP[$('s-scoring').value] || ''; }
   $('s-scoring').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat', 's-rounds', 's-time', 's-atype', 's-subject', 's-scoring'].forEach(function (id) { $(id).addEventListener('change', ready); });
