@@ -1460,6 +1460,7 @@
     // the Era setting has nothing to choose then.
     $('s-parts').disabled = !robin; $('s-era').disabled = robin;
     if (robin && lastType !== 'robin') { $('s-parts').value = '4'; $('s-rounds').value = '5'; }   // picked just now: four rounds of five songs to start from
+    if (!robin) $('s-parts').value = '1';   // every other game type is one round
     lastType = $('s-atype').value;
     scoreHelp(); }
   // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
