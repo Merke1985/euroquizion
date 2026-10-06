@@ -612,3 +612,11 @@ body.embed .phone.compact #lobbystart{width:auto!important;font-size:.95rem;padd
 .climber.won .char{box-shadow:0 0 0 3px var(--yellow),0 0 16px 4px rgba(255,214,10,.8)}
 .climber.off{opacity:.4}
 @media (prefers-reduced-motion:reduce){.climber{transition:none}}
+
+/* End game: a small button in the corner of the host screen, and the question it asks */
+.endgame{position:fixed;right:14px;bottom:14px;z-index:45;opacity:.75}
+.endgame:hover,.endgame:focus-visible{opacity:1}
+body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
+@media (max-width:760px){body.remote .endgame{bottom:auto;top:64px;right:10px}}
+.endask{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,2,30,.72)}
+.endask .card{width:min(420px,100%)}

@@ -251,6 +251,7 @@
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
     renderLadder();
+    $('endgame').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'intro' || G.phase === 'paused' || G.phase === 'end');
     $('newgame').classList.toggle('hidden', !(G.phase === 'intro' || G.phase === 'paused'));   // not while a game is playing: only during the countdown and after a restore
     $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? 'Song ' + G.round + ofTotal(' / ') : '';
     var noCtrl = G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end';
@@ -1080,8 +1081,16 @@
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
+    list().forEach(function (p) { p.score = 0; });   // a game that is over leaves no scores behind
+    $('endask').classList.add('hidden');
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
   }
+  // "End game" in the corner: back to the menu, after a yes.
+  $('endgame').addEventListener('click', function () { $('endask').classList.remove('hidden'); $('endno').focus(); });
+  $('endno').addEventListener('click', function () { $('endask').classList.add('hidden'); });
+  $('endask').addEventListener('click', function (e) { if (e.target === $('endask')) $('endask').classList.add('hidden'); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('endask').classList.add('hidden'); });
+  $('endyes').addEventListener('click', toLobby);
   // "Start new game" asks for a second click so a slip of the mouse cannot end a running game.
   var armed = null;
   $('newgame').addEventListener('click', function () {
