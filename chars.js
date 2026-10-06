@@ -7,8 +7,6 @@ var CHARS = [
   { id: 'verka', name: 'Verka Serduchka', file: 'Verka Serduchka 2017 1 (cropped).jpg', by: 'Serecki', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0' },
   { id: 'logan', name: 'Johnny Logan', file: 'Eurovision Song Contest 1980 - Johnny Logan 4 (cropped).jpg', by: 'Hans van Dijk / Anefo', lic: 'CC0', licUrl: 'https://creativecommons.org/publicdomain/zero/1.0/deed.en', pos: '50% 12%', face: [50, 30], zoom: 2.4 },
   { id: 'conchita', name: 'Conchita Wurst', file: 'Conchita Wurst, ESC2014 Meet & Greet 12 (crop).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0' },
-  { id: 'abba', name: 'ABBA', file: 'ABBA - TopPop 1974 5.png', by: 'AVRO / Beeld & Geluid', lic: 'CC BY-SA 3.0 NL', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0/nl/deed.en', pos: '50% 30%' },
-  { id: 'maneskin', name: 'Måneskin', file: 'Måneskin 2021.jpg', by: 'Funweek.it', lic: 'CC BY 3.0', licUrl: 'https://creativecommons.org/licenses/by/3.0', pos: '50% 50%' },
   { id: 'lordi', name: 'Lordi', file: 'Lordi performing at the ESC 2007.jpg', by: 'Indrek Galetin', lic: 'Nagi BY-SA', licUrl: 'http://nagi.ee/lists/PhotoLicense/Attribution-ShareAlike', pos: '60% 50%', face: [55, 34], zoom: 1.7 },
   { id: 'babylasagna', name: 'Baby Lasagna', file: 'Baby Lasagna 01 (cropped).jpg', by: 'Pedro J Pacheco', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 20%', face: [50, 32], zoom: 1.5 },
   { id: 'perrelli', name: 'Charlotte Perrelli', file: 'Charlotte Perrelli, Melodifestivalen 2017 (cropped).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 30%' },

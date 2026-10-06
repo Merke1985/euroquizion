@@ -621,8 +621,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .endask{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,2,30,.72)}
 .endask .card{width:min(420px,100%)}
 
-/* 13 avatars: two rows in solo */
-.solo .chargrid{grid-template-columns:repeat(7,1fr)}
+/* 11 avatars: two rows in solo */
+.solo .chargrid{grid-template-columns:repeat(6,1fr)}
 @media (max-width:600px){.solo .chargrid{grid-template-columns:repeat(5,1fr)}}
 
 /* Draw!: at the answer the drawing sits on the left and the video on the right (where YouTube's skip button is) */
