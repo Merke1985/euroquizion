@@ -248,7 +248,7 @@
       $('roundlabel').textContent = 'Song ' + G.round + ' / ' + G.total;
       renderQuestion(); renderAnswered();
       var between = G.phase === 'reveal' || G.phase === 'paused';
-      $('guessui').classList.toggle('hidden', between);
+      $('guessui').classList.toggle('hidden', G.phase === 'paused');   // the question stays in place at the reveal, so nothing jumps
       $('revealui').classList.toggle('hidden', !between);
       $('next').disabled = !(ytReady && songs.length) || !between;
       if (G.phase === 'paused') {
@@ -277,7 +277,7 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
-    $('qtext').textContent = on && G.phase !== 'reveal' ? q.text : G.phase === 'dpick' ? (dp ? dp.name : 'Someone') + ' is choosing a song to draw' : '';
+    $('qtext').textContent = on ? q.text : G.phase === 'dpick' ? (dp ? dp.name : 'Someone') + ' is choosing a song to draw' : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? q.options.map(function (o, i) {
