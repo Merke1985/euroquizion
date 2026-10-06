@@ -143,7 +143,9 @@
     if (c.showScore === 'always' || c.showScore === 'end') G.showScore = c.showScore;
     $('s-scoring').value = G.scoring; $('s-show').value = G.showScore;
     if (G.atype === 'open' || G.atype === 'mix') G.atype = 'mc';   // typed answers were removed; older saved games fall back to multiple choice
-    if (G.subject === 'sing') { G.atype = 'sing'; G.subject = 'country'; }   // games saved before Sing! moved to Category
+    if (G.subject === 'sing') { G.atype = 'sing'; G.subject = 'country'; }
+    if (G.subject === 'points') G.subject = 'random';   // the points question was removed
+    if (G.phase === 'lobby' || G.phase === 'end') G.go = {};   // games saved before Sing! moved to Category
     $('s-era').value = G.era; $('s-cat').value = G.cat;
     $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw'; scoreHelp();
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
@@ -987,7 +989,7 @@
   function goNext() {
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;
     autoStop(); note('');
-    if (G.round >= G.total) { try { yt.stopVideo(); } catch (e) {} G.phase = 'end'; push(); } else startRound();
+    if (G.round >= G.total) { try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push(); } else startRound();   // nobody is 'ready' for the next game yet
   }
   $('again').addEventListener('click', toLobby);
 

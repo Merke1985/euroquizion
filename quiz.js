@@ -72,7 +72,6 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
   if (canPlace) kinds.push('place');
-  if (canPoints) kinds.push('points');
   var subject = subjectSetting === 'random' || subjectSetting === 'odd' ? pick(kinds) : subjectSetting;
   if (subject === 'mistake') return makeMistake(song, allSongs, countries);
   if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
