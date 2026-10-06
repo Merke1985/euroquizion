@@ -69,7 +69,7 @@ function makeMistake(song, allSongs, countries, winners) {
 }
 // Two-clip questions: two songs are played one after the other (10 seconds each) and the players pick one.
 // "higher": both from the same contest, four to eight places apart; which finished higher?
-// "newer": at most three years apart; which is the newer song?
+// "newer": one to five years apart; which is the newer song?
 var PAIR_CLIP = 10, PAIR_MS = (PAIR_CLIP * 2 + 5) * 1000;
 function makePair(song, kind, allSongs, countries) {
   var inFinal = function (s) { return s[6] != null && s[8] == null && s[9] !== 'cancelled' && s[9] !== 'dq'; }, other;
@@ -79,7 +79,7 @@ function makePair(song, kind, allSongs, countries) {
     var near = function (lo, hi) { return shuffle(allSongs.filter(function (s) { var gap = Math.abs(s[6] - song[6]); return s[0] === song[0] && s[4] !== song[4] && inFinal(s) && gap >= lo && gap <= hi && !BAD_VIDEOS[s[4]]; }))[0]; };
     other = near(4, 8) || near(2, 30);
   } else {
-    other = shuffle(allSongs.filter(function (s) { return s[0] !== song[0] && Math.abs(s[0] - song[0]) <= 3 && !BAD_VIDEOS[s[4]]; }))[0];
+    other = shuffle(allSongs.filter(function (s) { return s[0] !== song[0] && Math.abs(s[0] - song[0]) <= 5 && !BAD_VIDEOS[s[4]]; }))[0];
   }
   if (!other) return null;
   var pair = Math.random() < 0.5 ? [song, other] : [other, song];
