@@ -244,7 +244,7 @@
     clearInterval(recTick);
     if (rec && rec.state !== 'inactive') { try { rec.onstop = null; rec.stop(); } catch (e) {} }
     rec = null; recBlob = null; recChunks = [];
-    $('srecbtn').textContent = 'Start recording'; $('srecbtn').classList.remove('live'); $('srecbtn').classList.remove('hidden');
+    $('srecbtn').textContent = 'Start recording'; $('srecbtn').disabled = false; $('srecbtn').classList.remove('live'); $('srecbtn').classList.remove('hidden');
     $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = '';
   }
   function renderSing(s, m) {
@@ -309,13 +309,22 @@
         $('sprev').src = URL.createObjectURL(recBlob); $('sprev').classList.remove('hidden'); $('srecdone').classList.remove('hidden');
         $('srecstate').className = 'fb'; $('srecstate').textContent = 'Happy with it?';
       };
-      rec.start(); recT0 = Date.now();
-      $('srecbtn').textContent = 'Stop'; $('srecbtn').classList.add('live'); $('srecstate').className = 'fb close';
-      recTick = setInterval(function () {
-        var left = REC_MAX - (Date.now() - recT0);
-        $('srecstate').textContent = 'Recording… ' + Math.max(0, Math.ceil(left / 1000)) + ' s left';
-        if (left <= 0) recStop();
-      }, 100);
+      // Three, two, one: time to take a breath before the recording starts.
+      var mine = rec, n = 3;
+      $('srecbtn').disabled = true; $('srecstate').className = 'fb close'; $('srecstate').textContent = 'Get ready…';
+      var count = function () {
+        if (rec !== mine) { $('srecbtn').disabled = false; return; }   // taken back in the meantime
+        if (n > 0) { $('srecbtn').textContent = String(n--); setTimeout(count, 1000); return; }
+        $('srecbtn').disabled = false;
+        rec.start(); recT0 = Date.now();
+        $('srecbtn').textContent = 'Stop'; $('srecbtn').classList.add('live');
+        recTick = setInterval(function () {
+          var left = REC_MAX - (Date.now() - recT0);
+          $('srecstate').textContent = 'Recording… ' + Math.max(0, Math.ceil(left / 1000)) + ' s left';
+          if (left <= 0) recStop();
+        }, 100);
+      };
+      count();
     }).catch(function () { $('srecstate').className = 'fb no'; $('srecstate').textContent = 'No access to the microphone. Allow it in your browser, or skip this one.'; });
   });
   $('sredo').addEventListener('click', recReset);

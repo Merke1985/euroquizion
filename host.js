@@ -1168,14 +1168,23 @@
     else if (G.phase === 'slisten') t = 'Listen first: ' + name;
     else if (G.phase === 'srec') t = 'Sing it! Record up to 10 seconds on your phone';
     else if (G.phase === 'splay') t = (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + (players[sg.now] ? players[sg.now].name : '');
-    else if (G.phase === 'sbest') { t = 'Who sang it best? Vote on your phone'; opts = sg.order.map(function (pid) { var p = players[pid]; return p ? '<div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">♪ singing now</span>' : '') + '</div>' : ''; }).join(''); }
+    else if (G.phase === 'sbest') {
+      // The vote is open while the recordings keep playing: behind each singer, who has voted for them so far.
+      t = 'Who sang it best? Vote on your phone';
+      opts = sg.order.map(function (pid) {
+        var p = players[pid]; if (!p) return '';
+        var who = list().filter(function (v) { return sg.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+        return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">♪ singing now</span>' : '') + '</div><div class="voters">' +
+          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '<span class="mute">No votes yet</span>') + '</div></div>';
+      }).join('');
+    }
     else if (G.phase === 'reveal') {
       var wins = (sg.result || []).filter(function (r) { return r.win; }).map(function (r) { return r.name; });
       $('ranswer').textContent = !sg.result || !sg.result.length ? 'Nobody sang this time' : wins.length ? 'Best singer: ' + wins.join(' & ') : 'Thanks for singing!';
       opts = (sg.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + charSvg(r.char) + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
-    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll');   // the song vote: one song per row, its voters behind it
+    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest');   // the song vote: one song per row, its voters behind it
   }
 
 
