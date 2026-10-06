@@ -261,10 +261,7 @@
       $('rwhy').textContent = G.phase === 'reveal' && G.q && G.q.explain ? G.q.explain : '';   // why it is the odd one out, right under the video
       // "Continue" moves a Sing! round along; otherwise the button only appears when YouTube will not play anything.
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
-      var adWait = adShown && G.phase === 'loading';   // waiting on an ad: offer a way out
-      if (adWait) $('skip').disabled = false;
-      $('skip').textContent = adWait ? 'Skip this song' : $('skip').textContent;
-      $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck || adWait));
+      $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck));
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
@@ -985,7 +982,7 @@
     autoStart();
     if (!recovering) net.send('state', snapshot());
   });
-  $('skip').addEventListener('click', function () { if (adShown && G.phase === 'loading' && !G.sing && !G.draw) { fails = 0; badSong(); } else if (G.sing) singSkip(); else reveal(); });
+  $('skip').addEventListener('click', function () { if (G.sing) singSkip(); else reveal(); });
   $('next').addEventListener('click', goNext);
   function goNext() {
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;
