@@ -35,13 +35,46 @@ function makeOdd(song, allSongs, countries) {
   return { subject: 'odd', type: 'mc', text: 'Which song is the odd one out?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer), noclip: true,
     explain: 'Odd one out: ' + song[3] + '. The other three are all ' + why + '.' };
 }
+// Find the mistake: four facts about the song that is playing, one of them wrong. The facts are the
+// country, the artist, the title and whether it reached the final (for years without semi-finals, or
+// where that is unclear, the year takes its place). The wrong one is made believable: a country from
+// the same contest, an artist of the same kind, a title in the same language.
+function makeMistake(song, allSongs, countries) {
+  var cname = function (c) { return countries[c] || c; };
+  var semis = song[0] >= 2004 && song[0] !== 2020 && song[9] !== 'dq' && song[9] !== 'cancelled';
+  var qualified = !(song[5] === 1 || song[8] != null);
+  var facts = [
+    { k: 'Country', v: cname(song[1]) },
+    { k: 'Artist', v: song[2] },
+    { k: 'Song title', v: song[3] },
+    semis ? { k: 'Reached the final', v: qualified ? 'Yes' : 'No' } : { k: 'Year', v: String(song[0]) }
+  ];
+  var wrong = Math.floor(Math.random() * 4), f = facts[wrong], truth = f.v, lie = null, near;
+  if (wrong === 0) {
+    near = shuffle(allSongs.filter(function (s) { return s[0] === song[0] && s[1] !== song[1]; }));
+    lie = near.length ? cname(near[0][1]) : cname(pick(Object.keys(countries).filter(function (c) { return c !== song[1]; })));
+  } else if (wrong === 1 || wrong === 2) {
+    var idx = wrong === 1 ? 2 : 3, g = song[11], solo = g === 'm' || g === 'f', lang = song[10];
+    var like = function (s) { return wrong === 1 ? (solo ? s[11] === g : (s[11] !== 'm' && s[11] !== 'f')) : (!lang || s[10] === lang); };
+    near = shuffle(allSongs.filter(function (s) { return s[idx] !== song[idx] && s[1] !== song[1] && like(s) && Math.abs(s[0] - song[0]) <= 8; }));
+    if (!near.length) near = shuffle(allSongs.filter(function (s) { return s[idx] !== song[idx]; }));
+    lie = near[0][idx];
+  } else if (semis) lie = qualified ? 'No' : 'Yes';
+  else { var last = 0; allSongs.forEach(function (s) { if (s[0] > last) last = s[0]; }); do { lie = song[0] + pick([-4, -3, -2, -1, 1, 2, 3, 4]); } while (lie < 1956 || lie > last); lie = String(lie); }
+  f.v = lie;
+  var opts = facts.map(function (x) { return x.k + ': ' + x.v; });
+  var fix = wrong === 3 && semis ? (qualified ? 'It did reach the final.' : 'It did not reach the final.') : 'It should be ' + truth + '.';
+  return { subject: 'mistake', type: 'mc', text: 'Which of these is wrong?', hint: '', answer: opts[wrong], options: opts, correct: wrong,
+    explain: 'The mistake: ' + f.k.toLowerCase() + '. ' + fix };
+}
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 1 / 6)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
-  var kinds = ['country', 'artist', 'title', 'year'];
+  var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
   if (canPlace) kinds.push('place');
   if (canPoints) kinds.push('points');
   var subject = subjectSetting === 'random' || subjectSetting === 'odd' ? pick(kinds) : subjectSetting;
+  if (subject === 'mistake') return makeMistake(song, allSongs, countries);
   if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
   var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting;
   if (subject === 'place' && song[8] != null) type = 'mc';         // "did not qualify" cannot be typed as a position
