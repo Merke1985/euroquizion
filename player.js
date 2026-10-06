@@ -166,8 +166,8 @@
     else if (s.phase === 'reveal' || s.phase === 'end') {
       show('v-reveal');
       var r = s.reveal || {};
-      if (s.phase !== 'end') $('verdict').className = 'fb verdict ' + (m && m.got ? 'ok' : 'no');
-      $('verdict').textContent = s.phase === 'end' ? $('verdict').textContent || 'Final scores' : (s.draw && s.draw.pid === pid ? (m && m.got ? 'They got it!' : 'Nobody guessed it') : m && m.got ? 'Correct' : 'Incorrect');
+      if (s.phase !== 'end') $('verdict').className = 'fb verdict' + (s.draw && s.draw.pid === pid ? (m && m.got ? ' ok' : ' no') : '');
+      $('verdict').textContent = s.phase === 'end' ? $('verdict').textContent || 'Final scores' : (s.draw && s.draw.pid === pid ? (m && m.got ? 'They got it! +' + m.pts : 'Nobody guessed it') : (s.q && s.q.text) || '');   // the question stays where it was, so the bars do not move
       var why = s.phase === 'reveal' && s.q && s.q.explain;   // the odd-one-out reason takes the top line, right under the video
       $('rround').textContent = s.phase === 'end' ? '' : why || 'Song ' + s.round + ' of ' + s.total;
       $('rround').className = why ? 'why' : 'mute';
@@ -184,8 +184,8 @@
       }
       if (!end) endShown = false;
       var rev = s.phase === 'reveal';
-      $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null) : '';
-      $('rpts').textContent = rev && m ? ptsText(m.got ? m.pts : 0) : '';
+      $('ropts').innerHTML = rev && s.q ? revealOptions(s.q, m ? m.pick : null, s.draw && s.draw.pid === pid ? null : m ? (m.got ? m.pts : 0) : null) : '';
+      $('rpts').textContent = '';
       $('rpts').className = 'rpts ' + (m && m.got ? 'ok' : 'no');
       if (rev && s.sing) {
         // A Sing! round: show the votes instead of right or wrong.
@@ -196,7 +196,7 @@
         $('rpts').textContent = ptsText(mine ? mine.pts : 0);
         $('rpts').className = 'rpts ' + (mine ? 'ok' : 'no');
       }
-      $('ranswer').textContent = s.phase === 'reveal' && s.q && s.q.answer && !s.q.explain ? s.q.text + ' ' + s.q.answer : '';
+      $('ranswer').textContent = '';   // the green bar already says it
       $('rtitle').textContent = r.title || '';
       $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';

@@ -89,7 +89,7 @@
     draw(); loadTick = setInterval(draw, 100);
   }
   function loadSong() {
-    stopTimers();
+    stopTimers(); stuck = false;
     var free = pool.filter(function (s) { return !used[s[4]]; });
     if (!free.length) { used = {}; free = pool; }
     S.song = free[Math.floor(Math.random() * free.length)]; used[S.song[4]] = 1;
@@ -130,11 +130,13 @@
     if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
     else if ($('err').textContent === AD_TEXT) $('err').textContent = '';
   }
+  var stuck = false;
   function badSong() {
     stopTimers(); fails++; adNote(false);
     if (fails >= 6) {
+      stuck = true;
       stage = 'idle'; countStop(); cover(true, '!', 'Videos won’t start');
-      $('err').textContent = 'YouTube isn’t playing anything. Check your connection and try again.';
+      $('err').textContent = 'YouTube isn’t playing anything. Check your connection, or skip this song.';
       S.phase = 'guess'; S.endsAt = Date.now(); render(); return;
     }
     loadSong();
@@ -160,7 +162,6 @@
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');
     if (S.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, '?', ''); } else playClip();   // odd one out has no clip
-    $('replay').classList.toggle('hidden', !!S.q.noclip);
     render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, S.guessMs);
   }
@@ -181,6 +182,7 @@
   }
   function render() {
     hud();
+    if (S.phase === 'setup' || S.phase === 'end') $('ctrl').classList.add('hidden');
     if (S.phase === 'setup') { show('v-setup'); return; }
     if (S.phase === 'end') {
       show('v-end');
@@ -194,14 +196,13 @@
     var rev = S.phase === 'reveal';
     $('guessui').classList.toggle('hidden', S.phase !== 'guess');   // nothing to answer while the next song loads
     $('revealui').classList.toggle('hidden', !rev);
-    $('guess').disabled = $('replay').disabled = $('skip').disabled = S.phase !== 'guess';
+    $('guess').disabled = $('skip').disabled = S.phase !== 'guess';
+    $('skip').classList.toggle('hidden', !(stuck && S.phase === 'guess'));   // only when YouTube will not play anything
+    $('ctrl').classList.remove('hidden'); $('next').disabled = !rev;
     if (rev) {
-      $('verdict').className = 'fb ' + (S.got ? 'ok' : 'no');
-      $('verdict').textContent = S.got ? 'Correct' : 'Incorrect';
-      $('ropts').innerHTML = revealOptions(S.q, S.picked);
-      $('rpts').textContent = (S.got ? S.pts : 0) + ((S.got ? S.pts : 0) === 1 ? ' point' : ' points');
-      $('rpts').className = 'rpts ' + (S.got ? 'ok' : 'no');
-      $('rwhy').textContent = S.q.explain || ''; $('ranswer').textContent = S.q.explain ? '' : S.q.text + ' ' + S.q.answer;
+      $('rq').textContent = S.q.text;   // the question stays where it was, so the bars do not move
+      $('ropts').innerHTML = revealOptions(S.q, S.picked, S.got ? S.pts : 0);
+      $('rwhy').textContent = S.q.explain || ''; $('ranswer').textContent = '';
       $('rtitle').textContent = S.song[3];
       $('rmeta').textContent = S.song[2] + ' · ' + flag(S.song[1]) + ' ' + (countries[S.song[1]] || S.song[1]) + ' ' + S.song[0];
       $('rres').textContent = resultText(S.song);
@@ -281,7 +282,6 @@
     S.round = 0; S.score = 0; S.right = 0; used = {}; fails = 0;
     startRound();
   });
-  $('replay').addEventListener('click', function () { if (S.phase === 'guess' && !S.q.noclip && (stage === 'paused' || stage === 'clip')) playClip(); });
   $('skip').addEventListener('click', reveal);
   $('next').addEventListener('click', goNext);
   function goNext() {

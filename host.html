@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=83">
+<link rel="stylesheet" href="style.css?v=85">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -15,6 +15,7 @@
     <div class="logo" style="font-size:1.6rem">Euro<b>Quizion!</b></div>
     <div class="roomtag"><button class="btn alt small hidden" id="newgame">Start new game</button><span class="mute" id="joinhint"></span><code id="roomcode">····</code></div>
   </header>
+  <div id="ctrl" class="ctrl hidden"><button class="btn" id="next" type="button">Next</button><label class="check"><input type="checkbox" id="auto"> Autoplay next song</label><select id="autolen" class="mini" aria-label="Autoplay after"><option value="10">10 sec</option><option value="20">20 sec</option><option value="30">30 sec</option><option value="end" selected>After current song ends</option></select><span id="autoleft" class="autoleft"></span></div>
 
   <section id="v-lobby" class="lobby">
     <div class="join">
@@ -94,10 +95,7 @@
         <div class="bar" style="margin-top:14px"><i id="tbar"></i></div>
         <div class="under">
           <div><div class="mute" id="roundlabel" style="font-weight:700"></div><h2 id="qtext"></h2><p id="allin" class="allin"></p></div>
-          <div style="display:flex;gap:10px">
-            <button class="btn alt" id="replay">Play again</button>
-            <button class="btn alt" id="skip">Show answer</button>
-          </div>
+          <button class="btn alt small hidden" id="skip" type="button">Show answer</button>
         </div>
       </div>
       <div id="qopts" class="opts"></div>
@@ -105,11 +103,6 @@
       <div id="revealui" class="reveal hidden">
         <div class="under">
           <div class="songinfo"><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta"></p><p id="rres" class="res"></p></div>
-          <div class="autobox">
-            <button class="btn big" id="next">Next</button>
-            <div class="autorow"><label class="check"><input type="checkbox" id="auto"> Autoplay next song</label><select id="autolen" class="mini" aria-label="Autoplay after"><option value="10">10 sec</option><option value="20">20 sec</option><option value="30">30 sec</option><option value="end" selected>After current song ends</option></select></div>
-            <div id="autoleft" class="mute"></div>
-          </div>
         </div>
       </div>
       <p id="err" class="fb no"></p>
@@ -127,14 +120,14 @@
   </section>
 </main>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=83"></script>
-<script src="vendor/qrcode.js?v=83"></script>
-<script src="config.js?v=83"></script>
-<script src="net.js?v=83"></script>
-<script src="music.js?v=83"></script>
-<script src="chars.js?v=83"></script>
-<script src="match.js?v=83"></script>
-<script src="quiz.js?v=83"></script>
-<script src="host.js?v=83"></script>
+<script src="vendor/supabase.js?v=85"></script>
+<script src="vendor/qrcode.js?v=85"></script>
+<script src="config.js?v=85"></script>
+<script src="net.js?v=85"></script>
+<script src="music.js?v=85"></script>
+<script src="chars.js?v=85"></script>
+<script src="match.js?v=85"></script>
+<script src="quiz.js?v=85"></script>
+<script src="host.js?v=85"></script>
 </body>
 </html>

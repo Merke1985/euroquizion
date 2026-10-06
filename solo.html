@@ -6,11 +6,12 @@
 <title>EuroQuizion – solo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=83">
+<link rel="stylesheet" href="style.css?v=85">
 </head>
 <body>
 <main class="solo">
   <header><a class="logo" href="./" style="text-decoration:none;color:inherit">Euro<b>Quizion!</b></a><div id="hud" class="mute"></div></header>
+  <div id="ctrl" class="ctrl hidden"><button class="btn" id="next" type="button">Next</button><label class="check"><input type="checkbox" id="auto"> Autoplay next song</label><select id="autolen" class="mini" aria-label="Autoplay after"><option value="10">10 sec</option><option value="20">20 sec</option><option value="30">30 sec</option><option value="end" selected>After current song ends</option></select></div>
 
   <section id="v-setup" class="card">
     <h2>Play solo</h2>
@@ -59,23 +60,16 @@
         <button class="btn">Guess!</button>
       </form>
       <p id="fb" class="fb"></p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn alt small" id="replay">Play again</button>
-        <button class="btn alt small" id="skip">Give up</button>
-      </div>
+      <button class="btn alt small hidden" id="skip" type="button">Skip this song</button>
     </div>
     <div id="revealui" class="reveal hidden">
+      <div class="barspace" style="margin-top:14px"></div>
+      <h2 id="rq" class="rq"></h2>
       <p id="rwhy" class="why"></p>
-      <p id="verdict" class="fb" style="font-size:1.3rem"></p>
-      <p id="rpts" class="rpts"></p>
       <p id="autoleft" class="allin"></p>
       <div id="ropts" class="opts"></div>
       <div class="under">
         <div class="songinfo"><p id="ranswer" class="answerline"></p><h2 id="rtitle"></h2><p id="rmeta"></p><p id="rres" class="res"></p></div>
-        <div class="autobox">
-            <button class="btn big" id="next">Next</button>
-            <div class="autorow"><label class="check"><input type="checkbox" id="auto"> Autoplay next song</label><select id="autolen" class="mini" aria-label="Autoplay after"><option value="10">10 sec</option><option value="20">20 sec</option><option value="30">30 sec</option><option value="end" selected>After current song ends</option></select></div>
-          </div>
       </div>
     </div>
     <p id="err" class="fb no"></p>
@@ -93,11 +87,11 @@
     </div>
   </section>
 </main>
-<script src="net.js?v=83"></script>
-<script src="music.js?v=83"></script>
-<script src="chars.js?v=83"></script>
-<script src="match.js?v=83"></script>
-<script src="quiz.js?v=83"></script>
-<script src="solo.js?v=83"></script>
+<script src="net.js?v=85"></script>
+<script src="music.js?v=85"></script>
+<script src="chars.js?v=85"></script>
+<script src="match.js?v=85"></script>
+<script src="quiz.js?v=85"></script>
+<script src="solo.js?v=85"></script>
 </body>
 </html>

@@ -406,3 +406,24 @@ button.opt:disabled:not(.picked){opacity:.45}
 body.remote .host.ingame .songinfo{display:none}
 .solo .autobox{flex:1 1 100%;min-width:0}
 .solo .autobox .check{white-space:normal}
+
+/* small control row on top: Next, autoplay, how long */
+.ctrl{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 0}
+.ctrl .btn,.ctrl .check,.ctrl select.mini{height:32px;font-size:.85rem;font-weight:600;border-radius:999px;padding:0 14px;margin:0;line-height:1;white-space:nowrap}
+.ctrl .btn{box-shadow:none;min-width:84px}
+.ctrl .btn:active{transform:scale(.97);box-shadow:none}
+.ctrl .check{display:inline-flex;gap:.5em;background:var(--surface);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);cursor:pointer;grid-column:auto}
+.ctrl .check input{width:1em;height:1em}
+.ctrl select.mini{width:auto;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.ctrl .autoleft{font-size:.85rem;font-weight:700;color:var(--yellow)}
+.ctrl .autoleft:empty{display:none}
+
+/* the player's result sits at the right end of their bar */
+.opt .otext{flex:1;min-width:0}
+.opt .mark{flex:none;margin-left:auto;font-weight:800;font-size:1.05em;white-space:nowrap;padding-left:.6em}
+.opt .mark.none{font-size:.85em;font-weight:700;opacity:.8}
+.verdict:empty,.vblock:has(.verdict:empty){display:none}
+.phone.ingame .vblock{min-height:0}
+.solo .rq{font-size:1.25rem;margin-top:10px;color:var(--ink)}
+.solo .reveal{margin-top:0}
+.fb.verdict:not(.ok):not(.no){color:var(--ink)}

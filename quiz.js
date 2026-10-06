@@ -155,10 +155,16 @@ function scoreFor(elapsedMs) {
   return Math.max(1, 12 - Math.ceil(Math.max(0, elapsedMs - 3000) / 1000));
 }
 // The four options as shown at the reveal: the right one green, a wrong pick red.
-function revealOptions(q, pick) {
+// pts = what this player scored (leave it out on the shared screen). The player's own bar gets a mark on
+// the right: a tick with the points, or a cross. No answer at all: the cross sits on the right answer.
+function revealOptions(q, pick, pts) {
   if (!q || !q.options) return '';
+  var mine = pts != null, none = mine && (pick == null || pick < 0 || !q.options[pick]);
   return q.options.map(function (o, i) {
-    return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div>';
+    var tag = '';
+    if (mine && i === pick) tag = i === q.correct ? '<span class="mark">✓ +' + pts + '</span>' : '<span class="mark">✗ 0</span>';
+    else if (none && i === q.correct) tag = '<span class="mark none">No answer · 0</span>';
+    return '<div class="opt' + (i === q.correct ? ' right' : i === pick ? ' wrong' : ' dim') + '"><b>' + 'ABCD'[i] + '</b><span class="otext">' + esc(o) + '</span>' + tag + '</div>';
   }).join('');
 }
 // The Eurovision opening fanfare, streamed from YouTube like the songs: video id and how long it plays.

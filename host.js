@@ -215,6 +215,7 @@
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : 'Scores';
     $('newgame').classList.toggle('hidden', G.phase === 'lobby');
+    $('ctrl').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end');
     $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro');
     $('hostmain').classList.toggle('briefing', G.phase === 'brief' || G.phase === 'intro');
     // The fanfare is sound only: its player stays out of sight (but not display:none, or it would not play).
@@ -243,7 +244,7 @@
       var between = G.phase === 'reveal' || G.phase === 'paused';
       $('guessui').classList.toggle('hidden', between);
       $('revealui').classList.toggle('hidden', !between);
-      $('next').disabled = !(ytReady && songs.length);
+      $('next').disabled = !(ytReady && songs.length) || !between;
       if (G.phase === 'paused') {
         cover(true, '↻', 'Game restored', false);
         $('rtitle').textContent = G.round ? 'Song ' + G.round + ' of ' + G.total + ' done' : 'Ready for song 1';
@@ -252,13 +253,14 @@
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Continue';
       }
       $('rwhy').textContent = G.phase === 'reveal' && G.q && G.q.explain ? G.q.explain : '';   // why it is the odd one out, right under the video
-      $('replay').disabled = G.phase !== 'guess' || !!G.sing;
+      // "Continue" moves a Sing! round along; otherwise the button only appears when YouTube will not play anything.
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
+      $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck));
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
         $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
         $('rres').textContent = resultText(G.song);
-        $('ranswer').textContent = G.q && !G.q.explain ? G.q.text + ' ' + G.q.answer : '';
+        $('ranswer').textContent = '';   // the green bar already says it
         $('next').textContent = G.round >= G.total ? 'Final scores' : 'Next';
       }
       renderSing();
@@ -357,7 +359,7 @@
 
   function loadSong(fixed) {
     if (REMOTE) { remoteLoad(fixed); return; }
-    stopTimers();
+    stopTimers(); stuck = false;
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
@@ -409,9 +411,11 @@
     if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
     else if ($('err').textContent === AD_TEXT) $('err').textContent = '';
   }
+  var stuck = false;   // six songs in a row would not play
   function badSong() {
     stopTimers(); fails++; adNote(false);
     if (fails >= 6) {
+      stuck = true;
       stage = 'idle'; countStop(); cover(true, '!', 'Videos won’t start', false);
       $('err').textContent = 'YouTube isn’t playing anything. Check your connection, or click “Show answer” and try the next song.';
       G.phase = 'guess'; G.endsAt = Date.now(); push(); return;
@@ -932,7 +936,6 @@
     autoStart();
     if (!recovering) net.send('state', snapshot());
   });
-  $('replay').addEventListener('click', function () { if (G.phase === 'guess' && !(G.q && G.q.noclip) && (stage === 'paused' || stage === 'clip')) playClip(); });
   $('skip').addEventListener('click', function () { if (G.sing) singSkip(); else reveal(); });
   $('next').addEventListener('click', goNext);
   function goNext() {
