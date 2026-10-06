@@ -749,6 +749,22 @@
     G.phase = 'slisten'; G.barMs = clipSecs() * 1000; G.endsAt = Date.now() + G.barMs;
     playClip(); masks(false); push();
   }
+  // "This clip isn't viable" on a phone: the part that played is no good for singing along (an intro, a
+  // speech, an instrumental break). Another part of the same song is picked and everyone listens again.
+  var SING_REROLLS = 3;
+  function singReroll() {
+    if (!G.sing || (G.phase !== 'slisten' && G.phase !== 'srec') || (G.sing.rerolls || 0) >= SING_REROLLS) return;
+    G.sing.rerolls = (G.sing.rerolls || 0) + 1;
+    clearTimeout(singTimer); clearInterval(poll); stopAudio();
+    Object.keys(G.sing.clips).forEach(function (k) { try { URL.revokeObjectURL(G.sing.clips[k]); } catch (e) {} });
+    G.sing.clips = {}; G.sing.parts = {}; G.sing.in = {};
+    var d = 0, old = clipStart, lo = 15, pickAt = old;
+    try { d = yt.getDuration() || 0; } catch (e) {}
+    var hi = Math.max(lo + 1, d - 20 - clipSecs());
+    for (var i = 0; i < 20 && Math.abs(pickAt - old) < 20; i++) pickAt = Math.floor(lo + Math.random() * (hi - lo));   // at least 20 seconds away from the last try
+    clipStart = pickAt;
+    cover(false); singListen();
+  }
   function singRecord() {
     if (!G.sing) return;
     singPhase('srec', SING.rec);
@@ -837,6 +853,7 @@
   }
   net.on('poll', function (m) {
     var p = m && players[m.pid];
+    if (p && G.sing && m.reroll) { singReroll(); return; }
     if (!p || !G.sing || typeof m.choice !== 'number') return;
     if (G.phase === 'svote' && G.sing.options[m.choice]) G.sing.votes[p.pid] = m.choice;
     else if (G.phase === 'sbest' && G.sing.order[m.choice] && G.sing.order[m.choice] !== p.pid) G.sing.best[p.pid] = G.sing.order[m.choice];   // no voting for yourself
@@ -867,7 +884,7 @@
     return { options: G.phase === 'svote' ? sg.options.map(function (o) { return o[3] + ' – ' + o[2]; }) : null,
       song: chosen ? { title: chosen[3], artist: chosen[2] } : null,
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
-      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1,
+      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: SING_REROLLS - (sg.rerolls || 0),
       tally: G.phase === 'svote' ? sg.options.map(function (o, i) { var n = 0, k; for (k in sg.votes) if (sg.votes[k] === i) n++; return n; }) : null };
   }
   function renderSing() {

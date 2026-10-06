@@ -234,6 +234,8 @@
     $('sround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Sing!';
     var poll = s.phase === 'svote' || s.phase === 'sbest', recPhase = s.phase === 'srec' && !(m && m.in);
     $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
+    // While listening or recording: ask for another part of the song (a few times per round at most).
+    $('sbad').classList.toggle('hidden', !((s.phase === 'slisten' || s.phase === 'srec') && sg.rerolls_left > 0)); if (fresh || sg.rerolls_left !== lastRerolls) { $('sbad').disabled = false; lastRerolls = sg.rerolls_left; }
     if (fresh) { $('sfb').textContent = ''; $('sfb').className = 'fb'; if (s.phase !== 'srec') { recReset(); recRelease(); } }
     var name = sg.song ? sg.song.title + ' – ' + sg.song.artist : '';
     if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
@@ -265,7 +267,7 @@
     [700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (seq === voteSeq && sKey === vk && net) net.send('poll', { pid: pid, choice: choice }); }, ms); });
     $('sfb').className = 'fb close'; $('sfb').textContent = 'Sending your vote…';
   });
-  var voteSeq = 0, sendTry = null;
+  var voteSeq = 0, sendTry = null, lastRerolls = -1;
   function recStop() { clearInterval(recTick); if (rec && rec.state !== 'inactive') rec.stop(); }
   $('srecbtn').addEventListener('click', function () {
     if (rec && rec.state === 'recording') { recStop(); return; }
@@ -295,6 +297,7 @@
     }).catch(function () { $('srecstate').className = 'fb no'; $('srecstate').textContent = 'No access to the microphone. Allow it in your browser, or skip this one.'; });
   });
   $('sredo').addEventListener('click', recReset);
+  $('sbad').addEventListener('click', function () { if (!net) return; $('sbad').disabled = true; recReset(); recRelease(); net.send('poll', { pid: pid, reroll: true }); $('sfb').className = 'fb close'; $('sfb').textContent = 'Picking another part of the song…'; });
   $('sskip').addEventListener('click', function () { recReset(); recRelease(); if (net) net.send('clip', { pid: pid, skip: true }); });
   $('ssend').addEventListener('click', function () {
     if (!recBlob || !net || recSent === sKey) return;
