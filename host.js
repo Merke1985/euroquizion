@@ -763,7 +763,7 @@
     });
     G.gallery = { id: Math.random().toString(36).slice(2, 8), items: items, queue: [] };
     G.draw = null; G.q = null; G.phase = 'dall'; G.barMs = DRAW_MS; G.endsAt = Date.now() + DRAW_MS;
-    if (!REMOTE) { cover(true, '✏️', 'Everyone is drawing', false); masks(true); }
+    if (!REMOTE) { cover(true, '🎨', 'Everyone is drawing', false); masks(true); }
     clearTimeout(drawTimer); drawTimer = setTimeout(drawAllEnd, DRAW_MS + 800);   // a moment extra for the last lines to come in
     push();
   }

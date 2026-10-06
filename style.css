@@ -654,3 +654,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .bestview{grid-auto-rows:minmax(0,1fr)}
 .bestview .tile{height:100%;justify-content:center}
 .bestview canvas{width:auto;height:calc(100% - 28px);max-width:100%}
+
+/* still drawing or writing: a small pencil badge at the top right of the avatar, making short writing strokes */
+.answered .pen{right:0;top:-8px;width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.45);filter:none;transform-origin:50% 50%;animation:penwrite .9s ease-in-out infinite}
+@keyframes penwrite{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(-2px,1px) rotate(-10deg)}40%{transform:translate(1px,2px) rotate(6deg)}60%{transform:translate(-1px,0) rotate(-6deg)}80%{transform:translate(2px,1px) rotate(8deg)}}
+.answered .pl.busy .char{animation:none}
