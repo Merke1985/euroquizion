@@ -433,6 +433,7 @@
 
   function stopTimers() { clearInterval(poll); clearTimeout(watchdog); clearTimeout(endTimer); clearTimeout(pairTimer); }
 
+  var lateLoad = false;
   function loadSong(fixed) {
     if (REMOTE) { remoteLoad(fixed); return; }
     stopTimers(); stuck = false;
@@ -451,8 +452,12 @@
       loadedId = pr[0][4]; G.used[pr[0][4]] = 1; G.used[pr[1][4]] = 1; G.song = pr[G.q.correct];
       yt2.load(second, PAIR_CLIP, function () { markBad(second); if (G.phase === 'loading') badSong(); });
     } else yt2.stop();
-    yt.mute(); yt.loadVideoById(loadedId);
     adNote(false);
+    // A question without a clip (odd one out, a drawing): the video is not loaded at all until the answer,
+    // so there is nothing in the player that could be glimpsed.
+    lateLoad = noClipQ();
+    if (lateLoad) { try { yt.stopVideo(); } catch (e) {} fails = 0; stage = 'ready'; clipReady = true; return; }
+    yt.mute(); yt.loadVideoById(loadedId);
     var frac = Math.random(), seekAt = 0, loadAt = Date.now();
     // Give up after 12 seconds of nothing. While something is playing (an ad, usually) wait longer.
     watchdog = setTimeout(function wd() {
@@ -609,6 +614,10 @@
       var second = G.q.correct === 1;
       stageEl().classList.toggle('second', second);
       try { if (second) { yt.pauseVideo(); if (pairStep === 0) yt2.play(); else yt2.resume(); } else { yt2.pause(); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
+    } else if (lateLoad && !REMOTE) {
+      // only now does the video come in, somewhere in the middle of the song
+      lateLoad = false; clipStart = Math.floor(35 + Math.random() * 50);
+      try { yt.unMute(); yt.setVolume(100); yt.loadVideoById({ videoId: G.song[4], startSeconds: clipStart }); } catch (e) {}
     } else {
     try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     }

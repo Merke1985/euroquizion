@@ -354,9 +354,13 @@
     };
     var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
   }
+  var vLate = '';
   function vPrepare(clip) {
     vStop(); vStage = 'probe'; vPlayed = '';
     vCover(true, '♪', 'Selecting song'); vMasks(true);
+    // A question without a clip: the video is not loaded at all until the answer, so nothing can be glimpsed.
+    vLate = clip.noclip ? clip.id : '';
+    if (vLate) { try { yt.stopVideo(); } catch (e) {} vStage = 'ready'; if (net) net.send('ready', { pid: pid, key: clipKey }); setTimeout(function () { if (state) remoteVideo(state); }, 0); return; }
     yt.mute(); yt.loadVideoById(clip.id);
     vWatch = setTimeout(function () { if (vStage === 'probe' || vStage === 'seek') { vStage = 'slow'; if (net) net.send('ready', { pid: pid, key: clipKey, slow: true }); } }, 10000);
     var seekAt = 0, loadAt = Date.now(), got = false;
@@ -395,7 +399,8 @@
   function vPlay(full) {
     clearInterval(vPoll); vStage = full ? 'full' : 'clip';
     // At the reveal the video carries on from where the clip stopped; only the clip itself starts from its mark.
-    try { var tNow = yt.getCurrentTime() || 0; if (!full || !(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
+    if (full && vLate) { clipStart = Math.floor(35 + Math.random() * 50); try { yt.unMute(); yt.setVolume(100); yt.loadVideoById({ videoId: vLate, startSeconds: clipStart }); } catch (e) {} vLate = ''; }
+    else try { var tNow = yt.getCurrentTime() || 0; if (!full || !(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     vCover(false); vMasks(!full);
     // Phones may refuse to start sound without a touch: offer a button if nothing is playing.
     clearTimeout(vWatch);

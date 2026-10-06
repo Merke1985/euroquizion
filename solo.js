@@ -121,8 +121,11 @@
       loadedId = pr[0][4]; used[pr[0][4]] = 1; used[pr[1][4]] = 1; S.song = pr[S.q.correct];
       yt2.load(second, PAIR_CLIP, function () { markBad(second); if (S.phase === 'loading') badSong(); });
     } else yt2.stop();
-    yt.mute(); yt.loadVideoById(loadedId);
     adNote(false);
+    // Odd one out has no clip: the video is not loaded at all until the answer, so nothing can be glimpsed.
+    lateLoad = !!S.q.noclip;
+    if (lateLoad) { try { yt.stopVideo(); } catch (e) {} fails = 0; stage = 'ready'; clipReady = true; return; }
+    yt.mute(); yt.loadVideoById(loadedId);
     var frac = Math.random(), seekAt = 0, loadAt = Date.now();
     watchdog = setTimeout(function wd() {
       var s0 = -1; try { s0 = yt.getPlayerState(); } catch (e) {}
@@ -206,6 +209,7 @@
     render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, roundMs());
   }
+  var lateLoad = false;
   function reveal() {
     if (S.phase !== 'guess') return;
     stopTimers(); S.phase = 'reveal'; stage = 'reveal';
@@ -220,6 +224,9 @@
       var second = S.q.correct === 1;   // the right answer's song plays on
       stageEl().classList.toggle('second', second);
       try { if (second) { yt.pauseVideo(); if (pairStep === 0) yt2.play(); else yt2.resume(); } else { yt2.pause(); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
+    } else if (lateLoad) {
+      lateLoad = false; clipStart = Math.floor(35 + Math.random() * 50);
+      try { yt.unMute(); yt.setVolume(100); yt.loadVideoById({ videoId: S.song[4], startSeconds: clipStart }); } catch (e) {}
     } else {
     try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}   // carries on from where the clip stopped
     }
