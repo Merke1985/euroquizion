@@ -337,3 +337,8 @@ select.mini{width:auto;padding:.3em .6em;font-size:.9rem;border-radius:10px}
 .opt.singing{border-color:var(--yellow);background:rgba(255,214,10,.2)}
 .opt .note{color:var(--yellow);font-size:.85rem;font-weight:700;margin-left:auto;white-space:nowrap}
 #adnote:empty{display:none}
+.musicbtn{position:fixed;left:12px;bottom:12px;z-index:40;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.2rem;cursor:pointer;backdrop-filter:blur(6px)}
+body.haschat .musicbtn{bottom:76px}
+.chip.pop{animation:chipPop .7s cubic-bezier(.2,1.6,.4,1) both;transform-origin:center}
+@keyframes chipPop{0%{transform:scale(0) rotate(-12deg);opacity:0}55%{transform:scale(1.25) rotate(4deg);opacity:1}75%{transform:scale(.93)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.chip.pop{animation:none}}

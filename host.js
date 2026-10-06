@@ -187,7 +187,7 @@
   // ---------- rendering ----------
   var endShown = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); }
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(id === 'v-lobby' || (id === 'v-brief' && G.phase === 'brief')); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   function boardHtml(showGot) {
@@ -198,9 +198,17 @@
         (showGot && p.got ? '<span class="pts">+' + p.pts + '</span>' : '')) + '</span></li>';
     }).join('') || '<li class="mute">No players yet</li>';
   }
+  var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
   function render() {
     var ps = list();
-    $('players').innerHTML = ps.map(function (p) { return '<span class="chip' + (p.off ? ' off' : '') + '">' + charSvg(p.char) + esc(p.name) + '</span>'; }).join('') || '<span class="mute">Waiting for players…</span>';
+    // A player who has just joined pops in with a chime, so nobody misses it.
+    var nowT = Date.now(), fresh = false;
+    ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
+    if (fresh && G.phase === 'lobby') Music.blip();
+    $('players').innerHTML = ps.map(function (p) {
+      var age = nowT - joinSeen[p.pid], pop = age < 700;
+      return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' + charSvg(p.char) + esc(p.name) + '</span>';
+    }).join('') || '<span class="mute">Waiting for players…</span>';
     $('pcount').textContent = ps.length ? '(' + ps.length + ')' : '';
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : 'Scores';
