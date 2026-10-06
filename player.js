@@ -384,7 +384,8 @@
   }
   function vPlay(full) {
     clearInterval(vPoll); vStage = full ? 'full' : 'clip';
-    try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
+    // At the reveal the video carries on from where the clip stopped; only the clip itself starts from its mark.
+    try { var tNow = yt.getCurrentTime() || 0; if (!full || !(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     vCover(false); vMasks(!full);
     // Phones may refuse to start sound without a touch: offer a button if nothing is playing.
     clearTimeout(vWatch);

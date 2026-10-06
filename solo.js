@@ -177,7 +177,7 @@
     }
     Music.ding();
     cover(false); masks(false);
-    try { yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}
+    try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}   // carries on from where the clip stopped
     render(); autoStart();
   }
   function startRound() {

@@ -503,7 +503,8 @@
     if (artist && right.length) { artist.pts = 12; artist.score += 12; artist.got = true; }
     if (!REMOTE && G.q) Music.ding();   // the right answer lights up
     cover(false); masks(false);
-    try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
+    // The video carries on from where the clip stopped (it only jumps back if it somehow is not at the clip).
+    try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     push(); autoStart();
   }
   function startRound() {
@@ -541,6 +542,7 @@
     if (G.phase !== 'loading') return;
     clearTimeout(remoteTimer);
     var ms = G.draw ? DRAW_MS : G.guessMs;
+    G.guessAt = Date.now();
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
     endTimer = setTimeout(reveal, ms);
   }
@@ -971,7 +973,7 @@
     if (!$('auto').checked || G.phase !== 'reveal') return;
     var toEnd = $('autolen').value === 'end';
     // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
-    autoEnd = Date.now() + (toEnd ? REMOTE ? (G.remain > 0 ? G.remain + 1 : 30) : 20 : +$('autolen').value) * 1000;
+    autoEnd = Date.now() + (toEnd ? REMOTE ? (G.remain > 0 ? Math.max(5, G.remain + 1 - (G.q && G.q.noclip ? 0 : Math.min(clipSecs(), (Date.now() - (G.guessAt || Date.now())) / 1000))) : 30) : 20 : +$('autolen').value) * 1000;
     var draw = function () {
       if (toEnd && !REMOTE && !(G.sing && G.sing.loop)) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
