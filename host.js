@@ -526,7 +526,8 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, cat: G.cat });
+    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, cat: G.cat, pool: G.pool });
+    if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }   // the question brought its own song
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
     // A two-clip question: the first song loads in the main player, the second in the spare one. The
@@ -799,7 +800,8 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { cat: G.cat });
+    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { cat: G.cat, pool: G.pool });
+    if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }
     G.clip = { id: G.song[4], frac: Math.random(), noclip: !!G.draw || !!(G.q && G.q.noclip) }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);

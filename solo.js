@@ -110,7 +110,8 @@
     var free = pool.filter(function (s) { return !used[s[4]]; });
     if (!free.length) { used = {}; free = pool; }
     S.song = free[Math.floor(Math.random() * free.length)]; used[S.song[4]] = 1;
-    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries, { pair: true, cat: $('s-cat').value }); S.picked = -1;
+    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries, { pair: true, cat: $('s-cat').value, pool: pool }); S.picked = -1;
+    if (S.q.swap) { S.song = S.q.swap; used[S.song[4]] = 1; }   // the question brought its own song
     stage = 'probe';
     cover(true, '', 'Selecting song'); countStart(); masks(true);
     // A two-clip question: the first song in the main player, the second in the spare one (see host.js).

@@ -14,6 +14,31 @@ function placeLabel(s) {
 function pointsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
 // Odd one out: four songs by name, no clip. Three of them share a country or a year; the round's
 // song is the one that doesn't belong. Nothing else may tie the odd one to the group.
+// ---------- Lost in translation ----------
+// English translations of the titles that are not in English (titles_en.json: video id -> translation).
+// The question shows the translation; the four answers are original titles, the three wrong ones in
+// the same language where possible. There is no clip: the song only plays at the answer.
+var TITLE_EN = {};
+if (typeof fetch === 'function' && typeof document !== 'undefined' && document.getElementById('s-subject')) {
+  fetch('titles_en.json?v=1').then(function (r) { return r.json(); }).then(function (d) { TITLE_EN = d || {}; }).catch(function () {});
+}
+function makeLost(song, allSongs, opt) {
+  var has = function (s) { return !!TITLE_EN[s[4]]; }, swap = null;
+  if (!has(song)) {
+    // the song that was drawn has no translation (an English title, a name): take one that has, from the same selection
+    var c = shuffle(((opt && opt.pool) || allSongs).filter(has));
+    if (!c.length) return null;
+    song = swap = c[0];
+  }
+  var picks = [song], seen = {}; seen[song[3].toLowerCase()] = 1;
+  var add = function (s) { if (picks.length < 4 && has(s) && !seen[s[3].toLowerCase()]) { seen[s[3].toLowerCase()] = 1; picks.push(s); } };
+  shuffle(allSongs.filter(function (s) { return s[10] === song[10]; })).forEach(add);
+  if (picks.length < 4) shuffle(allSongs.slice()).forEach(add);
+  if (picks.length < 4) return null;
+  picks = shuffle(picks);
+  return { subject: 'lost', type: 'mc', text: 'Lost in translation: which song is “' + TITLE_EN[song[4]] + '”?', hint: '', answer: song[3],
+    options: picks.map(function (s) { return s[3]; }), reveal: picks.map(function (s) { return s[3] + ' – ' + s[2]; }), correct: picks.indexOf(song), noclip: true, swap: swap };
+}
 function makeOdd(song, allSongs, countries) {
   var label = function (s) { return s[3] + ' – ' + s[2]; };
   var byYear = Math.random() < 0.5, tries = [byYear, !byYear], group = null, why = '';
@@ -132,6 +157,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   }
   if (subjectSetting === 'higher' || subjectSetting === 'newer') subjectSetting = 'random';
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 2 / 15)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
+  if (subjectSetting === 'lost' || (subjectSetting === 'random' && Math.random() < 0.154)) { var lost = makeLost(song, allSongs, opt); if (lost) return lost; }   // 10% overall
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
   if (canPlace && !winners) kinds.push('place');
@@ -139,7 +165,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   // and placing. Older saved games that still name one of those are treated the same way.
   var FACTS = ['country', 'artist', 'title', 'year', 'place'];
   if (FACTS.indexOf(subjectSetting) >= 0) subjectSetting = 'facts';
-  var subject = subjectSetting === 'facts' ? pick(kinds.filter(function (k) { return FACTS.indexOf(k) >= 0; })) : subjectSetting === 'random' || subjectSetting === 'odd' ? (Math.random() < 5 / 26 ? 'mistake' : pick(kinds.filter(function (k) { return k !== 'mistake'; }))) : subjectSetting;   // find the mistake: 12.5% overall, the same as each two-clip question
+  var subject = subjectSetting === 'facts' ? pick(kinds.filter(function (k) { return FACTS.indexOf(k) >= 0; })) : subjectSetting === 'random' || subjectSetting === 'odd' || subjectSetting === 'lost' ? (Math.random() < 5 / 22 ? 'mistake' : pick(kinds.filter(function (k) { return k !== 'mistake'; }))) : subjectSetting;   // find the mistake: 12.5% overall, the same as each two-clip question
   if (subject === 'mistake') return makeMistake(song, allSongs, countries, winners);
   if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
   var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting;

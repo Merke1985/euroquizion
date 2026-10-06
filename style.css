@@ -693,7 +693,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .ladder.big .climber.lefty{flex-direction:row-reverse}
 .ladder.big .climber.lefty b{text-align:right}
 
-.host .voters span{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.host .voters span{white-space:nowrap;flex:none}
+.host .voters{flex-wrap:wrap;justify-content:flex-end;row-gap:4px}
 .host .voters span .char{flex:none}
 
 /* the title card before a party round */
