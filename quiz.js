@@ -139,7 +139,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   // and placing. Older saved games that still name one of those are treated the same way.
   var FACTS = ['country', 'artist', 'title', 'year', 'place'];
   if (FACTS.indexOf(subjectSetting) >= 0) subjectSetting = 'facts';
-  var subject = subjectSetting === 'facts' ? pick(kinds.filter(function (k) { return FACTS.indexOf(k) >= 0; })) : subjectSetting === 'random' || subjectSetting === 'odd' ? pick(kinds) : subjectSetting;
+  var subject = subjectSetting === 'facts' ? pick(kinds.filter(function (k) { return FACTS.indexOf(k) >= 0; })) : subjectSetting === 'random' || subjectSetting === 'odd' ? (Math.random() < 5 / 26 ? 'mistake' : pick(kinds.filter(function (k) { return k !== 'mistake'; }))) : subjectSetting;   // find the mistake: 12.5% overall, the same as each two-clip question
   if (subject === 'mistake') return makeMistake(song, allSongs, countries, winners);
   if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
   var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting;
