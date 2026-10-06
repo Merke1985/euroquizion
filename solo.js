@@ -8,7 +8,7 @@
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
   var loadT0 = 0, loadTick = null, clipReady = false;
 
-  function show(id) { ['v-setup', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(id === 'v-setup' || (id === 'v-game' && S.phase === 'guess' && !!S.q && !!S.q.noclip));   // menu music, also under questions without a clip }
+  function show(id) { ['v-setup', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(id === 'v-setup' || (id === 'v-game' && S.phase === 'guess' && !!S.q && !!S.q.noclip)); }   // menu music, also under questions without a clip
   function cover(on, icon, text) { $('cover').classList.toggle('hidden', !on); if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; } }
   function masks(on) { $('mt').classList.toggle('hidden', !on); $('mb').classList.toggle('hidden', !on); }
   // The avatar is only for show in solo; the choice is remembered on this device.
