@@ -508,3 +508,6 @@ body.remote .host.ingame>header .brand .logo{display:none}
 .finalboard li.reached{border-color:var(--line)}
 .finalboard li.winner{border:6px solid var(--yellow);box-shadow:0 0 0 4px rgba(255,214,10,.3),0 10px 40px -8px rgba(255,214,10,.6);font-size:1.35rem;padding:.6em .8em;background:linear-gradient(90deg,#3a1fb0,#6a2bd0)}
 .finalboard li.winner .num{background:var(--yellow)}
+.finalboard li.flash{animation:rowFlash .7s ease-out}
+@keyframes rowFlash{0%{background:#fff;box-shadow:0 0 0 8px rgba(255,255,255,.7);transform:scale(1.04)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.finalboard li.flash{animation:none}}

@@ -253,21 +253,26 @@ function finalBoard(el, players, mePid, onDone, sound) {
     if (!live()) return;
     if (k >= order.length) { setTimeout(finish, 500); return; }
     var p = order[k++], li = rows[p.pid], num = li.querySelector('.num'), total = p.score;
+    // 1. the player lights up, with a sound
     li.classList.add('counting');
-    // one point per step; long scores speed up so nobody waits more than about three seconds
-    var gap = total > 0 ? Math.max(18, Math.min(90, 2800 / total)) : 0, v = 0, lastPing = 0;
+    if (sound && window.Music) Music.plop(k);
+    // 2. a second later the points are added one at a time, a ping for each (long scores go faster,
+    //    but never so fast that the steps blur: at most about five seconds per player)
+    var gap = total > 0 ? Math.max(40, Math.min(140, 5000 / total)) : 0, v = 0;
+    var done = function () {
+      // 3. the total is in: a flash and a different sound, then the row slides to its rank
+      li.classList.remove('counting'); li.classList.add('reached'); li.classList.add('flash'); val[p.pid] = total;
+      if (sound && window.Music) Music.ding();
+      setTimeout(function () { if (!live()) return; li.classList.remove('flash'); resort(); setTimeout(next, 900); }, 800);
+    };
     var step = function () {
       if (!live()) return;
-      if (v >= total) {
-        li.classList.remove('counting'); li.classList.add('reached'); val[p.pid] = total;
-        setTimeout(function () { if (!live()) return; resort(); setTimeout(next, 650); }, 300);
-        return;
-      }
+      if (v >= total) { done(); return; }
       v++; num.textContent = v;
-      if (sound && window.Music && Date.now() - lastPing > 45) { lastPing = Date.now(); Music.ping(v, total); }
+      if (sound && window.Music) Music.ping(v, total);
       setTimeout(step, gap);
     };
-    setTimeout(step, total > 0 ? 350 : 500);
+    setTimeout(step, 1000);
   };
   setTimeout(next, 600);
 }
