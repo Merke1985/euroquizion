@@ -376,7 +376,7 @@ function revealHold(yt, clipStart) {
 // A song plays and everyone answers a question about it; then the room votes for the best answer.
 // 'h' is the house answer, used when only one player wrote something.
 var QUIP_HELP = 'Quip!: a song plays, with a question about it. Everyone writes their funniest answer, then the room votes for the best one. Every vote is 1 point, and the favourite gets 3 more.';
-var QUIP_MS = 60000, QUIP_VOTE_MS = 25000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
+var QUIP_MS = 20000, QUIP_VOTE_MS = 20000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
 var QUIPS = [
   { p: 'What is this song really about?', h: 'Losing the car keys, with feeling' },
   { p: 'Give this song a better title', h: 'Three Minutes of This' },
