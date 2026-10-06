@@ -247,8 +247,6 @@
           $('endlead').textContent = wins.length ? 'And the winner is…' : 'Final scores';
           $('winner').textContent = wins.length ? wins.map(function (w) { return w.name; }).join(' & ') + ' · ' + ptsLabel(wins[0].score) : 'Nobody scored';
           $('winchar').innerHTML = wins.length === 1 ? charSvg(wins[0].char) : '';
-          // the fanfare once more for the winner (sound only)
-          if (!REMOTE && wins.length && G.phase === 'end') { endFanfare = true; introTry = 0; stage = 'intro'; $('v-game').classList.remove('hidden'); $('v-game').classList.add('audioonly'); try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {} }
         }, true);
       }
     } else {
