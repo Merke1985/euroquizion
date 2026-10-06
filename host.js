@@ -553,7 +553,7 @@
       if (G.phase !== 'picks') return;
       if (i >= order.length) { picksTimer = setTimeout(reveal, 1100); return; }
       var p = order[i++]; G.shown.push(p.pid); G.plopped = p.pid; Music.plop(i); render();
-      picksTimer = setTimeout(step, order.length > 5 ? 450 : 650);
+      picksTimer = setTimeout(step, 400);
     };
     picksTimer = setTimeout(step, 500);
   }
