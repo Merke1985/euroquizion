@@ -71,7 +71,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round ? 'Song ' + s.round + ' of ' + s.total : '';
+    $('waitlabel').textContent = ing && s.round ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -136,14 +136,14 @@
     else if (s.phase === 'dpick' && s.draw) {
       // Draw!: the drawer picks one of four songs, everyone else waits.
       if (s.draw.pid === pid) {
-        show('v-draw'); $('dround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Draw!';
+        show('v-draw'); $('dround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Draw!';
         $('dtitle').textContent = 'Pick a song to draw'; $('dopts').classList.remove('hidden'); $('dpad').classList.add('hidden');
         if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; $('dopts').innerHTML = (s.draw.options || []).map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join(''); }
       } else { show('v-wait'); $('waittitle').textContent = s.draw.name + ' is drawing next'; $('waitsub').textContent = 'Choosing a song…'; }
     }
     else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'You draw: ' + s.draw.song : s.draw.name + ' is about to draw.'; }
     else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) {
-      show('v-draw'); $('dround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Draw!';
+      show('v-draw'); $('dround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Draw!';
       $('dtitle').textContent = 'Draw: ' + s.draw.song; $('dopts').classList.add('hidden'); $('dpad').classList.remove('hidden');
       if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; padReset(); }
     }
@@ -156,7 +156,7 @@
       if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct'; $('waitsub').textContent = ptsText(m.pts) + '. Waiting for the others…'; }
       else if (m && m.done) { show('v-wait'); $('waittitle').textContent = 'Incorrect'; $('waitsub').textContent = 'Your answer is locked in. Waiting for the others…'; }
       else {
-        show('v-guess'); $('roundlabel').textContent = 'Song ' + s.round + ' of ' + s.total;
+        show('v-guess'); $('roundlabel').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total);
         $('pdraw').classList.toggle('hidden', !s.draw);
         if (s.draw && builtKey !== key) drawClear($('pdraw'));
         $('qtext').textContent = q.text;
@@ -177,7 +177,7 @@
       if (s.phase !== 'end') $('verdict').className = 'fb verdict' + (s.draw && s.draw.pid === pid ? (m && m.got ? ' ok' : ' no') : '');
       $('verdict').textContent = s.phase === 'end' ? $('verdict').textContent || 'Final scores' : (s.draw && s.draw.pid === pid ? (m && m.got ? 'They got it! +' + m.pts : 'Nobody guessed it') : (s.q && s.q.text) || '');   // the question stays where it was, so the bars do not move
       var why = s.phase === 'reveal' && s.q && s.q.explain;   // the odd-one-out reason takes the top line, right under the video
-      $('rround').textContent = s.phase === 'end' ? '' : why || 'Song ' + s.round + ' of ' + s.total;
+      $('rround').textContent = s.phase === 'end' ? '' : why || 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total);
       $('rround').className = why ? 'why' : 'mute';
       // The end of the game: no song any more, just the scoreboard counting up (once).
       var end = s.phase === 'end';
@@ -234,7 +234,7 @@
     var sg = s.sing, key = s.phase + ':' + s.round, fresh = key !== sKey;
     sKey = key;
     show('v-sing');
-    $('sround').textContent = 'Song ' + s.round + ' of ' + s.total + ' · Sing!';
+    $('sround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Sing!';
     var poll = s.phase === 'svote' || s.phase === 'sbest', recPhase = s.phase === 'srec' && !(m && m.in);
     $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
     // While listening or recording: ask for another part of the song (a few times per round at most).

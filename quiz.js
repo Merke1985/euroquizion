@@ -85,7 +85,7 @@ function makePair(song, kind, allSongs, countries) {
   var fact = function (s) { return kind === 'higher' ? ordinal(s[6]) + ' place' : String(s[0]); };
   return { subject: kind, type: 'mc', hint: '', pair: pair, correct: correct,
     text: kind === 'higher' ? 'Which song finished higher?' : 'Which song is newer?',
-    options: ['Song 1 (the first clip)', 'Song 2 (the second clip)'], answer: 'Song ' + (correct + 1),
+    options: ['Song 1', 'Song 2'], answer: 'Song ' + (correct + 1),
     reveal: pair.map(function (s, i) { return 'Song ' + (i + 1) + ': ' + s[3] + ' – ' + s[2] + ' · ' + fact(s); }),
     explain: kind === 'higher' ? 'Both from ' + song[0] + ': ' + fact(pair[0]) + ' against ' + fact(pair[1]) + '.' : fact(pair[0]) + ' against ' + fact(pair[1]) + '.' };
 }
@@ -269,7 +269,7 @@ var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',
   speed: 'Speedy: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
-  ladder: 'Ladder: everyone climbs the same ladder. A right answer takes you one rung up, a wrong answer or no answer one rung down. The rungs are worth 1, 2, 3, 4, 5, 6, 7, 8, 10 and 12 points, and the first player to reach the top wins.'
+  ladder: 'Ladder: everyone climbs the same ladder. A right answer takes you one rung up, a wrong answer or no answer one rung down. The rungs are worth 1, 2, 3, 4, 5, 6, 7, 8, 10 and 12 points, and the game goes on until the first player reaches the top.'
 };
 // The ladder: rung 0 is the ground, rung 10 the top. Each rung is worth a Eurovision score.
 var LADDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12];

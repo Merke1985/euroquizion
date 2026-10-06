@@ -251,7 +251,7 @@
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
     renderLadder();
     $('newgame').classList.toggle('hidden', !(G.phase === 'intro' || G.phase === 'paused'));   // not while a game is playing: only during the countdown and after a restore
-    $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? 'Song ' + G.round + ' / ' + G.total : '';
+    $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? 'Song ' + G.round + ofTotal(' / ') : '';
     var noCtrl = G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end';
     $('ctrl').classList.toggle('hidden', noCtrl); $('next').classList.toggle('hidden', noCtrl);
     $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro');
@@ -284,7 +284,7 @@
       }
     } else {
       show('v-game');
-      $('roundlabel').textContent = 'Song ' + G.round + ' / ' + G.total;
+      $('roundlabel').textContent = 'Song ' + G.round + ofTotal(' / ');
       renderQuestion(); renderAnswered();
       var between = G.phase === 'reveal' || G.phase === 'paused';
       $('guessui').classList.toggle('hidden', G.phase === 'paused');   // the question stays in place at the reveal, so nothing jumps
@@ -292,10 +292,10 @@
       $('next').disabled = !(ytReady && songs.length) || !between;
       if (G.phase === 'paused') {
         cover(true, '↻', 'Game restored', false);
-        $('rtitle').textContent = G.round ? 'Song ' + G.round + ' of ' + G.total + ' done' : 'Ready for song 1';
-        $('rmeta').textContent = G.round >= G.total ? 'Only the final scores are left.' : 'Press continue when everyone is back.';
+        $('rtitle').textContent = G.round ? 'Song ' + G.round + ofTotal(' of ') + ' done' : 'Ready for song 1';
+        $('rmeta').textContent = lastSong() ? 'Only the final scores are left.' : 'Press continue when everyone is back.';
         $('rres').textContent = ''; $('ranswer').textContent = '';
-        $('next').textContent = G.round >= G.total ? 'Final scores' : 'Continue';
+        $('next').textContent = lastSong() ? 'Final scores' : 'Continue';
       }
       $('rwhy').textContent = G.phase === 'reveal' && G.q && G.q.explain ? G.q.explain : '';   // why it is the odd one out, right under the video
       // "Continue" moves a Sing! round along; otherwise the button only appears when YouTube will not play anything.
@@ -552,6 +552,8 @@
     picksTimer = setTimeout(step, 500);
   }
   function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder'; }
+  var ENDLESS = 9999;   // Ladder has no song limit: it runs until someone is at the top
+  function ofTotal(sep) { return G.total >= ENDLESS ? '' : sep + G.total; }
   function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame()); }
   function reveal() {
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
@@ -691,7 +693,7 @@
   function optText(id) { var el = $(id); return el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''; }
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw';
-    var rows = [['Songs', G.total], ['Video time', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
+    var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.total], ['Video time', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
     if (!sing) rows.push(['Answers', optText('s-subject')], ['Scoring', optText('s-scoring')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'draw' ? DRAW_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
@@ -1039,8 +1041,10 @@
     if (G.phase === 'paused') render();
   }
   // Sing! is a category of its own: there is no question, so the Answers setting does not apply.
-  function singToggle() { var on = $('s-atype').value === 'sing' || $('s-atype').value === 'draw'; $('s-subject').disabled = on; $('s-scoring').disabled = on; scoreHelp(); }
-  $('s-atype').addEventListener('change', singToggle);
+  function singToggle() { var on = $('s-atype').value === 'sing' || $('s-atype').value === 'draw'; $('s-subject').disabled = on; $('s-scoring').disabled = on;
+    var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
+    $('s-rounds').disabled = lad; $('s-show').disabled = lad; scoreHelp(); }
+  $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
     $('scorehelp').textContent = ($('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (SCORING_HELP[$('s-scoring').value] || '')) + show;
@@ -1080,7 +1084,8 @@
     if (G.phase !== 'lobby') return false;
     G.era = $('s-era').value; G.cat = $('s-cat').value; G.atype = $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-scoring').value; G.showScore = $('s-show').value;
     if (!ytReadyOrRemote() || !buildPool()) return false;
-    G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;   // the clip, then 5 seconds more to answer
+    G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;
+    if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false;
     G.brief = briefInfo(); introStart();
