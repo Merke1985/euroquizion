@@ -76,7 +76,7 @@
     }
   });
   // Everyone who is still connected has answered: go to the answer.
-  var ALLIN_MS = 5000;
+  var ALLIN_MS = 3000, VOTE_MS = 5000;   // quiz answers: 3, 2, 1; Sing! votes keep 5 seconds
   function isIn(p) {
     if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]); return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
   function allIn() {
@@ -85,7 +85,7 @@
     if (!act.length || !act.every(isIn)) return;
     // A quiz question: tell everyone, count down from 5, then show the answer.
     var slow = ph === 'guess' || ph === 'svote' || ph === 'sbest';   // these say so on screen and count down from 5
-    var wait = slow ? ALLIN_MS : 1200;
+    var wait = ph === 'guess' ? ALLIN_MS : slow ? VOTE_MS : 1200;
     if (slow) { if (G.revealAt) return; G.revealAt = Date.now() + wait; push(); }
     setTimeout(function () {
       var now = list().filter(function (x) { return !x.off; });
@@ -331,7 +331,7 @@
     $('briefcd').textContent = G.phase === 'intro' ? 'Starting in ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)) : '';
     var voteCd = G.phase === 'svote' || G.phase === 'sbest';
     var cd = (G.phase === 'guess' || voteCd) && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
-    $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
+    $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
     var timed = G.phase === 'guess' || G.phase === 'dpick' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);

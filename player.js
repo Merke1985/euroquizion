@@ -571,7 +571,9 @@
 
   setInterval(function () {
     var cd = revealAt ? Math.max(0, Math.ceil((revealAt - Date.now()) / 1000)) : 0;
-    $('allin').textContent = cd ? (state && state.phase !== 'guess' ? 'Everyone has voted. Continuing in ' : state && state.players.length > 1 ? 'All players answered. Revealing in ' : 'Revealing in ') + cd : '';
+    var inGuess = !!(state && state.phase === 'guess');
+    $('allin').textContent = cd && !inGuess ? 'Everyone has voted. Continuing in ' + cd : '';
+    $('allinq').textContent = cd && inGuess ? (state.players.length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // below the answer bars
     var nx = nextAt ? Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) : 0;
     $('rnext').textContent = nx && state ? (state.round >= state.total ? 'Final scores in ' : 'Next song in ') + clock(nx) : '';   // same line as "All players answered"
 

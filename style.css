@@ -497,3 +497,6 @@ body.remote .host.ingame>header .brand .logo{display:none}
 @media (max-width:820px){.host .game{grid-template-columns:1fr}}
 .board li.ans .char{box-shadow:0 0 0 3px var(--ok)}
 .board li .char{border-radius:50%;transition:box-shadow .2s}
+.host #allin{margin-top:10px;font-size:1.05rem}
+.phone #allinq{text-align:left;min-height:0}
+.phone #allinq:empty{display:none}

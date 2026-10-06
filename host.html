@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=97">
+<link rel="stylesheet" href="style.css?v=98">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -94,11 +94,12 @@
       <div id="guessui">
         <div class="bar" style="margin-top:14px"><i id="tbar"></i></div>
         <div class="under">
-          <div><div class="mute" id="roundlabel" style="font-weight:700"></div><h2 id="qtext"></h2><p id="allin" class="allin"></p></div>
+          <div><div class="mute" id="roundlabel" style="font-weight:700"></div><h2 id="qtext"></h2></div>
           <button class="btn alt small hidden" id="skip" type="button">Show answer</button>
         </div>
       </div>
       <div id="qopts" class="opts"></div>
+      <p id="allin" class="allin"></p>
       <div id="answered" class="answered hidden"></div>
       <div id="revealui" class="reveal hidden">
         <div class="under">
@@ -120,14 +121,14 @@
   </section>
 </main>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=97"></script>
-<script src="vendor/qrcode.js?v=97"></script>
-<script src="config.js?v=97"></script>
-<script src="net.js?v=97"></script>
-<script src="music.js?v=97"></script>
-<script src="chars.js?v=97"></script>
-<script src="match.js?v=97"></script>
-<script src="quiz.js?v=97"></script>
-<script src="host.js?v=97"></script>
+<script src="vendor/supabase.js?v=98"></script>
+<script src="vendor/qrcode.js?v=98"></script>
+<script src="config.js?v=98"></script>
+<script src="net.js?v=98"></script>
+<script src="music.js?v=98"></script>
+<script src="chars.js?v=98"></script>
+<script src="match.js?v=98"></script>
+<script src="quiz.js?v=98"></script>
+<script src="host.js?v=98"></script>
 </body>
 </html>
