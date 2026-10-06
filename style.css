@@ -545,8 +545,9 @@ body.embed .phone.compact .readybtn.on{box-shadow:none}
 .lobby.locked .settings{opacity:.5}
 .lobby.locked #rehostbtn{display:none}
 
-/* the countdown text has its own fixed slot, so nothing moves when it appears */
-header .ctrl .autoleft,header .ctrl .autoleft:empty{display:inline-block;flex:none;width:13em;text-align:left;white-space:nowrap;overflow:hidden}
-.host header .ctrl:before{content:"";flex:none;width:13em}   /* same space on the left keeps the buttons centred */
+/* the countdown never moves anything: on the host it joins the tiny line under the logo, beside the question it has a fixed slot */
+.tinyrow{display:block;min-height:1em}
+.tinynext{color:var(--yellow);font-weight:700}
+.tinynext:not(:empty):before{content:" · ";color:var(--mute)}
 .qrow .nextin,.qrow .nextin:empty{display:inline-block;flex:none;min-width:8.6em;text-align:right}
-@media (max-width:1000px){.host header .ctrl:before{display:none}header .ctrl .autoleft,header .ctrl .autoleft:empty{width:11em}}
+.host>header .brand{width:230px;overflow:visible}
