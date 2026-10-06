@@ -555,7 +555,7 @@
   }
   function beginGuess() {
     $('err').textContent = '';
-    var ms = G.draw ? DRAW_GUESS_MS : isPair() ? PAIR_MS : G.guessMs;
+    var ms = G.draw ? drawGuessMs() : isPair() ? PAIR_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
     if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
     if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, G.draw ? '✏️' : '?', '', false); }   // odd one out and Draw!: no clip
@@ -672,7 +672,7 @@
   function remoteGo() {
     if (G.phase !== 'loading') return;
     clearTimeout(remoteTimer);
-    var ms = G.draw ? DRAW_GUESS_MS : G.guessMs;
+    var ms = G.draw ? drawGuessMs() : G.guessMs;
     G.guessAt = Date.now();
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push(); if (G.draw) drawSend();
     endTimer = setTimeout(reveal, ms);
@@ -683,13 +683,15 @@
   // on their phone, all within a minute. The host keeps the lines. After that every drawing is a
   // question for the others, one by one, with the artist's four songs as the answers.
   var drawTimer = null, DRAW_GUESS_MS = 20000;
+  // Nobody there to guess (a game with one player): do not sit out the whole guessing time.
+  function drawGuessMs() { return list().some(function (p) { return !p.off && G.draw && p.pid !== G.draw.pid; }) ? DRAW_GUESS_MS : 6000; }
   function drawFallback() { G.gallery = null; G.draw = null; G.phase = 'loading'; push(); loadSong(); }   // nothing to guess: a quiz question instead
   function drawAll() {
     var ps = list().filter(function (p) { return !p.off; });
-    if (ps.length < 2) ps = list();
+    if (!ps.length) ps = list();
     var free = G.pool.filter(function (s) { return !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
     if (free.length < ps.length * 4) free = G.pool.filter(function (s) { return !BAD_VIDEOS[s[4]]; });
-    if (ps.length < 2 || free.length < 4) { drawFallback(); return; }
+    if (!ps.length || free.length < 4) { drawFallback(); return; }   // (a single player can draw too: handy for trying it out)
     var cands = shuffle(free.slice()), items = {};
     ps.forEach(function (p, i) {
       var four = []; for (var k = 0; k < 4; k++) four.push(cands[(i * 4 + k) % cands.length]);
@@ -712,7 +714,7 @@
     clearTimeout(drawTimer);
     var g = G.gallery;
     g.queue = shuffle(Object.keys(g.items).filter(function (k) { var it = g.items[k]; return players[k] && it.chosen != null && !it.skip && it.strokes.length; }));
-    if (!g.queue.length) { drawFallback(); return; }
+    if (!g.queue.length) { drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody made a drawing this time, so here is a quiz question instead.'; return; }
     // every drawing is a song of its own: a game never stops halfway through the drawings
     if (G.total < ENDLESS && G.round - 1 + g.queue.length > G.total) G.total = G.round - 1 + g.queue.length;
     drawNext();
