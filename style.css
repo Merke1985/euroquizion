@@ -511,3 +511,12 @@ body.remote .host.ingame>header .brand .logo{display:none}
 .finalboard li.flash{animation:rowFlash .7s ease-out}
 @keyframes rowFlash{0%{background:#fff;box-shadow:0 0 0 8px rgba(255,255,255,.7);transform:scale(1.04)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.finalboard li.flash{animation:none}}
+
+/* host lobby: just the avatar with the name under it */
+.lobbyplayers .players{display:flex;flex-wrap:wrap;gap:14px 18px}
+.lobbyplayers .chip{flex-direction:column;gap:6px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;width:84px;text-align:center;font-size:.95rem;line-height:1.1;overflow-wrap:anywhere}
+.lobbyplayers .chip .char{width:68px;height:68px;margin:0;border-radius:50%;box-shadow:0 0 0 4px transparent;transition:box-shadow .2s}
+.lobbyplayers .chip.rdy{box-shadow:none}
+.lobbyplayers .chip.rdy .char{box-shadow:0 0 0 4px var(--ok)}
+.lobbyplayers .chip.off{opacity:.4}
+.lobbyplayers .players{margin-top:14px!important}
