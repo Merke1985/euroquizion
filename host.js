@@ -113,7 +113,7 @@
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (hideScores()) s.hide = true;
-    if (G.phase === 'end' && G.showScore === 'end') s.count_up = true;   // the totals were hidden: count them up one by one
+    if (G.phase === 'end' && !ladderGame()) s.count_up = true;   // the totals were hidden: count them up one by one
     if (G.phase === 'brief' || G.phase === 'intro') s.brief = G.brief;
     if (G.phase === 'intro') s.intro = INTRO.ids[0];
     if (G.phase === 'reveal' && autoTick && $('autolen').value !== 'end') s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
@@ -219,11 +219,37 @@
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading'))))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
-  function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
+  function hideScores() {
+    if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
+    if (G.showScore === 'end') return true;
+    // The very last song is played blind, so the final scoreboard still has something to reveal
+    // (not on the Ladder, where the ladder itself is the score).
+    return G.round > 0 && lastSong() && !ladderGame();
+  }
   // ---------- Ladder scoring: everyone on one ladder ----------
   // The rungs are drawn once; each player is a small avatar that keeps its element, so a change of
   // rung is a glide up or down instead of a redraw.
   var RUNG_H = 34;
+  // The end of a Ladder game: the whole ladder, big, with everyone on the rung they finished on.
+  function endLadder() {
+    var el = $('endladder'), on = ladderGame();
+    el.classList.toggle('hidden', !on); $('final').classList.toggle('hidden', on);
+    if (!on) return;
+    var H2 = 50, html = '<div class="rails"></div>';
+    for (var r = LADDER.length - 1; r >= 0; r--) html += '<div class="rung' + (r === LADDER.length - 1 ? ' top' : '') + '" style="bottom:' + (r * H2) + 'px"><span>' + (r ? LADDER[r] : 'Start') + '</span></div>';
+    el.innerHTML = html + '<div class="climbers"></div>'; el.style.height = (LADDER.length * H2 + 10) + 'px';
+    var box = el.querySelector('.climbers'), byRung = {};
+    var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    ps.forEach(function (p) { var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)); (byRung[r] = byRung[r] || []).push(p); });
+    var room = Math.max(200, el.clientWidth - 110);
+    ps.forEach(function (p) {
+      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), gap = Math.min(170, room / Math.max(1, mates.length));
+      var n = document.createElement('div'); n.className = 'climber' + (r === LADDER.length - 1 ? ' won' : '');
+      n.innerHTML = charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; n.style.bottom = '0px'; n.style.left = (104 + i * gap) + 'px';
+      box.appendChild(n); n.getBoundingClientRect();
+      n.style.bottom = (r * H2 + 3) + 'px';   // everyone climbs to their rung once more
+    });
+  }
   function renderLadder() {
     var el = $('ladder'), on = ladderGame() && !hideScores() && G.phase !== 'lobby' && G.phase !== 'end';
     el.classList.toggle('hidden', !on); $('board').classList.toggle('hidden', on);
@@ -270,6 +296,7 @@
       return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + ((G.phase === 'lobby' || G.phase === 'intro') && G.go && G.go[p.pid] ? ' rdy' : '') + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' + charSvg(p.char) + '<span class="pname">' + esc(p.name) + '</span></span>';
     }).join('') || '<span class="mute">Waiting for players…</span>';
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
+    $('clearplayers').classList.toggle('hidden', !ps.length);
     $('pcount').textContent = ps.length ? '(' + (G.phase === 'lobby' || G.phase === 'intro' ? nr + ' of ' + ps.length + ' ready' : ps.length) + ')' : '';
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal' || G.phase === 'dall' || G.phase === 'qall');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
@@ -305,7 +332,8 @@
           $('endlead').textContent = wins.length ? 'And the winner is…' : 'Final scores';
           $('winner').textContent = wins.length ? wins.map(function (w) { return w.name; }).join(' & ') + ' · ' + ptsLabel(wins[0].score) : 'Nobody scored';
           $('winchar').innerHTML = wins.length === 1 ? charSvg(wins[0].char) : '';
-        }, true, G.showScore !== 'end');   // counted up only when the totals were hidden during the game
+        }, true, ladderGame());
+        endLadder();   // counted up only when the totals were hidden during the game
       }
     } else {
       show('v-game');
@@ -1076,9 +1104,11 @@
     clearTimeout(singTimer); G.revealAt = 0;
     var c = G.sing.options.map(function () { return 0; }), pid, top = [];
     for (pid in G.sing.votes) c[G.sing.votes[pid]]++;
-    var max = Math.max.apply(null, c);
-    c.forEach(function (n, i) { if (n === max) top.push(i); });
-    var chosen = pick(top);
+    // Every song that got a vote is in the draw, and every vote is a ticket: more votes, more chance.
+    var tickets = [];
+    c.forEach(function (n, i) { if (n > 0) { top.push(i); for (var k = 0; k < n; k++) tickets.push(i); } });
+    if (!top.length) { G.sing.options.forEach(function (o, i) { top.push(i); tickets.push(i); }); }   // nobody voted: all four
+    var chosen = pick(tickets);
     var go = function () {
       if (!G.sing) return;
       G.sing.chosen = chosen; G.sing.tried[chosen] = 1; G.sing.roll = null;
@@ -1086,7 +1116,7 @@
       loadSong(G.sing.options[chosen]);
     };
     if (top.length < 2) { go(); return; }
-    // A tie: a roulette like a party-game minigame picker. The light jumps between the tied songs, fast at
+    // More than one song in the draw: a roulette like a party-game minigame picker. The light jumps between the tied songs, fast at
     // first and slower and slower, and stops on the winner.
     G.phase = 'sroll'; G.sing.in = {}; G.sing.tied = top; G.barMs = 0;
     var hops = 16 + Math.floor(Math.random() * top.length), start = (top.indexOf(chosen) - (hops % top.length) + top.length * 8) % top.length, n = 0;
@@ -1247,7 +1277,7 @@
     if (!sg) return;
     var song = sg.chosen != null ? sg.options[sg.chosen] : null, name = song ? song[3] + ' – ' + song[2] : '', t = '', opts = '';
     if (G.phase === 'sroll') {
-      t = sg.rollDone ? 'We’re singing: ' + (sg.options[sg.roll][3] + ' – ' + sg.options[sg.roll][2]) : 'It’s a tie!';
+      t = sg.rollDone ? 'We’re singing: ' + (sg.options[sg.roll][3] + ' – ' + sg.options[sg.roll][2]) : 'Which song will it be?';
       opts = sg.options.map(function (o, i) {
         var tied = sg.tied.indexOf(i) >= 0, n = 0, k; for (k in sg.votes) if (sg.votes[k] === i) n++;
         return '<div class="optcol"><div class="opt' + (i === sg.roll ? (sg.rollDone ? ' right' : ' rolling') : tied ? '' : ' dim') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters"><b>' + n + (n === 1 ? ' vote' : ' votes') + '</b></div></div>';
@@ -1312,8 +1342,19 @@
     bots.forEach(function (b) { delete players[b.pid]; if (G.go) delete G.go[b.pid]; });
     bots = []; botButtons(); push();
   }
+  // "Remove all players": everyone is sent back to the join screen (a second click confirms).
+  var clearArmed = null;
+  $('clearplayers').addEventListener('click', function () {
+    var b = $('clearplayers');
+    if (G.phase !== 'lobby') return;
+    if (!clearArmed) { b.textContent = 'Remove everyone? Click again'; clearArmed = setTimeout(function () { clearArmed = null; b.textContent = 'Remove all players'; }, 4000); return; }
+    clearTimeout(clearArmed); clearArmed = null; b.textContent = 'Remove all players';
+    net.send('kick', {});
+    Object.keys(players).forEach(function (k) { delete players[k]; });
+    bots = []; G.go = {}; botButtons(); push();
+  });
   function botButtons() {
-    $('botrow').classList.toggle('hidden', REMOTE);
+    $('botadd').classList.toggle('hidden', REMOTE);
     $('botadd').disabled = bots.length >= 4; $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of 4)' : 'Add a test bot';
     $('botclear').classList.toggle('hidden', !bots.length);
   }
@@ -1331,7 +1372,7 @@
       b.done = true;
       if (ph === 'guess' && G.q && G.q.options) {
         var can = []; G.q.options.forEach(function (o, i) { if (!(G.best && G.best.pids[i] === pid)) can.push(i); });
-        var smart = !G.best && G.q.correct >= 0 && Math.random() < 0.5;   // right about half the time
+        var smart = !G.best && G.q.correct >= 0 && Math.random() < (window.BOT_SMART == null ? 0.5 : window.BOT_SMART);   // right about half the time
         if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(can) });
       }
       else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { H.draw({ pid: pid, pick: Math.floor(Math.random() * 4) }); H.draw({ pid: pid, lines: botScribble() }); H.draw({ pid: pid, done: 1 }); }

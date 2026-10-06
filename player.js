@@ -25,10 +25,17 @@
     if (room.length !== 4 || !name) return;
     store.set('esc-name', name);
     $('joinerr').textContent = '';
-    state = null;
+    state = null; kicked = false;
     net = escConnect(room);
     $('demo').classList.toggle('hidden', !net.demo);
     net.on('state', onState);
+    // The host cleared the room: back to the join screen, and quiet until this phone joins again.
+    net.on('kick', function () {
+      if (kicked) return;
+      kicked = true; clearInterval(hiTimer); state = null;
+      document.querySelector('main').classList.remove('ingame'); $('pstage').classList.add('hidden'); rowUpdate(); $('chatbar').classList.add('hidden');
+      show('v-join'); $('joinerr').textContent = 'The host removed all players. Join again to play.';
+    });
     net.on('chat', chatAdd);
     // A finished drawing comes from the host as packets of lines, when it is that drawing's turn to be guessed.
     net.on('draw', function (d) {
@@ -37,6 +44,7 @@
     net.on('result', onResult);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
+      if (kicked) return;
       var m = me();
       net.send('hi', { pid: pid, name: name, char: want, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
@@ -47,7 +55,7 @@
     if (!hiHooked) {
       hiHooked = true;
       // back from another app or a locked screen: say hello at once, and ask for the current state
-      document.addEventListener('visibilitychange', function () { if (!document.hidden && net && hi) { net.send('hi', { pid: pid, name: name, char: want, score: (me() || {}).score, back: 1 }); } });
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && net && hi && !kicked) { net.send('hi', { pid: pid, name: name, char: want, score: (me() || {}).score, back: 1 }); } });
       // leaving: tell the host, so nobody waits for this phone
       window.addEventListener('pagehide', function () { if (net) net.send('hi', { pid: pid, bye: 1 }); });
     }
@@ -72,7 +80,9 @@
       if (Math.abs(h - lastH) > 4) { lastH = h; try { parent.postMessage({ esc: 'h', h: h }, location.origin); } catch (e) {} }
     }, 60);
   }
+  var kicked = false;
   function onState(s) {
+    if (kicked) return;
     onState2(s);
     remoteVideo(s);
     rowUpdate();

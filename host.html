@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=173">
+<link rel="stylesheet" href="style.css?v=176">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -30,7 +30,7 @@
         <h3>Players <span class="mute" id="pcount"></span></h3>
         <div class="players" id="players" style="margin-top:12px"></div>
         <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. When all rings are green, anyone can start the game from their phone.</p>
-        <p id="botrow" class="hidden" style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt small" id="botadd" type="button">Add a test bot</button><button class="btn alt small hidden" id="botclear" type="button">Remove bots</button></p>
+        <p id="botrow" style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt small" id="botadd" type="button">Add a test bot</button><button class="btn alt small hidden" id="botclear" type="button">Remove bots</button><button class="btn alt small hidden" id="clearplayers" type="button">Remove all players</button></p>
       </div>
       <div class="rehost hidden">
         <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
@@ -47,7 +47,7 @@
       <h3>Game settings</h3>
       <div class="settings">
         <div><label for="s-atype">Game type</label><select id="s-atype">
-          <option value="mc" selected>Quiz</option><option value="sing">Sing!</option><option value="draw">Draw!</option><option value="quip">Quip!</option><option value="party">Party</option></select></div>
+          <option value="mc" selected>Quiz</option><option value="party">Party</option></select></div>
         <div><label for="s-subject">Category</label><select id="s-subject">
           <option value="random" selected>All</option><option value="facts">Song facts</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option></select></div>
         <div><label for="s-rounds">Songs</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
@@ -117,6 +117,7 @@
   <section id="v-end" class="end hidden">
     <p class="mute" style="font-size:1.3rem;margin:0" id="endlead">Final scores</p>
     <div class="endhead"><div id="winchar" class="winchar"></div><h1 id="winner"></h1></div>
+    <div class="ladder big hidden" id="endladder"></div>
     <ol class="board finalboard" id="final"></ol>
     <button class="btn big" id="again">Play another game</button>
   </section>
@@ -130,14 +131,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=173"></script>
-<script src="vendor/qrcode.js?v=173"></script>
-<script src="config.js?v=173"></script>
-<script src="net.js?v=173"></script>
-<script src="music.js?v=173"></script>
-<script src="chars.js?v=173"></script>
-<script src="match.js?v=173"></script>
-<script src="quiz.js?v=173"></script>
-<script src="host.js?v=173"></script>
+<script src="vendor/supabase.js?v=176"></script>
+<script src="vendor/qrcode.js?v=176"></script>
+<script src="config.js?v=176"></script>
+<script src="net.js?v=176"></script>
+<script src="music.js?v=176"></script>
+<script src="chars.js?v=176"></script>
+<script src="match.js?v=176"></script>
+<script src="quiz.js?v=176"></script>
+<script src="host.js?v=176"></script>
 </body>
 </html>
