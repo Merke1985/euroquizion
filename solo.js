@@ -47,7 +47,7 @@
   $('pickdone').addEventListener('click', pickSave);
   $('editname').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pickSave(); } });
   profile();
-  function hud() { $('hud').innerHTML = ''; }   // nothing in the top right any more
+  function hud() { $('hud').textContent = S.phase === 'setup' || S.phase === 'end' ? '' : 'Song ' + S.round + ' / ' + S.total + ' · ' + S.score + (S.score === 1 ? ' point' : ' points'); }   // tiny, under the logo
   function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
 

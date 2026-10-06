@@ -6,13 +6,13 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=90">
+<link rel="stylesheet" href="style.css?v=91">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
 <main class="host" id="hostmain">
   <header>
-    <div class="logo" style="font-size:1.6rem">Euro<b>Quizion!</b></div>
+    <div class="brand"><div class="logo" style="font-size:1.6rem">Euro<b>Quizion!</b></div><span id="hud" class="tiny"></span></div>
     <div id="ctrl" class="ctrl hidden"><label class="check"><input type="checkbox" id="auto"> Autoplay next song</label><select id="autolen" class="mini" aria-label="Autoplay after"><option value="10">10 sec</option><option value="20">20 sec</option><option value="30">30 sec</option><option value="end" selected>Complete song</option></select><span id="autoleft" class="autoleft"></span></div>
     <div class="roomtag"><button class="btn alt small hidden" id="newgame">Start new game</button><span class="mute" id="joinhint"></span><code id="roomcode">····</code><button class="btn topnext hidden" id="next" type="button">Next</button></div>
   </header>
@@ -120,14 +120,14 @@
   </section>
 </main>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=90"></script>
-<script src="vendor/qrcode.js?v=90"></script>
-<script src="config.js?v=90"></script>
-<script src="net.js?v=90"></script>
-<script src="music.js?v=90"></script>
-<script src="chars.js?v=90"></script>
-<script src="match.js?v=90"></script>
-<script src="quiz.js?v=90"></script>
-<script src="host.js?v=90"></script>
+<script src="vendor/supabase.js?v=91"></script>
+<script src="vendor/qrcode.js?v=91"></script>
+<script src="config.js?v=91"></script>
+<script src="net.js?v=91"></script>
+<script src="music.js?v=91"></script>
+<script src="chars.js?v=91"></script>
+<script src="match.js?v=91"></script>
+<script src="quiz.js?v=91"></script>
+<script src="host.js?v=91"></script>
 </body>
 </html>

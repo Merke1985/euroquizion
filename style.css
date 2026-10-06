@@ -466,3 +466,8 @@ body.remote .host.ingame>header .logo,body.remote .host.ingame>header #joinhint,
 header .ctrl .check{flex:none}
 header .ctrl select.mini{flex:0 1 auto;max-width:150px}
 @media (max-width:600px){header .ctrl .check,header .ctrl select.mini{padding:0 8px}header .ctrl select.mini{max-width:104px}}
+
+.brand{display:flex;flex-direction:column;line-height:1;flex:none}
+.tiny{font-size:.62rem;font-weight:600;color:var(--mute);margin-top:2px;white-space:nowrap;letter-spacing:.01em}
+.tiny:empty{display:none}
+body.remote .host.ingame>header .brand .logo{display:none}
