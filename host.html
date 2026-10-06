@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=129">
+<link rel="stylesheet" href="style.css?v=130">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -53,8 +53,8 @@
           <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
         <div><label for="s-atype">Game type</label><select id="s-atype">
           <option value="mc" selected>Quiz</option><option value="sing">Sing!</option><option value="draw">Draw!</option></select></div>
-        <div><label for="s-subject">Answers</label><select id="s-subject">
-          <option value="random" selected>All</option><option value="country">Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="title">Song title</option><option value="year">Year</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option></select></div>
+        <div><label for="s-subject">Category</label><select id="s-subject">
+          <option value="random" selected>All</option><option value="facts">Song facts</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option></select></div>
         <div><label for="s-scoring">Scoring</label><select id="s-scoring">
           <option value="correct">Standard</option><option value="speed" selected>Speedy</option><option value="ladder">Ladder</option></select></div>
         <div><label for="s-show">Show score</label><select id="s-show">
@@ -121,14 +121,14 @@
   </section>
 </main>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=129"></script>
-<script src="vendor/qrcode.js?v=129"></script>
-<script src="config.js?v=129"></script>
-<script src="net.js?v=129"></script>
-<script src="music.js?v=129"></script>
-<script src="chars.js?v=129"></script>
-<script src="match.js?v=129"></script>
-<script src="quiz.js?v=129"></script>
-<script src="host.js?v=129"></script>
+<script src="vendor/supabase.js?v=130"></script>
+<script src="vendor/qrcode.js?v=130"></script>
+<script src="config.js?v=130"></script>
+<script src="net.js?v=130"></script>
+<script src="music.js?v=130"></script>
+<script src="chars.js?v=130"></script>
+<script src="match.js?v=130"></script>
+<script src="quiz.js?v=130"></script>
+<script src="host.js?v=130"></script>
 </body>
 </html>

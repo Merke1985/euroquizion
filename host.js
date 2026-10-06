@@ -146,7 +146,8 @@
     $('s-scoring').value = G.scoring; $('s-show').value = G.showScore;
     if (G.atype === 'open' || G.atype === 'mix') G.atype = 'mc';   // typed answers were removed; older saved games fall back to multiple choice
     if (G.subject === 'sing') { G.atype = 'sing'; G.subject = 'country'; }
-    if (G.subject === 'points') G.subject = 'random';   // the points question was removed
+    if (G.subject === 'points') G.subject = 'random';
+    if (['country', 'artist', 'title', 'year', 'place'].indexOf(G.subject) >= 0) G.subject = 'facts';   // these are one category now   // the points question was removed
     if (G.phase === 'lobby' || G.phase === 'end') G.go = {};   // games saved before Sing! moved to Category
     $('s-era').value = G.era; $('s-cat').value = G.cat;
     $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw'; scoreHelp();
@@ -694,7 +695,7 @@
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw';
     var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.total], ['Video time', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
-    if (!sing) rows.push(['Answers', optText('s-subject')], ['Scoring', optText('s-scoring')]);
+    if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', optText('s-scoring')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'draw' ? DRAW_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
   }

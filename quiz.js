@@ -133,7 +133,11 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
   if (canPlace && !winners) kinds.push('place');
-  var subject = subjectSetting === 'random' || subjectSetting === 'odd' ? pick(kinds) : subjectSetting;
+  // "Song facts" bundles the plain questions about the song that is playing: country, artist, title, year
+  // and placing. Older saved games that still name one of those are treated the same way.
+  var FACTS = ['country', 'artist', 'title', 'year', 'place'];
+  if (FACTS.indexOf(subjectSetting) >= 0) subjectSetting = 'facts';
+  var subject = subjectSetting === 'facts' ? pick(kinds.filter(function (k) { return FACTS.indexOf(k) >= 0; })) : subjectSetting === 'random' || subjectSetting === 'odd' ? pick(kinds) : subjectSetting;
   if (subject === 'mistake') return makeMistake(song, allSongs, countries, winners);
   if (kinds.indexOf(subject) < 0) subject = 'country';             // no known result (1956, 2020, a few others)
   var type = typeSetting === 'mix' ? pick(['mc', 'open']) : typeSetting;
