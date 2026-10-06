@@ -242,11 +242,13 @@
     var box = el.querySelector('.climbers'), byRung = {};
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     ps.forEach(function (p) { var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)); (byRung[r] = byRung[r] || []).push(p); });
-    var room = Math.max(200, el.clientWidth - 110);
+    var cx = el.clientWidth / 2, sideRoom = Math.max(160, cx - 50);
     ps.forEach(function (p) {
-      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), gap = Math.min(170, room / Math.max(1, mates.length));
-      var n = document.createElement('div'); n.className = 'climber' + (r === LADDER.length - 1 ? ' won' : '');
-      n.innerHTML = charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; n.style.bottom = '0px'; n.style.left = (104 + i * gap) + 'px';
+      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), k = Math.floor(i / 2), onRight = i % 2 === 0;
+      var gap = Math.min(170, sideRoom / Math.max(1, Math.ceil(mates.length / 2)));
+      var n = document.createElement('div'); n.className = 'climber' + (r === LADDER.length - 1 ? ' won' : '') + (onRight ? '' : ' lefty');
+      n.innerHTML = charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; n.style.bottom = '0px';
+      if (onRight) n.style.left = (cx + 52 + k * gap) + 'px'; else n.style.right = (cx + 52 + k * gap) + 'px';   // left of the ladder: the name on the outside
       box.appendChild(n); n.getBoundingClientRect();
       n.style.bottom = (r * H2 + 3) + 'px';   // everyone climbs to their rung once more
     });
@@ -264,13 +266,15 @@
     var box = el.querySelector('.climbers'), seen = {}, byRung = {};
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     ps.forEach(function (p) { var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)); (byRung[r] = byRung[r] || []).push(p); });
-    var room = Math.max(60, el.clientWidth - 64);
+    // The ladder stands in the middle; the players on a rung take turns to the right and to the left of it.
+    var cx = el.clientWidth / 2, sideRoom = Math.max(34, cx - 30);
     ps.forEach(function (p) {
-      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), gap = Math.min(34, room / Math.max(1, mates.length));
+      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), k = Math.floor(i / 2), onRight = i % 2 === 0;
+      var gap = Math.min(34, Math.max(6, (sideRoom - 30) / Math.max(1, Math.ceil(mates.length / 2) - 1 || 1)));
       var n = box.querySelector('[data-pid="' + p.pid + '"]');
-      if (!n) { n = document.createElement('div'); n.className = 'climber'; n.setAttribute('data-pid', p.pid); n.innerHTML = charSvg(p.char) + '<b></b>'; n.style.bottom = '0px'; n.style.left = '56px'; box.appendChild(n); n.getBoundingClientRect(); }
+      if (!n) { n = document.createElement('div'); n.className = 'climber'; n.setAttribute('data-pid', p.pid); n.innerHTML = charSvg(p.char) + '<b></b>'; n.style.bottom = '0px'; n.style.left = (cx + 30) + 'px'; box.appendChild(n); n.getBoundingClientRect(); }
       n.querySelector('b').textContent = p.name; n.title = p.name;
-      n.style.bottom = (r * RUNG_H + 2) + 'px'; n.style.left = (56 + i * gap) + 'px'; n.style.zIndex = 10 + i;
+      n.style.bottom = (r * RUNG_H + 2) + 'px'; n.style.left = (onRight ? cx + 30 + k * gap : cx - 60 - k * gap) + 'px'; n.style.zIndex = 10 + i;
       n.classList.toggle('off', !!p.off);
       n.classList.toggle('up', G.phase === 'reveal' && p.moved === 'up'); n.classList.toggle('down', G.phase === 'reveal' && p.moved === 'down');
       n.classList.toggle('ans', G.phase === 'guess' && isIn(p)); n.classList.toggle('won', r === LADDER.length - 1);

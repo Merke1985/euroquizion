@@ -684,3 +684,13 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .host .opts.eras{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .host .opts.eras .optcol{display:block}
 .host .opts.eras .opt{justify-content:center;text-align:center;flex-direction:column;gap:2px;min-height:64px}
+
+/* the ladder stands in the middle, players to both sides */
+.ladder .rails,.ladder .rung{left:50%;margin-left:-24px}
+.ladder .rung:after{left:-600px;right:-600px}
+.ladder.big .rails,.ladder.big .rung{left:50%;margin-left:-41px}
+.ladder.big .rung:after{left:-1200px;right:-1200px}
+.ladder.big .climber.lefty{flex-direction:row-reverse}
+.ladder.big .climber.lefty b{text-align:right}
+
+.host .voters span{white-space:nowrap}
