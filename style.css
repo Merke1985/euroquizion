@@ -551,3 +551,12 @@ body.embed .phone.compact .readybtn.on{box-shadow:none}
 .tinynext:not(:empty):before{content:" · ";color:var(--mute)}
 .qrow .nextin,.qrow .nextin:empty{display:inline-block;flex:none;min-width:8.6em;text-align:right}
 .host>header .brand{width:230px;overflow:visible}
+
+/* Ready sits right under the name and edit buttons, not at the bottom of the screen */
+.phone #v-wait.lobbyview .readybtn{margin-top:6px;order:1}
+.phone #v-wait.lobbyview #lobbystart{order:2}
+.phone #v-wait.lobbyview #waitlabel{display:none}
+.phone #v-wait.lobbyview #waittitle{order:3;font-size:1.3rem;margin-top:10px}
+.phone #v-wait.lobbyview #waitsub{order:4;margin:0}
+.phone #v-wait.lobbyview .avatarrow{order:0}
+body.embed .phone.compact #lobbystart{width:auto!important;font-size:.95rem;padding:.5em 1.1em;box-shadow:none}

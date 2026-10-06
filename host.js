@@ -110,6 +110,7 @@
     if (G.phase === 'intro') s.intro = INTRO.ids[0];
     if (G.phase === 'reveal' && autoTick && $('autolen').value !== 'end') s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
     if (G.revealAt && (G.phase === 'guess' || G.phase === 'svote' || G.phase === 'sbest')) s.reveal_in = Math.max(0, G.revealAt - Date.now());
+    if (G.phase === 'lobby') s.all_ready = allReady();
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
@@ -614,6 +615,7 @@
     G.phase = 'brief'; G.go = {}; G.brief = briefInfo(); push();
   }
   // Everyone presses Ready in the lobby; when all connected players are ready the game starts by itself.
+  function allReady() { var act = list().filter(function (x) { return !x.off; }); return act.length > 0 && act.every(function (p) { return G.go && G.go[p.pid]; }); }
   function briefCheck() {
     if (G.phase !== 'lobby') return;
     var act = list().filter(function (x) { return !x.off; });
@@ -645,7 +647,8 @@
     if (!p || G.phase !== 'lobby') return;
     if (!G.go) G.go = {};
     if (m.off) { delete G.go[p.pid]; push(); return; }   // pressed Ready again: not ready after all
-    G.go[p.pid] = 1; push(); briefCheck();
+    if (m.start) { if (allReady()) beginGame(); return; }   // "Start game" on a phone, only once everyone is ready
+    G.go[p.pid] = 1; push();
   });
 
   function renderBrief() {

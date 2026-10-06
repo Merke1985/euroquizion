@@ -123,14 +123,15 @@
       return;
     }
     $('v-wait').classList.toggle('lobbyview', s.phase === 'lobby');
-    if (s.phase !== 'lobby') $('lobbyready').classList.add('hidden');
+    if (s.phase !== 'lobby') { $('lobbyready').classList.add('hidden'); $('lobbystart').classList.add('hidden'); }
     if (s.phase === 'lobby') {
       var emb = document.body.classList.contains('embed');   // the host already sees the lobby around this frame
       var nrdy = s.players.filter(function (p) { return p.in; }).length;
       // The big Ready button at the bottom: press to check it, press again to take it back.
       $('lobbyready').classList.remove('hidden'); $('lobbyready').classList.toggle('on', !!m.in); $('lobbyready').setAttribute('aria-pressed', m.in ? 'true' : 'false');
       $('lobbyreadytext').textContent = m.in ? 'Ready!' : 'Ready';
-      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. The game starts when everyone is ready.';
+      $('lobbystart').classList.toggle('hidden', !s.all_ready);   // everyone is ready: any player may start
+      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? 'Everyone is ready. Anyone can start the game.' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set.';
     }
     else if (s.phase === 'dpick' && s.draw) {
       // Draw!: the drawer picks one of four songs, everyone else waits.
@@ -457,6 +458,7 @@
   });
 
   var pickKey = '';
+  $('lobbystart').addEventListener('click', function () { if (net && state && state.phase === 'lobby' && state.all_ready) net.send('go', { pid: pid, start: true }); });
   var readySeq = 0;
   $('lobbyready').addEventListener('click', function () {
     if (!net || !state || state.phase !== 'lobby') return;
