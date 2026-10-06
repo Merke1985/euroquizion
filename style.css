@@ -693,4 +693,5 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .ladder.big .climber.lefty{flex-direction:row-reverse}
 .ladder.big .climber.lefty b{text-align:right}
 
-.host .voters span{white-space:nowrap}
+.host .voters span{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.host .voters span .char{flex:none}

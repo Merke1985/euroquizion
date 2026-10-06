@@ -231,6 +231,22 @@
   // The rungs are drawn once; each player is a small avatar that keeps its element, so a change of
   // rung is a glide up or down instead of a redraw.
   var RUNG_H = 34;
+  // Where everyone stands beside the ladder: right and left in turn, further out when a spot is taken by
+  // someone on the same rung or half a rung away (so no two avatars overlap).
+  function ladderSpots(ps) {
+    var placed = [], out = {};
+    var rungOf = function (p) { return p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)); };
+    ps.slice().sort(function (a, b) { return rungOf(b) - rungOf(a) || a.name.localeCompare(b.name); }).forEach(function (p) {
+      var r = rungOf(p), spot = null;
+      var nr = placed.filter(function (q) { return q.right; }).length, sides = nr > placed.length - nr ? [false, true] : [true, false];   // the emptier side first
+      for (var k = 0; k < 12 && !spot; k++) sides.forEach(function (right) {
+        if (!spot && !placed.some(function (q) { return q.right === right && q.k === k && Math.abs(q.r - r) < 1; })) spot = { right: right, k: k, r: r };
+      });
+      spot = spot || { right: true, k: 0, r: r };
+      placed.push(spot); out[p.pid] = spot;
+    });
+    return out;
+  }
   // The end of a Ladder game: the whole ladder, big, with everyone on the rung they finished on.
   function endLadder() {
     var el = $('endladder'), on = ladderGame();
@@ -242,10 +258,11 @@
     var box = el.querySelector('.climbers'), byRung = {};
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     ps.forEach(function (p) { var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)); (byRung[r] = byRung[r] || []).push(p); });
-    var cx = el.clientWidth / 2, sideRoom = Math.max(160, cx - 50);
+    var cx = el.clientWidth / 2, sideRoom = Math.max(160, cx - 50), spots = ladderSpots(ps), far = 0;
+    ps.forEach(function (p) { far = Math.max(far, spots[p.pid].k); });
     ps.forEach(function (p) {
-      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), k = Math.floor(i / 2), onRight = i % 2 === 0;
-      var gap = Math.min(170, sideRoom / Math.max(1, Math.ceil(mates.length / 2)));
+      var r = spots[p.pid].r, k = spots[p.pid].k, onRight = spots[p.pid].right;
+      var gap = Math.min(170, sideRoom / (far + 1));
       var n = document.createElement('div'); n.className = 'climber' + (r === LADDER.length - 1 ? ' won' : '') + (onRight ? '' : ' lefty');
       n.innerHTML = charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; n.style.bottom = '0px';
       if (onRight) n.style.left = (cx + 52 + k * gap) + 'px'; else n.style.right = (cx + 52 + k * gap) + 'px';   // left of the ladder: the name on the outside
@@ -267,14 +284,15 @@
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     ps.forEach(function (p) { var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)); (byRung[r] = byRung[r] || []).push(p); });
     // The ladder stands in the middle; the players on a rung take turns to the right and to the left of it.
-    var cx = el.clientWidth / 2, sideRoom = Math.max(34, cx - 30);
-    ps.forEach(function (p) {
-      var r = p.rung != null ? p.rung : Math.max(0, LADDER.indexOf(p.score)), mates = byRung[r], i = mates.indexOf(p), k = Math.floor(i / 2), onRight = i % 2 === 0;
-      var gap = Math.min(34, Math.max(6, (sideRoom - 30) / Math.max(1, Math.ceil(mates.length / 2) - 1 || 1)));
+    var cx = el.clientWidth / 2, sideRoom = Math.max(34, cx - 30), spots = ladderSpots(ps), far = 0;
+    ps.forEach(function (p) { far = Math.max(far, spots[p.pid].k); });
+    ps.forEach(function (p, i) {
+      var r = spots[p.pid].r, k = spots[p.pid].k, onRight = spots[p.pid].right;
+      var gap = Math.min(40, Math.max(6, (cx - 68) / Math.max(1, far)));   // a little air between neighbours
       var n = box.querySelector('[data-pid="' + p.pid + '"]');
       if (!n) { n = document.createElement('div'); n.className = 'climber'; n.setAttribute('data-pid', p.pid); n.innerHTML = charSvg(p.char) + '<b></b>'; n.style.bottom = '0px'; n.style.left = (cx + 30) + 'px'; box.appendChild(n); n.getBoundingClientRect(); }
       n.querySelector('b').textContent = p.name; n.title = p.name;
-      n.style.bottom = (r * RUNG_H + 2) + 'px'; n.style.left = (onRight ? cx + 30 + k * gap : cx - 60 - k * gap) + 'px'; n.style.zIndex = 10 + i;
+      n.style.bottom = (r * RUNG_H + 2) + 'px'; n.style.left = (onRight ? cx + 34 + k * gap : cx - 64 - k * gap) + 'px'; n.style.zIndex = 10 + i;
       n.classList.toggle('off', !!p.off);
       n.classList.toggle('up', G.phase === 'reveal' && p.moved === 'up'); n.classList.toggle('down', G.phase === 'reveal' && p.moved === 'down');
       n.classList.toggle('ans', G.phase === 'guess' && isIn(p)); n.classList.toggle('won', r === LADDER.length - 1);
@@ -1378,10 +1396,10 @@
   function botAdd() {
     if (REMOTE || bots.length >= 4 || G.phase !== 'lobby') return;
     var used = {}; list().forEach(function (p) { used[p.char] = 1; });
-    var free = CHARS.filter(function (c) { return !used[c.id]; })[0], n = 1;
-    while (list().some(function (p) { return p.name === 'Bot ' + n; })) n++;
+    // a bot is named after its avatar (a random free one)
+    var open = CHARS.filter(function (c) { return !used[c.id]; }), free = open.length ? pick(open) : null, n = bots.length + 1;
     var pid = 'bot' + n + '-' + Math.random().toString(36).slice(2, 7);
-    H.hi({ pid: pid, name: 'Bot ' + n, char: free ? free.id : null });
+    H.hi({ pid: pid, name: free ? (free.name.length > 16 ? free.name.split(' ')[0] : free.name) : 'Bot ' + n, char: free ? free.id : null });
     if (!players[pid]) return;
     players[pid].bot = true; bots.push({ pid: pid, key: '', at: 0, done: false });
     H.go({ pid: pid });
