@@ -274,13 +274,19 @@
   }
   // The question (and, for multiple choice, the four options) on the big screen.
   function renderQuestion() {
-    var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'reveal');
+    var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
-    $('qtext').textContent = on && G.phase === 'guess' ? q.text : G.phase === 'dpick' ? (dp ? dp.name : 'Someone') + ' is choosing a song to draw' : '';
+    $('qtext').textContent = on && G.phase !== 'reveal' ? q.text : G.phase === 'dpick' ? (dp ? dp.name : 'Someone') + ' is choosing a song to draw' : '';
+    // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
+    var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? q.options.map(function (o, i) {
-      return '<div class="opt' + (G.phase === 'reveal' ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div>';
+      var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
+      if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
+      return '<div class="optcol"><div class="opt' + (rev ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div><div class="voters">' +
+        who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '">' + charSvg(p.char) + esc(p.name) + (rev && p.got && i === q.correct ? ' <b>+' + p.pts + '</b>' : '') + '</span>'; }).join('') + '</div></div>';
     }).join('') : '';
-    $('qopts').classList.remove('votelist');
+    G.plopped = null;   // the pop-in only plays once
+    $('qopts').classList.toggle('votelist', !!(on && q.options));
   }
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
@@ -460,8 +466,24 @@
     push();
     endTimer = setTimeout(reveal, ms);
   }
+  // Shared screen: before the answer, everyone's avatar drops in behind the answer they picked, one by one
+  // with a plop, in the order the answers came in. Then the right answer lights up.
+  var picksTimer = null;
+  function showPicks() {
+    var order = list().filter(function (p) { return p.pick != null && !(G.draw && p.pid === G.draw.pid); }).sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
+    stopTimers(); G.revealAt = 0; G.phase = 'picks'; G.shown = []; push();
+    var i = 0, step = function () {
+      if (G.phase !== 'picks') return;
+      if (i >= order.length) { picksTimer = setTimeout(reveal, 1100); return; }
+      var p = order[i++]; G.shown.push(p.pid); G.plopped = p.pid; Music.plop(i); render();
+      picksTimer = setTimeout(step, order.length > 5 ? 450 : 650);
+    };
+    picksTimer = setTimeout(step, 500);
+  }
   function reveal() {
-    if (G.phase !== 'guess') return;
+    if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
+    if (G.phase !== 'guess' && G.phase !== 'picks') return;
+    clearTimeout(picksTimer);
     stopTimers(); G.phase = 'reveal'; stage = 'reveal'; G.revealAt = 0;
     // Multiple choice is scored now, from the answer each player was holding.
     // For "order" scoring the right answers are ranked by when they were put in.
@@ -478,7 +500,7 @@
   function startRound() {
     G.round++; G.phase = 'loading';
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
-    G.q = null; G.revealAt = 0; singClear(); G.draw = null; clearTimeout(drawTimer);
+    G.q = null; G.revealAt = 0; singClear(); G.draw = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     if (G.atype === 'sing' && !REMOTE) { singStart(); return; }
     if (G.atype === 'draw') { drawStart(); return; }
     push(); loadSong();
@@ -880,7 +902,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    stopTimers(); autoStop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
+    clearTimeout(picksTimer); stopTimers(); autoStop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
   }

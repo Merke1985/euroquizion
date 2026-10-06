@@ -140,6 +140,7 @@
       $('dtitle').textContent = 'Draw: ' + s.draw.song; $('dopts').classList.add('hidden'); $('dpad').classList.remove('hidden');
       if (dKey !== key + s.draw.id) { dKey = key + s.draw.id; padReset(); }
     }
+    else if (s.phase === 'picks') { show('v-wait'); $('waittitle').textContent = 'Answers are in'; $('waitsub').textContent = 'Watch the big screen.'; }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Turn your sound on.'; }
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = ''; }
