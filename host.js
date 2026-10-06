@@ -835,7 +835,8 @@
     var g = G.quips, opts = [];
     Object.keys(g.items).forEach(function (k) { if (players[k] && g.items[k].text) opts.push({ pid: k, text: g.items[k].text }); });
     if (!opts.length) { G.quips = null; drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody wrote anything this time, so here is a quiz question instead.'; return; }
-    if (opts.length < 2) opts.push({ pid: null, text: g.line.h });   // a single answer plays against the house
+    // Playing alone, the one answer gets a house answer next to it; with more players only their own answers count.
+    if (opts.length < 2 && list().filter(function (p) { return !p.off; }).length < 2) opts.push({ pid: null, text: g.line.h });
     opts = shuffle(opts).slice(0, 12);
     stopTimers();
     G.best = { quip: true, id: g.id, pids: opts.map(function (o) { return o.pid; }), tally: null, wins: null };
