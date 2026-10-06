@@ -330,7 +330,7 @@
         var bw = (G.best.wins || []).map(function (i) { return players[G.best.pids[i]]; }).filter(Boolean).map(function (p) { return p.name; });
         if (G.best.quip) bw = (G.best.wins || []).map(function (i) { var w = players[G.best.pids[i]]; return w ? w.name : QUIP_HOUSE; });
         $('rtitle').textContent = bw.length ? (G.best.quip ? 'Favourite answer: ' : 'Best drawing: ') + bw.join(' & ') : 'Nobody voted';
-        $('rmeta').textContent = bw.length ? (G.best.quip ? (G.atype === 'party' ? '12 points for the favourite, 2 per vote for the others' : '1 point per vote, +' + QUIP_WIN + ' for the favourite') : '+' + BEST_PTS * partyX() + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
+        $('rmeta').textContent = bw.length ? (G.best.quip ? (G.best.per || 1) + (G.best.per === 1 ? ' point' : ' points') + ' per vote' : '+' + BEST_PTS * partyX() + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
         $('next').textContent = lastSong() ? 'Final scores' : 'Next';
       }
       if (G.phase === 'reveal' && G.song) {
@@ -626,8 +626,11 @@
       tally.forEach(function (n, i) { if (top > 0 && n === top) tops.push(i); });
       G.best.tally = tally; G.best.wins = tops; G.q.correct = tops.length ? tops[0] : -1;
       if (G.best.quip) {
-        // Quip!: a point per vote for each author, and the favourite gets a bonus. The names come out now.
-        G.best.pids.forEach(function (k, i) { var w = players[k]; if (!w) return; w.pts = G.atype === 'party' ? (tops.indexOf(i) >= 0 ? 12 : tally[i] * 2) : tally[i] + (tops.indexOf(i) >= 0 ? QUIP_WIN : 0); w.score += w.pts; w.got = w.pts > 0; });
+        // Quip!: every vote is worth the same; how much depends on the size of the group, so that an answer
+        // everyone else votes for comes to about 12 points. The names come out now.
+        var voters = Math.max(1, list().filter(function (p) { return !p.off; }).length - 1);
+        G.best.per = Math.max(1, Math.round(12 / voters));
+        G.best.pids.forEach(function (k, i) { var w = players[k]; if (!w) return; w.pts = tally[i] * G.best.per; w.score += w.pts; w.got = w.pts > 0; });
         G.q.reveal = G.q.options.map(function (o, i) { var w = players[G.best.pids[i]]; return o + '  —  ' + (w ? w.name : QUIP_HOUSE); });
       } else
       tops.forEach(function (i) { var w = players[G.best.pids[i]]; if (w) { w.pts = BEST_PTS * partyX(); w.score += w.pts; w.got = true; } });
