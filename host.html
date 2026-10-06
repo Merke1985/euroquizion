@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=182">
+<link rel="stylesheet" href="style.css?v=183">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -48,14 +48,14 @@
       <div class="settings">
         <div><label for="s-atype">Game type</label><select id="s-atype">
           <option value="mc" selected>Quiz</option><option value="robin">Through the Years</option><option value="party">Party</option></select></div>
+        <div><label for="s-scoring">Scoring</label><select id="s-scoring">
+          <option value="correct" selected>Standard</option><option value="speed">Speedy</option><option value="ladder">Ladder</option></select></div>
         <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
         <div><label for="s-rounds">Songs per round</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
         <div><label for="s-era">Era</label><select id="s-era">
           <option value="1956-2100" selected>All eras</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
         <div><label for="s-cat">Entries</label><select id="s-cat">
           <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
-        <div><label for="s-scoring">Scoring</label><select id="s-scoring">
-          <option value="correct" selected>Standard</option><option value="speed">Speedy</option><option value="ladder">Ladder</option></select></div>
         <details class="adv" style="grid-column:1/-1"><summary>Advanced settings</summary>
         <div class="settings" style="margin-top:12px">
         <div><label for="s-subject">Category</label><select id="s-subject">
@@ -137,14 +137,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=182"></script>
-<script src="vendor/qrcode.js?v=182"></script>
-<script src="config.js?v=182"></script>
-<script src="net.js?v=182"></script>
-<script src="music.js?v=182"></script>
-<script src="chars.js?v=182"></script>
-<script src="match.js?v=182"></script>
-<script src="quiz.js?v=182"></script>
-<script src="host.js?v=182"></script>
+<script src="vendor/supabase.js?v=183"></script>
+<script src="vendor/qrcode.js?v=183"></script>
+<script src="config.js?v=183"></script>
+<script src="net.js?v=183"></script>
+<script src="music.js?v=183"></script>
+<script src="chars.js?v=183"></script>
+<script src="match.js?v=183"></script>
+<script src="quiz.js?v=183"></script>
+<script src="host.js?v=183"></script>
 </body>
 </html>
