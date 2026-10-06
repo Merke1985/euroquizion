@@ -114,7 +114,7 @@
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
-    if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; }
+    if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
       s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: G.phase === 'dpick' ? G.draw.options.map(songLabel) : null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
@@ -286,7 +286,7 @@
     $('qtext').textContent = on ? q.text : G.phase === 'dpick' ? (dp ? dp.name : 'Someone') + ' is choosing a song to draw' : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
-    $('qopts').innerHTML = on && q.options ? q.options.map(function (o, i) {
+    $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
       var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
       if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
       return '<div class="optcol"><div class="opt' + (rev ? (i === q.correct ? ' right' : ' dim') : '') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</div><div class="voters">' +
@@ -325,6 +325,10 @@
     var draw = function () {
       var left = COUNT - Math.floor((Date.now() - loadT0) / 1000);
       if (left >= 1) { $('covericon').textContent = left; $('covertext').textContent = 'Selecting song'; }
+      else if (clipReady && isPair() && !yt2.ready) {   // the second song of a two-clip question is not ready yet
+        $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…';
+        if (Date.now() - loadT0 > 30000) badSong();   // it is not coming: take another song and question
+      }
       else if (clipReady) { countStop(); if (G.sing) singListen(); else beginGuess(); }
       else { $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…'; }
     };
@@ -348,12 +352,18 @@
   }, 100);
 
   // ---------- YouTube ----------
+  var yt2 = new SecondPlayer('yt2'), pairStep = 0, pairTimer = null, loadedId = '';
+  function stageEl() { return document.querySelector('#v-game .stage'); }
+  function pairTag(t) { $('pairtag').textContent = t; $('pairtag').classList.toggle('hidden', !t); }
+  function isPair() { return !!(G.q && G.q.pair); }
+  function clipLen() { return isPair() ? PAIR_CLIP : clipSecs(); }
   window.onYouTubeIframeAPIReady = function () {
+    yt2.make();
     yt = new YT.Player('yt', {
       width: '100%', height: '100%',
       playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
       events: { onReady: function () { ytReady = true; ready(); }, onError: function () {
-        if (stage === 'probe' || stage === 'seek') { if (G.song) markBad(G.song[4]); badSong(); }
+        if (stage === 'probe' || stage === 'seek') { if (loadedId) markBad(loadedId); badSong(); }
         else if (stage === 'intro' && ++introTry < INTRO.ids.length) { try { yt.loadVideoById(INTRO.ids[introTry]); } catch (e) {} }   // fanfare unavailable: try the spare
       } }
     });
@@ -374,11 +384,12 @@
       document.body.classList.remove('selfpending'); $('selfnote').classList.remove('hidden');
     });
     var so = $('s-atype').querySelector('option[value="sing"]'); if (so) so.remove();   // Sing! needs the shared screen
+    ['higher', 'newer'].forEach(function (v) { var o = $('s-subject').querySelector('option[value="' + v + '"]'); if (o) o.remove(); });   // two-clip questions need the shared screen too
   } else {
     var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
   }
 
-  function stopTimers() { clearInterval(poll); clearTimeout(watchdog); clearTimeout(endTimer); }
+  function stopTimers() { clearInterval(poll); clearTimeout(watchdog); clearTimeout(endTimer); clearTimeout(pairTimer); }
 
   function loadSong(fixed) {
     if (REMOTE) { remoteLoad(fixed); return; }
@@ -386,10 +397,18 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, G.atype, songs, countries);
+    G.q = G.sing ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, G.atype, songs, countries, { pair: true });
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
-    yt.mute(); yt.loadVideoById(G.song[4]);
+    // A two-clip question: the first song loads in the main player, the second in the spare one. The
+    // song shown at the reveal is the one that is the right answer.
+    stageEl().classList.remove('second'); pairTag(''); pairStep = 0; loadedId = G.song[4];
+    if (isPair()) {
+      var pr = G.q.pair, second = pr[1][4];
+      loadedId = pr[0][4]; G.used[pr[0][4]] = 1; G.used[pr[1][4]] = 1; G.song = pr[G.q.correct];
+      yt2.load(second, PAIR_CLIP, function () { markBad(second); if (G.phase === 'loading') badSong(); });
+    } else yt2.stop();
+    yt.mute(); yt.loadVideoById(loadedId);
     adNote(false);
     var frac = Math.random(), seekAt = 0, loadAt = Date.now();
     // Give up after 12 seconds of nothing. While something is playing (an ad, usually) wait longer.
@@ -409,7 +428,7 @@
       if (late > 6000) adNote(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }   // shorter than any song
-      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - clipSecs()));
+      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - clipLen()));
       if (G.sing) {
         // Sing! wants the chorus: an exact start from chorus.json if the song has one, otherwise the
         // stretch where a three-minute Eurovision song usually reaches its first chorus.
@@ -462,8 +481,14 @@
     yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
     cover(false);   // the video is always visible during the clip
     poll = setInterval(function () {
-      if ((yt.getCurrentTime() || 0) >= clipStart + clipSecs()) {
+      if ((yt.getCurrentTime() || 0) >= clipStart + clipLen()) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
+        if (isPair() && G.phase === 'guess' && pairStep === 0) {
+          // on to the second song, in the spare player
+          pairStep = 1; stageEl().classList.add('second'); pairTag('Song 2'); yt2.play();
+          pairTimer = setTimeout(function () { yt2.pause(); pairTag(''); if (G.phase === 'guess') cover(true, '?', '', false); }, PAIR_CLIP * 1000);
+          return;
+        }
         if (G.phase === 'guess') cover(true, '?', '', false);   // the question itself stays below the video
         if (G.sing && G.phase === 'slisten') singRecord();
       }
@@ -471,8 +496,9 @@
   }
   function beginGuess() {
     $('err').textContent = '';
-    var ms = G.draw ? DRAW_MS : G.guessMs;
+    var ms = G.draw ? DRAW_MS : isPair() ? PAIR_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
+    if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
     if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, G.draw ? '✏️' : '?', '', false); }   // odd one out and Draw!: no clip
     else playClip();
     push();
@@ -501,20 +527,30 @@
     // For "order" scoring the right answers are ranked by when they were put in.
     var right = G.q && G.q.type === 'mc' ? list().filter(function (p) { return p.pick === G.q.correct && !(G.draw && p.pid === G.draw.pid); })
       .sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); }) : [];
-    right.forEach(function (p, rank) { p.pts = pointsFor(G.draw ? 'order' : G.scoring, p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
+    // Speed scoring on a two-clip question only starts counting when the second clip begins.
+    right.forEach(function (p, rank) { p.pts = pointsFor(G.draw ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
     // Draw!: the first to guess gets 12, then 10, 8…; the drawer gets 12 as soon as anyone guessed it.
     var artist = G.draw && players[G.draw.pid];
     if (artist && right.length) { artist.pts = 12; artist.score += 12; artist.got = true; }
     if (!REMOTE && G.q) Music.ding();   // the right answer lights up
     cover(false); masks(false);
     // The video carries on from where the clip stopped (it only jumps back if it somehow is not at the clip).
+    clearTimeout(pairTimer); pairTag('');
+    if (isPair()) {
+      // the song that was the right answer plays on, from where its clip stopped
+      var second = G.q.correct === 1;
+      stageEl().classList.toggle('second', second);
+      try { if (second) { yt.pauseVideo(); if (pairStep === 0) yt2.play(); else yt2.resume(); } else { yt2.pause(); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
+    } else {
     try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
+    }
     push(); autoStart();
   }
   function startRound() {
     G.round++; G.phase = 'loading';
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
+    yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
     if (!REMOTE && (G.atype === 'sing' || G.atype === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     if (G.atype === 'sing' && !REMOTE) { singStart(); return; }
     if (G.atype === 'draw') { drawStart(); return; }
@@ -966,7 +1002,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    clearTimeout(picksTimer); stopTimers(); autoStop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
+    clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
@@ -1010,6 +1046,7 @@
   try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; var al = localStorage.getItem('esc-autolen'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
   // Seconds left of the song that is playing, or null when that cannot be told right now.
   function songLeft() {
+    if (isPair() && G.q.correct === 1) return yt2.left();
     try { var st = yt.getPlayerState(), d = yt.getDuration() || 0, t = yt.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {}
     return null;
   }

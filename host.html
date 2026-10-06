@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=124">
+<link rel="stylesheet" href="style.css?v=125">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -54,7 +54,7 @@
         <div><label for="s-atype">Game type</label><select id="s-atype">
           <option value="mc" selected>Quiz</option><option value="sing">Sing!</option><option value="draw">Draw!</option></select></div>
         <div><label for="s-subject">Answers</label><select id="s-subject">
-          <option value="random" selected>All</option><option value="country">Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="title">Song title</option><option value="year">Year</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option></select></div>
+          <option value="random" selected>All</option><option value="country">Country</option><option value="artist">Artist</option><option value="place">Placement</option><option value="title">Song title</option><option value="year">Year</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option></select></div>
         <div><label for="s-scoring">Scoring</label><select id="s-scoring">
           <option value="correct">Standard</option><option value="speed" selected>Speed</option><option value="order">Order</option></select></div>
         <div><label for="s-show">Show score</label><select id="s-show">
@@ -84,7 +84,7 @@
   <section id="v-game" class="game hidden">
     <div>
       <div class="stage">
-        <div id="yt"></div>
+        <div id="yt"></div><div id="yt2"></div><div id="pairtag" class="pairtag hidden"></div>
         <div class="shield"></div>
         <div class="maskbar t" id="mt"></div><div class="maskbar b" id="mb"></div>
         <div class="cover" id="cover"><div class="q" id="covericon">?</div><h2 id="covertext">Selecting song</h2></div><canvas id="drawview" class="drawview hidden" width="800" height="600"></canvas>
@@ -121,14 +121,14 @@
   </section>
 </main>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=124"></script>
-<script src="vendor/qrcode.js?v=124"></script>
-<script src="config.js?v=124"></script>
-<script src="net.js?v=124"></script>
-<script src="music.js?v=124"></script>
-<script src="chars.js?v=124"></script>
-<script src="match.js?v=124"></script>
-<script src="quiz.js?v=124"></script>
-<script src="host.js?v=124"></script>
+<script src="vendor/supabase.js?v=125"></script>
+<script src="vendor/qrcode.js?v=125"></script>
+<script src="config.js?v=125"></script>
+<script src="net.js?v=125"></script>
+<script src="music.js?v=125"></script>
+<script src="chars.js?v=125"></script>
+<script src="match.js?v=125"></script>
+<script src="quiz.js?v=125"></script>
+<script src="host.js?v=125"></script>
 </body>
 </html>

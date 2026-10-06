@@ -67,7 +67,67 @@ function makeMistake(song, allSongs, countries) {
   return { subject: 'mistake', type: 'mc', text: 'Which of these is wrong?', hint: '', answer: opts[wrong], options: opts, correct: wrong,
     explain: 'The mistake: ' + f.k.toLowerCase() + '. ' + fix };
 }
-function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries) {
+// Two-clip questions: two songs are played one after the other (10 seconds each) and the players pick one.
+// "higher": both from the same contest and at most three places apart; which finished higher?
+// "newer": at most three years apart; which is the newer song?
+var PAIR_CLIP = 10, PAIR_MS = (PAIR_CLIP * 2 + 5) * 1000;
+function makePair(song, kind, allSongs, countries) {
+  var inFinal = function (s) { return s[6] != null && s[8] == null && s[9] !== 'cancelled' && s[9] !== 'dq'; }, other;
+  if (kind === 'higher') {
+    if (!inFinal(song)) { song = shuffle(allSongs.filter(function (s) { return s[0] === song[0] && inFinal(s) && !BAD_VIDEOS[s[4]]; }))[0]; if (!song) return null; }   // not a finalist: take one from the same contest
+    other = shuffle(allSongs.filter(function (s) { return s[0] === song[0] && s[4] !== song[4] && inFinal(s) && s[6] !== song[6] && Math.abs(s[6] - song[6]) <= 3 && !BAD_VIDEOS[s[4]]; }))[0];
+  } else {
+    other = shuffle(allSongs.filter(function (s) { return s[0] !== song[0] && Math.abs(s[0] - song[0]) <= 3 && !BAD_VIDEOS[s[4]]; }))[0];
+  }
+  if (!other) return null;
+  var pair = Math.random() < 0.5 ? [song, other] : [other, song];
+  var correct = kind === 'higher' ? (pair[0][6] < pair[1][6] ? 0 : 1) : (pair[0][0] > pair[1][0] ? 0 : 1);
+  var fact = function (s) { return kind === 'higher' ? ordinal(s[6]) + ' place' : String(s[0]); };
+  return { subject: kind, type: 'mc', hint: '', pair: pair, correct: correct,
+    text: kind === 'higher' ? 'Which song finished higher?' : 'Which song is newer?',
+    options: ['Song 1 (the first clip)', 'Song 2 (the second clip)'], answer: 'Song ' + (correct + 1),
+    reveal: pair.map(function (s, i) { return 'Song ' + (i + 1) + ': ' + s[3] + ' – ' + s[2] + ' · ' + fact(s); }),
+    explain: kind === 'higher' ? 'Both from ' + song[0] + ': ' + fact(pair[0]) + ' against ' + fact(pair[1]) + '.' : fact(pair[0]) + ' against ' + fact(pair[1]) + '.' };
+}
+// The second video player of a two-clip question: loads its song silently, parks it at a random spot
+// and plays it when asked. Created lazily in the element with the given id.
+function SecondPlayer(elId) {
+  var self = this, p = null, ok = false, want = null, poll = null, onFail = null;
+  self.ready = false; self.start = 0;
+  self.make = function () {
+    if (p || !window.YT || !YT.Player || !document.getElementById(elId)) return;
+    p = new YT.Player(elId, { width: '100%', height: '100%', playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
+      events: { onReady: function () { ok = true; if (want) self.load(want[0], want[1], want[2]); }, onError: function () { if (onFail && !self.ready) onFail(); } } });
+  };
+  self.load = function (id, len, fail) {
+    self.ready = false; onFail = fail; clearInterval(poll);
+    if (!ok) { want = [id, len, fail]; self.make(); return; }
+    want = null;
+    var frac = Math.random(), seekAt = 0, t0 = Date.now();
+    try { p.mute(); p.loadVideoById(id); } catch (e) {}
+    poll = setInterval(function () {
+      var st = -1, t = 0, d = 0; try { st = p.getPlayerState(); t = p.getCurrentTime() || 0; d = p.getDuration() || 0; } catch (e) {}
+      if (st !== 1 || d <= 0) return;
+      if (d < 100 && Date.now() - t0 < 40000) return;   // an ad, most likely
+      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - len));
+      self.start = cs;
+      if (t >= cs && t < cs + 5) { clearInterval(poll); try { p.pauseVideo(); } catch (e) {} self.ready = true; }
+      else if (Date.now() - seekAt > 2500) { seekAt = Date.now(); try { p.seekTo(cs, true); } catch (e) {} }
+    }, 120);
+  };
+  self.play = function () { try { p.seekTo(self.start, true); p.unMute(); p.setVolume(100); p.playVideo(); } catch (e) {} };
+  self.resume = function () { try { p.unMute(); p.setVolume(100); p.playVideo(); } catch (e) {} };
+  self.pause = function () { try { if (p && ok) p.pauseVideo(); } catch (e) {} };
+  self.stop = function () { clearInterval(poll); want = null; self.ready = false; self.pause(); };
+  self.left = function () { try { var st = p.getPlayerState(), d = p.getDuration() || 0, t = p.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {} return null; };
+}
+function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
+  var pairOk = !!(opt && opt.pair);
+  if (pairOk && (subjectSetting === 'higher' || subjectSetting === 'newer' || (subjectSetting === 'random' && Math.random() < 0.2))) {
+    var pk = subjectSetting === 'random' ? pick(['higher', 'newer']) : subjectSetting, pq = makePair(song, pk, allSongs, countries) || (subjectSetting === 'higher' ? makePair(song, 'newer', allSongs, countries) : null);
+    if (pq) return pq;
+  }
+  if (subjectSetting === 'higher' || subjectSetting === 'newer') subjectSetting = 'random';
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 1 / 6)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
   var kinds = ['country', 'artist', 'title', 'year', 'mistake'];
@@ -191,8 +251,9 @@ function scoreFor(elapsedMs) {
 // the right: a tick with the points, or a cross. No answer at all: the cross sits on the right answer.
 function revealOptions(q, pick, pts) {
   if (!q || !q.options) return '';
+  var shown = q.reveal || q.options;   // two-clip questions name the songs at the reveal
   var mine = pts != null, none = mine && (pick == null || pick < 0 || !q.options[pick]);
-  return q.options.map(function (o, i) {
+  return shown.map(function (o, i) {
     var tag = '';
     if (mine && i === pick) tag = i === q.correct ? '<span class="mark">✓ +' + pts + '</span>' : '<span class="mark">✗ 0</span>';
     else if (none && i === q.correct) tag = '<span class="mark none">No answer · 0</span>';

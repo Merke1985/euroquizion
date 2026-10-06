@@ -65,16 +65,25 @@
   $('s-scoring').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat', 's-rounds', 's-time', 's-atype', 's-subject', 's-scoring'].forEach(function (id) { $(id).addEventListener('change', ready); });
 
+  var yt2 = new SecondPlayer('yt2'), pairStep = 0, pairTimer = null, loadedId = '';
+  function stageEl() { return document.querySelector('#v-game .stage'); }
+  function pairTag(t) { $('pairtag').textContent = t; $('pairtag').classList.toggle('hidden', !t); }
+  function isPair() { return !!(S.q && S.q.pair); }
+  function clipLen() { return isPair() ? PAIR_CLIP : clipSecs(); }
+  function roundMs() { return isPair() ? PAIR_MS : S.guessMs; }
+  // Speed scoring on a two-clip question only starts counting when the second clip begins.
+  function speedMs(ms) { return isPair() ? Math.max(0, ms - PAIR_CLIP * 1000) : ms; }
   window.onYouTubeIframeAPIReady = function () {
+    yt2.make();
     yt = new YT.Player('yt', {
       width: '100%', height: '100%',
       playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
-      events: { onReady: function () { ytReady = true; ready(); }, onError: function () { if (stage === 'probe' || stage === 'seek') { if (S.song) markBad(S.song[4]); badSong(); } } }
+      events: { onReady: function () { ytReady = true; ready(); }, onError: function () { if (stage === 'probe' || stage === 'seek') { if (loadedId) markBad(loadedId); badSong(); } } }
     });
   };
   var tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
 
-  function stopTimers() { clearInterval(poll); clearTimeout(watchdog); clearTimeout(endTimer); }
+  function stopTimers() { clearInterval(poll); clearTimeout(watchdog); clearTimeout(endTimer); clearTimeout(pairTimer); }
   function countStop() { clearInterval(loadTick); loadT0 = 0; }
   function countStart() {
     clipReady = false;
@@ -83,6 +92,7 @@
     var draw = function () {
       var left = COUNT - Math.floor((Date.now() - loadT0) / 1000);
       if (left >= 1) { $('covericon').textContent = left; $('covertext').textContent = 'Selecting song'; }
+      else if (clipReady && isPair() && !yt2.ready) { $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…'; if (Date.now() - loadT0 > 30000) badSong(); }
       else if (clipReady) { countStop(); beginGuess(); }
       else { $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…'; }
     };
@@ -93,10 +103,17 @@
     var free = pool.filter(function (s) { return !used[s[4]]; });
     if (!free.length) { used = {}; free = pool; }
     S.song = free[Math.floor(Math.random() * free.length)]; used[S.song[4]] = 1;
-    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries); S.picked = -1;
+    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries, { pair: true }); S.picked = -1;
     stage = 'probe';
     cover(true, '', 'Selecting song'); countStart(); masks(true);
-    yt.mute(); yt.loadVideoById(S.song[4]);
+    // A two-clip question: the first song in the main player, the second in the spare one (see host.js).
+    stageEl().classList.remove('second'); pairTag(''); pairStep = 0; loadedId = S.song[4];
+    if (isPair()) {
+      var pr = S.q.pair, second = pr[1][4];
+      loadedId = pr[0][4]; used[pr[0][4]] = 1; used[pr[1][4]] = 1; S.song = pr[S.q.correct];
+      yt2.load(second, PAIR_CLIP, function () { markBad(second); if (S.phase === 'loading') badSong(); });
+    } else yt2.stop();
+    yt.mute(); yt.loadVideoById(loadedId);
     adNote(false);
     var frac = Math.random(), seekAt = 0, loadAt = Date.now();
     watchdog = setTimeout(function wd() {
@@ -113,7 +130,7 @@
       if (late > 6000) adNote(true);   // stuck for whatever reason: show the player, so an ad or an error is visible and can be clicked
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }
-      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - clipSecs()));
+      var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - clipLen()));
       if (stage === 'probe' || cs !== clipStart) { clipStart = cs; stage = 'seek'; seekAt = 0; }
       if (t >= clipStart && t < clipStart + 5) {
         clearInterval(poll); clearTimeout(watchdog); fails = 0; adNote(false);
@@ -149,15 +166,21 @@
     yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
     cover(false);   // the video is always visible during the clip
     poll = setInterval(function () {
-      if ((yt.getCurrentTime() || 0) >= clipStart + clipSecs()) {
+      if ((yt.getCurrentTime() || 0) >= clipStart + clipLen()) {
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
+        if (isPair() && S.phase === 'guess' && pairStep === 0) {
+          pairStep = 1; stageEl().classList.add('second'); pairTag('Song 2'); yt2.play();
+          pairTimer = setTimeout(function () { yt2.pause(); pairTag(''); if (S.phase === 'guess') cover(true, '?', ''); }, PAIR_CLIP * 1000);
+          return;
+        }
         if (S.phase === 'guess') cover(true, '?', '');   // the question itself stays below the video
       }
     }, 100);
   }
   function beginGuess() {
     $('err').textContent = '';
-    S.phase = 'guess'; S.endsAt = Date.now() + S.guessMs;
+    S.phase = 'guess'; S.endsAt = Date.now() + roundMs();
+    if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
     $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
     var mc = S.q.type === 'mc';
     $('qtext').textContent = S.q.text; $('guess').placeholder = S.q.hint; $('guess').inputMode = (S.q.subject === 'place' || S.q.subject === 'points' || S.q.subject === 'year') ? 'numeric' : 'text';
@@ -166,21 +189,29 @@
     $('confirm').classList.add('hidden');
     if (S.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, '?', ''); } else playClip();   // odd one out has no clip
     render(); if (!mc) $('guess').focus();
-    endTimer = setTimeout(reveal, S.guessMs);
+    endTimer = setTimeout(reveal, roundMs());
   }
   function reveal() {
     if (S.phase !== 'guess') return;
     stopTimers(); S.phase = 'reveal'; stage = 'reveal';
     // Multiple choice is scored now, from the answer that was being held.
     if (S.q.type === 'mc' && S.picked === S.q.correct && !S.got) {
-      S.pts = pointsFor($('s-scoring').value, S.pickMs, S.guessMs, 0); S.score += S.pts; S.right++; S.got = true;
+      S.pts = pointsFor($('s-scoring').value, speedMs(S.pickMs), S.guessMs, 0); S.score += S.pts; S.right++; S.got = true;
     }
     Music.ding();
     cover(false); masks(false);
+    clearTimeout(pairTimer); pairTag('');
+    if (isPair()) {
+      var second = S.q.correct === 1;   // the right answer's song plays on
+      stageEl().classList.toggle('second', second);
+      try { if (second) { yt.pauseVideo(); if (pairStep === 0) yt2.play(); else yt2.resume(); } else { yt2.pause(); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
+    } else {
     try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.playVideo(); } catch (e) {}   // carries on from where the clip stopped
+    }
     render(); autoStart();
   }
   function startRound() {
+    yt2.pause(); stageEl().classList.remove('second'); pairTag('');
     S.round++; S.phase = 'loading'; S.got = false; S.pts = 0;
     render(); loadSong();
   }
@@ -215,7 +246,7 @@
   }
   setInterval(function () {
     if (S.phase !== 'guess') return;
-    $('tbar').style.transform = 'scaleX(' + Math.max(0, Math.min(1, (S.endsAt - Date.now()) / S.guessMs)) + ')';
+    $('tbar').style.transform = 'scaleX(' + Math.max(0, Math.min(1, (S.endsAt - Date.now()) / roundMs())) + ')';
   }, 100);
 
   $('guessform').addEventListener('submit', function (e) {
@@ -238,7 +269,7 @@
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
     if (!b || S.phase !== 'guess') return;
-    S.picked = +b.getAttribute('data-i'); S.pickMs = S.guessMs - (S.endsAt - Date.now());
+    S.picked = +b.getAttribute('data-i'); S.pickMs = roundMs() - (S.endsAt - Date.now());
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
     // With speed scoring every second counts, so the first tap is final and goes straight to the answer.
@@ -253,6 +284,7 @@
   try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; var al = localStorage.getItem('esc-autolen'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
   // Seconds left of the song that is playing, or null when that cannot be told right now.
   function songLeft() {
+    if (isPair() && S.q.correct === 1) return yt2.left();
     try { var st = yt.getPlayerState(), d = yt.getDuration() || 0, t = yt.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {}
     return null;
   }
