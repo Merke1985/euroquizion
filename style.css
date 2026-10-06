@@ -672,3 +672,15 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .ladder.big .climber b{display:block;font-size:1rem;font-weight:800;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 .ladder.big .climber.won .char{box-shadow:0 0 0 4px var(--yellow),0 0 22px 6px rgba(255,214,10,.8)}
 .ladder.big .climber.won b{color:var(--yellow)}
+
+/* Advanced settings on the host screen: folded away until asked for */
+.adv summary{cursor:pointer;font-weight:700;color:var(--mute);list-style:none;display:inline-flex;align-items:center;gap:8px;padding:6px 0}
+.adv summary::-webkit-details-marker{display:none}
+.adv summary:before{content:"▸";display:inline-block;transition:transform .15s}
+.adv[open] summary:before{transform:rotate(90deg)}
+.adv summary:hover,.adv[open] summary{color:var(--ink)}
+.adv .settings{margin-bottom:0}
+/* the decades of the spin: a row of tiles */
+.host .opts.eras{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.host .opts.eras .optcol{display:block}
+.host .opts.eras .opt{justify-content:center;text-align:center;flex-direction:column;gap:2px;min-height:64px}

@@ -124,6 +124,7 @@
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
+    if (G.phase === 'part' && G.part) s.part = { n: G.part.n, of: G.part.of, spin: !!G.part.eras, label: G.part.done ? G.part.label : '' };
     if (G.quips && G.phase === 'qall') {
       s.quips = { id: G.quips.id, prompts: {}, done: {} };
       Object.keys(G.quips.items).forEach(function (k) { s.quips.prompts[k] = G.quips.items[k].prompt; if (G.quips.items[k].done) s.quips.done[k] = 1; });
@@ -217,7 +218,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading'))))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part'))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -303,7 +304,7 @@
     renderLadder();
     $('endgame').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'intro' || G.phase === 'paused' || G.phase === 'end');
     $('newgame').classList.toggle('hidden', !(G.phase === 'intro' || G.phase === 'paused'));   // not while a game is playing: only during the countdown and after a restore
-    $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? 'Song ' + G.round + ofTotal(' / ') : '';
+    $('hud').textContent = G.round && G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro' ? (G.parts > 1 && G.per ? 'Round ' + (Math.floor((G.round - 1) / G.per) + 1) + ' / ' + G.parts + ' · Song ' + ((G.round - 1) % G.per + 1) + ' / ' + G.per : 'Song ' + G.round + ofTotal(' / ')) : '';
     var noCtrl = G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro' || G.phase === 'end';
     $('ctrl').classList.toggle('hidden', noCtrl); $('next').classList.toggle('hidden', noCtrl);
     $('hostmain').classList.toggle('ingame', G.phase !== 'lobby' && G.phase !== 'end' && G.phase !== 'brief' && G.phase !== 'intro');
@@ -376,6 +377,13 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
+    if (G.phase === 'part' && G.part) {
+      var pt = G.part, head = pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
+      $('qtext').textContent = pt.eras ? (pt.done ? head + ': ' + pt.label : head + ': which era will it be?') : head;
+      $('qopts').innerHTML = pt.eras ? pt.eras.map(function (e, i) { return '<div class="optcol"><div class="opt' + (i === pt.roll ? (pt.done ? ' right' : ' rolling') : e.out ? ' dim' : '') + '">' + esc(e.label) + (e.out ? ' <span class="mute" style="font-size:.8em">played</span>' : '') + '</div></div>'; }).join('') : '';
+      $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
+    }
+    $('qopts').classList.remove('eras');
     $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' && G.quips ? G.quips.line.p : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
@@ -715,6 +723,12 @@
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
     G.quips = null; G.quipLoad = false; clearTimeout(quipTimer);
+    // A new round of the quiz starts here: say so, and spin for its years if that is how this game is played.
+    if ((G.parts > 1 || G.eraSpin) && G.per && (G.round - 1) % G.per === 0 && !(G.partDone || {})[G.round]) { partIntro(); return; }
+    startRound2();
+  }
+  function startRound2() {
+    G.phase = 'loading';
     // Drawings that are still waiting to be guessed come first.
     if (G.gallery && G.gallery.queue.length) { if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } drawNext(); return; }
     if (G.gallery && G.gallery.vote && drawVote()) return;   // and to finish: which drawing was the best?
@@ -831,6 +845,37 @@
     G.phase = 'loading'; push();
     loadSong(it.options[it.chosen]);
   }
+  // ---------- rounds, and the spin for the years ----------
+  var ERAS = [['1956-1969', '1956 – 1969'], ['1970-1979', 'The 70s'], ['1980-1989', 'The 80s'], ['1990-1999', 'The 90s'], ['2000-2009', 'The 2000s'], ['2010-2019', 'The 2010s'], ['2020-2100', 'The 2020s']];
+  var partTimer = null;
+  function partIntro() {
+    G.partDone = G.partDone || {}; G.partDone[G.round] = 1;
+    var n = Math.floor((G.round - 1) / G.per) + 1;
+    G.part = { n: n, of: G.parts, eras: null, roll: -1, done: false, label: '' };
+    G.phase = 'part'; G.barMs = 0;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, String(n), G.parts > 1 ? 'Round ' + n + ' of ' + G.parts : 'Spinning the era', false); masks(true); }
+    var go = function () { if (G.phase !== 'part') return; startRound2(); };
+    if (!G.eraSpin) { push(); clearTimeout(partTimer); partTimer = setTimeout(go, 3200); return; }
+    // Which decades are still in the draw: not played yet in this game, and with enough songs in the selection.
+    var ok = function (e) { return poolFor(songs, e[0], G.cat).length >= Math.max(4, Math.min(G.per, 8)); };
+    var open = []; ERAS.forEach(function (e, i) { if (G.eraUsed.indexOf(i) < 0 && ok(e)) open.push(i); });
+    if (!open.length) { G.eraUsed = []; ERAS.forEach(function (e, i) { if (ok(e)) open.push(i); }); }   // all played: everything is back in
+    if (!open.length) { G.eraNow = ''; buildPool(); push(); partTimer = setTimeout(go, 2000); return; }   // a selection too thin to split up
+    G.part.eras = ERAS.map(function (e, i) { return { label: e[1], out: open.indexOf(i) < 0 }; });
+    var chosen = pick(open), hops = 18 + Math.floor(Math.random() * open.length), start = (open.indexOf(chosen) - (hops % open.length) + open.length * 8) % open.length, k = 0;
+    var hop = function () {
+      if (G.phase !== 'part') return;
+      G.part.roll = open[(start + k) % open.length]; if (!REMOTE) Music.plop(k); render();
+      if (k >= hops) {
+        G.part.done = true; G.part.label = ERAS[chosen][1]; G.eraUsed.push(chosen); G.eraNow = ERAS[chosen][0]; buildPool();
+        if (!REMOTE) { Music.ding(); cover(true, String(n), ERAS[chosen][1], false); }
+        push(); partTimer = setTimeout(go, 2600); return;
+      }
+      k++; partTimer = setTimeout(hop, 70 + Math.pow(k / hops, 2.4) * 520);
+    };
+    push(); clearTimeout(partTimer); partTimer = setTimeout(hop, 1400);
+  }
+
   // ---------- Quip! ----------
   // A song plays, and with it comes a question about that song. Everyone writes their funniest answer
   // on their phone while the clip runs on; then all answers are shown without names and everyone
@@ -969,7 +1014,7 @@
   function optText(id) { var el = $(id); return el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''; }
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip';
-    var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.total], ['Video length', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
+    var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.parts > 1 ? G.parts + ' rounds of ' + G.per : G.total], ['Video length', optText('s-time')], ['Era', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
     if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', optText('s-scoring')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : G.atype === 'quip' ? QUIP_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
@@ -1385,7 +1430,7 @@
 
   // ---------- buttons ----------
   function buildPool() {
-    G.pool = poolFor(songs, G.era, G.cat);
+    G.pool = poolFor(songs, G.eraNow || (G.era === 'spin' ? '1956-2100' : G.era), G.cat);   // eraNow: the years this round was dealt by the spin
     return G.pool.length;
   }
   function ready() {
@@ -1406,7 +1451,12 @@
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
     var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
     var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
-    $('s-rounds').disabled = lad; $('s-show').disabled = lad; scoreHelp(); }
+    $('s-rounds').disabled = lad; $('s-show').disabled = lad;
+    // Rounds and the spin for the years belong to a plain quiz
+    var plainQ = $('s-atype').value === 'mc' && !lad, so = $('s-era').querySelector('option[value="spin"]');
+    $('s-parts').disabled = !plainQ; if (!plainQ) $('s-parts').value = '1';
+    if (so) so.disabled = !plainQ; if (!plainQ && $('s-era').value === 'spin') { $('s-era').value = '1956-2100'; G.era = '1956-2100'; ready(); }
+    scoreHelp(); }
   // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
   function winnersLock() {
     var win = $('s-cat').value === 'win', o = $('s-subject').querySelector('option[value="higher"]');
@@ -1422,7 +1472,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
+    G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
@@ -1462,7 +1512,13 @@
     if (G.phase !== 'lobby') return false;
     G.era = $('s-era').value; G.cat = $('s-cat').value; G.atype = $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-scoring').value; G.showScore = $('s-show').value;
     if (!ytReadyOrRemote() || !buildPool()) return false;
-    G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;
+    // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
+    // round gets its own decade, picked by a spin; a decade that has been played is out of the draw.
+    var plain = G.atype === 'mc' && G.scoring !== 'ladder';
+    G.per = +$('s-rounds').value; G.parts = plain ? +$('s-parts').value || 1 : 1;
+    G.eraSpin = plain && G.era === 'spin'; G.eraNow = ''; G.eraUsed = []; G.part = null; G.partDone = {};
+    if (G.era === 'spin') buildPool();
+    G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';

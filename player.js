@@ -153,6 +153,10 @@
       $('lobbystart').classList.remove('hidden'); $('lobbystart').disabled = !s.all_ready;   // always there, greyed out until everyone is ready
       show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? 'Everyone is ready. Anyone can start the game.' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. Start unlocks when everyone is ready.';
     }
+    else if (s.phase === 'part' && s.part) {
+      show('v-wait'); $('waittitle').textContent = s.part.of > 1 ? 'Round ' + s.part.n + ' of ' + s.part.of : 'Get ready';
+      $('waitsub').textContent = s.part.spin ? (s.part.label ? 'Songs from: ' + s.part.label : 'Spinning the era…') : '';
+    }
     else if (s.phase === 'qall' && s.quips) {
       // Quip!: finish the line you were given.
       var qp = s.quips.prompts[pid];
