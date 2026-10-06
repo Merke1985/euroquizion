@@ -524,7 +524,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', songs, countries, { pair: true, cat: G.cat });
+    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, cat: G.cat });
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
     // A two-clip question: the first song loads in the main player, the second in the spare one. The
@@ -796,7 +796,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', songs, countries, { cat: G.cat });
+    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { cat: G.cat });
     G.clip = { id: G.song[4], frac: Math.random(), noclip: !!G.draw || !!(G.q && G.q.noclip) }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
     remoteTimer = setTimeout(remoteGo, LOAD_MAX);
@@ -888,7 +888,7 @@
     var go = function () { if (G.phase !== 'part') return; startRound2(); };
     if (!G.eraSpin) { push(); clearTimeout(partTimer); partTimer = setTimeout(go, 3200); return; }
     // Which decades are still in the draw: not played yet in this game, and with enough songs in the selection.
-    var ok = function (e) { return poolFor(songs, e[0], G.cat).length >= Math.max(4, Math.min(G.per, 8)); };
+    var ok = function (e) { return poolFor(playSongs(), e[0], G.cat).length >= Math.max(4, Math.min(G.per, 8)); };
     var open = []; ERAS.forEach(function (e, i) { if (G.eraUsed.indexOf(i) < 0 && ok(e)) open.push(i); });
     if (!open.length) { G.eraUsed = []; ERAS.forEach(function (e, i) { if (ok(e)) open.push(i); }); }   // all played: everything is back in
     if (!open.length) { G.eraNow = ''; buildPool(); push(); partTimer = setTimeout(go, 2000); return; }   // a selection too thin to split up
@@ -1460,8 +1460,13 @@
   }, 400);
 
   // ---------- buttons ----------
+  // "Leave out a country" (Advanced settings): its songs are not played, and it does not turn up among
+  // the wrong answers either.
+  function playSongs() { return G.skip ? songs.filter(function (s) { return s[1] !== G.skip; }) : songs; }
+  function playCountries() { if (!G.skip) return countries; var c = {}, k; for (k in countries) if (k !== G.skip) c[k] = countries[k]; return c; }
+  $('s-skip').addEventListener('change', function () { G.skip = $('s-skip').value; try { localStorage.setItem('esc-skip', G.skip); } catch (e) {} ready(); });
   function buildPool() {
-    G.pool = poolFor(songs, G.eraNow || (G.era === 'spin' ? '1956-2100' : G.era), G.cat);   // eraNow: the years this round was dealt by the spin
+    G.pool = poolFor(playSongs(), G.eraNow || (G.era === 'spin' ? '1956-2100' : G.era), G.cat);   // eraNow: the years this round was dealt by the spin
     return G.pool.length;
   }
   function ready() {
@@ -1634,6 +1639,9 @@
 
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;
+    // the countries for "Leave out a country", by name
+    $('s-skip').innerHTML = '<option value="">None</option>' + Object.keys(countries).sort(function (a, b) { return countries[a].localeCompare(countries[b]); }).map(function (k) { return '<option value="' + esc(k) + '">' + esc(countries[k]) + '</option>'; }).join('');
+    try { var sk = localStorage.getItem('esc-skip'); if (sk && countries[sk]) { $('s-skip').value = sk; G.skip = sk; } } catch (e) {}
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   fetch('chorus.json?v=43').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
