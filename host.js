@@ -109,6 +109,7 @@
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (hideScores()) s.hide = true;
+    if (G.phase === 'end' && G.showScore === 'end') s.count_up = true;   // the totals were hidden: count them up one by one
     if (G.phase === 'brief' || G.phase === 'intro') s.brief = G.brief;
     if (G.phase === 'intro') s.intro = INTRO.ids[0];
     if (G.phase === 'reveal' && autoTick && $('autolen').value !== 'end') s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
@@ -291,7 +292,7 @@
           $('endlead').textContent = wins.length ? 'And the winner is…' : 'Final scores';
           $('winner').textContent = wins.length ? wins.map(function (w) { return w.name; }).join(' & ') + ' · ' + ptsLabel(wins[0].score) : 'Nobody scored';
           $('winchar').innerHTML = wins.length === 1 ? charSvg(wins[0].char) : '';
-        }, true);
+        }, true, G.showScore !== 'end');   // counted up only when the totals were hidden during the game
       }
     } else {
       show('v-game');

@@ -195,7 +195,7 @@
           var iWon = wins.some(function (w) { return w.pid === pid; });
           $('verdict').className = 'fb verdict ' + (iWon ? 'ok' : '');
           $('verdict').textContent = !wins.length ? 'Nobody scored' : iWon ? (wins.length > 1 ? 'You share the win!' : 'You win!') : wins.map(function (w) { return w.name; }).join(' & ') + (wins.length > 1 ? ' win!' : ' wins!');
-        }, !!s.remote);
+        }, !!s.remote, !s.count_up);
       }
       if (!end) endShown = false;
       var rev = s.phase === 'reveal';
