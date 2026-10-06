@@ -282,7 +282,7 @@ var HOST_SCORING_HELP = {
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',
   speed: 'Speedy: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
-  ladder: 'Ladder: everyone climbs the same ladder. A right answer takes you one rung up, a wrong answer or no answer one rung down. The rungs are worth 1, 2, 3, 4, 5, 6, 7, 8, 10 and 12 points, and the game goes on until the first player reaches the top.'
+  ladder: 'Ladder: everyone climbs the same ladder. A right answer takes you one rung up, a wrong answer or no answer half a rung down. The rungs are worth 1, 2, 3, 4, 5, 6, 7, 8, 10 and 12 points, and the game goes on until the first player reaches the top.'
 };
 // The ladder: rung 0 is the ground, rung 10 the top. Each rung is worth a Eurovision score.
 var LADDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12];

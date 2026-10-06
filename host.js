@@ -573,12 +573,12 @@
       .sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); }) : [];
     // Speed scoring on a two-clip question only starts counting when the second clip begins.
     if (ladderGame() && !G.draw) {
-      // Ladder: up a rung for a right answer, down a rung for a wrong one or none. The score is what the rung is worth.
+      // Ladder: up a rung for a right answer, half a rung down for a wrong one or none. The score is what the last whole rung is worth.
       list().forEach(function (p) {
         if (p.rung == null) p.rung = Math.max(0, LADDER.indexOf(p.score));   // a restored game only knows the score
-        var ok = right.indexOf(p) >= 0, before = LADDER[p.rung || 0];
-        p.rung = Math.max(0, Math.min(LADDER.length - 1, (p.rung || 0) + (ok ? 1 : -1)));
-        p.score = LADDER[p.rung]; p.pts = p.score - before; p.got = ok; p.moved = ok ? 'up' : 'down';
+        var ok = right.indexOf(p) >= 0, before = LADDER[Math.floor(p.rung || 0)];
+        p.rung = Math.max(0, Math.min(LADDER.length - 1, (p.rung || 0) + (ok ? 1 : -0.5)));
+        p.score = LADDER[Math.floor(p.rung)]; p.pts = p.score - before; p.got = ok; p.moved = ok ? 'up' : 'down';
         if (p.rung === LADDER.length - 1) G.ladderWon = true;   // someone reached the top: this was the last song
       });
       right = [];
