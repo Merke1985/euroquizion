@@ -16,7 +16,7 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || state.phase === 'qall' || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -143,6 +143,15 @@
       $('lobbystart').classList.remove('hidden'); $('lobbystart').disabled = !s.all_ready;   // always there, greyed out until everyone is ready
       show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? 'Everyone is ready. Anyone can start the game.' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. Start unlocks when everyone is ready.';
     }
+    else if (s.phase === 'qall' && s.quips) {
+      // Quip!: finish the line you were given.
+      var qp = s.quips.prompts[pid];
+      if (quipKey !== s.quips.id) { quipKey = s.quips.id; quipSent = false; $('quipin').value = ''; $('quipfb').textContent = ''; }
+      if (!qp) { show('v-wait'); $('waittitle').textContent = 'Everyone is writing'; $('waitsub').textContent = 'You can vote in a moment.'; }
+      else if (s.quips.done[pid] || quipSent) { show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
+      else { show('v-quip'); $('qprompt').textContent = qp; }
+    }
+    else if (s.phase === 'guess' && s.best && s.best.quip && s.best.pids.indexOf(pid) >= 0) { show('v-wait'); $('waittitle').textContent = 'Your answer is up!'; $('waitsub').textContent = 'The others are voting.'; }
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -223,13 +232,14 @@
       }
       if (rev && s.best) {
         // Best drawing: the votes per drawing, and the winning picture.
-        var bw = s.best.wins || [], iw = bw.some(function (i) { return s.best.pids[i] === pid; });
-        var bn = bw.map(function (i) { return s.q.options[i]; });
+        var bw = s.best.wins || [], iw = bw.some(function (i) { return s.best.pids[i] === pid; }), qz = !!s.best.quip, shownOpts = (qz && s.q.reveal) || s.q.options;
+        var bn = bw.map(function (i) { return qz ? (shownOpts[i].split('  —  ')[1] || '') : s.q.options[i]; });
+        var myI = s.best.pids.indexOf(pid);
         $('verdict').className = 'fb verdict ' + (iw ? 'ok' : '');
-        $('verdict').textContent = !bw.length ? 'Nobody voted' : iw ? 'Your drawing won! +' + s.best.pts : 'Best drawing: ' + bn.join(' & ');
-        $('ropts').innerHTML = s.q.options.map(function (o, i) { var n = (s.best.tally || [])[i] || 0; return '<div class="opt' + (bw.indexOf(i) >= 0 ? ' right' : ' dim') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otext">' + esc(o) + '</span><span class="mark">' + n + (n === 1 ? ' vote' : ' votes') + '</span></div>'; }).join('');
-        if (fresh && bw.length) { try { var tc = document.createElement('canvas'); tc.width = DRAW_W; tc.height = DRAW_H; drawClear(tc); (bestStore.items[bw[0]] || []).forEach(function (m2) { drawPaint(tc, m2); }); $('rdraw').src = tc.toDataURL('image/png'); } catch (e) {} }
-        $('rdraw').classList.toggle('hidden', !bw.length);
+        $('verdict').textContent = qz ? (myI >= 0 ? (iw ? 'Your answer won! +' : 'Your answer: +') + (m ? m.pts || 0 : 0) : s.q.text) : !bw.length ? 'Nobody voted' : iw ? 'Your drawing won! +' + s.best.pts : 'Best drawing: ' + bn.join(' & ');
+        $('ropts').innerHTML = shownOpts.map(function (o, i) { var n = (s.best.tally || [])[i] || 0; return '<div class="opt' + (bw.indexOf(i) >= 0 ? ' right' : ' dim') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otext">' + esc(o) + '</span><span class="mark">' + n + (n === 1 ? ' vote' : ' votes') + '</span></div>'; }).join('');
+        if (fresh && bw.length && !qz) { try { var tc = document.createElement('canvas'); tc.width = DRAW_W; tc.height = DRAW_H; drawClear(tc); (bestStore.items[bw[0]] || []).forEach(function (m2) { drawPaint(tc, m2); }); $('rdraw').src = tc.toDataURL('image/png'); } catch (e) {} }
+        $('rdraw').classList.toggle('hidden', !bw.length || qz);
       }
       $('ranswer').textContent = '';   // the green bar already says it
       $('rtitle').textContent = r.title || '';
@@ -598,6 +608,17 @@
   function bestPaint() {
     [].forEach.call($('opts').querySelectorAll('canvas[data-g]'), function (cv) { drawClear(cv); (bestStore.items[+cv.getAttribute('data-g')] || []).forEach(function (m) { drawPaint(cv, m); }); });
   }
+  // Quip!: send the finished line (a few times, in case a message gets lost; the host takes the first).
+  var quipKey = '', quipSent = false;
+  $('quipform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var t = $('quipin').value.replace(/\s+/g, ' ').trim();
+    if (!t) { $('quipfb').className = 'fb no'; $('quipfb').textContent = 'Type something first.'; return; }
+    if (!net || !state || state.phase !== 'qall') return;
+    quipSent = true; var qk = quipKey;
+    [0, 700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (quipKey === qk && state && state.phase === 'qall' && net) net.send('quip', { pid: pid, text: t }); }, ms); });
+    show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…';
+  });
   var padPicked = -1, padDone = false, padSkipped = false;
   // The pad screen: first the four songs (and a way out), then the canvas.
   function drawView(go, gc) {
@@ -691,6 +712,7 @@
     if (!state) return;
     if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
+    if (state.phase === 'qall') $('qbar').style.transform = 'scaleX(' + f + ')';
     if (state.gallery && state.phase === 'dall') $('dbar').style.transform = 'scaleX(' + f + ')';
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';
     else if (state.sing) $('sbar').style.transform = 'scaleX(' + (state.phase === 'loading' || state.phase === 'splay' ? 0 : f) + ')';

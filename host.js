@@ -26,7 +26,7 @@
   $('demo').classList.toggle('hidden', !net.demo);
   net.on('hi', function (m) {
     if (!m || !m.pid) return;
-    if (m.bye) { var gone = players[m.pid]; if (gone && !gone.off) { gone.off = true; gone.last = 0; push(); allIn(); drawAllCheck(); } return; }   // that phone closed the page
+    if (m.bye) { var gone = players[m.pid]; if (gone && !gone.off) { gone.off = true; gone.last = 0; push(); allIn(); drawAllCheck(); quipAllCheck(); } return; }   // that phone closed the page
     var p = players[m.pid], isNew = !p;
     var nm = String(m.name || '').slice(0, 16) || 'Player';
     // Every character belongs to one player per room; first come, first served.
@@ -63,7 +63,8 @@
       // it was right before the reveal, which comes once everyone has an answer in.
       if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
       if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;
-      if (G.best && (G.best.pids[m.choice] === m.pid || p.pick != null)) return;   // best drawing: not your own, and a vote is final   // Draw!: the drawer does not guess, and a first guess is final
+      if (G.best && (G.best.pids[m.choice] === m.pid || p.pick != null)) return;
+      if (G.best && G.best.quip && G.best.pids.indexOf(m.pid) >= 0) return;   // Quip!: the two authors do not vote   // best drawing: not your own, and a vote is final   // Draw!: the drawer does not guess, and a first guess is final
       p.pick = m.choice; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now());
       push(); allIn(); return;
     }
@@ -81,7 +82,9 @@
   var ALLIN_MS = 3000, VOTE_MS = 5000;   // quiz answers: 3, 2, 1; Sing! votes keep 5 seconds
   function isIn(p) {
     if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]);
-    if (G.phase === 'dall') return !!(G.gallery && G.gallery.items[p.pid] && G.gallery.items[p.pid].done);   // finished drawing
+    if (G.phase === 'dall') return !!(G.gallery && G.gallery.items[p.pid] && G.gallery.items[p.pid].done);
+    if (G.phase === 'qall') return !!(G.quips && (!G.quips.items[p.pid] || G.quips.items[p.pid].done));   // answer sent (or no line to finish)
+    if (G.best && G.best.quip && G.best.pids.indexOf(p.pid) >= 0) return true;   // the authors only watch   // finished drawing
     return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
   function allIn() {
     var act = list().filter(function (x) { return !x.off; });
@@ -121,12 +124,16 @@
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
+    if (G.quips && G.phase === 'qall') {
+      s.quips = { id: G.quips.id, prompts: {}, done: {} };
+      Object.keys(G.quips.items).forEach(function (k) { s.quips.prompts[k] = G.quips.items[k].prompt; if (G.quips.items[k].done) s.quips.done[k] = 1; });
+    }
     if (G.gallery && G.phase === 'dall') {
       // Everyone draws at once: each player gets their own four songs.
       s.gallery = { id: G.gallery.id, opts: {}, chosen: {}, done: {} };
       Object.keys(G.gallery.items).forEach(function (k) { var it = G.gallery.items[k]; s.gallery.opts[k] = it.options.map(songLabel); if (it.chosen != null) s.gallery.chosen[k] = it.chosen; if (it.done) s.gallery.done[k] = 1; });
     }
-    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
+    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { quip: !!G.best.quip, win_pts: G.best.quip ? QUIP_WIN : BEST_PTS, id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
       s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
@@ -161,7 +168,7 @@
     if (['country', 'artist', 'title', 'year', 'place'].indexOf(G.subject) >= 0) G.subject = 'facts';   // these are one category now   // the points question was removed
     if (G.phase === 'lobby' || G.phase === 'end') G.go = {};   // games saved before Sing! moved to Category
     $('s-era').value = G.era; $('s-cat').value = G.cat;
-    $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw'; scoreHelp();
+    $('s-atype').value = G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip'; scoreHelp();
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([5, 10, 15, 30].indexOf(G.guessMs / 1000 - AFTER) < 0) G.guessMs = (15 + AFTER) * 1000;   // games saved with the old Guessing time setting
     $('s-time').value = G.guessMs / 1000 - AFTER;
@@ -210,7 +217,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading'))))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'qall'))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() { return G.showScore === 'end' && G.phase !== 'end' && G.phase !== 'lobby' && G.phase !== 'brief'; }
   // ---------- Ladder scoring: everyone on one ladder ----------
@@ -264,7 +271,7 @@
     }).join('') || '<span class="mute">Waiting for players…</span>';
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
     $('pcount').textContent = ps.length ? '(' + (G.phase === 'lobby' || G.phase === 'intro' ? nr + ' of ' + ps.length + ' ready' : ps.length) + ')' : '';
-    $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal' || G.phase === 'dall');
+    $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal' || G.phase === 'dall' || G.phase === 'qall');
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
     renderLadder();
     $('endgame').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'intro' || G.phase === 'paused' || G.phase === 'end');
@@ -321,8 +328,9 @@
       $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck));
       if (G.phase === 'reveal' && G.best) {
         var bw = (G.best.wins || []).map(function (i) { return players[G.best.pids[i]]; }).filter(Boolean).map(function (p) { return p.name; });
-        $('rtitle').textContent = bw.length ? 'Best drawing: ' + bw.join(' & ') : 'Nobody voted';
-        $('rmeta').textContent = bw.length ? '+' + BEST_PTS + ' bonus points' : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
+        if (G.best.quip) bw = (G.best.wins || []).map(function (i) { var w = players[G.best.pids[i]]; return w ? w.name : QUIP_HOUSE; });
+        $('rtitle').textContent = bw.length ? (G.best.quip ? 'Favourite answer: ' : 'Best drawing: ') + bw.join(' & ') : 'Nobody voted';
+        $('rmeta').textContent = bw.length ? (G.best.quip ? '1 point per vote, +' + QUIP_WIN + ' for the favourite' : '+' + BEST_PTS + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
         $('next').textContent = lastSong() ? 'Final scores' : 'Next';
       }
       if (G.phase === 'reveal' && G.song) {
@@ -340,7 +348,7 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
-    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : '';
+    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' ? 'Everyone is writing an answer!' : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
@@ -354,7 +362,7 @@
   }
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
-    var dall = G.phase === 'dall' && !!G.gallery, on = dall || (G.sing && (G.phase === 'srec' || G.phase === 'sbest'));   // quiz rounds show who has answered in the score panel instead   // during the song vote the voters show behind each song instead
+    var dall = (G.phase === 'dall' && !!G.gallery) || (G.phase === 'qall' && !!G.quips), busyOf = G.phase === 'qall' ? G.quips : G.gallery, on = dall || (G.sing && (G.phase === 'srec' || G.phase === 'sbest'));   // quiz rounds show who has answered in the score panel instead   // during the song vote the voters show behind each song instead
     var play = G.sing && G.phase === 'splay';
     $('answered').classList.toggle('hidden', !on && !play);
     if (play) {
@@ -366,7 +374,7 @@
     var ps = list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
     $('answered').innerHTML = ps.map(function (p) {
       // Draw!: a scribbling pencil on everyone who is still drawing, a green ring once they are done
-      var pen = dall && !isIn(p) && G.gallery.items[p.pid] ? '<i class="pen" aria-hidden="true">✏️</i>' : '';
+      var pen = dall && !isIn(p) && busyOf.items[p.pid] ? '<i class="pen" aria-hidden="true">✏️</i>' : '';
       return '<div class="pl' + (isIn(p) ? ' in' : '') + (p.off ? ' off' : '') + (pen ? ' busy' : '') + '">' + charSvg(p.char) + pen + '<span>' + esc(p.name) + '</span></div>';
     }).join('');
   }
@@ -407,7 +415,7 @@
     var voteCd = G.phase === 'svote' || G.phase === 'sbest';
     var cd = (G.phase === 'guess' || voteCd) && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
     $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
-    var timed = G.phase === 'guess' || G.phase === 'dall' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
+    var timed = G.phase === 'guess' || G.phase === 'dall' || G.phase === 'qall' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
 
@@ -616,6 +624,11 @@
       var top = Math.max.apply(null, tally), tops = [];
       tally.forEach(function (n, i) { if (top > 0 && n === top) tops.push(i); });
       G.best.tally = tally; G.best.wins = tops; G.q.correct = tops.length ? tops[0] : -1;
+      if (G.best.quip) {
+        // Quip!: a point per vote for each author, and the favourite gets a bonus. The names come out now.
+        G.best.pids.forEach(function (k, i) { var w = players[k]; if (!w) return; w.pts = tally[i] + (tops.indexOf(i) >= 0 ? QUIP_WIN : 0); w.score += w.pts; w.got = w.pts > 0; });
+        G.q.reveal = G.q.options.map(function (o, i) { var w = players[G.best.pids[i]]; return o + '  —  ' + (w ? w.name : QUIP_HOUSE); });
+      } else
       tops.forEach(function (i) { var w = players[G.best.pids[i]]; if (w) { w.pts = BEST_PTS; w.score += BEST_PTS; w.got = true; } });
     }
     if (ladderGame() && !G.draw && !G.best) {
@@ -637,7 +650,7 @@
     cover(false); masks(false);
     // The video carries on from where the clip stopped (it only jumps back if it somehow is not at the clip).
     clearTimeout(pairTimer); pairTag('');
-    if (G.best) { cover(true, '🏆', '', false); }   // no song with this one
+    if (G.best) { cover(true, G.best.quip ? '💬' : '🏆', '', false); }   // no song with this one
     else if (isPair()) {
       // the song that was the right answer plays on, from where its clip stopped
       var second = G.q.correct === 1;
@@ -668,6 +681,8 @@
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
+    if (G.quips && G.quips.queue.length) { quipNext(); return; }   // answers that are still waiting for their vote
+    G.quips = null;
     // Drawings that are still waiting to be guessed come first.
     if (G.gallery && G.gallery.queue.length) { if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } drawNext(); return; }
     if (G.gallery && G.gallery.vote && drawVote()) return;   // and to finish: which drawing was the best?
@@ -675,7 +690,7 @@
     // Party: four quiz questions, then a Sing! or a Draw! round, then four quiz questions again, and so on
     // (Sing! only with a shared screen, and neither without at least two players).
     if (G.atype === 'party') {
-      var special = REMOTE ? ['draw'] : ['sing', 'draw'], can = list().filter(function (p) { return !p.off; }).length >= 2;
+      var special = REMOTE ? ['draw', 'quip'] : ['sing', 'draw', 'quip'], can = list().filter(function (p) { return !p.off; }).length >= 2;
       if (can && (G.quizRun || 0) >= 4) {
         // take turns, so a game of ten songs has both: four questions, one of them, four questions, the other
         var other = special.filter(function (x) { return x !== G.lastSpecial; });
@@ -687,6 +702,7 @@
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     if (md === 'sing' && !REMOTE) { singStart(); return; }
     if (md === 'draw') { drawAll(); return; }
+    if (md === 'quip') { quipAll(); return; }
     push(); loadSong();
   }
 
@@ -777,6 +793,69 @@
     G.phase = 'loading'; push();
     loadSong(it.options[it.chosen]);
   }
+  // ---------- Quip! ----------
+  // Everyone finishes a line on their phone (a minute for it). The players are paired up on the same
+  // line; a player without an opponent plays against the house answer. Then every pair is a vote.
+  var quipTimer = null;
+  function quipAll() {
+    var ps = shuffle(list().filter(function (p) { return !p.off; }));
+    if (!ps.length) { drawFallback(); return; }
+    var lines = shuffle(QUIPS.slice()), items = {}, pairs = [];
+    for (var i = 0; i < ps.length; i += 2) {
+      var ln = lines[(i / 2) % lines.length], a = ps[i], b = ps[i + 1] || null;
+      items[a.pid] = { prompt: ln.p, text: '', done: 0 }; if (b) items[b.pid] = { prompt: ln.p, text: '', done: 0 };
+      pairs.push({ line: ln, a: a.pid, b: b ? b.pid : null });
+    }
+    G.quips = { id: Math.random().toString(36).slice(2, 8), items: items, pairs: pairs, queue: [] };
+    G.draw = null; G.best = null; G.q = null; G.song = null; G.clip = null;
+    G.phase = 'qall'; G.barMs = QUIP_MS; G.endsAt = Date.now() + QUIP_MS;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '💬', 'Everyone is writing', false); masks(true); stageEl().classList.add('novideo'); }
+    clearTimeout(quipTimer); quipTimer = setTimeout(quipAllEnd, QUIP_MS + 800);
+    push();
+  }
+  function quipAllCheck() {
+    if (G.phase !== 'qall' || !G.quips) return;
+    var act = list().filter(function (p) { return !p.off && G.quips.items[p.pid]; });
+    if (act.length && act.every(function (p) { return G.quips.items[p.pid].done; })) { clearTimeout(quipTimer); quipTimer = setTimeout(quipAllEnd, 900); }
+  }
+  function quipAllEnd() {
+    if (G.phase !== 'qall' || !G.quips) return;
+    clearTimeout(quipTimer);
+    var g = G.quips;
+    // A pair needs at least one written answer; an empty side is filled in by the house.
+    g.queue = g.pairs.map(function (pr) {
+      var ta = g.items[pr.a].text, tb = pr.b ? g.items[pr.b].text : '';
+      if (!ta && !tb) return null;
+      var opts = [];
+      if (ta) opts.push({ pid: pr.a, text: ta });
+      if (tb) opts.push({ pid: pr.b, text: tb });
+      if (opts.length < 2) opts.push({ pid: null, text: pr.line.h });
+      return { prompt: pr.line.p, opts: shuffle(opts) };
+    }).filter(Boolean);
+    if (!g.queue.length) { G.quips = null; drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody wrote anything this time, so here is a quiz question instead.'; return; }
+    var need = G.round - 1 + g.queue.length;
+    if (G.atype === 'party' && G.total < ENDLESS) G.total += g.queue.length - 1;   // in a Party game the whole round counts as one song
+    else if (G.total < ENDLESS && need > G.total) G.total = need;
+    quipNext();
+  }
+  function quipNext() {
+    var g = G.quips, m = g.queue.shift();
+    stopTimers(); G.draw = null; G.song = null; G.clip = null;
+    G.best = { quip: true, id: g.id + ':' + G.round, pids: m.opts.map(function (o) { return o.pid; }), tally: null, wins: null };
+    G.q = { subject: 'quip', type: 'mc', text: m.prompt, hint: '', options: m.opts.map(function (o) { return o.text; }), correct: -1, answer: '', noclip: true };
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '💬', '', false); masks(true); stageEl().classList.add('novideo'); }
+    // nobody left to vote (a very small game): only show the answers for a moment
+    var voters = list().filter(function (p) { return !p.off && G.best.pids.indexOf(p.pid) < 0; }).length, ms = voters ? QUIP_VOTE_MS : 7000;
+    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
+    endTimer = setTimeout(reveal, ms);
+  }
+  net.on('quip', function (m) {
+    var it = m && G.quips && G.phase === 'qall' && G.quips.items[m.pid];
+    if (!it || it.done) return;
+    var t = String(m.text || '').replace(/\s+/g, ' ').trim().slice(0, 70);
+    if (!t && !m.pass) return;
+    it.text = t; it.done = 1; push(); quipAllCheck();
+  });
   // After the last drawing: everyone votes for the best one (not their own). All drawings are on the
   // screen side by side; the phones get them as small pictures on the buttons.
   var BEST_MS = 25000, BEST_PTS = 3, bestKey = '';
@@ -799,7 +878,7 @@
   }
   // The drawings side by side on the big screen; the winner lights up at the answer.
   function bestRender() {
-    var el = $('bestview'), on = !!G.best && !!G.gallery && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
+    var el = $('bestview'), on = !!G.best && !G.best.quip && !!G.gallery && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     el.classList.toggle('hidden', !on);
     if (!on) { bestKey = ''; return; }
     if (bestKey !== G.best.id + ':' + G.round) {
@@ -854,11 +933,11 @@
   var introTimer = null, introTry = 0;
   function optText(id) { var el = $(id); return el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''; }
   function briefInfo() {
-    var sing = G.atype === 'sing' || G.atype === 'draw';
+    var sing = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip';
     var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.total], ['Video length', optText('s-time')], ['Years', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
     if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', optText('s-scoring')]);
     rows.push(['Show score', optText('s-show')]);
-    return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
+    return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : G.atype === 'quip' ? QUIP_HELP : sing ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
   }
   function briefStart() {
     stopTimers(); clearTimeout(introTimer);
@@ -1212,7 +1291,7 @@
     if (G.phase === 'paused') render();
   }
   // Sing! is a category of its own: there is no question, so the Answers setting does not apply.
-  function singToggle() { var on = $('s-atype').value === 'sing' || $('s-atype').value === 'draw'; $('s-subject').disabled = on; $('s-scoring').disabled = on;
+  function singToggle() { var on = $('s-atype').value === 'sing' || $('s-atype').value === 'draw' || $('s-atype').value === 'quip'; $('s-subject').disabled = on; $('s-scoring').disabled = on;
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     if (lo) lo.disabled = party;
@@ -1231,12 +1310,12 @@
   $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Sing!: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    G.ladderWon = false; G.gallery = null; G.best = null; list().forEach(function (p) { p.rung = 0; p.moved = ''; });
+    G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
@@ -1279,7 +1358,7 @@
     G.total = +$('s-rounds').value; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quizRun = 0; G.lastSpecial = '';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quizRun = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }

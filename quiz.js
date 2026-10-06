@@ -195,7 +195,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // Draw!: one player draws a song on their phone, the others guess. Lines travel as small batches of
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
-var PARTY_HELP = 'Party: a mix of everything. Four quiz questions, then Sing! or Draw!, four more questions, then the other one, and so on. With 10 songs you get both.';
+var PARTY_HELP = 'Party: a mix of everything. Four quiz questions, then a party round (Sing!, Draw! or Quip!), four more questions, then another one, and so on.';
 var DRAW_HELP = 'Draw!: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it. At the end everyone votes for the best drawing, which earns 3 bonus points.';
 var DRAW_COLORS = ['#111111', '#e11d48', '#2563eb', '#16a34a', '#f59e0b', '#ffffff'];   // the last one is the eraser
 function drawClear(cv) { var c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, DRAW_W, DRAW_H); }
@@ -371,3 +371,47 @@ function revealHold(yt, clipStart) {
   } catch (e) {}
   return '';
 }
+
+// ---------- Quip! ----------
+// Everyone gets a line to finish; two answers go head to head and the rest of the room votes.
+// 'h' is the house answer, used when a player has nobody to play against.
+var QUIP_HELP = 'Quip!: everyone gets a line to finish. Two answers go head to head and the others vote. Every vote is 1 point, and the favourite gets 3 more.';
+var QUIP_MS = 60000, QUIP_VOTE_MS = 20000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
+var QUIPS = [
+  { p: 'The worst possible title for a Eurovision song', h: 'Nul Points (Extended Mix)' },
+  { p: 'What the wind machine is really thinking', h: 'I carried that key change' },
+  { p: 'A country that should enter Eurovision but never will', h: 'The Moon' },
+  { p: 'The real reason the United Kingdom got zero points', h: 'They sang the weather forecast' },
+  { p: 'What the commentator says when the song is truly terrible', h: 'Well. That happened.' },
+  { p: 'The strangest thing ever lowered onto a Eurovision stage', h: 'A fully working sauna' },
+  { p: 'A rejected Eurovision slogan', h: 'Come Together, Leave Confused' },
+  { p: 'What the backing dancers whisper to each other mid-song', h: 'Left. No, your other left.' },
+  { p: 'The secret ingredient of every winning song', h: 'Three key changes and a cape' },
+  { p: 'What is actually inside the trophy', h: 'Leftover glitter' },
+  { p: 'A terrible prop to bring on stage', h: 'A live goose with opinions' },
+  { p: 'Our spokesperson opens with: "Good evening Europe, …"', h: '…we would like our points back' },
+  { p: 'A new rule that would make Eurovision better', h: 'Every song must mention soup' },
+  { p: 'What the jury writes in the margin of the scoresheet', h: 'Nice hat. Shame about the song.' },
+  { p: 'The title of the Eurovision song about your last holiday', h: 'Lost My Luggage (In Your Heart)' },
+  { p: 'Why the host changed outfits fourteen times', h: 'The first thirteen caught fire' },
+  { p: 'A lyric that rhymes with "fire"', h: 'My love is like a deep fat fryer' },
+  { p: 'The worst thing to shout during the quiet part of a ballad', h: 'Is this the interval act?' },
+  { p: 'What really happens in the green room', h: 'Competitive snack hoarding' },
+  { p: 'A Eurovision act made up of your family', h: 'Gran and the Remote Controls' },
+  { p: 'The next big Eurovision staging gimmick', h: 'Singing inside a giant kettle' },
+  { p: 'What twelve points should really be called', h: 'A full dozen of approval' },
+  { p: 'How to guarantee last place', h: 'Forget which country you are from' },
+  { p: 'The name of a Eurovision band of office workers', h: 'Reply All' },
+  { p: 'What the pyrotechnics guy does on his day off', h: 'Lights candles very dramatically' },
+  { p: 'A song title that would win in 1965 and lose today', h: 'Tra-La-La Goes My Bicycle' },
+  { p: 'The most Eurovision way to end a relationship', h: 'A key change and a costume reveal' },
+  { p: 'What the postcard before our song should show', h: 'Us, stuck in traffic' },
+  { p: 'An honest name for the voting sequence', h: 'Two Hours of Neighbours' },
+  { p: 'The Eurovision song about doing the dishes', h: 'Rise Like a Sponge' },
+  { p: 'What the winner says first when handed the trophy', h: 'Is it dishwasher safe?' },
+  { p: 'A dance move that should be banned from the stage', h: 'The confused windmill' },
+  { p: 'The theme of next year\'s interval act', h: 'A tribute to stage smoke' },
+  { p: 'Why the song is exactly three minutes long', h: 'The glitter runs out after that' },
+  { p: 'A new Eurovision award nobody wants to win', h: 'Most Enthusiastic Miming' },
+  { p: 'What the cameraman was told just before going live', h: 'Whatever you do, find the drummer' }
+];
