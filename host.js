@@ -2205,8 +2205,10 @@
     autoStop();
     if (!$('auto').checked || G.phase !== 'reveal') return;
     var toEnd = $('autolen').value === 'end';
+    // After a drawing the song only plays for ten seconds (there are as many drawings as players); everything else keeps the setting.
+    if (G.draw && !lastSong()) { toEnd = false; }
     // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
-    autoEnd = Date.now() + (toEnd ? REMOTE ? (G.remain > 0 ? Math.max(5, G.remain + 1 - (G.q && G.q.noclip ? 0 : Math.min(clipSecs(), (Date.now() - (G.guessAt || Date.now())) / 1000))) : 30) : 20 : +$('autolen').value) * 1000;
+    autoEnd = Date.now() + (toEnd ? REMOTE ? (G.remain > 0 ? Math.max(5, G.remain + 1 - (G.q && G.q.noclip ? 0 : Math.min(clipSecs(), (Date.now() - (G.guessAt || Date.now())) / 1000))) : 30) : 20 : G.draw && !lastSong() ? Math.min(10, +$('autolen').value || 10) : +$('autolen').value) * 1000;
     var t0 = Date.now(), last = t0, held = false;
     var draw = function () {
       if (G.phase !== 'reveal') { autoStop(); return; }
