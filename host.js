@@ -1830,6 +1830,56 @@
     }
     return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
   }
+  // A bot's drawing has something to do with its song: a picture for a word in the title (a heart for love,
+  // a sun, a star, fire, rain, music…) and the flag of the country in the corner. Without a word it knows,
+  // the flag is the drawing. Colours: 0 black 1 white 2 red 3 orange 4 yellow 5 green 6 blue 7 purple 8 pink 9 brown 10 grey.
+  var BOT_FLAGS = { nl: ['h', 2, 1, 6], de: ['h', 0, 2, 4], ru: ['h', 1, 6, 2], at: ['h', 2, 1, 2], hu: ['h', 2, 1, 5], bg: ['h', 1, 5, 2], ee: ['h', 6, 0, 1], lt: ['h', 4, 5, 2], lu: ['h', 2, 1, 6],
+    am: ['h', 2, 6, 3], ua: ['h', 6, 4], pl: ['h', 1, 2], mc: ['h', 2, 1], lv: ['h', 9, 1, 9], es: ['h', 2, 4, 2], az: ['h', 6, 2, 5], rs: ['h', 2, 6, 1], yu: ['h', 6, 1, 2], hr: ['h', 2, 1, 6], si: ['h', 1, 6, 2],
+    sk: ['h', 1, 6, 2], gr: ['h', 6, 1, 6, 1, 6], il: ['h', 1, 6, 1, 6, 1], fr: ['v', 6, 1, 2], it: ['v', 5, 1, 2], ie: ['v', 5, 1, 3], be: ['v', 0, 4, 2], ro: ['v', 6, 4, 2], md: ['v', 6, 4, 2], mt: ['v', 1, 2],
+    ad: ['v', 6, 4, 2], pt: ['v', 5, 2, 2], se: ['x', 6, 4], dk: ['x', 2, 1], no: ['x', 2, 6], fi: ['x', 1, 6], is: ['x', 6, 2], ch: ['p', 2, 1], ge: ['p', 1, 2], gb: ['p', 6, 2], tr: ['o', 2, 1], cz: ['h', 1, 2], al: ['p', 2, 0], cy: ['o', 1, 3], ba: ['v', 6, 4, 6], by: ['h', 2, 2, 5], mk: ['o', 2, 4], me: ['o', 2, 4], sm: ['h', 1, 6], ma: ['o', 2, 5], cs: ['h', 6, 1, 2], au: ['p', 6, 1] };
+  var BOT_WORDS = [['heart', /\b(love|loving|lover|heart|amor|amour|amore|liebe|cuore|coraz|kärlek|ljubav|aşk|kiss)/], ['sun', /\b(sun|sunshine|sunlight|summer|sol|soleil|sole|sonne|day)\b/], ['star', /\b(star|stars|étoile|stella|stern|estrella|shine|shining|light|diamond)/],
+    ['moon', /\b(moon|luna|lune|night|nuit|noche|notte|nacht|dream|sleep)/], ['fire', /\b(fire|flame|burn|burning|feuer|fuego|fuoco|feu|hot|heat)/], ['rain', /\b(rain|water|sea|ocean|river|mer|mar|tear|tears|cry|crying|wave|storm)/],
+    ['flower', /\b(flower|flowers|rose|roses|fleur|garden|spring|blossom)/], ['bird', /\b(bird|fly|flying|wing|wings|angel|sky|heaven|free|freedom|wind)/], ['house', /\b(home|house|heim|casa|maison|town|city|street)/],
+    ['eye', /\b(eye|eyes|look|see|watch|yeux|ojos|occhi)/], ['clock', /\b(time|clock|tomorrow|forever|never|always|yesterday|today|hour|moment)/], ['note', /\b(music|song|sing|dance|dancing|melody|rhythm|chanson|canzone|la la|boom|ding|guitar)/]];
+  function botDraw(song) {
+    var L = [], add = function (c, w, p) { L.push({ c: c, w: w, p: p.map(Math.round) }); };
+    var wob = function () { return (Math.random() - 0.5) * 8; };   // a slightly shaky hand
+    var rect = function (x0, y0, x1, y1, c) { var w = Math.min(40, Math.max(10, y1 - y0)), n = Math.max(1, Math.ceil((y1 - y0) / (w * 0.8))); for (var i = 0; i < n; i++) { var y = y0 + w / 2 + (y1 - y0 - w) * (n === 1 ? 0.5 : i / (n - 1)); add(c, w, [x0 + w / 2, y, x1 - w / 2, y]); } };
+    var ring = function (cx, cy, r, c, w, a0, a1) { var p = [], n = 22; a0 = a0 || 0; a1 = a1 == null ? Math.PI * 2 : a1; for (var i = 0; i <= n; i++) { var a = a0 + (a1 - a0) * i / n; p.push(cx + Math.cos(a) * r + wob() / 2, cy + Math.sin(a) * r + wob() / 2); } add(c, w, p); };
+    var disc = function (cx, cy, r, c) { for (var rr = r - 14; rr > 0; rr -= 24) ring(cx, cy, rr, c, 30); add(c, 30, [cx, cy]); };
+    var flag = function (code, x, y, w, hgt) {
+      var f = BOT_FLAGS[code]; if (!f) return false;
+      var cs = f.slice(1), i;
+      if (f[0] === 'h') for (i = 0; i < cs.length; i++) rect(x, y + hgt * i / cs.length, x + w, y + hgt * (i + 1) / cs.length, cs[i]);
+      else if (f[0] === 'v') for (i = 0; i < cs.length; i++) rect(x + w * i / cs.length, y, x + w * (i + 1) / cs.length, y + hgt, cs[i]);
+      else { rect(x, y, x + w, y + hgt, cs[0]); var t = Math.max(10, hgt * 0.16);
+        if (f[0] === 'x') { add(cs[1], t, [x + w * 0.36, y + t / 2, x + w * 0.36, y + hgt - t / 2]); add(cs[1], t, [x + t / 2, y + hgt / 2, x + w - t / 2, y + hgt / 2]); }
+        else if (f[0] === 'p') { add(cs[1], t, [x + w / 2, y + hgt * 0.2, x + w / 2, y + hgt * 0.8]); add(cs[1], t, [x + w * 0.3, y + hgt / 2, x + w * 0.7, y + hgt / 2]); }
+        else ring(x + w * 0.42, y + hgt / 2, hgt * 0.22, cs[1], t * 0.7, 0.6, Math.PI * 2 - 0.6); }
+      add(10, 4, [x, y, x + w, y, x + w, y + hgt, x, y + hgt, x, y]);   // an outline, so white stripes show on white paper
+      return true;
+    };
+    var pics = {
+      heart: function () { var p = []; for (var i = 0; i <= 40; i++) { var a = Math.PI * 2 * i / 40, sx = 16 * Math.pow(Math.sin(a), 3), sy = 13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a); p.push(430 + sx * 11 + wob(), 300 - sy * 11 + wob()); } add(2, 14, p); for (var k = 9; k > 1; k -= 2.2) { var q = []; for (i = 0; i <= 30; i++) { a = Math.PI * 2 * i / 30; q.push(430 + 16 * Math.pow(Math.sin(a), 3) * k, 300 - (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) * k); } add(2, 30, q); } add(2, 40, [430, 290]); },
+      sun: function () { disc(430, 300, 100, 4); for (var i = 0; i < 10; i++) { var a = Math.PI * 2 * i / 10; add(3, 12, [430 + Math.cos(a) * 130, 300 + Math.sin(a) * 130, 430 + Math.cos(a) * 200 + wob(), 300 + Math.sin(a) * 200 + wob()]); } },
+      star: function () { var p = []; for (var i = 0; i <= 10; i++) { var a = -Math.PI / 2 + Math.PI * 2 * i / 10, r = i % 2 ? 80 : 190; p.push(430 + Math.cos(a) * r + wob(), 310 + Math.sin(a) * r + wob()); } add(4, 16, p); disc(430, 310, 70, 4); },
+      moon: function () { rect(40, 40, 760, 560, 6); ring(430, 290, 120, 4, 34, Math.PI * 0.35, Math.PI * 1.65); ring(430, 290, 95, 4, 30, Math.PI * 0.45, Math.PI * 1.55); [[150, 130], [640, 150], [600, 430], [200, 450]].forEach(function (s) { add(1, 16, [s[0], s[1]]); }); },
+      fire: function () { add(2, 34, [330, 480, 300, 360, 380, 250, 400, 330, 450, 150, 520, 300, 560, 260, 580, 380, 540, 480, 330, 480]); add(2, 40, [380, 440, 500, 440]); add(3, 34, [390, 450, 400, 370, 450, 290, 490, 380, 500, 450]); add(4, 30, [430, 450, 445, 390, 465, 450]); },
+      rain: function () { ring(330, 190, 70, 10, 30); ring(430, 160, 85, 10, 30); ring(530, 195, 70, 10, 30); rect(280, 190, 580, 250, 10); for (var i = 0; i < 6; i++) add(6, 12, [300 + i * 55, 300, 280 + i * 55, 360]); for (i = 0; i < 2; i++) { var p = []; for (var x = 120; x <= 740; x += 40) p.push(x, 470 + i * 50 + Math.sin(x / 45) * 16); add(6, 14, p); } },
+      flower: function () { add(5, 14, [430, 330, 440, 560]); add(5, 14, [436, 450, 500, 410]); for (var i = 0; i < 6; i++) { var a = Math.PI * 2 * i / 6; disc(430 + Math.cos(a) * 85, 240 + Math.sin(a) * 85, 46, 8); } disc(430, 240, 44, 4); },
+      bird: function () { ring(250, 160, 55, 10, 24); ring(330, 140, 70, 10, 24); ring(410, 165, 55, 10, 24); [[480, 330, 1.3], [300, 420, 0.8], [600, 220, 0.7]].forEach(function (b) { var s = 70 * b[2]; add(0, 10, [b[0] - s, b[1] - s * 0.5, b[0] - s * 0.5, b[1] - s * 0.75, b[0], b[1], b[0] + s * 0.5, b[1] - s * 0.75, b[0] + s, b[1] - s * 0.5]); }); },
+      house: function () { rect(290, 300, 570, 500, 4); add(2, 26, [260, 310, 430, 160, 600, 310]); add(2, 30, [330, 280, 430, 200, 530, 280]); rect(400, 400, 460, 500, 9); rect(320, 340, 370, 390, 6); add(5, 20, [100, 520, 760, 520]); },
+      eye: function () { var p = [], q = []; for (var x = 200; x <= 660; x += 23) { var k = Math.sin((x - 200) / 460 * Math.PI) * 120; p.push(x, 300 - k); q.push(x, 300 + k); } add(0, 14, p); add(0, 14, q); disc(430, 300, 80, 6); disc(430, 300, 34, 0); },
+      clock: function () { ring(430, 300, 180, 0, 16); add(0, 14, [430, 300, 430, 180]); add(0, 14, [430, 300, 520, 330]); for (var i = 0; i < 12; i++) { var a = Math.PI * 2 * i / 12; add(2, 14, [430 + Math.cos(a) * 150, 300 + Math.sin(a) * 150]); } },
+      note: function () { disc(340, 430, 50, 0); disc(560, 400, 50, 0); add(0, 16, [384, 430, 384, 170, 604, 140, 604, 400]); add(0, 26, [384, 185, 604, 155]); }
+    };
+    var words = ((song[3] || '') + ' ' + ((window.TITLE_EN && TITLE_EN[song[4]]) || '')).toLowerCase(), pic = null;
+    for (var i = 0; i < BOT_WORDS.length && !pic; i++) if (BOT_WORDS[i][1].test(words)) pic = BOT_WORDS[i][0];
+    if (pic) { pics[pic](); flag(song[1], 30, 30, 170, 110); }
+    else if (flag(song[1], 150, 110, 520, 340)) { pics.note = null; add(0, 8, [150, 110, 150, 560]); }   // the flag on its pole
+    else pics.note();
+    return L.length ? L : botScribble();
+  }
   function botScribble() {
     var lines = [];
     for (var s = 0; s < 4; s++) {
@@ -1889,7 +1939,7 @@
         var smart = !G.best && G.q.correct >= 0 && Math.random() < (window.BOT_SMART == null ? 0.5 : window.BOT_SMART);   // right about half the time
         if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(can) });
       }
-      else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { H.draw({ pid: pid, pick: Math.floor(Math.random() * 4) }); H.draw({ pid: pid, lines: botScribble() }); H.draw({ pid: pid, done: 1 }); }
+      else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { var bp = Math.floor(Math.random() * 4), bs = (G.gallery.items[pid].options || [])[bp]; H.draw({ pid: pid, pick: bp }); H.draw({ pid: pid, lines: bs ? botDraw(bs) : botScribble() }); H.draw({ pid: pid, done: 1 }); }
       else if (ph === 'qall') H.quip({ pid: pid, text: pick(G.quips && G.quips.bluff ? BOT_BLUFFS : BOT_LINES) });
       else if (ph === 'svote' && G.sing) H.poll({ pid: pid, choice: Math.floor(Math.random() * G.sing.options.length) });
       else if (ph === 'srec' && G.sing) { try { if (G.sing.clips[pid]) URL.revokeObjectURL(G.sing.clips[pid]); G.sing.clips[pid] = botTune(); G.sing.in[pid] = 1; push(); allIn(); } catch (e) { H.clip({ pid: pid, skip: true }); } }   // a bot "sings" a random little tune
