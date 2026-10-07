@@ -48,12 +48,41 @@
   $('editname').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pickSave(); } });
   profile();
   function hud() { $('hud').textContent = S.phase === 'setup' || S.phase === 'end' ? '' : 'Song ' + S.round + ' / ' + S.total + ' · ' + S.score + (S.score === 1 ? ' point' : ' points'); }   // tiny, under the logo
-  function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, $('s-subject').value, $('s-scoring').value].join('|'); }
+  function bestKey() { return 'esc-solo-best3-' + [S.total, S.guessMs, $('s-era').value, $('s-cat').value, $('s-atype').value, (types || ['all']).join('+'), skip, $('s-scoring').value].join('|'); }
   function getBest() { try { return +localStorage.getItem(bestKey()) || 0; } catch (e) { return 0; } }
+
+  // ---------- settings shared with the host screen: question types and songs to leave out ----------
+  var types = null, skip = '';
+  function skipped(code) { return !!skip && skip.split(',').indexOf(code) >= 0; }
+  function playSongs() { return skip ? songs.filter(function (s) { return !skipped(s[1]); }) : songs; }
+  function playCountries() { if (!skip) return countries; var c = {}, k; for (k in countries) if (!skipped(k)) c[k] = countries[k]; return c; }
+  function readTypes(save) {
+    var all = $('typebox').querySelectorAll('input'), on = [];
+    [].forEach.call(all, function (el) { if (el.checked) on.push(el.getAttribute('data-type')); });
+    types = on.length ? on : null;
+    $('typesum').textContent = !on.length || on.length === all.length ? 'All' : 'Custom';
+    if (save) try { var pk = JSON.parse(localStorage.getItem('esc-picks') || 'null') || {}; pk.t = on; localStorage.setItem('esc-picks', JSON.stringify(pk)); } catch (e) {}
+  }
+  try {
+    var pk0 = JSON.parse(localStorage.getItem('esc-picks') || 'null');
+    if (pk0 && pk0.t && pk0.t.length) [].forEach.call($('typebox').querySelectorAll('input'), function (el) { el.checked = pk0.t.indexOf(el.getAttribute('data-type')) >= 0; });
+    var sk0 = localStorage.getItem('esc-skip'); if (sk0 && $('s-skip').querySelector('option[value="' + sk0 + '"]')) $('s-skip').value = sk0;
+  } catch (e) {}
+  skip = $('s-skip').value; readTypes(false);
+  $('typebox').addEventListener('change', function () { readTypes(true); ready(); });
+  $('s-skip').addEventListener('change', function () { skip = $('s-skip').value; try { localStorage.setItem('esc-skip', skip); } catch (e) {} ready(); });
+  (function () {
+    var m = $('typebox'), b = m.querySelector('.multibtn'), p = m.querySelector('.multipanel');
+    function shut() { p.classList.add('hidden'); b.setAttribute('aria-expanded', 'false'); }
+    b.addEventListener('click', function (e) { e.stopPropagation(); b.setAttribute('aria-expanded', p.classList.toggle('hidden') === false ? 'true' : 'false'); });
+    p.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('click', shut);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shut(); });
+  })();
 
   function ready() {
     if (!songs.length) return;
-    pool = poolFor(songs, $('s-era').value, $('s-cat').value);
+    pool = poolFor(playSongs(), $('s-era').value, $('s-cat').value);
     S.total = +$('s-rounds').value; S.guessMs = (+$('s-time').value + AFTER) * 1000;
     $('songcount').textContent = pool.length ? pool.length + ' songs in this selection.'
       : 'No songs match this combination. Semi-finals only started in 2004, so there are no non-qualifiers before that.';
@@ -110,7 +139,7 @@
     var free = pool.filter(function (s) { return !used[s[4]]; });
     if (!free.length) { used = {}; free = pool; }
     S.song = free[Math.floor(Math.random() * free.length)]; used[S.song[4]] = 1;
-    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, songs, countries, { pair: true, cat: $('s-cat').value, pool: pool }); S.picked = -1;
+    S.q = makeQuestion(S.song, $('s-subject').value, $('s-atype').value, playSongs(), playCountries(), { pair: true, cat: $('s-cat').value, pool: pool, types: types }); S.picked = -1;
     if (S.q.swap) { S.song = S.q.swap; used[S.song[4]] = 1; }   // the question brought its own song
     stage = 'probe';
     cover(true, '', 'Selecting song'); countStart(); masks(true);
@@ -316,7 +345,7 @@
   // Autoplay: with the box ticked the next song starts by itself, after 10, 20 or 30 seconds or when
   // the song that is playing has finished ("Until the end").
   var autoTick = null, autoEnd = 0;
-  try { $('auto').checked = localStorage.getItem('esc-auto') === '1'; var al = localStorage.getItem('esc-autolen'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
+  try { $('auto').checked = localStorage.getItem('esc-auto2') !== '0'; var al = localStorage.getItem('esc-autolen2'); if (al && $('autolen').querySelector('option[value="' + al + '"]')) $('autolen').value = al; } catch (e) {}
   // Seconds left of the song that is playing, or null when that cannot be told right now.
   function songLeft() {
     if (isPair() && S.q.correct === 1) return yt2.left();
@@ -349,11 +378,11 @@
     draw(); autoTick = setInterval(draw, 200);
   }
   $('auto').addEventListener('change', function () {
-    try { localStorage.setItem('esc-auto', $('auto').checked ? '1' : '0'); } catch (e) {}
+    try { localStorage.setItem('esc-auto2', $('auto').checked ? '1' : '0'); } catch (e) {}
     autoStart();
   });
   $('autolen').addEventListener('change', function () {
-    try { localStorage.setItem('esc-autolen', $('autolen').value); } catch (e) {}
+    try { localStorage.setItem('esc-autolen2', $('autolen').value); } catch (e) {}
     autoStart();
   });
   $('start').addEventListener('click', function () {
@@ -374,5 +403,6 @@
 
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { songs = d.songs; countries = d.countries; ready(); })
     .catch(function () { $('start').textContent = 'Could not load songs'; });
+  keepSettings(['s-era', 's-cat', 's-time', 's-scoring', 's-rounds']);   // shared with the host screen
   render();
 })();

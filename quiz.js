@@ -483,3 +483,17 @@ var QUIPS = [
   { p: 'Which bad decision does this song make you want to make?', h: 'Texting someone at 3 a.m.' },
   { p: 'What would the bedroom version of this song be called?', h: 'Nul Points' }
 ];
+
+// The lobby settings are remembered on this device and shared by the host screen and solo play:
+// what is set in one is there in the other (as far as it has that choice).
+function keepSettings(ids) {
+  ids.forEach(function (id) {
+    var el = document.getElementById(id); if (!el) return;
+    try {
+      var v = localStorage.getItem('esc-set-' + id), ok = false;
+      if (v !== null && v !== el.value) [].forEach.call(el.options, function (o) { if (o.value === v && !o.disabled) ok = true; });
+      if (ok) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); }
+    } catch (e) {}
+    el.addEventListener('change', function () { try { localStorage.setItem('esc-set-' + id, el.value); } catch (e) {} });
+  });
+}

@@ -433,8 +433,8 @@
   }
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
-    var dall = (G.phase === 'dall' && !!G.gallery) || (G.phase === 'qall' && !!G.quips), busyOf = G.phase === 'qall' ? G.quips : G.gallery, on = dall || (G.sing && (G.phase === 'srec' || G.phase === 'sbest'));   // quiz rounds show who has answered in the score panel instead   // during the song vote the voters show behind each song instead
-    var play = G.sing && G.phase === 'splay';
+    var dall = (G.phase === 'dall' && !!G.gallery) || (G.phase === 'qall' && !!G.quips), busyOf = G.phase === 'qall' ? G.quips : G.gallery, on = dall || (G.sing && G.phase === 'srec');   // quiz rounds show who has answered in the score panel instead   // during the song vote the voters show behind each song instead
+    var play = false;   // while the recordings play the singers are bars, with their voters behind them
     $('answered').classList.toggle('hidden', !on && !play);
     if (play) {
       // The singers in playing order; the one being heard right now lights up.
@@ -1517,15 +1517,15 @@
     else if (G.phase === 'loading') t = 'We’re singing: ' + name;
     else if (G.phase === 'slisten') t = 'Listen first: ' + name;
     else if (G.phase === 'srec') t = 'Sing it! Record up to 10 seconds on your phone';
-    else if (G.phase === 'splay') t = (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + (players[sg.now] ? players[sg.now].name : '');
-    else if (G.phase === 'sbest') {
+    else if (G.phase === 'splay' || G.phase === 'sbest') {
       // The vote is open while the recordings keep playing: behind each singer, who has voted for them so far.
-      t = 'Who sang it best? Vote on your phone';
+      t = G.phase === 'splay' ? 'Now singing: ' + (players[sg.now] ? players[sg.now].name : '') : 'Who sang it best? Vote on your phone';
+      var open = G.phase === 'sbest';
       opts = sg.order.map(function (pid) {
         var p = players[pid]; if (!p) return '';
         var who = list().filter(function (v) { return sg.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
         return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">♪ singing now</span>' : '') + '</div><div class="voters">' +
-          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '<span class="mute">No votes yet</span>') + '</div></div>';
+          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : (open ? '<span class="mute">No votes yet</span>' : '')) + '</div></div>';
       }).join('');
     }
     else if (G.phase === 'reveal') {
@@ -1534,7 +1534,7 @@
       opts = (sg.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + charSvg(r.char) + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
-    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' );   // the song vote: one song per row, its voters behind it
+    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' || G.phase === 'splay');   // the song vote: one song per row, its voters behind it
   }
 
 
@@ -1851,6 +1851,7 @@
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   fetch('chorus.json?v=43').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  keepSettings(['s-era', 's-cat', 's-time', 's-scoring', 's-rounds']);   // shared with solo play
   restore();
   render();
 })();
