@@ -917,7 +917,7 @@
     if (how === 'order') { G.partyIdx = (G.partyIdx || 0) + 1; partyGo(games[(G.partyIdx - 1) % games.length]); return; }
     if (how === 'vote' || how === 'one') { partyVote(games, how === 'one'); return; }
     var fresh = games.filter(function (x) { return x !== G.lastParty; }), chosen = pick(fresh.length ? fresh : games);
-    partySpin(games, chosen, function () { partyGo(chosen, 3000); });
+    partyGo(chosen);   // random: no spin, straight to the round
   }
   // A vote (or one player's choice) on the phones, with the party rounds as the answers.
   var PICK_MS = 15000;
