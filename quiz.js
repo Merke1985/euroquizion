@@ -219,7 +219,7 @@ function makePeel(song, allSongs, countries, opt) {
   shuffle(opts);
   return { subject: 'peel', swap: swap, peel: true, type: 'mc', text: 'Behind the curtain: which song is this? The sooner you know, the more points.', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
 }
-// fast ("Fast forward"): the clip at double speed, picture hidden; four bars with title and artist. Only on a shared screen.
+// fast ("Slow motion"; it began as double speed, hence the name): the clip at half speed, picture hidden; four bars with title and artist. Only on a shared screen.
 function makeFast(song, allSongs) {
   var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}; seen[song[4]] = 1;
   var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); } };
@@ -227,7 +227,7 @@ function makeFast(song, allSongs) {
   shuffle(allSongs.slice()).forEach(add);
   if (opts.length < 4) return null;
   shuffle(opts);
-  return { subject: 'fast', fast: true, type: 'mc', text: 'Fast forward: which song is this, at double speed?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
+  return { subject: 'fast', fast: true, type: 'mc', text: 'Slow motion: which song is this, at half speed?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
 }
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   if (opt && opt.types && subjectSetting === 'random') {
