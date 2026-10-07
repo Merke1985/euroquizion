@@ -260,14 +260,17 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
 var PARTY_HELP = 'Party: after every three quiz questions a spin picks a party round (Jury Show, Postcard, Green Room or Lost in Translation). Postcard scores extra here: 4 per guessed drawing.';
 var DRAW_HELP = 'Postcard: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it. At the end everyone votes for the best drawing, which earns 3 bonus points.';
-var DRAW_COLORS = ['#111111', '#e11d48', '#2563eb', '#16a34a', '#f59e0b', '#ffffff'];   // the last one is the eraser
-function drawClear(cv) { var c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, DRAW_W, DRAW_H); }
+var DRAW_COLORS = ['#111111', '#ffffff', '#e11d48', '#f97316', '#f59e0b', '#16a34a', '#2563eb', '#7c3aed', '#ec4899', '#92400e', '#9ca3af', '#ffffff'];   // the last one is the eraser: it paints in the background colour
+var DRAW_BGS = ['#ffffff', '#111111', '#bfdbfe', '#fde68a', '#bbf7d0', '#fecaca'];   // paper colours; a drawing starts on white
+var DRAW_SIZES = [3, 7, 14];
+// The paper colour is remembered on the canvas, so that the eraser knows what to paint with.
+function drawClear(cv, bg) { var c = cv.getContext('2d'); cv._bg = DRAW_BGS[bg] || '#ffffff'; c.fillStyle = cv._bg; c.fillRect(0, 0, DRAW_W, DRAW_H); }
 function drawPaint(cv, m) {
   if (!m) return;
-  if (m.clear) { drawClear(cv); return; }
+  if (m.clear) { drawClear(cv, m.bg); return; }
   var p = m.p, c = cv.getContext('2d');
   if (!p || p.length < 2) return;
-  c.strokeStyle = c.fillStyle = DRAW_COLORS[m.c] || DRAW_COLORS[0];
+  c.strokeStyle = c.fillStyle = m.c === DRAW_COLORS.length - 1 ? (cv._bg || '#ffffff') : (DRAW_COLORS[m.c] || DRAW_COLORS[0]);
   c.lineWidth = Math.max(2, Math.min(40, +m.w || 6)); c.lineCap = c.lineJoin = 'round';
   if (p.length === 2) { c.beginPath(); c.arc(p[0], p[1], c.lineWidth / 2, 0, 7); c.fill(); return; }
   c.beginPath(); c.moveTo(p[0], p[1]);

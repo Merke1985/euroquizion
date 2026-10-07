@@ -277,7 +277,7 @@
     if (rec && rec.state !== 'inactive') { try { rec.onstop = null; rec.stop(); } catch (e) {} }
     rec = null; recBlob = null; recChunks = [];
     $('srecbtn').textContent = 'Start recording'; $('srecbtn').disabled = false; $('srecbtn').classList.remove('live'); $('srecbtn').classList.remove('hidden');
-    $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = '';
+    $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = ''; $('scount').classList.add('hidden');
   }
   function renderSing(s, m) {
     var sg = s.sing, key = s.phase + ':' + s.round, fresh = key !== sKey;
@@ -293,8 +293,7 @@
     if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
     if (s.phase === 'svote') {
       $('stitle').textContent = 'Which song shall we sing?'; $('ssub').textContent = 'Vote for one. The most votes wins.';
-      if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<div class="optcol"><button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button><div class="voters" data-t="' + i + '"></div></div>'; }).join('');
-      [].forEach.call($('sopts').querySelectorAll('.voters'), function (el) { var n = (sg.tally || [])[+el.getAttribute('data-t')] || 0; el.textContent = n ? n + (n === 1 ? ' vote' : ' votes') : 'No votes yet'; el.classList.toggle('mute', !n); });
+      if (fresh) $('sopts').innerHTML = (sg.options || []).map(function (o, i) { return '<div class="optcol"><button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button></div>'; }).join('');   // the votes only show on the big screen
     } else if (s.phase === 'sbest') {
       $('stitle').textContent = 'Who sang it best?'; $('ssub').textContent = 'You can’t vote for yourself.';
       if (fresh) $('sopts').innerHTML = (sg.order || []).map(function (o, i) { return o.pid === pid ? '' : '<button type="button" class="opt" data-i="' + i + '">' + esc(o.name) + '</button>'; }).join('');
@@ -337,7 +336,7 @@
       rec.onstop = function () {
         recBlob = new Blob(recChunks, { type: (rec && rec.mimeType) || mime || 'audio/webm' });
         recRelease();
-        $('srecbtn').classList.add('hidden'); $('srecbtn').classList.remove('live');
+        $('srecbtn').classList.add('hidden'); $('srecbtn').classList.remove('live'); $('scount').classList.add('hidden');
         $('sprev').src = URL.createObjectURL(recBlob); $('sprev').classList.remove('hidden'); $('srecdone').classList.remove('hidden');
         $('srecstate').className = 'fb'; $('srecstate').textContent = 'Happy with it?';
       };
@@ -345,14 +344,17 @@
       var mine = rec, n = 3;
       $('srecbtn').disabled = true; $('srecstate').className = 'fb close'; $('srecstate').textContent = 'Get ready…';
       var count = function () {
-        if (rec !== mine) { $('srecbtn').disabled = false; return; }   // taken back in the meantime
-        if (n > 0) { $('srecbtn').textContent = String(n--); setTimeout(count, 1000); return; }
-        $('srecbtn').disabled = false;
+        if (rec !== mine) { $('srecbtn').disabled = false; $('scount').classList.add('hidden'); return; }   // taken back in the meantime
+        // a giant circle counts 3, 2, 1, 0: at 0 the recording starts
+        $('scount').classList.remove('hidden'); $('scount').classList.remove('live'); $('scount').textContent = String(n);
+        $('scount').classList.remove('tick'); void $('scount').offsetWidth; $('scount').classList.add('tick');
+        if (n > 0) { n--; setTimeout(count, 1000); return; }
+        $('srecbtn').disabled = false; $('scount').classList.add('live');
         rec.start(); recT0 = Date.now();
         $('srecbtn').textContent = 'Stop'; $('srecbtn').classList.add('live');
         recTick = setInterval(function () {
           var left = REC_MAX - (Date.now() - recT0);
-          $('srecstate').textContent = 'Recording… ' + Math.max(0, Math.ceil(left / 1000)) + ' s left';
+          $('srecstate').textContent = 'Recording… ' + Math.max(0, Math.ceil(left / 1000)) + ' s left'; $('scount').textContent = String(Math.max(0, Math.ceil(left / 1000)));
           if (left <= 0) recStop();
         }, 100);
       };
@@ -646,16 +648,19 @@
   function drawFinish(skip) { padFlush(); padShip(); padDone = true; padSkipped = !!skip; drawTell(skip ? { skip: 1 } : { done: 1 }); show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
   $('dpass').addEventListener('click', function () { drawFinish(true); });
   $('ddone').addEventListener('click', function () { drawFinish(false); });
-  var dKey = '', padColor = 0, padWidth = 6, padBuf = [], padDown = false, padLast = null, padTick = null;
+  var dKey = '', padColor = 0, padWidth = DRAW_SIZES[1], padBg = 0, padAll = [], padBuf = [], padDown = false, padLast = null, padTick = null;
   function padTools() {
+    var er = DRAW_COLORS.length - 1;
     $('dtools').innerHTML = DRAW_COLORS.map(function (c, i) {
-      return '<button type="button" data-c="' + i + '" class="' + (i === padColor ? 'on' : '') + '" style="background:' + c + '" aria-label="' + (i === DRAW_COLORS.length - 1 ? 'Eraser' : 'Colour') + '">' + (i === DRAW_COLORS.length - 1 ? '⌫' : '') + '</button>';
-    }).join('') + '<button type="button" data-w="1" class="wide">' + (padWidth > 6 ? 'Thick' : 'Thin') + '</button><button type="button" data-clear="1" class="wide">Clear</button>';
+      return '<button type="button" data-c="' + i + '" class="' + (i === padColor ? 'on' : '') + '" style="background:' + (i === er ? DRAW_BGS[padBg] : c) + (i === er && padBg === 1 ? ';color:#fff' : '') + '" aria-label="' + (i === er ? 'Eraser' : 'Colour') + '">' + (i === er ? '⌫' : '') + '</button>';
+    }).join('') + '<span class="toolbreak"></span>' + DRAW_SIZES.map(function (w, i) {
+      return '<button type="button" data-w="' + w + '" class="size' + (w === padWidth ? ' on' : '') + '" aria-label="' + ['Thin', 'Medium', 'Thick'][i] + ' line"><i style="width:' + (w + 3) + 'px;height:' + (w + 3) + 'px"></i></button>';
+    }).join('') + '<button type="button" data-bg="1" class="wide"><i class="paper" style="background:' + DRAW_BGS[padBg] + '"></i>Background</button><button type="button" data-clear="1" class="wide">Clear</button>';
   }
   // Nobody watches the drawing live, so the lines are not sent one by one: they are collected and go
   // out together every second and a half (and at once when time is nearly up, or on Done).
   var padOut = [], padOutAt = 0;
-  function padSend(m) { padOut.push(m); }
+  function padSend(m) { padOut.push(m); if (m.clear) padAll = []; else padAll.push(m); }
   function padShip() { if (!padOut.length || !net) return; net.send('draw', { pid: pid, lines: padOut }); padOut = []; padOutAt = Date.now(); }
   setInterval(function () {
     if (!padOut.length || !state || state.phase !== 'dall') return;
@@ -666,7 +671,7 @@
     var m = { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: padBuf };
     padSend(m); padBuf = padDown && padLast ? [padLast[0], padLast[1]] : [];   // the next batch continues from the last point
   }
-  function padReset() { padOut = []; padBuf = []; padDown = false; padLast = null; drawClear($('dcanvas')); padTools(); clearInterval(padTick); padTick = setInterval(function () { if (padBuf.length > 2) padFlush(); }, 400); }
+  function padReset() { padOut = []; padAll = []; padBg = 0; padBuf = []; padDown = false; padLast = null; drawClear($('dcanvas')); padTools(); clearInterval(padTick); padTick = setInterval(function () { if (padBuf.length > 2) padFlush(); }, 400); }
   function padPoint(e) { var r = $('dcanvas').getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * DRAW_W), Math.round((e.clientY - r.top) / r.height * DRAW_H)]; }
   function padLocal(a, b) { drawPaint($('dcanvas'), { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: b ? [a[0], a[1], b[0], b[1]] : [a[0], a[1]] }); }
   $('dcanvas').addEventListener('pointerdown', function (e) {
@@ -687,8 +692,14 @@
   $('dtools').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.hasAttribute('data-c')) padColor = +b.getAttribute('data-c');
-    else if (b.hasAttribute('data-w')) padWidth = padWidth > 6 ? 6 : 14;
-    else if (b.hasAttribute('data-clear')) { drawClear($('dcanvas')); padSend({ clear: 1 }); }
+    else if (b.hasAttribute('data-w')) padWidth = +b.getAttribute('data-w');
+    else if (b.hasAttribute('data-clear')) { drawClear($('dcanvas'), padBg); padSend({ clear: 1, bg: padBg }); }
+    else if (b.hasAttribute('data-bg')) {
+      // the next paper colour: the page is painted again in it, with everything drawn so far on top
+      padFlush(); padBg = (padBg + 1) % DRAW_BGS.length;
+      var keep = padAll.slice(); drawClear($('dcanvas'), padBg); padSend({ clear: 1, bg: padBg });
+      keep.forEach(function (m) { drawPaint($('dcanvas'), m); padSend(m); });
+    }
     padTools();
   });
   $('dopts').addEventListener('click', function (e) {

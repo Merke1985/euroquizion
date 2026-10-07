@@ -926,7 +926,15 @@
   function partyChoose(games) {
     var how = games.length < 2 ? 'single' : (G.partyPick || 'spin');
     if (how === 'single') { partyGo(games[0]); return; }
-    if (how === 'order') { G.partyIdx = (G.partyIdx || 0) + 1; partyGo(games[(G.partyIdx - 1) % games.length]); return; }
+    if (how === 'order') {
+      // Grand tour: the spin picks among the minigames that have not been played yet; the played ones are greyed
+      // out. Once all have had their turn, they are all back in.
+      var done = G.partyDone || (G.partyDone = []), left = games.filter(function (x) { return done.indexOf(x) < 0; });
+      if (!left.length) { done.length = 0; left = games.filter(function (x) { return x !== G.lastParty; }); if (!left.length) left = games.slice(); }
+      var next = pick(left); done.push(next);
+      if (left.length > 1) partySpin(left, next, function () { partyGo(next, 3000); }); else partyGo(next);
+      return;
+    }
     if (how === 'vote' || how === 'one') { partyVote(games, how === 'one'); return; }
     var fresh = games.filter(function (x) { return x !== G.lastParty; }), chosen = pick(fresh.length ? fresh : games);
     partySpin(games, chosen, function () { partyGo(chosen, 3000); });   // random: the spin picks one of the rounds that are switched on
@@ -1196,7 +1204,7 @@
     if (m.done) { if (!it.done) { it.done = 1; push(); drawAllCheck(); } return; }
     if (it.chosen == null || it.done || !m.lines) return;
     m.lines.forEach(function (l) {   // a bundle of lines (and maybe a 'clear') in the order they were made
-      if (l.clear) it.strokes = [];
+      if (l.clear) it.strokes = l.bg ? [{ clear: 1, bg: l.bg }] : [];   // a cleared page keeps its paper colour
       else if (l.p && l.p.length >= 2 && it.strokes.length < 4000) it.strokes.push({ c: l.c, w: l.w, p: l.p });
     });
   });
@@ -1510,8 +1518,11 @@
     cover(false); masks(false);
     clearInterval(silenceTick); silenceTick = null;
     // The winning recording keeps playing over the (silent) video, which jumps back to the same spot every time.
-    var best = G.sing.result.filter(function (r) { return r.win && G.sing.clips[r.pid]; })[0] || (G.sing.result.length === 1 && G.sing.clips[G.sing.result[0].pid] ? G.sing.result[0] : null);
-    if (best) { G.sing.loop = best.pid; G.sing.loopFails = 0; winnerLoop(); }
+    // With a tie, the winners' recordings take turns.
+    var bests = G.sing.result.filter(function (r) { return r.win && G.sing.clips[r.pid]; }).map(function (r) { return r.pid; });
+    if (!bests.length && G.sing.result.length === 1 && G.sing.clips[G.sing.result[0].pid]) bests = [G.sing.result[0].pid];
+    var best = bests.length;
+    if (best) { G.sing.loops = bests; G.sing.loopI = -1; G.sing.loop = bests[0]; G.sing.loopFails = 0; winnerLoop(); }
     else { try { if (G.sing.chosen != null) { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {} }
     push(); autoStart();
   }
@@ -1520,6 +1531,7 @@
     clearTimeout(singTimer); stopAudio(); silence();
     try { yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
     silence();
+    if (G.sing.loops && G.sing.loops.length) { G.sing.loopI = (G.sing.loopI + 1) % G.sing.loops.length; G.sing.loop = G.sing.loops[G.sing.loopI]; if (G.sing.loops.length > 1) { G.sing.now = G.sing.loop; render(); } }
     var a = recPlay(G.sing.clips[G.sing.loop]), done = false;
     var again = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(winnerLoop, 900); };
     // A recording that will not start is tried again a few times, not forever.
@@ -1572,7 +1584,7 @@
       song: chosen ? { title: chosen[3], artist: chosen[2] } : null,
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
       now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: SING_REROLLS - (sg.rerolls || 0),
-      tally: G.phase === 'svote' ? sg.options.map(function (o, i) { var n = 0, k; for (k in sg.votes) if (sg.votes[k] === i) n++; return n; }) : null };
+      tally: null };   // the votes are for the big screen only
   }
   function renderSing() {
     var sg = G.sing;
@@ -1613,7 +1625,7 @@
       opts = sg.order.map(function (pid) {
         var p = players[pid], r = (sg.result || []).filter(function (x) { return x.pid === pid; })[0]; if (!p) return '';
         var who = list().filter(function (v) { return sg.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
-        return '<div class="optcol"><div class="opt' + (r && r.win ? ' right' : '') + '">' + charSvg(p.char) + esc(p.name) + '</div><div class="voters">' +
+        return '<div class="optcol"><div class="opt' + (r && r.win ? ' right' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">♪</span>' : '') + '</div><div class="voters">' +
           (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return who.length > 2 || sg.order.length > 4 ? '<span class="face" title="' + esc(v.name) + '">' + charSvg(v.char) + '</span>' : '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '') + '</div></div>';
       }).join('');
     }
@@ -1689,7 +1701,7 @@
     for (var s = 0; s < 4; s++) {
       var x = 100 + Math.random() * 600, y = 100 + Math.random() * 400, p = [Math.round(x), Math.round(y)];
       for (var i = 0; i < 14; i++) { x = Math.max(20, Math.min(780, x + (Math.random() - 0.5) * 160)); y = Math.max(20, Math.min(580, y + (Math.random() - 0.5) * 160)); p.push(Math.round(x), Math.round(y)); }
-      lines.push({ c: Math.floor(Math.random() * 5), w: Math.random() < 0.5 ? 6 : 14, p: p });
+      lines.push({ c: [0, 2, 4, 5, 6][Math.floor(Math.random() * 5)], w: Math.random() < 0.5 ? 6 : 14, p: p });
     }
     return lines;
   }
@@ -1858,7 +1870,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.partyPick = $('s-partypick').value; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.partyDone = []; G.partyPick = $('s-partypick').value; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }
