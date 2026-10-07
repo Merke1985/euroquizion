@@ -660,6 +660,9 @@
       if (st !== 1 || d <= 0) return;
       if (d < 100 && late < 40000) { if (late > 2500) adNote(true); return; }   // shorter than any song
       var cs = d < 45 ? 0 : Math.floor(15 + frac * (d - 15 - 20 - clipLen()));
+      // Behind the curtain and Out of focus last a minute and the song plays on at the answer: they start early in the
+      // video (5 to 30 seconds in, sooner for a short one), so there is at least a minute and a half of song left.
+      if (G.q && G.q.peel) cs = Math.max(0, Math.min(Math.floor(5 + frac * 25), Math.floor(d - 100)));
       if (G.sing) {
         // Sing! wants the chorus: an exact start from chorus.json if the song has one, otherwise the
         // stretch where a three-minute Eurovision song usually reaches its first chorus.
