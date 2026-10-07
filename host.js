@@ -861,6 +861,9 @@
       var second = G.q.correct === 1;
       stageEl().classList.toggle('second', second && !yt2.shared);
       try { if (second) { if (!yt2.shared) yt.pauseVideo(); if (pairStep === 0) yt2.play(); else yt2.resume(); } else if (yt2.shared && yt2.back()) { /* the first song is back in the one player */ } else { yt2.pause(); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
+    } else if (G.q && G.q.peel && !REMOTE) {
+      // Behind the curtain: the video simply carries on where it is, now with its sound
+      try { yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
     } else if (lateLoad && !REMOTE) {
       // only now does the video come in, somewhere in the middle of the song
       lateLoad = false; clipStart = Math.floor(35 + Math.random() * 50);
