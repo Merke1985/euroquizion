@@ -180,7 +180,7 @@ function makeFlag(song, allSongs, countries) {
   shuffle(allSongs.slice()).forEach(add);
   if (opts.length < 4) return null;
   shuffle(opts);
-  return { subject: 'flag', type: 'mc', flag: song[1], noclip: true, text: 'Whose flag? Which of these songs was sent by this country?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer),
+  return { subject: 'flag', type: 'mc', flag: song[1], noclip: true, text: 'Which song does this flag belong to?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer),
     explain: song[3] + ' was sent by ' + (countries[song[1]] || song[1]) + '.' };
 }
 // The flag as a picture (it looks the same on every computer; flag emoji are not drawn everywhere), with the emoji as a stand-in.
@@ -202,9 +202,11 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
     var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher') && ((t !== 'peel' && t !== 'blur') || opt.peel); });
     if (on.length) {   // (always by these weights: every type has its own share)
       var total = 0, r, t = on[0], o2 = {}, k;
-      on.forEach(function (x) { total += TYPE_WEIGHT[x]; });
+      // a type that has been passed over gets a slightly bigger share each time (opt.wait: questions since it was last played)
+      var wOf = function (x) { return TYPE_WEIGHT[x] * (1 + 0.15 * Math.min(20, (opt.wait && opt.wait[x]) || 0)); };
+      on.forEach(function (x) { total += wOf(x); });
       r = Math.random() * total;
-      for (var i = 0; i < on.length; i++) { r -= TYPE_WEIGHT[on[i]]; if (r <= 0) { t = on[i]; break; } }
+      for (var i = 0; i < on.length; i++) { r -= wOf(on[i]); if (r <= 0) { t = on[i]; break; } }
       for (k in opt) if (k !== 'types') o2[k] = opt[k];
       var made = makeQuestion(song, t, typeSetting, allSongs, countries, o2);
       var kind = ['country', 'artist', 'title', 'year', 'place'].indexOf(made.subject) >= 0 ? 'facts' : made.subject;

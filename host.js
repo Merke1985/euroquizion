@@ -611,6 +611,26 @@
 
   function stopTimers() { clearInterval(poll); clearTimeout(watchdog); clearTimeout(endTimer); clearTimeout(pairTimer); }
 
+  // Variety: a type of question that has just been played sits out the next two questions (as far as the
+  // switched-on types allow: with only one or two on, there is nothing else to pick).
+  function typesNow() {
+    var base = G.types || Object.keys(TYPE_WEIGHT), seen = (G.typeLast || []).filter(function (x) { return x.round !== G.round; }).map(function (x) { return x.kind; });
+    var t = base.filter(function (x) { return seen.indexOf(x) < 0; });
+    if (!t.length && seen.length) t = base.filter(function (x) { return x !== seen[seen.length - 1]; });   // then at least not the same one twice in a row
+    return t.length ? t : base;
+  }
+  function typeNote(q) {
+    if (!q) return q;
+    var kind = ['country', 'artist', 'title', 'year', 'place', 'points'].indexOf(q.subject) >= 0 ? 'facts' : q.subject;
+    if (!(G.typeLast || []).some(function (x) { return x.round === G.round; })) {
+      G.typeWait = G.typeWait || {};
+      (G.types || Object.keys(TYPE_WEIGHT)).forEach(function (x) { G.typeWait[x] = (G.typeWait[x] || 0) + 1; });
+    }
+    G.typeWait[kind] = 0;
+    G.typeLast = (G.typeLast || []).filter(function (x) { return x.round !== G.round; });   // (a replacement for a broken video is the same question slot)
+    G.typeLast.push({ round: G.round, kind: kind }); if (G.typeLast.length > 2) G.typeLast = G.typeLast.slice(-2);
+    return q;
+  }
   var lateLoad = false;
   function loadSong(fixed) {
     if (REMOTE) { remoteLoad(fixed); return; }
@@ -618,7 +638,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, peel: true, cat: G.cat, pool: G.pool, types: G.types || Object.keys(TYPE_WEIGHT) });
+    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : typeNote(makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, peel: true, cat: G.cat, pool: G.pool, types: typesNow(), wait: G.typeWait }));
     if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }   // the question brought its own song
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
@@ -998,7 +1018,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { cat: G.cat, pool: G.pool, types: G.types });
+    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = typeNote(makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { cat: G.cat, pool: G.pool, types: typesNow(), wait: G.typeWait }));
     if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }
     G.clip = { id: G.song[4], frac: Math.random(), noclip: !!G.draw || !!(G.q && G.q.noclip) }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
@@ -2269,7 +2289,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.typeLast = []; G.typeWait = {}; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
