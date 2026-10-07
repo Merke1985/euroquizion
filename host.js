@@ -1514,7 +1514,11 @@
       G.phase = 'loading'; G.sing.in = {}; push();
       loadSong(G.sing.options[chosen]);
     };
-    if (top.length < 2) { go(); return; }
+    if (top.length < 2) {
+      // Everyone voted for the same song: no spin needed, but it lights up green for a moment before the game moves on.
+      G.phase = 'sroll'; G.sing.in = {}; G.sing.tied = top; G.barMs = 0; G.sing.roll = chosen; G.sing.rollDone = true;
+      Music.ding(); push(); singTimer = setTimeout(go, 1800); return;
+    }
     // More than one song in the draw: a roulette like a party-game minigame picker. The light jumps between the tied songs, fast at
     // first and slower and slower, and stops on the winner.
     G.phase = 'sroll'; G.sing.in = {}; G.sing.tied = top; G.barMs = 0;
@@ -1719,6 +1723,7 @@
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
       now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: 0,   // (the "this song isn't viable" button has been taken out)
        bad: Object.keys(sg.bad || {}).length, bad_need: singBadNeed(),
+      one: G.phase === 'sroll' && !!sg.tied && sg.tied.length < 2,   // a unanimous song vote: no spin
       rec_ms: clipSecs() * 1000,   // a recording may be as long as the clip that was played
       tally: null };   // the votes are for the big screen only
   }
@@ -1974,7 +1979,7 @@
       }
       else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { var bp = Math.floor(Math.random() * 4), bs = (G.gallery.items[pid].options || [])[bp]; H.draw({ pid: pid, pick: bp }); H.draw({ pid: pid, lines: bs ? botDraw(bs) : botScribble() }); H.draw({ pid: pid, done: 1 }); }
       else if (ph === 'qall') H.quip({ pid: pid, text: pick(G.quips && G.quips.bluff ? BOT_BLUFFS : BOT_LINES) });
-      else if (ph === 'svote' && G.sing) H.poll({ pid: pid, choice: Math.floor(Math.random() * G.sing.options.length) });
+      else if (ph === 'svote' && G.sing) H.poll({ pid: pid, choice: window.BOT_SAME ? 0 : Math.floor(Math.random() * G.sing.options.length) });
       else if (ph === 'srec' && G.sing) { try { if (G.sing.clips[pid]) URL.revokeObjectURL(G.sing.clips[pid]); G.sing.clips[pid] = botTune(); G.sing.in[pid] = 1; push(); allIn(); } catch (e) { H.clip({ pid: pid, skip: true }); } }   // a bot "sings" a random little tune
       else if (ph === 'sbest' && G.sing) { var others = []; G.sing.order.forEach(function (o, i) { if (o !== pid) others.push(i); }); if (others.length) H.poll({ pid: pid, choice: pick(others) }); }
     });

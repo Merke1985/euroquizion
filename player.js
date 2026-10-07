@@ -310,7 +310,8 @@
     } else if (s.phase === 'sann' || s.phase === 'svotes') {
       $('stitle').textContent = 'And our 12 points go to…'; $('ssub').textContent = 'Watch the big screen.';
     } else if (s.phase === 'sroll') {
-      $('stitle').textContent = 'It’s a tie!'; $('ssub').textContent = 'Watch the big screen: the roulette decides.';
+      if (sg.one) { $('stitle').textContent = 'Everyone agrees!'; $('ssub').textContent = 'Watch the big screen: that is the song.'; } else {
+        $('stitle').textContent = 'It’s a tie!'; $('ssub').textContent = 'Watch the big screen: the roulette decides.'; }
     } else if (s.phase === 'splay') {
       $('stitle').textContent = sg.now ? (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + sg.now : 'Showtime!'; $('ssub').textContent = 'Listen on the big screen.';
     } else {
