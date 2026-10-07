@@ -115,6 +115,21 @@ var Music = (function () {
       });
     } catch (e) {}
   }
+  // Douze points! A rising fanfare of five notes ending on a bright held chord, with a sparkle on top.
+  function douze() {
+    try {
+      if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
+      if (ctx.state === 'suspended') ctx.resume();
+      var t = ctx.currentTime + 0.02;
+      [[72, 0, 0.14, 'triangle', 0.26], [76, 0.1, 0.14, 'triangle', 0.26], [79, 0.2, 0.14, 'triangle', 0.27], [84, 0.3, 0.2, 'triangle', 0.28],
+        [88, 0.46, 1.1, 'triangle', 0.3], [84, 0.46, 1.1, 'triangle', 0.2], [79, 0.46, 1.1, 'sine', 0.16], [96, 0.5, 0.9, 'sine', 0.1], [100, 0.62, 0.7, 'sine', 0.07], [103, 0.74, 0.6, 'sine', 0.05]].forEach(function (n) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = n[3]; o.frequency.value = hz(n[0]);
+        g.gain.setValueAtTime(0.0001, t + n[1]); g.gain.exponentialRampToValueAtTime(n[4], t + n[1] + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + n[2]);
+        o.connect(g); g.connect(ctx.destination); o.start(t + n[1]); o.stop(t + n[1] + n[2] + 0.05);
+      });
+    } catch (e) {}
+  }
   // Counting up a score: a short ping that climbs in pitch as the number gets closer to the total.
   function ping(v, total) {
     try {
@@ -126,5 +141,5 @@ var Music = (function () {
       o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.08);
     } catch (e) {}
   }
-  return { blip: blip, plop: plop, ding: ding, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();
