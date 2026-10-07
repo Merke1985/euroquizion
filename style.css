@@ -870,3 +870,9 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @media (prefers-reduced-motion:reduce){.ptspin i.on.picked{animation:none}}
 .ptspin i.on.picked.douze{background:var(--yellow);color:#221a00;box-shadow:0 0 0 4px rgba(255,214,10,.55),0 0 34px 6px rgba(255,214,10,.9);animation:worthland .5s cubic-bezier(.2,1.6,.4,1) both,douzeglow .5s ease-in-out .5s 3 alternate}
 @keyframes douzeglow{to{box-shadow:0 0 0 7px rgba(255,46,136,.6),0 0 44px 10px rgba(255,46,136,.9)}}
+/* The points light is a darker orange while it moves and turns the yellow of the points badge where it lands */
+.ptspin i.on{background:#f08a1c;color:#2a1500;box-shadow:0 0 0 2px rgba(240,138,28,.4),0 4px 14px -4px rgba(240,138,28,.9)}
+.ptspin i.on.picked{background:var(--yellow);color:#221a00;box-shadow:0 0 0 3px rgba(255,214,10,.5),0 6px 20px -4px rgba(255,214,10,.95)}
+/* The points badge and the "Song 1 / Song 2" tag are small enough to sit inside the covered strip at the top of the video */
+.worth{right:6px;top:4px;font-size:.85rem;padding:4px 7px;border-radius:8px;min-width:0}
+.pairtag{left:6px;top:4px;font-size:.78rem;padding:.25em .7em}
