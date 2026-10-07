@@ -57,7 +57,7 @@
   function playSongs() { return skip ? songs.filter(function (s) { return !skipped(s[1]); }) : songs; }
   function playCountries() { if (!skip) return countries; var c = {}, k; for (k in countries) if (!skipped(k)) c[k] = countries[k]; return c; }
   function readTypes(save) {
-    var all = $('typebox').querySelectorAll('input'), on = [];
+    var all = $('typebox').querySelectorAll('input:not([data-all])'), on = [];
     [].forEach.call(all, function (el) { if (el.checked) on.push(el.getAttribute('data-type')); });
     types = on.length ? on : null;
     $('typesum').textContent = !on.length || on.length === all.length ? 'All' : 'Custom';
@@ -65,10 +65,11 @@
   }
   try {
     var pk0 = JSON.parse(localStorage.getItem('esc-picks') || 'null');
-    if (pk0 && pk0.t && pk0.t.length) [].forEach.call($('typebox').querySelectorAll('input'), function (el) { el.checked = pk0.t.indexOf(el.getAttribute('data-type')) >= 0; });
+    if (pk0 && pk0.t && pk0.t.length) [].forEach.call($('typebox').querySelectorAll('input:not([data-all])'), function (el) { el.checked = pk0.t.indexOf(el.getAttribute('data-type')) >= 0; });
     var sk0 = localStorage.getItem('esc-skip'); if (sk0 && $('s-skip').querySelector('option[value="' + sk0 + '"]')) $('s-skip').value = sk0;
   } catch (e) {}
   skip = $('s-skip').value; readTypes(false);
+  multiAll($('typebox'));
   $('typebox').addEventListener('change', function () { readTypes(true); ready(); });
   $('s-skip').addEventListener('change', function () { skip = $('s-skip').value; try { localStorage.setItem('esc-skip', skip); } catch (e) {} ready(); });
   (function () {

@@ -1821,22 +1821,23 @@
   // ---------- which question types and party rounds are in the game (Advanced settings) ----------
   function readPicks() {
     var types = [], party = {};
-    [].forEach.call($('typebox').querySelectorAll('input'), function (el) { if (el.checked) types.push(el.getAttribute('data-type')); });
-    [].forEach.call($('partybox').querySelectorAll('input'), function (el) { party[el.getAttribute('data-party')] = el.checked; });
+    [].forEach.call($('typebox').querySelectorAll('input:not([data-all])'), function (el) { if (el.checked) types.push(el.getAttribute('data-type')); });
+    [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { party[el.getAttribute('data-party')] = el.checked; });
     G.types = types.length ? types : null;   // nothing ticked counts as everything
     G.partyOn = party;
     try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party })); } catch (e) {}
     // the field shows what is switched on, in a few words
     var sum = function (box, on) {
-      var all = box.querySelectorAll('input'), names = [];
+      var all = box.querySelectorAll('input:not([data-all])'), names = [];
       [].forEach.call(all, function (el) { if (el.checked) names.push(el.parentNode.querySelector('b').textContent); });
       return !names.length || names.length === all.length ? 'All' : 'Custom';
     };
-    $('typesum').textContent = sum($('typebox')); $('partysum').textContent = $('partybox').querySelectorAll('input:checked').length ? sum($('partybox')) : 'Custom';
+    $('typesum').textContent = sum($('typebox')); $('partysum').textContent = $('partybox').querySelectorAll('input:not([data-all]):checked').length ? sum($('partybox')) : 'None';
   }
   // open and close the two lists; a click anywhere else, or Escape, closes them
   function multiClose(except) { [].forEach.call(document.querySelectorAll('.multi'), function (m) { if (m === except) return; m.querySelector('.multipanel').classList.add('hidden'); m.querySelector('.multibtn').setAttribute('aria-expanded', 'false'); }); }
   [].forEach.call(document.querySelectorAll('.multi'), function (m) {
+    multiAll(m);
     m.querySelector('.multibtn').addEventListener('click', function (e) {
       e.stopPropagation(); multiClose(m);
       var p = m.querySelector('.multipanel'), open = p.classList.toggle('hidden') === false;
@@ -1849,8 +1850,8 @@
   try {
     var pk = JSON.parse(localStorage.getItem('esc-picks') || 'null');
     if (pk) {
-      [].forEach.call($('typebox').querySelectorAll('input'), function (el) { if (pk.t && pk.t.length) el.checked = pk.t.indexOf(el.getAttribute('data-type')) >= 0; });
-      [].forEach.call($('partybox').querySelectorAll('input'), function (el) { var v = (pk.p || {})[el.getAttribute('data-party')]; if (v === false) el.checked = false; });
+      [].forEach.call($('typebox').querySelectorAll('input:not([data-all])'), function (el) { if (pk.t && pk.t.length) el.checked = pk.t.indexOf(el.getAttribute('data-type')) >= 0; });
+      [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { var v = (pk.p || {})[el.getAttribute('data-party')]; if (v === false) el.checked = false; });
     }
   } catch (e) {}
   $('typebox').addEventListener('change', readPicks); $('partybox').addEventListener('change', readPicks); readPicks();
@@ -2077,18 +2078,20 @@
   // stretches of years separated by commas.
   function eraSet(value) {
     var parts = String(value || '1956-2100').split(','), all = value === '1956-2100' || !value, sel = $('s-era'), names = [];
-    [].forEach.call($('erabox').querySelectorAll('input'), function (el) { el.checked = all || parts.indexOf(el.getAttribute('data-era')) >= 0; if (el.checked) names.push(el.parentNode.querySelector('b').textContent); });
-    var boxes = $('erabox').querySelectorAll('input'); if (names.length === boxes.length || !names.length) { all = true; value = '1956-2100'; }
+    [].forEach.call($('erabox').querySelectorAll('input:not([data-all])'), function (el) { el.checked = all || parts.indexOf(el.getAttribute('data-era')) >= 0; if (el.checked) names.push(el.parentNode.querySelector('b').textContent); });
+    var boxes = $('erabox').querySelectorAll('input:not([data-all])'); if (names.length === boxes.length || !names.length) { all = true; value = '1956-2100'; }
     var opt = sel.querySelector('option[data-custom]');
     if (!all && !sel.querySelector('option[value="' + value + '"]')) { if (!opt) { opt = document.createElement('option'); opt.setAttribute('data-custom', '1'); sel.appendChild(opt); } opt.value = value; opt.textContent = names.join(', '); }
     sel.value = value;
     $('erasum').textContent = all ? 'All eras' : names.length === 1 ? names[0] : 'Custom';
+    if ($('erabox')._allSync) $('erabox')._allSync();
     return value;
   }
   function eraRead() {
-    var on = []; [].forEach.call($('erabox').querySelectorAll('input'), function (el) { if (el.checked) on.push(el.getAttribute('data-era')); });
-    var all = !on.length || on.length === $('erabox').querySelectorAll('input').length;
-    G.era = eraSet(all ? '1956-2100' : on.join(','));
+    var on = []; [].forEach.call($('erabox').querySelectorAll('input:not([data-all])'), function (el) { if (el.checked) on.push(el.getAttribute('data-era')); });
+    var all = !on.length || on.length === $('erabox').querySelectorAll('input:not([data-all])').length;
+    if (!on.length) { G.era = '1956-2100'; $('s-era').value = G.era; $('erasum').textContent = 'All eras'; }   // nothing switched on: every year (the switches stay off)
+    else G.era = eraSet(all ? '1956-2100' : on.join(','));
     try { localStorage.setItem('esc-eras', G.era); } catch (e) {}
     ready();
   }

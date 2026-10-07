@@ -833,3 +833,6 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @keyframes noteshrink{from{transform:scale(2) rotate(0deg);opacity:.2}to{transform:rotate(var(--tilt));opacity:1}}
 .bigwrap{position:absolute;left:0;right:0;top:0;display:flex;justify-content:center;z-index:3;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.snote.shrunk,.snote .nvotes .plop{animation:none}}
+/* "Select all" on top of a list of switches */
+.swrow.allrow{border-bottom:1px solid var(--line);border-radius:10px 10px 0 0;margin-bottom:4px}
+.swrow.allrow b{color:var(--yellow)}

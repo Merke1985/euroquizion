@@ -516,3 +516,18 @@ function keepSettings(ids) {
 
 // A question without a clip shows a picture of its own on the stage instead of a plain question mark.
 function noClipArt(q) { return q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : ['?', '']; }
+
+// A list of switches (question types, minigames, eras) gets a "Select all" switch on top: on switches
+// everything on, pressing it again switches everything off.
+function multiAll(box) {
+  var panel = box && box.querySelector('.multipanel'); if (!panel || panel.querySelector('input[data-all]')) return;
+  var row = document.createElement('label'); row.className = 'swrow allrow';
+  row.innerHTML = '<span><b>Select all</b></span><input type="checkbox" data-all="1"><i class="sw" aria-hidden="true"></i>';
+  panel.insertBefore(row, panel.firstChild);
+  var all = row.querySelector('input'), rest = function () { return [].slice.call(panel.querySelectorAll('input:not([data-all])')); };
+  var sync = function () { all.checked = rest().every(function (el) { return el.checked; }); };
+  box.addEventListener('change', function (e) {   // (registered before the page's own handler, which then reads the result)
+    if (e.target === all) rest().forEach(function (el) { el.checked = all.checked; }); else sync();
+  });
+  setTimeout(sync, 0); box._allSync = sync;
+}
