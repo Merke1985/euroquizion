@@ -295,6 +295,7 @@
     if (s.phase === 'slisten' && $('sbad').disabled && sg.bad) { $('sfb').className = 'fb close'; $('sfb').textContent = 'You voted to skip this song: ' + sg.bad + ' of ' + sg.bad_need + ' needed.'; }
     if (fresh) { $('sfb').textContent = ''; $('sfb').className = 'fb'; if (s.phase !== 'srec') { recReset(); recRelease(); } }
     var name = sg.song ? sg.song.title + ' – ' + sg.song.artist : '';
+    if (sg.rec_ms >= 5000) REC_MAX = sg.rec_ms;   // as long as the clip that was played
     if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
     if (s.phase === 'svote') {
       $('stitle').textContent = 'Which song shall we sing?'; $('ssub').textContent = 'Vote for one. The most votes wins.';
@@ -304,7 +305,7 @@
       if (fresh) $('sopts').innerHTML = (sg.order || []).map(function (o, i) { return o.pid === pid ? '' : '<button type="button" class="opt" data-i="' + i + '">' + esc(o.name) + '</button>'; }).join('');
     } else if (s.phase === 'srec') {
       $('stitle').textContent = m && m.in ? 'Got it!' : 'Your turn to sing!';
-      $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to 10 seconds.';
+      $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to ' + Math.round(REC_MAX / 1000) + ' seconds.';
       if (fresh) { recReset(); recSent = ''; }
     } else if (s.phase === 'sann' || s.phase === 'svotes') {
       $('stitle').textContent = 'And our 12 points go to…'; $('ssub').textContent = 'Watch the big screen.';
@@ -377,7 +378,7 @@
     fr.onload = function () {
       // Sent in small pieces: the room connection has a size limit per message.
       var b64 = String(fr.result).split(',')[1] || '', size = 40000, n = Math.max(1, Math.ceil(b64.length / size)), key = Math.random().toString(36).slice(2), i = 0;
-      if (n > 16) { recSent = ''; $('srecstate').className = 'fb no'; $('srecstate').textContent = 'That recording is too large. Please record again.'; return; }
+      if (n > 30) { recSent = ''; $('srecstate').className = 'fb no'; $('srecstate').textContent = 'That recording is too large. Please record again.'; return; }
       var mime = recBlob.type, sk = sKey, tries = 0;
       var step = function () {
         if (sKey !== sk || !net) return;

@@ -1554,9 +1554,10 @@
   }
   function singRecord() {
     if (!G.sing) return;
-    singPhase('srec', SING.rec);
+    var recMs = Math.max(SING.rec, clipSecs() * 1000 + 25000);   // time to get ready, the full clip length, and to listen back
+    singPhase('srec', recMs);
     cover(true, '🎙', 'Your turn to sing!', true);
-    singTimer = setTimeout(singPlayAll, SING.rec + 4000);   // a little slack for the last uploads
+    singTimer = setTimeout(singPlayAll, recMs + 4000);   // a little slack for the last uploads
     push();
   }
   function singPlayAll() {
@@ -1583,7 +1584,7 @@
     var fin = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(singNext, 900); };
     a.onended = fin; a.onerror = fin;
     var pr = a.play(); if (pr && pr.catch) pr.catch(fin);
-    singTimer = setTimeout(fin, 13000);
+    singTimer = setTimeout(fin, clipSecs() * 1000 + 3000);
     push();
   }
   function singBest() {
@@ -1659,7 +1660,7 @@
     var retry = function () { if (done) return; if (++G.sing.loopFails > 4) { done = true; return; } again(); };
     a.onended = function () { G.sing.loopFails = 0; again(); }; a.onerror = retry;
     var pr = a.play(); if (pr && pr.catch) pr.catch(retry);
-    singTimer = setTimeout(again, 13000);
+    singTimer = setTimeout(again, clipSecs() * 1000 + 3000);
   }
   // The host's "Continue" button moves a Sing! round along when someone is stuck.
   function singSkip() {
@@ -1685,7 +1686,7 @@
     var p = m && players[m.pid];
     if (!p || !G.sing || G.phase !== 'srec') return;
     if (m.skip) { G.sing.in[p.pid] = 1; push(); allIn(); return; }
-    if (typeof m.data !== 'string' || !(m.n >= 1 && m.n <= 16) || !(m.i >= 0 && m.i < m.n)) return;
+    if (typeof m.data !== 'string' || !(m.n >= 1 && m.n <= 30) || !(m.i >= 0 && m.i < m.n)) return;
     var part = G.sing.parts[p.pid];
     if (!part || part.key !== m.key) part = G.sing.parts[p.pid] = { key: m.key, n: m.n, got: 0, data: [], mime: String(m.mime || 'audio/webm').slice(0, 60) };
     if (part.done) return;   // a repeat of a recording that already arrived
@@ -1707,6 +1708,7 @@
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
       now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: 0,   // (the "this song isn't viable" button has been taken out)
        bad: Object.keys(sg.bad || {}).length, bad_need: singBadNeed(),
+      rec_ms: clipSecs() * 1000,   // a recording may be as long as the clip that was played
       tally: null };   // the votes are for the big screen only
   }
   // The big cards of the minigame spin, and the stage stepping aside for them: only while that spin is on.
@@ -1736,7 +1738,7 @@
     }).join(''); }
     else if (G.phase === 'loading') t = 'We’re singing: ' + name;
     else if (G.phase === 'slisten') { var nb = Object.keys(sg.bad || {}).length; t = 'Listen first: ' + name + (nb ? ' · ' + nb + ' of ' + singBadNeed() + ' votes to skip it' : ''); }
-    else if (G.phase === 'srec') t = 'Sing it! Record up to 10 seconds on your phone';
+    else if (G.phase === 'srec') t = 'Sing it! Record up to ' + clipSecs() + ' seconds on your phone';
     else if (G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'svotes') {
       // The vote is open while the recordings keep playing. Who voted for whom only shows at the result.
       t = G.phase === 'splay' ? 'Now singing: ' + (players[sg.now] ? players[sg.now].name : '') : G.phase === 'sann' || G.phase === 'svotes' ? 'And our 12 points go to…' : 'Who sang it best? Vote on your phone';
