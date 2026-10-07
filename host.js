@@ -944,6 +944,7 @@
     else partyGo(cands[0]);
   }
   // More than one party round to choose from: a spin decides, like a party-game minigame picker.
+  var LAND = 700;   // a spin: how long the light rests on the winner before that tile turns green
   function partySpin(games, chosen, then) {
     G.phase = 'pspin'; G.barMs = 0;
     G.pspin = { games: ['sing', 'draw', 'quip', 'bluff'].map(function (k) { return { kind: k, icon: FUN[k].icon, title: FUN[k].title, out: games.indexOf(k) < 0 }; }), roll: -1, done: false };
@@ -953,7 +954,7 @@
     var hop = function () {
       if (G.phase !== 'pspin') return;
       G.pspin.roll = idx(games[(start + k) % games.length]); if (!REMOTE) Music.plop(k); render();
-      if (k >= hops) { G.pspin.done = true; if (!REMOTE) Music.ding(); push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); return; }
+      if (k >= hops) { funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin.done = true; if (!REMOTE) Music.ding(); push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); }, LAND); return; }   // the light lands on the winner first, then that tile turns green
       k++; funTimer = setTimeout(hop, 70 + Math.pow(k / hops, 2.4) * 520);
     };
     push(); clearTimeout(funTimer); funTimer = setTimeout(hop, 1200);
@@ -996,9 +997,13 @@
       if (G.phase !== 'part') return;
       G.part.roll = open[(start + k) % open.length]; if (!REMOTE) Music.plop(k); render();
       if (k >= hops) {
-        G.part.done = true; G.part.label = ERAS[chosen][1]; G.eraUsed.push(chosen); G.eraNow = ERAS[chosen][0]; buildPool();
-        if (!REMOTE) { Music.ding(); cover(true, String(n), ERAS[chosen][1], false); }
-        push(); partTimer = setTimeout(go, 2600); return;
+        partTimer = setTimeout(function () {
+          if (G.phase !== 'part' || !G.part) return;
+          G.part.done = true; G.part.label = ERAS[chosen][1]; G.eraUsed.push(chosen); G.eraNow = ERAS[chosen][0]; buildPool();
+          if (!REMOTE) { Music.ding(); cover(true, String(n), ERAS[chosen][1], false); }
+          push(); partTimer = setTimeout(go, 2600);
+        }, LAND);
+        return;
       }
       k++; partTimer = setTimeout(hop, 70 + Math.pow(k / hops, 2.4) * 520);
     };
@@ -1348,7 +1353,7 @@
     var hop = function () {
       if (!G.sing || G.phase !== 'sroll') return;
       G.sing.roll = top[(start + n) % top.length]; Music.plop(n); render();
-      if (n >= hops) { G.sing.rollDone = true; Music.ding(); render(); singTimer = setTimeout(go, 1400); return; }
+      if (n >= hops) { singTimer = setTimeout(function () { if (!G.sing || G.phase !== 'sroll') return; G.sing.rollDone = true; Music.ding(); render(); singTimer = setTimeout(go, 1400); }, LAND); return; }
       n++; singTimer = setTimeout(hop, 70 + Math.pow(n / hops, 2.4) * 520);
     };
     G.sing.rollDone = false; push(); singTimer = setTimeout(hop, 500);
