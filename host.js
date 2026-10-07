@@ -124,6 +124,7 @@
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
+    if (G.phase === 'pspin' && G.pspin) s.fun = { icon: '🎉', title: 'Party round!', sub: G.pspin.done ? 'It is ' + G.pspin.games[G.pspin.roll].title : 'Spinning…' };
     if (G.phase === 'fun' && G.fun) s.fun = { icon: G.fun.icon, title: G.fun.title, sub: G.fun.sub };
     if (G.phase === 'part' && G.part) s.part = { n: G.part.n, of: G.part.of, spin: !!G.part.eras, label: G.part.done ? G.part.label : '' };
     if (G.quips && G.phase === 'qall') {
@@ -172,8 +173,9 @@
     $('s-era').value = G.era; $('s-cat').value = G.cat;
     $('s-atype').value = G.robin ? 'robin' : G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip'; scoreHelp();
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
-    if ([5, 10, 15, 30].indexOf(G.guessMs / 1000 - AFTER) < 0) G.guessMs = (15 + AFTER) * 1000;   // games saved with the old Guessing time setting
+    if ([5, 10, 20, 30].indexOf(G.guessMs / 1000 - AFTER) < 0) G.guessMs = (20 + AFTER) * 1000;   // games saved with the old Guessing time setting
     $('s-time').value = G.guessMs / 1000 - AFTER;
+    if (!$('s-time').value) { $('s-time').value = '20'; G.guessMs = (20 + AFTER) * 1000; }   // a saved game with a length that is no longer on offer (15 s)
     buildPool();
   }
   function adopt(last) {
@@ -219,7 +221,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun'))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun' || G.phase === 'pspin'))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -401,6 +403,12 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
+    if (G.phase === 'pspin' && G.pspin) {
+      var sp = G.pspin;
+      $('qtext').textContent = sp.done ? 'Party round: ' + sp.games[sp.roll].title : 'Party round! Which one will it be?';
+      $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right' : ' rolling') : g.out ? ' dim' : '') + '"><span style="font-size:1.6em;line-height:1">' + g.icon + '</span>' + esc(g.title) + '</div></div>'; }).join('');
+      $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
+    }
     if (G.phase === 'fun' && G.fun) { $('qtext').textContent = 'Party round: ' + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
       var pt = G.part, head = pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
@@ -779,30 +787,26 @@
     // Party: four quiz questions, then a Sing! or a Draw! round, then four quiz questions again, and so on
     // (Sing! only with a shared screen, and neither without at least two players).
     if (G.atype === 'party') {
-      // only the party rounds that are ticked in the Advanced settings
-      var pOn = G.partyOn || {}, special = (REMOTE ? ['draw'] : ['sing', 'draw']).filter(function (x) { return pOn[x] !== false; }), small = ['quip', 'bluff'].filter(function (x) { return pOn[x] !== false; });
-      var can = list().filter(function (p) { return !p.off; }).length >= 2;
-      if ((G.quizRun || 0) >= 4 && !(can && special.length)) G.quizRun = 0;   // no big round to play: straight on to the next four
-      if (can && special.length && (G.quizRun || 0) >= 4) {
-        // take turns, so a game of ten songs has both: four questions, one of them, four questions, the other
-        var other = special.filter(function (x) { return x !== G.lastSpecial; });
-        G.mode = G.lastSpecial = pick(other.length ? other : special); G.quizRun = 0;
-      }
-      else {
-        // The four songs in between are quiz questions, one of which (the 2nd, 3rd or 4th) is a Quip!.
-        G.quizRun = (G.quizRun || 0) + 1;
-        if (G.quizRun === 1) G.quipSlot = 2 + Math.floor(Math.random() * 3);
-        // the small party round in between: Quip! and Bluff! take turns
-        if (G.quizRun === G.quipSlot && small.length) { var os = small.filter(function (x) { return x !== G.lastSmall; }); G.mode = G.lastSmall = (os.length ? os : small)[0]; } else G.mode = 'mc';
-      }
+      // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
+      // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
+      var pOn = G.partyOn || {}, two = list().filter(function (p) { return !p.off; }).length >= 2;
+      var games = ['sing', 'draw', 'quip', 'bluff'].filter(function (x) { return pOn[x] !== false && !(x === 'sing' && REMOTE) && (two || (x !== 'sing' && x !== 'draw')); });
+      G.partySpin = null;
+      if ((G.quizRun || 0) >= 3 && games.length) {
+        var fresh = games.filter(function (x) { return x !== G.lastParty; });
+        G.mode = G.lastParty = pick(fresh.length ? fresh : games); G.quizRun = 0;
+        if (games.length > 1) G.partySpin = games;
+      } else { G.quizRun = (G.quizRun || 0) + 1; G.mode = 'mc'; }
     } else G.mode = G.atype;
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     // A party round is announced first, so nobody is surprised by what is asked of them.
-    if (md === 'sing' && !REMOTE) { funIntro('sing', singStart); return; }
-    if (md === 'draw') { funIntro('draw', drawAll); return; }
-    if (md === 'quip') { funIntro('quip', quipAll); return; }
-    if (md === 'bluff') { funIntro('bluff', bluffAll); return; }
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll };
+    if (starts[md] && !(md === 'sing' && REMOTE)) {
+      if (G.partySpin) partySpin(G.partySpin, md, function () { funIntro(md, starts[md], 3000); });
+      else funIntro(md, starts[md]);
+      return;
+    }
     push(); loadSong();
   }
 
@@ -903,7 +907,22 @@
     sing: { icon: '🎤', title: 'Sing!', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
   var funTimer = null;
-  function funIntro(kind, then) {
+  // More than one party round to choose from: a spin decides, like a party-game minigame picker.
+  function partySpin(games, chosen, then) {
+    G.phase = 'pspin'; G.barMs = 0;
+    G.pspin = { games: ['sing', 'draw', 'quip', 'bluff'].map(function (k) { return { kind: k, icon: FUN[k].icon, title: FUN[k].title, out: games.indexOf(k) < 0 }; }), roll: -1, done: false };
+    var idx = function (k) { return ['sing', 'draw', 'quip', 'bluff'].indexOf(k); };
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '🎉', 'Party round!', false); masks(true); $('cover').classList.add('funcard'); }
+    var hops = 16 + Math.floor(Math.random() * games.length), start = (games.indexOf(chosen) - (hops % games.length) + games.length * 8) % games.length, k = 0;
+    var hop = function () {
+      if (G.phase !== 'pspin') return;
+      G.pspin.roll = idx(games[(start + k) % games.length]); if (!REMOTE) Music.plop(k); render();
+      if (k >= hops) { G.pspin.done = true; if (!REMOTE) Music.ding(); push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); return; }
+      k++; funTimer = setTimeout(hop, 70 + Math.pow(k / hops, 2.4) * 520);
+    };
+    push(); clearTimeout(funTimer); funTimer = setTimeout(hop, 1200);
+  }
+  function funIntro(kind, then, ms) {
     var f = FUN[kind];
     G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub };
     G.phase = 'fun'; G.barMs = 0;
@@ -915,7 +934,7 @@
     }
     push();
     clearTimeout(funTimer);
-    funTimer = setTimeout(function () { if (G.phase !== 'fun') return; $('cover').classList.remove('funcard'); G.fun = null; G.phase = 'loading'; then(); }, 4200);
+    funTimer = setTimeout(function () { if (G.phase !== 'fun') return; $('cover').classList.remove('funcard'); G.fun = null; G.phase = 'loading'; then(); }, ms || 4200);
   }
 
   // ---------- rounds, and the spin for the years ----------
@@ -1629,7 +1648,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
-    G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(funTimer); $('cover').classList.remove('funcard'); G.fun = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
+    G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(funTimer); $('cover').classList.remove('funcard'); G.fun = null; G.pspin = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
@@ -1679,7 +1698,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastSmall = window.FIRST_SMALL === 'bluff' ? 'quip' : ''; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }
