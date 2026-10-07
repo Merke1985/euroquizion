@@ -766,11 +766,11 @@
     var ok = !REMOTE && G.q && !G.draw && !G.sing && !G.quipLoad && !G.best && G.scoring === 'correct' && !ladderGame();
     if (!ok) { G.qWorth = 0; worthHide(); return; }
     if (G.worthRound === G.round && $('ptspin').innerHTML) return;   // a replacement for a broken video keeps what was spun
-    // A question whose points are not fixed (Behind the curtain: they fall as time passes) lands on the question mark.
+    // Behind the curtain starts at twelve and falls from there: the light lands on 12.
     var open = !!G.q.peel;
     G.worthRound = G.round; G.qWorth = open ? 0 : pick(WORTHS);
-    var el = $('ptspin'), x2 = G.tourFinal ? 2 : 1, target = open ? 0 : WORTHS.indexOf(G.qWorth) + 1;
-    el.innerHTML = '<i>?</i>' + WORTHS.map(function (v) { return '<i>' + v * x2 + '</i>'; }).join(''); el.classList.remove('hidden');
+    var el = $('ptspin'), x2 = G.tourFinal ? 2 : 1, target = open ? 0 : WORTHS.indexOf(G.qWorth);
+    el.innerHTML = WORTHS.map(function (v) { return '<i>' + v * x2 + '</i>'; }).join(''); el.classList.remove('hidden');
     // The light climbs from 1 at the bottom, rung by rung, up to this question's number, and pops when it gets there.
     // (First it runs once all the way from the bottom to the top, quickly; the second time up it stops on the number.)
     var chips = el.querySelectorAll('i'), n = chips.length, at = n - 1, steps = n - 1 - target, gap = Math.max(100, Math.min(240, 1400 / Math.max(1, steps))), lap = 1;
@@ -780,7 +780,7 @@
       [].forEach.call(chips, function (c, i) { c.className = i === at ? 'on' : i > at ? 'lit' : ''; });
       Music.plop(n - 1 - at);
       if (lap === 1) { if (at <= 0) { lap = 2; at = n - 1; worthTimer = setTimeout(hop, 160); } else { at--; worthTimer = setTimeout(hop, 55); } return; }
-      if (at <= target) { worthTimer = setTimeout(function () { if (G.phase !== 'loading') return; chips[at].className = 'on picked' + (G.qWorth === 12 ? ' douze' : ''); if (G.qWorth === 12) Music.douze(); else Music.ding(); }, 260); return; }   // twelve gets a fanfare of its own
+      if (at <= target) { worthTimer = setTimeout(function () { if (G.phase !== 'loading') return; chips[at].className = 'on picked' + (at === 0 ? ' douze' : ''); if (at === 0) Music.douze(); else Music.ding(); }, 260); return; }   // twelve gets a fanfare of its own
       at--; worthTimer = setTimeout(hop, gap);
     };
     worthTimer = setTimeout(hop, 200);
