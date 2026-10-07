@@ -358,7 +358,7 @@ var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'],
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 // With several players Speedy goes by who was first; solo it goes by the clock.
 var HOST_SCORING_HELP = {
-  correct: 'Standard: every right answer scores a flat 12 points.',
+  correct: 'Standard: before each question a spin decides what a right answer is worth, from 1 to 12 points.',
   speed: 'Speedy: the first player with the right answer scores 12 points, the second 10, the third 8, then 7, 6, 5, 4, 3, 2 and 1.',
   ladder: ''
 };

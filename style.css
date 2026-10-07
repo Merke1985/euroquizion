@@ -858,3 +858,9 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* A list of switches: the word in its field is green when everything is on, orange for a selection of your own */
 .multi.isall .multibtn span{color:var(--ok)}
 .multi.iscustom .multibtn span{color:#ff9f1c}
+/* The points spin while a song is being selected: a column of Eurovision points, the light stops on this question's worth */
+.ptspin{position:absolute;right:10px;top:8px;bottom:8px;z-index:8;display:flex;flex-direction:column;justify-content:space-between;gap:3px}
+.ptspin.hidden{display:none}
+.ptspin i{flex:1;min-height:0;min-width:3.2em;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:900;font-size:clamp(.7rem,1.6vh,1.05rem);line-height:1;color:var(--mute);background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:8px;transition:transform .08s}
+.ptspin i.on{background:var(--yellow);color:#221a00;border-color:transparent;transform:scale(1.12);box-shadow:0 0 0 2px rgba(255,214,10,.4),0 4px 14px -4px rgba(255,214,10,.9)}
+.ptspin i.on.picked{background:#35f08a;color:#03260f;transform:scale(1.25);box-shadow:0 0 0 3px rgba(53,240,138,.5),0 6px 20px -4px rgba(53,240,138,.95)}
