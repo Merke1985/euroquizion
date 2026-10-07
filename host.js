@@ -431,7 +431,7 @@
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
     $('qopts').classList.remove('eras');
-    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' && G.quips ? (G.quips.bluff ? '' : 'Write a funny answer: ') + G.quips.line.p : '';
+    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' && G.quips ? (G.quips.bluff ? '' : 'Write a funny answer: ') + G.quips.line.p : G.phase === 'qshow' && G.qshow ? 'Here is what you wrote: ' + G.qshow.prompt : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
@@ -819,7 +819,7 @@
     }, 400);
   }
   function startRound() {
-    payFlush();
+    payFlush(); paper(null);
     G.round++; G.phase = 'loading'; G.singSkips = 0;
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
@@ -958,7 +958,7 @@
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
     bluff: { icon: '🤥', title: 'Lost in Translation', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
-    quiz: { icon: '🎧', title: 'Quiz', sub: 'Back to the questions: three songs coming up.' },
+    quiz: { icon: '🎧', title: 'Trivia', sub: 'Trivia time: three questions coming up.' },
     sing: { icon: '🎤', title: 'Jury Show', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
   var funTimer = null;
@@ -1189,8 +1189,31 @@
     G.q = { subject: 'quip', type: 'mc', text: 'Vote for the funniest answer: ' + g.line.p, hint: '', options: opts.map(function (o) { return o.text; }), correct: -1, answer: '' };
     // nobody who could vote for someone else's answer (a game on your own): only show the answers for a moment
     var canVote = list().filter(function (p) { return !p.off; }).length >= 2, ms = canVote ? QUIP_VOTE_MS : 7000;
-    G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
-    endTimer = setTimeout(reveal, ms);
+    var vote = function () {
+      paper(null);
+      G.qshow = null; G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
+      endTimer = setTimeout(reveal, ms);
+    };
+    // First every answer is read out on the big screen, one at a time and without a name, as a scribbled note.
+    if (REMOTE || opts.length < 2) { vote(); return; }
+    var texts = G.q.options.slice(), per = texts.length > 8 ? 3500 : texts.length > 5 ? 4200 : 5000, i = 0, id = g.id;
+    G.phase = 'qshow'; G.qshow = { prompt: g.line.p, n: texts.length }; G.barMs = 0; push();
+    var step = function () {
+      if (G.phase !== 'qshow' || !G.best || G.best.id !== id) { paper(null); return; }
+      if (i >= texts.length) { vote(); return; }
+      paper(texts[i], i + 1, texts.length); Music.plop(i); i++;
+      quipTimer = setTimeout(step, per);
+    };
+    quipTimer = setTimeout(step, 500);
+  }
+  // A note on the stage: one Green Room answer, as if scribbled on a piece of paper.
+  function paper(text, n, of) {
+    var el = $('paper'); if (!el) return;
+    el.classList.toggle('hidden', text == null);
+    if (text == null) return;
+    $('papertext').textContent = text; $('papern').textContent = n + ' / ' + of;
+    var note = el.querySelector('.sheet'); note.style.setProperty('--tilt', ((n % 2 ? -1 : 1) * (1.5 + (n * 37 % 30) / 10)).toFixed(1) + 'deg');
+    note.classList.remove('in'); void note.offsetWidth; note.classList.add('in');
   }
   net.on('quip', function (m) {
     var it = m && G.quips && G.phase === 'qall' && G.quips.items[m.pid];
@@ -1932,7 +1955,7 @@
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
     setTimeout(fanCue, 1500);   // back in the lobby: line the fanfare up again
-    payFlush();
+    payFlush(); paper(null); clearTimeout(quipTimer);
     G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(funTimer); $('cover').classList.remove('funcard'); G.fun = null; G.pspin = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}

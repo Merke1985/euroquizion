@@ -158,6 +158,7 @@
       show('v-wait'); $('waittitle').textContent = s.part.of > 1 ? 'Round ' + s.part.n + ' of ' + s.part.of : 'Get ready';
       $('waitsub').textContent = s.part.spin ? (s.part.label ? 'Songs from: ' + s.part.label : 'Spinning the era…') : '';
     }
+    else if (s.phase === 'qshow') { show('v-wait'); $('waittitle').textContent = 'Here are the answers'; $('waitsub').textContent = 'Watch the big screen. You can vote for the funniest in a moment.'; }
     else if (s.phase === 'qall' && s.quips) {
       // Quip!: finish the line you were given.
       var qp = s.quips.prompts[pid];
