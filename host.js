@@ -1240,6 +1240,24 @@
   // Recordings travel phone -> host as chunks over the room connection and are never stored.
   var SING = { vote: 20000, rec: 45000, best: 45000 }, singTimer = null, bestTimer = null, singAudio = null;
   function stopAudio() { if (singAudio) { try { singAudio.onended = singAudio.onerror = null; singAudio.pause(); } catch (e) {} singAudio = null; } }
+  // Recordings are played through one audio element that is "unlocked" by the first touch or click on
+  // this page: phones and tablets refuse to start sound in an element the user never touched, and a
+  // fresh element per recording was cut off there after a moment.
+  var recEl = new Audio(), recUnlocked = false;
+  recEl.preload = 'auto';
+  function recUnlock() {
+    if (recUnlocked) return; recUnlocked = true;
+    try {
+      // a tenth of a second of silence, as a real (if tiny) sound file
+      var n = 800, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf), str = function (o, s) { for (var k = 0; k < s.length; k++) v.setUint8(o + k, s.charCodeAt(k)); };
+      str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, 8000, true); v.setUint32(28, 16000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, n * 2, true);
+      recEl.src = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+      var pr = recEl.play(); if (pr && pr.then) pr.then(function () { if (!singAudio) recEl.pause(); }).catch(function () {});
+    } catch (e) {}
+  }
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, recUnlock, { capture: true, passive: true }); });
+  function recPlay(url) { stopAudio(); var a = singAudio = recEl; try { a.pause(); a.src = url; a.load(); } catch (e) {} return a; }
   function singClear() {
     clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio();
     if (G.sing) Object.keys(G.sing.clips).forEach(function (k) { try { URL.revokeObjectURL(G.sing.clips[k]); } catch (e) {} });
@@ -1382,7 +1400,7 @@
     silence();
     try { yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
     silence();
-    var a = singAudio = new Audio(G.sing.clips[pid]), done = false;
+    var a = recPlay(G.sing.clips[pid]), done = false;
     var fin = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(singNext, 900); };
     a.onended = fin; a.onerror = fin;
     var pr = a.play(); if (pr && pr.catch) pr.catch(fin);
@@ -1424,7 +1442,7 @@
     clearTimeout(singTimer); stopAudio(); silence();
     try { yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
     silence();
-    var a = singAudio = new Audio(G.sing.clips[G.sing.loop]), done = false;
+    var a = recPlay(G.sing.clips[G.sing.loop]), done = false;
     var again = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(winnerLoop, 900); };
     // A recording that will not start is tried again a few times, not forever.
     var retry = function () { if (done) return; if (++G.sing.loopFails > 4) { done = true; return; } again(); };
@@ -1516,7 +1534,7 @@
       opts = (sg.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + charSvg(r.char) + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
-    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest');   // the song vote: one song per row, its voters behind it
+    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' );   // the song vote: one song per row, its voters behind it
   }
 
 
