@@ -540,7 +540,14 @@ function multiAll(box) {
   row.innerHTML = '<span><b>Select all</b></span><input type="checkbox" data-all="1"><i class="sw" aria-hidden="true"></i>';
   panel.insertBefore(row, panel.firstChild);
   var all = row.querySelector('input'), rest = function () { return [].slice.call(panel.querySelectorAll('input:not([data-all])')); };
-  var sync = function () { all.checked = rest().every(function (el) { return el.checked; }); };
+  // The field itself turns green when everything is on and orange for a selection of your own. (Where nothing
+  // switched on plays everything, as with question types, eras and entries, that counts as everything too.)
+  var sync = function () {
+    var r = rest(), every = r.every(function (el) { return el.checked; }), none = !r.some(function (el) { return el.checked; });
+    all.checked = every;
+    var full = every || (none && box.hasAttribute('data-noneall'));
+    box.classList.toggle('isall', full); box.classList.toggle('iscustom', !full);
+  };
   box.addEventListener('change', function (e) {   // (registered before the page's own handler, which then reads the result)
     if (e.target === all) rest().forEach(function (el) { el.checked = all.checked; }); else sync();
   });

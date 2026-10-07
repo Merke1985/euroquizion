@@ -6,7 +6,7 @@
 <title>EuroQuizion – solo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=275">
+<link rel="stylesheet" href="style.css?v=276">
 </head>
 <body>
 <main class="solo">
@@ -25,7 +25,7 @@
     <div class="settings">
       <div class="hidden"><label for="s-subject">Category</label><select id="s-subject">
         <option value="random" selected>All</option><option value="facts">Song facts</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option><option value="lost">Language barrier</option></select></div>
-      <div class="multi" id="typebox" style="grid-column:1/-1"><label id="typelabel">Question types</label>
+      <div class="multi" id="typebox" data-noneall="1" style="grid-column:1/-1"><label id="typelabel">Trivia</label>
           <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="typelabel typesum"><span id="typesum">All</span></button>
           <div class="multipanel hidden">
             <label class="swrow"><span><b>Song facts</b><small>Country, artist, title, year, placing</small></span><input type="checkbox" data-type="facts" checked><i class="sw" aria-hidden="true"></i></label>
@@ -97,11 +97,11 @@
     </div>
   </section>
 </main>
-<script src="net.js?v=275"></script>
-<script src="music.js?v=275"></script>
-<script src="chars.js?v=275"></script>
-<script src="match.js?v=275"></script>
-<script src="quiz.js?v=275"></script>
-<script src="solo.js?v=275"></script>
+<script src="net.js?v=276"></script>
+<script src="music.js?v=276"></script>
+<script src="chars.js?v=276"></script>
+<script src="match.js?v=276"></script>
+<script src="quiz.js?v=276"></script>
+<script src="solo.js?v=276"></script>
 </body>
 </html>
