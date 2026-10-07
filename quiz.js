@@ -259,12 +259,13 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
 var PARTY_HELP = 'Quiz questions mixed in with party games.';
-var DRAW_HELP = 'Postcard: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it.';
+var DRAW_HELP = 'Postcard: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores points, and the artist gets 12 points divided by the number of players who answered, for each of them who guessed it.';
 var DRAW_COLORS = ['#111111', '#ffffff', '#e11d48', '#f97316', '#f59e0b', '#16a34a', '#2563eb', '#7c3aed', '#ec4899', '#92400e', '#9ca3af', '#ffffff'];   // the last one is the eraser: it paints in the background colour
-var DRAW_BGS = ['#ffffff', '#111111', '#bfdbfe', '#fde68a', '#bbf7d0', '#fecaca'];   // paper colours; a drawing starts on white
 var DRAW_SIZES = [3, 7, 14];
 // The paper colour is remembered on the canvas, so that the eraser knows what to paint with.
-function drawClear(cv, bg) { var c = cv.getContext('2d'); cv._bg = DRAW_BGS[bg] || '#ffffff'; c.fillStyle = cv._bg; c.fillRect(0, 0, DRAW_W, DRAW_H); }
+// bg: the paper colour, as a pencil colour's number plus one (nothing: white).
+function drawBg(bg) { return (bg > 0 && bg < DRAW_COLORS.length && DRAW_COLORS[bg - 1]) || '#ffffff'; }
+function drawClear(cv, bg) { var c = cv.getContext('2d'); cv._bg = drawBg(bg); c.fillStyle = cv._bg; c.fillRect(0, 0, DRAW_W, DRAW_H); }
 function drawPaint(cv, m) {
   if (!m) return;
   if (m.clear) { drawClear(cv, m.bg); return; }

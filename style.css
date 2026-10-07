@@ -783,3 +783,6 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .opt.right.picked{background:#35f08a;color:#03260f;box-shadow:0 0 0 4px rgba(53,240,138,.5),0 10px 34px -6px rgba(53,240,138,.95);transform:scale(1.04);animation:pickpop .45s cubic-bezier(.2,1.5,.4,1) both;position:relative;z-index:1}
 @keyframes pickpop{0%{transform:scale(1.015)}45%{transform:scale(1.1)}100%{transform:scale(1.04)}}
 @media (prefers-reduced-motion:reduce){.opt.right.picked{animation:none}}
+.drawtools button.pickme{animation:pulse .6s ease-in-out infinite alternate}
+.drawtools button.wide.on{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow)}
+@media (prefers-reduced-motion:reduce){.drawtools button.pickme{animation:none}}

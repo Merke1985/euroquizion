@@ -648,14 +648,14 @@
   function drawFinish(skip) { padFlush(); padShip(); padDone = true; padSkipped = !!skip; drawTell(skip ? { skip: 1 } : { done: 1 }); show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
   $('dpass').addEventListener('click', function () { drawFinish(true); });
   $('ddone').addEventListener('click', function () { drawFinish(false); });
-  var dKey = '', padColor = 0, padWidth = DRAW_SIZES[1], padBg = 0, padAll = [], padBuf = [], padDown = false, padLast = null, padTick = null;
+  var dKey = '', padColor = 0, padWidth = DRAW_SIZES[1], padBg = 0, padBgPick = false, padAll = [], padBuf = [], padDown = false, padLast = null, padTick = null;
   function padTools() {
     var er = DRAW_COLORS.length - 1;
     $('dtools').innerHTML = DRAW_COLORS.map(function (c, i) {
-      return '<button type="button" data-c="' + i + '" class="' + (i === padColor ? 'on' : '') + '" style="background:' + (i === er ? DRAW_BGS[padBg] : c) + (i === er && padBg === 1 ? ';color:#fff' : '') + '" aria-label="' + (i === er ? 'Eraser' : 'Colour') + '">' + (i === er ? '⌫' : '') + '</button>';
+      return '<button type="button" data-c="' + i + '" class="' + (i === padColor && !padBgPick ? 'on' : '') + (padBgPick && i !== er ? ' pickme' : '') + '" style="background:' + (i === er ? drawBg(padBg) : c) + (i === er && padBg === 1 ? ';color:#fff' : '') + '" aria-label="' + (i === er ? 'Eraser' : 'Colour') + '">' + (i === er ? '⌫' : '') + '</button>';
     }).join('') + '<span class="toolbreak"></span>' + DRAW_SIZES.map(function (w, i) {
       return '<button type="button" data-w="' + w + '" class="size' + (w === padWidth ? ' on' : '') + '" aria-label="' + ['Thin', 'Medium', 'Thick'][i] + ' line"><i style="width:' + (w + 3) + 'px;height:' + (w + 3) + 'px"></i></button>';
-    }).join('') + '<button type="button" data-bg="1" class="wide"><i class="paper" style="background:' + DRAW_BGS[padBg] + '"></i>Background</button><button type="button" data-clear="1" class="wide">Clear</button>';
+    }).join('') + '<button type="button" data-bg="1" class="wide' + (padBgPick ? ' on' : '') + '"><i class="paper" style="background:' + drawBg(padBg) + '"></i>' + (padBgPick ? 'Pick a colour' : 'Background') + '</button><button type="button" data-clear="1" class="wide">Clear</button>';
   }
   // Nobody watches the drawing live, so the lines are not sent one by one: they are collected and go
   // out together every second and a half (and at once when time is nearly up, or on Done).
@@ -671,7 +671,7 @@
     var m = { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: padBuf };
     padSend(m); padBuf = padDown && padLast ? [padLast[0], padLast[1]] : [];   // the next batch continues from the last point
   }
-  function padReset() { padOut = []; padAll = []; padBg = 0; padBuf = []; padDown = false; padLast = null; drawClear($('dcanvas')); padTools(); clearInterval(padTick); padTick = setInterval(function () { if (padBuf.length > 2) padFlush(); }, 400); }
+  function padReset() { padOut = []; padAll = []; padBg = 0; padBgPick = false; padBuf = []; padDown = false; padLast = null; drawClear($('dcanvas')); padTools(); clearInterval(padTick); padTick = setInterval(function () { if (padBuf.length > 2) padFlush(); }, 400); }
   function padPoint(e) { var r = $('dcanvas').getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * DRAW_W), Math.round((e.clientY - r.top) / r.height * DRAW_H)]; }
   function padLocal(a, b) { drawPaint($('dcanvas'), { c: padColor, w: padColor === DRAW_COLORS.length - 1 ? padWidth * 4 : padWidth, p: b ? [a[0], a[1], b[0], b[1]] : [a[0], a[1]] }); }
   $('dcanvas').addEventListener('pointerdown', function (e) {
@@ -691,15 +691,19 @@
   }); });
   $('dtools').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    if (b.hasAttribute('data-c')) padColor = +b.getAttribute('data-c');
+    if (b.hasAttribute('data-c')) {
+      var ci = +b.getAttribute('data-c');
+      if (padBgPick && ci !== DRAW_COLORS.length - 1) {
+        // "Background" was tapped first: this colour becomes the paper. The page is painted again in it, with
+        // everything drawn so far on top.
+        padFlush(); padBg = ci + 1; padBgPick = false;
+        var keep = padAll.slice(); drawClear($('dcanvas'), padBg); padSend({ clear: 1, bg: padBg });
+        keep.forEach(function (m) { drawPaint($('dcanvas'), m); padSend(m); });
+      } else { padColor = ci; padBgPick = false; }
+    }
     else if (b.hasAttribute('data-w')) padWidth = +b.getAttribute('data-w');
     else if (b.hasAttribute('data-clear')) { drawClear($('dcanvas'), padBg); padSend({ clear: 1, bg: padBg }); }
-    else if (b.hasAttribute('data-bg')) {
-      // the next paper colour: the page is painted again in it, with everything drawn so far on top
-      padFlush(); padBg = (padBg + 1) % DRAW_BGS.length;
-      var keep = padAll.slice(); drawClear($('dcanvas'), padBg); padSend({ clear: 1, bg: padBg });
-      keep.forEach(function (m) { drawPaint($('dcanvas'), m); padSend(m); });
-    }
+    else if (b.hasAttribute('data-bg')) padBgPick = !padBgPick;   // next: tap one of the colours
     padTools();
   });
   $('dopts').addEventListener('click', function (e) {

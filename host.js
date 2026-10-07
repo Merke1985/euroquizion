@@ -747,7 +747,9 @@
     right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
-    if (artist && right.length) { artist.pts = right.length * partyX(); artist.score += artist.pts; artist.got = true; }
+    // The artist: 12 points shared out over everyone who answered, for each of them who got it (all right: 12).
+    var answered = G.draw ? list().filter(function (p) { return p.pick != null && p.pid !== G.draw.pid; }).length : 0;
+    if (artist && right.length) { artist.pts = Math.max(1, Math.round(12 * right.length / Math.max(answered, right.length))); artist.score += artist.pts; artist.got = true; }
     if (!REMOTE && G.q) Music.ding();   // the right answer lights up
     cover(false); masks(false);
     // After a drawing the video only starts now, and YouTube shows its title and buttons over the first seconds:
