@@ -878,3 +878,10 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .pairtag{left:6px;top:4px;font-size:.78rem;padding:.25em .7em}
 /* Whose flag?: the flag fills the middle of the stage */
 .cover .q .flagimg{display:block;height:min(24vh,220px);width:auto;max-width:80%;margin:0 auto;border-radius:10px;box-shadow:0 10px 40px -8px rgba(0,0,0,.8),0 0 0 3px rgba(255,255,255,.85)}
+
+/* On the map: the outline of a country on the cover */
+.cover .q .mapimg{display:block;height:min(30vh,270px);width:auto;max-width:80%;margin:0 auto;overflow:visible;filter:drop-shadow(0 10px 26px rgba(0,0,0,.75))}
+.cover .q .mapimg path{fill:#ffd23f;stroke:#fff;stroke-width:1.6;stroke-linejoin:round}
+.cover .q .mapimg .mapdot{fill:#e6007e;stroke:#fff;stroke-width:2}
+.cover .q .mapimg .mapring{fill:none;stroke:#e6007e;stroke-width:2.5;transform-box:fill-box;transform-origin:center;animation:mapring 1.6s ease-out infinite}
+@keyframes mapring{0%{transform:scale(.6);opacity:1}100%{transform:scale(2.6);opacity:0}}

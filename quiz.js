@@ -171,31 +171,53 @@ function SecondPlayer(elId) {
 // peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
 // blur ("Out of focus"): the same idea, but the silent video starts blurred and sharpens.
 // flag ("Whose flag?"): a flag on the screen and four songs; one of them was sent by that country. No clip until the answer.
-var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10 };
-function makeFlag(song, allSongs, countries) {
-  if (!flag(song[1])) return null;   // a country that no longer exists has no flag to show
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, map: 10, host: 8 };
+// map ("On the map"): the same, with the outline of the country in place of its flag (the smallest states are only a dot: left out).
+function makeFlag(song, allSongs, countries, map) {
+  if (map ? !(typeof SHAPES !== 'undefined' && SHAPES[song[1]]) : !flag(song[1])) return null;   // a country that no longer exists has no flag to show
   var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}, lands = {}; seen[song[4]] = 1; lands[song[1]] = 1;
   var add = function (s) { if (opts.length < 4 && !seen[s[4]] && !lands[s[1]] && s[2] !== song[2]) { seen[s[4]] = 1; lands[s[1]] = 1; opts.push(lab(s)); } };
   shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6; })).forEach(add);
   shuffle(allSongs.slice()).forEach(add);
   if (opts.length < 4) return null;
   shuffle(opts);
-  return { subject: 'flag', type: 'mc', flag: song[1], noclip: true, text: 'Which song does this flag belong to?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer),
+  return { subject: map ? 'map' : 'flag', type: 'mc', flag: map ? '' : song[1], map: map ? song[1] : '', noclip: true, text: map ? 'Which song came from this country?' : 'Which song does this flag belong to?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer),
     explain: song[3] + ' was sent by ' + (countries[song[1]] || song[1]) + '.' };
 }
 // The flag as a picture (it looks the same on every computer; flag emoji are not drawn everywhere), with the emoji as a stand-in.
+function mapHtml(code, dot) { return '<svg class="mapimg" viewBox="0 0 300 200" aria-hidden="true"><path d="' + SHAPES[code] + '" fill-rule="evenodd"/>' + (dot ? '<circle class="mapring" cx="' + dot[0] + '" cy="' + dot[1] + '" r="9"/><circle class="mapdot" cx="' + dot[0] + '" cy="' + dot[1] + '" r="5.5"/>' : '') + '</svg>'; }
+// host ("Host city"): the country that held the contest of this song's year, with a dot where the hall stood; four host cities.
+function makeHost(song, countries) {
+  if (typeof HOSTS === 'undefined' || !HOSTS[song[0]]) return null;
+  var city = HOSTS[song[0]], c = CITIES[city], opts = [city];
+  var add = function (n) { if (opts.length < 4 && opts.indexOf(n) < 0) opts.push(n); };
+  shuffle(Object.keys(CITIES).filter(function (n) { return CITIES[n][0] === c[0]; })).forEach(add);   // first the other host cities of the same country
+  shuffle(Object.keys(CITIES)).forEach(add);
+  shuffle(opts);
+  return { subject: 'host', type: 'mc', map: c[0], dot: [c[1], c[2]], noclip: true, text: 'Which host city is the dot on this map?', hint: '', answer: city, options: opts, correct: opts.indexOf(city),
+    explain: 'The ' + song[0] + ' contest was held in ' + city + (song[0] === 1990 || city === 'Luxembourg' ? '' : ', ' + (countries[c[0]] || '')) + '.' };
+}
 function flagHtml(code) { return '<img class="flagimg" src="https://flagcdn.com/w640/' + code + '.png" alt="" onerror="this.outerHTML=\'' + flag(code) + '\'">'; }
 var PEEL_MS = 60000;
 function peelPoints(ms) { return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
 function makePeel(song, allSongs, countries, opt) {
   // always the song itself: four bars with title and artist, the other three from about the same years
+  // Only winners, on the screen and on the bars: a song that did not win makes way for a winner (from the years in play, if there is one).
+  var wins = allSongs.filter(function (s) { return s[5] === 2; }), swap = null;
+  if (wins.length < 4) return null;
+  if (song[5] !== 2) {
+    var yrs = {}, used = (opt && opt.used) || {}; ((opt && opt.pool) || []).forEach(function (s) { yrs[s[0]] = 1; });
+    var near = wins.filter(function (s) { return yrs[s[0]]; }); if (!near.length) near = wins;
+    var fresh = near.filter(function (s) { return !used[s[4]]; }); if (fresh.length) near = fresh;
+    song = swap = near[Math.floor(Math.random() * near.length)];
+  }
   var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}; seen[song[4]] = 1;
   var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); } };
-  shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6; })).forEach(add);
-  shuffle(allSongs.slice()).forEach(add);
+  shuffle(wins.filter(function (s) { return Math.abs(s[0] - song[0]) <= 8; })).forEach(add);
+  shuffle(wins.slice()).forEach(add);
   if (opts.length < 4) return null;
   shuffle(opts);
-  return { subject: 'peel', peel: true, type: 'mc', text: 'Behind the curtain: which song is this? The sooner you know, the more points.', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
+  return { subject: 'peel', swap: swap, peel: true, type: 'mc', text: 'Behind the curtain: which song is this? The sooner you know, the more points.', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
 }
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   if (opt && opt.types && subjectSetting === 'random') {
@@ -227,6 +249,8 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   if (opt && opt.peel && (subjectSetting === 'peel' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('peel') >= 0 && Math.random() < 0.09))) { var pq2 = makePeel(song, allSongs, countries, opt); if (pq2) return pq2; }
   if (opt && opt.peel && (subjectSetting === 'blur' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('blur') >= 0 && Math.random() < 0.09))) { var bq = makePeel(song, allSongs, countries, opt); if (bq) { bq.blur = true; bq.subject = 'blur'; bq.text = 'Out of focus: which song is this? The sooner you know, the more points.'; return bq; } }
   if (subjectSetting === 'peel' || subjectSetting === 'blur') subjectSetting = 'facts';
+  if (subjectSetting === 'host') { var hq = makeHost(song, countries); if (hq) return hq; subjectSetting = 'facts'; }
+  if (subjectSetting === 'map') { var mq = makeFlag(song, allSongs, countries, true); if (mq) return mq; subjectSetting = 'facts'; }
   if (subjectSetting === 'flag') { var fq = makeFlag(song, allSongs, countries); if (fq) return fq; subjectSetting = 'facts'; }
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 2 / 15)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   if (subjectSetting === 'lost' || (subjectSetting === 'random' && Math.random() < 0.154)) { var lost = makeLost(song, allSongs, opt); if (lost) return lost; }   // 10% overall
@@ -551,7 +575,7 @@ function keepSettings(ids) {
 }
 
 // A question without a clip shows a picture of its own on the stage instead of a plain question mark.
-function noClipArt(q) { return q && q.subject === 'flag' ? [flag(q.flag), 'Whose flag?'] : q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : ['?', '']; }
+function noClipArt(q) { return q && q.subject === 'host' ? ['📍', 'Host city'] : q && q.subject === 'map' ? ['🗺️', 'On the map'] : q && q.subject === 'flag' ? [flag(q.flag), 'Whose flag?'] : q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : ['?', '']; }
 
 // A list of switches (question types, minigames, eras) gets a "Select all" switch on top: on switches
 // everything on, pressing it again switches everything off.

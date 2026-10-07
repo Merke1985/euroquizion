@@ -638,7 +638,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : typeNote(makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, peel: true, cat: G.cat, pool: G.pool, types: typesNow(), wait: G.typeWait }));
+    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : typeNote(makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, peel: true, cat: G.cat, pool: G.pool, used: G.used, types: typesNow(), wait: G.typeWait }));
     if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }   // the question brought its own song
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
@@ -829,7 +829,7 @@
     var ms = G.draw ? drawGuessMs() : isPair() ? PAIR_MS : G.q && G.q.peel ? PEEL_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
     if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
-    if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(G.q); cover(true, G.draw ? '✏️' : art[0], G.draw ? '' : art[1], false); if (!G.draw && G.q.flag) { $('covericon').innerHTML = flagHtml(G.q.flag); $('covertext').textContent = ''; } }   // odd one out and Draw!: no clip
+    if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(G.q); cover(true, G.draw ? '✏️' : art[0], G.draw ? '' : art[1], false); if (!G.draw && G.q.flag) { $('covericon').innerHTML = flagHtml(G.q.flag); $('covertext').textContent = ''; } if (!G.draw && G.q.map) { $('covericon').innerHTML = mapHtml(G.q.map, G.q.dot); $('covertext').textContent = ''; } }   // odd one out and Draw!: no clip
     else if (G.q && G.q.peel) peelPlay(ms);
     else playClip();
     push(); if (G.draw) drawSend();
