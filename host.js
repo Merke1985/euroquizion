@@ -615,6 +615,7 @@
   // switched-on types allow: with only one or two on, there is nothing else to pick).
   function typesNow() {
     var base = G.types || Object.keys(TYPE_WEIGHT), seen = (G.typeLast || []).filter(function (x) { return x.round !== G.round; }).map(function (x) { return x.kind; });
+    if (seen.indexOf('map') >= 0 || seen.indexOf('host') >= 0) seen = seen.concat(['map', 'host']);   // both show the outline of a country: they keep the same distance from each other
     var t = base.filter(function (x) { return seen.indexOf(x) < 0; });
     if (!t.length && seen.length) t = base.filter(function (x) { return x !== seen[seen.length - 1]; });   // then at least not the same one twice in a row
     return t.length ? t : base;
