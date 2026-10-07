@@ -112,7 +112,7 @@ function makePair(song, kind, allSongs, countries) {
   var correct = kind === 'higher' ? (pair[0][6] < pair[1][6] ? 0 : 1) : (pair[0][0] > pair[1][0] ? 0 : 1);
   var fact = function (s) { return kind === 'higher' ? ordinal(s[6]) + ' place' : String(s[0]); };
   return { subject: kind, type: 'mc', hint: '', pair: pair, correct: correct,
-    text: kind === 'higher' ? 'Which song finished higher?' : 'Which song is newer?',
+    text: kind === 'higher' ? 'Which song finished higher?' : 'Which song came out later?',
     options: ['Song 1', 'Song 2'], answer: 'Song ' + (correct + 1),
     reveal: pair.map(function (s, i) { return 'Song ' + (i + 1) + ': ' + s[3] + ' – ' + s[2] + ' · ' + fact(s); }),
     explain: kind === 'higher' ? 'Both from ' + song[0] + ': ' + fact(pair[0]) + ' against ' + fact(pair[1]) + '.' : fact(pair[0]) + ' against ' + fact(pair[1]) + '.' };
