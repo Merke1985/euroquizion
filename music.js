@@ -91,13 +91,13 @@ var Music = (function () {
     } catch (e) {}
   }
   // A soft "plop": a sine that drops in pitch. n shifts it a little so a row of them does not sound identical.
-  function plop(n) {
+  function plop(n, vol) {   // vol: 1 by default, lower for a quiet tick
     try {
       if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
       if (ctx.state === 'suspended') ctx.resume();
       var t = ctx.currentTime + 0.01, o = ctx.createOscillator(), g = ctx.createGain(), f = 520 + ((n || 0) % 5) * 45;
       o.type = 'sine'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.34, t + 0.13);
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35 * (vol > 0 ? vol : 1), t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
       o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.22);
     } catch (e) {}
   }

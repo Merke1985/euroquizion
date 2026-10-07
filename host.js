@@ -777,8 +777,8 @@
     clearTimeout(worthTimer);
     var hop = function () {
       if (G.phase !== 'loading') { worthHide(); return; }
-      [].forEach.call(chips, function (c, i) { c.className = i === at ? 'on' : i > at ? 'lit' : ''; });
-      Music.plop(n - 1 - at);
+      [].forEach.call(chips, function (c, i) { c.className = i === at ? 'on' : ''; });   // only the rung it is on lights up
+      Music.plop(n - 1 - at, 0.22);   // a soft tick, in the background
       if (lap === 1) { if (at <= 0) { lap = 2; at = n - 1; worthTimer = setTimeout(hop, 160); } else { at--; worthTimer = setTimeout(hop, 55); } return; }
       if (at <= target) { worthTimer = setTimeout(function () { if (G.phase !== 'loading') return; chips[at].className = 'on picked' + (at === 0 ? ' douze' : ''); if (at === 0) Music.douze(); else Music.ding(); }, 260); return; }   // twelve gets a fanfare of its own
       at--; worthTimer = setTimeout(hop, gap);
