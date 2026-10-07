@@ -170,7 +170,21 @@ function SecondPlayer(elId) {
 // "random" one of those is drawn, in the usual proportions.
 // peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
 // blur ("Out of focus"): the same idea, but the silent video starts blurred and sharpens.
-var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10 };
+// flag ("Whose flag?"): a flag on the screen and four songs; one of them was sent by that country. No clip until the answer.
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10 };
+function makeFlag(song, allSongs, countries) {
+  if (!flag(song[1])) return null;   // a country that no longer exists has no flag to show
+  var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}, lands = {}; seen[song[4]] = 1; lands[song[1]] = 1;
+  var add = function (s) { if (opts.length < 4 && !seen[s[4]] && !lands[s[1]] && s[2] !== song[2]) { seen[s[4]] = 1; lands[s[1]] = 1; opts.push(lab(s)); } };
+  shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6; })).forEach(add);
+  shuffle(allSongs.slice()).forEach(add);
+  if (opts.length < 4) return null;
+  shuffle(opts);
+  return { subject: 'flag', type: 'mc', flag: song[1], noclip: true, text: 'Whose flag? Which of these songs was sent by this country?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer),
+    explain: song[3] + ' was sent by ' + (countries[song[1]] || song[1]) + '.' };
+}
+// The flag as a picture (it looks the same on every computer; flag emoji are not drawn everywhere), with the emoji as a stand-in.
+function flagHtml(code) { return '<img class="flagimg" src="https://flagcdn.com/w640/' + code + '.png" alt="" onerror="this.outerHTML=\'' + flag(code) + '\'">'; }
 var PEEL_MS = 60000;
 function peelPoints(ms) { return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
 function makePeel(song, allSongs, countries, opt) {
@@ -186,7 +200,7 @@ function makePeel(song, allSongs, countries, opt) {
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   if (opt && opt.types && subjectSetting === 'random') {
     var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher') && ((t !== 'peel' && t !== 'blur') || opt.peel); });
-    if (on.length && on.length < Object.keys(TYPE_WEIGHT).length) {
+    if (on.length) {   // (always by these weights: every type has its own share)
       var total = 0, r, t = on[0], o2 = {}, k;
       on.forEach(function (x) { total += TYPE_WEIGHT[x]; });
       r = Math.random() * total;
@@ -211,6 +225,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   if (opt && opt.peel && (subjectSetting === 'peel' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('peel') >= 0 && Math.random() < 0.09))) { var pq2 = makePeel(song, allSongs, countries, opt); if (pq2) return pq2; }
   if (opt && opt.peel && (subjectSetting === 'blur' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('blur') >= 0 && Math.random() < 0.09))) { var bq = makePeel(song, allSongs, countries, opt); if (bq) { bq.blur = true; bq.subject = 'blur'; bq.text = 'Out of focus: which song is this? The sooner you know, the more points.'; return bq; } }
   if (subjectSetting === 'peel' || subjectSetting === 'blur') subjectSetting = 'facts';
+  if (subjectSetting === 'flag') { var fq = makeFlag(song, allSongs, countries); if (fq) return fq; subjectSetting = 'facts'; }
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 2 / 15)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   if (subjectSetting === 'lost' || (subjectSetting === 'random' && Math.random() < 0.154)) { var lost = makeLost(song, allSongs, opt); if (lost) return lost; }   // 10% overall
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
@@ -534,7 +549,7 @@ function keepSettings(ids) {
 }
 
 // A question without a clip shows a picture of its own on the stage instead of a plain question mark.
-function noClipArt(q) { return q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : ['?', '']; }
+function noClipArt(q) { return q && q.subject === 'flag' ? [flag(q.flag), 'Whose flag?'] : q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : ['?', '']; }
 
 // A list of switches (question types, minigames, eras) gets a "Select all" switch on top: on switches
 // everything on, pressing it again switches everything off.

@@ -809,7 +809,7 @@
     var ms = G.draw ? drawGuessMs() : isPair() ? PAIR_MS : G.q && G.q.peel ? PEEL_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
     if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
-    if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(G.q); cover(true, G.draw ? '✏️' : art[0], G.draw ? '' : art[1], false); }   // odd one out and Draw!: no clip
+    if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(G.q); cover(true, G.draw ? '✏️' : art[0], G.draw ? '' : art[1], false); if (!G.draw && G.q.flag) { $('covericon').innerHTML = flagHtml(G.q.flag); $('covertext').textContent = ''; } }   // odd one out and Draw!: no clip
     else if (G.q && G.q.peel) peelPlay(ms);
     else playClip();
     push(); if (G.draw) drawSend();
@@ -1919,7 +1919,7 @@
     [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { party[el.getAttribute('data-party')] = el.checked; });
     G.types = types.length ? types : null;   // nothing ticked counts as everything
     G.partyOn = party;
-    try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party, peelSeen: 1, blurSeen: 1 })); } catch (e) {}
+    try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party, peelSeen: 1, blurSeen: 1, known: Object.keys(TYPE_WEIGHT) })); } catch (e) {}
     // the field shows what is switched on, in a few words
     var sum = function (box, on) {
       var all = box.querySelectorAll('input:not([data-all])'), names = [];
@@ -1944,8 +1944,9 @@
   try {
     var pk = JSON.parse(localStorage.getItem('esc-picks') || 'null');
     if (pk) {
-      if (pk.t && pk.t.length >= 6 && pk.t.indexOf('peel') < 0 && !pk.peelSeen) pk.t.push('peel');
-      if (pk.t && pk.t.length >= 7 && pk.t.indexOf('blur') < 0 && !pk.blurSeen) pk.t.push('blur');   // everything was on before this type existed: it joins in
+      // a type that did not exist yet when the choice was saved joins in, switched on
+      var known = pk.known || ['facts', 'odd', 'mistake', 'higher', 'newer', 'lost'].concat(pk.peelSeen ? ['peel'] : [], pk.blurSeen ? ['blur'] : []);
+      if (pk.t && pk.t.length) Object.keys(TYPE_WEIGHT).forEach(function (t) { if (known.indexOf(t) < 0 && pk.t.indexOf(t) < 0) pk.t.push(t); });   // everything was on before this type existed: it joins in
       [].forEach.call($('typebox').querySelectorAll('input:not([data-all])'), function (el) { if (pk.t && pk.t.length) el.checked = pk.t.indexOf(el.getAttribute('data-type')) >= 0; });
       [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { var v = (pk.p || {})[el.getAttribute('data-party')]; if (v === false) el.checked = false; });
     }

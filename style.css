@@ -876,3 +876,5 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* The points badge and the "Song 1 / Song 2" tag are small enough to sit inside the covered strip at the top of the video */
 .worth{right:6px;top:4px;font-size:.85rem;padding:4px 7px;border-radius:8px;min-width:0}
 .pairtag{left:6px;top:4px;font-size:.78rem;padding:.25em .7em}
+/* Whose flag?: the flag fills the middle of the stage */
+.cover .q .flagimg{display:block;height:min(24vh,220px);width:auto;max-width:80%;margin:0 auto;border-radius:10px;box-shadow:0 10px 40px -8px rgba(0,0,0,.8),0 0 0 3px rgba(255,255,255,.85)}
