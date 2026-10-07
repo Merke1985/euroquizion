@@ -746,6 +746,7 @@
     preAt = 0;
     try { yt.mute(); if (!rolling) yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
     cover(false); masks(true);
+    if (G.q.blur) { blurPlay(ms); return; }
     var el = $('peel'), cols = 12, rows = 7, n = cols * rows, html = '';
     for (var i = 0; i < n; i++) html += '<i style="background-position:' + (i % cols) * 100 / (cols - 1) + '% ' + Math.floor(i / cols) * 100 / (rows - 1) + '%"></i>';
     el.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)'; el.style.gridTemplateRows = 'repeat(' + rows + ',1fr)';
@@ -758,7 +759,19 @@
       while (gone < want) tiles[order[gone++]].classList.add('gone');
     }, 200);
   }
-  function peelStop() { clearInterval(peelTick); $('peel').classList.add('hidden'); $('peel').innerHTML = ''; }
+  function peelStop() { clearInterval(peelTick); $('peel').classList.add('hidden'); $('peel').innerHTML = ''; blurSet(0); }
+  // "Out of focus": the same round, but the picture starts as a blur and sharpens little by little.
+  function blurSet(px) { var f = document.getElementById('yt'); if (!f) return; f.style.transition = px ? 'filter .5s linear' : 'none'; f.style.filter = px > 0.3 ? 'blur(' + px.toFixed(1) + 'px)' : ''; }
+  function blurPlay(ms) {
+    var w = stageEl().clientWidth || 800, start = Math.max(26, w * 0.065), t0 = Date.now();
+    var f = document.getElementById('yt'); if (f) { f.style.transition = 'none'; f.style.filter = 'blur(' + start.toFixed(1) + 'px)'; }
+    clearInterval(peelTick);
+    peelTick = setInterval(function () {
+      if (G.phase !== 'guess' || !G.q || !G.q.blur) { peelStop(); return; }
+      var left = Math.max(0, 1 - (Date.now() - t0) / (ms * 0.97));
+      blurSet(start * Math.pow(left, 1.5));   // stays vague for a good while, sharp just before the time is up
+    }, 400);
+  }
   // Standard scoring: while the song is being selected, a light runs up and down a column of the Eurovision
   // points (12, 10, 8, 7 … 1) and stops on what a right answer to this question will be worth.
   var WORTHS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1], worthTimer = null;
@@ -1903,7 +1916,7 @@
     [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { party[el.getAttribute('data-party')] = el.checked; });
     G.types = types.length ? types : null;   // nothing ticked counts as everything
     G.partyOn = party;
-    try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party, peelSeen: 1 })); } catch (e) {}
+    try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party, peelSeen: 1, blurSeen: 1 })); } catch (e) {}
     // the field shows what is switched on, in a few words
     var sum = function (box, on) {
       var all = box.querySelectorAll('input:not([data-all])'), names = [];
@@ -1928,7 +1941,8 @@
   try {
     var pk = JSON.parse(localStorage.getItem('esc-picks') || 'null');
     if (pk) {
-      if (pk.t && pk.t.length >= 6 && pk.t.indexOf('peel') < 0 && !pk.peelSeen) pk.t.push('peel');   // everything was on before this type existed: it joins in
+      if (pk.t && pk.t.length >= 6 && pk.t.indexOf('peel') < 0 && !pk.peelSeen) pk.t.push('peel');
+      if (pk.t && pk.t.length >= 7 && pk.t.indexOf('blur') < 0 && !pk.blurSeen) pk.t.push('blur');   // everything was on before this type existed: it joins in
       [].forEach.call($('typebox').querySelectorAll('input:not([data-all])'), function (el) { if (pk.t && pk.t.length) el.checked = pk.t.indexOf(el.getAttribute('data-type')) >= 0; });
       [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { var v = (pk.p || {})[el.getAttribute('data-party')]; if (v === false) el.checked = false; });
     }

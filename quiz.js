@@ -169,7 +169,8 @@ function SecondPlayer(elId) {
 // opt.types: the question types that are switched on (facts, odd, mistake, higher, newer, lost). With
 // "random" one of those is drawn, in the usual proportions.
 // peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
-var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10 };
+// blur ("Out of focus"): the same idea, but the silent video starts blurred and sharpens.
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10 };
 var PEEL_MS = 60000;
 function peelPoints(ms) { return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
 function makePeel(song, allSongs, countries, opt) {
@@ -184,7 +185,7 @@ function makePeel(song, allSongs, countries, opt) {
 }
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   if (opt && opt.types && subjectSetting === 'random') {
-    var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher') && (t !== 'peel' || opt.peel); });
+    var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher') && ((t !== 'peel' && t !== 'blur') || opt.peel); });
     if (on.length && on.length < Object.keys(TYPE_WEIGHT).length) {
       var total = 0, r, t = on[0], o2 = {}, k;
       on.forEach(function (x) { total += TYPE_WEIGHT[x]; });
@@ -208,7 +209,8 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   }
   if (subjectSetting === 'higher' || subjectSetting === 'newer') subjectSetting = 'random';
   if (opt && opt.peel && (subjectSetting === 'peel' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('peel') >= 0 && Math.random() < 0.09))) { var pq2 = makePeel(song, allSongs, countries, opt); if (pq2) return pq2; }
-  if (subjectSetting === 'peel') subjectSetting = 'facts';
+  if (opt && opt.peel && (subjectSetting === 'blur' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('blur') >= 0 && Math.random() < 0.09))) { var bq = makePeel(song, allSongs, countries, opt); if (bq) { bq.blur = true; bq.subject = 'blur'; bq.text = 'Out of focus: which song is this? The sooner you know, the more points.'; return bq; } }
+  if (subjectSetting === 'peel' || subjectSetting === 'blur') subjectSetting = 'facts';
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 2 / 15)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   if (subjectSetting === 'lost' || (subjectSetting === 'random' && Math.random() < 0.154)) { var lost = makeLost(song, allSongs, opt); if (lost) return lost; }   // 10% overall
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
