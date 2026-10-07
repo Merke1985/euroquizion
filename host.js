@@ -564,7 +564,7 @@
       if (G.draw) worth = String(partyX());
       else if (G.q.peel) worth = String(peelPoints((G.barMs || PEEL_MS) - (G.endsAt - Date.now())) * x2);
       else if (G.scoring === 'speed') worth = String((ESC_POINTS[list().filter(function (p) { return p.pick != null; }).length] || 1) * x2);   // Speedy: what the next one in can still get
-      else worth = String((G.qWorth || 12) * x2);
+      else worth = String((G.scoring === 'random' && G.qWorth ? G.qWorth : 12) * x2);
     }
     if (worth !== worthShown) { worthShown = worth; $('worth').classList.toggle('hidden', !worth); if (worth) { $('worth').textContent = worth; $('worth').classList.remove('tick'); void $('worth').offsetWidth; $('worth').classList.add('tick'); } }
     var timed = G.phase === 'guess' || G.phase === 'dall' || G.phase === 'qall' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
@@ -763,7 +763,7 @@
   // points (12, 10, 8, 7 … 1) and stops on what a right answer to this question will be worth.
   var WORTHS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1], worthTimer = null;
   function worthSpin() {
-    var ok = !REMOTE && G.q && !G.draw && !G.sing && !G.quipLoad && !G.best && G.scoring === 'correct' && !ladderGame();
+    var ok = !REMOTE && G.q && !G.draw && !G.sing && !G.quipLoad && !G.best && G.scoring === 'random' && !ladderGame();
     if (!ok) { G.qWorth = 0; worthHide(); return; }
     if (G.worthRound === G.round && $('ptspin').innerHTML) return;   // a replacement for a broken video keeps what was spun
     // Behind the curtain starts at twelve and falls from there: the light lands on 12.
@@ -873,7 +873,7 @@
       });
       right = [];
     }
-    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : (G.q && G.q.peel ? peelPoints(p.pickMs) : G.scoring === 'correct' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
+    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : (G.q && G.q.peel ? peelPoints(p.pickMs) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
     // The artist: 12 points shared out over everyone who answered, for each of them who got it (all right: 12).

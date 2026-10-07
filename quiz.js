@@ -358,12 +358,14 @@ var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'],
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 // With several players Speedy goes by who was first; solo it goes by the clock.
 var HOST_SCORING_HELP = {
-  correct: 'Standard: before each question a spin decides what a right answer is worth, from 1 to 12 points.',
+  correct: 'Standard: every right answer scores a flat 12 points.',
+  random: 'Random: before each question a light climbs the Eurovision points and stops on what a right answer is worth this time, from 1 to 12.',
   speed: 'Speedy: the first player with the right answer scores 12 points, the second 10, the third 8, then 7, 6, 5, 4, 3, 2 and 1.',
   ladder: ''
 };
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',
+  random: 'Random: before each question a light climbs the Eurovision points and stops on what a right answer is worth this time, from 1 to 12.',
   speed: 'Speedy: a right answer within the first 3 seconds scores 12 points. After that it drops a point every second, down to 1.',
   ladder: 'Ladder: everyone climbs the same ladder. A right answer takes you one rung up, a wrong answer or no answer half a rung down. The rungs are worth 1, 2, 3, 4, 5, 6, 7, 8, 10 and 12 points, and the game goes on until the first player reaches the top. With more rounds, every round is a new climb and the rungs reached are added up.'
 };
@@ -371,7 +373,7 @@ var SCORING_HELP = {
 var LADDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
 // rank = how many players were right before this one (only used for "order").
 function pointsFor(scoring, elapsedMs, totalMs, rank) {
-  if (scoring === 'correct') return 12;
+  if (scoring === 'correct' || scoring === 'random') return 12;   // (random: the host hands out what was spun; 12 where there was no spin)
   if (scoring === 'order') return ESC_POINTS[rank] || 1;   // never lower than 1
   return scoreFor(elapsedMs, totalMs);
 }
