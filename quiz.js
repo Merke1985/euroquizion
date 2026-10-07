@@ -171,7 +171,7 @@ function SecondPlayer(elId) {
 // peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
 // blur ("Out of focus"): the same idea, but the silent video starts blurred and sharpens.
 // flag ("Whose flag?"): a flag on the screen and four songs; one of them was sent by that country. No clip until the answer.
-var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, map: 10, host: 8 };
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, host: 8 };   // (map, "On the map", is switched off for now: give it a weight here and a switch in host.html to bring it back)
 // map ("On the map"): the same, with the outline of the country in place of its flag (the smallest states are only a dot: left out).
 function makeFlag(song, allSongs, countries, map) {
   if (map ? !(typeof SHAPES !== 'undefined' && SHAPES[song[1]]) : !flag(song[1])) return null;   // a country that no longer exists has no flag to show
