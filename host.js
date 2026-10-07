@@ -340,7 +340,7 @@
     if (G.phase !== 'end') endShown = false;
     // Everyone is ready: the fanfare plays, but the screen stays on the lobby with the settings locked.
     var locked = G.phase === 'intro';
-    [].forEach.call($('v-lobby').querySelectorAll('.settings select'), function (el) { el.disabled = locked; });
+    [].forEach.call($('v-lobby').querySelectorAll('.settings select, .settings input'), function (el) { el.disabled = locked; });
     $('v-lobby').classList.toggle('locked', locked);
     if (!locked) { singToggle(); winnersLock(); autoMirror(); }   // gives Answers and Scoring back unless Sing! or Draw! greys them out
     if (!locked && G.phase === 'lobby' && $('start').textContent.indexOf('Start now') === 0) ready();
@@ -527,7 +527,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, cat: G.cat, pool: G.pool });
+    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, cat: G.cat, pool: G.pool, types: G.types });
     if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }   // the question brought its own song
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
@@ -779,8 +779,11 @@
     // Party: four quiz questions, then a Sing! or a Draw! round, then four quiz questions again, and so on
     // (Sing! only with a shared screen, and neither without at least two players).
     if (G.atype === 'party') {
-      var special = REMOTE ? ['draw'] : ['sing', 'draw'], can = list().filter(function (p) { return !p.off; }).length >= 2;
-      if (can && (G.quizRun || 0) >= 4) {
+      // only the party rounds that are ticked in the Advanced settings
+      var pOn = G.partyOn || {}, special = (REMOTE ? ['draw'] : ['sing', 'draw']).filter(function (x) { return pOn[x] !== false; }), small = ['quip', 'bluff'].filter(function (x) { return pOn[x] !== false; });
+      var can = list().filter(function (p) { return !p.off; }).length >= 2;
+      if ((G.quizRun || 0) >= 4 && !(can && special.length)) G.quizRun = 0;   // no big round to play: straight on to the next four
+      if (can && special.length && (G.quizRun || 0) >= 4) {
         // take turns, so a game of ten songs has both: four questions, one of them, four questions, the other
         var other = special.filter(function (x) { return x !== G.lastSpecial; });
         G.mode = G.lastSpecial = pick(other.length ? other : special); G.quizRun = 0;
@@ -790,7 +793,7 @@
         G.quizRun = (G.quizRun || 0) + 1;
         if (G.quizRun === 1) G.quipSlot = 2 + Math.floor(Math.random() * 3);
         // the small party round in between: Quip! and Bluff! take turns
-        if (G.quizRun === G.quipSlot) { G.mode = G.lastSmall === 'quip' ? 'bluff' : 'quip'; G.lastSmall = G.mode; } else G.mode = 'mc';
+        if (G.quizRun === G.quipSlot && small.length) { var os = small.filter(function (x) { return x !== G.lastSmall; }); G.mode = G.lastSmall = (os.length ? os : small)[0]; } else G.mode = 'mc';
       }
     } else G.mode = G.atype;
     var md = roundMode();
@@ -812,7 +815,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { cat: G.cat, pool: G.pool });
+    if (G.quipLoad) G.q = null; else if (!G.draw) G.q = makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { cat: G.cat, pool: G.pool, types: G.types });
     if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }
     G.clip = { id: G.song[4], frac: Math.random(), noclip: !!G.draw || !!(G.q && G.q.noclip) }; G.ready = {}; G.badVotes = 0; G.remain = 0; G.adWait = 0;
     G.phase = 'loading'; remoteT0 = Date.now(); push();
@@ -1462,6 +1465,24 @@
   }
 
 
+  // ---------- which question types and party rounds are in the game (Advanced settings) ----------
+  function readPicks() {
+    var types = [], party = {};
+    [].forEach.call($('typebox').querySelectorAll('input'), function (el) { if (el.checked) types.push(el.getAttribute('data-type')); });
+    [].forEach.call($('partybox').querySelectorAll('input'), function (el) { party[el.getAttribute('data-party')] = el.checked; });
+    G.types = types.length ? types : null;   // nothing ticked counts as everything
+    G.partyOn = party;
+    try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party })); } catch (e) {}
+  }
+  try {
+    var pk = JSON.parse(localStorage.getItem('esc-picks') || 'null');
+    if (pk) {
+      [].forEach.call($('typebox').querySelectorAll('input'), function (el) { if (pk.t && pk.t.length) el.checked = pk.t.indexOf(el.getAttribute('data-type')) >= 0; });
+      [].forEach.call($('partybox').querySelectorAll('input'), function (el) { var v = (pk.p || {})[el.getAttribute('data-party')]; if (v === false) el.checked = false; });
+    }
+  } catch (e) {}
+  $('typebox').addEventListener('change', readPicks); $('partybox').addEventListener('change', readPicks); readPicks();
+
   // ---------- test bots ----------
   // Up to four pretend players for trying things out on the shared screen. They live on this page and
   // do what a phone would do: get ready, answer, draw a scribble, write a line, vote.
@@ -1559,6 +1580,7 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
+    $('partybox').classList.toggle('off', !party);
     if (lo) lo.disabled = party;
     if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.

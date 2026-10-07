@@ -705,3 +705,10 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .funsub{font-size:1.25rem;font-weight:700;margin:6px 0 0;color:var(--ink);grid-column:1/-1;width:100%}
 .host .opts:has(.funsub){display:block}
 @media (prefers-reduced-motion:reduce){.cover.funcard .q,.cover.funcard h2{animation:none}}
+
+/* tick boxes in the Advanced settings: which question types and which party rounds are in the game */
+.pickrow{display:flex;flex-wrap:wrap;gap:8px}
+.pick{display:inline-flex;align-items:center;gap:.5em;padding:.45em .8em;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.05);font-weight:700;font-size:.92rem;text-transform:none;letter-spacing:0;color:var(--ink);cursor:pointer;margin:0}
+.pick input{width:1.1em;height:1.1em;accent-color:var(--pink);margin:0}
+.pick:has(input:not(:checked)){opacity:.55}
+.picks.off{opacity:.4;pointer-events:none}

@@ -148,7 +148,27 @@ function SecondPlayer(elId) {
   self.stop = function () { clearInterval(poll); want = null; self.ready = false; self.pause(); };
   self.left = function () { try { var st = p.getPlayerState(), d = p.getDuration() || 0, t = p.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {} return null; };
 }
+// opt.types: the question types that are switched on (facts, odd, mistake, higher, newer, lost). With
+// "random" one of those is drawn, in the usual proportions.
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10 };
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
+  if (opt && opt.types && subjectSetting === 'random') {
+    var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher'); });
+    if (on.length && on.length < 6) {
+      var total = 0, r, t = on[0], o2 = {}, k;
+      on.forEach(function (x) { total += TYPE_WEIGHT[x]; });
+      r = Math.random() * total;
+      for (var i = 0; i < on.length; i++) { r -= TYPE_WEIGHT[on[i]]; if (r <= 0) { t = on[i]; break; } }
+      for (k in opt) if (k !== 'types') o2[k] = opt[k];
+      var made = makeQuestion(song, t, typeSetting, allSongs, countries, o2);
+      var kind = ['country', 'artist', 'title', 'year', 'place'].indexOf(made.subject) >= 0 ? 'facts' : made.subject;
+      if (on.indexOf(kind) >= 0) return made;
+      // that type could not be made for this song: one that is switched on and always works, if there is one
+      if (on.indexOf('facts') >= 0) return makeQuestion(song, 'facts', typeSetting, allSongs, countries, o2);
+      if (on.indexOf('mistake') >= 0) return makeQuestion(song, 'mistake', typeSetting, allSongs, countries, o2);
+      return made;
+    }
+  }
   var pairOk = !!(opt && opt.pair), winners = !!(opt && opt.cat === 'win');   // only winners in play: every placing question would answer itself
   if (winners && (subjectSetting === 'place' || subjectSetting === 'higher')) subjectSetting = 'random';
   if (pairOk && (subjectSetting === 'higher' || subjectSetting === 'newer' || (subjectSetting === 'random' && Math.random() < 0.25))) {   // 12.5% each for higher/lower and newer
