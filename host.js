@@ -444,6 +444,7 @@
     $('answered').innerHTML = ps.map(function (p) {
       // Draw!: a scribbling pencil on everyone who is still drawing, a green ring once they are done
       var pen = dall && !isIn(p) && busyOf.items[p.pid] ? '<i class="pen" aria-hidden="true">✏️</i>' : '';
+      if (!dall && G.sing && G.phase === 'srec' && !isIn(p) && !p.off) pen = '<i class="pen" aria-hidden="true">🎤</i>';   // still recording
       return '<div class="pl' + (isIn(p) ? ' in' : '') + (p.off ? ' off' : '') + (pen ? ' busy' : '') + '">' + charSvg(p.char) + pen + '<span>' + esc(p.name) + '</span></div>';
     }).join('');
   }
