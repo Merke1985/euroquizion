@@ -470,17 +470,25 @@
   // Countdown: the video loads muted behind the cover while 5..1 counts down.
   // The clip starts as soon as both the countdown and the loading are done.
   var COUNT = 5, loadT0 = 0, loadTick = null, clipReady = false;
+  // YouTube flashes a play/pause symbol in the middle of the picture whenever a video is started or stopped.
+  // So the clip is started two seconds early, silent and behind the cover, and is uncovered once that has passed;
+  // and at the end of the clip it is not stopped, only silenced and covered (see playClip).
+  var PRE = 2, preAt = 0, quietAt = -1;
+  function preOk() { return !REMOTE && stage === 'ready' && !lateLoad && !G.draw && !(G.q && G.q.noclip); }
   function countStart() {
-    clipReady = false;
+    clipReady = false; preAt = 0;
     if (loadT0) return;                 // a replacement for a broken video keeps the running countdown
     loadT0 = Date.now(); clearInterval(loadTick);
     var draw = function () {
       var left = COUNT - Math.floor((Date.now() - loadT0) / 1000);
+      // two seconds before the end of the countdown (or as soon as the video is ready after that): start it, unseen and unheard
+      if (clipReady && !preAt && preOk() && Date.now() - loadT0 >= (COUNT - PRE) * 1000) { preAt = Date.now(); try { yt.mute(); yt.seekTo(Math.max(0, clipStart - PRE), true); yt.playVideo(); } catch (e) {} }
       if (left >= 1) { $('covericon').textContent = left; $('covertext').textContent = 'Selecting song'; }
       else if (clipReady && isPair() && !yt2.ready) {   // the second song of a two-clip question is not ready yet
         $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…';
         if (Date.now() - loadT0 > 30000) badSong();   // it is not coming: take another song and question
       }
+      else if (clipReady && preAt && Date.now() - preAt < PRE * 1000) { $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…'; }   // the head start is not over yet
       else if (clipReady) { countStop(); if (G.sing) singListen(); else beginGuess(); }
       else { $('covericon').textContent = '♪'; $('covertext').textContent = 'Almost there…'; }
     };
@@ -653,12 +661,18 @@
   }
   function playClip() {
     clearInterval(poll);
-    stage = 'clip';
-    yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo();
+    stage = 'clip'; quietAt = -1;
+    var rolling = false; try { var t0 = yt.getCurrentTime() || 0; rolling = !!preAt && yt.getPlayerState() === 1 && Math.abs(t0 - clipStart) < 1.5; } catch (e) {}
+    preAt = 0;
+    if (!rolling) yt.seekTo(clipStart, true);   // (already running at the right spot after its head start: no jump, no symbol)
+    yt.unMute(); yt.setVolume(100); yt.playVideo();
     cover(false);   // the video is always visible during the clip
     poll = setInterval(function () {
       if ((yt.getCurrentTime() || 0) >= clipStart + clipLen()) {
-        clearInterval(poll); yt.pauseVideo(); stage = 'paused';
+        clearInterval(poll);
+        // A plain question: the video runs on silently behind the cover until the answer, so nothing is stopped and started.
+        if (G.phase === 'guess' && !isPair() && !G.sing && !G.draw && !G.quipLoad && !G.quips) { quietAt = yt.getCurrentTime() || 0; yt.mute(); } else yt.pauseVideo();
+        stage = 'paused';
         if (isPair() && G.phase === 'guess' && pairStep === 0) {
           // on to the second song, in the spare player
           pairStep = 1; if (!yt2.shared) stageEl().classList.add('second'); pairTag('Song 2'); yt2.play();
@@ -781,7 +795,12 @@
       lateLoad = false; clipStart = Math.floor(35 + Math.random() * 50);
       try { yt.unMute(); yt.setVolume(100); yt.loadVideoById({ videoId: G.song[4], startSeconds: clipStart }); } catch (e) {}
     } else {
-    try { var tNow = yt.getCurrentTime() || 0; if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
+    try {
+      var tNow = yt.getCurrentTime() || 0;
+      if (quietAt >= 0 && yt.getPlayerState() === 1) { if (tNow - quietAt > 1) yt.seekTo(quietAt, true); }   // it ran on in silence: back to where the clip stopped
+      else if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true);
+      quietAt = -1; yt.unMute(); yt.setVolume(100); yt.playVideo();
+    } catch (e) {}
     }
     push(); autoStart(); revealWatch();
   }
