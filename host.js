@@ -831,6 +831,8 @@
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       if ((G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
+      // Back from a minigame: a card says so, before the questions start again.
+      if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 3200); return; }
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
     var md = roundMode();
@@ -935,6 +937,7 @@
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Write the funniest answer on your phone, then vote for the best one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
     bluff: { icon: '🤥', title: 'Lost in Translation', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
+    quiz: { icon: '🎧', title: 'Quiz', sub: 'Back to the questions: three songs coming up.' },
     sing: { icon: '🎤', title: 'Jury Show', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
   var funTimer = null;
@@ -942,7 +945,7 @@
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll };
-    G.mode = G.lastParty = kind; G.best = null; G.q = null;
+    G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     funIntro(kind, starts[kind], ms);
   }
   function partyChoose(games) {
@@ -1004,7 +1007,7 @@
   }
   function funIntro(kind, then, ms) {
     var f = FUN[kind];
-    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub };
+    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub, plain: kind === 'quiz' };
     G.phase = 'fun'; G.barMs = 0;
     if (!REMOTE) {
       try { yt.pauseVideo(); } catch (e) {}
@@ -1612,7 +1615,7 @@
   }
   net.on('poll', function (m) {
     var p = m && players[m.pid];
-    if (p && G.sing && m.reroll) { singBadVote(p); return; }
+    if (p && G.sing && m.reroll) return;   // no longer offered
     if (!p || !G.sing || typeof m.choice !== 'number') return;
     if (G.phase === 'svote' && G.sing.options[m.choice]) G.sing.votes[p.pid] = m.choice;
     else if (G.phase === 'sbest' && G.sing.order[m.choice] && G.sing.order[m.choice] !== p.pid) G.sing.best[p.pid] = G.sing.order[m.choice];   // no voting for yourself
@@ -1643,7 +1646,8 @@
     return { options: G.phase === 'svote' ? sg.options.map(function (o) { return o[3] + ' – ' + o[2]; }) : null,
       song: chosen ? { title: chosen[3], artist: chosen[2] } : null,
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
-      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: SING_REROLLS - (G.singSkips || 0), bad: Object.keys(sg.bad || {}).length, bad_need: singBadNeed(),
+      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: 0,   // (the "this song isn't viable" button has been taken out)
+       bad: Object.keys(sg.bad || {}).length, bad_need: singBadNeed(),
       tally: null };   // the votes are for the big screen only
   }
   function renderSing() {
@@ -1930,7 +1934,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.partyDone = []; G.partyPick = $('s-partypick').value; G.tourLast = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.afterParty = false; G.partyDone = []; G.partyPick = $('s-partypick').value; G.tourLast = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;

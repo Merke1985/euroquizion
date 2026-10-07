@@ -287,7 +287,8 @@
     var poll = s.phase === 'svote' || s.phase === 'sbest', recPhase = s.phase === 'srec' && !(m && m.in);
     $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
     // While listening or recording: ask for another part of the song (a few times per round at most).
-    $('sbad').classList.toggle('hidden', !(s.phase === 'slisten' && sg.rerolls_left > 0)); if (fresh || sg.rerolls_left !== lastRerolls) { $('sbad').disabled = false; lastRerolls = sg.rerolls_left; }
+    $('sbad').classList.add('hidden');   // taken out: the song that wins the vote is the song
+     if (fresh || sg.rerolls_left !== lastRerolls) { $('sbad').disabled = false; lastRerolls = sg.rerolls_left; }
     if (s.phase === 'slisten' && $('sbad').disabled && sg.bad) { $('sfb').className = 'fb close'; $('sfb').textContent = 'You voted to skip this song: ' + sg.bad + ' of ' + sg.bad_need + ' needed.'; }
     if (fresh) { $('sfb').textContent = ''; $('sfb').className = 'fb'; if (s.phase !== 'srec') { recReset(); recRelease(); } }
     var name = sg.song ? sg.song.title + ' – ' + sg.song.artist : '';
