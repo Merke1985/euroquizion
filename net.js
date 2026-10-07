@@ -54,8 +54,9 @@ function markBad(id) {
   try { localStorage.setItem('esc-badvideos', JSON.stringify(Object.keys(BAD_VIDEOS).slice(-600))); } catch (e) {}
 }
 function poolFor(songs, eraValue, cat) {
-  var era = eraValue.split('-').map(Number);
+  // eraValue: one stretch of years ('1980-1999') or several, separated by commas
+  var eras = String(eraValue || '1956-2100').split(',').map(function (r) { return r.split('-').map(Number); });
   return songs.filter(function (s) {
-    return !BAD_VIDEOS[s[4]] && s[0] >= era[0] && s[0] <= era[1] && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
+    return !BAD_VIDEOS[s[4]] && eras.some(function (era) { return s[0] >= era[0] && s[0] <= era[1]; }) && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
   });
 }

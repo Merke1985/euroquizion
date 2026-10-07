@@ -172,7 +172,7 @@
     if (G.subject === 'points') G.subject = 'random';
     if (['country', 'artist', 'title', 'year', 'place'].indexOf(G.subject) >= 0) G.subject = 'facts';   // these are one category now   // the points question was removed
     if (G.phase === 'lobby' || G.phase === 'end') G.go = {};   // games saved before Sing! moved to Category
-    $('s-era').value = G.era; $('s-cat').value = G.cat;
+    eraSet(G.era); $('s-cat').value = G.cat;
     $('s-atype').value = G.robin ? 'robin' : G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip'; scoreHelp();
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([5, 10, 20, 30].indexOf(G.guessMs / 1000 - AFTER) < 0) G.guessMs = (20 + AFTER) * 1000;   // games saved with the old Guessing time setting
@@ -2072,6 +2072,28 @@
     $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
+  // ---------- eras: several can be switched on (none or all of them: every year) ----------
+  // The hidden Era field carries the choice as one value: '1956-2100' for everything, otherwise the chosen
+  // stretches of years separated by commas.
+  function eraSet(value) {
+    var parts = String(value || '1956-2100').split(','), all = value === '1956-2100' || !value, sel = $('s-era'), names = [];
+    [].forEach.call($('erabox').querySelectorAll('input'), function (el) { el.checked = all || parts.indexOf(el.getAttribute('data-era')) >= 0; if (el.checked) names.push(el.parentNode.querySelector('b').textContent); });
+    var boxes = $('erabox').querySelectorAll('input'); if (names.length === boxes.length || !names.length) { all = true; value = '1956-2100'; }
+    var opt = sel.querySelector('option[data-custom]');
+    if (!all && !sel.querySelector('option[value="' + value + '"]')) { if (!opt) { opt = document.createElement('option'); opt.setAttribute('data-custom', '1'); sel.appendChild(opt); } opt.value = value; opt.textContent = names.join(', '); }
+    sel.value = value;
+    $('erasum').textContent = all ? 'All eras' : names.length === 1 ? names[0] : 'Custom';
+    return value;
+  }
+  function eraRead() {
+    var on = []; [].forEach.call($('erabox').querySelectorAll('input'), function (el) { if (el.checked) on.push(el.getAttribute('data-era')); });
+    var all = !on.length || on.length === $('erabox').querySelectorAll('input').length;
+    G.era = eraSet(all ? '1956-2100' : on.join(','));
+    try { localStorage.setItem('esc-eras', G.era); } catch (e) {}
+    ready();
+  }
+  $('erabox').addEventListener('change', eraRead);
+  try { var er0 = localStorage.getItem('esc-eras'); if (er0 && /^[0-9,\-]+$/.test(er0)) G.era = eraSet(er0); } catch (e) {}
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
     setTimeout(fanCue, 1500);   // back in the lobby: line the fanfare up again
@@ -2208,7 +2230,7 @@
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   fetch('chorus.json?v=43').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
-  keepSettings(['s-era', 's-cat', 's-time', 's-scoring', 's-rounds']);   // shared with solo play
+  keepSettings(['s-cat', 's-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   restore();
   render();
 })();
