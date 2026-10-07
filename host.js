@@ -1524,8 +1524,8 @@
       opts = sg.order.map(function (pid) {
         var p = players[pid]; if (!p) return '';
         var who = list().filter(function (v) { return sg.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
-        return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">♪ singing now</span>' : '') + '</div><div class="voters">' +
-          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return who.length > 2 ? '<span class="face" title="' + esc(v.name) + '">' + charSvg(v.char) + '</span>' : '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '') + '</div></div>';
+        return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">' + (sg.order.length > 4 ? '♪' : '♪ singing now') + '</span>' : '') + '</div><div class="voters">' +
+          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return who.length > 2 || sg.order.length > 4 ? '<span class="face" title="' + esc(v.name) + '">' + charSvg(v.char) + '</span>' : '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '') + '</div></div>';
       }).join('');
     }
     else if (G.phase === 'reveal') {
@@ -1535,11 +1535,13 @@
       opts = sg.order.map(function (pid) {
         var p = players[pid], r = (sg.result || []).filter(function (x) { return x.pid === pid; })[0]; if (!p) return '';
         var who = list().filter(function (v) { return sg.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
-        return '<div class="optcol"><div class="opt' + (r && r.win ? ' right' : '') + '">' + charSvg(p.char) + esc(p.name) + '</div><div class="voters">' +
-          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return who.length > 2 ? '<span class="face" title="' + esc(v.name) + '">' + charSvg(v.char) + '</span>' : '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '') + '</div></div>';
+        return '<div class="optcol"><div class="opt' + (r && r.win ? ' right' : '') + '">' + charSvg(p.char) + esc(p.name) + (r && r.win ? '<span class="balloon">Thank you Europe!</span>' : '') + '</div><div class="voters">' +
+          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return who.length > 2 || sg.order.length > 4 ? '<span class="face" title="' + esc(v.name) + '">' + charSvg(v.char) + '</span>' : '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '') + '</div></div>';
       }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
+    var singers = G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'reveal' ? sg.order.length : 0;   // more than four singers: tiles side by side, so it all fits
+    $('qopts').classList.toggle('tiles', singers > 4); $('qopts').classList.toggle('tiles3', singers > 8);
     $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' || G.phase === 'splay' || G.phase === 'reveal');   // the song vote: one song per row, its voters behind it
   }
 
@@ -1614,7 +1616,7 @@
     return lines;
   }
   function botAdd() {
-    if (REMOTE || bots.length >= 4 || G.phase !== 'lobby') return;
+    if (REMOTE || bots.length >= (window.BOT_MAX || 4) || G.phase !== 'lobby') return;
     var used = {}; list().forEach(function (p) { used[p.char] = 1; });
     // a bot is named after its avatar (a random free one)
     var open = CHARS.filter(function (c) { return !used[c.id]; }), free = open.length ? pick(open) : null, n = bots.length + 1;

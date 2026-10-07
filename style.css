@@ -733,3 +733,16 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .host .opts.votelist .opt.singing .note{margin-left:12px}
 .host .opts.votelist .voters span.face{padding:2px}
 .host .opts.votelist .opt.right+.voters>b{color:#052e16}
+/* Sing!: the "singing now" mark never makes its bar taller; more than four singers become tiles */
+.host .opts.votelist .opt .note{padding:0;margin:0 0 0 12px;border:0;background:none;line-height:1}
+.host .opts.votelist.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+.host .opts.votelist.tiles3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.host .opts.votelist.tiles .opt{padding-right:33%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.host .opts.votelist.tiles .voters{max-width:31%;gap:3px}
+.host .opts.votelist.tiles .voters>b{font-size:.85rem}
+/* Sing!: the winner says thanks, in a speech balloon next to the avatar */
+.host .opt .balloon{position:relative;margin-left:16px;background:#fff;color:#1a1147;font-weight:800;font-size:.85rem;line-height:1;padding:6px 11px;border-radius:999px;white-space:nowrap;flex:none;animation:balloon .35s ease-out both}
+.host .opt .balloon:before{content:"";position:absolute;left:-6px;top:50%;margin-top:-5px;border:5px solid transparent;border-left:0;border-right:7px solid #fff}
+.host .opts.votelist.tiles .balloon{font-size:.72rem;padding:5px 8px;margin-left:10px}
+@media (prefers-reduced-motion:reduce){.host .opt .balloon{animation:none}}
+@keyframes balloon{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
