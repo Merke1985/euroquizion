@@ -162,6 +162,8 @@
       // Quip!: finish the line you were given.
       var qp = s.quips.prompts[pid];
       if (quipKey !== s.quips.id) { quipKey = s.quips.id; quipSent = false; $('quipin').value = ''; $('quipfb').textContent = ''; }
+      var isBluff = /^What does “/.test(qp || '');
+      $('qlead').textContent = isBluff ? 'About the song that is playing:' : 'Write a funny answer about the song that is playing. Afterwards everyone votes for the funniest.'; $('quipin').placeholder = isBluff ? 'Your fake translation…' : 'Your funniest answer…';
       if (!qp) { show('v-wait'); $('waittitle').textContent = 'Everyone is writing'; $('waitsub').textContent = 'You can vote in a moment.'; }
       else if (s.quips.done[pid] || quipSent) { show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
       else { show('v-quip'); $('qprompt').textContent = qp; }
@@ -303,7 +305,7 @@
       $('stitle').textContent = m && m.in ? 'Got it!' : 'Your turn to sing!';
       $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to 10 seconds.';
       if (fresh) { recReset(); recSent = ''; }
-    } else if (s.phase === 'sann') {
+    } else if (s.phase === 'sann' || s.phase === 'svotes') {
       $('stitle').textContent = 'And our 12 points go to…'; $('ssub').textContent = 'Watch the big screen.';
     } else if (s.phase === 'sroll') {
       $('stitle').textContent = 'It’s a tie!'; $('ssub').textContent = 'Watch the big screen: the roulette decides.';

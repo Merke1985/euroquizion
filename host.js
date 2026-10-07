@@ -391,7 +391,7 @@
       $('rwhy').textContent = G.phase === 'reveal' && G.q && G.q.explain ? G.q.explain : '';   // why it is the odd one out, right under the video
       // "Continue" moves a Sing! round along; otherwise the button only appears when YouTube will not play anything.
       $('skip').disabled = !(G.phase === 'guess' || (G.sing && G.phase !== 'reveal' && G.phase !== 'loading'));
-      $('skip').classList.toggle('hidden', $('skip').disabled || !(G.sing || stuck));
+      $('skip').classList.toggle('hidden', $('skip').disabled || !!G.sing || !stuck);   // no Continue button in Jury Show: its timers move it along
       if (G.phase === 'reveal' && G.best) {
         var bw = (G.best.wins || []).map(function (i) { return players[G.best.pids[i]]; }).filter(Boolean).map(function (p) { return p.name; });
         if (G.best.quip) bw = (G.best.wins || []).map(function (i) { var w = players[G.best.pids[i]]; return w ? w.name : QUIP_HOUSE; });
@@ -431,7 +431,7 @@
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
     $('qopts').classList.remove('eras');
-    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' && G.quips ? G.quips.line.p : '';
+    $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' && G.quips ? (G.quips.bluff ? '' : 'Write a funny answer: ') + G.quips.line.p : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
@@ -936,7 +936,7 @@
   }
   // ---------- the title card before a party round ----------
   var FUN = {
-    quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Write the funniest answer on your phone, then vote for the best one.' },
+    quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
     bluff: { icon: '🤥', title: 'Lost in Translation', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
     quiz: { icon: '🎧', title: 'Quiz', sub: 'Back to the questions: three songs coming up.' },
@@ -1167,7 +1167,7 @@
     opts = shuffle(opts).slice(0, 12);
     stopTimers();
     G.best = { quip: true, id: g.id, pids: opts.map(function (o) { return o.pid; }), tally: null, wins: null };
-    G.q = { subject: 'quip', type: 'mc', text: g.line.p, hint: '', options: opts.map(function (o) { return o.text; }), correct: -1, answer: '' };
+    G.q = { subject: 'quip', type: 'mc', text: 'Vote for the funniest answer: ' + g.line.p, hint: '', options: opts.map(function (o) { return o.text; }), correct: -1, answer: '' };
     // nobody who could vote for someone else's answer (a game on your own): only show the answers for a moment
     var canVote = list().filter(function (p) { return !p.off; }).length >= 2, ms = canVote ? QUIP_VOTE_MS : 7000;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
@@ -1551,15 +1551,30 @@
   }
   // The vote is in: the music stops and the screen says "And our 12 points go to…" before the votes are shown.
   function singReveal() {
-    if (!G.sing || G.phase === 'reveal' || G.phase === 'sann') return;
+    if (!G.sing || G.phase === 'reveal' || G.phase === 'sann' || G.phase === 'svotes') return;
     if (G.phase === 'sbest' && G.sing.order.length > 1) {
       clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio(); stopTimers(); G.revealAt = 0;
       clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {}
       G.phase = 'sann'; G.sing.now = null; G.barMs = 0;
       cover(true, '🏆', 'And our 12 points go to…', false); masks(true); Music.plop(3);
-      push(); singTimer = setTimeout(singReveal2, 3500); return;
+      push(); singTimer = setTimeout(singVotes, 3500); return;
     }
     singReveal2();
+  }
+  // Then the votes pop in one by one behind the singers, like the names at a quiz answer; only when they are
+  // all there does the winner turn green.
+  function singVotes() {
+    if (!G.sing || G.phase !== 'sann') return;
+    clearTimeout(singTimer); G.phase = 'svotes'; G.sing.shown = []; G.sing.plopped = null;
+    var order = []; G.sing.order.forEach(function (pid) { list().filter(function (v) { return G.sing.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (v) { order.push(v.pid); }); });
+    order = shuffle(order);
+    var i = 0, step = function () {
+      if (!G.sing || G.phase !== 'svotes') return;
+      if (i >= order.length) { G.sing.plopped = null; singTimer = setTimeout(singReveal2, 1100); return; }
+      G.sing.shown.push(order[i]); G.sing.plopped = order[i]; Music.plop(++i); render();
+      singTimer = setTimeout(step, Math.max(260, Math.min(550, 3600 / order.length)));
+    };
+    push(); singTimer = setTimeout(step, 600);
   }
   function singReveal2() {
     if (!G.sing || G.phase === 'reveal') return;
@@ -1612,7 +1627,7 @@
     else if (G.phase === 'slisten') { clearInterval(poll); try { yt.pauseVideo(); } catch (e) {} singRecord(); }
     else if (G.phase === 'srec') singPlayAll();
     else if (G.phase === 'splay') singNext();
-    else if (G.phase === 'sann') singReveal2();
+    else if (G.phase === 'sann' || G.phase === 'svotes') singReveal2();
     else if (G.phase !== 'loading') singReveal();
   }
   net.on('poll', function (m) {
@@ -1680,13 +1695,19 @@
     else if (G.phase === 'loading') t = 'We’re singing: ' + name;
     else if (G.phase === 'slisten') { var nb = Object.keys(sg.bad || {}).length; t = 'Listen first: ' + name + (nb ? ' · ' + nb + ' of ' + singBadNeed() + ' votes to skip it' : ''); }
     else if (G.phase === 'srec') t = 'Sing it! Record up to 10 seconds on your phone';
-    else if (G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'sann') {
+    else if (G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'svotes') {
       // The vote is open while the recordings keep playing. Who voted for whom only shows at the result.
-      t = G.phase === 'splay' ? 'Now singing: ' + (players[sg.now] ? players[sg.now].name : '') : G.phase === 'sann' ? 'And our 12 points go to…' : 'Who sang it best? Vote on your phone';
-      var open = G.phase === 'sbest';
+      t = G.phase === 'splay' ? 'Now singing: ' + (players[sg.now] ? players[sg.now].name : '') : G.phase === 'sann' || G.phase === 'svotes' ? 'And our 12 points go to…' : 'Who sang it best? Vote on your phone';
+      // while the votes are being counted out: the ones that have popped in so far
+      var votersOf = function (pid) {
+        if (G.phase !== 'svotes') return '';
+        var who = list().filter(function (v) { return sg.best[v.pid] === pid && (sg.shown || []).indexOf(v.pid) >= 0; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+        var faces = list().filter(function (v) { return sg.best[v.pid] === pid; }).length > 2 || sg.order.length > 4;   // (the same shape as at the result, so nothing jumps)
+        return who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return '<span class="' + (faces ? 'face' : '') + (v.pid === sg.plopped ? ' plop' : '') + '"' + (faces ? ' title="' + esc(v.name) + '"' : '') + '>' + charSvg(v.char) + (faces ? '' : esc(v.name)) + '</span>'; }).join('') : '';
+      };
       opts = sg.order.map(function (pid) {
         var p = players[pid]; if (!p) return '';
-        return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">' + (sg.order.length > 4 ? '♪' : '♪ singing now') + '</span>' : '') + '</div><div class="voters"></div></div>';
+        return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">' + (sg.order.length > 4 ? '♪' : '♪ singing now') + '</span>' : '') + '</div><div class="voters">' + votersOf(pid) + '</div></div>';
       }).join('');
     }
     else if (G.phase === 'reveal') {
@@ -1701,9 +1722,9 @@
       }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
-    var singers = G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'reveal' ? sg.order.length : 0;   // more than four singers: tiles side by side, so it all fits
+    var singers = G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'svotes' || G.phase === 'reveal' ? sg.order.length : 0;   // more than four singers: tiles side by side, so it all fits
     $('qopts').classList.toggle('tiles', singers > 4); $('qopts').classList.toggle('tiles3', singers > 8);
-    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'splay' || G.phase === 'reveal');   // the song vote: one song per row, its voters behind it
+    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'svotes' || G.phase === 'splay' || G.phase === 'reveal');   // the song vote: one song per row, its voters behind it
   }
 
 
@@ -1943,7 +1964,8 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.afterParty = false; G.partyDone = []; G.partyPick = $('s-partypick').value; G.tourLast = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;

@@ -792,8 +792,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .host .stage.offstage{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
 .host .opts.bigtiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:22px}
 .host .opts.bigtiles .optcol{display:block}
-.host .opts.bigtiles .opt{flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:18px;height:min(52vh,420px);padding:18px 12px;border-radius:22px;font-size:clamp(1.1rem,1.9vw,1.6rem);font-weight:800}
-.host .opts.bigtiles .bigicon{font-size:clamp(4rem,9vw,8rem);line-height:1}
+.host .opts.bigtiles .opt{flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:18px;height:min(36vh,290px);padding:16px 12px;border-radius:20px;font-size:clamp(1.05rem,1.7vw,1.4rem);font-weight:800}
+.host .opts.bigtiles .bigicon{font-size:clamp(3rem,6vw,5.2rem);line-height:1}
 .host .opts.bigtiles .bigname{display:block;line-height:1.15}
 .host .opts.bigtiles .opt.dim{opacity:.28;filter:grayscale(1)}
 @media (max-width:820px){.host .opts.bigtiles{grid-template-columns:repeat(2,minmax(0,1fr))}.host .opts.bigtiles .opt{height:min(26vh,220px)}}
