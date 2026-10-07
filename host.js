@@ -1008,7 +1008,7 @@
   function partyGo(kind, ms) {
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
-    funIntro(kind, starts[kind], ms);
+    funIntro(kind, starts[kind], 7000);   // long enough to read what the minigame asks of you
   }
   function partyChoose(games) {
     var how = games.length < 2 ? 'single' : (G.partyPick || 'order');
@@ -1066,7 +1066,7 @@
       if (k >= hops) { funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin.done = true; if (!REMOTE) Music.ding(); push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); }, LAND); return; }   // the light lands on the winner first, then that tile turns green
       k++; funTimer = setTimeout(hop, 70 + Math.pow(k / hops, 2.4) * 520);
     };
-    push(); clearTimeout(funTimer); funTimer = setTimeout(hop, 1200);
+    push(); clearTimeout(funTimer); funTimer = setTimeout(hop, 2200);   // a moment to take in the cards before the light starts running
   }
   function funIntro(kind, then, ms) {
     var f = FUN[kind];
@@ -1463,7 +1463,7 @@
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, recUnlock, { capture: true, passive: true }); });
   function recPlay(url) { stopAudio(); var a = singAudio = recEl; try { a.pause(); a.src = url; a.load(); } catch (e) {} return a; }
   function singClear() {
-    clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio();
+    clearTimeout(singTimer); clearTimeout(bestTimer); clearTimeout(annTimer); stopAudio();
     if (G.sing) Object.keys(G.sing.clips).forEach(function (k) { try { URL.revokeObjectURL(G.sing.clips[k]); } catch (e) {} });
     G.sing = null;
   }
@@ -1626,7 +1626,7 @@
     try { yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
     silence();
     var a = recPlay(G.sing.clips[pid]), done = false;
-    var fin = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(singNext, 900); };
+    var fin = function () { if (done || singAudio !== a || !G.sing || (G.phase !== 'splay' && G.phase !== 'sbest')) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(singNext, 900); };   // (only while this recording is still the one playing)
     a.onended = fin; a.onerror = fin;
     var pr = a.play(); if (pr && pr.catch) pr.catch(fin);
     singTimer = setTimeout(fin, clipSecs() * 1000 + 3000);
@@ -1645,24 +1645,28 @@
       clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {}
       G.phase = 'sann'; G.sing.now = null; G.barMs = 0;
       cover(true, '🏆', 'And our 12 points go to…', false); masks(true); Music.plop(3);
-      push(); singTimer = setTimeout(singVotes, 3500); return;
+      push(); clearTimeout(annTimer); annTimer = setTimeout(singVotes, 3500);
+      // a safety net: whatever happens, the result follows
+      var sgNow = G.sing; setTimeout(function () { if (G.sing === sgNow && (G.phase === 'sann' || G.phase === 'svotes')) singReveal2(); }, 16000);
+      return;
     }
     singReveal2();
   }
   // Then the votes pop in one by one behind the singers, like the names at a quiz answer; only when they are
   // all there does the winner turn green.
+  var annTimer = null;   // its own timer: a recording that was just cut off reports back late, and must not cancel the announcement
   function singVotes() {
     if (!G.sing || G.phase !== 'sann') return;
-    clearTimeout(singTimer); G.phase = 'svotes'; G.sing.shown = []; G.sing.plopped = null;
+    clearTimeout(singTimer); clearTimeout(annTimer); G.phase = 'svotes'; G.sing.shown = []; G.sing.plopped = null;
     var order = []; G.sing.order.forEach(function (pid) { list().filter(function (v) { return G.sing.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (v) { order.push(v.pid); }); });
     order = shuffle(order);
     var i = 0, step = function () {
       if (!G.sing || G.phase !== 'svotes') return;
-      if (i >= order.length) { G.sing.plopped = null; singTimer = setTimeout(singReveal2, 1100); return; }
+      if (i >= order.length) { G.sing.plopped = null; annTimer = setTimeout(singReveal2, 1100); return; }
       G.sing.shown.push(order[i]); G.sing.plopped = order[i]; Music.plop(++i); render();
-      singTimer = setTimeout(step, Math.max(260, Math.min(550, 3600 / order.length)));
+      annTimer = setTimeout(step, Math.max(260, Math.min(550, 3600 / order.length)));
     };
-    push(); singTimer = setTimeout(step, 600);
+    push(); annTimer = setTimeout(step, 600);
   }
   function singReveal2() {
     if (!G.sing || G.phase === 'reveal') return;
@@ -1700,7 +1704,7 @@
     silence();
     if (G.sing.loops && G.sing.loops.length) { G.sing.loopI = (G.sing.loopI + 1) % G.sing.loops.length; G.sing.loop = G.sing.loops[G.sing.loopI]; if (G.sing.loops.length > 1) { G.sing.now = G.sing.loop; render(); } }
     var a = recPlay(G.sing.clips[G.sing.loop]), done = false;
-    var again = function () { if (done) return; done = true; clearTimeout(singTimer); singTimer = setTimeout(winnerLoop, 900); };
+    var again = function () { if (done || singAudio !== a || !G.sing || G.phase !== 'reveal') return; done = true; clearTimeout(singTimer); singTimer = setTimeout(winnerLoop, 900); };
     // A recording that will not start is tried again a few times, not forever.
     var retry = function () { if (done) return; if (++G.sing.loopFails > 4) { done = true; return; } again(); };
     a.onended = function () { G.sing.loopFails = 0; again(); }; a.onerror = retry;
