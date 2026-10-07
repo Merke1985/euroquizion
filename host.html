@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=297">
+<link rel="stylesheet" href="style.css?v=298">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -61,6 +61,7 @@
             <label class="swrow"><span><b>Out of focus</b><small>A winner, silent, starts blurred and sharpens; faster scores more</small></span><input type="checkbox" data-type="blur" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Whose flag?</b><small>A flag on the screen: which song did that country send?</small></span><input type="checkbox" data-type="flag" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Host city</b><small>A dot on the map: which city held the contest there?</small></span><input type="checkbox" data-type="host" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Fast forward</b><small>The song at double speed, picture hidden: which song is it?</small></span><input type="checkbox" data-type="fast" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
         <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="order" selected>Grand tour</option><option value="spin">Random</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
         <div class="multi" id="partybox"><label id="partylabel">Party minigames</label>
@@ -176,15 +177,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=297"></script>
-<script src="vendor/qrcode.js?v=297"></script>
-<script src="config.js?v=297"></script>
-<script src="net.js?v=297"></script>
-<script src="music.js?v=297"></script>
-<script src="chars.js?v=297"></script>
-<script src="match.js?v=297"></script>
-<script src="shapes.js?v=297"></script>
-<script src="quiz.js?v=297"></script>
-<script src="host.js?v=297"></script>
+<script src="vendor/supabase.js?v=298"></script>
+<script src="vendor/qrcode.js?v=298"></script>
+<script src="config.js?v=298"></script>
+<script src="net.js?v=298"></script>
+<script src="music.js?v=298"></script>
+<script src="chars.js?v=298"></script>
+<script src="match.js?v=298"></script>
+<script src="shapes.js?v=298"></script>
+<script src="quiz.js?v=298"></script>
+<script src="host.js?v=298"></script>
 </body>
 </html>

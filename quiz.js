@@ -171,7 +171,7 @@ function SecondPlayer(elId) {
 // peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
 // blur ("Out of focus"): the same idea, but the silent video starts blurred and sharpens.
 // flag ("Whose flag?"): a flag on the screen and four songs; one of them was sent by that country. No clip until the answer.
-var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, host: 8 };   // (map, "On the map", is switched off for now: give it a weight here and a switch in host.html to bring it back)
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, host: 8, fast: 10 };   // (map, "On the map", is switched off for now: give it a weight here and a switch in host.html to bring it back)
 // map ("On the map"): the same, with the outline of the country in place of its flag (the smallest states are only a dot: left out).
 function makeFlag(song, allSongs, countries, map) {
   if (map ? !(typeof SHAPES !== 'undefined' && SHAPES[song[1]]) : !flag(song[1])) return null;   // a country that no longer exists has no flag to show
@@ -219,9 +219,19 @@ function makePeel(song, allSongs, countries, opt) {
   shuffle(opts);
   return { subject: 'peel', swap: swap, peel: true, type: 'mc', text: 'Behind the curtain: which song is this? The sooner you know, the more points.', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
 }
+// fast ("Fast forward"): the clip at double speed, picture hidden; four bars with title and artist. Only on a shared screen.
+function makeFast(song, allSongs) {
+  var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}; seen[song[4]] = 1;
+  var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); } };
+  shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6; })).forEach(add);
+  shuffle(allSongs.slice()).forEach(add);
+  if (opts.length < 4) return null;
+  shuffle(opts);
+  return { subject: 'fast', fast: true, type: 'mc', text: 'Fast forward: which song is this, at double speed?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
+}
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   if (opt && opt.types && subjectSetting === 'random') {
-    var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher') && ((t !== 'peel' && t !== 'blur') || opt.peel); });
+    var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher') && ((t !== 'peel' && t !== 'blur' && t !== 'fast') || opt.peel); });
     if (on.length) {   // (always by these weights: every type has its own share)
       var total = 0, r, t = on[0], o2 = {}, k;
       // a type that has been passed over gets a slightly bigger share each time (opt.wait: questions since it was last played)
@@ -249,6 +259,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   if (opt && opt.peel && (subjectSetting === 'peel' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('peel') >= 0 && Math.random() < 0.09))) { var pq2 = makePeel(song, allSongs, countries, opt); if (pq2) return pq2; }
   if (opt && opt.peel && (subjectSetting === 'blur' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('blur') >= 0 && Math.random() < 0.09))) { var bq = makePeel(song, allSongs, countries, opt); if (bq) { bq.blur = true; bq.subject = 'blur'; bq.text = 'Out of focus: which song is this? The sooner you know, the more points.'; return bq; } }
   if (subjectSetting === 'peel' || subjectSetting === 'blur') subjectSetting = 'facts';
+  if (subjectSetting === 'fast') { var xq = opt && opt.peel ? makeFast(song, allSongs) : null; if (xq) return xq; subjectSetting = 'facts'; }
   if (subjectSetting === 'host') { var hq = makeHost(song, countries); if (hq) return hq; subjectSetting = 'facts'; }
   if (subjectSetting === 'map') { var mq = makeFlag(song, allSongs, countries, true); if (mq) return mq; subjectSetting = 'facts'; }
   if (subjectSetting === 'flag') { var fq = makeFlag(song, allSongs, countries); if (fq) return fq; subjectSetting = 'facts'; }

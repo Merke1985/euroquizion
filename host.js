@@ -641,7 +641,7 @@
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
     G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : typeNote(makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, peel: true, cat: G.cat, pool: G.pool, used: G.used, types: typesNow(), wait: G.typeWait }));
     if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }   // the question brought its own song
-    stage = 'probe';
+    stage = 'probe'; rate(1);
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
     worthSpin();
     // A two-clip question: the first song loads in the main player, the second in the spare one. The
@@ -736,6 +736,7 @@
     if (G.draw) { fails = 0; stage = 'idle'; clipReady = true; return; }   // Draw! does not need the video: carry on, the drawing starts after the countdown
     loadSong();
   }
+  function rate(r) { try { yt.setPlaybackRate(r); } catch (e) {} }
   function playClip() {
     clearInterval(poll);
     stage = 'clip'; quietAt = -1;
@@ -745,7 +746,7 @@
     yt.unMute(); yt.setVolume(100); yt.playVideo();
     cover(false);   // the video is always visible during the clip
     poll = setInterval(function () {
-      if ((yt.getCurrentTime() || 0) >= clipStart + clipLen()) {
+      if ((yt.getCurrentTime() || 0) >= clipStart + clipLen() * (G.q && G.q.fast && G.phase === 'guess' ? 2 : 1)) {   // (at double speed the clip takes just as long: twice as much song)
         clearInterval(poll);
         // A plain question: the video runs on silently behind the cover until the answer, so nothing is stopped and started.
         if (G.phase === 'guess' && !isPair() && !G.sing && !G.draw && !G.quipLoad && !G.quips) { quietAt = yt.getCurrentTime() || 0; yt.mute(); } else yt.pauseVideo();
@@ -832,7 +833,7 @@
     if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
     if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(G.q); cover(true, G.draw ? '✏️' : art[0], G.draw ? '' : art[1], false); if (!G.draw && G.q.flag) { $('covericon').innerHTML = flagHtml(G.q.flag); $('covertext').textContent = ''; } if (!G.draw && G.q.map) { $('covericon').innerHTML = mapHtml(G.q.map, G.q.dot); $('covertext').textContent = ''; } }   // odd one out and Draw!: no clip
     else if (G.q && G.q.peel) peelPlay(ms);
-    else playClip();
+    else { rate(G.q && G.q.fast ? 2 : 1); playClip(); if (G.q && G.q.fast) cover(true, '⏩', 'Fast forward', false); }   // Fast forward: only the sound, at double speed
     push(); if (G.draw) drawSend();
     endTimer = setTimeout(reveal, ms);
   }
@@ -940,6 +941,7 @@
       try { yt.unMute(); yt.setVolume(100); yt.loadVideoById({ videoId: G.song[4], startSeconds: clipStart }); } catch (e) {}
     } else {
     try {
+      if (G.q && G.q.fast) { rate(1); quietAt = -1; yt.seekTo(clipStart, true); }   // Fast forward: the same bit once more, at its own speed
       var tNow = yt.getCurrentTime() || 0;
       if (quietAt >= 0 && yt.getPlayerState() === 1) { if (tNow - quietAt > 1) yt.seekTo(quietAt, true); }   // it ran on in silence: back to where the clip stopped
       else if (!(tNow >= clipStart - 1 && tNow <= clipStart + clipSecs() + 2)) yt.seekTo(clipStart, true);
