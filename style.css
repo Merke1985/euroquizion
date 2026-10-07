@@ -814,8 +814,10 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 
 /* Green Room: the notes gather below the video; the vote is held on them */
 .noteboard{display:grid;gap:22px 16px;align-items:start;transition:opacity .3s,filter .3s}
-.noteboard.back{opacity:.4;filter:blur(1.5px)}
-.snote{--tilt:-1deg;position:relative;background:#fffbe6;color:#1d2a5c;border-radius:5px;padding:16px 12px 24px;min-height:96px;transform:rotate(var(--tilt));box-shadow:0 8px 22px -8px rgba(0,0,0,.7);text-align:center;background-image:repeating-linear-gradient(transparent 0 1.55em,rgba(40,80,200,.16) 1.55em 1.62em);transition:opacity .3s,box-shadow .3s}
+.noteboard.back .snote:not(.moving){opacity:.4;filter:blur(1.5px)}
+.snote.moving{z-index:4;opacity:1;filter:none}
+.bigwrap .sheet.in{animation-delay:.55s}
+.snote{--tilt:-1deg;position:relative;background:#fffbe6;color:#1d2a5c;border-radius:5px;padding:16px 12px 24px;min-height:96px;transform:rotate(var(--tilt));box-shadow:0 8px 22px -8px rgba(0,0,0,.7);text-align:center;background-image:repeating-linear-gradient(transparent 0 1.55em,rgba(40,80,200,.16) 1.55em 1.62em);;transition:opacity .3s,box-shadow .3s,filter .3s}
 .snote.ghost{visibility:hidden}
 .snote .scrib{display:block;font-family:"Caveat","Segoe Print","Bradley Hand","Comic Sans MS",cursive;font-weight:700;font-size:clamp(1.05rem,1.7vw,1.5rem);line-height:1.1;overflow-wrap:anywhere}
 .snote .tag{position:absolute;left:-9px;top:-11px;width:28px;height:28px;border-radius:50%;background:var(--yellow);color:#221a00;font-size:.85rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.4)}

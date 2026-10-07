@@ -433,16 +433,31 @@
       var cols = q.options.length <= 3 ? q.options.length : q.options.length <= 8 ? 4 : 6;
       $('qtext').textContent = showing ? 'Here is what you wrote: ' + G.qshow.prompt : q.text;
       $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); $('qopts').classList.remove('cols2'); $('qopts').classList.add('notearea');
+      var bigWas = $('qopts').querySelector('.bigwrap .sheet'), bigRect = bigWas ? bigWas.getBoundingClientRect() : null, movedI = -1;   // where the big note is now: the start of its move
       $('qopts').innerHTML = '<div class="noteboard' + (cu ? ' back' : '') + '" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">' + q.options.map(function (o, i) {
         if (i >= nSmall) return '<div class="snote ghost"></div>';   // its place is kept free
         var who = nshown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i; });
         var win = nrev && G.best.wins && G.best.wins.indexOf(i) >= 0, au = players[G.best.pids[i]];
         var just = (cu && cu.fresh && i === nSmall - 1) || G.noteJust === i;
-        return '<div class="snote' + (win ? ' win' : nrev ? ' lost' : '') + (just ? ' shrunk' : '') + '" style="--tilt:' + ((i % 2 ? 1 : -1) * (0.8 + (i * 37 % 20) / 10)).toFixed(1) + 'deg"><b class="tag">' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="scrib">' + esc(o) + '</span>' +
+        if (just) movedI = i;
+        return '<div class="snote' + (win ? ' win' : nrev ? ' lost' : '') + (just && !bigRect ? ' shrunk' : '') + '" style="--tilt:' + ((i % 2 ? 1 : -1) * (0.8 + (i * 37 % 20) / 10)).toFixed(1) + 'deg"><b class="tag">' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="scrib">' + esc(o) + '</span>' +
           '<div class="nvotes">' + who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('') + '</div>' +
           (nrev ? '<small class="by">' + esc(au ? au.name : QUIP_HOUSE) + (au && au.pts ? ' <b>+' + au.pts + '</b>' : '') + '</small>' : '') + '</div>';
       }).join('') + '</div>' +
         (cu ? '<div class="bigwrap"><div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg"><span class="scrib">' + esc(cu.text) + '</span><small>' + cu.n + ' / ' + cu.of + '</small></div></div>' : '');
+      // The note that was big travels to its place among the others: it starts where the big one was, at that
+      // size, and glides and shrinks into its slot. The next big note comes in once it has landed.
+      var mv = movedI >= 0 && bigRect ? $('qopts').querySelectorAll('.snote')[movedI] : null;
+      if (mv) {
+        var r = mv.getBoundingClientRect();
+        if (r.width) {
+          mv.classList.add('moving'); mv.style.transition = 'none';
+          mv.style.transform = 'translate(' + ((bigRect.left + bigRect.width / 2) - (r.left + r.width / 2)).toFixed(1) + 'px,' + ((bigRect.top + bigRect.height / 2) - (r.top + r.height / 2)).toFixed(1) + 'px) scale(' + (bigRect.width / r.width).toFixed(3) + ')';
+          mv.getBoundingClientRect();
+          mv.style.transition = 'transform .7s cubic-bezier(.3,.8,.3,1)'; mv.style.transform = '';
+          setTimeout(function () { mv.classList.remove('moving'); }, 750);
+        }
+      }
       if (cu) cu.fresh = false;
       G.noteJust = null; G.plopped = null; return;
     }
