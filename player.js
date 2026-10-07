@@ -283,7 +283,7 @@
     var sg = s.sing, key = s.phase + ':' + s.round, fresh = key !== sKey;
     sKey = key;
     show('v-sing');
-    $('sround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Sing!';
+    $('sround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Jury Show';
     var poll = s.phase === 'svote' || s.phase === 'sbest', recPhase = s.phase === 'srec' && !(m && m.in);
     $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
     // While listening or recording: ask for another part of the song (a few times per round at most).

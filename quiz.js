@@ -258,7 +258,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // Draw!: one player draws a song on their phone, the others guess. Lines travel as small batches of
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
-var PARTY_HELP = 'Party: after every three quiz questions a spin picks a party round (Sing!, Draw!, Quip! or Bluff!). Draw! scores extra here: 4 per guessed drawing.';
+var PARTY_HELP = 'Party: after every three quiz questions a spin picks a party round (Jury Show, Draw!, Green Room or Bluff!). Draw! scores extra here: 4 per guessed drawing.';
 var DRAW_HELP = 'Draw!: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it. At the end everyone votes for the best drawing, which earns 3 bonus points.';
 var DRAW_COLORS = ['#111111', '#e11d48', '#2563eb', '#16a34a', '#f59e0b', '#ffffff'];   // the last one is the eraser
 function drawClear(cv) { var c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, DRAW_W, DRAW_H); }
@@ -442,7 +442,7 @@ function revealHold(yt, clipStart) {
 // ---------- Quip! ----------
 // A song plays and everyone answers a question about it; then the room votes for the best answer.
 // 'h' is the house answer, used when only one player wrote something.
-var QUIP_HELP = 'Quip!: a song plays, with a question about it. Everyone writes their funniest answer, then the room votes for the best one. Every vote scores points: 12 divided by the number of other players, so 4 per vote with four players.';
+var QUIP_HELP = 'Green Room: a song plays, with a question about it. Everyone writes their funniest answer, then the room votes for the best one. Every vote scores points: 12 divided by the number of other players, so 4 per vote with four players.';
 var QUIP_MS = 30000, QUIP_VOTE_MS = 25000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
 var QUIPS = [
   { p: 'What is this song really about?', h: 'Losing the car keys, with feeling' },
