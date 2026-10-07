@@ -1244,14 +1244,15 @@
     if (G.phase !== 'lobby') return;
     stopTimers(); clearTimeout(introTimer);
     if (!G.go) G.go = {};
-    G.phase = 'intro'; G.barMs = INTRO.ms; G.endsAt = Date.now() + INTRO.ms; introTry = 0; stage = 'intro';
+    var ims = !REMOTE && fanEl ? INTRO.audioMs : INTRO.ms;   // the sound file plays the theme once; the YouTube clip is longer
+    G.phase = 'intro'; G.barMs = ims; G.endsAt = Date.now() + ims; introTry = 0; stage = 'intro';
     list().forEach(function (p) { G.go[p.pid] = 1; });
     if (!REMOTE) {
       cover(false); masks(false);
       fanPlay();
     }
     push();
-    introTimer = setTimeout(introEnd, INTRO.ms);
+    introTimer = setTimeout(introEnd, ims);
   }
   // The fanfare is a sound file that was loaded while everyone was joining, so it starts at once. If it will
   // not play (no connection to it, or the browser refuses), the YouTube clip takes over as before.
@@ -1263,19 +1264,23 @@
   }
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, fanUnlock, { capture: true, passive: true }); });
   function fanYt() { try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {} }
-  function fanSpare() { if (!fanOn || G.phase !== 'intro') return; fanStop(); fanYt(); }
+  function fanSpare() {
+    if (!fanOn || G.phase !== 'intro') return;
+    fanStop(); fanYt();
+    G.barMs = INTRO.ms; G.endsAt = Date.now() + INTRO.ms; clearTimeout(introTimer); introTimer = setTimeout(introEnd, INTRO.ms); push();   // the YouTube clip has its own length
+  }
   function fanStop() { fanOn = false; clearTimeout(fanFade); clearInterval(fanFade); try { if (fanEl) fanEl.pause(); } catch (e) {} }
   function fanPlay() {
     if (!fanEl) { fanYt(); return; }
     fanOn = true;
     try {
-      fanEl.muted = false; fanEl.volume = 1; try { fanEl.currentTime = 0.4; } catch (e) {}
+      fanEl.muted = false; fanEl.volume = 1; try { fanEl.currentTime = INTRO.audioAt; } catch (e) {}
       var p = fanEl.play(); if (p && p.then) p.catch(fanSpare);
     } catch (e) { fanSpare(); return; }
     fanEl.onerror = fanSpare;
-    setTimeout(function () { if (fanOn && G.phase === 'intro' && (fanEl.paused || fanEl.currentTime < 0.9)) fanSpare(); }, 2500);   // still silent: the spare
-    // the last second and a half fades out
-    fanFade = setTimeout(function () { fanFade = setInterval(function () { try { fanEl.volume = Math.max(0, fanEl.volume - 0.07); } catch (e) {} }, 100); }, Math.max(0, INTRO.ms - 1500));
+    setTimeout(function () { if (fanOn && G.phase === 'intro' && (fanEl.paused || fanEl.currentTime < INTRO.audioAt + 0.5)) fanSpare(); }, 2500);   // still silent: the spare
+    // the last note fades out, just before the theme would start over
+    fanFade = setTimeout(function () { fanFade = setInterval(function () { try { fanEl.volume = Math.max(0, fanEl.volume - 0.15); } catch (e) {} }, 100); }, Math.max(0, INTRO.audioMs - 700));
   }
   // The fanfare is over, or the host pressed "Start now": on to the first song.
   function introEnd() {
