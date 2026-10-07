@@ -416,8 +416,7 @@
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
     // The minigame spin fills the screen with four big cards: the video stage steps aside for it.
-    if (!REMOTE) stageEl().classList.toggle('offstage', G.phase === 'pspin' && !!G.pspin);
-    $('qopts').classList.toggle('bigtiles', G.phase === 'pspin' && !!G.pspin);
+    spinLayout(); $('qopts').classList.remove('tiles'); $('qopts').classList.remove('tiles3');   // (tiles: only Jury Show with more than four singers)
     if (G.phase === 'pspin' && G.pspin) {
       var sp = G.pspin;
       $('qtext').textContent = sp.done ? 'Party round: ' + sp.games[sp.roll].title : 'Party round! Which one will it be?';
@@ -443,6 +442,7 @@
     }).join('') : '';
     G.plopped = null;   // the pop-in only plays once
     $('qopts').classList.toggle('votelist', !!(on && q.options));
+    $('qopts').classList.toggle('cols2', !!(on && q.options && q.options.length > 4));   // up to four answers below each other, more than that side by side
   }
   // Everyone's character under the video, with a green ring once their answer is in.
   function renderAnswered() {
@@ -1650,7 +1650,14 @@
        bad: Object.keys(sg.bad || {}).length, bad_need: singBadNeed(),
       tally: null };   // the votes are for the big screen only
   }
+  // The big cards of the minigame spin, and the stage stepping aside for them: only while that spin is on.
+  function spinLayout() {
+    var on = G.phase === 'pspin' && !!G.pspin;
+    if (!REMOTE) stageEl().classList.toggle('offstage', on);
+    $('qopts').classList.toggle('bigtiles', on);
+  }
   function renderSing() {
+    spinLayout(); $('qopts').classList.remove('cols2');
     var sg = G.sing;
     $('skip').textContent = sg && G.phase !== 'reveal' ? 'Continue' : 'Show answer';
     if (!sg) return;
