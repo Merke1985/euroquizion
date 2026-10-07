@@ -424,13 +424,27 @@
       $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right picked' : ' rolling') : g.out ? ' dim' : '') + '"><span class="bigicon">' + g.icon + '</span><span class="bigname">' + esc(g.title) + '</span></div></div>'; }).join('');
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
-    if (G.phase === 'qshow' && G.qshow) {
-      var cu = G.qshow.cur;
-      $('qtext').textContent = 'Here is what you wrote: ' + G.qshow.prompt;
-      $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); $('qopts').classList.add('notearea');
-      $('qopts').innerHTML = cu ? '<div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg"><span class="scrib">' + esc(cu.text) + '</span><small>' + cu.n + ' / ' + cu.of + '</small></div>' : '';
+    // Green Room on the big screen: the answers are notes. Each one is shown large for a few seconds and then
+    // shrinks to its place among the others, where the bars would be. The vote is held on those notes: the
+    // votes land on them, and at the end each note gets the name of who wrote it.
+    if (!REMOTE && q && G.best && G.best.quip && !G.best.bluff && ((G.phase === 'qshow' && G.qshow) || on)) {
+      var showing = G.phase === 'qshow', cu = showing ? G.qshow.cur : null, nSmall = showing ? (cu ? cu.n - 1 : 0) : q.options.length;
+      var nrev = G.phase === 'reveal', nshown = G.phase === 'picks' ? (G.shown || []) : nrev ? list().map(function (p) { return p.pid; }) : [];
+      var cols = q.options.length <= 3 ? q.options.length : q.options.length <= 8 ? 4 : 6;
+      $('qtext').textContent = showing ? 'Here is what you wrote: ' + G.qshow.prompt : q.text;
+      $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); $('qopts').classList.remove('cols2'); $('qopts').classList.add('notearea');
+      $('qopts').innerHTML = '<div class="noteboard' + (cu ? ' back' : '') + '" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">' + q.options.map(function (o, i) {
+        if (i >= nSmall) return '<div class="snote ghost"></div>';   // its place is kept free
+        var who = nshown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i; });
+        var win = nrev && G.best.wins && G.best.wins.indexOf(i) >= 0, au = players[G.best.pids[i]];
+        var just = (cu && cu.fresh && i === nSmall - 1) || G.noteJust === i;
+        return '<div class="snote' + (win ? ' win' : nrev ? ' lost' : '') + (just ? ' shrunk' : '') + '" style="--tilt:' + ((i % 2 ? 1 : -1) * (0.8 + (i * 37 % 20) / 10)).toFixed(1) + 'deg"><b class="tag">' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="scrib">' + esc(o) + '</span>' +
+          '<div class="nvotes">' + who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('') + '</div>' +
+          (nrev ? '<small class="by">' + esc(au ? au.name : QUIP_HOUSE) + (au && au.pts ? ' <b>+' + au.pts + '</b>' : '') + '</small>' : '') + '</div>';
+      }).join('') + '</div>' +
+        (cu ? '<div class="bigwrap"><div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg"><span class="scrib">' + esc(cu.text) + '</span><small>' + cu.n + ' / ' + cu.of + '</small></div></div>' : '');
       if (cu) cu.fresh = false;
-      G.plopped = null; return;
+      G.noteJust = null; G.plopped = null; return;
     }
     if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party round: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
@@ -1204,6 +1218,7 @@
     var canVote = list().filter(function (p) { return !p.off; }).length >= 2, ms = canVote ? QUIP_VOTE_MS : 7000;
     var vote = function () {
       paper(null);
+      G.noteJust = G.q && G.q.options ? G.q.options.length - 1 : null;   // the last note shrinks into its place
       G.qshow = null; G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push();
       endTimer = setTimeout(reveal, ms);
     };
