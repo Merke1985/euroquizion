@@ -173,7 +173,7 @@
       var gc = s.gallery.chosen[pid] != null ? s.gallery.chosen[pid] : padPicked;
       if (!go) { show('v-wait'); $('waittitle').textContent = 'Everyone is drawing'; $('waitsub').textContent = 'You can guess the drawings in a moment.'; }
       else if (s.gallery.done[pid] || padDone) { show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
-      else { show('v-draw'); $('dround').textContent = 'Draw!'; drawView(go, gc); }
+      else { show('v-draw'); $('dround').textContent = 'Postcard'; drawView(go, gc); }
     }
     else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'Your drawing is next.' : 'Next: a drawing by ' + s.draw.name + '.'; }
     else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) { show('v-wait'); $('waittitle').textContent = 'Your drawing!'; $('waitsub').textContent = 'The others are guessing what it is.'; }

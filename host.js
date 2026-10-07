@@ -899,8 +899,8 @@
   // ---------- the title card before a party round ----------
   var FUN = {
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Write the funniest answer on your phone, then vote for the best one.' },
-    draw: { icon: '🎨', title: 'Draw!', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
-    bluff: { icon: '🤥', title: 'Bluff!', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
+    draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
+    bluff: { icon: '🤥', title: 'Lost in Translation', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
     sing: { icon: '🎤', title: 'Jury Show', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
   var funTimer = null;
