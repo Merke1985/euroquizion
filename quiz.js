@@ -118,6 +118,23 @@ function makePair(song, kind, allSongs, countries) {
 }
 // The second video player of a two-clip question: loads its song silently, parks it at a random spot
 // and plays it when asked. Created lazily in the element with the given id.
+// Phones and tablets only let a video with sound start in a player the user has touched, and the spare
+// player never was. There the second song of a two-clip question plays in the main player instead:
+// same interface as SecondPlayer, but nothing can be loaded ahead, so it starts with a short pause.
+var ONE_PLAYER = typeof navigator !== 'undefined' && (/iP(hone|ad|od)|Android/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform || '')));
+function SharedSecond(main, first) {
+  var self = this, id = null, on = false;   // on: the second video is the one in the main player right now
+  self.ready = false; self.start = 0; self.shared = true;
+  self.make = function () {};
+  self.load = function (vid) { id = vid; on = false; self.start = 30 + Math.floor(Math.random() * 50); self.ready = true; };
+  self.play = function () { try { var p = main(); p.loadVideoById({ videoId: id, startSeconds: self.start }); p.unMute(); p.setVolume(100); p.playVideo(); on = true; } catch (e) {} };
+  self.resume = function () { if (!on) { self.play(); return; } try { var p = main(); p.unMute(); p.setVolume(100); p.playVideo(); } catch (e) {} };
+  self.pause = function () { try { if (on) main().pauseVideo(); } catch (e) {} };
+  self.stop = function () { id = null; on = false; self.ready = false; };
+  self.left = function () { try { var p = main(), st = p.getPlayerState(), d = p.getDuration() || 0, t = p.getCurrentTime() || 0; if (st === 0) return 0; if (st === 1 && d > 0) return Math.max(0, d - t); } catch (e) {} return null; };
+  // at the answer, when the first song was the right one: bring it back into the player
+  self.back = function () { if (!on) return false; on = false; try { var f = first(), p = main(); p.loadVideoById({ videoId: f.id, startSeconds: f.start }); p.unMute(); p.setVolume(100); p.playVideo(); } catch (e) {} return true; };
+}
 function SecondPlayer(elId) {
   var self = this, p = null, ok = false, want = null, poll = null, onFail = null;
   self.ready = false; self.start = 0;

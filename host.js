@@ -492,7 +492,7 @@
   }, 100);
 
   // ---------- YouTube ----------
-  var yt2 = new SecondPlayer('yt2'), pairStep = 0, pairTimer = null, loadedId = '';
+  var yt2 = ONE_PLAYER ? new SharedSecond(function () { return yt; }, function () { return { id: loadedId, start: clipStart }; }) : new SecondPlayer('yt2'), pairStep = 0, pairTimer = null, loadedId = '';
   function stageEl() { return document.querySelector('#v-game .stage'); }
   function pairTag(t) { $('pairtag').textContent = t; $('pairtag').classList.toggle('hidden', !t); }
   function isPair() { return !!(G.q && G.q.pair); }
@@ -641,7 +641,7 @@
         clearInterval(poll); yt.pauseVideo(); stage = 'paused';
         if (isPair() && G.phase === 'guess' && pairStep === 0) {
           // on to the second song, in the spare player
-          pairStep = 1; stageEl().classList.add('second'); pairTag('Song 2'); yt2.play();
+          pairStep = 1; if (!yt2.shared) stageEl().classList.add('second'); pairTag('Song 2'); yt2.play();
           pairTimer = setTimeout(function () { yt2.pause(); pairTag(''); if (G.phase === 'guess') cover(true, '?', '', false); }, PAIR_CLIP * 1000);
           return;
         }
@@ -743,8 +743,8 @@
     else if (isPair()) {
       // the song that was the right answer plays on, from where its clip stopped
       var second = G.q.correct === 1;
-      stageEl().classList.toggle('second', second);
-      try { if (second) { yt.pauseVideo(); if (pairStep === 0) yt2.play(); else yt2.resume(); } else { yt2.pause(); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
+      stageEl().classList.toggle('second', second && !yt2.shared);
+      try { if (second) { if (!yt2.shared) yt.pauseVideo(); if (pairStep === 0) yt2.play(); else yt2.resume(); } else if (yt2.shared && yt2.back()) { /* the first song is back in the one player */ } else { yt2.pause(); yt.unMute(); yt.setVolume(100); yt.playVideo(); } } catch (e) {}
     } else if (lateLoad && !REMOTE) {
       // only now does the video come in, somewhere in the middle of the song
       lateLoad = false; clipStart = Math.floor(35 + Math.random() * 50);
