@@ -1023,6 +1023,12 @@
   // Bluff!: the same round, but the question is what a title in another language means. Everyone makes up
   // a translation; the real one is mixed in, and everyone tries to find it. Hard languages go first.
   var EASY_LANG = { english: 1, french: 1, german: 1, dutch: 1, spanish: 1, italian: 1 };
+  // Lost in Translation: every answer is shown the same way (a capital first, the rest small, no quotes or
+  // full stop at the end), so the real translation cannot be told apart by how it was typed.
+  function sameCase(t) {
+    t = String(t).replace(/\s+/g, ' ').replace(/^[\s"'“”‘’«»]+|[\s"'“”‘’«».!]+$/g, '').toLowerCase().replace(/\bi\b/g, 'I');
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
   function bluffAll() {
     var can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
     if (!can.length) can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !BAD_VIDEOS[s[4]]; });
@@ -1075,7 +1081,7 @@
         opts = shuffle(opts.slice(0, 11).concat([{ pid: null, text: g.bluff.real }]));
         stopTimers();
         G.best = { quip: true, bluff: true, id: g.id, pids: opts.map(function (o) { return o.pid; }), real: opts.map(function (o) { return o.pid; }).indexOf(null), tally: null, wins: null };
-        G.q = { subject: 'bluff', type: 'mc', text: 'What does “' + g.bluff.title + '” really mean?', hint: '', options: opts.map(function (o) { return o.text; }), correct: -1, answer: '' };
+        G.q = { subject: 'bluff', type: 'mc', text: 'What does “' + g.bluff.title + '” really mean?', hint: '', options: opts.map(function (o) { return sameCase(o.text); }), correct: -1, answer: '' };
         var bms = list().filter(function (p) { return !p.off; }).length >= 2 ? QUIP_VOTE_MS : 7000;
         G.phase = 'guess'; G.barMs = bms; G.endsAt = Date.now() + bms; push();
         endTimer = setTimeout(reveal, bms);
