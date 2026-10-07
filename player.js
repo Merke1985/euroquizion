@@ -177,6 +177,7 @@
     }
     else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'Your drawing is next.' : 'Next: a drawing by ' + s.draw.name + '.'; }
     else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) { show('v-wait'); $('waittitle').textContent = 'Your drawing!'; $('waitsub').textContent = 'The others are guessing what it is.'; }
+    else if (s.phase === 'guess' && s.best && s.best.only && s.best.only !== pid) { show('v-wait'); $('waittitle').textContent = '🎉 Party round!'; $('waitsub').textContent = (s.q && s.q.text) || ''; }
     else if (s.phase === 'picks') { show('v-wait'); $('waittitle').textContent = 'Answers are in'; $('waitsub').textContent = 'Watch the big screen.'; }
     else if (s.phase === 'paused') { show('v-wait'); $('waittitle').textContent = 'Game restored'; $('waitsub').textContent = 'The host will continue in a moment.'; }
     else if (s.phase === 'loading' && s.remote) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = 'Turn your sound on.'; }

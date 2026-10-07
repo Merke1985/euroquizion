@@ -66,6 +66,7 @@
       if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
       if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;
       if (G.best && (G.best.pids[m.choice] === m.pid || p.pick != null)) return;
+      if (G.best && G.best.only && m.pid !== G.best.only) return;   // one player picks the party round
       p.pick = m.choice; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now());
       push(); allIn(); return;
     }
@@ -84,6 +85,7 @@
   function isIn(p) {
     if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]);
     if (G.phase === 'dall') return !!(G.gallery && G.gallery.items[p.pid] && G.gallery.items[p.pid].done);
+    if (G.best && G.best.only && p.pid !== G.best.only && G.phase === 'guess') return true;   // only the chooser is waited for
     if (G.phase === 'qall') return !!(G.quips && (!G.quips.items[p.pid] || G.quips.items[p.pid].done));   // answer sent (or no line to finish)
     return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
   function allIn() {
@@ -136,7 +138,7 @@
       s.gallery = { id: G.gallery.id, opts: {}, chosen: {}, done: {} };
       Object.keys(G.gallery.items).forEach(function (k) { var it = G.gallery.items[k]; s.gallery.opts[k] = it.options.map(songLabel); if (it.chosen != null) s.gallery.chosen[k] = it.chosen; if (it.done) s.gallery.done[k] = 1; });
     }
-    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { bluff: !!G.best.bluff, quip: !!G.best.quip, win_pts: G.best.quip ? QUIP_WIN : BEST_PTS * partyX(), id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
+    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { only: G.best.only || null, pick: !!G.best.pick, bluff: !!G.best.bluff, quip: !!G.best.quip, win_pts: G.best.quip ? QUIP_WIN : BEST_PTS * partyX(), id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
       s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
@@ -696,6 +698,7 @@
       list().forEach(function (p) { if (p.pick != null && tally[p.pick] != null) tally[p.pick]++; });
       var top = Math.max.apply(null, tally), tops = [];
       tally.forEach(function (n, i) { if (top > 0 && n === top) tops.push(i); });
+      if (G.best.pick) { partyPicked(tops); return; }   // not a question: the choice of the next party round
       G.best.tally = tally; G.best.wins = tops; G.q.correct = tops.length ? tops[0] : -1;
       if (G.best.bluff) {
         // Bluff!: 12 points for finding the real meaning, 4 for every player who falls for your fake.
@@ -792,22 +795,15 @@
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
       var pOn = G.partyOn || {}, two = list().filter(function (p) { return !p.off; }).length >= 2;
       var games = ['sing', 'draw', 'quip', 'bluff'].filter(function (x) { return pOn[x] !== false && !(x === 'sing' && REMOTE) && (two || (x !== 'sing' && x !== 'draw')); });
-      G.partySpin = null;
-      if ((G.quizRun || 0) >= 3 && games.length) {
-        var fresh = games.filter(function (x) { return x !== G.lastParty; });
-        G.mode = G.lastParty = pick(fresh.length ? fresh : games); G.quizRun = 0;
-        if (games.length > 1) G.partySpin = games;
-      } else { G.quizRun = (G.quizRun || 0) + 1; G.mode = 'mc'; }
+      G.mode = 'mc';
+      if ((G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
+      G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     // A party round is announced first, so nobody is surprised by what is asked of them.
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll };
-    if (starts[md] && !(md === 'sing' && REMOTE)) {
-      if (G.partySpin) partySpin(G.partySpin, md, function () { funIntro(md, starts[md], 3000); });
-      else funIntro(md, starts[md]);
-      return;
-    }
+    var alone = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll };   // (a game of only one of these)
+    if (G.atype !== 'party' && alone[md] && !(md === 'sing' && REMOTE)) { funIntro(md, alone[md]); return; }
     push(); loadSong();
   }
 
@@ -908,6 +904,45 @@
     sing: { icon: '🎤', title: 'Sing!', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
   var funTimer = null;
+  // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
+  // by everyone, or one player (a different one each time) picks.
+  function partyGo(kind, ms) {
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll };
+    G.mode = G.lastParty = kind; G.best = null; G.q = null;
+    funIntro(kind, starts[kind], ms);
+  }
+  function partyChoose(games) {
+    var how = games.length < 2 ? 'single' : (G.partyPick || 'spin');
+    if (how === 'single') { partyGo(games[0]); return; }
+    if (how === 'order') { G.partyIdx = (G.partyIdx || 0) + 1; partyGo(games[(G.partyIdx - 1) % games.length]); return; }
+    if (how === 'vote' || how === 'one') { partyVote(games, how === 'one'); return; }
+    var fresh = games.filter(function (x) { return x !== G.lastParty; }), chosen = pick(fresh.length ? fresh : games);
+    partySpin(games, chosen, function () { partyGo(chosen, 3000); });
+  }
+  // A vote (or one player's choice) on the phones, with the party rounds as the answers.
+  var PICK_MS = 15000;
+  function partyVote(games, one) {
+    var chooser = null;
+    if (one) {
+      var act = list().filter(function (p) { return !p.off; }).sort(function (a, b) { return a.pid < b.pid ? -1 : 1; });
+      if (act.length) { chooser = act[(G.partyTurn || 0) % act.length]; G.partyTurn = (G.partyTurn || 0) + 1; }
+    }
+    stopTimers(); G.draw = null; G.song = null; G.clip = null;
+    G.best = { pick: true, kinds: games, pids: games.map(function () { return null; }), only: chooser ? chooser.pid : null, id: 'pick' + G.round, tally: null, wins: null };
+    G.q = { subject: 'pick', type: 'mc', text: chooser ? chooser.name + ' picks the party round' : 'Vote: which party round is next?', hint: '', options: games.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), correct: -1, answer: '', noclip: true };
+    if (!REMOTE) { cover(true, '🎉', 'Party round!', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); }
+    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push();
+    endTimer = setTimeout(reveal, PICK_MS);
+  }
+  // The votes are in: the one with the most plays; a tie (or no votes at all) is settled by the spin.
+  function partyPicked(tops) {
+    var kinds = G.best.kinds, cands = tops.length ? tops.map(function (i) { return kinds[i]; }) : kinds;
+    clearTimeout(picksTimer); stopTimers();
+    list().forEach(function (p) { p.pick = null; });
+    G.best = null; G.q = null;
+    if (cands.length > 1) { var c = pick(cands); partySpin(cands, c, function () { partyGo(c, 3000); }); }
+    else partyGo(cands[0]);
+  }
   // More than one party round to choose from: a spin decides, like a party-game minigame picker.
   function partySpin(games, chosen, then) {
     G.phase = 'pspin'; G.barMs = 0;
@@ -1522,11 +1557,29 @@
   } catch (e) {}
   $('typebox').addEventListener('change', readPicks); $('partybox').addEventListener('change', readPicks); readPicks();
 
+  try { var pp = localStorage.getItem('esc-partypick'); if (pp && $('s-partypick').querySelector('option[value="' + pp + '"]')) $('s-partypick').value = pp; } catch (e) {}
+  $('s-partypick').addEventListener('change', function () { try { localStorage.setItem('esc-partypick', $('s-partypick').value); } catch (e) {} });
+
   // ---------- test bots ----------
   // Up to four pretend players for trying things out on the shared screen. They live on this page and
   // do what a phone would do: get ready, answer, draw a scribble, write a line, vote.
   var BOT_BLUFFS = ['My Heart Is Yours', 'Dance With Me Tonight', 'The Last Summer', 'Tell Me Why', 'Under the Stars', 'I Will Wait for You', 'A Little Bit of Love', 'Do Not Go Away', 'Song of the Sea', 'When the Morning Comes', 'One More Night', 'The Girl from the Village'];
   var bots = [], BOT_LINES = ['Beep boop, douze points', 'Even my circuits felt that', '404: talent not found', 'More glitter. Always more glitter.', 'My sensors detect a key change', 'Does not compute, but I love it', 'I was promised a wind machine', 'Zero points from the robot jury'];
+  // A bot's recording for Sing!: a few seconds of a random tune, built here as a small WAV file.
+  function botTune() {
+    var rate = 8000, secs = 3.2, n = Math.floor(rate * secs), buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf), i;
+    var str = function (o, s) { for (var k = 0; k < s.length; k++) v.setUint8(o + k, s.charCodeAt(k)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, n * 2, true);
+    var scale = [262, 294, 330, 392, 440, 523, 587, 659], notes = [], len = 0.4, base = Math.random() < 0.5 ? 1 : 0.75;
+    for (i = 0; i < 8; i++) notes.push(scale[Math.floor(Math.random() * scale.length)] * base);
+    for (i = 0; i < n; i++) {
+      var t = i / rate, k = Math.min(notes.length - 1, Math.floor(t / len)), u = t - k * len, env = Math.min(1, u * 30) * Math.max(0, 1 - u / len * 0.85);
+      var s = Math.sin(2 * Math.PI * notes[k] * t) * 0.6 + Math.sin(2 * Math.PI * notes[k] * 2 * t + Math.sin(t * 30) * 0.5) * 0.2;   // a slightly wobbly "voice"
+      v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, s * env)) * 0x6fff, true);
+    }
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
   function botScribble() {
     var lines = [];
     for (var s = 0; s < 4; s++) {
@@ -1578,7 +1631,7 @@
       // one action per step of the game, after a short random think
       var key = ph + ':' + G.round + ':' + (G.best ? G.best.id : '') + (G.draw ? G.draw.id : '');
       // (two-clip questions: wait until the second song has been on for a bit, about 15 seconds in)
-      if (b.key !== key) { b.key = key; b.at = Date.now() + (ph === 'guess' && isPair() ? 14000 + Math.random() * 3000 : 1200 + Math.random() * 3500); b.done = false; }
+      if (b.key !== key) { b.key = key; b.at = Date.now() + (ph === 'guess' && isPair() ? 14000 + Math.random() * 3000 : ph === 'srec' ? 9000 + Math.random() * 2500 : 1200 + Math.random() * 3500); b.done = false; }   // (and about 10 seconds to "record")
       if (b.done || Date.now() < b.at) return;
       b.done = true;
       if (ph === 'guess' && G.q && G.q.options) {
@@ -1589,7 +1642,7 @@
       else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { H.draw({ pid: pid, pick: Math.floor(Math.random() * 4) }); H.draw({ pid: pid, lines: botScribble() }); H.draw({ pid: pid, done: 1 }); }
       else if (ph === 'qall') H.quip({ pid: pid, text: pick(G.quips && G.quips.bluff ? BOT_BLUFFS : BOT_LINES) });
       else if (ph === 'svote' && G.sing) H.poll({ pid: pid, choice: Math.floor(Math.random() * G.sing.options.length) });
-      else if (ph === 'srec') H.clip({ pid: pid, skip: true });   // bots do not sing
+      else if (ph === 'srec' && G.sing) { try { if (G.sing.clips[pid]) URL.revokeObjectURL(G.sing.clips[pid]); G.sing.clips[pid] = botTune(); G.sing.in[pid] = 1; push(); allIn(); } catch (e) { H.clip({ pid: pid, skip: true }); } }   // a bot "sings" a random little tune
       else if (ph === 'sbest' && G.sing) { var others = []; G.sing.order.forEach(function (o, i) { if (o !== pid) others.push(i); }); if (others.length) H.poll({ pid: pid, choice: pick(others) }); }
     });
   }, 400);
@@ -1620,7 +1673,7 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
-    $('partybox').classList.toggle('off', !party);
+    $('partybox').classList.toggle('off', !party); $('s-partypick').disabled = !party;
     if (lo) lo.disabled = party;
     if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
@@ -1700,7 +1753,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.partyPick = $('s-partypick').value; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }
