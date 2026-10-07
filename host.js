@@ -507,7 +507,7 @@
   }
   // Countdown: the video loads muted behind the cover while 5..1 counts down.
   // The clip starts as soon as both the countdown and the loading are done.
-  var COUNT = 5, loadT0 = 0, loadTick = null, clipReady = false;
+  var COUNT = 3, loadT0 = 0, loadTick = null, clipReady = false;
   // YouTube flashes a play/pause symbol in the middle of the picture whenever a video is started or stopped.
   // So the clip is started two seconds early, silent and behind the cover, and is uncovered once that has passed;
   // and at the end of the clip it is not stopped, only silenced and covered (see playClip).

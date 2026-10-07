@@ -1,7 +1,7 @@
 // Solo mode: one device plays the clip and takes the guesses. No room, no connection.
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var COUNT = 5, AFTER = 5;   // countdown before the clip; seconds to answer after it
+  var COUNT = 3, AFTER = 5;   // countdown before the clip; seconds to answer after it
   function clipSecs() { return Math.max(5, Math.round(S.guessMs / 1000) - AFTER); }
   var songs = [], countries = {}, pool = [], used = {};
   var S = { phase: 'setup', round: 0, total: 10, guessMs: 20000, score: 0, right: 0, song: null, q: null, picked: -1, pickMs: 0, got: false, pts: 0, endsAt: 0, showVideo: true };
