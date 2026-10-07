@@ -928,10 +928,10 @@
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
-      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 5000); return; }
+      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 6000); return; }
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
-      if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 3200); return; }
+      if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
     var md = roundMode();
@@ -1046,7 +1046,7 @@
   function partyGo(kind, ms) {
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
-    funIntro(kind, starts[kind], 7000);   // long enough to read what the minigame asks of you
+    funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
   function partyChoose(games) {
     var how = games.length < 2 ? 'single' : (G.partyPick || 'order');
@@ -1118,7 +1118,7 @@
     }
     push();
     clearTimeout(funTimer);
-    funTimer = setTimeout(function () { if (G.phase !== 'fun') return; $('cover').classList.remove('funcard'); G.fun = null; G.phase = 'loading'; then(); }, ms || 4200);
+    funTimer = setTimeout(function () { if (G.phase !== 'fun') return; $('cover').classList.remove('funcard'); G.fun = null; G.phase = 'loading'; then(); }, ms || 5200);
   }
 
   // ---------- rounds, and the spin for the years ----------
