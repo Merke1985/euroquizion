@@ -1710,7 +1710,7 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
-    $('partybox').classList.toggle('off', !party); $('s-partypick').disabled = !party;
+    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); $('s-partypick').disabled = !party;   // the party settings only show for a Party game
     if (lo) lo.disabled = party;
     if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.

@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=214">
+<link rel="stylesheet" href="style.css?v=215">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -50,6 +50,15 @@
           <option value="mc" selected>Quiz</option><option value="robin">Through the Years</option><option value="party">Party</option></select></div>
         <div><label for="s-scoring">Scoring</label><select id="s-scoring">
           <option value="correct" selected>Standard</option><option value="speed">Speedy</option><option value="ladder">Ladder</option></select></div>
+        <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="spin" selected>Random</option><option value="order">Grand tour</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
+        <div class="multi" id="partybox"><label id="partylabel">Party minigames</label>
+          <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="partylabel partysum"><span id="partysum">All</span></button>
+          <div class="multipanel hidden">
+            <label class="swrow"><span><b>Jury Show</b><small>Record yourself singing a clip</small></span><input type="checkbox" data-party="sing" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Postcard</b><small>Draw a song, guess the others</small></span><input type="checkbox" data-party="draw" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Green Room</b><small>The funniest answer about a song</small></span><input type="checkbox" data-party="quip" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Lost in Translation</b><small>Fake a translation, find the real one</small></span><input type="checkbox" data-party="bluff" checked><i class="sw" aria-hidden="true"></i></label>
+          </div></div>
         <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
         <div><label for="s-rounds">Songs per round</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
         <div><label for="s-era">Era</label><select id="s-era">
@@ -70,15 +79,6 @@
             <label class="swrow"><span><b>Which is newer</b><small>Two clips: which is the later song?</small></span><input type="checkbox" data-type="newer" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Language barrier</b><small>A translated title: which song is it?</small></span><input type="checkbox" data-type="lost" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
-        <div class="multi" id="partybox"><label id="partylabel">Party rounds</label>
-          <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="partylabel partysum"><span id="partysum">All</span></button>
-          <div class="multipanel hidden">
-            <label class="swrow"><span><b>Jury Show</b><small>Record yourself singing a clip</small></span><input type="checkbox" data-party="sing" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>Postcard</b><small>Draw a song, guess the others</small></span><input type="checkbox" data-party="draw" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>Green Room</b><small>The funniest answer about a song</small></span><input type="checkbox" data-party="quip" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>Lost in Translation</b><small>Fake a translation, find the real one</small></span><input type="checkbox" data-party="bluff" checked><i class="sw" aria-hidden="true"></i></label>
-          </div></div>
-        <div><label for="s-partypick">Party selection</label><select id="s-partypick"><option value="spin" selected>Random</option><option value="order">Grand tour</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
         <div><label for="s-time">Video length</label><select id="s-time"><option value="5">5 sec</option><option value="10">10 sec</option><option value="20" selected>20 sec</option><option value="30">30 sec</option></select></div>
         <div><label for="s-show">Show score</label><select id="s-show">
           <option value="always" selected>Always</option><option value="end">At the end of the round</option></select></div>
@@ -157,14 +157,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=214"></script>
-<script src="vendor/qrcode.js?v=214"></script>
-<script src="config.js?v=214"></script>
-<script src="net.js?v=214"></script>
-<script src="music.js?v=214"></script>
-<script src="chars.js?v=214"></script>
-<script src="match.js?v=214"></script>
-<script src="quiz.js?v=214"></script>
-<script src="host.js?v=214"></script>
+<script src="vendor/supabase.js?v=215"></script>
+<script src="vendor/qrcode.js?v=215"></script>
+<script src="config.js?v=215"></script>
+<script src="net.js?v=215"></script>
+<script src="music.js?v=215"></script>
+<script src="chars.js?v=215"></script>
+<script src="match.js?v=215"></script>
+<script src="quiz.js?v=215"></script>
+<script src="host.js?v=215"></script>
 </body>
 </html>
