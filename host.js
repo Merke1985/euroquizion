@@ -228,6 +228,7 @@
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
     if (G.showScore === 'end') return true;
+    if (G.tourFinal) return true;   // Grand tour: the last three questions are played blind
     // The very last song is played blind, so the final scoreboard still has something to reveal
     // (not on the Ladder, where the ladder itself is the score).
     return G.round > 0 && lastSong() && !ladderGame();
@@ -724,7 +725,7 @@
   function ofTotal(sep) { return G.total >= ENDLESS ? '' : sep + G.total; }
   // Grand tour: the game is over when the last minigame is (with Postcard: when its last drawing and the vote are done).
   function tourOver() { return !!(G.tour && G.tourLast && !(G.gallery && (G.gallery.queue.length || G.gallery.vote))); }
-  function lastSong() { return G.round >= G.total || tourOver() || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
+  function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
   function reveal() {
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
@@ -777,7 +778,7 @@
       });
       right = [];
     }
-    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank); p.score += p.pts; p.got = true; });
+    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
     // The artist: 12 points shared out over everyone who answered, for each of them who got it (all right: 12).
@@ -859,7 +860,9 @@
       var games = ['sing', 'draw', 'quip', 'bluff'].filter(function (x) { return pOn[x] !== false && !(x === 'sing' && REMOTE) && (two || (x !== 'sing' && x !== 'draw')); });
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
-      if ((G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
+      // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
+      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 5000); return; }
+      if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 3200); return; }
       G.quizRun = (G.quizRun || 0) + 1;
@@ -966,6 +969,7 @@
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
     bluff: { icon: '🤥', title: 'Lost in Translation', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
+    final: { icon: '✨', title: 'Trivia finale', sub: 'The last three questions: every point counts double! The scores stay hidden until the final reveal.' },
     quiz: { icon: '🎧', title: 'Trivia', sub: 'Trivia time: three questions coming up.' },
     sing: { icon: '🎤', title: 'Jury Show', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
@@ -1037,7 +1041,7 @@
   }
   function funIntro(kind, then, ms) {
     var f = FUN[kind];
-    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub, plain: kind === 'quiz' };
+    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub, plain: kind === 'quiz' || kind === 'final' };
     G.phase = 'fun'; G.barMs = 0;
     if (!REMOTE) {
       try { yt.pauseVideo(); } catch (e) {}
@@ -1721,7 +1725,7 @@
   // The big cards of the minigame spin, and the stage stepping aside for them: only while that spin is on.
   function spinLayout() {
     var on = G.phase === 'pspin' && !!G.pspin;
-    if (!REMOTE) stageEl().classList.toggle('offstage', on);
+    if (!REMOTE) stageEl().classList.remove('offstage');   // the big "Party round!" picture stays on top, the cards spin below it
     $('qopts').classList.toggle('bigtiles', on);
   }
   function renderSing() {
@@ -1839,9 +1843,8 @@
     }
     return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
   }
-  // A bot's drawing has something to do with its song: a picture for a word in the title (a heart for love,
-  // a sun, a star, fire, rain, music…) and the flag of the country in the corner. Without a word it knows,
-  // the flag is the drawing. Colours: 0 black 1 white 2 red 3 orange 4 yellow 5 green 6 blue 7 purple 8 pink 9 brown 10 grey.
+  // A bot's drawing has something to do with its song's title: a picture for a word in it (a heart for love,
+  // a sun, a star, fire, rain, music…). Without a word it knows, it draws the title as blanks. Colours: 0 black 1 white 2 red 3 orange 4 yellow 5 green 6 blue 7 purple 8 pink 9 brown 10 grey.
   var BOT_FLAGS = { nl: ['h', 2, 1, 6], de: ['h', 0, 2, 4], ru: ['h', 1, 6, 2], at: ['h', 2, 1, 2], hu: ['h', 2, 1, 5], bg: ['h', 1, 5, 2], ee: ['h', 6, 0, 1], lt: ['h', 4, 5, 2], lu: ['h', 2, 1, 6],
     am: ['h', 2, 6, 3], ua: ['h', 6, 4], pl: ['h', 1, 2], mc: ['h', 2, 1], lv: ['h', 9, 1, 9], es: ['h', 2, 4, 2], az: ['h', 6, 2, 5], rs: ['h', 2, 6, 1], yu: ['h', 6, 1, 2], hr: ['h', 2, 1, 6], si: ['h', 1, 6, 2],
     sk: ['h', 1, 6, 2], gr: ['h', 6, 1, 6, 1, 6], il: ['h', 1, 6, 1, 6, 1], fr: ['v', 6, 1, 2], it: ['v', 5, 1, 2], ie: ['v', 5, 1, 3], be: ['v', 0, 4, 2], ro: ['v', 6, 4, 2], md: ['v', 6, 4, 2], mt: ['v', 1, 2],
@@ -1849,7 +1852,10 @@
   var BOT_WORDS = [['heart', /\b(love|loving|lover|heart|amor|amour|amore|liebe|cuore|coraz|kärlek|ljubav|aşk|kiss)/], ['sun', /\b(sun|sunshine|sunlight|summer|sol|soleil|sole|sonne|day)\b/], ['star', /\b(star|stars|étoile|stella|stern|estrella|shine|shining|light|diamond)/],
     ['moon', /\b(moon|luna|lune|night|nuit|noche|notte|nacht|dream|sleep)/], ['fire', /\b(fire|flame|burn|burning|feuer|fuego|fuoco|feu|hot|heat)/], ['rain', /\b(rain|water|sea|ocean|river|mer|mar|tear|tears|cry|crying|wave|storm)/],
     ['flower', /\b(flower|flowers|rose|roses|fleur|garden|spring|blossom)/], ['bird', /\b(bird|fly|flying|wing|wings|angel|sky|heaven|free|freedom|wind)/], ['house', /\b(home|house|heim|casa|maison|town|city|street)/],
-    ['eye', /\b(eye|eyes|look|see|watch|yeux|ojos|occhi)/], ['clock', /\b(time|clock|tomorrow|forever|never|always|yesterday|today|hour|moment)/], ['note', /\b(music|song|sing|dance|dancing|melody|rhythm|chanson|canzone|la la|boom|ding|guitar)/]];
+    ['eye', /\b(eye|eyes|look|see|watch|yeux|ojos|occhi)/], ['clock', /\b(time|clock|tomorrow|forever|always|yesterday|today|hour|moment|wait|waiting)/], ['note', /\b(music|song|sing|dance|dancing|melody|rhythm|chanson|canzone|la la|ding|guitar|rock|disco|party)/],
+    ['crown', /\b(king|queen|prince|princess|hero|heroes|champion|winner|crown|gold|golden)/], ['globe', /\b(world|earth|europe|universe|planet|everybody|everyone)/], ['tree', /\b(tree|trees|forest|wood|leaf|leaves|apple)/],
+    ['mountain', /\b(mountain|mountains|hill|high|higher|top|rise|rising|up)\b/], ['snow', /\b(snow|winter|ice|cold|frozen|christmas)/], ['phone', /\b(call|calling|phone|telephone|ring|hello|hallo|message)/], ['boom', /\b(boom|bang|explosion|thunder|lightning|power|crazy|wild)/],
+    ['cross', /\b(no|not|never|don't|dont|stop|without|goodbye|bye|end|over|lie|lies)\b/], ['qmark', /\b(why|what|who|where|how|when|maybe|if)\b|\?/], ['person', /\b(you|me|i|my|we|us|girl|boy|man|woman|he|she|her|him|baby|friend|mama|mother|father|people|alone|lonely)\b/]];
   function botDraw(song) {
     var L = [], add = function (c, w, p) { L.push({ c: c, w: w, p: p.map(Math.round) }); };
     var wob = function () { return (Math.random() - 0.5) * 8; };   // a slightly shaky hand
@@ -1880,13 +1886,31 @@
       house: function () { rect(290, 300, 570, 500, 4); add(2, 26, [260, 310, 430, 160, 600, 310]); add(2, 30, [330, 280, 430, 200, 530, 280]); rect(400, 400, 460, 500, 9); rect(320, 340, 370, 390, 6); add(5, 20, [100, 520, 760, 520]); },
       eye: function () { var p = [], q = []; for (var x = 200; x <= 660; x += 23) { var k = Math.sin((x - 200) / 460 * Math.PI) * 120; p.push(x, 300 - k); q.push(x, 300 + k); } add(0, 14, p); add(0, 14, q); disc(430, 300, 80, 6); disc(430, 300, 34, 0); },
       clock: function () { ring(430, 300, 180, 0, 16); add(0, 14, [430, 300, 430, 180]); add(0, 14, [430, 300, 520, 330]); for (var i = 0; i < 12; i++) { var a = Math.PI * 2 * i / 12; add(2, 14, [430 + Math.cos(a) * 150, 300 + Math.sin(a) * 150]); } },
-      note: function () { disc(340, 430, 50, 0); disc(560, 400, 50, 0); add(0, 16, [384, 430, 384, 170, 604, 140, 604, 400]); add(0, 26, [384, 185, 604, 155]); }
+      note: function () { disc(340, 430, 50, 0); disc(560, 400, 50, 0); add(0, 16, [384, 430, 384, 170, 604, 140, 604, 400]); add(0, 26, [384, 185, 604, 155]); },
+      crown: function () { add(4, 26, [230, 420, 200, 200, 320, 320, 430, 170, 540, 320, 660, 200, 630, 420, 230, 420]); rect(240, 330, 620, 430, 4); [[200, 200], [430, 170], [660, 200]].forEach(function (s) { add(2, 34, [s[0], s[1]]); }); add(3, 18, [240, 450, 620, 450]); },
+      globe: function () { disc(430, 300, 170, 6); add(5, 40, [330, 220, 380, 200, 420, 250, 380, 300, 340, 280]); add(5, 40, [470, 330, 540, 300, 560, 370, 500, 410]); add(5, 30, [500, 190, 540, 200]); ring(430, 300, 172, 0, 8); },
+      tree: function () { rect(400, 360, 460, 540, 9); disc(430, 240, 120, 5); disc(340, 300, 70, 5); disc(520, 300, 70, 5); add(5, 20, [120, 545, 740, 545]); },
+      mountain: function () { add(10, 30, [100, 500, 300, 190, 420, 380, 540, 240, 740, 500, 100, 500]); add(10, 40, [220, 440, 300, 300, 380, 440]); add(10, 40, [480, 450, 545, 340, 620, 450]); add(1, 22, [270, 235, 300, 195, 330, 240]); add(1, 20, [515, 280, 540, 245, 565, 280]); disc(640, 130, 44, 4); },
+      snow: function () { for (var i = 0; i < 6; i++) { var a = Math.PI * i / 3; add(6, 12, [430, 300, 430 + Math.cos(a) * 190, 300 + Math.sin(a) * 190]); var mx = 430 + Math.cos(a) * 120, my = 300 + Math.sin(a) * 120; add(6, 10, [mx + Math.cos(a + 2.2) * 50, my + Math.sin(a + 2.2) * 50, mx, my, mx + Math.cos(a - 2.2) * 50, my + Math.sin(a - 2.2) * 50]); } },
+      phone: function () { add(0, 40, [250, 250, 330, 190, 530, 190, 610, 250]); rect(230, 230, 310, 300, 0); rect(550, 230, 630, 300, 0); rect(300, 320, 560, 470, 2); ring(430, 395, 44, 1, 12); [[120, 150, 170, 110], [140, 220, 90, 220], [740, 150, 690, 110], [720, 220, 770, 220]].forEach(function (z) { add(4, 10, z); }); },
+      boom: function () { var p = []; for (var i = 0; i <= 24; i++) { var a = Math.PI * 2 * i / 24, r = i % 2 ? 110 : 220; p.push(430 + Math.cos(a) * r + wob(), 300 + Math.sin(a) * r * 0.85 + wob()); } add(2, 16, p); disc(430, 300, 95, 3); disc(430, 300, 50, 4); },
+      cross: function () { add(2, 36, [250, 130, 610, 470]); add(2, 36, [610, 130, 250, 470]); },
+      qmark: function () { ring(430, 220, 95, 7, 34, Math.PI * 1.05, Math.PI * 2.45); add(7, 34, [470, 305, 430, 350, 430, 400]); add(7, 44, [430, 490]); },
+      person: function () { ring(430, 170, 60, 0, 14); add(0, 14, [430, 230, 430, 410]); add(0, 14, [320, 290, 430, 270, 540, 290]); add(0, 14, [350, 540, 430, 410, 510, 540]); add(2, 10, [405, 180, 430, 195, 455, 180]); }
+    };
+    // No word it knows: the title as blanks, one dash per letter, like a game of hangman (with the first letter filled in as a dot).
+    var blanks = function (title) {
+      var ws = String(title || '').replace(/[^\p{L}\p{N} ]/gu, '').split(/\s+/).filter(Boolean).slice(0, 6), y = 170, x = 70, cw = 46;
+      ws.forEach(function (w, wi) {
+        var len = Math.min(12, w.length); if (x + len * cw > 740) { x = 70; y += 120; }
+        for (var k = 0; k < len; k++) { add(0, 10, [x + 4, y + 50, x + cw - 10, y + 50]); if (!k) add(wi % 2 ? 6 : 2, 26, [x + cw / 2 - 3, y + 14]); x += cw; }
+        x += cw * 0.7;
+      });
+      add(0, 8, [60, y + 110, 740, y + 110]);
     };
     var words = ((song[3] || '') + ' ' + ((window.TITLE_EN && TITLE_EN[song[4]]) || '')).toLowerCase(), pic = null;
     for (var i = 0; i < BOT_WORDS.length && !pic; i++) if (BOT_WORDS[i][1].test(words)) pic = BOT_WORDS[i][0];
-    if (pic) { pics[pic](); flag(song[1], 30, 30, 170, 110); }
-    else if (flag(song[1], 150, 110, 520, 340)) { pics.note = null; add(0, 8, [150, 110, 150, 560]); }   // the flag on its pole
-    else pics.note();
+    if (pic) pics[pic](); else blanks(song[3]);   // (no flags: the picture is about the title)
     return L.length ? L : botScribble();
   }
   function botScribble() {
@@ -2066,7 +2090,7 @@
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
-    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
