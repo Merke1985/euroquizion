@@ -1006,7 +1006,7 @@
       if (!left.length) { done.length = 0; left = games.filter(function (x) { return x !== G.lastParty; }); if (!left.length) left = games.slice(); }
       var next = pick(left); done.push(next);
       if (G.tour && games.every(function (x) { return done.indexOf(x) >= 0; })) G.tourLast = true;   // the last stop of the tour
-      if (left.length > 1) partySpin(left, next, function () { partyGo(next, 3000); }); else partyGo(next);
+      partySpin(left, next, function () { partyGo(next, 3000); });   // (with one minigame left the spin page still shows: it lights up at once)
       return;
     }
     if (how === 'vote' || how === 'one') { partyVote(games, how === 'one'); return; }
@@ -1044,7 +1044,7 @@
     G.pspin = { games: ['sing', 'draw', 'quip', 'bluff'].map(function (k) { return { kind: k, icon: FUN[k].icon, title: FUN[k].title, out: games.indexOf(k) < 0 }; }), roll: -1, done: false };
     var idx = function (k) { return ['sing', 'draw', 'quip', 'bluff'].indexOf(k); };
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '🎉', 'Party round!', false); masks(true); $('cover').classList.add('funcard'); }
-    var hops = 16 + Math.floor(Math.random() * games.length), start = (games.indexOf(chosen) - (hops % games.length) + games.length * 8) % games.length, k = 0;
+    var hops = games.length < 2 ? 0 : 16 + Math.floor(Math.random() * games.length), start = (games.indexOf(chosen) - (hops % games.length) + games.length * 8) % games.length, k = 0;   // only one left: no running light, straight to yellow and then green
     var hop = function () {
       if (G.phase !== 'pspin') return;
       G.pspin.roll = idx(games[(start + k) % games.length]); if (!REMOTE) Music.plop(k); render();
