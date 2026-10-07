@@ -777,3 +777,5 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* The Scores panel: a little wider, so full names fit */
 .host .game{grid-template-columns:minmax(0,1fr) 310px}
 @media (max-width:820px){.host .game{grid-template-columns:1fr}}
+/* Final scores: the row that was just counted stays yellow while it moves, and lights up where it lands */
+.finalboard li.landed{box-shadow:0 0 0 5px rgba(255,214,10,.55),0 8px 30px -6px rgba(255,214,10,.7)}

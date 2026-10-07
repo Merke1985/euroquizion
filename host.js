@@ -511,7 +511,7 @@
     yt = new YT.Player('yt', {
       width: '100%', height: '100%',
       playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
-      events: { onReady: function () { ytReady = true; ready(); }, onError: function () {
+      events: { onReady: function () { ytReady = true; ready(); fanCue(); }, onError: function () {
         if (stage === 'probe' || stage === 'seek') { if (loadedId) markBad(loadedId); badSong(); }
         else if (stage === 'intro' && ++introTry < INTRO.ids.length) { try { yt.loadVideoById(INTRO.ids[introTry]); } catch (e) {} }   // fanfare unavailable: try the spare
       } }
@@ -750,6 +750,10 @@
     if (artist && right.length) { artist.pts = right.length * partyX(); artist.score += artist.pts; artist.got = true; }
     if (!REMOTE && G.q) Music.ding();   // the right answer lights up
     cover(false); masks(false);
+    // After a drawing the video only starts now, and YouTube shows its title and buttons over the first seconds:
+    // the top and bottom stay covered for that long (then they clear, so an ad can still be skipped by hand).
+    clearTimeout(maskTimer);
+    if (G.draw && !REMOTE) { masks(true); maskTimer = setTimeout(function () { if (G.phase === 'reveal') masks(false); }, 8000); }
     // The video carries on from where the clip stopped (it only jumps back if it somehow is not at the clip).
     clearTimeout(pairTimer); pairTag('');
     if (G.best && G.best.quip) { /* the song is already playing: it simply carries on, now without the masks */ }
@@ -770,6 +774,7 @@
   }
   // At the answer: while an ad is playing instead of the song, the player can be clicked (Skip ad).
   var revealTick = null;
+  var maskTimer = null;
   function revealWatch() {
     clearInterval(revealTick);
     var sh = document.querySelector('#v-game .shield');
@@ -895,7 +900,7 @@
     if (!g.queue.length) { drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody made a drawing this time, so here is a quiz question instead.'; return; }
     // every drawing is a song of its own: a game never stops halfway through the drawings
     g.shown = g.queue.slice();
-    g.vote = g.queue.length >= 2 && list().filter(function (p) { return !p.off; }).length >= 3;   // enough to choose from, and enough voters
+    g.vote = false;   // (there used to be a vote for the best drawing at the end; it is no longer played)
     var need = G.round - 1 + g.queue.length + (g.vote ? 1 : 0);
     // In a Party game the whole Draw! round counts as one song, so the game is made that much longer.
     if (G.atype === 'party' && G.total < ENDLESS) G.total += g.queue.length + (g.vote ? 1 : 0) - 1;
@@ -1276,7 +1281,14 @@
     try { fanEl.muted = true; var p = fanEl.play(); if (p && p.then) p.then(function () { if (!fanOn) { fanEl.pause(); fanEl.muted = false; } }).catch(function () { fanEl.muted = false; }); } catch (e) {}
   }
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, fanUnlock, { capture: true, passive: true }); });
-  function fanYt() { try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {} }
+  // The fanfare is the real Eurovision one, from YouTube. It is lined up while everyone is still joining, so
+  // that it starts sooner when the game begins.
+  var fanCued = false;
+  function fanCue() { if (REMOTE || fanCued || !ytReady || G.phase !== 'lobby') return; try { yt.cueVideoById(INTRO.ids[0]); fanCued = true; } catch (e) {} }
+  function fanYt() {
+    try { if (fanCued) { yt.unMute(); yt.setVolume(100); yt.playVideo(); } else yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {}
+    fanCued = false;
+  }
   function fanSpare() {
     if (!fanOn || G.phase !== 'intro') return;
     fanStop(); fanYt();
@@ -1825,6 +1837,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
+    setTimeout(fanCue, 1500);   // back in the lobby: line the fanfare up again
     payFlush();
     G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(funTimer); $('cover').classList.remove('funcard'); G.fun = null; G.pspin = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';

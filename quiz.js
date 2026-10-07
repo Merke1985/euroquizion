@@ -259,7 +259,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
 var PARTY_HELP = 'Quiz questions mixed in with party games.';
-var DRAW_HELP = 'Postcard: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it. At the end everyone votes for the best drawing, which earns 3 bonus points.';
+var DRAW_HELP = 'Postcard: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it.';
 var DRAW_COLORS = ['#111111', '#ffffff', '#e11d48', '#f97316', '#f59e0b', '#16a34a', '#2563eb', '#7c3aed', '#ec4899', '#92400e', '#9ca3af', '#ffffff'];   // the last one is the eraser: it paints in the background colour
 var DRAW_BGS = ['#ffffff', '#111111', '#bfdbfe', '#fde68a', '#bbf7d0', '#fecaca'];   // paper colours; a drawing starts on white
 var DRAW_SIZES = [3, 7, 14];
@@ -336,12 +336,7 @@ function revealOptions(q, pick, pts) {
 }
 // The Eurovision opening fanfare, streamed from YouTube like the songs: video id and how long it plays.
 // These were checked to play when embedded; the first one that works is used.
-// audio: a free recording of the same piece (the prelude of Charpentier's Te Deum; Musopen, CC0, hosted by
-// Wikimedia Commons). The shared screen plays this one, loaded ahead of time so it starts at once; the
-// YouTube clips are the spare for when it will not play.
-// audioMs: the theme is heard exactly once (it lasts 13.9 seconds and then starts over), and the countdown runs as long.
-var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'], ms: 19000, audioAt: 0.45, audioMs: 14100,
-  audio: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/4/41/Charpentier%2C_Te_Deum_%28Prelude%29.ogg/Charpentier%2C_Te_Deum_%28Prelude%29.ogg.mp3' };   // the first clip lasts 18 seconds; the countdown runs one second longer
+var INTRO = { ids: ['itP7H6Uo29s', 'g6sunstIdf8', 'SK5aHV732b8', 'PT9zvm7Wf5M'], ms: 19000, audio: '', audioAt: 0, audioMs: 19000 };   // (audio: a sound file to play instead, if there ever is one)   // the first clip lasts 18 seconds; the countdown runs one second longer
 // The three ways to score a correct answer, and the line that explains the selected one.
 var ESC_POINTS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 // With several players Speedy goes by who was first; solo it goes by the clock.
@@ -415,10 +410,19 @@ function finalBoard(el, players, mePid, onDone, sound, instant) {
     //    but never so fast that the steps blur: at most about five seconds per player)
     var gap = total > 0 ? Math.max(40, Math.min(140, 5000 / total)) : 0, v = 0;
     var done = function () {
-      // 3. the total is in: a flash and a different sound, then the row slides to its rank
-      li.classList.remove('counting'); li.classList.add('reached'); li.classList.add('flash'); val[p.pid] = total;
+      // 3. the total is in: a flash and a different sound, then the row slides to its rank. It keeps its yellow
+      //    border on the way, and stays lit for a second where it lands before the next player's turn.
+      li.classList.add('flash'); val[p.pid] = total;
       if (sound && window.Music) Music.ding();
-      setTimeout(function () { if (!live()) return; li.classList.remove('flash'); resort(); setTimeout(next, 900); }, 800);
+      setTimeout(function () {
+        if (!live()) return;
+        li.classList.remove('flash'); resort();
+        setTimeout(function () {
+          if (!live()) return;
+          li.classList.add('landed');
+          setTimeout(function () { if (!live()) return; li.classList.remove('counting'); li.classList.remove('landed'); li.classList.add('reached'); setTimeout(next, 250); }, 1000);
+        }, 500);
+      }, 800);
     };
     var step = function () {
       if (!live()) return;
