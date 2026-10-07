@@ -416,12 +416,20 @@
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
     // The minigame spin fills the screen with four big cards: the video stage steps aside for it.
-    spinLayout(); $('qopts').classList.remove('tiles'); $('qopts').classList.remove('tiles3');   // (tiles: only Jury Show with more than four singers)
+    spinLayout(); $('qopts').classList.remove('notearea'); $('qopts').classList.remove('tiles'); $('qopts').classList.remove('tiles3');   // (tiles: only Jury Show with more than four singers)
     if (G.phase === 'pspin' && G.pspin) {
       var sp = G.pspin;
       $('qtext').textContent = sp.done ? 'Party round: ' + sp.games[sp.roll].title : 'Party round! Which one will it be?';
       $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right picked' : ' rolling') : g.out ? ' dim' : '') + '"><span class="bigicon">' + g.icon + '</span><span class="bigname">' + esc(g.title) + '</span></div></div>'; }).join('');
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
+    }
+    if (G.phase === 'qshow' && G.qshow) {
+      var cu = G.qshow.cur;
+      $('qtext').textContent = 'Here is what you wrote: ' + G.qshow.prompt;
+      $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); $('qopts').classList.add('notearea');
+      $('qopts').innerHTML = cu ? '<div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg"><span class="scrib">' + esc(cu.text) + '</span><small>' + cu.n + ' / ' + cu.of + '</small></div>' : '';
+      if (cu) cu.fresh = false;
+      G.plopped = null; return;
     }
     if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party round: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
@@ -970,7 +978,8 @@
     funIntro(kind, starts[kind], ms);
   }
   function partyChoose(games) {
-    var how = games.length < 2 ? 'single' : (G.partyPick || 'spin');
+    var how = games.length < 2 ? 'single' : (G.partyPick || 'order');
+    if (how === 'single' && G.tour) G.tourLast = true;   // a tour of one minigame ends with it
     if (how === 'single') { partyGo(games[0]); return; }
     if (how === 'order') {
       // Grand tour: the spin picks among the minigames that have not been played yet; the played ones are greyed
@@ -1206,14 +1215,12 @@
     };
     quipTimer = setTimeout(step, 500);
   }
-  // A note on the stage: one Green Room answer, as if scribbled on a piece of paper.
+  // One Green Room answer, as if scribbled on a piece of paper. It sits below the video, where the answer bars
+  // will be once the vote starts.
   function paper(text, n, of) {
-    var el = $('paper'); if (!el) return;
-    el.classList.toggle('hidden', text == null);
-    if (text == null) return;
-    $('papertext').textContent = text; $('papern').textContent = n + ' / ' + of;
-    var note = el.querySelector('.sheet'); note.style.setProperty('--tilt', ((n % 2 ? -1 : 1) * (1.5 + (n * 37 % 30) / 10)).toFixed(1) + 'deg');
-    note.classList.remove('in'); void note.offsetWidth; note.classList.add('in');
+    if (text == null) { if (G.qshow) G.qshow.cur = null; return; }
+    if (!G.qshow) return;
+    G.qshow.cur = { text: text, n: n, of: of, fresh: true }; render();
   }
   net.on('quip', function (m) {
     var it = m && G.quips && G.phase === 'qall' && G.quips.items[m.pid];
@@ -1809,8 +1816,8 @@
   } catch (e) {}
   $('typebox').addEventListener('change', readPicks); $('partybox').addEventListener('change', readPicks); readPicks();
 
-  try { var pp = localStorage.getItem('esc-partypick'); if (pp && $('s-partypick').querySelector('option[value="' + pp + '"]')) $('s-partypick').value = pp; } catch (e) {}
-  $('s-partypick').addEventListener('change', function () { try { localStorage.setItem('esc-partypick', $('s-partypick').value); } catch (e) {} singToggle(); });
+  try { var pp = localStorage.getItem('esc-partypick2'); if (pp && $('s-partypick').querySelector('option[value="' + pp + '"]')) $('s-partypick').value = pp; } catch (e) {}
+  $('s-partypick').addEventListener('change', function () { try { localStorage.setItem('esc-partypick2', $('s-partypick').value); } catch (e) {} singToggle(); });
 
   // ---------- test bots ----------
   // Up to four pretend players for trying things out on the shared screen. They live on this page and
