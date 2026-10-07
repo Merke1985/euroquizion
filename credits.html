@@ -6,17 +6,18 @@
 <title>EuroQuizion – photo credits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=215">
+<link rel="stylesheet" href="style.css?v=216">
 </head>
 <body>
 <main class="credits">
   <div class="logo" style="font-size:1.4rem;margin-bottom:20px">Euro<b>Quizion!</b></div>
   <h1 style="font-size:2rem;margin-bottom:10px">Photo credits</h1>
+  <p class="mute">The opening fanfare is the prelude of Marc-Antoine Charpentier’s Te Deum, in a recording from Musopen released into the public domain (CC0), played from <a href="https://commons.wikimedia.org/wiki/File:Charpentier,_Te_Deum_(Prelude).ogg" target="_blank" rel="noopener">Wikimedia Commons</a>.</p>
   <p class="mute">The artist photos used as player characters come from Wikimedia Commons and are used under the free licences listed below. They are shown cropped to a circle and are otherwise unchanged. This is a fan-made game and is not affiliated with or endorsed by the artists or the Eurovision Song Contest.</p>
   <ul id="list" style="list-style:none;padding:0;margin:24px 0"></ul>
   <p><a href="./">Back to the game</a></p>
 </main>
-<script src="chars.js?v=215"></script>
+<script src="chars.js?v=216"></script>
 <script>
 document.getElementById('list').innerHTML = CHARS.filter(function (c) { return c.file; }).map(function (c) {
   var page = 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(c.file.replace(/ /g, '_'));

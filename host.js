@@ -338,6 +338,7 @@
     $('hostmain').classList.toggle('briefing', G.phase === 'brief' || G.phase === 'intro');
     // The fanfare is sound only: its player stays out of sight (but not display:none, or it would not play).
     if (G.phase !== 'end' && endFanfare) { endFanfare = false; try { yt.stopVideo(); } catch (e) {} }
+    if (G.phase !== 'intro' && fanOn) fanStop();   // left the intro some other way (game ended)
     $('v-game').classList.toggle('audioonly', G.phase === 'intro' || endFanfare);
     if (G.phase === 'intro') $('v-game').classList.remove('hidden');
     if (window.selfSize) window.selfSize();
@@ -1211,15 +1212,40 @@
     list().forEach(function (p) { G.go[p.pid] = 1; });
     if (!REMOTE) {
       cover(false); masks(false);
-      try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {}
+      fanPlay();
     }
     push();
     introTimer = setTimeout(introEnd, INTRO.ms);
+  }
+  // The fanfare is a sound file that was loaded while everyone was joining, so it starts at once. If it will
+  // not play (no connection to it, or the browser refuses), the YouTube clip takes over as before.
+  var fanEl = null, fanOn = false, fanUnlocked = false, fanFade = null;
+  if (!REMOTE && INTRO.audio) { try { fanEl = new Audio(); fanEl.preload = 'auto'; fanEl.src = INTRO.audio; } catch (e) { fanEl = null; } }
+  function fanUnlock() {   // phones and tablets only let a sound start that was started once by a touch
+    if (fanUnlocked || !fanEl || fanOn) return; fanUnlocked = true;
+    try { fanEl.muted = true; var p = fanEl.play(); if (p && p.then) p.then(function () { if (!fanOn) { fanEl.pause(); fanEl.muted = false; } }).catch(function () { fanEl.muted = false; }); } catch (e) {}
+  }
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, fanUnlock, { capture: true, passive: true }); });
+  function fanYt() { try { yt.loadVideoById(INTRO.ids[0]); yt.unMute(); yt.setVolume(100); } catch (e) {} }
+  function fanSpare() { if (!fanOn || G.phase !== 'intro') return; fanStop(); fanYt(); }
+  function fanStop() { fanOn = false; clearTimeout(fanFade); clearInterval(fanFade); try { if (fanEl) fanEl.pause(); } catch (e) {} }
+  function fanPlay() {
+    if (!fanEl) { fanYt(); return; }
+    fanOn = true;
+    try {
+      fanEl.muted = false; fanEl.volume = 1; try { fanEl.currentTime = 0.4; } catch (e) {}
+      var p = fanEl.play(); if (p && p.then) p.catch(fanSpare);
+    } catch (e) { fanSpare(); return; }
+    fanEl.onerror = fanSpare;
+    setTimeout(function () { if (fanOn && G.phase === 'intro' && (fanEl.paused || fanEl.currentTime < 0.9)) fanSpare(); }, 2500);   // still silent: the spare
+    // the last second and a half fades out
+    fanFade = setTimeout(function () { fanFade = setInterval(function () { try { fanEl.volume = Math.max(0, fanEl.volume - 0.07); } catch (e) {} }, 100); }, Math.max(0, INTRO.ms - 1500));
   }
   // The fanfare is over, or the host pressed "Start now": on to the first song.
   function introEnd() {
     if (G.phase !== 'intro') return;
     clearTimeout(introTimer);
+    fanStop();
     try { if (!REMOTE) yt.pauseVideo(); } catch (e) {}
     stage = 'idle'; startRound();
   }
