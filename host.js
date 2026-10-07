@@ -300,7 +300,7 @@
       n.style.bottom = (r * RUNG_H + 2) + 'px'; n.style.left = (onRight ? cx + 34 + k * gap : cx - 64 - k * gap) + 'px'; n.style.zIndex = 10 + i;
       n.classList.toggle('off', !!p.off);
       n.classList.toggle('up', G.phase === 'reveal' && p.moved === 'up'); n.classList.toggle('down', G.phase === 'reveal' && p.moved === 'down');
-      n.classList.toggle('ans', G.phase === 'guess' && isIn(p)); n.classList.toggle('won', r === LADDER.length - 1);
+      n.classList.toggle('won', r === LADDER.length - 1);
       seen[p.pid] = 1;
     });
     [].forEach.call(box.querySelectorAll('.climber'), function (n) { if (!seen[n.getAttribute('data-pid')]) n.remove(); });
@@ -309,7 +309,7 @@
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li class="' + (showGot && p.got && !hide ? 'got ' : '') + (G.phase === 'guess' && isIn(p) ? 'ans ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li class="' + (showGot && p.got && !hide ? 'got ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -487,7 +487,14 @@
     if (G.phase === 'intro') { $('start').disabled = false; $('start').textContent = 'Start now · ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)); }
     var voteCd = G.phase === 'svote' || G.phase === 'sbest';
     var cd = (G.phase === 'guess' || voteCd) && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
-    $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
+    // The last five seconds of a question: who are we still waiting for?
+    var late = G.phase === 'guess' && !cd && G.endsAt && G.endsAt - Date.now() <= 5000 && G.endsAt - Date.now() > 0 && list().length > 1 ? list().filter(function (p) { return !p.off && !isIn(p); }).sort(function (a, b) { return a.name.localeCompare(b.name); }) : [];
+    var key = cd ? 'cd' + cd + voteCd : late.length ? 'late' + late.map(function (p) { return p.pid; }).join(',') : '';
+    if (key !== allinKey) {
+      allinKey = key;
+      if (late.length) $('allin').innerHTML = '<span class="hurry">Hurry up, still waiting for:</span>' + late.map(function (p) { return '<span class="waitfor" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('');
+      else $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
+    }
     var timed = G.phase === 'guess' || G.phase === 'dall' || G.phase === 'qall' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
@@ -1037,6 +1044,7 @@
   // Lost in Translation: every vote for a bluff is worth 2 points to whoever wrote it. They are counted out one
   // by one after the reveal, with a ping, and the bluff that is being paid lights up.
   var payTimer = null, BLUFF_PTS = 2;
+  var allinKey = '';
   function payMark() {
     [].forEach.call($('qopts').querySelectorAll('.opt'), function (el, i) { el.classList.toggle('rolling', i === G.payNow); });
   }

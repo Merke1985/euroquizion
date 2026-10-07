@@ -747,3 +747,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @media (prefers-reduced-motion:reduce){.balloon{animation:none}}
 @keyframes balloon{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
 .finalboard .who .balloon{margin-left:6px}
+/* The last five seconds: who has not answered yet */
+.host .allin .hurry{margin-right:10px;vertical-align:middle}
+.host .allin .waitfor{display:inline-block;vertical-align:middle;margin-right:6px}
+.host .allin .waitfor .char{width:34px;height:34px;display:block}
