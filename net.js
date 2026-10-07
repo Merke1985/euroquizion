@@ -56,7 +56,10 @@ function markBad(id) {
 function poolFor(songs, eraValue, cat) {
   // eraValue: one stretch of years ('1980-1999') or several, separated by commas
   var eras = String(eraValue || '1956-2100').split(',').map(function (r) { return r.split('-').map(Number); });
+  // cat: 'all', or one or more of nq (did not qualify), final (every finalist), fin (finalists who did not win), win (winners)
+  var cats = String(cat || 'all').split(',');
+  var catOk = function (s) { return cats.some(function (c) { return c === 'all' || (c === 'nq' && s[5] === 1) || (c === 'final' && s[5] !== 1) || (c === 'fin' && s[5] !== 1 && s[5] !== 2) || (c === 'win' && s[5] === 2); }); };
   return songs.filter(function (s) {
-    return !BAD_VIDEOS[s[4]] && eras.some(function (era) { return s[0] >= era[0] && s[0] <= era[1]; }) && (cat === 'all' || (cat === 'nq' && s[5] === 1) || (cat === 'final' && s[5] !== 1) || (cat === 'win' && s[5] === 2));
+    return !BAD_VIDEOS[s[4]] && eras.some(function (era) { return s[0] >= era[0] && s[0] <= era[1]; }) && catOk(s);
   });
 }

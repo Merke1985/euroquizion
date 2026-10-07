@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=264">
+<link rel="stylesheet" href="style.css?v=265">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -71,8 +71,15 @@
             <label class="swrow"><span><b>2000 – 2012</b><small>Televoting and the first semi-finals</small></span><input type="checkbox" data-era="2000-2012" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>2013 – now</b><small>The modern contest</small></span><input type="checkbox" data-era="2013-2100" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
-        <div><label for="s-cat">Entries</label><select id="s-cat">
+        <div class="hidden"><label for="s-cat">Entries</label><select id="s-cat">
           <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
+        <div class="multi" id="catbox"><label id="catlabel">Entries</label>
+          <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="catlabel catsum"><span id="catsum">All entries</span></button>
+          <div class="multipanel hidden">
+            <label class="swrow"><span><b>Winners</b><small>The song that won its year</small></span><input type="checkbox" data-cat="win" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Finalists</b><small>In the final, but did not win</small></span><input type="checkbox" data-cat="fin" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Non-qualifiers</b><small>Out in a semi-final (from 2004)</small></span><input type="checkbox" data-cat="nq" checked><i class="sw" aria-hidden="true"></i></label>
+          </div></div>
         <details class="adv" style="grid-column:1/-1"><summary>Advanced settings</summary>
         <div class="settings" style="margin-top:12px">
         <div class="hidden"><label for="s-subject">Category</label><select id="s-subject">
@@ -165,14 +172,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=264"></script>
-<script src="vendor/qrcode.js?v=264"></script>
-<script src="config.js?v=264"></script>
-<script src="net.js?v=264"></script>
-<script src="music.js?v=264"></script>
-<script src="chars.js?v=264"></script>
-<script src="match.js?v=264"></script>
-<script src="quiz.js?v=264"></script>
-<script src="host.js?v=264"></script>
+<script src="vendor/supabase.js?v=265"></script>
+<script src="vendor/qrcode.js?v=265"></script>
+<script src="config.js?v=265"></script>
+<script src="net.js?v=265"></script>
+<script src="music.js?v=265"></script>
+<script src="chars.js?v=265"></script>
+<script src="match.js?v=265"></script>
+<script src="quiz.js?v=265"></script>
+<script src="host.js?v=265"></script>
 </body>
 </html>

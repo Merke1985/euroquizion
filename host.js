@@ -172,7 +172,7 @@
     if (G.subject === 'points') G.subject = 'random';
     if (['country', 'artist', 'title', 'year', 'place'].indexOf(G.subject) >= 0) G.subject = 'facts';   // these are one category now   // the points question was removed
     if (G.phase === 'lobby' || G.phase === 'end') G.go = {};   // games saved before Sing! moved to Category
-    eraSet(G.era); $('s-cat').value = G.cat;
+    eraSet(G.era); catSet(G.cat);
     $('s-atype').value = G.robin ? 'robin' : G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip'; scoreHelp();
     if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([5, 10, 20, 30].indexOf(G.guessMs / 1000 - AFTER) < 0) G.guessMs = (20 + AFTER) * 1000;   // games saved with the old Guessing time setting
@@ -2097,6 +2097,27 @@
   }
   $('erabox').addEventListener('change', eraRead);
   try { var er0 = localStorage.getItem('esc-eras'); if (er0 && /^[0-9,\-]+$/.test(er0)) G.era = eraSet(er0); } catch (e) {}
+  // ---------- entries: winners, the other finalists and non-qualifiers can be combined the same way ----------
+  // The hidden Entries field carries the choice: 'all', the old single values where they fit ('win', 'nq',
+  // 'final' for every finalist), otherwise the switched-on kinds separated by commas.
+  function catSet(value) {
+    var v = String(value || 'all'), on = v === 'all' ? ['win', 'fin', 'nq'] : v === 'final' ? ['win', 'fin'] : v.split(','), sel = $('s-cat'), names = [];
+    [].forEach.call($('catbox').querySelectorAll('input:not([data-all])'), function (el) { el.checked = on.indexOf(el.getAttribute('data-cat')) >= 0; if (el.checked) names.push(el.parentNode.querySelector('b').textContent); });
+    if (!sel.querySelector('option[value="' + v + '"]')) { var opt = sel.querySelector('option[data-custom]'); if (!opt) { opt = document.createElement('option'); opt.setAttribute('data-custom', '1'); sel.appendChild(opt); } opt.value = v; opt.textContent = names.join(' and '); }
+    sel.value = v;
+    $('catsum').textContent = v === 'all' ? 'All entries' : names.length === 1 ? names[0] : v === 'final' ? 'All finalists' : 'Custom';
+    if ($('catbox')._allSync) $('catbox')._allSync();
+    return v;
+  }
+  function catRead() {
+    var on = []; [].forEach.call($('catbox').querySelectorAll('input:not([data-all])'), function (el) { if (el.checked) on.push(el.getAttribute('data-cat')); });
+    if (!on.length) { G.cat = 'all'; $('s-cat').value = 'all'; $('catsum').textContent = 'All entries'; }   // nothing switched on: every entry (the switches stay off)
+    else G.cat = catSet(on.length === 3 ? 'all' : on.indexOf('win') >= 0 && on.indexOf('fin') >= 0 ? 'final' : on.join(','));
+    try { localStorage.setItem('esc-cats', G.cat); } catch (e) {}
+    winnersLock(); ready();
+  }
+  $('catbox').addEventListener('change', catRead);
+  try { var ct0 = localStorage.getItem('esc-cats'); if (ct0 && /^[a-z,]+$/.test(ct0)) { G.cat = catSet(ct0); winnersLock(); } } catch (e) {}
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
     setTimeout(fanCue, 1500);   // back in the lobby: line the fanfare up again
@@ -2233,7 +2254,7 @@
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   fetch('chorus.json?v=43').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
-  keepSettings(['s-cat', 's-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
+  keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   restore();
   render();
 })();
