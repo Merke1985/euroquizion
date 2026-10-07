@@ -388,7 +388,7 @@
         if (G.best.quip) bw = (G.best.wins || []).map(function (i) { var w = players[G.best.pids[i]]; return w ? w.name : QUIP_HOUSE; });
         if (G.best.bluff) bw = [G.q.options[G.best.real]];
         $('rtitle').textContent = bw.length ? (G.best.bluff ? 'It means: ' : G.best.quip ? 'Favourite answer: ' : 'Best drawing: ') + bw.join(' & ') : 'Nobody voted';
-        $('rmeta').textContent = bw.length ? (G.best.bluff ? '12 points for finding it, 4 for every player you fool' : G.best.quip ? (G.best.per || 1) + (G.best.per === 1 ? ' point' : ' points') + ' per vote' : '+' + BEST_PTS * partyX() + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
+        $('rmeta').textContent = bw.length ? (G.best.bluff ? '12 points for finding it, 2 for every vote your bluff gets' : G.best.quip ? (G.best.per || 1) + (G.best.per === 1 ? ' point' : ' points') + ' per vote' : '+' + BEST_PTS * partyX() + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
         $('next').textContent = lastSong() ? 'Final scores' : 'Next';
       }
       if (G.phase === 'reveal' && G.song) {
@@ -706,8 +706,11 @@
         var realI = G.best.real;
         G.best.wins = [realI]; G.q.correct = realI;
         list().forEach(function (p) { if (p.pick === realI) { p.pts = (p.pts || 0) + 12; p.got = true; } });
-        G.best.pids.forEach(function (k, i) { var w = players[k]; if (w && tally[i]) { w.pts = (w.pts || 0) + tally[i] * 4; w.got = true; } });
         list().forEach(function (p) { if (p.pts) p.score += p.pts; });
+        // the bluffs are paid out after the real meaning is shown: 2 points per vote, one vote at a time (payTick)
+        var pay = []; G.best.pids.forEach(function (k, i) { if (players[k] && i !== realI) for (var v = 0; v < tally[i]; v++) pay.push({ i: i, pid: k }); });
+        clearTimeout(payTimer); G.pay = pay; G.payN = 0; G.payNow = -1;
+        if (pay.length) payTimer = setTimeout(payTick, 2200);
         G.q.reveal = G.q.options.map(function (o, i) { var w = players[G.best.pids[i]]; return o + '  —  ' + (i === realI ? 'the real meaning' : w ? w.name + '’s bluff' : ''); });
       } else
       if (G.best.quip) {
@@ -767,6 +770,7 @@
     }, 400);
   }
   function startRound() {
+    payFlush();
     G.round++; G.phase = 'loading';
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
@@ -1029,6 +1033,30 @@
   function sameCase(t) {
     t = String(t).replace(/\s+/g, ' ').replace(/^[\s"'“”‘’«»]+|[\s"'“”‘’«».!]+$/g, '').toLowerCase().replace(/\bi\b/g, 'I');
     return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  // Lost in Translation: every vote for a bluff is worth 2 points to whoever wrote it. They are counted out one
+  // by one after the reveal, with a ping, and the bluff that is being paid lights up.
+  var payTimer = null, BLUFF_PTS = 2;
+  function payMark() {
+    [].forEach.call($('qopts').querySelectorAll('.opt'), function (el, i) { el.classList.toggle('rolling', i === G.payNow); });
+  }
+  function payFlush() {   // the game moves on before the count is done: the rest is added at once
+    clearTimeout(payTimer);
+    while (G.pay && G.pay.length) { var x = G.pay.shift(), w = players[x.pid]; if (w) { w.pts = (w.pts || 0) + BLUFF_PTS; w.score += BLUFF_PTS; w.got = true; } }
+    G.payNow = -1;
+  }
+  function payTick() {
+    clearTimeout(payTimer);
+    if (!G.pay || !G.pay.length) { G.payNow = -1; return; }
+    var live = G.phase === 'reveal' && G.best && G.best.bluff;
+    do {
+      var x = G.pay.shift(), w = players[x.pid];
+      if (w) { w.pts = (w.pts || 0) + BLUFF_PTS; w.score += BLUFF_PTS; w.got = true; }
+      if (live) { G.payNow = x.i; if (!REMOTE) Music.plop(G.payN++); }
+    } while (!live && G.pay.length);   // the game moved on: the rest is added at once
+    if (!live) { G.payNow = -1; return; }
+    push(); payMark();
+    payTimer = setTimeout(G.pay.length ? payTick : function () { G.payNow = -1; if (G.phase === 'reveal') payMark(); }, 650);
   }
   function bluffAll() {
     var can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
@@ -1766,6 +1794,7 @@
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   ['s-era', 's-cat'].forEach(function (id) { $(id).addEventListener('change', function () { G.era = $('s-era').value; G.cat = $('s-cat').value; ready(); }); });
   function toLobby() {
+    payFlush();
     G.ladderWon = false; G.gallery = null; G.best = null; G.quips = null; G.part = null; G.eraNow = ''; clearTimeout(partTimer); clearTimeout(funTimer); $('cover').classList.remove('funcard'); G.fun = null; G.pspin = null; clearTimeout(quipTimer); list().forEach(function (p) { p.rung = 0; p.moved = ''; });
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
