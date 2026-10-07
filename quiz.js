@@ -385,7 +385,11 @@ function finalBoard(el, players, mePid, onDone, sound, instant) {
   var finish = function () {
     if (!live()) return;
     var wins = ps.filter(function (p) { return max > 0 && p.score === max; });
-    wins.forEach(function (p) { rows[p.pid].classList.remove('reached'); rows[p.pid].classList.add('winner'); });
+    wins.forEach(function (p) {
+      rows[p.pid].classList.remove('reached'); rows[p.pid].classList.add('winner');
+      var who = rows[p.pid].querySelector('.who');   // the winner's speech
+      if (who && !who.querySelector('.balloon')) { var b = document.createElement('span'); b.className = 'balloon'; b.textContent = 'Thank you Europe!'; who.appendChild(b); }
+    });
     if (onDone) onDone(wins);
   };
   // The scores were in view all game: no counting up, just the final ranking with the winner marked.
