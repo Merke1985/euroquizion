@@ -173,12 +173,14 @@ var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 
 var PEEL_MS = 60000;
 function peelPoints(ms) { return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
 function makePeel(song, allSongs, countries, opt) {
-  var o2 = {}, k; for (k in (opt || {})) if (k !== 'types') o2[k] = opt[k];
-  var q = makeQuestion(song, pick(['artist', 'title', 'country']), 'mc', allSongs, countries, o2);
-  if (!q || !q.options) return null;
-  q.peel = true; q.asks = q.subject; q.subject = 'peel';
-  q.text = 'Behind the curtain: ' + q.text.charAt(0).toLowerCase() + q.text.slice(1) + ' The sooner you know, the more points.';
-  return q;
+  // always the song itself: four bars with title and artist, the other three from about the same years
+  var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}; seen[song[4]] = 1;
+  var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); } };
+  shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6; })).forEach(add);
+  shuffle(allSongs.slice()).forEach(add);
+  if (opts.length < 4) return null;
+  shuffle(opts);
+  return { subject: 'peel', peel: true, type: 'mc', text: 'Behind the curtain: which song is this? The sooner you know, the more points.', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
 }
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   if (opt && opt.types && subjectSetting === 'random') {
