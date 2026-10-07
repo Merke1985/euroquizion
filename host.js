@@ -360,7 +360,8 @@
         finalBoard($('final'), ps, null, function (wins) {
           $('endlead').textContent = wins.length ? 'And the winner is…' : 'Final scores';
           $('winner').textContent = wins.length ? wins.map(function (w) { return w.name; }).join(' & ') + ' · ' + ptsLabel(wins[0].score) : 'Nobody scored';
-          $('winchar').innerHTML = wins.length === 1 ? charSvg(wins[0].char) : '';
+          // the winner's big avatar (with a tie: all of them), with a speech balloon above it
+          $('winchar').innerHTML = wins.length ? '<div class="winballoon">Thank you Europe!</div><div class="winfaces">' + wins.slice(0, 4).map(function (w) { return charSvg(w.char); }).join('') + '</div>' : '';
         }, true, ladderGame());
         endLadder();   // counted up only when the totals were hidden during the game
       }
@@ -688,7 +689,9 @@
   function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder' && !(G.phase === 'end' && G.partLadder); }
   var ENDLESS = 9999;   // Ladder has no song limit: it runs until someone is at the top
   function ofTotal(sep) { return G.total >= ENDLESS ? '' : sep + G.total; }
-  function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
+  // Grand tour: the game is over when the last minigame is (with Postcard: when its last drawing and the vote are done).
+  function tourOver() { return !!(G.tour && G.tourLast && !(G.gallery && (G.gallery.queue.length || G.gallery.vote))); }
+  function lastSong() { return G.round >= G.total || tourOver() || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
   function reveal() {
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
@@ -808,6 +811,7 @@
       var pOn = G.partyOn || {}, two = list().filter(function (p) { return !p.off; }).length >= 2;
       var games = ['sing', 'draw', 'quip', 'bluff'].filter(function (x) { return pOn[x] !== false && !(x === 'sing' && REMOTE) && (two || (x !== 'sing' && x !== 'draw')); });
       G.mode = 'mc';
+      if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       if ((G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
@@ -932,6 +936,7 @@
       var done = G.partyDone || (G.partyDone = []), left = games.filter(function (x) { return done.indexOf(x) < 0; });
       if (!left.length) { done.length = 0; left = games.filter(function (x) { return x !== G.lastParty; }); if (!left.length) left = games.slice(); }
       var next = pick(left); done.push(next);
+      if (G.tour && games.every(function (x) { return done.indexOf(x) >= 0; })) G.tourLast = true;   // the last stop of the tour
       if (left.length > 1) partySpin(left, next, function () { partyGo(next, 3000); }); else partyGo(next);
       return;
     }
@@ -1232,7 +1237,7 @@
   function optText(id) { var el = $(id); return el.options[el.selectedIndex] ? el.options[el.selectedIndex].textContent : ''; }
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip';
-    var rows = [['Songs', G.total >= ENDLESS ? 'Until someone reaches the top' : G.parts > 1 ? G.parts + ' rounds of ' + G.per : G.total], ['Video length', optText('s-time')], ['Era', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
+    var rows = [['Songs', G.tour ? 'Until every minigame is played' : G.total >= ENDLESS ? 'Until someone reaches the top' : G.parts > 1 ? G.parts + ' rounds of ' + G.per : G.total], ['Video length', optText('s-time')], ['Era', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
     if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', optText('s-scoring')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : G.atype === 'quip' ? QUIP_HELP : sing ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
@@ -1674,7 +1679,7 @@
   $('typebox').addEventListener('change', readPicks); $('partybox').addEventListener('change', readPicks); readPicks();
 
   try { var pp = localStorage.getItem('esc-partypick'); if (pp && $('s-partypick').querySelector('option[value="' + pp + '"]')) $('s-partypick').value = pp; } catch (e) {}
-  $('s-partypick').addEventListener('change', function () { try { localStorage.setItem('esc-partypick', $('s-partypick').value); } catch (e) {} });
+  $('s-partypick').addEventListener('change', function () { try { localStorage.setItem('esc-partypick', $('s-partypick').value); } catch (e) {} singToggle(); });
 
   // ---------- test bots ----------
   // Up to four pretend players for trying things out on the shared screen. They live on this page and
@@ -1795,7 +1800,8 @@
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
     var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
     var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
-    $('s-rounds').disabled = lad; $('s-show').disabled = lad;
+    var tour = party && $('s-partypick').value === 'order';   // Grand tour sets its own length: every minigame once
+    $('s-rounds').disabled = lad || tour; $('s-show').disabled = lad;
     // Rounds and the spin for the years belong to a plain quiz
     // Round Robin: several rounds, each with its own era from the spin. Rounds only counts there, and
     // the Era setting has nothing to choose then.
@@ -1870,7 +1876,8 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.partyDone = []; G.partyPick = $('s-partypick').value; G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; G.partyIdx = 0; G.partyDone = []; G.partyPick = $('s-partypick').value; G.tourLast = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
   }

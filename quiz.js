@@ -258,7 +258,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // Draw!: one player draws a song on their phone, the others guess. Lines travel as small batches of
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
-var PARTY_HELP = 'Party: after every three quiz questions a spin picks a party round (Jury Show, Postcard, Green Room or Lost in Translation). Postcard scores extra here: 4 per guessed drawing.';
+var PARTY_HELP = 'Quiz questions mixed in with party games.';
 var DRAW_HELP = 'Postcard: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores 1 point, and the artist gets 1 point for everyone who guesses it. At the end everyone votes for the best drawing, which earns 3 bonus points.';
 var DRAW_COLORS = ['#111111', '#ffffff', '#e11d48', '#f97316', '#f59e0b', '#16a34a', '#2563eb', '#7c3aed', '#ec4899', '#92400e', '#9ca3af', '#ffffff'];   // the last one is the eraser: it paints in the background colour
 var DRAW_BGS = ['#ffffff', '#111111', '#bfdbfe', '#fde68a', '#bbf7d0', '#fecaca'];   // paper colours; a drawing starts on white
@@ -395,8 +395,6 @@ function finalBoard(el, players, mePid, onDone, sound, instant) {
     var wins = ps.filter(function (p) { return max > 0 && p.score === max; });
     wins.forEach(function (p) {
       rows[p.pid].classList.remove('reached'); rows[p.pid].classList.add('winner');
-      var who = rows[p.pid].querySelector('.who');   // the winner's speech
-      if (who && !who.querySelector('.balloon')) { var b = document.createElement('span'); b.className = 'balloon'; b.textContent = 'Thank you Europe!'; who.appendChild(b); }
     });
     if (onDone) onDone(wins);
   };
