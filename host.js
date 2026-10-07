@@ -789,12 +789,14 @@
   var revealTick = null;
   var maskTimer = null;
   function revealWatch() {
+    // While the answer is up, the video stays covered against clicks and taps (they make YouTube show its pause
+    // button and other controls), except for the bottom right corner, where "Skip ad" appears.
     clearInterval(revealTick);
     var sh = document.querySelector('#v-game .shield');
-    sh.classList.add('hidden');
+    sh.classList.remove('hidden'); sh.classList.add('peek');
     revealTick = setInterval(function () {
-      if (G.phase !== 'reveal') { clearInterval(revealTick); sh.classList.toggle('hidden', adShown); return; }
-      sh.classList.add('hidden');   // the whole time the answer is up: an ad cannot always be told apart from the song
+      if (G.phase !== 'reveal') { clearInterval(revealTick); sh.classList.remove('peek'); sh.classList.toggle('hidden', adShown); return; }
+      sh.classList.remove('hidden'); sh.classList.add('peek');
     }, 400);
   }
   function startRound() {

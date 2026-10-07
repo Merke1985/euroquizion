@@ -800,3 +800,5 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .host aside .board li{position:relative}
 /* More than four answers: two columns */
 .host .opts.votelist.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* At the answer the video is covered against clicks, apart from the corner where YouTube puts "Skip ad" */
+.shield.peek{clip-path:polygon(0 0,100% 0,100% 58%,58% 58%,58% 100%,0 100%)}
