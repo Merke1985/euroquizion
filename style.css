@@ -855,8 +855,6 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* The host screen on a phone: no room for the join address next to the controls while a game is on */
 @media (max-width:700px){.host.ingame>header #joinhint{display:none}.host>header{flex-wrap:wrap}.host.ingame>header .ctrl{order:3;flex-basis:100%;justify-content:flex-start}}
 @media (max-width:700px){.host .opts.votelist .opt{padding-right:26%}.host .opts.votelist .voters{max-width:26%}}
-/* A list of switches: its field is green when everything is on, orange for a selection of your own */
-.multi.isall .multibtn{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+/* A list of switches: the word in its field is green when everything is on, orange for a selection of your own */
 .multi.isall .multibtn span{color:var(--ok)}
-.multi.iscustom .multibtn{border-color:#ff9f1c;box-shadow:inset 0 0 0 1px #ff9f1c}
 .multi.iscustom .multibtn span{color:#ff9f1c}
