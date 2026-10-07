@@ -731,3 +731,5 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 /* Sing!: the singers as bars, the one being heard marked on the right */
 .host .opt.singing .note{margin-left:auto;position:static;transform:none}
 .host .opts.votelist .opt.singing .note{margin-left:12px}
+.host .opts.votelist .voters span.face{padding:2px}
+.host .opts.votelist .opt.right+.voters>b{color:#052e16}
