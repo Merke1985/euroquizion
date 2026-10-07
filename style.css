@@ -779,3 +779,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @media (max-width:820px){.host .game{grid-template-columns:1fr}}
 /* Final scores: the row that was just counted stays yellow while it moves, and lights up where it lands */
 .finalboard li.landed{box-shadow:0 0 0 5px rgba(255,214,10,.55),0 8px 30px -6px rgba(255,214,10,.7)}
+/* The spin's pick: the green pops as much as the yellow light that ran before it */
+.opt.right.picked{background:#35f08a;color:#03260f;box-shadow:0 0 0 4px rgba(53,240,138,.5),0 10px 34px -6px rgba(53,240,138,.95);transform:scale(1.04);animation:pickpop .45s cubic-bezier(.2,1.5,.4,1) both;position:relative;z-index:1}
+@keyframes pickpop{0%{transform:scale(1.015)}45%{transform:scale(1.1)}100%{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.opt.right.picked{animation:none}}

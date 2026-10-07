@@ -410,14 +410,14 @@
     if (G.phase === 'pspin' && G.pspin) {
       var sp = G.pspin;
       $('qtext').textContent = sp.done ? 'Party round: ' + sp.games[sp.roll].title : 'Party round! Which one will it be?';
-      $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right' : ' rolling') : g.out ? ' dim' : '') + '"><span style="font-size:1.6em;line-height:1">' + g.icon + '</span>' + esc(g.title) + '</div></div>'; }).join('');
+      $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right picked' : ' rolling') : g.out ? ' dim' : '') + '"><span style="font-size:1.6em;line-height:1">' + g.icon + '</span>' + esc(g.title) + '</div></div>'; }).join('');
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
     if (G.phase === 'fun' && G.fun) { $('qtext').textContent = 'Party round: ' + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
       var pt = G.part, head = pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
       $('qtext').textContent = pt.eras ? (pt.done ? head + ': ' + pt.label : head + ': which era will it be?') : head;
-      $('qopts').innerHTML = pt.eras ? pt.eras.map(function (e, i) { return '<div class="optcol"><div class="opt' + (i === pt.roll ? (pt.done ? ' right' : ' rolling') : e.out ? ' dim' : '') + '">' + esc(e.label) + (e.out ? ' <span class="mute" style="font-size:.8em">played</span>' : '') + '</div></div>'; }).join('') : '';
+      $('qopts').innerHTML = pt.eras ? pt.eras.map(function (e, i) { return '<div class="optcol"><div class="opt' + (i === pt.roll ? (pt.done ? ' right picked' : ' rolling') : e.out ? ' dim' : '') + '">' + esc(e.label) + (e.out ? ' <span class="mute" style="font-size:.8em">played</span>' : '') + '</div></div>'; }).join('') : '';
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
     $('qopts').classList.remove('eras');
@@ -1612,7 +1612,7 @@
       t = sg.rollDone ? 'We’re singing: ' + (sg.options[sg.roll][3] + ' – ' + sg.options[sg.roll][2]) : 'Which song will it be?';
       opts = sg.options.map(function (o, i) {
         var tied = sg.tied.indexOf(i) >= 0, n = 0, k; for (k in sg.votes) if (sg.votes[k] === i) n++;
-        return '<div class="optcol"><div class="opt' + (i === sg.roll ? (sg.rollDone ? ' right' : ' rolling') : tied ? '' : ' dim') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters"><b>' + n + (n === 1 ? ' vote' : ' votes') + '</b></div></div>';
+        return '<div class="optcol"><div class="opt' + (i === sg.roll ? (sg.rollDone ? ' right picked' : ' rolling') : tied ? '' : ' dim') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters"><b>' + n + (n === 1 ? ' vote' : ' votes') + '</b></div></div>';
       }).join('');
     }
     else if (G.phase === 'svote') { t = 'Jury Show: vote for the song'; opts = sg.options.map(function (o, i) {
