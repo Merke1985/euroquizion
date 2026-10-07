@@ -1577,7 +1577,8 @@
       if (ph === 'lobby') { b.key = ''; if (!(G.go && G.go[pid])) H.go({ pid: pid }); return; }
       // one action per step of the game, after a short random think
       var key = ph + ':' + G.round + ':' + (G.best ? G.best.id : '') + (G.draw ? G.draw.id : '');
-      if (b.key !== key) { b.key = key; b.at = Date.now() + 1200 + Math.random() * 3500; b.done = false; }
+      // (two-clip questions: wait until the second song has been on for a bit, about 15 seconds in)
+      if (b.key !== key) { b.key = key; b.at = Date.now() + (ph === 'guess' && isPair() ? 14000 + Math.random() * 3000 : 1200 + Math.random() * 3500); b.done = false; }
       if (b.done || Date.now() < b.at) return;
       b.done = true;
       if (ph === 'guess' && G.q && G.q.options) {
