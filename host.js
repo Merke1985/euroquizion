@@ -1497,9 +1497,9 @@
     var sum = function (box, on) {
       var all = box.querySelectorAll('input'), names = [];
       [].forEach.call(all, function (el) { if (el.checked) names.push(el.parentNode.querySelector('b').textContent); });
-      return !names.length || names.length === all.length ? 'All ' + all.length : names.length <= 2 ? names.join(', ') : names.length + ' of ' + all.length;
+      return !names.length || names.length === all.length ? 'All' : 'Custom';
     };
-    $('typesum').textContent = sum($('typebox')); $('partysum').textContent = $('partybox').querySelectorAll('input:checked').length ? sum($('partybox')) : 'None';
+    $('typesum').textContent = sum($('typebox')); $('partysum').textContent = $('partybox').querySelectorAll('input:checked').length ? sum($('partybox')) : 'Custom';
   }
   // open and close the two lists; a click anywhere else, or Escape, closes them
   function multiClose(except) { [].forEach.call(document.querySelectorAll('.multi'), function (m) { if (m === except) return; m.querySelector('.multipanel').classList.add('hidden'); m.querySelector('.multibtn').setAttribute('aria-expanded', 'false'); }); }
