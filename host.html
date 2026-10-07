@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=193">
+<link rel="stylesheet" href="style.css?v=194">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -60,18 +60,24 @@
         <div class="settings" style="margin-top:12px">
         <div class="hidden"><label for="s-subject">Category</label><select id="s-subject">
           <option value="random" selected>All</option><option value="facts">Song facts</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option><option value="lost">Lost in translation</option></select></div>
-        <div class="picks" id="typebox" style="grid-column:1/-1"><label>Question types</label><div class="pickrow">
-          <label class="pick"><input type="checkbox" data-type="facts" checked> Song facts</label>
-          <label class="pick"><input type="checkbox" data-type="odd" checked> Odd one out</label>
-          <label class="pick"><input type="checkbox" data-type="mistake" checked> Find the mistake</label>
-          <label class="pick"><input type="checkbox" data-type="higher" checked> Higher or lower</label>
-          <label class="pick"><input type="checkbox" data-type="newer" checked> Which is newer</label>
-          <label class="pick"><input type="checkbox" data-type="lost" checked> Lost in translation</label></div></div>
-        <div class="picks" id="partybox" style="grid-column:1/-1"><label>Party rounds</label><div class="pickrow">
-          <label class="pick"><input type="checkbox" data-party="sing" checked> Sing!</label>
-          <label class="pick"><input type="checkbox" data-party="draw" checked> Draw!</label>
-          <label class="pick"><input type="checkbox" data-party="quip" checked> Quip!</label>
-          <label class="pick"><input type="checkbox" data-party="bluff" checked> Bluff!</label></div></div>
+        <div class="multi" id="typebox"><label id="typelabel">Question types</label>
+          <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="typelabel typesum"><span id="typesum">All 6</span></button>
+          <div class="multipanel hidden">
+            <label class="swrow"><span><b>Song facts</b><small>Country, artist, title, year, placing</small></span><input type="checkbox" data-type="facts" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Odd one out</b><small>Three songs share something, one does not</small></span><input type="checkbox" data-type="odd" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Find the mistake</b><small>Four facts, one is wrong</small></span><input type="checkbox" data-type="mistake" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Higher or lower</b><small>Two clips: which finished higher?</small></span><input type="checkbox" data-type="higher" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Which is newer</b><small>Two clips: which is the later song?</small></span><input type="checkbox" data-type="newer" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Lost in translation</b><small>A translated title: which song is it?</small></span><input type="checkbox" data-type="lost" checked><i class="sw" aria-hidden="true"></i></label>
+          </div></div>
+        <div class="multi" id="partybox"><label id="partylabel">Party rounds</label>
+          <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="partylabel partysum"><span id="partysum">All 4</span></button>
+          <div class="multipanel hidden">
+            <label class="swrow"><span><b>Sing!</b><small>Record yourself singing a clip</small></span><input type="checkbox" data-party="sing" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Draw!</b><small>Draw a song, guess the others</small></span><input type="checkbox" data-party="draw" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Quip!</b><small>The funniest answer about a song</small></span><input type="checkbox" data-party="quip" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Bluff!</b><small>Fake a translation, find the real one</small></span><input type="checkbox" data-party="bluff" checked><i class="sw" aria-hidden="true"></i></label>
+          </div></div>
         <div><label for="s-time">Video length</label><select id="s-time"><option value="5">5 sec</option><option value="10">10 sec</option><option value="20" selected>20 sec</option><option value="30">30 sec</option></select></div>
         <div><label for="s-show">Show score</label><select id="s-show">
           <option value="always" selected>Always</option><option value="end">At the end of the round</option></select></div>
@@ -150,14 +156,14 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=193"></script>
-<script src="vendor/qrcode.js?v=193"></script>
-<script src="config.js?v=193"></script>
-<script src="net.js?v=193"></script>
-<script src="music.js?v=193"></script>
-<script src="chars.js?v=193"></script>
-<script src="match.js?v=193"></script>
-<script src="quiz.js?v=193"></script>
-<script src="host.js?v=193"></script>
+<script src="vendor/supabase.js?v=194"></script>
+<script src="vendor/qrcode.js?v=194"></script>
+<script src="config.js?v=194"></script>
+<script src="net.js?v=194"></script>
+<script src="music.js?v=194"></script>
+<script src="chars.js?v=194"></script>
+<script src="match.js?v=194"></script>
+<script src="quiz.js?v=194"></script>
+<script src="host.js?v=194"></script>
 </body>
 </html>

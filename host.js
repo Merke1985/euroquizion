@@ -340,7 +340,7 @@
     if (G.phase !== 'end') endShown = false;
     // Everyone is ready: the fanfare plays, but the screen stays on the lobby with the settings locked.
     var locked = G.phase === 'intro';
-    [].forEach.call($('v-lobby').querySelectorAll('.settings select, .settings input'), function (el) { el.disabled = locked; });
+    [].forEach.call($('v-lobby').querySelectorAll('.settings select, .settings input, .settings .multibtn'), function (el) { el.disabled = locked; });
     $('v-lobby').classList.toggle('locked', locked);
     if (!locked) { singToggle(); winnersLock(); autoMirror(); }   // gives Answers and Scoring back unless Sing! or Draw! greys them out
     if (!locked && G.phase === 'lobby' && $('start').textContent.indexOf('Start now') === 0) ready();
@@ -1473,7 +1473,26 @@
     G.types = types.length ? types : null;   // nothing ticked counts as everything
     G.partyOn = party;
     try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party })); } catch (e) {}
+    // the field shows what is switched on, in a few words
+    var sum = function (box, on) {
+      var all = box.querySelectorAll('input'), names = [];
+      [].forEach.call(all, function (el) { if (el.checked) names.push(el.parentNode.querySelector('b').textContent); });
+      return !names.length || names.length === all.length ? 'All ' + all.length : names.length <= 2 ? names.join(', ') : names.length + ' of ' + all.length;
+    };
+    $('typesum').textContent = sum($('typebox')); $('partysum').textContent = $('partybox').querySelectorAll('input:checked').length ? sum($('partybox')) : 'None';
   }
+  // open and close the two lists; a click anywhere else, or Escape, closes them
+  function multiClose(except) { [].forEach.call(document.querySelectorAll('.multi'), function (m) { if (m === except) return; m.querySelector('.multipanel').classList.add('hidden'); m.querySelector('.multibtn').setAttribute('aria-expanded', 'false'); }); }
+  [].forEach.call(document.querySelectorAll('.multi'), function (m) {
+    m.querySelector('.multibtn').addEventListener('click', function (e) {
+      e.stopPropagation(); multiClose(m);
+      var p = m.querySelector('.multipanel'), open = p.classList.toggle('hidden') === false;
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    m.querySelector('.multipanel').addEventListener('click', function (e) { e.stopPropagation(); });
+  });
+  document.addEventListener('click', function () { multiClose(null); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') multiClose(null); });
   try {
     var pk = JSON.parse(localStorage.getItem('esc-picks') || 'null');
     if (pk) {
