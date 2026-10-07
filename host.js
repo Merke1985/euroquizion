@@ -547,10 +547,12 @@
     var cd = (G.phase === 'guess' || voteCd) && G.revealAt ? Math.max(0, Math.ceil((G.revealAt - Date.now()) / 1000)) : 0;
     // The last five seconds of a question: who are we still waiting for?
     var late = G.phase === 'guess' && !cd && G.endsAt && G.endsAt - Date.now() <= 5000 && G.endsAt - Date.now() > 0 && list().length > 1 ? list().filter(function (p) { return !p.off && !isIn(p); }).sort(function (a, b) { return a.name.localeCompare(b.name); }) : [];
-    var key = cd ? 'cd' + cd + voteCd : late.length ? 'late' + late.map(function (p) { return p.pid; }).join(',') : '';
+    var qcd = G.phase === 'qall' && G.quips && G.quips.cdAt ? Math.max(1, Math.ceil((G.quips.cdAt - Date.now()) / 1000)) : 0;   // writing round: everyone has sent something in
+    var key = qcd ? 'q' + qcd : cd ? 'cd' + cd + voteCd : late.length ? 'late' + late.map(function (p) { return p.pid; }).join(',') : '';
     if (key !== allinKey) {
       allinKey = key;
-      if (late.length) $('allin').innerHTML = '<span class="hurry">Hurry up, still waiting for:</span>' + late.map(function (p) { return '<span class="waitfor" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('');
+      if (qcd) $('allin').textContent = 'All answers received: ' + qcd;
+      else if (late.length) $('allin').innerHTML = '<span class="hurry">Hurry up, still waiting for:</span>' + late.map(function (p) { return '<span class="waitfor" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('');
       else $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
     }
     // What a right answer is worth right now, in the corner of the video (every trivia question; not for votes or the Ladder).
@@ -1239,7 +1241,11 @@
   function quipAllCheck() {
     if (G.phase !== 'qall' || !G.quips) return;
     var act = list().filter(function (p) { return !p.off && G.quips.items[p.pid]; });
-    if (act.length && act.every(function (p) { return G.quips.items[p.pid].done; })) { clearTimeout(quipTimer); quipTimer = setTimeout(quipAllEnd, 900); }
+    if (act.length && act.every(function (p) { return G.quips.items[p.pid].done; }) && !G.quips.cdAt) {
+      // Everyone is in: the screen says so and counts 3, 2, 1; then a sound, and on to the answers.
+      clearTimeout(quipTimer); G.quips.cdAt = Date.now() + 3000; push();
+      quipTimer = setTimeout(function () { if (!REMOTE) Music.ding(); quipAllEnd(); }, 3000);
+    }
   }
   function quipAllEnd() {
     if (G.phase !== 'qall' || !G.quips) return;
