@@ -553,6 +553,16 @@
       if (late.length) $('allin').innerHTML = '<span class="hurry">Hurry up, still waiting for:</span>' + late.map(function (p) { return '<span class="waitfor" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('');
       else $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
     }
+    // What a right answer is worth right now, in the corner of the video (every trivia question; not for votes or the Ladder).
+    var worth = '';
+    if (!REMOTE && G.phase === 'guess' && G.q && !G.best && !ladderGame() && !G.revealAt) {
+      var x2 = G.tourFinal && !G.draw ? 2 : 1;
+      if (G.draw) worth = String(partyX());
+      else if (G.q.peel) worth = String(peelPoints((G.barMs || PEEL_MS) - (G.endsAt - Date.now())) * x2);
+      else if (G.scoring === 'speed') worth = String((ESC_POINTS[list().filter(function (p) { return p.pick != null; }).length] || 1) * x2);   // Speedy: what the next one in can still get
+      else worth = String(12 * x2);
+    }
+    if (worth !== worthShown) { worthShown = worth; $('worth').classList.toggle('hidden', !worth); if (worth) { $('worth').textContent = worth; $('worth').classList.remove('tick'); void $('worth').offsetWidth; $('worth').classList.add('tick'); } }
     var timed = G.phase === 'guess' || G.phase === 'dall' || G.phase === 'qall' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
     $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
@@ -731,16 +741,16 @@
     preAt = 0;
     try { yt.mute(); if (!rolling) yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
     cover(false); masks(true);
-    var el = $('peel'), cols = 8, rows = 5, n = cols * rows, html = '';
+    var el = $('peel'), cols = 12, rows = 7, n = cols * rows, html = '';
     for (var i = 0; i < n; i++) html += '<i style="background-position:' + (i % cols) * 100 / (cols - 1) + '% ' + Math.floor(i / cols) * 100 / (rows - 1) + '%"></i>';
-    el.innerHTML = html + '<b id="peelpts">12</b>'; el.classList.remove('hidden');
+    el.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)'; el.style.gridTemplateRows = 'repeat(' + rows + ',1fr)';
+    el.innerHTML = html; el.classList.remove('hidden');
     var order = shuffle(Array.apply(null, { length: n }).map(function (x, k) { return k; })), t0 = Date.now(), gone = 0, tiles = el.querySelectorAll('i');
     clearInterval(peelTick);
     peelTick = setInterval(function () {
       if (G.phase !== 'guess' || !G.q || !G.q.peel) { peelStop(); return; }
-      var el2 = Date.now() - t0, want = Math.min(n, Math.floor(n * el2 / (ms * 0.8)));   // all of it is in view with a fifth of the time to go
+      var el2 = Date.now() - t0, want = Math.min(n, Math.floor(n * el2 / (ms * 0.97)));   // slowly: the last tile goes just before the time is up
       while (gone < want) tiles[order[gone++]].classList.add('gone');
-      $('peelpts').textContent = peelPoints(el2);
     }, 200);
   }
   function peelStop() { clearInterval(peelTick); $('peel').classList.add('hidden'); $('peel').innerHTML = ''; }
@@ -1164,6 +1174,7 @@
   // Lost in Translation: every vote for a bluff is worth 2 points to whoever wrote it. They are counted out one
   // by one after the reveal, with a ping, and the bluff that is being paid lights up.
   var payTimer = null, BLUFF_PTS = 2;
+  var worthShown = '';
   var allinKey = '';
   function payMark() {
     [].forEach.call($('qopts').querySelectorAll('.opt'), function (el, i) { el.classList.toggle('rolling', i === G.payNow); });
@@ -1888,7 +1899,7 @@
   $('s-partypick').addEventListener('change', function () { try { localStorage.setItem('esc-partypick2', $('s-partypick').value); } catch (e) {} singToggle(); });
 
   // ---------- test bots ----------
-  // Up to four pretend players for trying things out on the shared screen. They live on this page and
+  // Up to eight pretend players for trying things out on the shared screen. They live on this page and
   // do what a phone would do: get ready, answer, draw a scribble, write a line, vote.
   var BOT_BLUFFS = ['My Heart Is Yours', 'Dance With Me Tonight', 'The Last Summer', 'Tell Me Why', 'Under the Stars', 'I Will Wait for You', 'A Little Bit of Love', 'Do Not Go Away', 'Song of the Sea', 'When the Morning Comes', 'One More Night', 'The Girl from the Village'];
   var bots = [], BOT_LINES = ['Beep boop, douze points', 'Even my circuits felt that', '404: talent not found', 'More glitter. Always more glitter.', 'My sensors detect a key change', 'Does not compute, but I love it', 'I was promised a wind machine', 'Zero points from the robot jury'];
@@ -1987,7 +1998,7 @@
     return lines;
   }
   function botAdd() {
-    if (REMOTE || bots.length >= (window.BOT_MAX || 4) || G.phase !== 'lobby') return;
+    if (REMOTE || bots.length >= (window.BOT_MAX || 8) || G.phase !== 'lobby') return;
     var used = {}; list().forEach(function (p) { used[p.char] = 1; });
     // a bot is named after its avatar (a random free one)
     var open = CHARS.filter(function (c) { return !used[c.id]; }), free = open.length ? pick(open) : null, n = bots.length + 1;
@@ -2015,7 +2026,7 @@
   });
   function botButtons() {
     $('botadd').classList.toggle('hidden', REMOTE);
-    $('botadd').disabled = bots.length >= 4; $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of 4)' : 'Add a test bot';
+    $('botadd').disabled = bots.length >= 8; $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of 8)' : 'Add a test bot';
     $('botclear').classList.toggle('hidden', !bots.length);
   }
   $('botadd').addEventListener('click', botAdd); $('botclear').addEventListener('click', botClear); botButtons();
@@ -2028,7 +2039,7 @@
       // one action per step of the game, after a short random think
       var key = ph + ':' + G.round + ':' + (G.best ? G.best.id : '') + (G.draw ? G.draw.id : '');
       // (two-clip questions: wait until the second song has been on for a bit, about 15 seconds in)
-      if (b.key !== key) { b.key = key; b.at = Date.now() + (ph === 'guess' && isPair() ? 14000 + Math.random() * 3000 : ph === 'srec' ? 9000 + Math.random() * 2500 : 1200 + Math.random() * 3500); b.done = false; }   // (and about 10 seconds to "record")
+      if (b.key !== key) { b.key = key; b.at = Date.now() + (ph === 'guess' && G.q && G.q.peel ? 40000 + Math.random() * 15000 : ph === 'guess' && isPair() ? 14000 + Math.random() * 3000 : ph === 'srec' ? 9000 + Math.random() * 2500 : 1200 + Math.random() * 3500); b.done = false; }   // (and about 10 seconds to "record")
       if (b.done || Date.now() < b.at) return;
       b.done = true;
       if (ph === 'guess' && G.q && G.q.options) {

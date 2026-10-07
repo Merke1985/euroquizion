@@ -170,8 +170,8 @@ function SecondPlayer(elId) {
 // "random" one of those is drawn, in the usual proportions.
 // peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
 var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10 };
-var PEEL_MS = 20000;
-function peelPoints(ms) { return Math.max(1, 12 - Math.floor(Math.max(0, ms) / 1500)); }   // 12 at once, one less every second and a half
+var PEEL_MS = 60000;
+function peelPoints(ms) { return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
 function makePeel(song, allSongs, countries, opt) {
   var o2 = {}, k; for (k in (opt || {})) if (k !== 'types') o2[k] = opt[k];
   var q = makeQuestion(song, pick(['artist', 'title', 'country']), 'mc', allSongs, countries, o2);
