@@ -49,6 +49,7 @@ function makeOdd(song, allSongs, countries) {
       (buckets[s[keyIdx]] = buckets[s[keyIdx]] || []).push(s);
     });
     var keys = shuffle(Object.keys(buckets));
+    if (tries[t]) keys = keys.filter(function (y) { return Math.abs(+y - song[0]) <= 5; });   // by year: the odd one is at most five years away from the other three
     for (var k = 0; k < keys.length && !group; k++) {
       var seen = {}, got = [];
       shuffle(buckets[keys[k]]).forEach(function (s) { if (got.length < 3 && !seen[s[otherIdx]]) { seen[s[otherIdx]] = 1; got.push(s); } });
