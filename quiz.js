@@ -41,7 +41,7 @@ function makeLost(song, allSongs, opt) {
 }
 function makeOdd(song, allSongs, countries) {
   var label = function (s) { return s[3] + ' – ' + s[2]; };
-  var byYear = Math.random() < 0.5, tries = [byYear, !byYear], group = null, why = '';
+  var byYear = Math.random() < 0.5, tries = [byYear, !byYear], group = null, why = '', same = '';
   for (var t = 0; t < 2 && !group; t++) {
     var keyIdx = tries[t] ? 0 : 1, otherIdx = tries[t] ? 1 : 0, buckets = {};
     allSongs.forEach(function (s) {
@@ -52,12 +52,12 @@ function makeOdd(song, allSongs, countries) {
     for (var k = 0; k < keys.length && !group; k++) {
       var seen = {}, got = [];
       shuffle(buckets[keys[k]]).forEach(function (s) { if (got.length < 3 && !seen[s[otherIdx]]) { seen[s[otherIdx]] = 1; got.push(s); } });
-      if (got.length === 3) { group = got; why = tries[t] ? 'from ' + got[0][0] : 'from ' + (countries[got[0][1]] || got[0][1]); }
+      if (got.length === 3) { group = got; same = tries[t] ? 'year' : 'country'; why = tries[t] ? 'from ' + got[0][0] : 'from ' + (countries[got[0][1]] || got[0][1]); }
     }
   }
   if (!group) return null;
   var answer = label(song), opts = shuffle(group.map(label).concat([answer]));
-  return { subject: 'odd', type: 'mc', text: 'Which song is the odd one out?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer), noclip: true,
+  return { subject: 'odd', type: 'mc', text: 'Odd one out: three of these songs are from the same ' + same + '. Which one is not?', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer), noclip: true,
     explain: 'Odd one out: ' + song[3] + '. The other three are all ' + why + '.' };
 }
 // Find the mistake: four facts about the song that is playing, one of them wrong. The facts are the
@@ -382,7 +382,7 @@ function finalBoard(el, players, mePid, onDone, sound, instant) {
       if (!dy) return;
       li.style.transition = 'none'; li.style.transform = 'translateY(' + dy + 'px)';
       li.getBoundingClientRect();
-      li.style.transition = 'transform .45s cubic-bezier(.2,.9,.3,1)'; li.style.transform = '';
+      li.style.transition = 'transform .8s cubic-bezier(.22,.8,.3,1)'; li.style.transform = '';
     })(rows[pid], before[pid] - rows[pid].getBoundingClientRect().top);
   };
   var order = shuffle(ps.slice()), k = 0;
@@ -422,7 +422,7 @@ function finalBoard(el, players, mePid, onDone, sound, instant) {
           if (!live()) return;
           li.classList.add('landed');
           setTimeout(function () { if (!live()) return; li.classList.remove('counting'); li.classList.remove('landed'); li.classList.add('reached'); setTimeout(next, 250); }, 1000);
-        }, 500);
+        }, 850);
       }, 800);
     };
     var step = function () {
@@ -512,3 +512,6 @@ function keepSettings(ids) {
     el.addEventListener('change', function () { try { localStorage.setItem('esc-set-' + id, el.value); } catch (e) {} });
   });
 }
+
+// A question without a clip shows a picture of its own on the stage instead of a plain question mark.
+function noClipArt(q) { return q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : ['?', '']; }

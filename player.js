@@ -277,7 +277,7 @@
     if (rec && rec.state !== 'inactive') { try { rec.onstop = null; rec.stop(); } catch (e) {} }
     rec = null; recBlob = null; recChunks = [];
     $('srecbtn').textContent = 'Start recording'; $('srecbtn').disabled = false; $('srecbtn').classList.remove('live'); $('srecbtn').classList.remove('hidden');
-    $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = ''; $('scount').classList.add('hidden');
+    $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = ''; $('scount').classList.remove('hidden'); $('scount').classList.remove('live'); $('scount').textContent = '3';
   }
   function renderSing(s, m) {
     var sg = s.sing, key = s.phase + ':' + s.round, fresh = key !== sKey;
@@ -287,7 +287,8 @@
     var poll = s.phase === 'svote' || s.phase === 'sbest', recPhase = s.phase === 'srec' && !(m && m.in);
     $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
     // While listening or recording: ask for another part of the song (a few times per round at most).
-    $('sbad').classList.toggle('hidden', !((s.phase === 'slisten' || s.phase === 'srec') && sg.rerolls_left > 0)); if (fresh || sg.rerolls_left !== lastRerolls) { $('sbad').disabled = false; lastRerolls = sg.rerolls_left; }
+    $('sbad').classList.toggle('hidden', !(s.phase === 'slisten' && sg.rerolls_left > 0)); if (fresh || sg.rerolls_left !== lastRerolls) { $('sbad').disabled = false; lastRerolls = sg.rerolls_left; }
+    if (s.phase === 'slisten' && $('sbad').disabled && sg.bad) { $('sfb').className = 'fb close'; $('sfb').textContent = 'You voted to skip this song: ' + sg.bad + ' of ' + sg.bad_need + ' needed.'; }
     if (fresh) { $('sfb').textContent = ''; $('sfb').className = 'fb'; if (s.phase !== 'srec') { recReset(); recRelease(); } }
     var name = sg.song ? sg.song.title + ' – ' + sg.song.artist : '';
     if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
@@ -301,6 +302,8 @@
       $('stitle').textContent = m && m.in ? 'Got it!' : 'Your turn to sing!';
       $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to 10 seconds.';
       if (fresh) { recReset(); recSent = ''; }
+    } else if (s.phase === 'sann') {
+      $('stitle').textContent = 'And our 12 points go to…'; $('ssub').textContent = 'Watch the big screen.';
     } else if (s.phase === 'sroll') {
       $('stitle').textContent = 'It’s a tie!'; $('ssub').textContent = 'Watch the big screen: the roulette decides.';
     } else if (s.phase === 'splay') {
@@ -344,10 +347,9 @@
       var mine = rec, n = 3;
       $('srecbtn').disabled = true; $('srecstate').className = 'fb close'; $('srecstate').textContent = 'Get ready…';
       var count = function () {
-        if (rec !== mine) { $('srecbtn').disabled = false; $('scount').classList.add('hidden'); return; }   // taken back in the meantime
+        if (rec !== mine) { $('srecbtn').disabled = false; $('scount').textContent = '3'; return; }   // taken back in the meantime
         // a giant circle counts 3, 2, 1, 0: at 0 the recording starts
         $('scount').classList.remove('hidden'); $('scount').classList.remove('live'); $('scount').textContent = String(n);
-        $('scount').classList.remove('tick'); void $('scount').offsetWidth; $('scount').classList.add('tick');
         if (n > 0) { n--; setTimeout(count, 1000); return; }
         $('srecbtn').disabled = false; $('scount').classList.add('live');
         rec.start(); recT0 = Date.now();
@@ -362,7 +364,7 @@
     }).catch(function () { $('srecstate').className = 'fb no'; $('srecstate').textContent = 'No access to the microphone. Allow it in your browser, or skip this one.'; });
   });
   $('sredo').addEventListener('click', recReset);
-  $('sbad').addEventListener('click', function () { if (!net) return; $('sbad').disabled = true; recReset(); recRelease(); net.send('poll', { pid: pid, reroll: true }); $('sfb').className = 'fb close'; $('sfb').textContent = 'Picking another part of the song…'; });
+  $('sbad').addEventListener('click', function () { if (!net) return; $('sbad').disabled = true; net.send('poll', { pid: pid, reroll: true }); $('sfb').className = 'fb close'; $('sfb').textContent = 'You voted to skip this song.'; });
   $('sskip').addEventListener('click', function () { recReset(); recRelease(); if (net) net.send('clip', { pid: pid, skip: true }); });
   $('ssend').addEventListener('click', function () {
     if (!recBlob || !net || recSent === sKey) return;
@@ -503,7 +505,7 @@
     if (key !== clipKey) { clipKey = key; vPrepare(s.clip); return; }
     var ready = vStage === 'ready' || vStage === 'clip' || vStage === 'paused' || vStage === 'full';
     if (!ready) return;
-    if (s.phase === 'guess' && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; vCover(true, '?', ''); } }   // odd one out: nothing plays until the answer
+    if (s.phase === 'guess' && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; var art = noClipArt(s.q); vCover(true, art[0], art[1]); } }   // odd one out: nothing plays until the answer
     else if ((s.phase === 'guess' || s.phase === 'qall') && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }   // qall: Quip!, the clip plays while you write
     else if (s.phase === 'reveal' && vPlayed !== 'full') { vPlayed = 'full'; vPlay(true); }
   }

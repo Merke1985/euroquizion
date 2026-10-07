@@ -235,7 +235,7 @@
     $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
     $('opts').innerHTML = mc ? S.q.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '"><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('') : '';
     $('confirm').classList.add('hidden');
-    if (S.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, '?', ''); } else playClip();   // odd one out has no clip
+    if (S.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(S.q); cover(true, art[0], art[1]); } else playClip();   // odd one out has no clip
     render(); if (!mc) $('guess').focus();
     endTimer = setTimeout(reveal, roundMs());
   }

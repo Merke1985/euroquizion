@@ -309,7 +309,7 @@
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li class="' + (showGot && p.got && !hide ? 'got ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -326,7 +326,15 @@
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
     $('clearplayers').classList.toggle('hidden', !ps.length);
     $('pcount').textContent = ps.length ? '(' + (G.phase === 'lobby' || G.phase === 'intro' ? nr + ' of ' + ps.length + ' ready' : ps.length) + ')' : '';
+    // Players who change places glide to their new spot instead of jumping there.
+    var was = {}; [].forEach.call($('board').querySelectorAll('li[data-pid]'), function (li) { var r = li.getBoundingClientRect(); if (r.height) was[li.getAttribute('data-pid')] = r.top; });
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal' || G.phase === 'dall' || G.phase === 'qall');
+    [].forEach.call($('board').querySelectorAll('li[data-pid]'), function (li) {
+      var w = was[li.getAttribute('data-pid')], r = li.getBoundingClientRect(); if (w == null || !r.height) return;
+      var dy = w - r.top; if (Math.abs(dy) < 2) return;
+      li.style.transition = 'none'; li.style.transform = 'translateY(' + dy + 'px)'; li.style.zIndex = dy > 0 ? 2 : 1; li.getBoundingClientRect();
+      li.style.transition = 'transform .9s cubic-bezier(.22,.8,.3,1)'; li.style.transform = '';
+    });
     $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
     renderLadder();
     $('endgame').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'intro' || G.phase === 'paused' || G.phase === 'end');
@@ -407,13 +415,16 @@
   function renderQuestion() {
     var q = G.q, on = q && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal');
     var dp = G.draw && players[G.draw.pid];
+    // The minigame spin fills the screen with four big cards: the video stage steps aside for it.
+    if (!REMOTE) stageEl().classList.toggle('offstage', G.phase === 'pspin' && !!G.pspin);
+    $('qopts').classList.toggle('bigtiles', G.phase === 'pspin' && !!G.pspin);
     if (G.phase === 'pspin' && G.pspin) {
       var sp = G.pspin;
       $('qtext').textContent = sp.done ? 'Party round: ' + sp.games[sp.roll].title : 'Party round! Which one will it be?';
-      $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right picked' : ' rolling') : g.out ? ' dim' : '') + '"><span style="font-size:1.6em;line-height:1">' + g.icon + '</span>' + esc(g.title) + '</div></div>'; }).join('');
+      $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right picked' : ' rolling') : g.out ? ' dim' : '') + '"><span class="bigicon">' + g.icon + '</span><span class="bigname">' + esc(g.title) + '</span></div></div>'; }).join('');
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
-    if (G.phase === 'fun' && G.fun) { $('qtext').textContent = 'Party round: ' + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
+    if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party round: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
       var pt = G.part, head = pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
       $('qtext').textContent = pt.eras ? (pt.done ? head + ': ' + pt.label : head + ': which era will it be?') : head;
@@ -665,7 +676,7 @@
     var ms = G.draw ? drawGuessMs() : isPair() ? PAIR_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
     if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
-    if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; cover(true, G.draw ? '✏️' : '?', '', false); }   // odd one out and Draw!: no clip
+    if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(G.q); cover(true, G.draw ? '✏️' : art[0], G.draw ? '' : art[1], false); }   // odd one out and Draw!: no clip
     else playClip();
     push(); if (G.draw) drawSend();
     endTimer = setTimeout(reveal, ms);
@@ -788,7 +799,7 @@
   }
   function startRound() {
     payFlush();
-    G.round++; G.phase = 'loading';
+    G.round++; G.phase = 'loading'; G.singSkips = 0;
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
@@ -1465,6 +1476,22 @@
   // "This clip isn't viable" on a phone: the part that played is no good for singing along (an intro, a
   // speech, an instrumental break). Another part of the same song is picked and everyone listens again.
   var SING_REROLLS = 3;
+  // "This clip isn't viable" on a phone, while the clip plays: a vote. When at least half of the players say
+  // so, this song is dropped and everyone votes again, on four new songs (a few times per round at most).
+  function singBadNeed() { return Math.max(1, Math.ceil(list().filter(function (p) { return !p.off; }).length / 2)); }
+  function singBadVote(p) {
+    if (!G.sing || G.phase !== 'slisten' || (G.singSkips || 0) >= SING_REROLLS) return;
+    G.sing.bad = G.sing.bad || {}; G.sing.bad[p.pid] = 1;
+    if (Object.keys(G.sing.bad).length < singBadNeed()) { push(); return; }
+    G.singSkips = (G.singSkips || 0) + 1;
+    (G.sing.options || []).forEach(function (o) { G.used[o[4]] = 1; });   // none of these four again
+    clearInterval(poll); stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    singClear(); G.phase = 'fun'; G.q = null;
+    cover(true, '🙅', 'Not this one! Four new songs coming up…', false); masks(true); if (!REMOTE) Music.plop(0);
+    G.fun = { plain: true, icon: '🙅', title: 'Not this one!', sub: 'Half of you said this song won’t work. Four new songs to vote on…' };
+    var round = G.round; push();
+    singTimer = setTimeout(function () { if (G.round !== round || G.phase !== 'fun' || G.sing) return; G.fun = null; G.phase = 'loading'; singStart(); }, 3200);
+  }
   function singReroll() {
     if (!G.sing || (G.phase !== 'slisten' && G.phase !== 'srec') || (G.sing.rerolls || 0) >= SING_REROLLS) return;
     G.sing.rerolls = (G.sing.rerolls || 0) + 1;
@@ -1517,8 +1544,21 @@
     clearTimeout(bestTimer); bestTimer = setTimeout(singReveal, SING.best);
     singNext();
   }
+  // The vote is in: the music stops and the screen says "And our 12 points go to…" before the votes are shown.
   function singReveal() {
+    if (!G.sing || G.phase === 'reveal' || G.phase === 'sann') return;
+    if (G.phase === 'sbest' && G.sing.order.length > 1) {
+      clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio(); stopTimers(); G.revealAt = 0;
+      clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {}
+      G.phase = 'sann'; G.sing.now = null; G.barMs = 0;
+      cover(true, '🏆', 'And our 12 points go to…', false); masks(true); Music.plop(3);
+      push(); singTimer = setTimeout(singReveal2, 3500); return;
+    }
+    singReveal2();
+  }
+  function singReveal2() {
     if (!G.sing || G.phase === 'reveal') return;
+    $('cover').classList.remove('funcard');
     clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio(); stopTimers(); G.revealAt = 0;
     var tally = {}, v, max = 0;
     G.sing.order.forEach(function (pid) { tally[pid] = 0; });
@@ -1567,11 +1607,12 @@
     else if (G.phase === 'slisten') { clearInterval(poll); try { yt.pauseVideo(); } catch (e) {} singRecord(); }
     else if (G.phase === 'srec') singPlayAll();
     else if (G.phase === 'splay') singNext();
+    else if (G.phase === 'sann') singReveal2();
     else if (G.phase !== 'loading') singReveal();
   }
   net.on('poll', function (m) {
     var p = m && players[m.pid];
-    if (p && G.sing && m.reroll) { singReroll(); return; }
+    if (p && G.sing && m.reroll) { singBadVote(p); return; }
     if (!p || !G.sing || typeof m.choice !== 'number') return;
     if (G.phase === 'svote' && G.sing.options[m.choice]) G.sing.votes[p.pid] = m.choice;
     else if (G.phase === 'sbest' && G.sing.order[m.choice] && G.sing.order[m.choice] !== p.pid) G.sing.best[p.pid] = G.sing.order[m.choice];   // no voting for yourself
@@ -1602,7 +1643,7 @@
     return { options: G.phase === 'svote' ? sg.options.map(function (o) { return o[3] + ' – ' + o[2]; }) : null,
       song: chosen ? { title: chosen[3], artist: chosen[2] } : null,
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
-      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: SING_REROLLS - (sg.rerolls || 0),
+      now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: SING_REROLLS - (G.singSkips || 0), bad: Object.keys(sg.bad || {}).length, bad_need: singBadNeed(),
       tally: null };   // the votes are for the big screen only
   }
   function renderSing() {
@@ -1624,17 +1665,15 @@
         (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (p) { return '<span>' + charSvg(p.char) + esc(p.name) + '</span>'; }).join('') : '<span class="mute">No votes yet</span>') + '</div></div>';
     }).join(''); }
     else if (G.phase === 'loading') t = 'We’re singing: ' + name;
-    else if (G.phase === 'slisten') t = 'Listen first: ' + name;
+    else if (G.phase === 'slisten') { var nb = Object.keys(sg.bad || {}).length; t = 'Listen first: ' + name + (nb ? ' · ' + nb + ' of ' + singBadNeed() + ' votes to skip it' : ''); }
     else if (G.phase === 'srec') t = 'Sing it! Record up to 10 seconds on your phone';
-    else if (G.phase === 'splay' || G.phase === 'sbest') {
-      // The vote is open while the recordings keep playing: behind each singer, who has voted for them so far.
-      t = G.phase === 'splay' ? 'Now singing: ' + (players[sg.now] ? players[sg.now].name : '') : 'Who sang it best? Vote on your phone';
+    else if (G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'sann') {
+      // The vote is open while the recordings keep playing. Who voted for whom only shows at the result.
+      t = G.phase === 'splay' ? 'Now singing: ' + (players[sg.now] ? players[sg.now].name : '') : G.phase === 'sann' ? 'And our 12 points go to…' : 'Who sang it best? Vote on your phone';
       var open = G.phase === 'sbest';
       opts = sg.order.map(function (pid) {
         var p = players[pid]; if (!p) return '';
-        var who = list().filter(function (v) { return sg.best[v.pid] === pid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
-        return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">' + (sg.order.length > 4 ? '♪' : '♪ singing now') + '</span>' : '') + '</div><div class="voters">' +
-          (who.length ? '<b>' + who.length + (who.length === 1 ? ' vote' : ' votes') + '</b>' + who.map(function (v) { return who.length > 2 || sg.order.length > 4 ? '<span class="face" title="' + esc(v.name) + '">' + charSvg(v.char) + '</span>' : '<span>' + charSvg(v.char) + esc(v.name) + '</span>'; }).join('') : '') + '</div></div>';
+        return '<div class="optcol"><div class="opt' + (pid === sg.now ? ' singing' : '') + '">' + charSvg(p.char) + esc(p.name) + (pid === sg.now ? ' <span class="note">' + (sg.order.length > 4 ? '♪' : '♪ singing now') + '</span>' : '') + '</div><div class="voters"></div></div>';
       }).join('');
     }
     else if (G.phase === 'reveal') {
@@ -1649,9 +1688,9 @@
       }).join('');
     }
     $('qtext').textContent = t; $('qopts').innerHTML = opts;
-    var singers = G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'reveal' ? sg.order.length : 0;   // more than four singers: tiles side by side, so it all fits
+    var singers = G.phase === 'splay' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'reveal' ? sg.order.length : 0;   // more than four singers: tiles side by side, so it all fits
     $('qopts').classList.toggle('tiles', singers > 4); $('qopts').classList.toggle('tiles3', singers > 8);
-    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' || G.phase === 'splay' || G.phase === 'reveal');   // the song vote: one song per row, its voters behind it
+    $('qopts').classList.toggle('votelist', G.phase === 'svote' || G.phase === 'sroll' || G.phase === 'sbest' || G.phase === 'sann' || G.phase === 'splay' || G.phase === 'reveal');   // the song vote: one song per row, its voters behind it
   }
 
 
