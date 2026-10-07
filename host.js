@@ -554,8 +554,10 @@
       else $('allin').textContent = cd ? (voteCd ? 'Everyone has voted. Continuing in ' : list().length > 1 ? 'Everyone answered, revealing in ' : 'Revealing in ') + cd : '';   // alone: nobody else to wait for
     }
     // What a right answer is worth right now, in the corner of the video (every trivia question; not for votes or the Ladder).
-    var worth = '';
-    if (!REMOTE && G.phase === 'guess' && G.q && !G.best && !ladderGame() && !G.revealAt) {
+    // It stays where it was once everyone has answered, until the points are handed out at the answer.
+    var worth = '', held = !REMOTE && !!G.q && !G.best && !ladderGame() && ((G.phase === 'guess' && !!G.revealAt) || G.phase === 'picks');
+    if (held) worth = worthShown;
+    else if (!REMOTE && G.phase === 'guess' && G.q && !G.best && !ladderGame()) {
       var x2 = G.tourFinal && !G.draw ? 2 : 1;
       if (G.draw) worth = String(partyX());
       else if (G.q.peel) worth = String(peelPoints((G.barMs || PEEL_MS) - (G.endsAt - Date.now())) * x2);
