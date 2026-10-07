@@ -223,7 +223,7 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && !!G.q.noclip) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun' || G.phase === 'pspin'))); }   // menu music until the fanfare
+  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun' || G.phase === 'pspin'))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -604,7 +604,7 @@
     var free = G.pool.filter(function (s) { return !G.used[s[4]]; });
     if (!free.length) { G.used = {}; free = G.pool; }
     G.song = fixed || free[Math.floor(Math.random() * free.length)]; G.used[G.song[4]] = 1;
-    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, cat: G.cat, pool: G.pool, types: G.types });
+    G.q = G.sing || G.quipLoad ? null : G.draw ? G.q : makeQuestion(G.song, G.subject, 'mc', playSongs(), playCountries(), { pair: true, peel: true, cat: G.cat, pool: G.pool, types: G.types || Object.keys(TYPE_WEIGHT) });
     if (G.q && G.q.swap) { G.song = G.q.swap; G.used[G.song[4]] = 1; }   // the question brought its own song
     stage = 'probe';
     cover(true, '', 'Selecting song', false); countStart(); masks(true);
@@ -722,13 +722,36 @@
       }
     }, 100);
   }
+  // "Behind the curtain": the video plays without its sound behind a curtain of tiles, which drop away a few
+  // at a time; the game's own music plays meanwhile. An answer is worth less with every second that passes.
+  var peelTick = null;
+  function peelPlay(ms) {
+    clearInterval(poll); stage = 'clip'; quietAt = -1;
+    var rolling = false; try { rolling = !!preAt && yt.getPlayerState() === 1 && Math.abs((yt.getCurrentTime() || 0) - clipStart) < 1.5; } catch (e) {}
+    preAt = 0;
+    try { yt.mute(); if (!rolling) yt.seekTo(clipStart, true); yt.playVideo(); } catch (e) {}
+    cover(false); masks(true);
+    var el = $('peel'), cols = 8, rows = 5, n = cols * rows, html = '';
+    for (var i = 0; i < n; i++) html += '<i style="background-position:' + (i % cols) * 100 / (cols - 1) + '% ' + Math.floor(i / cols) * 100 / (rows - 1) + '%"></i>';
+    el.innerHTML = html + '<b id="peelpts">12</b>'; el.classList.remove('hidden');
+    var order = shuffle(Array.apply(null, { length: n }).map(function (x, k) { return k; })), t0 = Date.now(), gone = 0, tiles = el.querySelectorAll('i');
+    clearInterval(peelTick);
+    peelTick = setInterval(function () {
+      if (G.phase !== 'guess' || !G.q || !G.q.peel) { peelStop(); return; }
+      var el2 = Date.now() - t0, want = Math.min(n, Math.floor(n * el2 / (ms * 0.8)));   // all of it is in view with a fifth of the time to go
+      while (gone < want) tiles[order[gone++]].classList.add('gone');
+      $('peelpts').textContent = peelPoints(el2);
+    }, 200);
+  }
+  function peelStop() { clearInterval(peelTick); $('peel').classList.add('hidden'); $('peel').innerHTML = ''; }
   function beginGuess() {
     if (G.quipLoad) { quipWrite(); return; }   // Quip!: the clip comes with a question to write an answer to
     $('err').textContent = '';
-    var ms = G.draw ? drawGuessMs() : isPair() ? PAIR_MS : G.guessMs;
+    var ms = G.draw ? drawGuessMs() : isPair() ? PAIR_MS : G.q && G.q.peel ? PEEL_MS : G.guessMs;
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms;
     if (isPair()) { pairStep = 0; stageEl().classList.remove('second'); pairTag('Song 1'); }
     if (G.q && G.q.noclip) { clearInterval(poll); stage = 'paused'; var art = noClipArt(G.q); cover(true, G.draw ? '✏️' : art[0], G.draw ? '' : art[1], false); }   // odd one out and Draw!: no clip
+    else if (G.q && G.q.peel) peelPlay(ms);
     else playClip();
     push(); if (G.draw) drawSend();
     endTimer = setTimeout(reveal, ms);
@@ -807,14 +830,14 @@
       });
       right = [];
     }
-    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
+    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : (G.q && G.q.peel ? peelPoints(p.pickMs) : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
     // The artist: 12 points shared out over everyone who answered, for each of them who got it (all right: 12).
     var answered = G.draw ? list().filter(function (p) { return p.pick != null && p.pid !== G.draw.pid; }).length : 0;
     if (artist && right.length) { artist.pts = Math.max(1, Math.round(12 * right.length / Math.max(answered, right.length))); artist.score += artist.pts; artist.got = true; }
     if (!REMOTE && G.q) Music.ding();   // the right answer lights up
-    cover(false); masks(false);
+    cover(false); masks(false); peelStop();
     // After a drawing the video only starts now, and YouTube shows its title and buttons over the first seconds:
     // the top and bottom stay covered for that long (then they clear, so an ad can still be skipped by hand).
     clearTimeout(maskTimer);
@@ -857,7 +880,7 @@
     }, 400);
   }
   function startRound() {
-    payFlush(); paper(null);
+    payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0;
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
@@ -1829,7 +1852,7 @@
     [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { party[el.getAttribute('data-party')] = el.checked; });
     G.types = types.length ? types : null;   // nothing ticked counts as everything
     G.partyOn = party;
-    try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party })); } catch (e) {}
+    try { localStorage.setItem('esc-picks', JSON.stringify({ t: types, p: party, peelSeen: 1 })); } catch (e) {}
     // the field shows what is switched on, in a few words
     var sum = function (box, on) {
       var all = box.querySelectorAll('input:not([data-all])'), names = [];
@@ -1854,6 +1877,7 @@
   try {
     var pk = JSON.parse(localStorage.getItem('esc-picks') || 'null');
     if (pk) {
+      if (pk.t && pk.t.length >= 6 && pk.t.indexOf('peel') < 0 && !pk.peelSeen) pk.t.push('peel');   // everything was on before this type existed: it joins in
       [].forEach.call($('typebox').querySelectorAll('input:not([data-all])'), function (el) { if (pk.t && pk.t.length) el.checked = pk.t.indexOf(el.getAttribute('data-type')) >= 0; });
       [].forEach.call($('partybox').querySelectorAll('input:not([data-all])'), function (el) { var v = (pk.p || {})[el.getAttribute('data-party')]; if (v === false) el.checked = false; });
     }

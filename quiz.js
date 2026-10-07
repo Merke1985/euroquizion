@@ -168,11 +168,22 @@ function SecondPlayer(elId) {
 }
 // opt.types: the question types that are switched on (facts, odd, mistake, higher, newer, lost). With
 // "random" one of those is drawn, in the usual proportions.
-var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10 };
+// peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10 };
+var PEEL_MS = 20000;
+function peelPoints(ms) { return Math.max(1, 12 - Math.floor(Math.max(0, ms) / 1500)); }   // 12 at once, one less every second and a half
+function makePeel(song, allSongs, countries, opt) {
+  var o2 = {}, k; for (k in (opt || {})) if (k !== 'types') o2[k] = opt[k];
+  var q = makeQuestion(song, pick(['artist', 'title', 'country']), 'mc', allSongs, countries, o2);
+  if (!q || !q.options) return null;
+  q.peel = true; q.asks = q.subject; q.subject = 'peel';
+  q.text = 'Behind the curtain: ' + q.text.charAt(0).toLowerCase() + q.text.slice(1) + ' The sooner you know, the more points.';
+  return q;
+}
 function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, opt) {
   if (opt && opt.types && subjectSetting === 'random') {
-    var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher'); });
-    if (on.length && on.length < 6) {
+    var on = opt.types.filter(function (t) { return TYPE_WEIGHT[t] && (opt.pair || (t !== 'higher' && t !== 'newer')) && !(opt.cat === 'win' && t === 'higher') && (t !== 'peel' || opt.peel); });
+    if (on.length && on.length < Object.keys(TYPE_WEIGHT).length) {
       var total = 0, r, t = on[0], o2 = {}, k;
       on.forEach(function (x) { total += TYPE_WEIGHT[x]; });
       r = Math.random() * total;
@@ -194,6 +205,8 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
     if (pq) return pq;
   }
   if (subjectSetting === 'higher' || subjectSetting === 'newer') subjectSetting = 'random';
+  if (opt && opt.peel && (subjectSetting === 'peel' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('peel') >= 0 && Math.random() < 0.09))) { var pq2 = makePeel(song, allSongs, countries, opt); if (pq2) return pq2; }
+  if (subjectSetting === 'peel') subjectSetting = 'facts';
   if (subjectSetting === 'odd' || (subjectSetting === 'random' && Math.random() < 2 / 15)) { var odd = makeOdd(song, allSongs, countries); if (odd) return odd; }
   if (subjectSetting === 'lost' || (subjectSetting === 'random' && Math.random() < 0.154)) { var lost = makeLost(song, allSongs, opt); if (lost) return lost; }   // 10% overall
   var canPlace = placeLabel(song) != null, canPoints = song[7] != null;
