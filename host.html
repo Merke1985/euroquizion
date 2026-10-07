@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=300">
+<link rel="stylesheet" href="style.css?v=301">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -70,6 +70,7 @@
             <label class="swrow"><span><b>Postcard</b><small>Draw a song, guess the others</small></span><input type="checkbox" data-party="draw" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Green Room</b><small>The funniest answer about a song</small></span><input type="checkbox" data-party="quip" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Lost in Translation</b><small>Fake a translation, find the real one</small></span><input type="checkbox" data-party="bluff" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Song Battle</b><small>Four songs knock each other out; bet on the winner and vote</small></span><input type="checkbox" data-party="battle" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
         <div class="hidden"><label for="s-era">Era</label><select id="s-era">
           <option value="1956-2100" selected>All eras</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
@@ -176,15 +177,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=300"></script>
-<script src="vendor/qrcode.js?v=300"></script>
-<script src="config.js?v=300"></script>
-<script src="net.js?v=300"></script>
-<script src="music.js?v=300"></script>
-<script src="chars.js?v=300"></script>
-<script src="match.js?v=300"></script>
-<script src="shapes.js?v=300"></script>
-<script src="quiz.js?v=300"></script>
-<script src="host.js?v=300"></script>
+<script src="vendor/supabase.js?v=301"></script>
+<script src="vendor/qrcode.js?v=301"></script>
+<script src="config.js?v=301"></script>
+<script src="net.js?v=301"></script>
+<script src="music.js?v=301"></script>
+<script src="chars.js?v=301"></script>
+<script src="match.js?v=301"></script>
+<script src="shapes.js?v=301"></script>
+<script src="quiz.js?v=301"></script>
+<script src="host.js?v=301"></script>
 </body>
 </html>
