@@ -1974,8 +1974,10 @@
       b.done = true;
       if (ph === 'guess' && G.q && G.q.options) {
         var can = []; G.q.options.forEach(function (o, i) { if (!(G.best && G.best.pids[i] === pid)) can.push(i); });
-        var smart = !G.best && G.q.correct >= 0 && Math.random() < (window.BOT_SMART == null ? 0.5 : window.BOT_SMART);   // right about half the time
-        if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(can) });
+        // A question with a right answer: right 40% of the time, otherwise one of the wrong answers. (Votes are random.)
+        var known = !G.best && G.q.correct >= 0, smart = known && Math.random() < (window.BOT_SMART == null ? 0.4 : window.BOT_SMART);
+        var wrong = known ? can.filter(function (i) { return i !== G.q.correct; }) : can;
+        if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(wrong.length ? wrong : can) });
       }
       else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { var bp = Math.floor(Math.random() * 4), bs = (G.gallery.items[pid].options || [])[bp]; H.draw({ pid: pid, pick: bp }); H.draw({ pid: pid, lines: bs ? botDraw(bs) : botScribble() }); H.draw({ pid: pid, done: 1 }); }
       else if (ph === 'qall') H.quip({ pid: pid, text: pick(G.quips && G.quips.bluff ? BOT_BLUFFS : BOT_LINES) });
