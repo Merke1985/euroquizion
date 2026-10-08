@@ -64,7 +64,7 @@
     if (cs && (cs.st === 'ready' || cs.st === 'go')) { if (chReadyKey === cs.rkey || !net) return; chReadyKey = cs.rkey; var rk = cs.rkey; net.send('chase', { pid: pid, key: rk, ready: 1 }); [800, 2200].forEach(function (ms) { setTimeout(function () { if (net && state && state.chase && state.chase.st === 'ready') net.send('chase', { pid: pid, key: rk, ready: 1 }); }, ms); }); chaseView(cs); }
   });
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-chase', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-chase', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && (((state.phase === 'guess' || (state.phase === 'reveal' && state.q && state.q.subject === 'trivia')) && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -678,7 +678,7 @@
     if (key !== clipKey) { clipKey = key; vPrepare(s.clip); return; }
     var ready = vStage === 'ready' || vStage === 'clip' || vStage === 'paused' || vStage === 'full';
     if (!ready) return;
-    if (s.phase === 'guess' && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; var art = noClipArt(s.q); vCover(true, art[0], art[1]); } }   // odd one out: nothing plays until the answer
+    if ((s.phase === 'guess' || (s.phase === 'reveal' && s.q && s.q.subject === 'trivia')) && s.q && s.q.noclip) { if (vPlayed !== 'none') { vPlayed = 'none'; vStage = 'paused'; var art = noClipArt(s.q); vCover(true, art[0], art[1]); } }   // odd one out: nothing plays until the answer
     else if ((s.phase === 'guess' || s.phase === 'qall') && vPlayed !== 'clip' && vPlayed !== 'full') { vPlayed = 'clip'; vPlay(false); }   // qall: Quip!, the clip plays while you write
     else if (s.phase === 'reveal' && vPlayed !== 'full') { vPlayed = 'full'; vPlay(true); }
   }
@@ -702,7 +702,7 @@
       setTimeout(function () { if (pop.parentNode) pop.parentNode.removeChild(pop); }, 5200);
     }
   }
-  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('pstage').classList.toggle('novideo', !!(state && (state.draw || (state.clip && state.clip.noclip)) && state.phase !== 'reveal')); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly') || !!(state && state.draw && state.phase === 'guess')); }
+  function rowUpdate() { $('stagerow').classList.toggle('hidden', $('pstage').classList.contains('hidden')); $('pstage').classList.toggle('novideo', !!(state && (state.draw || (state.clip && state.clip.noclip)) && (state.phase !== 'reveal' || !!(state.q && state.q.subject === 'trivia')))); $('stagerow').classList.toggle('flat', $('pstage').classList.contains('audioonly') || !!(state && state.draw && state.phase === 'guess')); }
   function chatToggle(open) {
     chatOpen = open; $('chat').classList.toggle('hidden', !open);
     if (open) $('chatpop').innerHTML = '';

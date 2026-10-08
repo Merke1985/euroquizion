@@ -235,7 +235,7 @@
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   var viewNow = '';
-  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun' || G.phase === 'pspin'))); }   // menu music until the fanfare
+  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun' || G.phase === 'pspin'))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -571,7 +571,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var dShow = !!G.draw && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal'), dSide = !!G.draw && G.phase === 'reveal';
     $('drawview').classList.toggle('hidden', !dShow); $('drawview').classList.toggle('side', dSide);
     bestRender();
-    var stg = document.querySelector('#v-game .stage'); stg.classList.toggle('withdraw', dSide); stg.classList.toggle('novideo', (!!G.draw || !!(G.q && G.q.noclip)) && G.phase !== 'reveal');   // no clip in this question: not a glimpse of the video before the answer
+    var stg = document.querySelector('#v-game .stage'); stg.classList.toggle('withdraw', dSide); stg.classList.toggle('novideo', (!!G.draw || !!(G.q && G.q.noclip)) && (G.phase !== 'reveal' || triviaQ()));   // no clip in this question: not a glimpse of the video before the answer
     $('briefcd').textContent = '';
     if (G.phase === 'intro') { $('start').disabled = false; $('start').textContent = 'Start now · ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)); }
     var voteCd = G.phase === 'svote' || G.phase === 'sbest';
@@ -736,6 +736,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // An ad seems to be playing: show the player (title bar stays masked) so it can be skipped by hand.
   var adShown = false;
+  function triviaQ() { return !!(G.q && G.q.subject === 'trivia'); }
   function noClipQ() { return !!G.draw || !!(G.q && G.q.noclip); }
   function adNote(on) {
     if (on && (noClipQ() || (G.q && G.q.peel))) return;   // never uncover the video of a question that has no clip, or that hides it (curtain, blur)
@@ -1001,6 +1002,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     clearTimeout(pairTimer); pairTag('');
     if (G.best && G.best.quip) { /* the song is already playing: it simply carries on, now without the masks */ }
     else if (G.best) { cover(true, '🏆', '', false); }   // no song with this one
+    else if (triviaQ()) { var ta = noClipArt(G.q); cover(true, ta[0], ta[1], false); }   // Did you know?: no song at all, also not at the answer
     else if (isPair()) {
       // the song that was the right answer plays on, from where its clip stopped
       var second = G.q.correct === 1;
