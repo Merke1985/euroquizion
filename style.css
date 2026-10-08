@@ -1415,3 +1415,15 @@ aside.recapgone{visibility:hidden}
 .boutique .bqi .si{font-size:clamp(1.8rem,3.4vw,3rem);line-height:1}
 .boutique .bqi b{font-size:clamp(.6rem,.9vw,.85rem);line-height:1.1;opacity:.85}
 .boutique .bqbubble{top:55vh}
+
+/* leaving the studio: the presenters go first, then the screen, the scoreboard and the question */
+@keyframes outLeft{to{transform:translateX(-110vw);opacity:0}}
+@keyframes outRight{to{transform:translateX(110vw);opacity:0}}
+@keyframes outTop{to{transform:translateY(-110vh);opacity:0}}
+@keyframes outBottom{to{transform:translateY(80vh);opacity:0}}
+.game.leaving .shosts .ehost.him{animation:outLeft .6s cubic-bezier(.6,0,.8,.4) forwards}
+.game.leaving .shosts .ehost.her{animation:outRight .6s cubic-bezier(.6,0,.8,.4) forwards}
+.game.leaving .shosts .hbub{opacity:0}
+.game.leaving .stage{animation:outTop .7s .3s cubic-bezier(.6,0,.8,.4) forwards}
+.game.leaving aside{animation:outRight .7s .55s cubic-bezier(.6,0,.8,.4) forwards}
+.game.leaving #qtext,.game.leaving #qopts,.game.leaving #revealui,.game.leaving .bar{animation:outBottom .7s .8s cubic-bezier(.6,0,.8,.4) forwards}

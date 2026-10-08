@@ -1760,10 +1760,10 @@
     G.mgTest = true; G.shopFirst = true; G.quizRun = 3; clearTimeout(funTimer); stopTimers();
     var first = list().filter(function (p) { return !p.off; }), lucky = [pick(first).pid];
     G.mode = G.lastParty = 'shop'; G.afterParty = true; G.mgBase = null;
-    shopVisit(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
+    shopGo(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
       var nm = players[lucky[0]] ? players[lucky[0]].name : '';
       FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: nm + ' wins this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
-      funIntro('shopwin', function () { shopVisit(lucky, SHOP_PICKS, function () { startRound(); }); }, 4000);
+      funIntro('shopwin', function () { shopGo(lucky, SHOP_PICKS, function () { startRound(); }); }, 4000);
     });
   });
   $('chasetest').addEventListener('click', function () {
@@ -2000,7 +2000,7 @@
   function questionEnter() {   // a new question: the question and its answers slide up, one after another
     if (REMOTE || !G.q) return;
     var k = G.round + '|' + G.q.text; if (k === qInKey) return; qInKey = k;
-    ['qtext', 'qopts'].forEach(function (id) { var e = $(id); if (!e) return; e.classList.remove('qin'); void e.offsetWidth; e.classList.add('qin'); });
+    ['qtext', 'qopts'].forEach(function (id) { var e = $(id); if (!e) return; e.classList.remove('qin'); void e.offsetWidth; e.classList.add('qin'); clearTimeout(e._qinT); e._qinT = setTimeout(function () { e.classList.remove('qin'); }, 1100); });   // (only once: the answers are redrawn on every update, which would start it again)
     whooshes([0]);
   }
   // ---------- the presenters on the big screen ----------
@@ -2030,6 +2030,7 @@
     hostSay('next', pick(l), 3800);
   }
   function hostWelcome() {
+    if (G.mgTest) return;   // (a test of the party games or the boutique: straight to it)
     hostSay('him', 'Good evening, Europe! 🇪🇺', 3200);
     setTimeout(function () { hostSay('her', 'Welcome to EuroQuizion! Grab your phones: here comes the first song!', 4200); }, 2600);
   }
@@ -2137,10 +2138,20 @@
     if (!wins.length) { back(); return; }
     var names = wins.map(function (k) { return players[k].name; });
     FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
-    funIntro('shopwin', function () { shopVisit(wins, SHOP_PICKS, back); }, 5000);
+    funIntro('shopwin', function () { shopGo(wins, SHOP_PICKS, back); }, 5000);
     Music.douze();
   }
-  function shopAll() { shopVisit(null, 1, function () { startRound(); }); }   // the first visit: everyone, one item each
+  function shopAll() { shopGo(null, 1, function () { startRound(); }); }
+  // To the boutique: a presenter sends us there, the studio slides away (presenters first), and the shop slides in.
+  function shopGo(who, n, then) {
+    if (REMOTE || $('v-game').classList.contains('hidden')) { shopVisit(who, n, then); return; }
+    stopTimers(); hostsEl();
+    hostSay('him', 'Let’s go to our beloved shopkeeper!', 2600); Music.ding();
+    setTimeout(function () {
+      var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
+      setTimeout(function () { shopVisit(who, n, function () { v.classList.remove('leaving'); viewEnter('v-game'); then(); }); }, 1400);
+    }, 2200);
+  }   // the first visit: everyone, one item each
   // A visit to the boutique: who (null: everyone), how many items each, and what comes after.
   function shopVisit(who, n, then) {
     var act = list().filter(function (p) { return !p.off && (!who || who.indexOf(p.pid) >= 0); });
