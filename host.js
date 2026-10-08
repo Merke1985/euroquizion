@@ -2055,7 +2055,7 @@
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
     step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
     // what they say: who they are, what we play tonight and how it works, then off we go
-    var lines = [['him', 'Good evening, Europe! 🇪🇺 I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
+    var lines = [['him', 'Good evening, Europe! I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
     lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
     lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'It’s time to test your knowledge: it’s trivia time! 🧠']);
     lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
@@ -2081,7 +2081,7 @@
   }
   function hostWelcome() {
     if (G.mgTest) return;   // (a test of the party games or the boutique: straight to it)
-    hostSay('him', 'Good evening, Europe! 🇪🇺', 3200);
+    hostSay('him', 'Good evening, Europe!', 3200);
     setTimeout(function () { hostSay('her', 'Welcome to EuroQuizion! Grab your phones: here comes the first song!', 4200); }, 2600);
   }
 
@@ -2159,14 +2159,14 @@
     var bme = bp.querySelector('.bme'); if (bme) { bme.classList.toggle('boom', g.st === 'boom'); bme.classList.toggle('win', g.st === 'win'); }
     ov.querySelector('.benvs').innerHTML = g.env.map(function (e, i) {
       var cls = 'benv' + (e.open ? ' open' + (e.bomb ? ' bomb' : ' flag') : '') + (g.pick === i && !e.open ? ' picked' : '');
-      return '<div class="' + cls + '" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span>' + (e.open ? (e.bomb ? '<span class="bin">💣</span>' : '<span class="bin">' + flag(e.code) + '</span><small>' + esc(countries[e.code] || '') + '</small>') : '') + '</div>';
+      return '<div class="' + cls + '" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span>' + (e.open ? (e.bomb ? '<span class="bin">💣</span>' : '<span class="bin"><img class="bflag" src="https://flagcdn.com/w160/' + e.code + '.png" alt=""></span><small>' + esc(countries[e.code] || '') + '</small>') : '') + '</div>';
     }).join('');
     ov.querySelector('.bstrip').innerHTML = g.alive.concat(g.out).map(function (k) { var p = players[k]; if (!p) return ''; var o = g.out.indexOf(k) >= 0; return '<span class="bps' + (o ? ' out' : '') + (k === bombWho() && g.st !== 'win' ? ' now' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + (o ? ' 💥' : '') + '</i></span>'; }).join('');
     var e = g.pick >= 0 ? g.env[g.pick] : null, nm = cur ? cur.name : '';
     ov.querySelector('.bmsg').innerHTML = g.st === 'deal' ? (g.round > 1 ? 'New envelopes! One of them hides a bomb…' : 'One of these envelopes hides a bomb…')
       : g.st === 'pick' ? esc(nm) + ', pick an envelope on your phone!'
       : g.st === 'open' ? 'Envelope ' + (g.pick + 1) + '… the envelope, please!'
-      : g.st === 'safe' ? 'Phew! ' + flag(e.code) + ' ' + esc(countries[e.code] || '') + ': ' + esc(nm) + ' is safe!'
+      : g.st === 'safe' ? 'Phew! ' + esc(countries[e.code] || '') + ': ' + esc(nm) + ' is safe!'
       : g.st === 'boom' ? '💥 BOOM! ' + esc(nm) + ' is out!'
       : g.st === 'win' ? '🏆 ' + esc(nm) + ' is the last one standing!' + (shopOn() ? '' : ' +' + g.prize[0] + (g.out.length && players[g.out[g.out.length - 1]] ? ' · ' + esc(players[g.out[g.out.length - 1]].name) + ' +' + g.prize[1] : '')) : '';
   }
@@ -2200,7 +2200,7 @@
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
     var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
-    if (!on) at(200, function () { hostSay('him', 'Welcome back, Europe! 🇪🇺', 4000); });
+    if (!on) at(200, function () { hostSay('him', 'Welcome back, Europe!', 4000); });
     if (hh) hh.classList.add('together');
     at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
       G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
