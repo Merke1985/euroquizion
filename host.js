@@ -1942,6 +1942,12 @@
   function shopApply(u) {
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; Music.woosh(); return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': −' + n; }
+    if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
+      var rest = list().filter(function (x) { return !x.off && x !== t; }); if (!rest.length) return '';
+      var low = Math.min.apply(null, rest.map(function (x) { return x.score; })), to = pick(rest.filter(function (x) { return x.score === low; }));
+      var nb = Math.min(it.amount, Math.max(0, t.score)); t.score -= nb; to.score += nb; Music.woosh();
+      return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': ' + nb + ' points blown over to ' + (to === by ? by.name + ' (that’s them!)' : to.name);
+    }
     if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, t.score)); t.score -= n2; by.score += n2; Music.ding(); return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + n2 + ' points stolen'; }
     if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; if (t.got) { t.score -= t.pts || 0; t.got = false; t.pts = 0; } Music.buzz(); return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
     return '';

@@ -693,9 +693,9 @@ function makeChase(allSongs, countries, used) {
 }
 
 // ---------- Eurofan Shop: the merchandise (more to come) ----------
-// kind: 'lose' (the target loses points), 'steal' (the buyer takes them), 'sit' (the target sits out a trivia question)
+// kind: 'lose' (the target loses points), 'blow' (they go to whoever has the fewest), 'steal' (the buyer takes them), 'sit' (no points for the open question)
 var SHOP_ITEMS = [
-  { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 10 points off another player', kind: 'lose', amount: 10 },
+  { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
   { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
   { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
 ];
