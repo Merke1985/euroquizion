@@ -2738,7 +2738,7 @@
     return lines;
   }
   function botAdd() {
-    if (REMOTE || bots.length >= (window.BOT_MAX || 8) || G.phase !== 'lobby') return;
+    if (REMOTE || bots.length >= (window.BOT_MAX || 12) || G.phase !== 'lobby') return;
     var used = {}; list().forEach(function (p) { used[p.char] = 1; });
     // a bot is named after its avatar (a random free one)
     var open = CHARS.filter(function (c) { return !used[c.id]; }), free = open.length ? pick(open) : null, n = bots.length + 1;
@@ -2766,7 +2766,7 @@
   });
   function botButtons() {
     $('botadd').classList.toggle('hidden', REMOTE);
-    $('botadd').disabled = bots.length >= 8; $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of 8)' : 'Add a test bot';
+    $('botadd').disabled = bots.length >= (window.BOT_MAX || 12); $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of ' + (window.BOT_MAX || 12) + ')' : 'Add a test bot';
     $('botclear').classList.toggle('hidden', !bots.length);
   }
   $('botadd').addEventListener('click', botAdd); $('botclear').addEventListener('click', botClear); botButtons();
