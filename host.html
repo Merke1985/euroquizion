@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=312">
+<link rel="stylesheet" href="style.css?v=315">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -166,11 +166,12 @@
   <div id="chase" class="chase hidden">
     <div class="chhead"><b>🏁 The Final Chase</b><span id="chn"></span><button class="btn alt small" id="chstop" type="button">End chase</button></div>
     <div class="chtrack" id="chtrack">
-      <div class="chstage"><div class="chbeams"><i></i><i></i><i></i><i></i></div><div class="chled"></div></div>
+      <div class="chstage"><div class="chbeams"><i></i><i></i><i></i><i></i></div></div>
       <div class="chview" id="chview"><div class="chrun" id="chrun">
         <div class="chvoid" id="chvoid"></div>
         <div class="chtiles" id="chtiles"></div>
         <div class="chstg"><div class="chstg-floor"><i></i></div><div class="chstg-ring"></div>
+          <div class="charch"><svg viewBox="0 0 300 170" aria-hidden="true"><path d="M20 168 L20 90 A130 80 0 0 1 280 90 L280 168" fill="none" stroke="#2a1640" stroke-width="22"/><path d="M20 168 L20 90 A130 80 0 0 1 280 90 L280 168" fill="none" stroke="#ffd23f" stroke-width="3" stroke-dasharray="1 13" stroke-linecap="round" class="charch-bulbs"/><path d="M60 168 L60 100 A90 54 0 0 1 240 100 L240 168" fill="none" stroke="#ff2fa8" stroke-width="5" opacity=".8"/></svg></div>
           <div class="chpyro" style="top:6%"><i></i><i></i><i></i><i></i><i></i></div><div class="chpyro" style="top:94%"><i></i><i></i><i></i><i></i><i></i></div>
           <div class="chtro" id="chtro"><svg class="trophy" viewBox="0 0 120 260" aria-hidden="true">
             <defs><linearGradient id="fnglass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f7ff"/><stop offset=".5" stop-color="#9fd9ff"/><stop offset="1" stop-color="#e8f7ff"/></linearGradient></defs>
@@ -215,6 +216,7 @@
     </div>
     <div class="chq hidden" id="chq"><div class="chqt" id="chqt"></div><div class="chqs" id="chqs"></div><div class="chqi" id="chqi"></div><div class="chbar"><i id="chbar"></i></div></div>
     <div class="chbig hidden" id="chbig"></div>
+    <div class="chcard hidden" id="chcard"></div>
   </div>
   <section id="v-end" class="end hidden">
     <p class="mute" style="font-size:1.3rem;margin:0" id="endlead">Final scores</p>
@@ -233,15 +235,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=312"></script>
-<script src="vendor/qrcode.js?v=312"></script>
-<script src="config.js?v=312"></script>
-<script src="net.js?v=312"></script>
-<script src="music.js?v=312"></script>
-<script src="chars.js?v=312"></script>
-<script src="match.js?v=312"></script>
-<script src="shapes.js?v=312"></script>
-<script src="quiz.js?v=312"></script>
-<script src="host.js?v=312"></script>
+<script src="vendor/supabase.js?v=315"></script>
+<script src="vendor/qrcode.js?v=315"></script>
+<script src="config.js?v=315"></script>
+<script src="net.js?v=315"></script>
+<script src="music.js?v=315"></script>
+<script src="chars.js?v=315"></script>
+<script src="match.js?v=315"></script>
+<script src="shapes.js?v=315"></script>
+<script src="quiz.js?v=315"></script>
+<script src="host.js?v=315"></script>
 </body>
 </html>

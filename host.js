@@ -1348,18 +1348,40 @@
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0 };
     G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
     chaseMusic(true);
-    Music.want(false); Music.dread(true); setTimeout(function () { if (G.phase === 'chase') Music.creep(); }, 1500);
+    Music.want(false); Music.dread(true);
     push();
-    var put = function () {
-      var c = G.chase; if (!c || G.phase !== 'chase' || c.st !== 'intro') return;
-      if (c.placed >= c.placeOrder.length) { chaseTimer = setTimeout(chaseAsk, 2500); return; }
-      c.placed++; Music.plop(c.placed); push();
-      chaseTimer = setTimeout(put, 500);
-    };
-    chaseTimer = setTimeout(put, 1800);
+    chaseTimer = setTimeout(chaseIntroNext, 1500);
   }
-  // The Diva sleeps through the first two questions, then comes: two spaces a turn, three from the ninth question.
-  function divaStep(n) { return n <= 2 ? 0 : n <= 8 ? 2 : 3; }
+  // The start: one by one, lowest score first, each player is shown big in the middle while their televotes count up
+  // to their score; then they take their place on the runway. When all are on it, the Diva rises from the smoke.
+  var chaseCount = null;
+  function chaseIntroNext() {
+    var c = G.chase; if (!c || G.phase !== 'chase' || c.st !== 'intro') return;
+    clearInterval(chaseCount);
+    if (c.placed >= c.placeOrder.length) {
+      c.showing = null; c.st = 'rise'; Music.crumble(); push();
+      chaseTimer = setTimeout(chaseAsk, 6000); return;
+    }
+    var k = c.placeOrder[c.placed], total = c.scores[k] || 0, steps = Math.max(1, Math.min(40, total)), i = 0;
+    c.showing = k; c.count = 0; c.counted = false; push();
+    var card = function () { var el = $('chcount'); if (el) el.textContent = c.count; };
+    chaseCount = setInterval(function () {
+      if (!G.chase || G.chase !== c) { clearInterval(chaseCount); return; }
+      i++; c.count = Math.round(total * i / steps); card();
+      if (i % 2 === 0 || i === steps) Music.ping(i, steps);
+      if (i >= steps) {
+        clearInterval(chaseCount); c.counted = true; Music.ding(); push();
+        chaseTimer = setTimeout(function () {
+          if (G.chase !== c || c.st !== 'intro') return;
+          c.placed++; c.showing = null; Music.plop(c.placed); push();
+          chaseTimer = setTimeout(chaseIntroNext, 650);
+        }, 1100);
+      }
+    }, Math.max(25, Math.min(60, 1300 / steps)));
+    chaseTimer = null;
+  }
+  // The Diva sleeps through the first two questions, then comes: one space a turn for three questions, then two a turn.
+  function divaStep(n) { return n <= 2 ? 0 : n <= 5 ? 1 : 2; }
   function chaseNear() { var c = G.chase; return chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL - 3; }); }
   function chaseAlive() { var c = G.chase; return c.order.filter(function (k) { return c.lanes[k] && !c.lanes[k].out; }); }
   function chaseAsk() {
@@ -1370,8 +1392,7 @@
     chaseAlive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; });
     // test bots: a random answer after a few seconds, each song judged right a bit more often than not
     chaseAlive().forEach(function (k) { if (!players[k] || !players[k].bot) return; var qk = c.qkey;
-      setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0; c.q.items.forEach(function (it, i) { var right = Math.random() < 0.62; if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 2000 + Math.random() * 6500); });
-    if (c.n > 1 && Math.random() < 0.45) setTimeout(function () { if (G.phase === 'chase') Music.creep(); }, 1500 + Math.random() * 5000);
+      setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0; c.q.items.forEach(function (it, i) { var right = Math.random() < (window.CHASE_SMART || 0.62); if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 2000 + Math.random() * 6500); });
     push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, CHASE_ASK + 300);
   }
@@ -1394,8 +1415,10 @@
     var c = G.chase; if (!c) return;
     c.st = 'move';
     // Only a perfect answer (all three right) takes the trophy: anything less stops at the last space.
-    chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); if (to >= CHASE_GOAL && l.res < 3) to = CHASE_END; l.pos = Math.max(l.pos, to); });
-    Music.step(); push();
+    chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); l.blocked = 0; if (to >= CHASE_GOAL && l.res < 3) { to = CHASE_END; l.blocked = c.n; } l.pos = Math.max(l.pos, to); });
+    if (chaseAlive().some(function (k) { return c.lanes[k].res > 0; })) Music.woosh();
+    if (chaseAlive().some(function (k) { return c.lanes[k].blocked === c.n; })) setTimeout(function () { if (G.phase === 'chase') Music.buzz(); }, 700);   // in front of the stage, but not perfect
+    push();
     var home = chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL; });
     if (home.length) { clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { chaseWin(home); }, 1400); return; }
     clearTimeout(chaseTimer); chaseTimer = setTimeout(function () {
@@ -1407,7 +1430,6 @@
       push();
       if (stepN) Music.crumble();
       if (caught.length) setTimeout(function () { if (G.phase === 'chase') { Music.chomp(); Music.scream(); } }, 900);
-      if (c.coming) Music.creep();
       chaseTimer = setTimeout(function () {
         if (!chaseAlive().length) { var best = Math.max.apply(null, caught.map(function (k) { return c.lanes[k].pos; })); chaseWin(caught.filter(function (k) { return c.lanes[k].pos === best; })); return; }
         if (chaseAlive().length && caught.length) Music.dread(true, true);   // getting tight: the heart beats faster
@@ -1424,7 +1446,7 @@
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseDone, 9000);
   }
   function chaseDone() {
-    var c = G.chase; clearTimeout(chaseTimer); Music.dread(false); chaseMusic(false);
+    var c = G.chase; clearTimeout(chaseTimer); clearInterval(chaseCount); Music.dread(false); chaseMusic(false);
     $('chase').classList.add('hidden');
     if (!c) return;
     c.done = true;
@@ -1462,7 +1484,7 @@
       var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
       $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
     }
-    var next = c.st === 'diva' || c.st === 'intro' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {};
+    var next = c.st === 'diva' || c.st === 'intro' || c.st === 'rise' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {}, deny = {};
     c.order.forEach(function (k, i) {
       var l = c.lanes[k], el = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]'); if (!el) return;
       var at = Math.min(CHASE_END, l.pos), won = !!(c.win && c.win.indexOf(k) >= 0);
@@ -1470,12 +1492,13 @@
         el.style.left = (won ? 110 : 103) + '%'; el.style.top = (won ? 56 : (i + 0.62) / n * 100) + '%';
         el.classList.add('jump');
       } else { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
+      if (!l.out && l.blocked === c.n && c.st === 'move') deny[i + ':' + at] = 1;   // not perfect, so not onto the stage: the space flashes red
       if (!l.out) { occ[i + ':' + at] = 1; if (next && at <= c.mon + next && c.st !== 'win' && c.st !== 'move') doomed[k] = 1; }
       el.classList.toggle('out', l.out); el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
       el.classList.toggle('near', !l.out && l.pos >= CHASE_GOAL - 3 && !c.win); el.classList.toggle('doomed', !!doomed[k]);
       var waiting = c.st === 'intro' && c.placeOrder.indexOf(k) >= c.placed; el.classList.toggle('unplaced', waiting);   // not on the runway yet
       if (waiting) delete occ[i + ':' + at];
-      el.querySelector('.ch-name').textContent = (players[k] ? players[k].name : '?') + (c.st === 'intro' ? ' · ' + c.scores[k] : '');
+      el.querySelector('.ch-name').textContent = (players[k] ? players[k].name : '?');
       var r = el.querySelector('.ch-res'), showR = (c.st === 'show' || c.st === 'move') && l.res != null && !l.out;
       r.classList.toggle('on', showR); r.classList.toggle('zero', !l.res); r.classList.toggle('gold', l.res === 3); r.textContent = showR ? (l.res === 3 ? '★ +3' : '+' + l.res) : '';
     });
@@ -1488,18 +1511,25 @@
       }
       if (r <= c.mon) return;
       t.classList.toggle('warn', warn && !on); t.classList.toggle('doom', warn && on); t.classList.toggle('occ', on && !warn);
+      t.classList.toggle('deny', !!deny[t.getAttribute('data-l') + ':' + r]);
     });
     $('chvoid').style.width = chaseX(c.mon) + '%';
-    // the winner on the stage: the camera zooms in on them
+    // the winner on the stage: the Diva goes down in agony and is gone, then the camera zooms in on the winner and the trophy
     var view = $('chview');
+    $('chmon').classList.toggle('defeat', c.st === 'win' && !!c.win && c.win.some(function (k) { return c.lanes[k] && c.lanes[k].pos >= CHASE_GOAL; }));
     if (c.st === 'win' && c.win && c.win.length && !view.classList.contains('zoom') && !view._zt) {
+      var onStage = c.lanes[c.win[0]] && c.lanes[c.win[0]].pos >= CHASE_GOAL;
+      if (onStage) Music.defeat();
       view._zt = setTimeout(function () {
         view._zt = null; if (!G.chase || G.chase.st !== 'win') return;
         var w = $('chlanes').querySelector('.chtok[data-pid="' + G.chase.win[0].replace(/"/g, '') + '"]'); if (!w) return;
-        var vr = view.getBoundingClientRect(), wr = w.getBoundingClientRect();
-        view.style.transformOrigin = (wr.left + wr.width / 2 - vr.left) + 'px ' + (wr.top + wr.height / 2 - vr.top) + 'px';
+        var vr = view.getBoundingClientRect(), wr = w.getBoundingClientRect(), tr = onStage ? $('chtro').getBoundingClientRect() : wr;
+        var L = Math.min(wr.left, tr.left), R = Math.max(wr.right, tr.right), T = Math.min(wr.top, tr.top), B = Math.max(wr.bottom, tr.bottom);
+        var z = Math.max(1.2, Math.min(2.3, 0.72 * vr.width / (R - L), 0.72 * vr.height / (B - T)));
+        view.style.setProperty('--z', z.toFixed(2));
+        view.style.transformOrigin = ((L + R) / 2 - vr.left) + 'px ' + ((T + B) / 2 - vr.top) + 'px';
         view.classList.add('zoom'); Music.douze();
-      }, 1300);
+      }, onStage ? 2300 : 1300);
     }
     if (c.st !== 'win') { view.classList.remove('zoom'); clearTimeout(view._zt); view._zt = null; }
     [].forEach.call(document.querySelectorAll('#chase .chpyro'), function (p) { p.classList.toggle('boom', c.st === 'win' || chaseNear().length > 0); });
@@ -1509,16 +1539,22 @@
     $('chn').textContent = c.n ? 'Question ' + c.n + ' · first to the trophy wins' : 'First to the trophy wins';
     // the line under the stage: what the Diva is up to, or that the trophy is within reach
     var note = $('chnote'), near = chaseNear();
-    if (c.st === 'win' || c.st === 'intro') note.classList.add('hidden');
+    if (c.st === 'win' || c.st === 'intro' || c.st === 'rise') note.classList.add('hidden');
     else if (near.length) { note.className = 'chnote'; note.textContent = '🏆 Within reach of the stage: only a perfect answer (3 out of 3) gets you on it!'; }
     else if (c.n < 2 || (c.n === 2 && c.st !== 'diva')) { var w = 2 - c.n + (c.st === 'intro' ? 0 : 0); note.className = 'chnote red'; note.textContent = '😴 The Diva is waiting… ' + (c.n < 2 ? (2 - c.n) + (2 - c.n === 1 ? ' more question' : ' more questions') : 'last quiet question'); }
     else if (next) { var dn = Object.keys(doomed).length; note.className = 'chnote red'; note.textContent = '⚠️ Next turn the Diva smashes ' + next + (next === 1 ? ' space' : ' spaces') + (dn ? ' · ' + dn + (dn === 1 ? ' player is' : ' players are') + ' in danger!' : ''); }
     else note.classList.add('hidden');
     var big = $('chbig'); big.classList.toggle('winbox', c.st === 'win'); big.classList.toggle('introbox', c.st === 'intro');
-    if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>Run up the runway to the trophy! Tick every song that fits the question; one space for each one you get right. The Diva waits two questions, then she comes.</small>'; big.classList.remove('hidden'); }
+    $('chmon').classList.toggle('lurk', c.st === 'intro'); $('chmon').classList.toggle('rise', c.st === 'rise');
+    var cc = $('chcard'), sp = c.st === 'intro' && c.showing ? players[c.showing] : null;
+    cc.classList.toggle('hidden', !sp);
+    if (sp && cc.getAttribute('data-k') !== c.showing) { cc.setAttribute('data-k', c.showing); cc.innerHTML = '<div class="chcard-face">' + charSvg(sp.char) + '</div><b>' + esc(sp.name) + '</b><span>Televotes</span><strong id="chcount">' + (c.count || 0) + '</strong>'; }
+    cc.classList.toggle('final', !!(sp && c.counted));
+    if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>The televotes are in: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'rise') { big.innerHTML = '👹 The Diva is coming for the trophy!<small>Answer correctly to beat her to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : 'jumped onto the stage: the trophy is theirs!') + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { big.innerHTML = '💀 Caught!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
-    else if (c.st === 'diva' && c.coming) { big.innerHTML = '👹 The Diva is coming for the trophy!'; big.classList.remove('hidden'); }
+    else if (c.st === 'diva' && c.coming) { big.innerHTML = '👹 The Diva starts moving!'; big.classList.remove('hidden'); }
     else big.classList.add('hidden');
     var q = $('chq'), on = !!c.q && (c.st === 'ask' || c.st === 'show');
     q.classList.toggle('hidden', !on);

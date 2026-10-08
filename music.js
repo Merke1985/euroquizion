@@ -227,6 +227,42 @@ var Music = (function () {
       for (var k = 0; k < 6; k++) (function (at) { var c2 = ctx.createBufferSource(), cg = ctx.createGain(), cf = ctx.createBiquadFilter(); c2.buffer = noiseBuf; cf.type = 'highpass'; cf.frequency.value = 1600; cg.gain.setValueAtTime(0.3, at); cg.gain.exponentialRampToValueAtTime(0.0001, at + 0.06); c2.connect(cf); cf.connect(cg); cg.connect(ctx.destination); c2.start(at); c2.stop(at + 0.08); })(t + 0.05 + Math.random() * 0.9);
     } catch (e) {}
   }
+  function woosh() {   // everyone moves forward
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      var s = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      s.buffer = noiseBuf; s.loop = true; f.type = 'bandpass'; f.Q.value = 1.6;
+      f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(2600, t + 0.35); f.frequency.exponentialRampToValueAtTime(900, t + 0.7);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
+      s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + 0.8);
+    } catch (e) {}
+  }
+  function buzz() {   // not good enough: a short error buzzer, two low notes
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      [[196, 0], [147, 0.18]].forEach(function (n) {
+        var o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        o.type = 'square'; o.frequency.value = n[0]; f.type = 'lowpass'; f.frequency.value = 1200;
+        g.gain.setValueAtTime(0.0001, t + n[1]); g.gain.exponentialRampToValueAtTime(0.18, t + n[1] + 0.01); g.gain.setValueAtTime(0.18, t + n[1] + 0.14); g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + 0.2);
+        o.connect(f); f.connect(g); g.connect(ctx.destination); o.start(t + n[1]); o.stop(t + n[1] + 0.22);
+      });
+    } catch (e) {}
+  }
+  function defeat() {   // the monster goes down: a long, falling howl and a thud
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.02, o = ctx.createOscillator(), v = ctx.createOscillator(), vg = ctx.createGain(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(70, t + 1.6);
+      v.frequency.value = 7; vg.gain.value = 25; v.connect(vg); vg.connect(o.frequency);
+      f.type = 'lowpass'; f.frequency.value = 1400;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.7);
+      o.connect(f); f.connect(g); g.connect(ctx.destination); o.start(t); v.start(t); o.stop(t + 1.75); v.stop(t + 1.75);
+      thump(t + 1.5, 50, 0.7);
+    } catch (e) {}
+  }
   function stepSnd() { if (!ac()) return; try { var t = ctx.currentTime + 0.01; thump(t, 160, 0.18); } catch (e) {} }
-  return { dread: dread, creep: creep, chomp: chomp, scream: scream, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { dread: dread, creep: creep, chomp: chomp, scream: scream, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();
