@@ -1566,7 +1566,7 @@
     c.st = 'show';
     chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = !l.touched ? 0 : c.q.items.reduce(function (n, it, i) { return n + ((((l.mask >> i) & 1) === 1) === it.ok ? 1 : 0); }, 0); l.fp = (l.fp || 0) + l.res; });   // (a point per right answer, for the overview at the end)
     Music.soft(); push();
-    clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseMove, 3600);
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseMove, 4600);   // a second longer to take in the answers before anyone moves
   }
   function chaseMove() {
     var c = G.chase; if (!c) return;
