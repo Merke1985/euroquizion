@@ -427,9 +427,9 @@ var HOST_SCORING_HELP = {
   ladder: ''
 };
 var ROUND_HELP = {
-  standard: 'Quiz: every round mixes songs from all the eras you picked.',
-  random: 'Random rounds: before each round a spinner picks a decade, and all its questions come from that decade.',
-  vote: 'Voted rounds: before each round everyone votes on their phone for the decade of that round.',
+  standard: 'Standard: the questions of each round are based on the selected eras.',
+  random: 'Random: the game randomly picks one of the selected eras for each round.',
+  vote: 'Vote: before each round the players vote for their favourite era.',
   ladder: 'Ladder: a right answer takes you a rung up, a wrong one half a rung down; the first to reach the top ends the climb.'
 };
 var PARTY_MODE_HELP = {
@@ -440,8 +440,8 @@ var PARTY_MODE_HELP = {
 };
 var FINAL_HELP = {
   chase: 'Chase the trophy: after the last question everyone races up a runway to the stage, with a monster on their heels. The higher your score, the further ahead you start.',
-  double: 'The Big Five: the last five questions count double, and the scores stay hidden until the very end.',
-  standard: 'Standard: after the last question, straight to the final scores.'
+  double: 'The Big Five: after the rounds are completed, there will be 5 final questions with double points. The scores stay hidden until the end.',
+  standard: 'Standard: the game ends after the final round. No surprises.'
 };
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',

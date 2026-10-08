@@ -1000,7 +1000,7 @@
       G.ladderWon = false; G.partNext = true;
     }
     var due = ladderGame() ? !!G.partNext : !!G.per && (G.round - 1) % G.per === 0 && !(G.partDone || {})[G.round];
-    if ((G.parts > 1 || G.eraSpin) && due && G.atype !== 'party') { partIntro(); return; }
+    if ((G.parts > 1 || G.eraSpin) && due && G.atype !== 'party' && !G.tourFinal) { partIntro(); return; }
     startRound2();
   }
   function startRound2() {
@@ -1029,8 +1029,7 @@
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
     // Final "Double points": the last three questions count double and the scores are hidden until the end
-    var bigN = G.total >= 10 ? 5 : 3;
-    if (G.finalMode === 'double' && !G.tour && !G.tourFinal && G.total < ENDLESS && G.total >= 5 && G.round === G.total - bigN + 1 && roundMode() === 'mc') { G.tourFinal = true; FUN.bigfive.sub = 'The last ' + (bigN === 5 ? 'five' : 'three') + ' questions: every point counts double! The scores stay hidden until the end.'; funIntro('bigfive', startRound2, 6000); return; }
+    if (G.bigCard) { G.bigCard = false; G.mode = 'mc'; funIntro('bigfive', startRound2, 6000); return; }   // The Big Five: five extra questions after the rounds
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     // A party round is announced first, so nobody is surprised by what is asked of them.
@@ -1131,7 +1130,7 @@
   // ---------- the title card before a party round ----------
   var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav'];
   var FUN = {
-    bigfive: { icon: '🖐️', title: 'The Big Five', sub: '' },
+    bigfive: { icon: '🖐️', title: 'The Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -1401,7 +1400,7 @@
     Music.want(false); Music.dread(true);
     push();
     // first a message in the middle, then it moves up and the jury votes are counted
-    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1100); }, 4200);
+    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1100); }, 6200);
   }
   // The start: one by one, lowest score first, each player is shown big in the middle while their jury votes count up
   // to their score; then they take their place on the runway. When all are on it, the Diva rises from the smoke.
@@ -1432,7 +1431,8 @@
     var k = c.placeOrder[c.placed], total = c.scores[k] || 0, steps = Math.max(1, Math.min(40, total)), i = 0;
     c.showing = k; c.count = 0; c.counted = false; push();
     var card = function () { var el = $('chcount'); if (el) el.textContent = c.count; };
-    chaseCount = setInterval(function () {
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (G.chase !== c || c.st !== 'intro') return; chaseCount = setInterval(countStep, Math.max(25, Math.min(60, 1300 / steps))); }, 1000);   // a second on 0 first
+    var countStep = function () {
       if (!G.chase || G.chase !== c) { clearInterval(chaseCount); return; }
       i++; c.count = Math.round(total * i / steps); card();
       if (i % 2 === 0 || i === steps) Music.ping(i, steps);
@@ -1444,8 +1444,7 @@
           chaseTimer = setTimeout(chaseIntroNext, 650);
         }, 1100);
       }
-    }, Math.max(25, Math.min(60, 1300 / steps)));
-    chaseTimer = null;
+    };
   }
   // The Diva sleeps through the first two questions, then comes: one space a turn for three questions, then two a turn.
   function divaStep(n) { return n <= 2 ? 0 : n <= 5 ? 1 : 2; }
@@ -2887,7 +2886,7 @@
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
-    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
@@ -2956,6 +2955,8 @@
   function goNext() {
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;
     autoStop(); note('');
+    // The Big Five: when the rounds are done, five more questions for double points, with the scores hidden
+    if (lastSong() && G.finalMode === 'double' && !G.tourFinal && !G.tour && !ladderGame() && G.total < ENDLESS) { G.tourFinal = true; G.total += 5; G.bigCard = true; G.quizRun = 0; startRound(); return; }
     if (lastSong()) {
       // a Ladder game in rounds: the last round is added to what was banked before
       if (G.partLadder) list().forEach(function (p) { p.score = (p.bank || 0) + LADDER[Math.floor(p.rung || 0)]; });
