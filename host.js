@@ -1398,7 +1398,7 @@
     setTimeout(function () { bk.classList.add('gone'); bk.classList.remove('on'); }, CHASE_ENTER - 400);
     setTimeout(function () { ch.classList.remove('nostage'); Music.woosh(); }, CHASE_ENTER + 700);
     setTimeout(function () { ch.classList.remove('norunway'); Music.woosh(); }, CHASE_ENTER + 1700);
-    setTimeout(function () { ch.classList.remove('nolights'); chaseSfx('brk', 0.6, Music.crumble); Music.ding(); }, CHASE_ENTER + 2900);
+    setTimeout(function () { ch.classList.remove('nolights'); Music.ding(); }, CHASE_ENTER + 2900);
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
   function chaseStart(test, face) {
