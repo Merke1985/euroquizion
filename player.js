@@ -39,10 +39,10 @@
       $('chhelp').textContent = rd ? 'Waiting for the others…' : 'The chase starts when everyone is ready.'; $('chopts').innerHTML = '';
       if (c.st === 'ready' && chBarKey !== c.rkey) { chBarKey = c.rkey; var rb = $('chpbar'); rb.style.transition = 'none'; rb.style.width = (c.rleft / 600) + '%'; rb.getBoundingClientRect(); rb.style.transition = 'width ' + c.rleft + 'ms linear'; rb.style.width = '0%'; }
       $('chpbar').parentNode.classList.toggle('hidden', c.st !== 'ready');
-      $('chlock').classList.add('hidden'); $('chready').classList.remove('hidden'); $('chready').classList.toggle('on', rd); $('chready').setAttribute('aria-pressed', rd ? 'true' : 'false'); $('chreadytext').textContent = rd ? 'Ready!' : 'Ready';
+      $('chready').classList.remove('hidden'); $('chready').classList.toggle('on', rd); $('chready').setAttribute('aria-pressed', rd ? 'true' : 'false'); $('chreadytext').textContent = rd ? 'Ready!' : 'Ready';
       return;
     }
-    $('chpbar').parentNode.classList.remove('hidden'); $('chlock').classList.add('hidden'); $('chready').classList.add('hidden');
+    $('chpbar').parentNode.classList.remove('hidden'); $('chready').classList.add('hidden');
     if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = (c.mname || 'A former winner') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
     if (c.st === 'ask') {
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
@@ -63,8 +63,7 @@
     var cs = state && state.chase;
     if (cs && (cs.st === 'ready' || cs.st === 'go')) { if (chReadyKey === cs.rkey || !net) return; chReadyKey = cs.rkey; var rk = cs.rkey; net.send('chase', { pid: pid, key: rk, ready: 1 }); [800, 2200].forEach(function (ms) { setTimeout(function () { if (net && state && state.chase && state.chase.st === 'ready') net.send('chase', { pid: pid, key: rk, ready: 1 }); }, ms); }); chaseView(cs); }
   });
-  $('chlock').addEventListener('click', function () {
-    if (chLocked) return; chLocked = true; chaseSend(true); if (state && state.chase) chaseView(state.chase); });
+
   function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-chase', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
