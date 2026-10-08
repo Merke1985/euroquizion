@@ -1520,4 +1520,4 @@ aside.recapgone{visibility:hidden}
 #board .binv:empty { margin: 0; border: 0; }
 
 /* presenters talking: the rest of the line waits, invisible, so the balloon keeps its size */
-.hbub .unsaid { visibility: hidden; }
+.hbub .unsaid, .bqbubble .unsaid { visibility: hidden; }

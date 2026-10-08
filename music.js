@@ -100,7 +100,7 @@ var Music = (function () {
     try {
       if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
       if (ctx.state === 'suspended') ctx.resume();
-      var t = ctx.currentTime + 0.005, base = who === 'her' ? 330 : 190, f = base * (0.85 + Math.random() * 0.35);
+      var t = ctx.currentTime + 0.005, base = who === 'her' ? 330 : who === 'lynda' ? 270 : 190, f = base * (0.85 + Math.random() * 0.35);
       var o = ctx.createOscillator(), g = ctx.createGain(), bp = ctx.createBiquadFilter();
       o.type = 'square'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random() < 0.5 ? 0.9 : 1.08), t + 0.07);
       bp.type = 'bandpass'; bp.frequency.value = f * 3; bp.Q.value = 1.2;

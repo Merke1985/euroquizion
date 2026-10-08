@@ -2030,6 +2030,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!h) { h = document.createElement('div'); h.className = 'shosts away together'; h.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; st.appendChild(h); }   // (off stage until they have something to say)
     return h;
   }
+  // A line that comes out letter by letter, with a little blip now and then, so it looks (and sounds) like someone talking.
+  // The rest of the line is already there, invisible, so the balloon has its full size from the start.
+  // The same line again (a redraw) changes nothing. Returns how long the typing takes.
+  var TALK_MS = 26;
+  function typeSay(el, text, voice) {
+    text = String(text); if (el._said === text) return 0; el._said = text;
+    var chars = Array.from(text), n = 0;
+    clearInterval(el._typeT);
+    var draw = function () { el.innerHTML = '<span>' + esc(chars.slice(0, n).join('')) + '</span><span class="unsaid">' + esc(chars.slice(n).join('')) + '</span>'; };
+    draw();
+    el._typeT = setInterval(function () {
+      if (!el.isConnected) { clearInterval(el._typeT); return; }
+      n++; draw();
+      var c = chars[n - 1];
+      if (!REMOTE && c && /[A-Za-zÀ-ÿ0-9]/.test(c) && n % 3 === 1) Music.talk(voice);
+      if (n >= chars.length) clearInterval(el._typeT);
+    }, TALK_MS);
+    return chars.length * TALK_MS;
+  }
   function hostSay(who, text, ms) {
     var h = hostsEl(); if (!h) return;
     if (who === 'next') { who = hostTurn++ % 2 ? 'her' : 'him'; }
@@ -2037,16 +2056,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var b = h.querySelector('.hbub.' + who); b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
     // The words come out letter by letter, with a little blip now and then, so it looks (and sounds) like they are talking.
     // The rest of the line is already there, invisible, so the balloon has its full size from the start.
-    var chars = Array.from(String(text)), n = 0, per = 26, typing = chars.length * per;
-    clearInterval(hostType[who]);
-    var draw = function () { b.innerHTML = '<span>' + esc(chars.slice(0, n).join('')) + '</span><span class="unsaid">' + esc(chars.slice(n).join('')) + '</span>'; };
-    draw(); b.classList.toggle('talking', true);
-    hostType[who] = setInterval(function () {
-      n++; draw();
-      var c = chars[n - 1];
-      if (!REMOTE && c && /[A-Za-zÀ-ÿ0-9]/.test(c) && n % 3 === 1) Music.talk(who);
-      if (n >= chars.length) { clearInterval(hostType[who]); b.classList.remove('talking'); }
-    }, per);
+    b._said = ''; var typing = typeSay(b, text, who);
     ms = Math.max(ms || 3500, typing + 1600);
     clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { b.classList.remove('on'); }, ms);
     clearTimeout(hostT.away); hostT.away = setTimeout(hostsAway, ms + 600);   // …and leave the screen to the game again
@@ -2511,8 +2521,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
     var one = act.length === 1, wn = act.map(function (p) { return p.name; }), wnames = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
-    if (g.win) ov.querySelector('.bqbubble').textContent = g.over ? (one ? 'Good choice, darling!' : 'Good choices, darlings!') : 'Congratulations, ' + wnames + '! You can choose an item out of my selection of four. Enjoy!';
-    else ov.querySelector('.bqbubble').textContent = g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'I’m Lynda, welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.';
+    var bq = ov.querySelector('.bqbubble');
+    if (g.win) typeSay(bq, g.over ? (one ? 'Good choice, darling!' : 'Good choices, darlings!') : 'Congratulations, ' + wnames + '! You can choose an item out of my selection of four. Enjoy!', 'lynda');
+    else typeSay(bq, g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'I’m Lynda, welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.', 'lynda');
     ov.querySelector('.shoppers').innerHTML = act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('');
   }
   // The big announcement of an item: across the whole screen, with the points flying and a sound.
