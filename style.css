@@ -986,7 +986,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @keyframes chring{0%,100%{transform:scale(.92);opacity:.7}50%{transform:scale(1.04);opacity:1}}
 .chtro{position:absolute;left:56%;top:58%;height:auto;width:46%;transform:translate(-50%,-100%) rotateX(-26deg);transform-origin:50% 100%;display:flex;flex-direction:column;align-items:center}
 .chtro .trophy{width:100%;height:auto}
-.chpyro{position:absolute;left:14%;width:12%;height:70%;z-index:2;transform:translate(-50%,-100%) rotateX(-26deg);transform-origin:50% 100%;pointer-events:none}
+.chpyro{position:absolute;left:14%;width:12%;height:70%;z-index:2;transform:translate(-50%,-100%) rotateX(-26deg) scale(1.5);transform-origin:50% 100%;pointer-events:none}
 .chpyro i{position:absolute;bottom:0;left:50%;width:9px;height:9px;border-radius:50%;background:#ffd23f;box-shadow:0 0 10px #ff9d00,0 0 4px #fff;animation:chspark 1.6s ease-out infinite;opacity:0}
 .chpyro i:nth-child(2){animation-delay:-.3s;margin-left:-8px}.chpyro i:nth-child(3){animation-delay:-.6s;margin-left:7px}.chpyro i:nth-child(4){animation-delay:-.9s;margin-left:-4px}.chpyro i:nth-child(5){animation-delay:-1.2s;margin-left:4px}
 @keyframes chspark{0%{transform:translateY(0) scale(1.4);opacity:1}70%{opacity:.9}100%{transform:translateY(-260%) scale(.3);opacity:0}}
