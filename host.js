@@ -1356,6 +1356,8 @@
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0 };
     G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
+    // the monster starts hidden (no fade-out from the last chase), dressed as this chase's monster
+    var mon = $('chmon'); mon.classList.remove('rise', 'defeat', 'hungry', 'sleep'); mon.classList.add('lurk'); mon.setAttribute('data-mon', G.chase.monster.id);
     Object.keys(CHASE_SFX).forEach(function (k) { if (!chaseSfxEl[k]) { chaseSfxEl[k] = new Audio(CHASE_SFX[k]); chaseSfxEl[k].preload = 'auto'; } });
     chaseMusic(true);
     Music.want(false); Music.dread(true);

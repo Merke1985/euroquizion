@@ -1032,7 +1032,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chcard.final{border-color:#ffd23f;box-shadow:0 0 40px rgba(255,210,63,.5),0 20px 60px rgba(0,0,0,.7)}
 @keyframes chfinal{from{transform:scale(1);color:#ffd23f}to{transform:scale(1.25);color:#fff}}
 @keyframes chcardin{from{transform:translate(-50%,-50%) scale(.6);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
-.chmon.lurk{opacity:0}
+.chmon.lurk{opacity:0;transition:none}
 .chmon.rise .chbob{animation:chrise 1.8s cubic-bezier(.2,1.2,.4,1) 1,chbob .9s ease-in-out 1.8s infinite}
 @keyframes chrise{from{transform:translateY(60%) scale(.7);opacity:0;filter:brightness(3)}to{transform:translateY(0) scale(1);opacity:1;filter:none}}
 .chmon{transition:left 1.4s ease-in-out,opacity .6s}
