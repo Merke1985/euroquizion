@@ -1415,9 +1415,9 @@
     var c = G.chase; if (!c) return;
     c.st = 'move';
     // Only a perfect answer (all three right) takes the trophy: anything less stops at the last space.
-    chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); l.blocked = 0; if (to >= CHASE_GOAL && l.res < 3) { to = CHASE_END; l.blocked = c.n; } l.pos = Math.max(l.pos, to); });
+    chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); l.blocked = 0; if (to >= CHASE_GOAL && l.res < 3) { to = l.pos; l.blocked = c.n; /* not perfect: they bump into the stage and fall back */ } l.pos = Math.max(l.pos, to); });
     if (chaseAlive().some(function (k) { return c.lanes[k].res > 0; })) Music.woosh();
-    if (chaseAlive().some(function (k) { return c.lanes[k].blocked === c.n; })) setTimeout(function () { if (G.phase === 'chase') Music.buzz(); }, 700);   // in front of the stage, but not perfect
+    if (chaseAlive().some(function (k) { return c.lanes[k].blocked === c.n; })) setTimeout(function () { if (G.phase === 'chase') Music.buzz(); }, 650);   // in front of the stage, but not perfect
     push();
     var home = chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL; });
     if (home.length) { clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { chaseWin(home); }, 1400); return; }
@@ -1491,7 +1491,14 @@
       if (l.pos >= CHASE_GOAL) {   // on the stage: the winner jumps to the trophy, anyone else who made it waits at the edge
         el.style.left = (won ? 110 : 103) + '%'; el.style.top = (won ? 56 : (i + 0.62) / n * 100) + '%';
         el.classList.add('jump');
-      } else { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
+      } else if (l.blocked === c.n && c.st === 'move' && el.getAttribute('data-bump') !== c.qkey) {
+        // the bump: run up to the edge of the stage, hit it, and slide back to the space they came from
+        el.setAttribute('data-bump', c.qkey); el.style.top = ((i + 0.62) / n * 100) + '%';
+        el.style.left = '99%'; el.classList.remove('bonk');
+        setTimeout(function () { el.classList.add('bonk'); }, 650);
+        setTimeout(function () { el.style.left = chaseX(at - 0.5) + '%'; }, 900);
+        setTimeout(function () { el.classList.remove('bonk'); }, 1700);
+      } else if (el.getAttribute('data-bump') !== c.qkey || c.st !== 'move') { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
       if (!l.out && l.blocked === c.n && c.st === 'move') deny[i + ':' + at] = 1;   // not perfect, so not onto the stage: the space flashes red
       if (!l.out) { occ[i + ':' + at] = 1; if (next && at <= c.mon + next && c.st !== 'win' && c.st !== 'move') doomed[k] = 1; }
       el.classList.toggle('out', l.out); el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
