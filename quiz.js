@@ -100,7 +100,10 @@ var PAIR_CLIP = 10, PAIR_MS = (PAIR_CLIP * 2 + 5) * 1000;
 function makePair(song, kind, allSongs, countries) {
   var inFinal = function (s) { return s[6] != null && s[8] == null && s[9] !== 'cancelled' && s[9] !== 'dq'; }, other;
   if (kind === 'higher') {
-    if (!inFinal(song)) { song = shuffle(allSongs.filter(function (s) { return s[0] === song[0] && inFinal(s) && !BAD_VIDEOS[s[4]]; }))[0]; if (!song) return null; }   // not a finalist: take one from the same contest
+    // a winner of the last 20 years is too easy to spot: they are left out
+    var recentWin = function (s) { return s[6] === 1 && s[0] > new Date().getFullYear() - 20; };
+    inFinal = (function (f) { return function (s) { return f(s) && !recentWin(s); }; })(inFinal);
+    if (!inFinal(song)) { song = shuffle(allSongs.filter(function (s) { return s[0] === song[0] && inFinal(s) && !BAD_VIDEOS[s[4]]; }))[0]; if (!song) return null; }   // not a finalist (or a recent winner): take one from the same contest
     // Four to eight places apart: close enough to need thought, far enough to be fair. Small contests fall back to any gap of two or more.
     var near = function (lo, hi) { return shuffle(allSongs.filter(function (s) { var gap = Math.abs(s[6] - song[6]); return s[0] === song[0] && s[4] !== song[4] && inFinal(s) && gap >= lo && gap <= hi && !BAD_VIDEOS[s[4]]; }))[0]; };
     other = near(4, 8) || near(2, 30);
