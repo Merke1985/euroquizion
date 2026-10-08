@@ -114,7 +114,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '' }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '', flag: !!p.flagNow }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.phase === 'shop' && G.shop) { s.shop = { id: G.shop.id, n: SHOP_PICKS, items: SHOP_ITEMS, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') s.shopq = (G.shopQ || []).length;
@@ -1024,7 +1024,7 @@
   function startRound() {
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
-    list().forEach(function (p) { p.sitNow = ''; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
+    list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
@@ -1079,7 +1079,7 @@
     var alone = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll };   // (a game of only one of these)
     if (G.atype !== 'party' && alone[md] && !(md === 'sing' && REMOTE)) { funIntro(md, alone[md]); return; }
     if (G.atype === 'party' && G.shopQ && G.shopQ.length) { shopDeliver(startRound2); return; }   // Eurofan Shop items used since the last question land first
-    if (G.atype === 'party' && !G.quipLoad) list().forEach(function (p) { if (p.sitout) { p.sitNow = p.sitout; p.sitout = ''; } });   // a Broken Mic: this one sits out
+    if (G.atype === 'party' && !G.quipLoad) list().forEach(function (p) { if (p.sitout) { p.sitNow = p.sitout; p.sitout = ''; } if (p.flagged > 0) { p.flagNow = true; p.flagged--; } });   // (a Giant Flag: this question is blocked from view)   // a Broken Mic: this one sits out
     push(); loadSong();
   }
 
@@ -1957,9 +1957,10 @@
   function shopApply(u) {
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
     shopLast = { icon: it.icon, deltas: [], sound: it.kind };
-    var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit') && t.inv ? t.inv.indexOf('umbrella') : -1;
+    var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit' || it.kind === 'flag') && t.inv ? t.inv.indexOf('umbrella') : -1;
     if (ui >= 0) { t.inv.splice(ui, 1); shopLast = { icon: '☂️', deltas: [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '☂️ blocked' }], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
     if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
+    if (it.kind === 'flag') { t.flagged = (t.flagged || 0) + (it.amount || 3); shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see the next ' + (it.amount || 3) + ' questions!'; }
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
       var rest = list().filter(function (x) { return !x.off && x !== t; }); if (!rest.length) return '';
@@ -3138,7 +3139,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.starterGiven = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.starterGiven = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();

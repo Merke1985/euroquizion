@@ -247,7 +247,7 @@
         show('v-guess'); $('roundlabel').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total);
         $('pdraw').classList.toggle('hidden', !s.draw);
         if (s.draw && builtKey !== key) drawClear($('pdraw'));
-        $('qtext').textContent = q.text;
+        $('qtext').textContent = m && m.flag && q.type === 'mc' ? '🚩 A giant flag is blocking your view!' : q.text;
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
         if (builtKey !== key) {   // build the question once per song, so typing is never wiped
@@ -255,9 +255,11 @@
           $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
           $('guess').placeholder = q.hint || ''; $('guess').inputMode = (q.subject === 'place' || q.subject === 'points' || q.subject === 'year') ? 'numeric' : 'text';
           var bq = q.subject === 'best' && s.best;   // best drawing: a small picture on every button, and your own cannot be picked
-          $('opts').innerHTML = mc ? q.options.map(function (o, i) {
+          var flagged = !!(m && m.flag) && mc && !bq;   // a Giant Flag: the answers in another order, lettered anew
+          var order = mc ? q.options.map(function (o, i) { return i; }) : []; if (flagged) for (var j = order.length - 1; j > 0; j--) { var r2 = Math.floor(Math.random() * (j + 1)), tmp = order[j]; order[j] = order[r2]; order[r2] = tmp; }
+          $('opts').innerHTML = mc ? order.map(function (i, pos) { var o = q.options[i];
             var own = !!s.best && s.best.pids[i] === pid;   // your own drawing or answer cannot be picked
-            return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + (own ? ' (yours)' : '') + '</span></button>';
+            return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[flagged ? pos : i] + '</b><span class="otx">' + esc(o) + (own ? ' (yours)' : '') + '</span></button>';
           }).join('') : '';
           $('opts').classList.toggle('bestgrid', !!bq);
           $('opts').classList.toggle('smoked', !!(q.smoke && q.smoke.indexOf(pid) < 0));   // someone else's Smoke Machine: guess blind
