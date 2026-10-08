@@ -163,7 +163,7 @@ var Music = (function () {
       var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(), lp = ctx.createBiquadFilter();
       o.type = 'sawtooth'; o.frequency.value = 55; o2.type = 'sawtooth'; o2.frequency.value = 58.3; lp.type = 'lowpass'; lp.frequency.value = 260;
       lfo.frequency.value = 0.35; lg.gain.value = 120; lfo.connect(lg); lg.connect(lp.frequency);
-      g.gain.value = 0.0001; g.gain.setTargetAtTime(0.05, ctx.currentTime, 1.2);
+      g.gain.value = 0.0001; g.gain.setTargetAtTime(0.03, ctx.currentTime, 1.2);
       o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(ctx.destination); o.start(); o2.start(); lfo.start();
       dreadDrone = { o: o, o2: o2, g: g, lfo: lfo };
       // and a heartbeat: lub-dub
@@ -201,6 +201,32 @@ var Music = (function () {
       thump(t + 0.32, 55, 0.6);
     } catch (e) {}
   }
+  function scream() {   // caught: a short, shrill scream that falls away
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.02, len = 1.15, o = ctx.createOscillator(), o2 = ctx.createOscillator(), v = ctx.createOscillator(), vg = ctx.createGain(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = 'sawtooth'; o2.type = 'square';
+      o.frequency.setValueAtTime(820, t); o.frequency.linearRampToValueAtTime(1050, t + 0.18); o.frequency.exponentialRampToValueAtTime(360, t + len);
+      o2.frequency.setValueAtTime(828, t); o2.frequency.linearRampToValueAtTime(1062, t + 0.18); o2.frequency.exponentialRampToValueAtTime(366, t + len);
+      v.frequency.value = 9; vg.gain.value = 45; v.connect(vg); vg.connect(o.frequency); vg.connect(o2.frequency);
+      f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 1.4;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.05); g.gain.setValueAtTime(0.16, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(f); o2.connect(f); f.connect(g); g.connect(ctx.destination);
+      [o, o2, v].forEach(function (x) { x.start(t); x.stop(t + len + 0.05); });
+    } catch (e) {}
+  }
+  function crumble() {   // stone breaking: a rumble with cracks in it
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.02;
+      if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      var s = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      s.buffer = noiseBuf; s.loop = true; f.type = 'lowpass'; f.frequency.value = 380;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.3);
+      s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + 1.35);
+      for (var k = 0; k < 6; k++) (function (at) { var c2 = ctx.createBufferSource(), cg = ctx.createGain(), cf = ctx.createBiquadFilter(); c2.buffer = noiseBuf; cf.type = 'highpass'; cf.frequency.value = 1600; cg.gain.setValueAtTime(0.3, at); cg.gain.exponentialRampToValueAtTime(0.0001, at + 0.06); c2.connect(cf); cf.connect(cg); cg.connect(ctx.destination); c2.start(at); c2.stop(at + 0.08); })(t + 0.05 + Math.random() * 0.9);
+    } catch (e) {}
+  }
   function stepSnd() { if (!ac()) return; try { var t = ctx.currentTime + 0.01; thump(t, 160, 0.18); } catch (e) {} }
-  return { dread: dread, creep: creep, chomp: chomp, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { dread: dread, creep: creep, chomp: chomp, scream: scream, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

@@ -34,7 +34,7 @@
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = c.text;
-      $('chhelp').textContent = l.pos >= c.end - 3 ? '🏆 You can reach the trophy: only a perfect answer (all three right) wins!' : 'Tick every song that fits: none, some or all. One space forward for each one you get right.';
+      $('chhelp').textContent = l.pos >= (c.goal || c.end) - 3 ? '🏆 You can reach the stage: only a perfect answer (all three right) gets you on it and wins!' : 'Tick every song that fits: none, some or all. One space forward for each one you get right.';
       $('chopts').innerHTML = c.items.map(function (it, i) { return '<button type="button" class="opt' + ((chMask >> i) & 1 ? ' on' : '') + '" data-i="' + i + '"><b>' + ((chMask >> i) & 1 ? '✓' : 'ABC'[i]) + '</b>' + esc(it) + '</button>'; }).join('');
       if (chBarKey !== c.key) { chBarKey = c.key; var b = $('chpbar'); b.style.transition = 'none'; b.style.width = (c.left / 100) + '%'; b.getBoundingClientRect(); b.style.transition = 'width ' + c.left + 'ms linear'; b.style.width = '0%'; }
       return;

@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=307">
+<link rel="stylesheet" href="style.css?v=310">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -166,7 +166,13 @@
   <div id="chase" class="chase hidden">
     <div class="chhead"><b>🏁 The Final Chase</b><span id="chn"></span><button class="btn alt small" id="chstop" type="button">End chase</button></div>
     <div class="chtrack" id="chtrack">
-      <div class="chstage"><div class="chbeams"><i></i><i></i><i></i><i></i></div><div class="chled"></div><div class="chtro"><svg class="trophy" viewBox="0 0 120 260" aria-hidden="true">
+      <div class="chstage"><div class="chbeams"><i></i><i></i><i></i><i></i></div><div class="chled"></div></div>
+      <div class="chview" id="chview"><div class="chrun" id="chrun">
+        <div class="chvoid" id="chvoid"></div>
+        <div class="chtiles" id="chtiles"></div>
+        <div class="chstg"><div class="chstg-floor"><i></i></div><div class="chstg-ring"></div>
+          <div class="chpyro" style="top:6%"><i></i><i></i><i></i><i></i><i></i></div><div class="chpyro" style="top:94%"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chtro" id="chtro"><svg class="trophy" viewBox="0 0 120 260" aria-hidden="true">
             <defs><linearGradient id="fnglass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f7ff"/><stop offset=".5" stop-color="#9fd9ff"/><stop offset="1" stop-color="#e8f7ff"/></linearGradient></defs>
             <g class="fnrays" stroke="#ffd23f" stroke-width="3" opacity=".6"><line x1="60" y1="70" x2="60" y2="6"/><line x1="60" y1="70" x2="14" y2="24"/><line x1="60" y1="70" x2="106" y2="24"/><line x1="60" y1="70" x2="2" y2="72"/><line x1="60" y1="70" x2="118" y2="72"/></g>
             <ellipse cx="60" cy="70" rx="26" ry="30" fill="url(#fnglass)" stroke="#fff" stroke-width="3"/>
@@ -174,11 +180,9 @@
             <path d="M50 98 L70 98 L64 190 L56 190 Z" fill="url(#fnglass)" stroke="#fff" stroke-width="3"/>
             <rect x="34" y="190" width="52" height="18" rx="4" fill="#ffd23f"/>
             <path d="M60 232 C48 220 34 214 34 202 C34 194 42 190 48 194 C54 197 58 202 60 206 C62 202 66 197 72 194 C78 190 86 194 86 202 C86 214 72 220 60 232 Z" fill="#ff2fa8" transform="translate(0 16) scale(1 .9)"/>
-          </svg><span>Douze points!</span></div><div class="chfloor"></div></div>
-      <div class="chview" id="chview"><div class="chrun" id="chrun">
-        <div class="chtiles" id="chtiles"></div>
+          </svg><span>Douze points!</span></div></div>
         <div class="chtoks" id="chlanes"></div>
-        <div class="chmon" id="chmon"><div class="chbob"><svg class="diva" viewBox="0 0 340 340" aria-hidden="true">
+        <div class="chmon" id="chmon"><div class="chsmoke"><i></i><i></i><i></i><i></i><i></i></div><div class="chbob"><svg class="diva" viewBox="0 0 340 340" aria-hidden="true">
             <defs><radialGradient id="dvglow" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#ff2f6d" stop-opacity=".5"/><stop offset="1" stop-color="#ff2f6d" stop-opacity="0"/></radialGradient>
             <radialGradient id="dvface" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#efe8f6"/><stop offset="1" stop-color="#9c8fb3"/></radialGradient>
             <linearGradient id="dvchrome" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfcfe"/><stop offset=".3" stop-color="#a3acbb"/><stop offset=".55" stop-color="#eef1f6"/><stop offset=".8" stop-color="#6b7384"/><stop offset="1" stop-color="#d9dee6"/></linearGradient>
@@ -229,15 +233,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=307"></script>
-<script src="vendor/qrcode.js?v=307"></script>
-<script src="config.js?v=307"></script>
-<script src="net.js?v=307"></script>
-<script src="music.js?v=307"></script>
-<script src="chars.js?v=307"></script>
-<script src="match.js?v=307"></script>
-<script src="shapes.js?v=307"></script>
-<script src="quiz.js?v=307"></script>
-<script src="host.js?v=307"></script>
+<script src="vendor/supabase.js?v=310"></script>
+<script src="vendor/qrcode.js?v=310"></script>
+<script src="config.js?v=310"></script>
+<script src="net.js?v=310"></script>
+<script src="music.js?v=310"></script>
+<script src="chars.js?v=310"></script>
+<script src="match.js?v=310"></script>
+<script src="shapes.js?v=310"></script>
+<script src="quiz.js?v=310"></script>
+<script src="host.js?v=310"></script>
 </body>
 </html>
