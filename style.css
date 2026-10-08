@@ -1507,3 +1507,9 @@ aside.recapgone{visibility:hidden}
 .shosts.together .hbub.him{left:6%;max-width:26%}
 .shosts.together .hbub.her{right:6%;max-width:26%}
 .bombov .benv .bflag{height:clamp(22px,3vw,40px);width:auto;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.3);display:block}
+
+/* the envelopes always fit in one row, so the text above never runs through them */
+.bombov .benvs{flex-wrap:nowrap;gap:10px;padding:0 3vw}
+.bombov .benv{width:min(clamp(70px,9vw,120px),calc((94vw - (var(--n,4) - 1) * 10px) / var(--n,4)));height:auto;aspect-ratio:3/2}
+.bombov .benv .bno{font-size:clamp(.9rem,1.6vw,1.5rem)}
+.bombov .benv.open .bin{font-size:clamp(1.2rem,2.2vw,2.2rem)}

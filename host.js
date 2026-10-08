@@ -2157,6 +2157,7 @@
     if (cur && bp.getAttribute('data-k') !== cur.pid + '|' + g.round + '|' + g.turn) { bp.setAttribute('data-k', cur.pid + '|' + g.round + '|' + g.turn); bp.innerHTML = '<div class="bme">' + charSvg(cur.char) + '<b>' + esc(cur.name) + '</b></div>'; }
     if (!cur) { bp.innerHTML = ''; bp.removeAttribute('data-k'); }
     var bme = bp.querySelector('.bme'); if (bme) { bme.classList.toggle('boom', g.st === 'boom'); bme.classList.toggle('win', g.st === 'win'); }
+    ov.querySelector('.benvs').style.setProperty('--n', g.env.length);   // (all envelopes in one row, however many)
     ov.querySelector('.benvs').innerHTML = g.env.map(function (e, i) {
       var cls = 'benv' + (e.open ? ' open' + (e.bomb ? ' bomb' : ' flag') : '') + (g.pick === i && !e.open ? ' picked' : '');
       return '<div class="' + cls + '" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span>' + (e.open ? (e.bomb ? '<span class="bin">💣</span>' : '<span class="bin"><img class="bflag" src="https://flagcdn.com/w160/' + e.code + '.png" alt=""></span><small>' + esc(countries[e.code] || '') + '</small>') : '') + '</div>';
