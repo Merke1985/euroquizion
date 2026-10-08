@@ -1385,8 +1385,11 @@
       a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () { if (fallback) fallback(); });
     } catch (e) { if (fallback) fallback(); }
   }
+  function chaseSpot() {   // a fresh copy each time, so the clunks can overlap
+    try { var a = new Audio('sounds/spotlight.mp3?v=1'); a.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
   // The way in: the lights go out on the quiz, a line in the dark, then the chase opens up from a growing circle.
-  var CHASE_ENTER = 5400, CHASE_BUILD = 3600;
+  var CHASE_ENTER = 5400, CHASE_BUILD = 6000;
   function chaseEnter() {
     var bk = $('chblack');
     if (!bk) { bk = document.createElement('div'); bk.id = 'chblack'; bk.className = 'chblack'; document.body.appendChild(bk); }
@@ -1398,7 +1401,12 @@
     setTimeout(function () { bk.classList.add('gone'); bk.classList.remove('on'); }, CHASE_ENTER - 400);
     setTimeout(function () { ch.classList.remove('nostage'); Music.woosh(); }, CHASE_ENTER + 700);
     setTimeout(function () { ch.classList.remove('norunway'); Music.woosh(); }, CHASE_ENTER + 1700);
-    setTimeout(function () { ch.classList.remove('nolights'); Music.ding(); }, CHASE_ENTER + 2900);
+    [].forEach.call(ch.querySelectorAll('.lit'), function (e) { e.classList.remove('lit'); });
+    // the lights pop on one by one, each with a spotlight clunk: the four beams, the ring and the fireworks, then the floor and the trophy
+    var lights = [].slice.call(ch.querySelectorAll('.chbeams i')).reverse().map(function (e) { return [e]; });
+    lights.push([].slice.call(ch.querySelectorAll('.chstg-ring,.chpyro')), [].slice.call(ch.querySelectorAll('.chstg-floor,.chtro')));
+    lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 2900 + i * 420); });
+    setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 2900 + lights.length * 420 + 200);
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
   function chaseStart(test, face) {

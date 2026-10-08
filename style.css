@@ -1121,7 +1121,12 @@ header{padding-right:66px!important}
 .chase .chstg,.chase .chtiles,.chase .chbeams,.chase .chstg-ring,.chase .chpyro{transition:transform 1s cubic-bezier(.2,.9,.3,1.1),opacity .8s ease}
 .chase.nostage .chstg{transform:translateX(120%);opacity:0}
 .chase.norunway .chtiles{transform:translateX(-110%);opacity:0}
-.chase.nolights .chbeams{opacity:0}
-.chase.nolights .chstg-ring,.chase.nolights .chpyro{opacity:0}
-.chase.nolights .chtro{filter:brightness(.4)}
-.chase.nolights .chstg-floor i{animation:none;opacity:.15}
+.chase.nolights .chbeams i:not(.lit){opacity:0}
+.chase.nolights .chstg-ring:not(.lit),.chase.nolights .chpyro:not(.lit){opacity:0}
+.chase.nolights .chtro:not(.lit){filter:brightness(.4)}
+.chase.nolights .chstg-floor:not(.lit) i{animation:none;opacity:.15}
+.chase .chbeams i,.chase .chstg-ring,.chase .chpyro{transition:transform 1s cubic-bezier(.2,.9,.3,1.1),opacity .06s linear}
+.chase.nolights .lit{animation:chlitpop .5s ease-out}
+.chase.nolights .chbeams i.lit{animation:chlitpop .5s ease-out,chbeam 4s ease-in-out infinite alternate}
+.chase.nolights .chstg-ring.lit{animation:chlitpop .5s ease-out,chring 2.4s ease-in-out infinite}
+@keyframes chlitpop{0%{filter:brightness(3)}100%{filter:brightness(1)}}
