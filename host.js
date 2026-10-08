@@ -64,6 +64,10 @@
     if (mc) {
       // Multiple choice: the answer is held and can still be changed. Nobody learns whether
       // it was right before the reveal, which comes once everyone has an answer in.
+      if (G.best && G.best.ranked && Array.isArray(m.ranks)) {   // the 12-10-8 of the best drawings (not your own, no drawing twice)
+        var rk = []; m.ranks.forEach(function (i) { if (typeof i === 'number' && G.q.options[i] && G.best.pids[i] !== m.pid && rk.indexOf(i) < 0 && rk.length < 3) rk.push(i); });
+        if (!rk.length) return; p.ranks = rk; p.pick = rk[0]; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now()); push(); allIn(); return;
+      }
       if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
       if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;
       if (G.best && (G.best.pids[m.choice] === m.pid || p.pick != null)) return;
@@ -144,7 +148,7 @@
       s.gallery = { id: G.gallery.id, opts: {}, chosen: {}, done: {} };
       Object.keys(G.gallery.items).forEach(function (k) { var it = G.gallery.items[k]; s.gallery.opts[k] = it.options.map(songLabel); if (it.chosen != null) s.gallery.chosen[k] = it.chosen; if (it.done) s.gallery.done[k] = 1; });
     }
-    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { only: G.best.only || null, pick: !!G.best.pick, bluff: !!G.best.bluff, quip: !!G.best.quip, win_pts: G.best.quip ? QUIP_WIN : BEST_PTS * partyX(), id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS };
+    if (G.best && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal')) s.best = { only: G.best.only || null, pick: !!G.best.pick, bluff: !!G.best.bluff, quip: !!G.best.quip, win_pts: G.best.quip ? QUIP_WIN : BEST_PTS * partyX(), id: G.best.id, pids: G.best.pids, tally: G.phase === 'reveal' ? G.best.tally : null, wins: G.phase === 'reveal' ? G.best.wins : null, pts: BEST_PTS, ranked: !!G.best.ranked };
     if (G.draw && G.phase !== 'end' && G.phase !== 'lobby') {
       var dp = players[G.draw.pid];
       s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
@@ -930,7 +934,8 @@
       // Best drawing: the votes are counted, the drawing with the most gets the bonus (a tie: all of them).
       right = [];
       var tally = G.best.pids.map(function () { return 0; });
-      list().forEach(function (p) { if (p.pick != null && tally[p.pick] != null) tally[p.pick]++; });
+      if (G.best.ranked) list().forEach(function (p) { (p.ranks || (p.pick != null ? [p.pick] : [])).forEach(function (i, r) { if (tally[i] != null) tally[i] += RANK_PTS[r] || 0; }); });   // 12, 10, 8
+      else list().forEach(function (p) { if (p.pick != null && tally[p.pick] != null) tally[p.pick]++; });
       var top = Math.max.apply(null, tally), tops = [];
       tally.forEach(function (n, i) { if (top > 0 && n === top) tops.push(i); });
       if (G.best.bpick) { battleBets(); return; }   // Song Battle: the bets are in, on to the first battle
@@ -956,6 +961,10 @@
         G.best.per = Math.max(1, Math.round(12 / voters));
         G.best.pids.forEach(function (k, i) { var w = players[k]; if (!w) return; w.pts = tally[i] * G.best.per; w.score += w.pts; w.got = w.pts > 0; });
         G.q.reveal = G.q.options.map(function (o, i) { var w = players[G.best.pids[i]]; return o + '  —  ' + (w ? w.name : QUIP_HOUSE); });
+      } else
+      if (G.best.ranked) {   // every drawing gets the points it was given; the most points wins
+        G.best.pids.forEach(function (k, i) { var w = players[k]; if (!w || !tally[i]) return; w.pts = tally[i]; w.score += w.pts; w.got = tops.indexOf(i) >= 0; });
+        G.q.reveal = G.q.options.map(function (o, i) { return o + '  —  ' + tally[i] + (tally[i] === 1 ? ' point' : ' points'); });
       } else
       tops.forEach(function (i) { var w = players[G.best.pids[i]]; if (w) { w.pts = BEST_PTS * partyX(); w.score += w.pts; w.got = true; } });
     }
@@ -1029,7 +1038,7 @@
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
     list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
-    list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
+    list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; p.ranks = null; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
     G.quips = null; G.quipLoad = false; clearTimeout(quipTimer);
@@ -1060,7 +1069,8 @@
       FUN.starter = { icon: '🛍️', title: 'Your Eurofan bag!', sub: 'Everyone gets one of each item from the Eurofan Shop. Use them with the 🛍️ button on your phone, whenever you like.' };
       funIntro('starter', startRound2, 6500); return;
     }
-    if (G.atype === 'party' && G.afterParty && G.mgBase) { mgPrize(); return; }   // a party game is over: the winner goes shopping
+    if (G.atype === 'party' && G.afterParty && G.mgBase) { mgPrize(); return; }
+    if (G.atype === 'party' && G.mgTest) { G.afterParty = false; G.quizRun = Math.max(G.quizRun || 0, 3); }   // testing the party games: no trivia in between   // a party game is over: the winner goes shopping
     if (G.atype === 'party') {
       // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
@@ -1069,7 +1079,7 @@
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
-      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.eraNow = ''; buildPool(); G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; ebuPay(function () { funIntro('final', startRound2, 6000); }); return; }
+      if (G.tour && G.tourLast && !G.tourFinal && !G.tourDone) { G.tourDone = true; G.round--; G.total = G.round; G.afterParty = false; G.quizRun = 0; goOn(); return; }   // the tour is over: on to the end (the Final Chase is the grand final)
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; partyGo('shop'); return; }   // the first break: everyone visits the boutique
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
@@ -1161,7 +1171,7 @@
     if (!g.queue.length) { drawFallback(); if (!REMOTE) $('err').textContent = 'Nobody made a drawing this time, so here is a quiz question instead.'; return; }
     // every drawing is a song of its own: a game never stops halfway through the drawings
     g.shown = g.queue.slice();
-    g.vote = false;   // (there used to be a vote for the best drawing at the end; it is no longer played)
+    g.vote = true;   // at the end: 12, 10 and 8 points for the best drawings
     var need = G.round - 1 + g.queue.length + (g.vote ? 1 : 0);
     // In a Party game the whole Draw! round counts as one song, so the game is made that much longer.
     if (G.atype === 'party' && G.total < ENDLESS) G.total += g.queue.length + (g.vote ? 1 : 0) - 1;
@@ -1726,6 +1736,15 @@
     try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push();
   }
   $('chstop').addEventListener('click', function () { var c = G.chase; if (!c) return; if (c.st !== 'win') { var al = chaseAlive(), best = al.length ? Math.max.apply(null, al.map(function (k) { return c.lanes[k].pos; })) : 0; c.win = al.filter(function (k) { return c.lanes[k].pos === best; }); } chaseDone(); });
+  // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
+  $('mgtest').addEventListener('click', function () {
+    if (REMOTE || G.phase !== 'lobby') return;
+    var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
+    $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
+    if (beginGame() === false) return;
+    G.mgTest = true; G.quizRun = 3;
+    if (G.phase === 'intro') introEnd();
+  });
   $('chasetest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     if (!list().length) { botAdd(); botAdd(); botAdd(); }
@@ -2432,7 +2451,7 @@
   });
   // After the last drawing: everyone votes for the best one (not their own). All drawings are on the
   // screen side by side; the phones get them as small pictures on the buttons.
-  var BEST_MS = 25000, BEST_PTS = 3, bestKey = '';
+  var BEST_MS = 25000, BEST_PTS = 3, bestKey = '', RANK_PTS = [12, 10, 8];
   // In a Party game these rounds sit between 12-point quiz questions, so they are worth four times as much.
   function partyX() { return G.atype === 'party' ? 4 : 1; }
   function drawVote() {
@@ -2440,8 +2459,8 @@
     var pids = (g.shown || []).filter(function (k) { return players[k] && g.items[k]; });
     if (pids.length < 2) return false;
     stopTimers(); G.draw = null; G.song = null; G.clip = null;
-    G.best = { id: g.id, pids: pids, tally: null, wins: null };
-    G.q = { subject: 'best', type: 'mc', text: 'Which drawing is the best?', hint: '', options: pids.map(function (k) { return players[k].name; }), correct: -1, answer: '', noclip: true };
+    G.best = { id: g.id, pids: pids, tally: null, wins: null, ranked: true };   // Eurovision style: 12, 10 and 8 points for your three favourites
+    G.q = { subject: 'best', type: 'mc', text: 'Give your 12, 10 and 8 points to the best drawings!', hint: '', options: pids.map(function (k) { return players[k].name; }), correct: -1, answer: '', noclip: true };
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '🏆', '', false); masks(true); stageEl().classList.add('novideo'); }
     G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = BEST_MS; G.endsAt = Date.now() + BEST_MS; push();
     var b = G.best, go = function () {
@@ -3182,7 +3201,8 @@
         // A question with a right answer: right 40% of the time, otherwise one of the wrong answers. (Votes are random.)
         var known = !G.best && !G.q.battle && G.q.correct >= 0, smart = known && Math.random() < (window.BOT_SMART == null ? 0.4 : window.BOT_SMART);
         var wrong = known ? can.filter(function (i) { return i !== G.q.correct; }) : can;
-        if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(wrong.length ? wrong : can) });
+        if (can.length && G.best && G.best.ranked) H.guess({ pid: pid, ranks: shuffle(can.slice()).slice(0, 3) });   // a bot's 12, 10 and 8
+        else if (can.length) H.guess({ pid: pid, choice: smart ? G.q.correct : pick(wrong.length ? wrong : can) });
       }
       else if (ph === 'dall' && G.gallery && G.gallery.items[pid]) { var bp = Math.floor(Math.random() * 4), bs = (G.gallery.items[pid].options || [])[bp]; H.draw({ pid: pid, pick: bp }); H.draw({ pid: pid, lines: bs ? botDraw(bs) : botScribble() }); H.draw({ pid: pid, done: 1 }); }
       else if (ph === 'qall') H.quip({ pid: pid, text: pick(G.quips && G.quips.bluff ? BOT_BLUFFS : BOT_LINES) });
@@ -3356,8 +3376,8 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
-    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;

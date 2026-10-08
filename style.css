@@ -1357,3 +1357,6 @@ aside.recapgone{visibility:hidden}
 .boutique .bqshelf{width:46vw;white-space:nowrap;letter-spacing:.12em;font-size:clamp(1.2rem,2.3vw,2.1rem)}
 .boutique .bqshelf.top{top:25vh}.boutique .bqshelf.low{top:36vh}
 .boutique .shopitems{grid-template-columns:repeat(5,1fr)}
+
+.opt .rankpts{margin-left:auto;background:var(--yellow);color:#221a00;font-weight:900;border-radius:999px;padding:2px 10px;font-size:1rem}
+.opt .rankpts.hidden{display:none}

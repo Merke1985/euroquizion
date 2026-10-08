@@ -880,9 +880,28 @@
     drawTell({ pick: padPicked });
     if (state && state.gallery) drawView(state.gallery.opts[pid] || [], padPicked);   // straight to the pad
   });
+  // Postcard: 12, 10 and 8 points for the three best drawings, in the order you tap them (tap again to take it back)
+  var rankSel = [], rankKey = '';
+  function rankPaint() {
+    var RP = [12, 10, 8];
+    [].forEach.call($('opts').querySelectorAll('button[data-i]'), function (x) {
+      var r = rankSel.indexOf(+x.getAttribute('data-i')), bd = x.querySelector('.rankpts');
+      if (!bd) { bd = document.createElement('span'); bd.className = 'rankpts'; x.appendChild(bd); }
+      x.classList.toggle('picked', r >= 0); bd.textContent = r >= 0 ? RP[r] : ''; bd.classList.toggle('hidden', r < 0);
+    });
+  }
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-i]');
     if (!b || b.disabled || !net) return;
+    if (state && state.best && state.best.ranked) {
+      if (rankKey !== state.best.id) { rankKey = state.best.id; rankSel = []; }
+      var i = +b.getAttribute('data-i'), at = rankSel.indexOf(i), can = $('opts').querySelectorAll('button[data-i]:not([disabled])').length, need = Math.min(3, can);
+      if (at >= 0) rankSel.splice(at, 1); else if (rankSel.length < need) rankSel.push(i);
+      rankPaint();
+      $('fb').className = 'fb close'; $('fb').textContent = rankSel.length < need ? 'Next: ' + [12, 10, 8][rankSel.length] + ' points' : 'Points sent! Tap one to change.';
+      if (rankSel.length >= need) net.send('guess', { pid: pid, ranks: rankSel.slice() });
+      return;
+    }
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked');
     var final = !!(state && (state.draw || state.best));   // Draw!: the first guess counts, and so does a vote
