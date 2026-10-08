@@ -697,7 +697,7 @@ function makeChase(allSongs, countries, used) {
 var SHOP_ITEMS = [
   { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
   { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
-  { id: 'power', icon: '🔋', name: 'Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
+  { id: 'power', icon: '🔋', name: 'Marc’s Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'umbrella', icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
   { id: 'flag', icon: '🚩', name: 'Giant Eurovision Flag', desc: 'Wave it in front of another player: for 3 questions they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
