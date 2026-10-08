@@ -1566,7 +1566,7 @@
     c.st = 'show';
     chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = !l.touched ? 0 : c.q.items.reduce(function (n, it, i) { return n + ((((l.mask >> i) & 1) === 1) === it.ok ? 1 : 0); }, 0); l.fp = (l.fp || 0) + l.res; });   // (a point per right answer, for the overview at the end)
     Music.soft(); push();
-    clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseMove, 3600);
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (G.chase !== c || c.st !== 'show') return; c.st = 'pause'; push(); chaseTimer = setTimeout(chaseMove, 1000); }, 3000);   // the answers go, a second's pause, then everyone moves
   }
   function chaseMove() {
     var c = G.chase; if (!c) return;
@@ -1723,7 +1723,7 @@
   function chaseSnap() {
     var c = G.chase, s = { rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
-    var nx = c.monsterDead ? 0 : (c.st === 'ask' || c.st === 'show' || c.st === 'move') ? divaStep(c.n) : divaStep(c.n + 1);
+    var nx = c.monsterDead ? 0 : (c.st === 'ask' || c.st === 'show' || c.st === 'pause' || c.st === 'move') ? divaStep(c.n) : divaStep(c.n + 1);
     c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { danger: !l.out && !!nx && l.pos <= c.mon + nx && l.pos < CHASE_GOAL, fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });
     return s;
   }
@@ -1767,13 +1767,13 @@
         setTimeout(function () { el.classList.remove('bonk'); }, 1700);
       } else if (el.getAttribute('data-bump') !== c.qkey || c.st !== 'move') { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
       if (!l.out && l.blocked === c.n && c.st === 'move') deny[i + ':' + at] = 1;   // not perfect, so not onto the stage: the space flashes red
-      if (!l.out) { occ[i + ':' + at] = 1; if (next && l.pos < CHASE_GOAL && at <= c.mon + next && c.st !== 'win' && c.st !== 'move') doomed[k] = 1; }
+      if (!l.out) { occ[i + ':' + at] = 1; if (next && l.pos < CHASE_GOAL && at <= c.mon + next && c.st !== 'win' && c.st !== 'move' && c.st !== 'pause') doomed[k] = 1; }
       el.classList.toggle('out', l.out); el.classList.toggle('vanish', (l.out && !(c.st === 'diva' && l.at === c.n)) || (!!c.wrecked && l.pos < CHASE_GOAL));   // caught: shown with a skull for a moment, then gone el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
       el.classList.toggle('near', !l.out && l.pos >= CHASE_GOAL - 3 && !c.win); el.classList.toggle('doomed', !!doomed[k]);
       var waiting = c.st === 'intro' && c.placeOrder.indexOf(k) >= c.placed; el.classList.toggle('unplaced', waiting);   // not on the runway yet
       if (waiting) delete occ[i + ':' + at];
       el.querySelector('.ch-name').textContent = (players[k] ? players[k].name : '?');
-      var r = el.querySelector('.ch-res'), showR = (c.st === 'show' || c.st === 'move') && l.res != null && !l.out;
+      var r = el.querySelector('.ch-res'), showR = (c.st === 'show' || c.st === 'pause') && l.res != null && !l.out;
       r.classList.toggle('on', showR); r.classList.toggle('zero', !l.res); r.classList.toggle('gold', l.res === 3); r.textContent = showR ? (l.res === 3 ? '★ +3' : '+' + l.res) : '';
     });
     // smashed, threatened and occupied spaces (an occupied space that is threatened: deadly)

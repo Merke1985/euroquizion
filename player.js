@@ -32,7 +32,7 @@
     if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Final Chase!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
     if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by ' + (c.mname || 'the monster').replace(/^The /, 'the ') + '!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
     if (c.sd && (!c.act || c.act.indexOf(pid) < 0)) { show('v-wait'); $('waittitle').textContent = l.fell ? '💥 You fell off the stage!' : '🏆 Sudden death on the stage'; $('waitsub').textContent = 'Watch the big screen: the last one standing wins.'; return; }
-    if (c.sd && c.st !== 'ask') { show('v-wait'); $('waittitle').textContent = '🏆 Sudden death!'; $('waitsub').textContent = c.st === 'show' || c.st === 'sdres' ? (l.res != null ? l.res + ' out of 3 right' : '') : 'Get ready: whoever gets fewer right than the others falls off the stage.'; return; }
+    if (c.sd && c.st !== 'ask') { show('v-wait'); $('waittitle').textContent = '🏆 Sudden death!'; $('waitsub').textContent = c.st === 'show' || c.st === 'pause' || c.st === 'sdres' ? (l.res != null ? l.res + ' out of 3 right' : '') : 'Get ready: whoever gets fewer right than the others falls off the stage.'; return; }
     if (c.st === 'ready' || c.st === 'go') {
       var rd = !!(c.ready && c.ready[pid]) || chReadyKey === c.rkey;
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = rd ? 'You’re ready!' : 'Are you ready?';
@@ -55,7 +55,7 @@
     }
     // the answer and the moves
     show('v-wait');
-    $('waittitle').textContent = c.st === 'show' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A former winner') + ' moves…' : 'Moving…';
+    $('waittitle').textContent = c.st === 'show' || c.st === 'pause' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A former winner') + ' moves…' : 'Moving…';
     $('waitsub').textContent = where;
   }
   $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); if (state && state.chase) chaseView(state.chase); chaseSend(false); });
