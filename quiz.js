@@ -699,6 +699,7 @@ var SHOP_ITEMS = [
   { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
   { id: 'power', icon: '🔋', name: 'Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
+  { id: 'umbrella', icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
   { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
 ];
 var SHOP_PICKS = 2;   // free items per visit

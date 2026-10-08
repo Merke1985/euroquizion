@@ -362,8 +362,8 @@
     var p = $('bagpanel');
     if (!bagItem) {
       var seen = {}; p.innerHTML = '<h3>Your items</h3>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
-        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, wait = (it.kind === 'sit' && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess');   // the mic only breaks while a question is open; the smoke goes up before one
-        return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(wait ? (it.kind === 'smoke' ? 'Only before a question' : 'Only while a question is open') : it.desc) + '</small></span></button>';
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, wait = (it.kind === 'sit' && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess') || it.kind === 'shield';   // the mic only breaks while a question is open; the smoke goes up before one
+        return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(it.kind === 'shield' ? 'Protects you by itself: it blocks the next item used on you' : wait ? (it.kind === 'smoke' ? 'Only before a question' : 'Only while a question is open') : it.desc) + '</small></span></button>';
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
         var id = b.getAttribute('data-id');

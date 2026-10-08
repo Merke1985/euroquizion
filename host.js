@@ -1914,7 +1914,7 @@
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
       var it0 = shopItem(m.use); if (it0 && it0.kind === 'smoke') t = p;   // (no target: it is the user's own smoke)
       if (k < 0 || !t || (t === p && !(it0 && it0.kind === 'smoke'))) return;
-      var it = shopItem(m.use); if (!it) return;
+      var it = shopItem(m.use); if (!it || it.kind === 'shield') return;   // (the umbrella works by itself)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
       if (it.kind === 'smoke') { if (open) return; inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: it.id, target: p.pid }); Music.blip(); push(); return; }   // the Smoke Machine waits for the next question
@@ -1945,6 +1945,8 @@
   // What an item does; returns the line for the big screen.
   function shopApply(u) {
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
+    var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit') && t.inv ? t.inv.indexOf('umbrella') : -1;
+    if (ui >= 0) { t.inv.splice(ui, 1); Music.blip(); return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
     if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); Music.woosh(); return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; Music.woosh(); return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
