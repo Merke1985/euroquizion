@@ -1386,7 +1386,7 @@
         chaseTimer = setTimeout(function () {
           if (G.chase !== c) return;
           c.st = 'rise'; chaseMusic(true); chaseSfx('brk', 0.9, Music.crumble); push();
-          chaseTimer = setTimeout(chaseAsk, 6000);
+          chaseTimer = setTimeout(function () { chaseReady(c); }, 5000);
         }, 2200);
       }, 4500);
     }
@@ -1424,8 +1424,21 @@
     push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, CHASE_ASK + 300);
   }
+  // Before the first question: everyone presses Ready on their phone (test bots after three seconds).
+  function chaseReady(c) {
+    if (G.chase !== c) return;
+    c.st = 'ready'; c.ready = {}; push();
+    chaseAlive().forEach(function (k) { if (players[k] && players[k].bot) setTimeout(function () { chaseMsg({ pid: k, key: c.key + '-r', ready: 1 }); }, 3000); });
+  }
   function chaseMsg(m) {
-    var c = G.chase; if (!c || G.phase !== 'chase' || c.st !== 'ask' || m.key !== c.qkey) return;
+    var c = G.chase; if (!c || G.phase !== 'chase') return;
+    if (m.ready) {
+      if (c.st !== 'ready' || m.key !== c.key + '-r' || !c.lanes[m.pid] || c.ready[m.pid]) return;
+      c.ready[m.pid] = 1; Music.plop(Object.keys(c.ready).length); push();
+      if (chaseAlive().every(function (k) { return c.ready[k]; })) { c.st = 'go'; push(); clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseAsk, 1200); }
+      return;
+    }
+    if (c.st !== 'ask' || m.key !== c.qkey) return;
     var l = c.lanes[m.pid]; if (!l || l.out || l.lock) return;
     l.mask = (m.mask | 0) & 7; l.touched = true; if (m.lock) l.lock = true;
     push();
@@ -1518,7 +1531,7 @@
     arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)';
   }
   function chaseSnap() {
-    var c = G.chase, s = { key: c.qkey, st: c.st, n: c.n, mon: c.mon, mname: c.monster ? c.monster.name : 'The Diva', end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
+    var c = G.chase, s = { key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster ? c.monster.name : 'The Diva', end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
     c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });
     return s;
@@ -1541,7 +1554,7 @@
       var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
       $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
     }
-    var next = c.st === 'diva' || c.st === 'intro' || c.st === 'rise' || c.st === 'near' || c.st === 'wheel' || c.st === 'pre' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {}, deny = {};
+    var next = c.st === 'diva' || c.st === 'intro' || c.st === 'rise' || c.st === 'near' || c.st === 'wheel' || c.st === 'pre' || c.st === 'ready' || c.st === 'go' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {}, deny = {};
     c.order.forEach(function (k, i) {
       var l = c.lanes[k], el = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]'); if (!el) return;
       var at = Math.min(CHASE_END, l.pos), won = !!(c.win && c.win.indexOf(k) >= 0);
@@ -1614,10 +1627,11 @@
     cc.classList.toggle('hidden', !sp);
     if (sp && cc.getAttribute('data-k') !== c.showing) { cc.setAttribute('data-k', c.showing); cc.innerHTML = '<div class="chcard-face">' + charSvg(sp.char) + '</div><b>' + esc(sp.name) + '</b><span>Jury votes</span><strong id="chcount">' + (c.count || 0) + '</strong>'; }
     cc.classList.toggle('final', !!(sp && c.counted));
-    if (c.st === 'pre') { big.innerHTML = '👑 A former winner is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
+    if (c.st === 'ready' || c.st === 'go') { big.innerHTML = (c.st === 'go' ? 'Here we go!' : 'Is everyone ready?') + '<small>Press Ready on your phone.</small><div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
+    else if (c.st === 'pre') { big.innerHTML = '👑 A former winner is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
     else if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>The jury votes are in: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
-    else if (c.st === 'rise') { big.innerHTML = '👹 ' + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'rise') { big.innerHTML = esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : 'jumped onto the stage: the trophy is theirs!') + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { big.innerHTML = '💀 Caught!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'near') { big.innerHTML = '🏆 ' + esc((c.nearNew || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + ' within reach of the stage!<small>Only a perfect answer (all three right) gets you onto the stage. Anything less and you bounce back.</small>'; big.classList.remove('hidden'); }

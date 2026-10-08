@@ -17,7 +17,7 @@
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
   // ---------- The Final Chase: tick the songs that fit ----------
-  var chKey = '', chMask = 0, chLocked = false, chBarKey = '';
+  var chReadyKey = '', chKey = '', chMask = 0, chLocked = false, chBarKey = '';
   function chaseSend(lock) {
     if (!net || !chKey) return; var k = chKey, m = chMask;
     net.send('chase', { pid: pid, key: k, mask: m, lock: !!lock });
@@ -29,6 +29,13 @@
     var where = 'Space ' + l.pos + ' of ' + c.end + ' · ' + (c.wake ? (c.mname || 'the Diva').replace(/^The /, 'the ') + ' is still waiting' : (c.mname || 'the Diva').replace(/^The /, 'the ') + ' is on ' + c.mon);
     if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Final Chase!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
     if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by ' + (c.mname || 'the Diva').replace(/^The /, 'the ') + '!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
+    if (c.st === 'ready' || c.st === 'go') {
+      var rd = !!(c.ready && c.ready[pid]) || chReadyKey === c.rkey;
+      show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = rd ? 'You’re ready!' : 'Are you ready?';
+      $('chhelp').textContent = rd ? 'Waiting for the others…' : 'The chase starts when everyone is ready.'; $('chopts').innerHTML = ''; $('chpbar').parentNode.classList.add('hidden');
+      $('chlock').textContent = rd ? 'Ready ✓' : 'Ready!'; $('chlock').disabled = rd; return;
+    }
+    $('chpbar').parentNode.classList.remove('hidden'); $('chlock').textContent = 'Lock in'; $('chlock').disabled = false;
     if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = (c.mname || 'The Diva') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
     if (c.st === 'ask') {
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
@@ -45,7 +52,10 @@
     $('waitsub').textContent = where;
   }
   $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); if (state && state.chase) chaseView(state.chase); chaseSend(false); });
-  $('chlock').addEventListener('click', function () { if (chLocked) return; chLocked = true; chaseSend(true); if (state && state.chase) chaseView(state.chase); });
+  $('chlock').addEventListener('click', function () {
+    var cs = state && state.chase;
+    if (cs && (cs.st === 'ready' || cs.st === 'go')) { if (chReadyKey === cs.rkey || !net) return; chReadyKey = cs.rkey; var rk = cs.rkey; net.send('chase', { pid: pid, key: rk, ready: 1 }); [800, 2200].forEach(function (ms) { setTimeout(function () { if (net && state && state.chase && state.chase.st === 'ready') net.send('chase', { pid: pid, key: rk, ready: 1 }); }, ms); }); chaseView(cs); return; }
+    if (chLocked) return; chLocked = true; chaseSend(true); if (state && state.chase) chaseView(state.chase); });
   function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-chase', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
