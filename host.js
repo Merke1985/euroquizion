@@ -2278,12 +2278,12 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
-    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); $('s-partypick').disabled = !party;   // the party settings only show for a Party game
+    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); $('scoringbox').classList.toggle('hidden', party); $('scoringpad').classList.toggle('hidden', party); $('s-partypick').disabled = !party;   // (scoring is a Quiz setting: a Party game scores the standard way)   // the party settings only show for a Party game
     if (lo) lo.disabled = party;
-    if (party && $('s-scoring').value === 'ladder') $('s-scoring').value = 'correct';
+    
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
     var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
-    var lad = !on && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
+    var lad = !on && !party && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
     var tour = party && $('s-partypick').value === 'order';   // Grand tour sets its own length: every minigame once
     $('s-rounds').disabled = lad || tour; $('s-show').disabled = lad;
     // Rounds and the spin for the years belong to a plain quiz
@@ -2304,7 +2304,7 @@
   $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP + ' ' + (HOST_SCORING_HELP[$('s-scoring').value] || '') : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   // ---------- eras: several can be switched on (none or all of them: every year) ----------
@@ -2394,7 +2394,7 @@
   function ytReadyOrRemote() { return REMOTE || ytReady; }
   function beginGame() {
     if (G.phase !== 'lobby') return false;
-    G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-scoring').value; G.showScore = $('s-show').value;
+    G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : $('s-scoring').value; G.showScore = $('s-show').value;
     if (!ytReadyOrRemote() || !buildPool()) return false;
     // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
     // round gets its own decade, picked by a spin; a decade that has been played is out of the draw.
