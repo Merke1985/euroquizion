@@ -1583,7 +1583,7 @@
     $('chmon').classList.toggle('defeat', c.st === 'win' && !!c.win && c.win.some(function (k) { return c.lanes[k] && c.lanes[k].pos >= CHASE_GOAL; }));
     if (c.st === 'win' && c.win && c.win.length && !view.classList.contains('zoom') && !view._zt) {
       var onStage = c.lanes[c.win[0]] && c.lanes[c.win[0]].pos >= CHASE_GOAL;
-      if (onStage) Music.defeat();
+      if (onStage) { chaseMusic(false); Music.short(); setTimeout(function () { Music.defeat(); }, 350); }   // the music cuts out with a short circuit as the monster goes down
       view._zt = setTimeout(function () {
         view._zt = null; if (!G.chase || G.chase.st !== 'win') return;
         var w = $('chlanes').querySelector('.chtok[data-pid="' + G.chase.win[0].replace(/"/g, '') + '"]'); if (!w) return;

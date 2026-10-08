@@ -263,6 +263,28 @@ var Music = (function () {
       thump(t + 1.5, 50, 0.7);
     } catch (e) {}
   }
+  function short() {   // the music dies: a short circuit, sparks crackling over a mains hum that drops away
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      var o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(100, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.9);
+      f.type = 'lowpass'; f.frequency.value = 900;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + 0.02); g.gain.setValueAtTime(0.32, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95);
+      o.connect(f); f.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 1);
+      if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      for (var k = 0; k < 14; k++) (function (at, len, vol) {
+        var s = ctx.createBufferSource(), sg = ctx.createGain(), sf = ctx.createBiquadFilter();
+        s.buffer = noiseBuf; sf.type = 'highpass'; sf.frequency.value = 2500 + Math.random() * 3000;
+        sg.gain.setValueAtTime(vol, at); sg.gain.exponentialRampToValueAtTime(0.0001, at + len);
+        s.connect(sf); sf.connect(sg); sg.connect(ctx.destination); s.start(at, Math.random() * 0.2); s.stop(at + len + 0.01);
+      })(t + Math.pow(Math.random(), 1.6) * 0.8, 0.015 + Math.random() * 0.05, 0.2 + Math.random() * 0.35);
+      var z = ctx.createOscillator(), zg = ctx.createGain();   // a final zap
+      z.type = 'square'; z.frequency.setValueAtTime(1800, t + 0.05); z.frequency.exponentialRampToValueAtTime(120, t + 0.3);
+      zg.gain.setValueAtTime(0.0001, t + 0.05); zg.gain.exponentialRampToValueAtTime(0.12, t + 0.06); zg.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+      z.connect(zg); zg.connect(ctx.destination); z.start(t + 0.05); z.stop(t + 0.34);
+    } catch (e) {}
+  }
   function stepSnd() { if (!ac()) return; try { var t = ctx.currentTime + 0.01; thump(t, 160, 0.18); } catch (e) {} }
-  return { dread: dread, creep: creep, chomp: chomp, scream: scream, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { dread: dread, creep: creep, chomp: chomp, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();
