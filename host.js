@@ -404,7 +404,7 @@
       show('v-game'); bombShow();
     } else {
       show('v-game');
-      $('roundlabel').textContent = 'Song ' + G.round + ofTotal(' / ');
+      $('roundlabel').textContent = G.phase === 'opening' ? '' : 'Song ' + G.round + ofTotal(' / ');
       renderQuestion(); renderAnswered(); hostsEl();
       $('qopts').classList.toggle('smoked', G.phase === 'guess' && !!(G.smoke && G.smoke.length));   // Smoke Machine: the answers are hidden until the reveal
       var between = G.phase === 'reveal' || G.phase === 'paused';
@@ -1038,7 +1038,7 @@
     }, 400);
   }
   function startRound() {
-    if (!G.round) setTimeout(hostWelcome, 300);   // the very first song: the presenters say hello
+    if (!G.round && !G.opened && !REMOTE && !G.mgTest) { G.opened = true; opening(startRound); return; }   // the very first thing: the show opens
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
     list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
@@ -1756,8 +1756,9 @@
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     G.partyOn = G.partyOn || {}; G.partyOn.shop = true;
     if (beginGame() === false) return;
+    G.mgTest = true;
     if (G.phase === 'intro') introEnd();
-    G.mgTest = true; G.shopFirst = true; G.quizRun = 3; clearTimeout(funTimer); stopTimers();
+    G.shopFirst = true; G.quizRun = 3; clearTimeout(funTimer); stopTimers();
     var first = list().filter(function (p) { return !p.off; }), lucky = [pick(first).pid];
     G.mode = G.lastParty = 'shop'; G.afterParty = true; G.mgBase = null;
     shopGo(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
@@ -2028,6 +2029,21 @@
     if (!G.q || G.best || G.draw || G.sing || G.quipLoad || G.round <= 1) return;   // (the first song: the welcome is still being said)
     var sub = G.q.blur ? 'peel' : G.q.subject, l = HOST_LINES[sub] || HOST_LINES.any;
     hostSay('next', pick(l), 3800);
+  }
+  // The opening of the show: the studio slides in, then the presenters walk onto the stage and introduce
+  // themselves, and only then does the game begin.
+  function opening(then) {
+    stopTimers(); G.phase = 'opening'; G.q = null; G.song = null; G.barMs = 0;
+    try { yt.pauseVideo(); } catch (e) {}
+    cover(true, '', '', false); masks(true); $('cover').classList.add('funcard');
+    var v = $('v-game'); v.classList.add('opening'); push();
+    var h = hostsEl(); if (h) h.classList.remove('arrive');
+    var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
+    step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
+    step(1300, function () { hostSay('him', 'Good evening, Europe! 🇪🇺 I’m Felix…', 3400); Music.ding(); });
+    step(2800, function () { hostSay('her', '…and I’m Stella! Welcome to EuroQuizion!', 3600); });
+    step(3300, function () { hostSay('him', 'Grab your phones. Let’s get this show started!', 3200); });
+    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); then(); });
   }
   function hostWelcome() {
     if (G.mgTest) return;   // (a test of the party games or the boutique: straight to it)
@@ -3494,7 +3510,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();

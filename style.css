@@ -1427,3 +1427,9 @@ aside.recapgone{visibility:hidden}
 .game.leaving .stage{animation:outTop .7s .3s cubic-bezier(.6,0,.8,.4) forwards}
 .game.leaving aside{animation:outRight .7s .55s cubic-bezier(.6,0,.8,.4) forwards}
 .game.leaving #qtext,.game.leaving #qopts,.game.leaving #revealui,.game.leaving .bar{animation:outBottom .7s .8s cubic-bezier(.6,0,.8,.4) forwards}
+
+/* the opening: the presenters wait in the wings until the studio is in, then walk on */
+.game.opening .shosts .ehost{opacity:0;animation:none}
+.game.opening .shosts.arrive .ehost{opacity:1}
+.game.opening .shosts.arrive .ehost.him{animation:inLeft 1s cubic-bezier(.2,.9,.3,1.08) both,ehbob 3.2s 1s ease-in-out infinite alternate}
+.game.opening .shosts.arrive .ehost.her{animation:inRight 1s .15s cubic-bezier(.2,.9,.3,1.08) both,ehbob 3.2s 1.2s ease-in-out infinite alternate}
