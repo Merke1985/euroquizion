@@ -1748,6 +1748,23 @@
     G.mgTest = true; G.quizRun = 3;
     if (G.phase === 'intro') introEnd();
   });
+  // Test the boutique: straight into the shop (everyone picks one), then a winner's trip (two items), then the party games.
+  $('shoptest').addEventListener('click', function () {
+    if (REMOTE || G.phase !== 'lobby') return;
+    var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
+    $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
+    G.partyOn = G.partyOn || {}; G.partyOn.shop = true;
+    if (beginGame() === false) return;
+    if (G.phase === 'intro') introEnd();
+    G.mgTest = true; G.shopFirst = true; G.quizRun = 3; clearTimeout(funTimer); stopTimers();
+    var first = list().filter(function (p) { return !p.off; }), lucky = [pick(first).pid];
+    G.mode = G.lastParty = 'shop'; G.afterParty = true; G.mgBase = null;
+    shopVisit(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
+      var nm = players[lucky[0]] ? players[lucky[0]].name : '';
+      FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: nm + ' wins this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
+      funIntro('shopwin', function () { shopVisit(lucky, SHOP_PICKS, function () { startRound(); }); }, 4000);
+    });
+  });
   $('chasetest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     if (!list().length) { botAdd(); botAdd(); botAdd(); }
