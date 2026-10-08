@@ -1,5 +1,5 @@
 // Thin connection layer: Supabase Realtime (broadcast) or, without config, BroadcastChannel.
-var EVENTS = ['hi', 'guess', 'state', 'result', 'sync', 'poll', 'clip', 'ready', 'chat', 'go', 'draw', 'quip', 'kick', 'chase', 'shop'];
+var EVENTS = ['hi', 'guess', 'state', 'result', 'sync', 'poll', 'clip', 'ready', 'chat', 'go', 'draw', 'quip', 'kick', 'chase', 'shop', 'bomb'];
 function escConnect(room) {
   var cfg = window.ESC_CONFIG || {}, handlers = {};
   function emit(e, p) { if (handlers[e]) handlers[e](p); }

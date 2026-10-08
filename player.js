@@ -133,6 +133,7 @@
     if (kicked) return;
     onState2(s);
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
+    if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
     bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
@@ -222,6 +223,7 @@
     }
     else if (s.phase === 'chase' && s.chase) chaseView(s.chase);
     else if (s.phase === 'shop' && s.shop) shopView(s);
+    else if (s.phase === 'bomb' && s.bomb) bombView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -327,6 +329,29 @@
     }
   }
 
+
+  // ---------- The Envelope, Please ----------
+  var bombSent = '';
+  function bombName(s, k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }
+  function bombView(s) {
+    var b = s.bomb, mine = b.turn === pid, out = b.out.indexOf(pid) >= 0, box = $('bombui');
+    show('v-wait');
+    if (b.st === 'pick' && mine) {
+      $('waittitle').textContent = '💌 Your turn!'; $('waitsub').textContent = 'Pick an envelope. One of them hides a bomb…';
+      box.classList.remove('hidden');
+      box.innerHTML = b.env.map(function (e, i) { return '<button type="button" class="benvbtn' + (e.open ? ' open' : '') + '" data-i="' + i + '"' + (e.open || bombSent === b.key ? ' disabled' : '') + '>' + (e.open ? (e.bomb ? '💣' : flag(e.code)) : '✉️') + '<b>' + (i + 1) + '</b></button>'; }).join('');
+      [].forEach.call(box.querySelectorAll('.benvbtn:not([disabled])'), function (btn) { btn.onclick = function () {
+        if (!net || bombSent === b.key) return; bombSent = b.key; var msg = { pid: pid, key: b.key, pick: +btn.getAttribute('data-i') };
+        net.send('bomb', msg); setTimeout(function () { if (state && state.bomb && state.bomb.st === 'pick' && state.bomb.key === msg.key) net.send('bomb', msg); }, 1500);
+        bombView(state);
+      }; });
+      return;
+    }
+    box.classList.add('hidden');
+    var nm = bombName(s, b.turn);
+    $('waittitle').textContent = b.st === 'win' ? (b.alive[0] === pid ? '🏆 You win!' : '🏆 ' + bombName(s, b.alive[0]) + ' wins!') : b.st === 'boom' ? (mine ? '💥 BOOM! You are out' : '💥 ' + nm + ' blew up!') : out ? '💥 You blew up' : b.st === 'safe' ? (mine ? 'Phew, safe!' : nm + ' is safe') : b.st === 'open' ? 'Opening envelope ' + (b.pick + 1) + '…' : b.st === 'pick' ? nm + ' is picking…' : '💌 The Envelope, Please';
+    $('waitsub').textContent = out && b.st !== 'win' ? 'Watch the others sweat on the big screen.' : b.st === 'deal' ? 'New envelopes are coming out. One hides a bomb.' : 'Watch the big screen!';
+  }
 
   // ---------- Eurofan Shop ----------
   // Shopping: pick the free items (the same one twice is fine). Afterwards the bag button in the corner holds

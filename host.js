@@ -116,6 +116,7 @@
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '', flag: !!p.flagNow }; }) };
     if (G.sing) s.sing = singSnapshot();
+    if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.phase === 'shop' && G.shop) { s.shop = { id: G.shop.id, n: SHOP_PICKS, items: SHOP_ITEMS, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') s.shopq = (G.shopQ || []).length;
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
@@ -322,6 +323,7 @@
     var ps = list();
     if (G.phase !== 'chase') $('chase').classList.add('hidden');
     if (G.phase !== 'shop' && $('shopov')) $('shopov').remove();
+    if (G.phase !== 'bomb' && $('bombov')) $('bombov').remove();
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -393,6 +395,8 @@
       show('v-game'); chaseShow();
     } else if (G.phase === 'shop') {
       show('v-game'); shopShow();
+    } else if (G.phase === 'bomb') {
+      show('v-game'); bombShow();
     } else {
       show('v-game');
       $('roundlabel').textContent = 'Song ' + G.round + ofTotal(' / ');
@@ -1060,7 +1064,7 @@
       // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
       var pOn = G.partyOn || {}, two = list().filter(function (p) { return !p.off; }).length >= 2;
-      var games = PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'fav' && x !== 'shop')); });
+      var games = PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'fav' && x !== 'shop' && x !== 'bomb')); });
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
@@ -1173,9 +1177,10 @@
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav', 'shop'];
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav', 'shop', 'bomb'];
   var FUN = {
     bigfive: { icon: '🖐️', title: 'The Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
+    bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, one hides a bomb. Take turns to open one. Blow up and you are out; the last one standing wins!' },
     shop: { icon: '🛍️', title: 'Eurofan Shop', sub: 'Pick ' + SHOP_PICKS + ' free items on your phone. Use them whenever you like: blow points away, steal points, or break someone’s mic during a question.' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
@@ -1190,7 +1195,7 @@
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll, shop: shopAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll, shop: shopAll, bomb: bombAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
@@ -1887,6 +1892,144 @@
       }
     }
   }
+
+  // ---------- The Envelope, Please ----------
+  // Golden envelopes on stage, one per player still in: all hide a flag but one, which hides a bomb.
+  // The players take turns (on their phone) to open one; whoever finds the bomb is out, and a new set
+  // of envelopes comes out. The last one standing wins.
+  // The two presenters of "The Envelope, Please" (original characters): a man in a sharp suit and a woman in a gown.
+  var HOST_HIM = '<svg class="ehost him" viewBox="0 0 200 420" aria-hidden="true"><defs>' +
+    '<linearGradient id="ehsuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#28306e"/><stop offset="1" stop-color="#121640"/></linearGradient>' +
+    '<radialGradient id="ehskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f3c9a4"/><stop offset="1" stop-color="#d89b72"/></radialGradient></defs>' +
+    '<ellipse cx="100" cy="410" rx="62" ry="9" fill="rgba(0,0,0,.45)"/>' +
+    '<path d="M74 300 L70 405 L94 405 L100 320 L106 405 L130 405 L126 300 Z" fill="#0d1033"/>' +
+    '<path d="M68 404 h28 v8 h-30 z M104 404 h28 v8 h-30 z" fill="#050510"/>' +
+    '<path d="M52 150 Q100 128 148 150 L140 310 Q100 322 60 310 Z" fill="url(#ehsuit)"/>' +
+    '<path d="M86 140 L100 210 L114 140 Z" fill="#fff"/>' +
+    '<path d="M86 140 L78 150 L96 215 L100 210 Z M114 140 L122 150 L104 215 L100 210 Z" fill="#1a1f55"/>' +
+    '<path d="M91 146 L100 152 L109 146 L109 158 L100 153 L91 158 Z" fill="#e0234a"/>' +
+    '<circle cx="100" cy="232" r="3" fill="#c9a34a"/><circle cx="100" cy="258" r="3" fill="#c9a34a"/>' +
+    '<path d="M126 168 l6 0 l-2 14 l-8 0 z" fill="#ffd23f"/>' +
+    '<path d="M52 152 Q38 200 44 262 L60 262 Q58 210 66 170 Z" fill="url(#ehsuit)"/>' +
+    '<path d="M148 152 Q166 186 160 232 L146 236 Q148 200 136 172 Z" fill="url(#ehsuit)"/>' +
+    '<circle cx="52" cy="266" r="9" fill="url(#ehskin)"/>' +
+    '<g class="ecard"><rect x="140" y="206" width="38" height="26" rx="3" fill="#ffd23f" transform="rotate(-12 159 219)"/><circle cx="154" cy="236" r="9" fill="url(#ehskin)"/></g>' +
+    '<rect x="92" y="118" width="16" height="22" fill="#d89b72"/>' +
+    '<ellipse cx="100" cy="92" rx="30" ry="36" fill="url(#ehskin)"/>' +
+    '<path d="M70 86 Q68 50 100 50 Q134 50 131 84 Q124 66 104 66 Q88 70 76 66 Z" fill="#2b1d14"/>' +
+    '<ellipse cx="89" cy="94" rx="3.2" ry="4" fill="#2a1a10"/><ellipse cx="111" cy="94" rx="3.2" ry="4" fill="#2a1a10"/>' +
+    '<path d="M83 84 q6 -4 12 0 M105 84 q6 -4 12 0" stroke="#2b1d14" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M88 110 Q100 122 112 110" stroke="#7a3b2a" stroke-width="3.5" fill="#fff" stroke-linecap="round"/>' +
+    '</svg>';
+  var HOST_HER = '<svg class="ehost her" viewBox="0 0 200 420" aria-hidden="true"><defs>' +
+    '<linearGradient id="ehgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3fa4"/><stop offset=".55" stop-color="#b0208a"/><stop offset="1" stop-color="#5a1170"/></linearGradient>' +
+    '<radialGradient id="ehskin2" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#e8b48c"/><stop offset="1" stop-color="#b9805a"/></radialGradient>' +
+    '<pattern id="ehsparkle" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.3" fill="#fff" opacity=".85"/><circle cx="12" cy="11" r="1" fill="#ffd23f" opacity=".9"/></pattern></defs>' +
+    '<ellipse cx="100" cy="410" rx="74" ry="10" fill="rgba(0,0,0,.45)"/>' +
+    '<path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehgown)"/>' +
+    '<path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehsparkle)" class="esparkle"/>' +
+    '<path d="M70 232 Q100 244 130 232" stroke="#ffd23f" stroke-width="4" fill="none"/>' +
+    '<path d="M74 152 Q60 196 64 236 L76 236 Q76 200 84 160 Z" fill="url(#ehskin2)"/>' +
+    '<path d="M126 152 Q146 180 144 214 L132 218 Q134 192 118 164 Z" fill="url(#ehskin2)"/>' +
+    '<circle cx="70" cy="240" r="8" fill="url(#ehskin2)"/>' +
+    '<g class="emic"><rect x="134" y="196" width="7" height="30" rx="3" fill="#222" transform="rotate(18 137 211)"/><circle cx="133" cy="194" r="8" fill="#9aa0b4"/><circle cx="140" cy="220" r="8" fill="url(#ehskin2)"/></g>' +
+    '<rect x="93" y="118" width="14" height="26" fill="#b9805a"/>' +
+    '<path d="M64 96 Q58 40 100 38 Q144 40 138 98 Q146 150 128 176 Q132 128 122 106 L78 106 Q68 128 72 176 Q54 150 64 96 Z" fill="#6b2a12"/>' +
+    '<ellipse cx="100" cy="90" rx="27" ry="33" fill="url(#ehskin2)"/>' +
+    '<path d="M73 84 Q76 54 104 56 Q128 58 128 82 Q114 66 94 70 Q80 74 73 84 Z" fill="#6b2a12"/>' +
+    '<ellipse cx="90" cy="92" rx="3" ry="3.8" fill="#2a1a10"/><ellipse cx="110" cy="92" rx="3" ry="3.8" fill="#2a1a10"/>' +
+    '<path d="M85 86 l-3 -3 M115 86 l3 -3" stroke="#2a1a10" stroke-width="2" stroke-linecap="round"/>' +
+    '<path d="M90 107 Q100 116 110 107" stroke="#c0204a" stroke-width="4" fill="#fff" stroke-linecap="round"/>' +
+    '<circle cx="74" cy="100" r="3" fill="#ffd23f"/><circle cx="126" cy="100" r="3" fill="#ffd23f"/>' +
+    '</svg>';
+
+  var BOMB_PICK_MS = 20000, bombTimer = null;
+  function bombAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (act.length < 2) { quipAll(); return; }
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    var order = shuffle(act.map(function (p) { return p.pid; }));
+    G.bomb = { id: 'bomb' + G.round + '-' + Math.random().toString(36).slice(2, 6), alive: order.slice(), out: [], turn: 0, round: 0, env: [], st: 'deal', pick: -1, at: Date.now() };
+    G.phase = 'bomb'; G.barMs = 0; push();
+    bombDeal();
+  }
+  function bombDeal() {   // a fresh set: one envelope per player still in, one of them with the bomb
+    var g = G.bomb; if (!g) return;
+    g.round++;
+    var codes = shuffle(Object.keys(countries || {})).filter(function (c) { return c.length === 2; }), n = g.alive.length, bomb = Math.floor(Math.random() * n);
+    g.env = []; for (var i = 0; i < n; i++) g.env.push({ bomb: i === bomb, code: codes[i % (codes.length || 1)] || 'se', open: false, by: '' });
+    g.st = 'deal'; g.pick = -1; push(); Music.woosh();
+    clearTimeout(bombTimer); bombTimer = setTimeout(bombTurn, 2200);
+  }
+  function bombWho() { var g = G.bomb; return g.alive[g.turn % g.alive.length]; }
+  function bombTurn() {   // the next player walks on stage and picks
+    var g = G.bomb; if (!g || G.phase !== 'bomb') return;
+    g.st = 'pick'; g.pick = -1; g.at = Date.now(); g.ends = Date.now() + BOMB_PICK_MS; push(); Music.blip();
+    var who = bombWho(), id = g.id + '-' + g.round + '-' + g.turn;
+    g.key = id;
+    if (players[who] && players[who].bot) setTimeout(function () { bombMsg({ pid: who, key: id, pick: bombRandom() }); }, 1800 + Math.random() * 1800);
+    clearTimeout(bombTimer); bombTimer = setTimeout(function () { if (G.bomb === g && g.st === 'pick' && g.key === id) bombOpen(bombRandom()); }, BOMB_PICK_MS);   // too slow: one is picked for you
+  }
+  function bombRandom() { var g = G.bomb, left = []; g.env.forEach(function (e, i) { if (!e.open) left.push(i); }); return pick(left); }
+  function bombMsg(m) {
+    var g = G.bomb; if (!g || G.phase !== 'bomb' || g.st !== 'pick' || !m || m.key !== g.key || m.pid !== bombWho()) return;
+    if (typeof m.pick !== 'number' || !g.env[m.pick] || g.env[m.pick].open) return;
+    bombOpen(m.pick);
+  }
+  function bombOpen(i) {   // the envelope is picked: a moment of suspense, then it opens
+    var g = G.bomb; if (!g) return;
+    clearTimeout(bombTimer); g.st = 'open'; g.pick = i; g.env[i].by = bombWho(); push();
+    Music.dread(true);
+    bombTimer = setTimeout(function () {
+      Music.dread(false);
+      var e = g.env[i], who = bombWho(); e.open = true;
+      if (!e.bomb) { g.st = 'safe'; Music.ding(); push(); g.turn++; bombTimer = setTimeout(bombTurn, 2600); return; }
+      g.st = 'boom'; chaseSfx('brk', 1, Music.crumble); setTimeout(function () { Music.scream(); }, 300); push();
+      bombTimer = setTimeout(function () {
+        g.alive.splice(g.alive.indexOf(who), 1); g.out.push(who); g.turn = g.turn % Math.max(1, g.alive.length);
+        if (g.alive.length <= 1) { bombWin(); return; }
+        bombDeal();
+      }, 3200);
+    }, 2400);
+  }
+  function bombWin() {
+    var g = G.bomb, w = players[g.alive[0]], second = players[g.out[g.out.length - 1]];
+    var big = 6 * partyX(), small = 3 * partyX();
+    if (w) { w.score += big; w.pts = big; } if (second) { second.score += small; second.pts = small; }
+    g.st = 'win'; g.prize = [big, small]; push(); Music.douze();
+    clearTimeout(bombTimer); bombTimer = setTimeout(function () { if (G.phase === 'bomb') { G.bomb = null; startRound(); } }, 6500);
+  }
+  function bombSnap() {
+    var g = G.bomb;
+    return { id: g.id, st: g.st, round: g.round, turn: bombWho(), key: g.key, pick: g.pick, alive: g.alive, out: g.out, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, prize: g.prize || null,
+      env: g.env.map(function (e) { return e.open ? { open: 1, bomb: e.bomb ? 1 : 0, code: e.code, by: e.by } : { open: 0 }; }) };   // (what is inside stays on the host until it opens)
+  }
+  // The big screen: the stage, the two presenters, the player whose turn it is, and the envelopes.
+  function bombShow() {
+    var g = G.bomb; if (!g) return;
+    var ov = $('bombov'); if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov'; ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="bplayer"></div><div class="benvs"></div><div class="bstrip"></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
+    var who = players[bombWho()], cur = g.st === 'win' ? players[g.alive[0]] : who;
+    ov.setAttribute('data-st', g.st);
+    ov.querySelector('.bhead').innerHTML = '💌 The Envelope, Please <small>' + (g.alive.length) + ' still in · round ' + g.round + '</small>';
+    var bp = ov.querySelector('.bplayer');   // the player on stage walks in once per turn (not on every update)
+    if (cur && bp.getAttribute('data-k') !== cur.pid + '|' + g.round + '|' + g.turn) { bp.setAttribute('data-k', cur.pid + '|' + g.round + '|' + g.turn); bp.innerHTML = '<div class="bme">' + charSvg(cur.char) + '<b>' + esc(cur.name) + '</b></div>'; }
+    if (!cur) { bp.innerHTML = ''; bp.removeAttribute('data-k'); }
+    var bme = bp.querySelector('.bme'); if (bme) { bme.classList.toggle('boom', g.st === 'boom'); bme.classList.toggle('win', g.st === 'win'); }
+    ov.querySelector('.benvs').innerHTML = g.env.map(function (e, i) {
+      var cls = 'benv' + (e.open ? ' open' + (e.bomb ? ' bomb' : ' flag') : '') + (g.pick === i && !e.open ? ' picked' : '');
+      return '<div class="' + cls + '" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span>' + (e.open ? (e.bomb ? '<span class="bin">💣</span>' : '<span class="bin">' + flag(e.code) + '</span><small>' + esc(countries[e.code] || '') + '</small>') : '') + '</div>';
+    }).join('');
+    ov.querySelector('.bstrip').innerHTML = g.alive.concat(g.out).map(function (k) { var p = players[k]; if (!p) return ''; var o = g.out.indexOf(k) >= 0; return '<span class="bps' + (o ? ' out' : '') + (k === bombWho() && g.st !== 'win' ? ' now' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + (o ? ' 💥' : '') + '</i></span>'; }).join('');
+    var e = g.pick >= 0 ? g.env[g.pick] : null, nm = cur ? cur.name : '';
+    ov.querySelector('.bmsg').innerHTML = g.st === 'deal' ? (g.round > 1 ? 'New envelopes! One of them hides a bomb…' : 'One of these envelopes hides a bomb…')
+      : g.st === 'pick' ? esc(nm) + ', pick an envelope on your phone!'
+      : g.st === 'open' ? 'Envelope ' + (g.pick + 1) + '… the envelope, please!'
+      : g.st === 'safe' ? 'Phew! ' + flag(e.code) + ' ' + esc(countries[e.code] || '') + ': ' + esc(nm) + ' is safe!'
+      : g.st === 'boom' ? '💥 BOOM! ' + esc(nm) + ' is out!'
+      : g.st === 'win' ? '🏆 ' + esc(nm) + ' is the last one standing! +' + g.prize[0] + (g.out.length && players[g.out[g.out.length - 1]] ? ' · ' + esc(players[g.out[g.out.length - 1]].name) + ' +' + g.prize[1] : '') : '';
+  }
+  net.on('bomb', bombMsg);
 
   // ---------- Eurofan Shop ----------
   // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
@@ -3160,7 +3303,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();

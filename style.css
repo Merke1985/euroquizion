@@ -1286,3 +1286,52 @@ aside.recapgone{visibility:hidden}
 .shophit.onstage .shtxt{font-size:clamp(1.3rem,2.4vw,2.2rem)}
 .shophit.onstage .shd{font-size:1.2rem}.shophit.onstage .shd em{font-size:1.8rem}.shophit.onstage .shd .char{width:42px;height:42px}
 .shophit .shd.neu em{color:#ffd23f;font-size:1.5rem}
+
+/* ---------- The Envelope, Please ---------- */
+.bombov{position:fixed;inset:0;z-index:55;overflow:hidden;background:radial-gradient(ellipse at 50% 120%,#5a1a7a 0%,#2a0d45 45%,#0c0418 80%);font-family:inherit}
+.bombov .bbeams i{position:absolute;top:-10%;width:22%;height:120%;background:linear-gradient(rgba(255,255,255,.14),transparent 70%);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);transform-origin:50% 0;animation:chbeam 5s ease-in-out infinite alternate}
+.bombov .bbeams i:nth-child(1){left:2%;animation-delay:-1s}.bombov .bbeams i:nth-child(2){left:26%;animation-delay:-3s}.bombov .bbeams i:nth-child(3){left:52%;animation-delay:-2s}.bombov .bbeams i:nth-child(4){left:76%;animation-delay:-4s}
+.bombov .bfloor{position:absolute;left:8%;right:8%;bottom:-18vh;height:46vh;border-radius:50%;background:radial-gradient(ellipse at 50% 30%,#3c1a62,#1a0a30 70%);box-shadow:0 0 0 4px rgba(255,210,63,.6),0 0 60px rgba(255,47,168,.45)}
+.bombov .bhead{position:absolute;top:2.5vh;left:0;right:0;text-align:center;font-weight:900;font-size:clamp(1.6rem,3.4vw,2.8rem);text-shadow:0 4px 18px rgba(0,0,0,.6)}
+.bombov .bhead small{display:block;font-size:.45em;opacity:.75;font-weight:700}
+.bombov .bstrip{position:absolute;top:13vh;left:0;right:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:0 6vw}
+.bombov .bps{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:99px;background:rgba(0,0,0,.35);font-weight:800;font-size:.95rem}
+.bombov .bps .char{width:28px;height:28px}.bombov .bps i{font-style:normal}
+.bombov .bps.now{box-shadow:0 0 0 3px var(--yellow);background:rgba(255,210,63,.18)}
+.bombov .bps.out{opacity:.4;filter:grayscale(1)}
+.bombov .bhosts .ehost{position:absolute;bottom:20vh;height:52vh;width:auto;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3.2s ease-in-out infinite alternate}
+.bombov .bhosts .him{left:6vw}.bombov .bhosts .her{right:6vw;animation-delay:-1.6s}
+@keyframes ehbob{from{transform:translateY(0) rotate(-1deg)}to{transform:translateY(-8px) rotate(1deg)}}
+.bombov[data-st="boom"] .bhosts .ehost{animation:ehshock .25s linear 6}
+@keyframes ehshock{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px) rotate(-4deg)}75%{transform:translateX(10px) rotate(4deg)}}
+.bombov .bplayer{position:absolute;left:50%;bottom:37vh;transform:translateX(-50%)}
+.bombov .bme{display:flex;flex-direction:column;align-items:center;gap:6px;animation:bmewalk .9s cubic-bezier(.3,1.4,.5,1) both}
+.bombov .bme .char{width:20vh;height:20vh;border-radius:50%;box-shadow:0 0 0 5px #fff,0 0 40px rgba(255,210,63,.6)}
+.bombov .bme b{font-size:clamp(1.3rem,2.6vw,2.2rem);font-weight:900;text-shadow:0 3px 10px #000}
+.bombov .bme.boom{animation:bmeboom 1.6s cubic-bezier(.2,.8,.3,1) forwards}
+.bombov .bme.win .char{box-shadow:0 0 0 6px var(--yellow),0 0 70px var(--yellow)}
+.bombov .bme.win{animation:bmewin .7s ease-in-out infinite alternate}
+@keyframes bmewalk{from{opacity:0;transform:translateX(-40vw) scale(.6)}to{opacity:1;transform:none}}
+@keyframes bmeboom{0%{transform:none;filter:none}15%{transform:scale(1.25);filter:brightness(3)}100%{transform:translate(30vw,-60vh) rotate(720deg) scale(.2);opacity:0;filter:grayscale(1)}}
+@keyframes bmewin{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+.bombov .bmsg{position:absolute;left:0;right:0;bottom:21vh;text-align:center;font-size:clamp(1.3rem,2.8vw,2.4rem);font-weight:900;text-shadow:0 4px 16px rgba(0,0,0,.8);padding:0 18vw}
+.bombov .benvs{position:absolute;left:0;right:0;bottom:4vh;display:flex;justify-content:center;flex-wrap:wrap;gap:14px;padding:0 4vw}
+.bombov .benv{position:relative;width:clamp(70px,9vw,120px);height:clamp(48px,6.2vw,82px);border-radius:8px;background:linear-gradient(135deg,#ffe27a,#d9a520);box-shadow:0 6px 16px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#3a2600;font-weight:900;animation:benvin .5s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i) * .08s);transition:transform .3s}
+.bombov .benv::before{content:'';position:absolute;left:0;right:0;top:0;height:55%;background:linear-gradient(160deg,rgba(255,255,255,.35),transparent);clip-path:polygon(0 0,100% 0,50% 100%);border-radius:8px 8px 0 0}
+.bombov .benv .bno{font-size:1.5rem;position:relative}
+.bombov .benv.picked{transform:translateY(-22px) scale(1.15);box-shadow:0 0 0 4px #fff,0 0 34px var(--yellow);animation:benvshake .18s linear infinite}
+.bombov .benv.open{background:#fff;color:#14094f}
+.bombov .benv.open .bno{display:none}
+.bombov .benv.open .bin{font-size:2.2rem;line-height:1}
+.bombov .benv.open small{font-size:.6rem;font-weight:800;max-width:95%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.bombov .benv.bomb{background:radial-gradient(circle,#ff9a1f,#c4150f 60%,#2a0000);box-shadow:0 0 50px #ff4d1f}
+@keyframes benvin{from{opacity:0;transform:translateY(40px) rotate(-10deg)}to{opacity:1;transform:none}}
+@keyframes benvshake{0%,100%{rotate:0deg}25%{rotate:-3deg}75%{rotate:3deg}}
+.bombov[data-st="boom"]{animation:bflash .9s ease-out}
+@keyframes bflash{0%{box-shadow:inset 0 0 0 100vmax rgba(255,240,200,.95)}40%{box-shadow:inset 0 0 0 100vmax rgba(255,80,30,.45)}100%{box-shadow:inset 0 0 0 100vmax rgba(255,80,30,0)}}
+/* the phone: envelopes to tap */
+.bombui{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin-top:14px}
+.benvbtn{aspect-ratio:3/2;border:0;border-radius:10px;background:linear-gradient(135deg,#ffe27a,#d9a520);color:#3a2600;font-size:1.6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.benvbtn b{font-size:1rem}
+.benvbtn.open{background:#fff;opacity:.5}
+.benvbtn:disabled{cursor:default}
