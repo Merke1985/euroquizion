@@ -1754,6 +1754,7 @@
       $('chtiles').innerHTML = tiles;
       $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" style="top:' + ((i + 0.62) / n * 100) + '%;left:' + chaseX(c.lanes[k].pos - 0.5) + '%"><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span></div>'; }).join('');
       var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
+      $('chase').classList.toggle('many', n >= 9);
       $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
     }
     var next = c.wreckWarn && !c.wrecked ? CHASE_END : c.monsterDead ? 0 : c.st === 'diva' || c.st === 'intro' || c.st === 'rise' || c.st === 'near' || c.st === 'wheel' || c.st === 'pre' || c.st === 'ready' || c.st === 'go' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {}, deny = {};
