@@ -1445,9 +1445,8 @@
     }
     if (c.st !== 'ask' || m.key !== c.qkey) return;
     var l = c.lanes[m.pid]; if (!l || l.out || l.lock || chaseActive().indexOf(m.pid) < 0) return;
-    l.mask = (m.mask | 0) & 7; l.touched = true; if (m.lock) l.lock = true;
+    l.mask = (m.mask | 0) & 7; l.touched = true;   // (no locking in: whatever is ticked when the time is up counts)
     push();
-    if (chaseActive().every(function (k) { return c.lanes[k].lock; })) { clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, 900); }
   }
   net.on('chase', chaseMsg);
   function chaseScore() {

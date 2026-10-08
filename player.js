@@ -42,13 +42,13 @@
       $('chlock').classList.add('hidden'); $('chready').classList.remove('hidden'); $('chready').classList.toggle('on', rd); $('chready').setAttribute('aria-pressed', rd ? 'true' : 'false'); $('chreadytext').textContent = rd ? 'Ready!' : 'Ready';
       return;
     }
-    $('chpbar').parentNode.classList.remove('hidden'); $('chlock').classList.remove('hidden'); $('chready').classList.add('hidden');
+    $('chpbar').parentNode.classList.remove('hidden'); $('chlock').classList.add('hidden'); $('chready').classList.add('hidden');
     if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = (c.mname || 'A former winner') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
     if (c.st === 'ask') {
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = c.text;
-      $('chhelp').textContent = l.pos >= (c.goal || c.end) - 3 ? '🏆 You can reach the stage: only a perfect answer (all three right) gets you on it and wins!' : 'Tick every song that fits: none, some or all. One space forward for each one you get right.';
+      $('chhelp').textContent = l.pos >= (c.goal || c.end) - 3 ? '🏆 You can reach the stage: only a perfect answer (all three right) gets you on it and wins!' : 'Tick every song that fits: none, some or all. When the time runs out, what you ticked counts: one space for each one right.';
       $('chopts').innerHTML = c.items.map(function (it, i) { return '<button type="button" class="opt' + ((chMask >> i) & 1 ? ' on' : '') + '" data-i="' + i + '"><b>' + ((chMask >> i) & 1 ? '✓' : 'ABC'[i]) + '</b>' + esc(it) + '</button>'; }).join('');
       if (chBarKey !== c.key) { chBarKey = c.key; var b = $('chpbar'); b.style.transition = 'none'; b.style.width = (c.left / 100) + '%'; b.getBoundingClientRect(); b.style.transition = 'width ' + c.left + 'ms linear'; b.style.width = '0%'; }
       return;
