@@ -790,7 +790,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .bigcount.tick{animation:none}
 /* The minigame spin: four big picture cards instead of small bars */
 .host .stage.offstage{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
-.host .opts.bigtiles{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:16px}
+.host .opts.bigtiles{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:16px}
 .host .opts.bigtiles .optcol{display:block}
 .host .opts.bigtiles .opt{flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:18px;height:min(24vh,190px);padding:12px 10px;border-radius:18px;gap:10px;font-size:clamp(1rem,1.5vw,1.25rem);font-weight:800}
 .host .opts.bigtiles .bigicon{font-size:clamp(2.4rem,4.4vw,3.8rem);line-height:1}
@@ -885,3 +885,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .cover .q .mapimg .mapdot{fill:#e6007e;stroke:#fff;stroke-width:2}
 .cover .q .mapimg .mapring{fill:none;stroke:#e6007e;stroke-width:2.5;transform-box:fill-box;transform-origin:center;animation:mapring 1.6s ease-out infinite}
 @keyframes mapring{0%{transform:scale(.6);opacity:1}100%{transform:scale(2.6);opacity:0}}
+
+/* Beat the Favourite: the favourite is marked on the scoreboard, and points taken away show in red */
+.board li.fav .who::after{content:' 🎯'}
+.board li.lost{outline:2px solid #ff4d6d}
+.board li.lost .pts{color:#ff6b84}
