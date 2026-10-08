@@ -26,7 +26,7 @@
   function chaseView(c) {
     var l = c.lanes[pid];
     if (!l) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'Watch the big screen!'; return; }
-    var where = 'Space ' + l.pos + ' of ' + c.end + ' · the Diva is on ' + c.mon;
+    var where = 'Space ' + l.pos + ' of ' + c.end + ' · ' + (c.wake ? 'the Diva is still waiting' : 'the Diva is on ' + c.mon);
     if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Final Chase!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
     if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by the Diva!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
     if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'The Diva is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
@@ -34,6 +34,7 @@
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = c.text;
+      $('chhelp').textContent = l.pos >= c.end - 3 ? '🏆 You can reach the trophy: only a perfect answer (all three right) wins!' : 'Tick every song that fits: none, some or all. One space forward for each one you get right.';
       $('chopts').innerHTML = c.items.map(function (it, i) { return '<button type="button" class="opt' + ((chMask >> i) & 1 ? ' on' : '') + '" data-i="' + i + '"><b>' + ((chMask >> i) & 1 ? '✓' : 'ABC'[i]) + '</b>' + esc(it) + '</button>'; }).join('');
       if (chBarKey !== c.key) { chBarKey = c.key; var b = $('chpbar'); b.style.transition = 'none'; b.style.width = (c.left / 100) + '%'; b.getBoundingClientRect(); b.style.transition = 'width ' + c.left + 'ms linear'; b.style.width = '0%'; }
       return;
