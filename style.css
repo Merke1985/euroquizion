@@ -943,7 +943,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chtok.near .ch-face{box-shadow:0 0 0 4px rgba(255,210,63,.5),0 0 18px rgba(255,210,63,.8)}
 .chmon{position:absolute;top:82%;width:46%;transform:translate(-72%,-100%) rotateX(-26deg);transform-origin:50% 100%;transition:left 1.4s ease-in-out;pointer-events:none;z-index:3}
 .chbob{animation:chbob .9s ease-in-out infinite;transform-origin:50% 100%}
-.chbob .diva{width:100%;height:auto;display:block;filter:drop-shadow(0 0 30px rgba(255,47,109,.5))}
+.chbob .diva{width:100%;height:auto;display:block}
 .chmon .dveyes{animation:chblink 3.2s infinite;transform-box:fill-box;transform-origin:center}
 .chmon .dvhair{animation:chhair 1.4s ease-in-out infinite;transform-origin:140px 40px}
 .chmon .dvmouth{animation:chwail 1.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
@@ -1040,7 +1040,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @keyframes chbonk{0%{transform:translateX(0) rotate(0)}20%{transform:translateX(-14%) rotate(-14deg) scale(.92)}45%{transform:translateX(6%) rotate(8deg)}70%{transform:translateX(-3%) rotate(-4deg)}100%{transform:none}}
 .chtok.vanish{opacity:0!important;transition:opacity .8s}
 .chtok.won{transition:left 1.6s ease-in-out,top 1.6s ease-in-out}
-.chbob .goblin{width:100%;height:auto;display:block;filter:drop-shadow(0 0 30px rgba(57,255,20,.45))}
+.chbob .goblin{width:100%;height:auto;display:block}
 .chmon[data-mon="diva"] .goblin,.chmon[data-mon="goblin"] .diva,.chmon:not([data-mon]) .goblin{display:none}
 .chmon[data-mon="goblin"] .chmonname{color:#7dff4f}
 .chmon[data-mon="goblin"] .chsmoke i{background:radial-gradient(circle,rgba(40,90,40,.85),rgba(20,60,20,.5) 45%,rgba(10,30,10,0) 70%)}
