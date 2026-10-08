@@ -1335,6 +1335,14 @@
       try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
     }, 1000);
   }
+  // Sound files for the chase (the rest of its sounds are made on the spot). Loaded once, played from the start each time.
+  var CHASE_SFX = { brk: 'sounds/stage_break.mp3?v=1' }, chaseSfxEl = {};
+  function chaseSfx(k, vol, fallback) {
+    try {
+      var a = chaseSfxEl[k] || (chaseSfxEl[k] = new Audio(CHASE_SFX[k])); a.volume = vol == null ? 1 : vol;
+      a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () { if (fallback) fallback(); });
+    } catch (e) { if (fallback) fallback(); }
+  }
   function chaseWanted() { return !REMOTE && $('s-chase').value === '1' && !(G.chase && G.chase.done) && list().length > 0; }
   function chaseStart(test) {
     autoStop(); stopTimers(); clearTimeout(chaseTimer); try { yt.pauseVideo(); } catch (e) {} yt2.pause(); cover(true, '', '', false);
@@ -1347,6 +1355,7 @@
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0 };
     G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
+    Object.keys(CHASE_SFX).forEach(function (k) { if (!chaseSfxEl[k]) { chaseSfxEl[k] = new Audio(CHASE_SFX[k]); chaseSfxEl[k].preload = 'auto'; } });
     chaseMusic(true);
     Music.want(false); Music.dread(true);
     push();
@@ -1359,7 +1368,7 @@
     var c = G.chase; if (!c || G.phase !== 'chase' || c.st !== 'intro') return;
     clearInterval(chaseCount);
     if (c.placed >= c.placeOrder.length) {
-      c.showing = null; c.st = 'rise'; Music.crumble(); push();
+      c.showing = null; c.st = 'rise'; chaseSfx('brk', 0.9, Music.crumble); push();
       chaseTimer = setTimeout(chaseAsk, 6000); return;
     }
     var k = c.placeOrder[c.placed], total = c.scores[k] || 0, steps = Math.max(1, Math.min(40, total)), i = 0;
@@ -1428,7 +1437,7 @@
       var caught = before.filter(function (k) { return c.lanes[k].pos <= c.mon; });
       caught.forEach(function (k) { c.lanes[k].out = true; c.lanes[k].at = c.n; });
       push();
-      if (stepN) Music.crumble();
+      if (stepN) chaseSfx('brk', 0.9, Music.crumble);
       if (caught.length) setTimeout(function () { if (G.phase === 'chase') { Music.chomp(); Music.scream(); } }, 900);
       chaseTimer = setTimeout(function () {
         if (!chaseAlive().length) { var best = Math.max.apply(null, caught.map(function (k) { return c.lanes[k].pos; })); chaseWin(caught.filter(function (k) { return c.lanes[k].pos === best; })); return; }
