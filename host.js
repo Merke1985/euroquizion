@@ -1083,7 +1083,7 @@
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
       if (G.tour && G.tourLast && !G.tourFinal && !G.tourDone) { G.tourDone = true; G.total = G.round + 2; G.quizRun = 0; G.mgTest = false; }   // the tour is over: one last block of trivia, then the end (the Grand Final)
-      if (!G.tourFinal && (G.quizRun || 0) >= 3 && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; partyGo('shop'); return; }   // the first break: everyone visits the boutique
+      if (!G.tourFinal && (G.quizRun || 0) >= 3 && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; shopIntro(); return; }   // the first break: everyone visits the boutique
       if (!G.tourFinal && !G.tourDone && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyTime(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
@@ -1220,8 +1220,7 @@
   // A presenter hops on screen to announce it, then the party round is chosen.
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
-    funIntro('partytime', function () { partyChoose(games); }, 3000);
-    setTimeout(function () { hostSay(Math.random() < 0.5 ? 'him' : 'her', 'It’s time for a party round! 🎉', 2600); }, 250);
+    studioIntro('🎉', 'Party round!', '', 'It’s time for a party game! Let’s see what it’s going to be…', function () { partyChoose(games); }, 'partytime');
   }
   function partyChoose(games) {
     var how = games.length < 2 ? 'single' : (G.partyPick || 'order');
@@ -2170,6 +2169,27 @@
     Music.douze(); shopVisit(wins, 1, back, true);   // straight to the boutique: the winner chooses one
   }
   function shopAll() { shopGo(null, 1, function () { startRound(); }); }
+  // The first visit: the presenters welcome Europe back, the boutique appears on the screen between them,
+  // they announce it, and the whole studio moves over to the shop.
+  // The presenters welcome Europe back, a card appears on the screen between them, they announce what comes, then it starts.
+  function studioIntro(icon, title, sub, line, then, kind) {
+    stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true }; G.phase = 'fun'; G.barMs = 0;
+    cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
+    var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
+    at(200, function () { hostSay('him', 'Welcome back, Europe! 🇪🇺', 4000); });
+    at(2400, function () { G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
+    at(3700, function () { hostSay('her', line, 3400); });
+    at(7200, function () { $('cover').classList.remove('introcard'); then(); });
+  }
+  function shopIntro() {
+    if (REMOTE) { partyGo('shop'); return; }
+    G.mode = G.lastParty = 'shop'; G.best = null; G.q = null; G.afterParty = true; G.mgBase = null;
+    studioIntro('🛍️', 'The Green Room Boutique', FUN.shop.sub, 'It’s time to visit the Green Room Boutique!', function () {
+      var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
+      setTimeout(function () { shopVisit(null, 1, function () { v.classList.remove('leaving'); viewEnter('v-game'); startRound(); }); }, 1400);
+    }, 'shop');
+  }
   // To the boutique: a presenter sends us there, the studio slides away (presenters first), and the shop slides in.
   function shopGo(who, n, then) {
     if (REMOTE || $('v-game').classList.contains('hidden')) { shopVisit(who, n, then); return; }

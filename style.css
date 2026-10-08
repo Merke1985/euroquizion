@@ -1475,3 +1475,15 @@ aside.recapgone{visibility:hidden}
 .boutique.leaving .bqrack,.boutique.leaving .shoppers{animation:outBottom .7s .25s cubic-bezier(.6,0,.8,.4) forwards}
 .boutique.leaving .bqsign,.boutique.leaving .bqbunting,.boutique.leaving .bqdisco,.boutique.leaving .bqsale{animation:outTop .7s .4s cubic-bezier(.6,0,.8,.4) forwards}
 .boutique.leaving{transition:background-color .4s 1s}
+
+/* a card between the presenters: smaller, so they stand beside it */
+.cover.introcard .covericon,#cover.introcard #covericon{font-size:clamp(3rem,7vw,6rem)}
+#cover.introcard #covertext,#cover.introcard .covertext{font-size:clamp(1.6rem,3.4vw,3rem);max-width:56%;margin:0 auto;line-height:1.05}
+/* the opening: the two presenters stand close together in the middle of the stage */
+.shosts .ehost{transition:translate .6s cubic-bezier(.3,.8,.3,1),opacity .5s,left .8s ease,right .8s ease}
+.game.opening .shosts .ehost.him{left:33%}
+.game.opening .shosts .ehost.her{right:33%}
+.game.opening .shosts .hbub.him{left:12%;max-width:30%}
+.game.opening .shosts .hbub.her{right:12%;max-width:30%}
+.game.opening .shosts .hbub.him{left:6%;max-width:26%}
+.game.opening .shosts .hbub.her{right:6%;max-width:26%}
