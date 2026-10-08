@@ -2206,12 +2206,50 @@
   }
   // The envelopes for the EBU: right before the final, a tenth of the leader's score is shared among everyone who sent one
   // (two envelopes from one player: two shares).
-  function ebuPay(then) {
+  function ebuCalc() {   // who sent an envelope, and what each gets (not paid yet); null when nobody did
     var bs = (G.bribes || []).filter(function (k) { return players[k]; }); G.bribes = [];
-    if (!bs.length) { then(); return; }
+    if (!bs.length) return null;
     var top = Math.max.apply(null, list().map(function (p) { return p.score; })), pot = Math.max(bs.length, Math.round(top * 0.1)), each = Math.floor(pot / bs.length), got = {};
     bs.forEach(function (k) { got[k] = (got[k] || 0) + each; });
-    var names = Object.keys(got).map(function (k) { players[k].score += got[k]; return players[k].name; });
+    var names = Object.keys(got).map(function (k) { return players[k].name; });
+    return { got: got, pot: pot, names: names, txt: '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'They share ' + pot + ' points.' : pot + ' points for them.') };
+  }
+  // Party: before the Final Chase, the final scores, where the envelopes for the EBU pay out.
+  function partyStandings(then) {
+    var bg = document.createElement('div'); bg.id = 'recapbg'; bg.className = 'recapbg'; document.body.appendChild(bg);
+    var c = document.createElement('div'); c.id = 'recap'; c.className = 'card recap tally standings';
+    var ps = list().slice().sort(function (a, b) { return b.score - a.score; }), tot = {}; ps.forEach(function (p) { tot[p.pid] = p.score; });
+    c.innerHTML = '<h3>The final scores</h3><p class="rstep">' + (chaseWanted() ? 'before the Final Chase' : '') + '</p><ol class="board">' + ps.map(function (p) {
+      return '<li data-pid="' + esc(p.pid) + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + p.score + '</span><span class="gain"></span></li>';
+    }).join('') + '</ol><p class="recapnext ebuline"></p>';
+    document.body.appendChild(c);
+    c.style.left = Math.round((innerWidth - c.offsetWidth) / 2) + 'px'; c.style.top = Math.round((innerHeight - c.offsetHeight) / 2) + 'px';
+    c.classList.add('go'); bg.classList.add('on'); whooshes([0, 300]);
+    var ol = c.querySelector('ol'), done = function () { c.classList.add('leave'); bg.classList.remove('on'); setTimeout(function () { c.remove(); bg.remove(); }, 550); then(); };
+    var e = ebuCalc();
+    if (!e) { setTimeout(done, 5500); return; }
+    setTimeout(function () {   // the envelopes: the points pop up next to the totals and count in
+      var line = c.querySelector('.ebuline'); line.textContent = e.txt; line.classList.add('on'); Music.ping(); setTimeout(function () { Music.ding(); }, 300);
+      Object.keys(e.got).forEach(function (k, i) {
+        var p = players[k], li = ol.querySelector('li[data-pid="' + k.replace(/"/g, '') + '"]'); if (!p || !li) return;
+        setTimeout(function () {
+          var ge = li.querySelector('.gain'), from = p.score; p.score += e.got[k]; ge.textContent = '✉️ +' + e.got[k]; ge.classList.add('on'); Music.plop(i);
+          setTimeout(function () { ge.classList.add('off'); var t0 = Date.now(), el = li.querySelector('.tot'); (function f() { var q = Math.min(1, (Date.now() - t0) / 700); el.textContent = Math.round(from + e.got[k] * q); if (q < 1) requestAnimationFrame(f); })(); }, 700);
+        }, 600 + i * 500);
+      });
+      setTimeout(function () {   // and the order changes if it has to
+        var lis = [].slice.call(ol.children), was = {}; lis.forEach(function (li) { was[li.getAttribute('data-pid')] = li.getBoundingClientRect().top; });
+        lis.sort(function (a, b) { return (players[b.getAttribute('data-pid')] || {}).score - (players[a.getAttribute('data-pid')] || {}).score; }).forEach(function (li) { ol.appendChild(li); });
+        lis.forEach(function (li) { var dy = was[li.getAttribute('data-pid')] - li.getBoundingClientRect().top; if (Math.abs(dy) < 2) return; li.style.transition = 'none'; li.style.transform = 'translateY(' + dy + 'px)'; li.getBoundingClientRect(); li.style.transition = 'transform .8s cubic-bezier(.22,.8,.3,1)'; li.style.transform = ''; });
+        push();
+      }, 2200 + Object.keys(e.got).length * 500);
+      setTimeout(done, 6500 + Object.keys(e.got).length * 500);
+    }, 2400);
+  }
+  function ebuPay(then) {
+    var e = ebuCalc(); if (!e) { then(); return; }
+    var got = e.got, pot = e.pot, names = e.names;
+    Object.keys(got).forEach(function (k) { players[k].score += got[k]; });
     shopLast = { icon: '✉️', sound: 'steal', deltas: Object.keys(got).map(function (k) { return { pid: k, n: got[k] }; }) };
     var txt = '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'They share ' + pot + ' points' : pot + ' points') + ' before the Grand Final.';
     FUN.shopgo = { icon: '✉️', title: 'A brown envelope…', sub: txt };
@@ -3443,7 +3481,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
@@ -3611,6 +3649,7 @@
   function goOn() {
     if (lastSong() && G.shopQ && G.shopQ.length) { shopDeliver(goOn); return; }   // Eurofan Shop items still on their way land before the final scores
     if (lastSong()) roundsAddUp();
+    if (lastSong() && G.atype === 'party' && !G.standingsShown && !REMOTE) { G.standingsShown = true; partyStandings(goOn); return; }   // Party: the final scores first, where the envelopes pay out
     if (lastSong() && G.bribes && G.bribes.length) { ebuPay(goOn); return; }   // the envelopes for the EBU pay out before the final
     // The Big Five: when the rounds are done, five more questions for double points, with the scores hidden
     if (lastSong() && G.finalMode === 'double' && !G.tourFinal && !G.tour && !ladderGame() && G.total < ENDLESS) { G.tourFinal = true; G.total += 5; G.bigCard = true; G.quizRun = 0; G.eraNow = ''; buildPool(); startRound(); return; }   // (the Big Five: all selected eras again)
