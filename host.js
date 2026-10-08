@@ -1038,7 +1038,7 @@
     }, 400);
   }
   function startRound() {
-    if (!G.round && !G.opened && !REMOTE && !G.mgTest) { G.opened = true; opening(startRound); return; }   // the very first thing: the show opens
+    if (!G.round && !G.opened && !REMOTE && !G.skipOpening) { G.opened = true; opening(startRound); return; }   // the very first thing: the show opens
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
     list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
@@ -1756,7 +1756,7 @@
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     G.partyOn = G.partyOn || {}; G.partyOn.shop = true;
     if (beginGame() === false) return;
-    G.mgTest = true;
+    G.mgTest = true; G.skipOpening = true;
     if (G.phase === 'intro') introEnd();
     G.shopFirst = true; G.quizRun = 3; clearTimeout(funTimer); stopTimers();
     var first = list().filter(function (p) { return !p.off; }), lucky = [pick(first).pid];
@@ -2359,7 +2359,13 @@
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov boutique enter'; whooshes([0, 300, 650, 950]); setTimeout(function () { ov.classList.remove('enter'); }, 2600);
       var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2; })).slice(0, 22);
-      ov.innerHTML = '<div class="bqsign">✨ The Green Room Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span style="--i:' + i + '">' + flag(c) + '</span>'; }).join('') + '</div>' +
+      // bunting with real flag pictures (flag emoji show up as letters on some computers)
+      ov.innerHTML = '<div class="bqwall"></div><div class="bqsign">✨ The Green Room Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span class="bqpen" style="--i:' + i + ';background:hsl(' + (i * 47 % 360) + ',80%,60%)"><img src="https://flagcdn.com/w80/' + c + '.png" alt="" onerror="this.remove()"></span>'; }).join('') + '</div>' +
+        '<div class="bqdisco">🪩</div><div class="bqsale">SALE<br><b>100% OFF</b></div>' +
+        '<div class="bqfans"><span>🪭</span><span>🪭</span><span>🪭</span><span>🪭</span><span>🪭</span></div>' +
+        '<div class="bqhats"><span>🎩</span><span>👑</span><span>🧢</span><span>👒</span><span>🎓</span></div>' +
+        '<div class="bqrack"><i class="rail"></i><span>👕</span><span>🧣</span><span>👗</span><span>🧥</span><span>🧣</span><span>👕</span></div>' +
+        '<div class="bqfloor"><span>🛍️</span><span>🎁</span><span>🛍️</span><span>🎈</span><span>🎁</span></div>' +
         (function () {   // the merchandise on the shelves at the back, with its name (what you can get is on your phone)
           var shelf = function (items) { return items.map(function (it) { return '<span class="bqi"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b></span>'; }).join(''); }, h = Math.ceil(SHOP_ITEMS.length / 2);
           return '<div class="bqshelf top">' + shelf(SHOP_ITEMS.slice(0, h)) + '</div><div class="bqshelf low">' + shelf(SHOP_ITEMS.slice(h)) + '</div>';
@@ -3510,7 +3516,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();

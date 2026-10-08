@@ -1433,3 +1433,31 @@ aside.recapgone{visibility:hidden}
 .game.opening .shosts.arrive .ehost{opacity:1}
 .game.opening .shosts.arrive .ehost.him{animation:inLeft 1s cubic-bezier(.2,.9,.3,1.08) both,ehbob 3.2s 1s ease-in-out infinite alternate}
 .game.opening .shosts.arrive .ehost.her{animation:inRight 1s .15s cubic-bezier(.2,.9,.3,1.08) both,ehbob 3.2s 1.2s ease-in-out infinite alternate}
+
+/* a more shoppy boutique: wall panels, flag pennants, a disco ball, fans, hats, a clothes rack and bags */
+.boutique .bqwall{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 2px,transparent 2px 90px),linear-gradient(transparent 70%,rgba(0,0,0,.35));pointer-events:none}
+.boutique .bqbunting{top:15vh;align-items:flex-start}
+.boutique .bqpen{width:clamp(28px,3.2vw,46px);height:clamp(36px,4.2vw,58px);clip-path:polygon(0 0,100% 0,50% 100%);overflow:hidden;background:#fff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.boutique .bqpen img{width:180%;height:70%;object-fit:cover;margin-left:-40%;display:block}
+.boutique .bqdisco{position:absolute;left:3vw;top:20vh;font-size:clamp(2.5rem,5vw,4.5rem);animation:bqspin 4s linear infinite;filter:drop-shadow(0 0 18px rgba(255,255,255,.6))}
+.boutique .bqdisco::before{content:'';position:absolute;left:50%;bottom:100%;width:2px;height:14vh;background:rgba(255,255,255,.4)}
+@keyframes bqspin{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+.boutique .bqsale{position:absolute;left:14vw;top:21vh;transform:rotate(-8deg);background:#ffd23f;color:#b0103a;font-weight:900;text-align:center;line-height:1.05;padding:.4em .7em;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.5);font-size:clamp(.8rem,1.3vw,1.2rem)}
+.boutique .bqsale b{font-size:1.25em}
+.boutique .bqfans{position:absolute;left:4vw;top:34vh;display:flex;gap:.3vw;font-size:clamp(1.6rem,2.8vw,2.6rem)}
+.boutique .bqfans span{display:inline-block;transform-origin:50% 100%;animation:bqsway 1.8s ease-in-out infinite alternate}
+.boutique .bqfans span:nth-child(odd){animation-delay:-.9s;filter:hue-rotate(140deg)}
+.boutique .bqhats{position:absolute;left:30vw;right:3vw;top:16.5vh;display:none}
+.boutique .bqhats{display:flex;justify-content:space-around;top:auto;bottom:35vh;left:auto;right:3vw;width:26vw;font-size:clamp(1.6rem,2.8vw,2.6rem);border-bottom:8px solid #6a3b1f;padding-bottom:.15em}
+.boutique .bqrack{position:absolute;right:31vw;bottom:13vh;display:flex;gap:.3vw;font-size:clamp(1.8rem,3.2vw,3rem);padding-top:1vh}
+.boutique .bqrack .rail{position:absolute;left:-1vw;right:-1vw;top:0;height:6px;border-radius:3px;background:#c9c9d6}
+.boutique .bqrack span{transform-origin:50% 0;animation:bqsway 2.4s ease-in-out infinite alternate}
+.boutique .bqrack span:nth-child(even){animation-delay:-1.2s}
+.boutique .bqfloor{position:absolute;right:3vw;bottom:13vh;display:flex;gap:1vw;font-size:clamp(1.8rem,3.2vw,3rem)}
+.boutique .bqbubble{left:30vw;top:auto;bottom:24vh;max-width:36vw}
+.boutique .shoppers{left:30vw;right:auto;bottom:4vh}
+
+.boutique .bqfans{left:auto;right:4vw;top:47vh}
+.boutique .bqbubble{bottom:21vh;max-width:30vw;font-size:clamp(1rem,1.8vw,1.6rem)}
+.boutique .bqpen{background:#ff2fa8}
+.boutique .bqfans{top:51vh}
