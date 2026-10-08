@@ -1385,8 +1385,7 @@
         Music.ding(); c.landed = true; push();   // the chosen slice lights up for two seconds
         chaseTimer = setTimeout(function () {
           if (G.chase !== c) return;
-          c.st = 'rise'; chaseMusic(true); chaseSfx('brk', 0.9, Music.crumble); push();
-          chaseTimer = setTimeout(function () { chaseReady(c); }, 5000);
+          chaseSfx('brk', 0.9, Music.crumble); chaseReady(c);   // the monster rises; the same screen asks everyone to press Ready
         }, 2200);
       }, 4500);
     }
@@ -1411,15 +1410,17 @@
   // The Diva sleeps through the first two questions, then comes: one space a turn for three questions, then two a turn.
   function divaStep(n) { return n <= 2 ? 0 : n <= 5 ? 1 : 2; }
   function chaseNear() { var c = G.chase; return chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL - 3; }); }
+  // who answers now: everyone still running, or (in a sudden death on the stage) the finalists still standing
+  function chaseActive() { var c = G.chase; return c.sd ? c.finals.filter(function (k) { return c.lanes[k] && !c.lanes[k].fell; }) : chaseAlive(); }
   function chaseAlive() { var c = G.chase; return c.order.filter(function (k) { return c.lanes[k] && !c.lanes[k].out; }); }
   function chaseAsk() {
     var c = G.chase; if (!c || G.phase !== 'chase') return;
     c.n++; c.q = makeChase(playSongs(), playCountries(), c.used) || makeChase(playSongs(), playCountries(), {});
     c.q.items.forEach(function (it) { c.used[it.id] = 1; });
     c.qkey = c.key + '-' + c.n; c.st = 'ask'; c.endsAt = Date.now() + CHASE_ASK;
-    chaseAlive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; });
+    chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; });
     // test bots: a random answer after a few seconds, each song judged right a bit more often than not
-    chaseAlive().forEach(function (k) { if (!players[k] || !players[k].bot) return; var qk = c.qkey;
+    chaseActive().forEach(function (k) { if (!players[k] || !players[k].bot) return; var qk = c.qkey;
       setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0; c.q.items.forEach(function (it, i) { var right = Math.random() < (window.CHASE_SMART || 0.62); if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 2000 + Math.random() * 6500); });
     push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, CHASE_ASK + 300);
@@ -1435,25 +1436,26 @@
     if (m.ready) {
       if (c.st !== 'ready' || m.key !== c.key + '-r' || !c.lanes[m.pid] || c.ready[m.pid]) return;
       c.ready[m.pid] = 1; Music.plop(Object.keys(c.ready).length); push();
-      if (chaseAlive().every(function (k) { return c.ready[k]; })) { c.st = 'go'; push(); clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseAsk, 1200); }
+      if (chaseAlive().every(function (k) { return c.ready[k]; })) { c.st = 'go'; chaseMusic(true); push(); clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseAsk, 2500); }   // everyone is ready: the monster's song starts
       return;
     }
     if (c.st !== 'ask' || m.key !== c.qkey) return;
-    var l = c.lanes[m.pid]; if (!l || l.out || l.lock) return;
+    var l = c.lanes[m.pid]; if (!l || l.out || l.lock || chaseActive().indexOf(m.pid) < 0) return;
     l.mask = (m.mask | 0) & 7; l.touched = true; if (m.lock) l.lock = true;
     push();
-    if (chaseAlive().every(function (k) { return c.lanes[k].lock; })) { clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, 900); }
+    if (chaseActive().every(function (k) { return c.lanes[k].lock; })) { clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, 900); }
   }
   net.on('chase', chaseMsg);
   function chaseScore() {
     var c = G.chase; if (!c || c.st !== 'ask') return;
     c.st = 'show';
-    chaseAlive().forEach(function (k) { var l = c.lanes[k]; l.res = !l.touched ? 0 : c.q.items.reduce(function (n, it, i) { return n + ((((l.mask >> i) & 1) === 1) === it.ok ? 1 : 0); }, 0); });
+    chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = !l.touched ? 0 : c.q.items.reduce(function (n, it, i) { return n + ((((l.mask >> i) & 1) === 1) === it.ok ? 1 : 0); }, 0); });
     Music.ding(); push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseMove, 3600);
   }
   function chaseMove() {
     var c = G.chase; if (!c) return;
+    if (c.sd) { chaseSdMove(); return; }
     c.st = 'move';
     // Only a perfect answer (all three right) takes the trophy: anything less stops at the last space.
     chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); l.blocked = 0; if (to >= CHASE_GOAL && l.res < 3) { to = l.pos; l.blocked = c.n; /* not perfect: they bump into the stage and fall back */ } l.pos = Math.max(l.pos, to); });
@@ -1461,7 +1463,7 @@
     if (chaseAlive().some(function (k) { return c.lanes[k].blocked === c.n; })) setTimeout(function () { if (G.phase === 'chase') Music.buzz(); }, 650);   // in front of the stage, but not perfect
     push();
     var home = chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL; });
-    if (home.length) { clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { chaseWin(home); }, 1400); return; }
+    if (home.length) { clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (home.length > 1) chaseFinal(home); else chaseWin(home); }, 1400); return; }
     clearTimeout(chaseTimer); chaseTimer = setTimeout(function () {
       // the Diva moves: one space at first, two from the fifth question, three from the tenth
       var before = chaseAlive();
@@ -1480,6 +1482,31 @@
         chaseAsk();
       }, caught.length || c.coming ? 2800 : stepN ? 1600 : 400);
     }, 1500);
+  }
+  // Two or more reach the stage at once: the monster goes down, they all walk up to the trophy, and a sudden death
+  // decides: the same kind of questions, and whoever gets fewer right than the best falls off the stage.
+  function chaseFinal(home) {
+    var c = G.chase; if (!c) return;
+    c.sd = true; c.finals = home.slice(); c.monsterDead = true; c.st = 'fdie';
+    chaseMusic(false); Music.dread(false); Music.short(); setTimeout(function () { Music.defeat(); }, 350); push();
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () {
+      if (G.chase !== c) return;
+      c.st = 'fmsg'; Music.douze(); push();
+      chaseTimer = setTimeout(chaseAsk, 5500);
+    }, 3400);
+  }
+  function chaseSdMove() {
+    var c = G.chase, act = chaseActive(), best = Math.max.apply(null, act.map(function (k) { return c.lanes[k].res || 0; }));
+    var losers = act.filter(function (k) { return (c.lanes[k].res || 0) < best; });
+    losers.forEach(function (k) { c.lanes[k].fell = c.n; });
+    c.sdLost = losers; c.st = 'sdres'; push();
+    if (losers.length) setTimeout(function () { if (G.phase === 'chase') { Music.woosh(); Music.scream(); } }, 400);
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () {
+      if (G.chase !== c) return;
+      var left = chaseActive();
+      if (left.length === 1) { chaseWin(left); return; }
+      chaseAsk();
+    }, losers.length ? 3200 : 2600);
   }
   function chaseWin(pids) {
     var c = G.chase; if (!c) return;
@@ -1531,9 +1558,9 @@
     arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)';
   }
   function chaseSnap() {
-    var c = G.chase, s = { key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster ? c.monster.name : 'The Diva', end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
+    var c = G.chase, s = { sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster ? c.monster.name : 'The Diva', end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
-    c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });
+    c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });
     return s;
   }
   // The big screen: lanes, tokens, the Diva and the trophy; the question in a smaller box in the middle.
@@ -1554,12 +1581,16 @@
       var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
       $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
     }
-    var next = c.st === 'diva' || c.st === 'intro' || c.st === 'rise' || c.st === 'near' || c.st === 'wheel' || c.st === 'pre' || c.st === 'ready' || c.st === 'go' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {}, deny = {};
+    var next = c.monsterDead ? 0 : c.st === 'diva' || c.st === 'intro' || c.st === 'rise' || c.st === 'near' || c.st === 'wheel' || c.st === 'pre' || c.st === 'ready' || c.st === 'go' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {}, deny = {};
     c.order.forEach(function (k, i) {
       var l = c.lanes[k], el = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]'); if (!el) return;
       var at = Math.min(CHASE_END, l.pos), won = !!(c.win && c.win.indexOf(k) >= 0);
-      if (l.pos >= CHASE_GOAL) {   // on the stage: the winner jumps to the trophy, anyone else who made it waits at the edge
-        el.style.left = (won ? 110 : 103) + '%'; el.style.top = (won ? 56 : (i + 0.62) / n * 100) + '%';
+      if (l.pos >= CHASE_GOAL) {   // on the stage: the winner walks to the trophy; in a sudden death all finalists stand around it
+        var fi = c.sd ? c.finals.indexOf(k) : -1, fn = c.sd ? c.finals.length : 1, ftop = fn > 1 ? 24 + fi * (56 / (fn - 1)) : 56;
+        if (won) { el.style.left = '110%'; el.style.top = '56%'; }
+        else if (fi >= 0) { el.style.left = (c.st === 'fdie' && !el.getAttribute('data-up') ? 103 : 106) + '%'; if (c.st !== 'fdie') el.setAttribute('data-up', '1'); el.style.top = (l.fell ? ftop + 60 : ftop) + '%'; }
+        else { el.style.left = '103%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
+        el.classList.toggle('fall', !!l.fell);
         el.classList.add('jump');
       } else if (l.blocked === c.n && c.st === 'move' && el.getAttribute('data-bump') !== c.qkey) {
         // the bump: run up to the edge of the stage, hit it, and slide back to the space they came from
@@ -1593,10 +1624,10 @@
     $('chvoid').style.width = chaseX(c.mon) + '%';
     // the winner on the stage: the Diva goes down in agony and is gone, then the camera zooms in on the winner and the trophy
     var view = $('chview');
-    $('chmon').classList.toggle('defeat', c.st === 'win' && !!c.win && c.win.some(function (k) { return c.lanes[k] && c.lanes[k].pos >= CHASE_GOAL; }));
+    $('chmon').classList.toggle('defeat', !!c.monsterDead || (c.st === 'win' && !!c.win && c.win.some(function (k) { return c.lanes[k] && c.lanes[k].pos >= CHASE_GOAL; })));
     if (c.st === 'win' && c.win && c.win.length && !view.classList.contains('zoom') && !view._zt) {
       var onStage = c.lanes[c.win[0]] && c.lanes[c.win[0]].pos >= CHASE_GOAL;
-      if (onStage) { chaseMusic(false); Music.short(); setTimeout(function () { Music.defeat(); }, 350); }   // the music cuts out with a short circuit as the monster goes down
+      if (onStage && !c.sd) { chaseMusic(false); Music.short(); setTimeout(function () { Music.defeat(); }, 350); }   // the music cuts out with a short circuit as the monster goes down
       view._zt = setTimeout(function () {
         view._zt = null; if (!G.chase || G.chase.st !== 'win') return;
         var w = $('chlanes').querySelector('.chtok[data-pid="' + G.chase.win[0].replace(/"/g, '') + '"]'); if (!w) return;
@@ -1606,7 +1637,7 @@
         view.style.setProperty('--z', z.toFixed(2));
         view.style.transformOrigin = ((L + R) / 2 - vr.left) + 'px ' + ((T + B) / 2 - vr.top) + 'px';
         view.classList.add('zoom'); Music.douze();
-      }, onStage ? 2300 : 1300);
+      }, onStage && !c.sd ? 2300 : 1300);
     }
     if (c.st !== 'win') { view.classList.remove('zoom'); clearTimeout(view._zt); view._zt = null; }
     [].forEach.call(document.querySelectorAll('#chase .chpyro'), function (p) { p.classList.toggle('boom', c.st === 'win' || chaseNear().length > 0); });
@@ -1616,23 +1647,26 @@
     $('chn').textContent = c.n ? 'Question ' + c.n + ' · first to the trophy wins' : 'First to the trophy wins';
     // the line under the stage: what the Diva is up to, or that the trophy is within reach
     var note = $('chnote'), near = chaseNear();
-    if (c.st === 'win' || c.st === 'intro' || c.st === 'rise' || c.st === 'wheel' || c.st === 'pre') note.classList.add('hidden');
+    if (c.sd || c.st === 'win' || c.st === 'intro' || c.st === 'rise' || c.st === 'wheel' || c.st === 'pre' || c.st === 'ready' || c.st === 'go') note.classList.add('hidden');
     else if (c.n < 2 || (c.n === 2 && c.st !== 'diva')) { var w = 2 - c.n + (c.st === 'intro' ? 0 : 0); note.className = 'chnote red'; note.textContent = '😴 ' + mName() + ' is waiting… ' + (c.n < 2 ? (2 - c.n) + (2 - c.n === 1 ? ' more question' : ' more questions') : 'last quiet question'); }
     else if (next) { var dn = Object.keys(doomed).length; note.className = 'chnote red'; note.textContent = '⚠️ Next turn ' + mName().replace(/^The /, 'the ') + ' smashes ' + next + (next === 1 ? ' space' : ' spaces') + (dn ? ' · ' + dn + (dn === 1 ? ' player is' : ' players are') + ' in danger!' : ''); }
     else note.classList.add('hidden');
     var big = $('chbig'); big.classList.toggle('winbox', c.st === 'win'); big.classList.toggle('introbox', c.st === 'intro' || c.st === 'wheel');
     $('chmon').classList.toggle('lurk', c.st === 'intro' || c.st === 'wheel' || c.st === 'pre');
-    chaseWheel(c); $('chmon').classList.toggle('rise', c.st === 'rise');
+    chaseWheel(c); $('chmon').classList.toggle('rise', c.st === 'rise' || c.st === 'ready' || c.st === 'go');
     var cc = $('chcard'), sp = c.st === 'intro' && c.showing ? players[c.showing] : null;
     cc.classList.toggle('hidden', !sp);
     if (sp && cc.getAttribute('data-k') !== c.showing) { cc.setAttribute('data-k', c.showing); cc.innerHTML = '<div class="chcard-face">' + charSvg(sp.char) + '</div><b>' + esc(sp.name) + '</b><span>Jury votes</span><strong id="chcount">' + (c.count || 0) + '</strong>'; }
     cc.classList.toggle('final', !!(sp && c.counted));
-    if (c.st === 'ready' || c.st === 'go') { big.innerHTML = (c.st === 'go' ? 'Here we go!' : 'Is everyone ready?') + '<small>Press Ready on your phone.</small><div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
+    var nm = function (ks) { return esc(ks.map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')); };
+    if (c.st === 'fmsg') { big.innerHTML = 'Sudden death!<small>' + nm(c.finals) + ' reached the stage together. Keep answering: whoever gets fewer right than the others falls off the stage. The last one standing wins!</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'sdres') { big.innerHTML = (c.sdLost && c.sdLost.length ? nm(c.sdLost) + ' fell off the stage!' : 'Still level! Next question…'); big.classList.remove('hidden'); }
+    else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Is everyone ready? Press Ready on your phone.') + '</div><div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
     else if (c.st === 'pre') { big.innerHTML = '👑 A former winner is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
     else if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>The jury votes are in: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'rise') { big.innerHTML = esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
-    else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : 'jumped onto the stage: the trophy is theirs!') + '</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : (c.sd ? 'last one standing on the stage: the trophy is theirs!' : 'jumped onto the stage: the trophy is theirs!')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { big.innerHTML = '💀 Caught!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'near') { big.innerHTML = '🏆 ' + esc((c.nearNew || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + ' within reach of the stage!<small>Only a perfect answer (all three right) gets you onto the stage. Anything less and you bounce back.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.coming) { big.innerHTML = '👹 ' + esc(mName()) + ' starts moving!'; big.classList.remove('hidden'); }
@@ -1642,7 +1676,7 @@
     if (on) {
       var truth = c.st === 'show';
       $('chqt').textContent = c.q.text;
-      $('chqs').textContent = truth ? 'The answer:' : 'Tick every one that fits on your phone (none, some or all)';
+      $('chqs').textContent = truth ? 'The answer:' : c.sd ? 'Sudden death: whoever gets fewer right falls off the stage!' : 'Tick every one that fits on your phone (none, some or all)';
       $('chqi').innerHTML = c.q.items.map(function (it, i) { return '<div class="' + (truth ? (it.ok ? 'yes' : 'no') : '') + '"><b>' + 'ABC'[i] + '</b>' + esc(it.label) + (truth ? '<i>' + (it.ok ? '✓' : '✗') + '</i>' : '') + '</div>'; }).join('');
       var bar = $('chbar');
       if (c.st === 'ask' && bar.getAttribute('data-k') !== c.qkey) {
