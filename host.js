@@ -1408,8 +1408,9 @@
     var v = $('chview'); [].forEach.call(v.querySelectorAll('.chcrowd'), function (e) { e.remove(); });
     var back = document.createElement('div'); back.className = 'chcrowd back';
     var front = document.createElement('div'); front.className = 'chcrowd front';
-    var h = ''; for (var i = 0; i < 26; i++) h += fanSvg(false); back.innerHTML = h;
-    h = ''; for (i = 0; i < 15; i++) h += fanSvg(true); front.innerHTML = h;
+    // a few rows deep, packed together; the far rows smaller and darker
+    var rows = function (el, spec, front) { el.innerHTML = spec.map(function (n, r) { var h = ''; for (var i = 0; i < n; i++) h += fanSvg(front); return '<div class="crow r' + r + '">' + h + '</div>'; }).join(''); };
+    rows(back, [34, 30, 26], false); rows(front, [17, 14], true);
     v.insertBefore(back, v.firstChild); v.appendChild(front);
   }
   function chaseEnter() {

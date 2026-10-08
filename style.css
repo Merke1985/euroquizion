@@ -1166,11 +1166,18 @@ aside.recapgone{visibility:hidden}
 
 /* ---------- the audience on both sides of the runway ---------- */
 .chcrowd{position:absolute;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;transition:transform 1.1s cubic-bezier(.2,.9,.3,1.05),opacity .8s ease}
-.chcrowd.back{left:21%;right:25%;top:-9%;height:14%;opacity:.8}
-.chcrowd.front{left:14%;right:27%;bottom:-3%;height:17%}
+.chcrowd.back{left:19%;right:24%;top:-8%;height:18%;-webkit-mask-image:linear-gradient(#000 55%,transparent 92%);mask-image:linear-gradient(#000 55%,transparent 92%)}
+.chcrowd.front{left:12%;right:27%;bottom:-5%;height:18%}
 .chcrowd .fan{height:100%;width:auto;flex:none;transform-origin:50% 100%;animation:fanjump var(--d) ease-in-out infinite alternate;animation-delay:var(--dl);overflow:visible}
-.chcrowd.back .fan{margin:0 -6px}
-.chcrowd.front .fan{margin:0 -4px}
+/* each row of fans: packed, overlapping; the far rows are smaller, darker and a little hazy */
+.chcrowd .crow{position:absolute;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end}
+.chcrowd.back .crow .fan{margin:0 -7px}
+.chcrowd.back .r0{bottom:38%;height:46%;left:3%;right:3%;filter:brightness(.42) blur(.6px)}
+.chcrowd.back .r1{bottom:22%;height:56%;left:1.5%;right:1.5%;filter:brightness(.55) blur(.3px)}
+.chcrowd.back .r2{bottom:4%;height:66%;filter:brightness(.7)}
+.chcrowd.front .crow .fan{margin:0 -9px}
+.chcrowd.front .r0{bottom:22%;height:78%;left:4%;right:2%;filter:brightness(.7)}
+.chcrowd.front .r1{bottom:-6%;height:96%}
 .chcrowd .fan .arm{transform-box:fill-box;animation:fanwave calc(var(--d) * 1.3) ease-in-out infinite alternate;animation-delay:var(--dl)}
 .chcrowd .fan .arm.l{transform-origin:100% 100%}.chcrowd .fan .arm.r{transform-origin:0 100%}
 .chcrowd .fan.p0 .arm.l,.chcrowd .fan.p2 .arm.l{animation-name:fanwavel}
