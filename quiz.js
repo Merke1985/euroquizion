@@ -613,6 +613,7 @@ function multiAll(box) {
 // ---------- The Final Chase: three statements, each true or false ----------
 // Every question has three songs; any number of them (none to all three) fit the question. A player ticks the
 // ones they think fit, and moves one space for each song they judged right (ticked and true, or left and false).
+var CHASE_NOT_HOSTS = ['Monte Carlo', 'Barcelona', 'Milan', 'Berlin', 'Hamburg', 'Cologne', 'Prague', 'Warsaw', 'Budapest', 'Bucharest', 'Sofia', 'Zurich', 'Geneva', 'Lyon', 'Marseille', 'Manchester', 'Glasgow', 'Cork', 'Antwerp', 'Utrecht', 'Florence', 'Venice', 'Porto', 'Seville', 'Valencia', 'Trondheim', 'Aarhus', 'Tampere', 'Krakow', 'Vilnius', 'Minsk', 'Tbilisi', 'Yerevan', 'Chisinau', 'Ljubljana', 'Bratislava', 'Valletta', 'Nicosia', 'Reykjavik', 'Ankara', 'Thessaloniki', 'Split', 'Sarajevo', 'Haifa', 'Salzburg', 'Bruges'];
 function makeChase(allSongs, countries, used) {
   var ok = function (s) { return s[9] !== 'cancelled' && !(used && used[s[4]]); };
   var S = allSongs.filter(ok); if (S.length < 40) S = allSongs.filter(function (s) { return s[9] !== 'cancelled'; });
@@ -639,11 +640,14 @@ function makeChase(allSongs, countries, used) {
     },
     function () {   // top five
       return { text: 'Which of these finished in the top 5?', yes: function (s) { return s[6] != null && s[6] <= 5; }, pool: S.filter(function (s) { return s[6] != null && (s[6] <= 5 || s[6] >= 10); }), label: function (s) { return lab(s) + ' (' + s[0] + ')'; } };
-    },
-    function () {   // not in English
-      return { text: 'Which of these were NOT sung in English?', yes: function (s) { return s[10] && s[10] !== 'english'; }, pool: S.filter(function (s) { return s[0] >= 1999; }), label: function (s) { return lab(s) + ' ' + flag(s[1]); } };
     }
   ];
+  // host cities: which of these cities ever held the contest? (some well-known cities never did)
+  if (typeof CITIES !== 'undefined' && Math.random() < 1 / 7) {
+    var hosts = Object.keys(CITIES), nh = Math.floor(Math.random() * 4);
+    var a2 = shuffle(hosts.slice()).slice(0, nh), b2 = shuffle(CHASE_NOT_HOSTS.slice()).slice(0, 3 - nh);
+    return { text: 'Which of these cities have hosted Eurovision?', items: shuffle(a2.map(function (n) { return { label: n, ok: true, id: 'city:' + n }; }).concat(b2.map(function (n) { return { label: n, ok: false, id: 'city:' + n }; }))) };
+  }
   for (var tries = 0; tries < 30; tries++) {
     var k = pick(kinds)(); if (!k) continue;
     var n = Math.floor(Math.random() * 4), yes = k.pool.filter(k.yes), no = k.pool.filter(function (s) { return !k.yes(s); });

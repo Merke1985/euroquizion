@@ -26,10 +26,10 @@
   function chaseView(c) {
     var l = c.lanes[pid];
     if (!l) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'Watch the big screen!'; return; }
-    var where = 'Space ' + l.pos + ' of ' + c.end + ' · ' + (c.wake ? 'the Diva is still waiting' : 'the Diva is on ' + c.mon);
+    var where = 'Space ' + l.pos + ' of ' + c.end + ' · ' + (c.wake ? (c.mname || 'the Diva').replace(/^The /, 'the ') + ' is still waiting' : (c.mname || 'the Diva').replace(/^The /, 'the ') + ' is on ' + c.mon);
     if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Final Chase!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
-    if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by the Diva!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
-    if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'The Diva is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
+    if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by ' + (c.mname || 'the Diva').replace(/^The /, 'the ') + '!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
+    if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = (c.mname || 'The Diva') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
     if (c.st === 'ask') {
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
@@ -41,7 +41,7 @@
     }
     // the answer and the moves
     show('v-wait');
-    $('waittitle').textContent = c.st === 'show' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? 'The Diva moves…' : 'Moving…';
+    $('waittitle').textContent = c.st === 'show' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'The Diva') + ' moves…' : 'Moving…';
     $('waitsub').textContent = where;
   }
   $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); if (state && state.chase) chaseView(state.chase); chaseSend(false); });
