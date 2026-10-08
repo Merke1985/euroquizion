@@ -1371,3 +1371,32 @@ aside.recapgone{visibility:hidden}
 .shosts .hbub.him{left:6%;border-bottom-left-radius:4px;transform-origin:0 100%}
 .shosts .hbub.her{right:6%;border-bottom-right-radius:4px;transform-origin:100% 100%}
 .shosts .hbub.on{opacity:1;transform:none}
+
+/* ---------- entrances: everything slides in ---------- */
+@keyframes inLeft{from{transform:translateX(-110vw);opacity:0}to{transform:none;opacity:1}}
+@keyframes inRight{from{transform:translateX(110vw);opacity:0}to{transform:none;opacity:1}}
+@keyframes inTop{from{transform:translateY(-110vh);opacity:0}to{transform:none;opacity:1}}
+@keyframes inBottom{from{transform:translateY(80vh);opacity:0}to{transform:none;opacity:1}}
+@keyframes inUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.enter-ease,.game.enter .stage,.game.enter aside,.game.enter #qtext,.game.enter #qopts,.game.enter .shosts .ehost{animation-duration:.8s;animation-timing-function:cubic-bezier(.2,.9,.3,1.08);animation-fill-mode:both}
+.game.enter .stage{animation-name:inTop}
+.game.enter .shosts .ehost.him{animation-name:inLeft;animation-delay:.35s}
+.game.enter .shosts .ehost.her{animation-name:inRight;animation-delay:.35s}
+.game.enter aside{animation-name:inRight;animation-delay:.7s}
+.game.enter #qtext,.game.enter #qopts{animation-name:inBottom;animation-delay:1s}
+.end.enter > *{animation:inBottom .8s cubic-bezier(.2,.9,.3,1.08) both}
+.end.enter > *:nth-child(2){animation-delay:.2s}.end.enter > *:nth-child(n+3){animation-delay:.45s}
+#qtext.qin{animation:inUp .5s cubic-bezier(.2,.9,.3,1.1) both}
+#qopts.qin .optcol,#qopts.qin > .opt{animation:inUp .5s cubic-bezier(.2,.9,.3,1.1) both}
+#qopts.qin .optcol:nth-child(1){animation-delay:.12s}#qopts.qin .optcol:nth-child(2){animation-delay:.22s}#qopts.qin .optcol:nth-child(3){animation-delay:.32s}#qopts.qin .optcol:nth-child(4){animation-delay:.42s}#qopts.qin .optcol:nth-child(n+5){animation-delay:.5s}
+/* the boutique and the envelope stage build up piece by piece */
+.boutique.enter .bqsign{animation:inTop .8s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqbunting{animation:inTop .8s .15s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqkeeper{animation:inLeft .9s .3s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqshelf{animation:inRight .8s .55s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqcounter,.boutique.enter .shoppers{animation:inBottom .8s .85s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqbubble{animation:inUp .5s 1.4s both}
+.bombov.enter .bhead,.bombov.enter .bstrip{animation:inTop .8s cubic-bezier(.2,.9,.3,1.08) both}
+.bombov.enter .ehost.him{animation:inLeft .9s .35s cubic-bezier(.2,.9,.3,1.08) both}
+.bombov.enter .ehost.her{animation:inRight .9s .35s cubic-bezier(.2,.9,.3,1.08) both}
+.bombov.enter .bfloor{animation:inBottom .8s .6s cubic-bezier(.2,.9,.3,1.08) both}

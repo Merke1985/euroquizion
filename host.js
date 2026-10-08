@@ -234,7 +234,8 @@
   // ---------- rendering ----------
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
-  function show(id) { ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun' || G.phase === 'pspin'))); }   // menu music until the fanfare
+  var viewNow = '';
+  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((G.phase === 'guess' && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'fun' || G.phase === 'pspin'))); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -856,7 +857,7 @@
   }
   function worthHide() { clearTimeout(worthTimer); $('ptspin').classList.add('hidden'); $('ptspin').innerHTML = ''; }
   function beginGuess() {
-    setTimeout(hostQuestion, 600);
+    setTimeout(hostQuestion, 600); setTimeout(questionEnter, 30);
     worthHide();
     if (G.quipLoad) { quipWrite(); return; }   // Quip!: the clip comes with a question to write an answer to
     $('err').textContent = '';
@@ -1987,6 +1988,21 @@
     '</svg>';
 
   var BOMB_PICK_MS = 20000, bombTimer = null;
+  // ---------- things slide in, with a whoosh ----------
+  function whooshes(times) { if (REMOTE) return; times.forEach(function (t) { setTimeout(function () { Music.woosh(); }, t); }); }
+  function viewEnter(id) {
+    var v = $(id); if (!v || REMOTE) return;
+    v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter');
+    clearTimeout(v._enterT); v._enterT = setTimeout(function () { v.classList.remove('enter'); }, 2400);
+    if (id === 'v-game') whooshes([0, 350, 700, 1000]); else if (id === 'v-end') whooshes([0, 400]);
+  }
+  var qInKey = '';
+  function questionEnter() {   // a new question: the question and its answers slide up, one after another
+    if (REMOTE || !G.q) return;
+    var k = G.round + '|' + G.q.text; if (k === qInKey) return; qInKey = k;
+    ['qtext', 'qopts'].forEach(function (id) { var e = $(id); if (!e) return; e.classList.remove('qin'); void e.offsetWidth; e.classList.add('qin'); });
+    whooshes([0]);
+  }
   // ---------- the presenters on the big screen ----------
   // The two presenters stand in front of the video screen for the whole game and talk in speech balloons.
   var HOST_LINES = {
@@ -2082,7 +2098,7 @@
   // The big screen: the stage, the two presenters, the player whose turn it is, and the envelopes.
   function bombShow() {
     var g = G.bomb; if (!g) return;
-    var ov = $('bombov'); if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov'; ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="bplayer"></div><div class="benvs"></div><div class="bstrip"></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
+    var ov = $('bombov'); if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov enter'; whooshes([0, 350, 700]); (function (o) { setTimeout(function () { o.classList.remove('enter'); }, 2600); })(ov); ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="bplayer"></div><div class="benvs"></div><div class="bstrip"></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
     var who = players[bombWho()], cur = g.st === 'win' ? players[g.alive[0]] : who;
     ov.setAttribute('data-st', g.st);
     ov.querySelector('.bhead').innerHTML = '💌 The Envelope, Please <small>' + (g.alive.length) + ' still in · round ' + g.round + '</small>';
@@ -2276,7 +2292,7 @@
     var g = G.shop; if (!g) return;
     var ov = $('shopov');
     if (!ov) {
-      ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov boutique';
+      ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov boutique enter'; whooshes([0, 300, 650, 950]); setTimeout(function () { ov.classList.remove('enter'); }, 2600);
       var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2; })).slice(0, 22);
       ov.innerHTML = '<div class="bqsign">✨ The Green Room Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span style="--i:' + i + '">' + flag(c) + '</span>'; }).join('') + '</div>' +
         '<div class="bqshelf top">💃 🎤 🪩 🎟️ 🌈 💌 🎶 👑</div><div class="bqshelf low">🧢 🧣 🎧 🕶️ 🪭 🎊 🍾 ✨</div>' +
