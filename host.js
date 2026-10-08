@@ -1386,7 +1386,7 @@
     } catch (e) { if (fallback) fallback(); }
   }
   // The way in: the lights go out on the quiz, a line in the dark, then the chase opens up from a growing circle.
-  var CHASE_ENTER = 3400;
+  var CHASE_ENTER = 5400;
   function chaseEnter() {
     var bk = $('chblack');
     if (!bk) { bk = document.createElement('div'); bk.id = 'chblack'; bk.className = 'chblack'; document.body.appendChild(bk); }
