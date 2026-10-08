@@ -1958,17 +1958,17 @@
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
     shopLast = { icon: it.icon, deltas: [], sound: it.kind };
     var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit') && t.inv ? t.inv.indexOf('umbrella') : -1;
-    if (ui >= 0) { t.inv.splice(ui, 1); shopLast = { icon: '☂️', deltas: [], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
-    if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
-    if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
+    if (ui >= 0) { t.inv.splice(ui, 1); shopLast = { icon: '☂️', deltas: [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '☂️ blocked' }], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
+    if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
+    if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
       var rest = list().filter(function (x) { return !x.off && x !== t; }); if (!rest.length) return '';
       var low = Math.min.apply(null, rest.map(function (x) { return x.score; })), to = pick(rest.filter(function (x) { return x.score === low; }));
-      var nb = Math.min(it.amount, Math.max(0, t.score)); t.score -= nb; to.score += nb; shopLast.deltas = [{ pid: t.pid, n: -nb }, { pid: to.pid, n: nb }];
+      var nb = Math.min(it.amount, Math.max(0, t.score)); t.score -= nb; to.score += nb; shopLast.deltas = (to === by ? [] : [{ pid: by.pid, tag: it.icon }]).concat([{ pid: t.pid, n: -nb }, { pid: to.pid, n: nb }]);
       return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': ' + nb + ' points blown over to ' + (to === by ? by.name + ' (that’s them!)' : to.name);
     }
     if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, t.score)); t.score -= n2; by.score += n2; shopLast.deltas = [{ pid: t.pid, n: -n2 }, { pid: by.pid, n: n2 }]; return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + n2 + ' points stolen'; }
-    if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; if (t.got) { shopLast.deltas = [{ pid: t.pid, n: -(t.pts || 0) }]; t.score -= t.pts || 0; t.got = false; t.pts = 0; } return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
+    if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, t.got && t.pts ? { pid: t.pid, n: -t.pts } : { pid: t.pid, tag: '🔇 muted' }]; if (t.got) { t.score -= t.pts || 0; t.got = false; t.pts = 0; } return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
     return '';
   }
   // An item used during a question: everything stops for a moment (video, timer), the item lands, then it goes on.
@@ -2012,9 +2012,9 @@
     else Music.woosh();
     if (REMOTE) return;
     var ov = $('shophit'); if (!ov) { ov = document.createElement('div'); ov.id = 'shophit'; ov.className = 'shophit'; document.body.appendChild(ov); }
-    var ds = (shopLast && shopLast.deltas || []).filter(function (d) { return d.n && players[d.pid]; });
+    var ds = (shopLast && shopLast.deltas || []).filter(function (d) { return players[d.pid]; });   // everyone it involves: who used it and who it hit
     ov.innerHTML = '<div class="shcard"><div class="shicon">' + ((shopLast && shopLast.icon) || '🛍️') + '</div><div class="shtxt">' + esc(txt.replace(/^\S+\s/, '')) + '</div>' +
-      (ds.length ? '<div class="shdel">' + ds.map(function (d, i) { var p = players[d.pid]; return '<span class="shd ' + (d.n < 0 ? 'neg' : 'pos') + '" style="--i:' + i + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em>' + (d.n < 0 ? '−' + (-d.n) : '+' + d.n) + '</em></span>'; }).join('') + '</div>' : '') + '</div>';
+      (ds.length ? '<div class="shdel">' + ds.map(function (d, i) { var p = players[d.pid]; var num = typeof d.n === 'number'; return '<span class="shd ' + (num ? (d.n < 0 ? 'neg' : 'pos') : 'neu') + '" style="--i:' + i + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em>' + (num ? (d.n < 0 ? '−' + (-d.n) : '+' + d.n) : esc(d.tag || '')) + '</em></span>'; }).join('') + '</div>' : '') + '</div>';
     // right in front of the video screen (when it is showing), else over the whole page
     var st = stageEl(), r = st && st.offsetParent ? st.getBoundingClientRect() : null;
     if (r && r.width > 200) { ov.style.left = r.left + 'px'; ov.style.top = r.top + 'px'; ov.style.width = r.width + 'px'; ov.style.height = r.height + 'px'; ov.classList.add('onstage'); }
