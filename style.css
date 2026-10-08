@@ -1199,10 +1199,13 @@ aside.recapgone{visibility:hidden}
 @keyframes chignite{0%{filter:brightness(3.2)}30%{filter:brightness(2.6)}100%{filter:none}}
 
 /* ---------- overview after the Final Chase ---------- */
-.chaseov{width:min(760px,94vw);margin:14px auto 0;display:flex;flex-direction:column;gap:8px}
-.chaseov .ovrow{display:grid;grid-template-columns:minmax(0,1fr) repeat(var(--R),5.2em) 6.4em;align-items:center;gap:10px;padding:.5em .9em;border-radius:12px;background:rgba(0,0,0,.28);font-weight:800;font-size:1.15rem;animation:rcgain .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.6s + var(--i) * .15s)}
+.chaseov{width:min(760px,94vw);margin:6px auto 0;display:flex;gap:18px}
+.chaseov .ovcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.chaseov.two{width:min(1240px,96vw)}
+.chaseov.two .ovcol{gap:6px}
+.chaseov .ovrow{display:grid;grid-template-columns:var(--cols,minmax(0,1fr) 6.4em);align-items:center;gap:10px;padding:.5em .9em;border-radius:12px;background:rgba(0,0,0,.28);font-weight:800;font-size:1.15em;animation:rcgain .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.6s + var(--i) * .15s)}
 .chaseov .ovrow > span:not(.who){text-align:center;font-variant-numeric:tabular-nums}
-.chaseov .ovhead{background:none;font-size:.85rem;opacity:.7;padding-top:0;padding-bottom:0;animation:none}
+.chaseov .ovhead{background:none;font-size:.8em;opacity:.7;padding-top:0;padding-bottom:0;animation:none}
 .chaseov .who{display:flex;align-items:center;gap:.5em;min-width:0}
 .chaseov .who .char{width:1.9em;height:1.9em;flex:none}
 .chaseov .fc{color:var(--yellow)}
@@ -1239,3 +1242,12 @@ aside.recapgone{visibility:hidden}
 /* many players (9+): names on a dark pill so they stay readable, and the front crowd ducks a little */
 .chase.many .chtok .ch-name{font-size:15px;background:rgba(10,4,24,.78);padding:1px 7px;border-radius:99px;margin-top:2px;position:relative;z-index:2}
 .chase.many .chcrowd.front{height:11%}
+
+/* a big group: the winner's header gets smaller and the table shrinks to fit the screen (see chaseOverview) */
+.end.ovmany{gap:10px;justify-content:flex-start;padding-top:8px}
+.end.ovmany .endhead .winchar .char{width:80px;height:80px}
+.end.ovmany .endhead .winchar{gap:8px}
+.end.ovmany h1{font-size:clamp(2rem,4.5vw,3.2rem);margin:0}
+.end.ovmany .endhead{min-height:0}
+.end.ovmany .winballoon{font-size:.8em}
+.chaseov{font-size:16px}

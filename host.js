@@ -878,15 +878,29 @@
   function chaseOverview(on) {
     var box = $('chaseov');
     if (!box) { box = document.createElement('div'); box.id = 'chaseov'; box.className = 'chaseov'; $('v-end').insertBefore(box, $('v-end').querySelector('.endbtns')); }
-    box.classList.toggle('hidden', !on || !G.chaseOv); if (!on || !G.chaseOv) return;
+    box.classList.toggle('hidden', !on || !G.chaseOv); if (!on || !G.chaseOv) { $('v-end').classList.remove('ovmany'); return; }
     var R = 0; G.chaseOv.forEach(function (o) { var p = players[o.pid]; if (p && p.rh) R = Math.max(R, p.rh.length); });
     var rows = G.chaseOv.filter(function (o) { return players[o.pid]; }).slice().sort(function (a, b) { return (b.win - a.win) || (b.fp - a.fp) || (players[b.pid].score - players[a.pid].score); });
     var head = '<span></span>'; for (var k = 0; k < R; k++) head += '<span>' + (R > 1 ? 'Round ' + (k + 1) : 'Quiz') + '</span>'; head += '<span class="fc">Final Chase</span>';
-    box.style.setProperty('--R', R);
-    box.innerHTML = '<div class="ovrow ovhead">' + head + '</div>' + rows.map(function (o, i) {
+    box.style.setProperty('--cols', 'minmax(0,1fr) ' + (R ? 'repeat(' + R + ',5.2em) ' : '') + '6.4em');
+    var rowHtml = function (o, i) {
       var p = players[o.pid], cells = ''; for (var k = 0; k < R; k++) cells += '<span>' + ((p.rh || [])[k] || 0) + '</span>';
       return '<div class="ovrow' + (o.win ? ' win' : ' dead') + '" style="--i:' + i + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (o.win ? ' 🏆' : '') + '</span>' + cells + '<span class="fc">' + o.fp + '</span></div>';
-    }).join('');
+    };
+    // a big group is split over two columns, so everyone fits without scrolling
+    var two = rows.length > 6, half = two ? Math.ceil(rows.length / 2) : rows.length, cols = two ? [rows.slice(0, half), rows.slice(half)] : [rows];
+    box.classList.toggle('two', two);
+    box.innerHTML = cols.map(function (cl, c) { return '<div class="ovcol"><div class="ovrow ovhead">' + head + '</div>' + cl.map(function (o, i) { return rowHtml(o, i + c * half); }).join('') + '</div>'; }).join('');
+    // everyone has to fit on the screen, without scrolling: a big group gets a smaller header, and the table shrinks until it fits
+    $('v-end').classList.toggle('ovmany', rows.length > 5);
+    var fit = function () {
+      if (!box.isConnected || box.classList.contains('hidden')) return;
+      box.style.fontSize = '';
+      var btns = $('v-end').querySelector('.endbtns'), bh = btns ? btns.offsetHeight + 34 : 90;   // (the buttons, the gap and the page's padding below the table)
+      for (var f = 16; f > 8; f -= 0.5) { box.style.fontSize = f + 'px'; if (box.getBoundingClientRect().bottom + scrollY + bh <= innerHeight) break; }
+    };
+    fit(); setTimeout(fit, 300); setTimeout(fit, 1200);
+    if (!window.__ovFit) { window.__ovFit = 1; addEventListener('resize', function () { var b = $('chaseov'); if (b && !b.classList.contains('hidden')) chaseOverview(true); }); }
   }
   function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder' && !(G.phase === 'end' && G.partLadder); }
   var ENDLESS = 9999;   // Ladder has no song limit: it runs until someone is at the top
