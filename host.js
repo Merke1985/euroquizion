@@ -1098,7 +1098,7 @@
     // A party round is announced first, so nobody is surprised by what is asked of them.
     var alone = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll };   // (a game of only one of these)
     if (G.atype !== 'party' && alone[md] && !(md === 'sing' && REMOTE)) { funIntro(md, alone[md]); return; }
-    if (G.atype === 'party' && !G.botRolled) { G.botRolled = true; botItems(); }   // bots with items may use one: 5% chance, 5% more each question they wait
+    if (G.atype === 'party' && !G.botRolled) { G.botRolled = true; botItems(); }   // bots with items may use one: 10% chance, 10% more each question they wait
     if (G.atype === 'party' && G.shopQ && G.shopQ.length) { shopDeliver(startRound2); return; }   // Eurofan Shop items used since the last question land first
     G.botRolled = false;
     if (G.atype === 'party' && !G.quipLoad) list().forEach(function (p) { if (p.sitout) { p.sitNow = p.sitout; p.sitout = ''; } if (p.flagged > 0) { p.flagNow = true; p.flagged--; } });   // (a Giant Flag: this question is blocked from view)   // a Broken Mic: this one sits out
@@ -2254,16 +2254,16 @@
   }
   function shopRandom(n, from) { var ids = from || SHOP_ITEMS.map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
   // Bots and their items: every trivia question a bot with items has a chance to use one,
-  // 5% at first and 5% more for every question it waits. The Broken Mic waits for the question to open.
+  // 10% at first and 10% more for every question it waits. The Broken Mic waits for the question to open.
   function botItems() {
     var alive = list().filter(function (x) { return !x.off; });
     list().forEach(function (b) {
       if (!b.bot || b.off || !b.inv || !b.inv.length) return;
-      var ch = b.useP || 0.05;
-      if (Math.random() >= ch) { b.useP = Math.min(1, ch + 0.05); return; }
+      var ch = b.useP || 0.1;
+      if (Math.random() >= ch) { b.useP = Math.min(1, ch + 0.1); return; }
       var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield'; });
       if (!ids.length) return;
-      b.useP = 0.05;
+      b.useP = 0.1;
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b; });
       var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'thief';
       if (!self && !others.length) return;
