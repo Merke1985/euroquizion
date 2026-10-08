@@ -1770,7 +1770,7 @@
     shopGo(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
       var nm = players[lucky[0]] ? players[lucky[0]].name : '';
       FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: nm + ' wins this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
-      funIntro('shopwin', function () { shopGo(lucky, SHOP_PICKS, function () { startRound(); }); }, 4000);
+      shopVisit(lucky, 1, function () { startRound(); }, true);
     });
   });
   $('chasetest').addEventListener('click', function () {
@@ -2167,8 +2167,7 @@
     if (!wins.length) { back(); return; }
     var names = wins.map(function (k) { return players[k].name; });
     FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
-    funIntro('shopwin', function () { shopGo(wins, SHOP_PICKS, back); }, 5000);
-    Music.douze();
+    Music.douze(); shopVisit(wins, 1, back, true);   // straight to the boutique: the winner chooses one
   }
   function shopAll() { shopGo(null, 1, function () { startRound(); }); }
   // To the boutique: a presenter sends us there, the studio slides away (presenters first), and the shop slides in.
@@ -2182,13 +2181,14 @@
     }, 2200);
   }   // the first visit: everyone, one item each
   // A visit to the boutique: who (null: everyone), how many items each, and what comes after.
-  function shopVisit(who, n, then) {
+  function shopVisit(who, n, then, win) {
     var act = list().filter(function (p) { return !p.off && (!who || who.indexOf(p.pid) >= 0); });
     if (!act.length) { then(); return; }
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    var old = $('shopov'); if (old) old.remove();   // (a fresh boutique, sliding in)
     var offer = {}; act.forEach(function (p) { offer[p.pid] = shuffle(SHOP_ITEMS.map(function (it) { return it.id; })).slice(0, 4); });   // everyone gets their own selection of four
-    G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer };
+    G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win };
     G.phase = 'shop'; G.barMs = SHOP_MS; G.endsAt = Date.now() + SHOP_MS; push(); Music.ding();
     var id = G.shop.id;
     bots.forEach(function (b) { if (G.shop.who.indexOf(b.pid) >= 0) setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom(n, offer[b.pid]) }); }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
@@ -2391,8 +2391,9 @@
       document.body.appendChild(ov);
     }
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
-    var one = act.length === 1;
-    ov.querySelector('.bqbubble').textContent = g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'Welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.';
+    var one = act.length === 1, wn = act.map(function (p) { return p.name; }), wnames = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
+    if (g.win) ov.querySelector('.bqbubble').textContent = g.over ? (one ? 'Good choice, darling!' : 'Good choices, darlings!') : 'Congratulations, ' + wnames + '! You can choose an item out of my selection of four. Enjoy!';
+    else ov.querySelector('.bqbubble').textContent = g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'Welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.';
     ov.querySelector('.shoppers').innerHTML = act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('');
   }
   // The big announcement of an item: across the whole screen, with the points flying and a sound.
