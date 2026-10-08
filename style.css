@@ -1500,3 +1500,9 @@ aside.recapgone{visibility:hidden}
 .boutique.enter .bqrack{animation:inBottom .8s .75s cubic-bezier(.2,.9,.3,1.08) both}
 .boutique.enter .bqwall{animation:fadein .6s both}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* side by side in the middle when they talk; they step apart when something appears on the screen between them */
+.shosts.together .ehost.him{left:33%}
+.shosts.together .ehost.her{right:33%}
+.shosts.together .hbub.him{left:6%;max-width:26%}
+.shosts.together .hbub.her{right:6%;max-width:26%}

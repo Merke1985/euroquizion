@@ -1198,8 +1198,8 @@
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, one hides a bomb. Take turns to open one. Blow up and you are out; the last one standing wins!' },
     partytime: { icon: '🎉', title: 'Party round!', sub: '' },
-    shop: { icon: '🛍️', title: 'The Green Room Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
-    shopwin: { icon: '🛍️', title: 'The Green Room Boutique', sub: '' },
+    shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
+    shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -1769,8 +1769,8 @@
     G.mode = G.lastParty = 'shop'; G.afterParty = true; G.mgBase = null;
     shopGo(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
       var nm = players[lucky[0]] ? players[lucky[0]].name : '';
-      FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: nm + ' wins this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
-      shopVisit(lucky, 1, function () { startRound(); }, true);
+      FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: nm + ' wins this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
+      shopVisit(lucky, 1, function () { backFromShop(1, startRound); }, true);
     });
   });
   $('chasetest').addEventListener('click', function () {
@@ -2022,7 +2022,7 @@
   function hostsEl() {
     var st = stageEl(); if (!st || REMOTE) return null;
     var h = st.querySelector('.shosts');
-    if (!h) { h = document.createElement('div'); h.className = 'shosts away'; h.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; st.appendChild(h); }   // (off stage until they have something to say)
+    if (!h) { h = document.createElement('div'); h.className = 'shosts away together'; h.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; st.appendChild(h); }   // (off stage until they have something to say)
     return h;
   }
   function hostSay(who, text, ms) {
@@ -2036,6 +2036,7 @@
   function hostsAway() {
     var h = hostsEl(); if (!h || h.classList.contains('away') || G.phase === 'opening' || hostHold || h.querySelector('.hbub.on')) return;
     h.classList.add('away'); if (!REMOTE) Music.woosh();
+    setTimeout(function () { if (h.classList.contains('away')) h.classList.add('together'); }, 700);   // (next time they come on side by side)
   }
   function hostQuestion() {   // a line for the question that starts now (not used: the presenters keep out of the way during the questions)
     return;
@@ -2067,7 +2068,7 @@
       var how = { order: 'Tonight it’s Party mode: the Grand Tour! 🎉', random: 'Tonight it’s Party mode, and the wheel decides! 🎡', vote: 'Tonight it’s Party mode, and you vote! 🗳️', one: 'Tonight it’s Party mode, and you take turns to choose!' }[G.partyPick] || 'Tonight it’s Party mode! 🎉';
       var then = { order: 'First three trivia questions, then a party game, and so on, until every party game has had its turn.', random: 'Three trivia questions, then the wheel picks a party game, and so on.', vote: 'Three trivia questions, then you vote for the next party game, and so on.', one: 'Three trivia questions, then one of you picks the next party game, and so on.' }[G.partyPick] || 'Three trivia questions, then a party game, and so on.';
       L.push(['him', how], ['her', then]);
-      if (shopOn()) L.push(['him', 'Win a party game and you get to go shopping in the Green Room Boutique! 🛍️']);
+      if (shopOn()) L.push(['him', 'Win a party game and you get to go shopping in Woodruff’s Boutique! 🛍️']);
     } else {
       var rounds = G.parts > 1 ? G.parts + ' rounds of ' + G.per + ' questions' : G.per + ' questions';
       L.push(['him', 'Tonight: a quiz of ' + rounds + '!']);
@@ -2186,8 +2187,8 @@
     var back = function () { startRound2(); };   // (then on as usual: the trivia card, or the Grand Final)
     if (!wins.length) { back(); return; }
     var names = wins.map(function (k) { return players[k].name; });
-    FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
-    Music.douze(); shopVisit(wins, 1, back, true);   // straight to the boutique: the winner chooses one
+    FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
+    Music.douze(); shopVisit(wins, 1, function () { backFromShop(wins.length, back); }, true);   // straight to the boutique: the winner chooses one
   }
   function shopAll() { shopGo(null, 1, function () { startRound(); }); }
   // The first visit: the presenters welcome Europe back, the boutique appears on the screen between them,
@@ -2200,24 +2201,35 @@
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
     var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
     if (!on) at(200, function () { hostSay('him', 'Welcome back, Europe! 🇪🇺', 4000); });
-    at(2400 + d, function () { G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
+    if (hh) hh.classList.add('together');
+    at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
+      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
     at(3700 + d, function () { hostSay('her', line, 3400); });
     at(7200 + d, function () { hostHold = false; then(); });
     setTimeout(function () { hostHold = false; }, 7600 + d);
   }
+  // Back in the studio after the boutique: the presenters hope you found something nice, and it's trivia time again.
+  function backFromShop(n, then) {
+    if (REMOTE) { then(); return; }
+    G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
+    hostHold = true; clearTimeout(hostT.away);
+    hostSay('him', 'I hope you got ' + (n > 1 ? 'some nice souvenirs' : 'a nice souvenir') + '! Let’s get on with the show!', 3600);
+    setTimeout(function () { hostSay('her', 'It’s time again for trivia! 🧠', 3000); }, 3300);
+    setTimeout(function () { hostHold = false; then(); }, 6400);
+  }
   function shopIntro() {
     if (REMOTE) { partyGo('shop'); return; }
     G.mode = G.lastParty = 'shop'; G.best = null; G.q = null; G.afterParty = true; G.mgBase = null;
-    studioIntro('🛍️', 'The Green Room Boutique', FUN.shop.sub, 'It’s time to visit the Green Room Boutique!', function () {
+    studioIntro('🛍️', 'Woodruff’s Boutique', FUN.shop.sub, 'It’s time to visit Woodruff’s Boutique!', function () {
       var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
-      setTimeout(function () { shopVisit(null, 1, function () { startRound(); }); }, 1400);
+      setTimeout(function () { shopVisit(null, 1, function () { backFromShop(2, startRound); }); }, 1400);
     }, 'shop');
   }
   // To the boutique: a presenter sends us there, the studio slides away (presenters first), and the shop slides in.
   function shopGo(who, n, then) {
     if (REMOTE || $('v-game').classList.contains('hidden')) { shopVisit(who, n, then); return; }
     stopTimers(); hostsEl();
-    hostSay('him', 'Let’s go to our beloved shopkeeper!', 2600); Music.ding();
+    hostSay('him', 'Let’s go and see our beloved Lynda!', 2600); Music.ding();
     setTimeout(function () {
       var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
       setTimeout(function () { shopVisit(who, n, then); }, 1400);
@@ -2396,7 +2408,7 @@
     }, ms);
   }
   // The big screen during the shopping: the items, and who has picked already.
-  // The shopkeeper of the Green Room Boutique (an original character): big red curls, cat-eye glasses, an emerald sequinned jumpsuit.
+  // The shopkeeper of Woodruff’s Boutique (an original character): big red curls, cat-eye glasses, an emerald sequinned jumpsuit.
   var SHOPKEEPER = '<svg class="keeper" viewBox="0 0 220 420" aria-hidden="true"><defs>' +
     '<linearGradient id="kpsuit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#19c48a"/><stop offset="1" stop-color="#0a6b52"/></linearGradient>' +
     '<radialGradient id="kpskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f6d2b8"/><stop offset="1" stop-color="#d9a585"/></radialGradient>' +
@@ -2426,7 +2438,7 @@
       ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov boutique enter'; whooshes([0, 300, 650, 950]); setTimeout(function () { ov.classList.remove('enter'); }, 2600);
       var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2; })).slice(0, 22);
       // bunting with real flag pictures (flag emoji show up as letters on some computers)
-      ov.innerHTML = '<div class="bqwall"></div><div class="bqsign">✨ The Green Room Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span class="bqpen" style="--i:' + i + ';background:hsl(' + (i * 47 % 360) + ',80%,60%)"><img src="https://flagcdn.com/w80/' + c + '.png" alt="" onerror="this.remove()"></span>'; }).join('') + '</div>' +
+      ov.innerHTML = '<div class="bqwall"></div><div class="bqsign">✨ Woodruff’s Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span class="bqpen" style="--i:' + i + ';background:hsl(' + (i * 47 % 360) + ',80%,60%)"><img src="https://flagcdn.com/w80/' + c + '.png" alt="" onerror="this.remove()"></span>'; }).join('') + '</div>' +
         '<div class="bqdisco">🪩</div><div class="bqsale">SALE<br><b>100% OFF</b></div>' +
         '<div class="bqfans"><span>🪭</span><span>🪭</span><span>🪭</span><span>🪭</span><span>🪭</span></div>' +
         '<div class="bqhats"><span>🎩</span><span>👑</span><span>🧢</span><span>👒</span><span>🎓</span></div>' +
@@ -2442,7 +2454,7 @@
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
     var one = act.length === 1, wn = act.map(function (p) { return p.name; }), wnames = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
     if (g.win) ov.querySelector('.bqbubble').textContent = g.over ? (one ? 'Good choice, darling!' : 'Good choices, darlings!') : 'Congratulations, ' + wnames + '! You can choose an item out of my selection of four. Enjoy!';
-    else ov.querySelector('.bqbubble').textContent = g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'Welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.';
+    else ov.querySelector('.bqbubble').textContent = g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'I’m Lynda, welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.';
     ov.querySelector('.shoppers').innerHTML = act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('');
   }
   // The big announcement of an item: across the whole screen, with the points flying and a sound.

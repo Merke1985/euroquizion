@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=402">
+<link rel="stylesheet" href="style.css?v=403">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -49,7 +49,6 @@
         <div><label for="s-atype">Game type</label><select id="s-atype">
           <option value="mc" selected>Quiz</option><option value="party">Party</option></select></div>
         <div id="finalbox"><label for="s-final">Final</label><select id="s-final"><option value="chase" selected>Grand Final</option><option value="double">Big Five</option><option value="standard">Standard</option></select></div>
-        <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="order" selected>Grand tour</option><option value="spin">Random</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
         <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
         <div id="qmodebox"><label for="s-qmode">Round selection</label><select id="s-qmode"><option value="standard" selected>Standard</option><option value="random">Random rounds</option><option value="vote">Voted rounds</option><option value="ladder">Ladder</option></select></div>
         <div><label for="s-rounds">Questions per round</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
@@ -63,6 +62,7 @@
             <label class="swrow"><span><b>2000 – 2012</b><small>Televoting and the first semi-finals</small></span><input type="checkbox" data-era="2000-2012" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>2013 – now</b><small>The modern contest</small></span><input type="checkbox" data-era="2013-2100" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
+        <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="order" selected>Grand tour</option><option value="spin">Random</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
         <p class="mute finalhelp" id="finalhelp" style="grid-column:1/-1;margin:2px 0 0;font-size:.9rem"></p>
         <details class="adv" style="grid-column:1/-1"><summary>Advanced settings</summary>
         <div class="settings" style="margin-top:12px">
@@ -91,7 +91,7 @@
             <label class="swrow"><span><b>Green Room</b><small>The funniest answer about a song</small></span><input type="checkbox" data-party="quip" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Lost in Translation</b><small>Fake a translation, find the real one</small></span><input type="checkbox" data-party="bluff" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Beat the Favourite</b><small>The leader is the favourite: answer right to steal their points</small></span><input type="checkbox" data-party="fav" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>The Green Room Boutique</b><small>Everyone gets an item at the first break; after that, the winner of each party game goes shopping instead of getting points</small></span><input type="checkbox" data-party="shop" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Woodruff’s Boutique</b><small>Everyone gets an item at the first break; after that, the winner of each party game goes shopping instead of getting points</small></span><input type="checkbox" data-party="shop" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>The Envelope, Please</b><small>Take turns opening envelopes: one hides a bomb. Last one standing wins</small></span><input type="checkbox" data-party="bomb" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
         <div class="hidden"><label for="s-cat">Entries</label><select id="s-cat">
@@ -308,15 +308,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=402"></script>
-<script src="vendor/qrcode.js?v=402"></script>
-<script src="config.js?v=402"></script>
-<script src="net.js?v=402"></script>
-<script src="music.js?v=402"></script>
-<script src="chars.js?v=402"></script>
-<script src="match.js?v=402"></script>
-<script src="shapes.js?v=402"></script>
-<script src="quiz.js?v=402"></script>
-<script src="host.js?v=402"></script>
+<script src="vendor/supabase.js?v=403"></script>
+<script src="vendor/qrcode.js?v=403"></script>
+<script src="config.js?v=403"></script>
+<script src="net.js?v=403"></script>
+<script src="music.js?v=403"></script>
+<script src="chars.js?v=403"></script>
+<script src="match.js?v=403"></script>
+<script src="shapes.js?v=403"></script>
+<script src="quiz.js?v=403"></script>
+<script src="host.js?v=403"></script>
 </body>
 </html>
