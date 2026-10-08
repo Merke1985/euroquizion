@@ -706,5 +706,5 @@ var SHOP_ITEMS = [
   { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
 ];
 var SHOP_PICKS = 2;   // free items per visit
-var SHOP_START_ALL = true;   // every (human) player starts a Party game with one of each item (handy for trying them out)
+var SHOP_START_ALL = false;   // every (human) player starts a Party game with one of each item (handy for trying them out)
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }

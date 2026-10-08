@@ -117,7 +117,7 @@
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '', flag: !!p.flagNow }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
-    if (G.phase === 'shop' && G.shop) { s.shop = { id: G.shop.id, n: SHOP_PICKS, items: SHOP_ITEMS, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
+    if (G.phase === 'shop' && G.shop) { s.shop = { id: G.shop.id, n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS, offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') s.shopq = (G.shopQ || []).length;
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
     if (hideScores()) s.hide = true;
@@ -1060,6 +1060,7 @@
       FUN.starter = { icon: '🛍️', title: 'Your Eurofan bag!', sub: 'Everyone gets one of each item from the Eurofan Shop. Use them with the 🛍️ button on your phone, whenever you like.' };
       funIntro('starter', startRound2, 6500); return;
     }
+    if (G.atype === 'party' && G.afterParty && G.mgBase) { mgPrize(); return; }   // a party game is over: the winner goes shopping
     if (G.atype === 'party') {
       // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
@@ -1069,6 +1070,7 @@
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
       if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.eraNow = ''; buildPool(); G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; ebuPay(function () { funIntro('final', startRound2, 6000); }); return; }
+      if (!G.tourFinal && (G.quizRun || 0) >= 3 && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; partyGo('shop'); return; }   // the first break: everyone visits the boutique
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
@@ -1177,11 +1179,12 @@
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav', 'shop', 'bomb'];
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav', 'bomb'];
   var FUN = {
     bigfive: { icon: '🖐️', title: 'The Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, one hides a bomb. Take turns to open one. Blow up and you are out; the last one standing wins!' },
-    shop: { icon: '🛍️', title: 'Eurofan Shop', sub: 'Pick ' + SHOP_PICKS + ' free items on your phone. Use them whenever you like: blow points away, steal points, or break someone’s mic during a question.' },
+    shop: { icon: '🛍️', title: 'The Green Room Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
+    shopwin: { icon: '🛍️', title: 'The Green Room Boutique', sub: '' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -1197,6 +1200,7 @@
   function partyGo(kind, ms) {
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll, shop: shopAll, bomb: bombAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
+    G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null;   // (the winner goes shopping instead of keeping the points)
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
   function partyChoose(games) {
@@ -2027,7 +2031,7 @@
       : g.st === 'open' ? 'Envelope ' + (g.pick + 1) + '… the envelope, please!'
       : g.st === 'safe' ? 'Phew! ' + flag(e.code) + ' ' + esc(countries[e.code] || '') + ': ' + esc(nm) + ' is safe!'
       : g.st === 'boom' ? '💥 BOOM! ' + esc(nm) + ' is out!'
-      : g.st === 'win' ? '🏆 ' + esc(nm) + ' is the last one standing! +' + g.prize[0] + (g.out.length && players[g.out[g.out.length - 1]] ? ' · ' + esc(players[g.out[g.out.length - 1]].name) + ' +' + g.prize[1] : '') : '';
+      : g.st === 'win' ? '🏆 ' + esc(nm) + ' is the last one standing!' + (shopOn() ? '' : ' +' + g.prize[0] + (g.out.length && players[g.out[g.out.length - 1]] ? ' · ' + esc(players[g.out[g.out.length - 1]].name) + ' +' + g.prize[1] : '')) : '';
   }
   net.on('bomb', bombMsg);
 
@@ -2035,26 +2039,44 @@
   // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
   // what was used lands just before the next question: points blown away or stolen, or a mic that breaks.
   var SHOP_MS = 30000, shopTimer = null;
-  function shopAll() {
-    var act = list().filter(function (p) { return !p.off; });
-    if (act.length < 2) { quipAll(); return; }
+  function shopOn() { return G.atype === 'party' && (G.partyOn || {}).shop !== false; }
+  function mgScores() { var o = {}; list().forEach(function (p) { o[p.pid] = p.score; }); return o; }
+  // A party game is over: what it scored is taken back, and whoever scored the most in it (a tie: all of them) wins a visit to the boutique.
+  function mgPrize() {
+    var base = G.mgBase; G.mgBase = null;
+    var gain = {}; list().forEach(function (p) { gain[p.pid] = p.score - (base[p.pid] || 0); p.score = base[p.pid] != null ? base[p.pid] : p.score; p.pts = 0; });
+    var best = Math.max.apply(null, Object.keys(gain).map(function (k) { return gain[k]; }));
+    var wins = best > 0 ? Object.keys(gain).filter(function (k) { return gain[k] === best && players[k] && !players[k].off; }) : [];
+    var back = function () { startRound2(); };   // (then on as usual: the trivia card, or the Grand Final)
+    if (!wins.length) { back(); return; }
+    var names = wins.map(function (k) { return players[k].name; });
+    FUN.shopwin = { icon: '🛍️', title: 'The Green Room Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
+    funIntro('shopwin', function () { shopVisit(wins, SHOP_PICKS, back); }, 5000);
+    Music.douze();
+  }
+  function shopAll() { shopVisit(null, 1, function () { startRound(); }); }   // the first visit: everyone, one item each
+  // A visit to the boutique: who (null: everyone), how many items each, and what comes after.
+  function shopVisit(who, n, then) {
+    var act = list().filter(function (p) { return !p.off && (!who || who.indexOf(p.pid) >= 0); });
+    if (!act.length) { then(); return; }
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
-    G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false };
-    G.phase = 'shop'; G.barMs = SHOP_MS; G.endsAt = Date.now() + SHOP_MS; push();
+    var offer = {}; act.forEach(function (p) { offer[p.pid] = shuffle(SHOP_ITEMS.map(function (it) { return it.id; })).slice(0, 4); });   // everyone gets their own selection of four
+    G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer };
+    G.phase = 'shop'; G.barMs = SHOP_MS; G.endsAt = Date.now() + SHOP_MS; push(); Music.ding();
     var id = G.shop.id;
-    bots.forEach(function (b) { setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom() }); }, 2000 + Math.random() * 4000); });
+    bots.forEach(function (b) { if (G.shop.who.indexOf(b.pid) >= 0) setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom(n, offer[b.pid]) }); }, 2000 + Math.random() * 4000); });
     clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
   }
-  function shopRandom() { var ids = SHOP_ITEMS.map(function (it) { return it.id; }), out = []; for (var i = 0; i < SHOP_PICKS; i++) out.push(pick(ids)); return out; }
+  function shopRandom(n, from) { var ids = from || SHOP_ITEMS.map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
   function shopMsg(m) {
     var p = m && players[m.pid]; if (!p) return;
     if (m.items) {   // shopping
-      var g = G.shop; if (G.phase !== 'shop' || !g || g.over || m.id !== g.id || g.picks[p.pid]) return;
-      var items = (m.items || []).filter(function (x) { return !!shopItem(x); }).slice(0, SHOP_PICKS); if (!items.length) return;
+      var g = G.shop; if (G.phase !== 'shop' || !g || g.over || m.id !== g.id || g.picks[p.pid] || g.who.indexOf(p.pid) < 0) return;
+      var own = (g.offer || {})[p.pid], items = (m.items || []).filter(function (x) { return !!shopItem(x) && (!own || own.indexOf(x) >= 0); }).slice(0, g.n || SHOP_PICKS); if (!items.length) return;
       g.picks[p.pid] = items; p.inv = (p.inv || []).concat(items);
       Music.plop(Object.keys(g.picks).length); push();
-      if (list().filter(function (x) { return !x.off; }).every(function (x) { return g.picks[x.pid]; })) { clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, 1500); }
+      if (g.who.filter(function (k) { return players[k] && !players[k].off; }).every(function (k) { return g.picks[k]; })) { clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, 1500); }
       return;
     }
     if (m.use) {   // using an item: it lands before the next question
@@ -2080,9 +2102,9 @@
   function shopDone() {
     var g = G.shop; if (G.phase !== 'shop' || !g || g.over) return;
     clearTimeout(shopTimer); g.over = true;
-    list().filter(function (p) { return !p.off && !g.picks[p.pid]; }).forEach(function (p) { var it = shopRandom(); g.picks[p.pid] = it; p.inv = (p.inv || []).concat(it); });   // too late: a surprise bag
+    g.who.forEach(function (k) { var p = players[k]; if (!p || p.off || g.picks[k]) return; var it = shopRandom(g.n, (g.offer || {})[k]); g.picks[k] = it; p.inv = (p.inv || []).concat(it); });   // too late: a surprise bag
     Music.ding(); push();
-    shopTimer = setTimeout(function () { if (G.phase === 'shop') { G.shop = null; startRound(); } }, 3500);
+    shopTimer = setTimeout(function () { if (G.phase === 'shop') { var then = g.then; G.shop = null; (then || startRound)(); } }, 3500);
   }
   // The used items land: one card on the big screen with everything that happens, then the next question.
   function shopDeliver(then) {
@@ -2157,13 +2179,44 @@
     }, ms);
   }
   // The big screen during the shopping: the items, and who has picked already.
+  // The shopkeeper of the Green Room Boutique (an original character): big red curls, cat-eye glasses, an emerald sequinned jumpsuit.
+  var SHOPKEEPER = '<svg class="keeper" viewBox="0 0 220 420" aria-hidden="true"><defs>' +
+    '<linearGradient id="kpsuit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#19c48a"/><stop offset="1" stop-color="#0a6b52"/></linearGradient>' +
+    '<radialGradient id="kpskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f6d2b8"/><stop offset="1" stop-color="#d9a585"/></radialGradient>' +
+    '<pattern id="kpsq" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.4" fill="#d6fff0" opacity=".8"/><circle cx="9" cy="9" r="1.1" fill="#ffd23f" opacity=".8"/></pattern></defs>' +
+    '<ellipse cx="110" cy="410" rx="64" ry="9" fill="rgba(0,0,0,.45)"/>' +
+    '<path d="M80 250 L74 404 L102 404 L110 290 L118 404 L146 404 L140 250 Z" fill="url(#kpsuit)"/><path d="M80 250 L74 404 L102 404 L110 290 L118 404 L146 404 L140 250 Z" fill="url(#kpsq)"/>' +
+    '<path d="M70 402 h34 l-2 10 h-34 z M116 402 h34 l2 10 h-34 z" fill="#ffd23f"/>' +
+    '<path d="M70 146 Q110 132 150 146 L144 256 Q110 266 76 256 Z" fill="url(#kpsuit)"/><path d="M70 146 Q110 132 150 146 L144 256 Q110 266 76 256 Z" fill="url(#kpsq)"/>' +
+    '<path d="M60 140 Q70 128 92 136 L84 160 Q66 160 60 140 Z M160 140 Q150 128 128 136 L136 160 Q154 160 160 140 Z" fill="#ffd23f"/>' +
+    '<path d="M76 248 Q110 258 144 248 L144 256 Q110 266 76 256 Z" fill="#ffd23f"/>' +
+    '<path d="M64 150 Q48 196 56 236 L70 236 Q66 200 78 166 Z" fill="url(#kpsuit)"/><circle cx="62" cy="242" r="9" fill="url(#kpskin)"/>' +
+    '<g class="kbag"><path d="M150 152 Q172 190 168 214 L156 216 Q158 190 140 166 Z" fill="url(#kpsuit)"/><circle cx="163" cy="222" r="9" fill="url(#kpskin)"/>' +
+    '<path d="M150 226 h34 l6 46 h-46 z" fill="#ff2fa8"/><path d="M158 228 q9 -16 18 0" stroke="#ffd23f" stroke-width="3" fill="none"/><text x="167" y="256" font-size="16" text-anchor="middle" fill="#fff">✦</text></g>' +
+    '<rect x="102" y="116" width="16" height="24" fill="#d9a585"/>' +
+    '<g fill="#c0392b"><circle cx="78" cy="78" r="20"/><circle cx="142" cy="78" r="20"/><circle cx="90" cy="52" r="20"/><circle cx="130" cy="52" r="20"/><circle cx="110" cy="42" r="20"/><circle cx="72" cy="104" r="16"/><circle cx="148" cy="104" r="16"/><circle cx="76" cy="126" r="13"/><circle cx="144" cy="126" r="13"/></g>' +
+    '<ellipse cx="110" cy="90" rx="27" ry="32" fill="url(#kpskin)"/>' +
+    '<path d="M86 74 Q98 60 122 66 Q132 70 134 80 Q120 70 100 72 Z" fill="#c0392b"/>' +
+    '<path d="M84 88 h22 v10 h-22 z M114 88 h22 v10 h-22 z" fill="none" stroke="#111" stroke-width="3" stroke-linejoin="round"/><path d="M84 88 l-6 -6 M136 88 l6 -6 M106 92 h8" stroke="#111" stroke-width="3" stroke-linecap="round"/>' +
+    '<circle cx="95" cy="93" r="2.6" fill="#1a1a1a"/><circle cx="125" cy="93" r="2.6" fill="#1a1a1a"/>' +
+    '<path d="M98 107 Q110 118 122 107" stroke="#c0204a" stroke-width="4" fill="#fff" stroke-linecap="round"/>' +
+    '<circle cx="84" cy="104" r="3.5" fill="#ffd23f"/><circle cx="136" cy="104" r="3.5" fill="#ffd23f"/>' +
+    '</svg>';
   function shopShow() {
     var g = G.shop; if (!g) return;
-    var ov = $('shopov'); if (!ov) { ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov'; document.body.appendChild(ov); }
-    var act = list().filter(function (p) { return !p.off; });
-    ov.innerHTML = '<div class="shopcard card"><h2>🛍️ Eurofan Shop</h2><p class="mute">' + (g.over ? 'The shop is closed! Use your items on your phone whenever you like.' : 'Pick ' + SHOP_PICKS + ' free items on your phone') + '</p>' +
-      '<div class="shopitems">' + SHOP_ITEMS.map(function (it) { return '<div class="shopitem"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><small>' + esc(it.desc) + '</small></div>'; }).join('') + '</div>' +
-      '<div class="shoppers">' + act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('') + '</div></div>';
+    var ov = $('shopov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov boutique';
+      var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2; })).slice(0, 22);
+      ov.innerHTML = '<div class="bqsign">✨ The Green Room Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span style="--i:' + i + '">' + flag(c) + '</span>'; }).join('') + '</div>' +
+        '<div class="bqshelf top">💃 🎤 🪩 🎟️ 🌈 💌 🎶 👑</div><div class="bqshelf low">🧢 🧣 🎧 🕶️ 🪭 🎊 🍾 ✨</div>' +
+        '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="bqcounter"><div class="shopitems"></div></div><div class="shoppers"></div>';
+      document.body.appendChild(ov);
+    }
+    var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
+    ov.querySelector('.bqbubble').textContent = g.over ? 'Thank you, darlings! Use them wisely…' : first ? 'Welcome, darlings! Everyone gets four to choose from: pick one on your phone, it’s on the house!' : 'Congratulations! Four treasures on your phone: take ' + g.n + ', on the house, darling!';
+    ov.querySelector('.shopitems').innerHTML = SHOP_ITEMS.map(function (it, i) { return '<div class="shopitem" style="--i:' + i + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b></div>'; }).join('');
+    ov.querySelector('.shoppers').innerHTML = act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('');
   }
   // The big announcement of an item: across the whole screen, with the points flying and a sound.
   var shopHitT = null;
@@ -3303,7 +3356,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();

@@ -1335,3 +1335,25 @@ aside.recapgone{visibility:hidden}
 .benvbtn b{font-size:1rem}
 .benvbtn.open{background:#fff;opacity:.5}
 .benvbtn:disabled{cursor:default}
+
+/* ---------- The Green Room Boutique ---------- */
+.shopov.boutique{display:block;background:radial-gradient(ellipse at 50% 20%,#3a1663 0%,#1d0a36 55%,#0b0416 100%);backdrop-filter:none}
+.boutique .bqsign{position:absolute;top:3vh;left:50%;transform:translateX(-50%);white-space:nowrap;font-weight:900;font-size:clamp(1.8rem,4.2vw,3.6rem);color:#fff;padding:.25em .9em;border-radius:18px;border:4px solid #ff2fa8;box-shadow:0 0 22px #ff2fa8,inset 0 0 18px rgba(255,47,168,.6);text-shadow:0 0 10px #ff8ad0,0 0 24px #ff2fa8;animation:bqneon 2.4s ease-in-out infinite}
+@keyframes bqneon{0%,100%{opacity:1}48%{opacity:1}50%{opacity:.7}52%{opacity:1}}
+.boutique .bqbunting{position:absolute;top:16vh;left:-2vw;right:-2vw;display:flex;justify-content:space-between;font-size:clamp(1.4rem,2.6vw,2.4rem)}
+.boutique .bqbunting::before{content:'';position:absolute;left:0;right:0;top:.3em;height:2px;background:rgba(255,255,255,.35)}
+.boutique .bqbunting span{position:relative;transform-origin:50% 0;animation:bqsway 2.6s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.23s)}
+@keyframes bqsway{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+.boutique .bqshelf{position:absolute;right:4vw;width:38vw;text-align:center;font-size:clamp(1.6rem,3vw,2.8rem);letter-spacing:.3em;padding:.2em 0 .35em;border-bottom:10px solid #6a3b1f;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+.boutique .bqshelf.top{top:26vh}.boutique .bqshelf.low{top:39vh}
+.boutique .bqkeeper{position:absolute;left:5vw;bottom:6vh;height:62vh}
+.boutique .bqkeeper .keeper{height:100%;width:auto;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3s ease-in-out infinite alternate}
+.boutique .bqbubble{position:absolute;left:21vw;top:27vh;max-width:30vw;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(1rem,1.7vw,1.5rem);padding:.7em 1em;border-radius:18px 18px 18px 4px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.boutique .bqcounter{position:absolute;left:28vw;right:3vw;bottom:15vh;padding:14px 18px;border-radius:18px;background:linear-gradient(#5b2b85,#3a1663);box-shadow:0 0 0 3px rgba(255,210,63,.6),0 14px 30px rgba(0,0,0,.6)}
+.boutique .shopitems{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:0}
+.boutique .shopitem{padding:10px 6px;gap:4px;animation:benvin .5s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i) * .07s)}
+.boutique .shopitem .si{font-size:2.2rem}.boutique .shopitem b{font-size:.85rem;line-height:1.15}
+.boutique .shoppers{position:absolute;left:28vw;right:3vw;bottom:5vh}
+.boutique .bqshelf{width:46vw;white-space:nowrap;letter-spacing:.12em;font-size:clamp(1.2rem,2.3vw,2.1rem)}
+.boutique .bqshelf.top{top:25vh}.boutique .bqshelf.low{top:36vh}
+.boutique .shopitems{grid-template-columns:repeat(5,1fr)}

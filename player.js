@@ -360,12 +360,14 @@
   function shopName(id) { var it = (typeof shopItem === 'function') && shopItem(id); return it ? it.icon + ' ' + it.name : id; }
   function shopView(s) {
     var sh = s.shop, mine = sh.done[pid], box = $('shopui');
-    show('v-wait'); $('waittitle').textContent = '🛍️ Eurofan Shop';
-    if (mine || sh.over) { $('waitsub').textContent = mine ? 'You got: ' + mine.map(shopName).join(' and ') + '. Use them with the 🛍️ button whenever you like.' : 'The shop is closed.'; box.classList.add('hidden'); return; }
-    $('waitsub').textContent = 'Pick ' + sh.n + ' free items (tap one twice to take two)';
+    show('v-wait'); $('waittitle').textContent = '🛍️ The Green Room Boutique';
+    if (sh.who && sh.who.indexOf(pid) < 0) { var sw = s.players.filter(function (x) { return sh.who.indexOf(x.pid) >= 0; }).map(function (x) { return x.name; }); $('waitsub').textContent = sw.join(' and ') + (sw.length > 1 ? ' are' : ' is') + ' shopping… win a party game to go shopping too!'; box.classList.add('hidden'); return; }
+    if (mine || sh.over) { $('waitsub').textContent = mine ? 'You got: ' + mine.map(shopName).join(' and ') + '. Use ' + (mine.length > 1 ? 'them' : 'it') + ' with the 🛍️ button whenever you like.' : 'The shop is closed.'; box.classList.add('hidden'); return; }
+    $('waitsub').textContent = (sh.n > 1 ? 'Take ' + sh.n + ' of these (tap one twice to take two)' : 'Take one of these') + '. It’s free!';
     box.classList.remove('hidden');
     if (shopKey !== sh.id) { shopKey = sh.id; shopSel = []; }
-    box.innerHTML = sh.items.map(function (it) {
+    var mineOffer = sh.offer && sh.offer[pid];   // your own selection of four
+    box.innerHTML = sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
       var n = shopSel.filter(function (x) { return x === it.id; }).length;
       return '<button type="button" class="shopbtn' + (n ? ' on' : '') + '" data-id="' + it.id + '"><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + '</b><small>' + esc(it.desc) + '</small></span></button>';
     }).join('') + '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take them!') + '</button>';
