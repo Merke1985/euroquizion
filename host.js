@@ -2854,7 +2854,7 @@
   function ytReadyOrRemote() { return REMOTE || ytReady; }
   function beginGame() {
     if (G.phase !== 'lobby') return false;
-    G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.finalMode = $('s-final').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : $('s-atype').value === 'mc' && $('s-qmode').value === 'ladder' ? 'ladder' : $('s-scoring').value || 'correct'; G.showScore = $('s-show').value;
+    G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.finalMode = $('s-final').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : $('s-atype').value === 'mc' && $('s-qmode').value === 'ladder' ? 'ladder' : $('s-scoring').value || 'correct'; G.showScore = 'always';   /* the scores are always in view (only the Big Five hides them) */
     if (!ytReadyOrRemote() || !buildPool()) return false;
     // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
     // round gets its own decade, picked by a spin; a decade that has been played is out of the draw.
