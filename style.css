@@ -1165,7 +1165,8 @@ aside.recapgone{visibility:hidden}
 .recap.tally li.best .who::after{content:' 👑'}
 
 /* ---------- the audience on both sides of the runway ---------- */
-.chcrowd{position:absolute;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;transition:transform 1.1s cubic-bezier(.2,.9,.3,1.05),opacity .8s ease}
+.chcrowd{position:absolute;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;transition:transform 1.1s cubic-bezier(.2,.9,.3,1.05),opacity .8s ease,filter .6s ease}
+.chase.nolights .chcrowd{filter:brightness(.3)}
 .chcrowd.back{left:19%;right:27.5%;top:-8%;height:18%;-webkit-mask-image:linear-gradient(#000 55%,transparent 92%);mask-image:linear-gradient(#000 55%,transparent 92%)}
 .chcrowd.front{left:12%;right:23%;bottom:-5%;height:18%}
 .chcrowd .fan{height:100%;width:auto;flex:none;transform-origin:50% 100%;animation:fanjump var(--d) ease-in-out infinite alternate;animation-delay:var(--dl);overflow:visible}

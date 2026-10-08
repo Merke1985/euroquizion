@@ -1419,7 +1419,7 @@
     bk.innerHTML = '<div><b>But wait…</b><span>the trophy has not been won yet.</span></div>';
     bk.classList.remove('gone'); bk.classList.add('on');
     Music.dread(true);
-    // then the scene is built up: first the background, then the stage moves in, then the runway slides in, then the lights
+    // then the scene is built up: first the background, then the stage moves in, then the runway slides in, then the fans come in (in the dark), then the lights
     chaseCrowd();
     var ch = $('chase'); ch.classList.add('nostage', 'norunway', 'nolights', 'nocrowd');
     setTimeout(function () { bk.classList.add('gone'); bk.classList.remove('on'); }, CHASE_ENTER - 400);
@@ -1429,9 +1429,9 @@
     // the lights pop on one by one, each with a spotlight clunk: the four beams, then the stage and the trophy
     var lights = [].slice.call(ch.querySelectorAll('.chbeams i')).reverse().map(function (e) { return [e]; });
     lights.push([].slice.call(ch.querySelectorAll('.chstg-floor,.chstg-ring,.chtro')));
-    lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 2900 + i * 420); });
-    setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 2900 + lights.length * 420 + 200);
-    setTimeout(function () { ch.classList.remove('nocrowd'); Music.woosh(); }, CHASE_ENTER + 2900 + lights.length * 420 + 700);   // and last, the fans come in
+    lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 4000 + i * 420); });
+    setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 150);   // the crowd brightens with the last light
+    setTimeout(function () { ch.classList.remove('nocrowd'); Music.woosh(); }, CHASE_ENTER + 2800);   // the fans come in, still in the dark
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
   function chaseStart(test, face) {
