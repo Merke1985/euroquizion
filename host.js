@@ -1976,10 +1976,10 @@
     if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
     if (it.kind === 'thief') {   // a random item from a random player's bag (which one stays a secret)
       var bags = list().filter(function (x) { return x !== by && !x.off && x.inv && x.inv.length; });
-      if (!bags.length) { shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' sneaked backstage, but every bag was empty!'; }
+      if (!bags.length) { shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' got into the Euroclub, but every bag was empty!'; }
       var v = pick(bags), gi = Math.floor(Math.random() * v.inv.length), loot = v.inv.splice(gi, 1)[0]; by.inv = (by.inv || []).concat(loot);
       shopLast.deltas = [{ pid: by.pid, tag: '+1 item' }, { pid: v.pid, tag: '−1 item' }];
-      return it.icon + ' ' + by.name + ' sneaked backstage and stole an item from ' + v.name + '!';
+      return it.icon + ' ' + by.name + ' got into the Euroclub and left with an item from ' + v.name + '!';
     }
     if (it.kind === 'flag') { t.flagged = (t.flagged || 0) + (it.amount || 3); shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see the next ' + (it.amount || 3) + ' questions!'; }
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
