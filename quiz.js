@@ -697,6 +697,7 @@ function makeChase(allSongs, countries, used) {
 var SHOP_ITEMS = [
   { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
   { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
+  { id: 'power', icon: '🔋', name: 'Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
 ];
 var SHOP_PICKS = 2;   // free items per visit
