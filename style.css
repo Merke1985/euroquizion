@@ -1279,3 +1279,9 @@ aside.recapgone{visibility:hidden}
 .shophit .shd.neg em{color:#ff4d6d}.shophit .shd.pos em{color:#3dff9a}
 @keyframes shbounce{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-14px) rotate(6deg)}}
 @keyframes shpop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+
+.shophit.onstage{inset:auto;border-radius:16px;background:rgba(6,0,18,.86);backdrop-filter:none;overflow:hidden}
+.shophit.onstage .shcard{gap:10px;max-width:92%}
+.shophit.onstage .shicon{font-size:clamp(3.5rem,8vw,7rem)}
+.shophit.onstage .shtxt{font-size:clamp(1.3rem,2.4vw,2.2rem)}
+.shophit.onstage .shd{font-size:1.2rem}.shophit.onstage .shd em{font-size:1.8rem}.shophit.onstage .shd .char{width:42px;height:42px}

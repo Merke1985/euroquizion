@@ -2015,6 +2015,10 @@
     var ds = (shopLast && shopLast.deltas || []).filter(function (d) { return d.n && players[d.pid]; });
     ov.innerHTML = '<div class="shcard"><div class="shicon">' + ((shopLast && shopLast.icon) || '🛍️') + '</div><div class="shtxt">' + esc(txt.replace(/^\S+\s/, '')) + '</div>' +
       (ds.length ? '<div class="shdel">' + ds.map(function (d, i) { var p = players[d.pid]; return '<span class="shd ' + (d.n < 0 ? 'neg' : 'pos') + '" style="--i:' + i + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em>' + (d.n < 0 ? '−' + (-d.n) : '+' + d.n) + '</em></span>'; }).join('') + '</div>' : '') + '</div>';
+    // right in front of the video screen (when it is showing), else over the whole page
+    var st = stageEl(), r = st && st.offsetParent ? st.getBoundingClientRect() : null;
+    if (r && r.width > 200) { ov.style.left = r.left + 'px'; ov.style.top = r.top + 'px'; ov.style.width = r.width + 'px'; ov.style.height = r.height + 'px'; ov.classList.add('onstage'); }
+    else { ov.style.left = ov.style.top = ov.style.width = ov.style.height = ''; ov.classList.remove('onstage'); }
     ov.classList.remove('on'); void ov.offsetWidth; ov.classList.add('on');
     clearTimeout(shopHitT); shopHitT = setTimeout(function () { ov.classList.remove('on'); }, ms || 4500);
   }
