@@ -1402,9 +1402,9 @@
     setTimeout(function () { ch.classList.remove('nostage'); Music.woosh(); }, CHASE_ENTER + 700);
     setTimeout(function () { ch.classList.remove('norunway'); Music.woosh(); }, CHASE_ENTER + 1700);
     [].forEach.call(ch.querySelectorAll('.lit'), function (e) { e.classList.remove('lit'); });
-    // the lights pop on one by one, each with a spotlight clunk: the four beams, the ring and the fireworks, then the floor and the trophy
+    // the lights pop on one by one, each with a spotlight clunk: the four beams, then the stage and the trophy
     var lights = [].slice.call(ch.querySelectorAll('.chbeams i')).reverse().map(function (e) { return [e]; });
-    lights.push([].slice.call(ch.querySelectorAll('.chstg-ring,.chpyro')), [].slice.call(ch.querySelectorAll('.chstg-floor,.chtro')));
+    lights.push([].slice.call(ch.querySelectorAll('.chstg-floor,.chstg-ring,.chtro')));
     lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 2900 + i * 420); });
     setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 2900 + lights.length * 420 + 200);
   }
