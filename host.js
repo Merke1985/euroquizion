@@ -2068,20 +2068,37 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Stella!").
   function showPlan() {
-    var L = [], fin = G.finalMode === 'chase' ? 'And at the very end… the Grand Final! 🏆' : G.finalMode === 'double' ? 'And at the end: the Big Five, five questions for double points!' : '';
+    var L = [], who = 'him', say = function (t) { L.push([who, t]); who = who === 'him' ? 'her' : 'him'; };
+    var fin = G.finalMode === 'chase' ? 'And our final game tonight: the Grand Final! Race your way to the trophy, before the monster catches you… 🏆'
+      : G.finalMode === 'double' ? 'And our final game tonight: the Big Five! Five extra questions at the end, all for double points. ⭐'
+      : 'No final game tonight: whoever has the most points after the last question wins!';
     if (G.atype === 'party') {
       var how = { order: 'Tonight it’s Party mode: the Grand Tour! 🎉', random: 'Tonight it’s Party mode, and the wheel decides! 🎡', vote: 'Tonight it’s Party mode, and you vote! 🗳️', one: 'Tonight it’s Party mode, and you take turns to choose!' }[G.partyPick] || 'Tonight it’s Party mode! 🎉';
       var then = { order: 'First three trivia questions, then a party game, and so on, until every party game has had its turn.', random: 'Three trivia questions, then the wheel picks a party game, and so on.', vote: 'Three trivia questions, then you vote for the next party game, and so on.', one: 'Three trivia questions, then one of you picks the next party game, and so on.' }[G.partyPick] || 'Three trivia questions, then a party game, and so on.';
-      L.push(['him', how], ['her', then]);
-      if (shopOn()) L.push(['him', 'Win a party game and you get to go shopping in Woodruff’s Boutique! 🛍️']);
-    } else {
-      var rounds = G.parts > 1 ? G.parts + ' rounds of ' + G.per + ' questions' : G.per + ' questions';
-      L.push(['him', 'Tonight: a quiz of ' + rounds + '!']);
-      if (G.parts > 1 && G.qmode === 'random') L.push(['her', 'The wheel picks the era of every round.']);
-      else if (G.parts > 1 && G.qmode === 'vote') L.push(['her', 'Before every round, you vote for the era.']);
-      else if (G.qmode === 'ladder') L.push(['her', 'Climb the ladder: every right answer takes you a rung higher!']);
+      say(how); say(then);
+      if (shopOn()) say('Win a party game and you get to go shopping in Woodruff’s Boutique! 🛍️');
+      say(fin);
+      return L;
     }
-    if (fin) L.push([L[L.length - 1][0] === 'him' ? 'her' : 'him', fin]);
+    // Quiz: what we play, which songs, how the points work, the rounds, and the final game
+    var lad = ladderGame() || G.partLadder, multi = G.parts > 1;
+    if (lad) say(multi ? 'Tonight we play the Ladder, in ' + G.parts + ' rounds! 🪜' : 'Tonight we play the Ladder! 🪜');
+    else say(multi ? 'Tonight it’s a quiz in ' + G.parts + ' rounds, of ' + G.per + ' questions each! 🎤' : 'Tonight it’s a quiz: ' + G.per + ' questions about Eurovision songs! 🎤');
+    var eraTxt = $('erasum') ? $('erasum').textContent : '';
+    if (G.robin) say('Every round, a different era of Eurovision.');
+    else if (G.eraSpin && G.eraVote) say('Before every round, you vote for the era we play.');
+    else if (G.eraSpin) say('Before every round, the wheel picks the era. 🎡');
+    else if (eraTxt && eraTxt !== 'All eras' && eraTxt !== 'Custom') say('Every song tonight comes from ' + eraTxt + '.');
+    else say('Songs from every era of Eurovision, from 1956 until now!');
+    if (G.cat === 'win') say('And only winners tonight! 🏆');
+    else if (G.cat === 'nq') say('And only songs that never made it out of the semi-final… 😬');
+    else if (G.cat === 'final') say('And only songs that made it to the final.');
+    if (lad) say('Every right answer takes you a rung higher, a wrong one half a rung down. First to the top wins!');
+    else if (G.scoring === 'speed') say('Be quick: the first right answer gets 12 points, the next 10, then 8, and so on.');
+    else if (G.scoring === 'random') say('Every question is worth a surprise number of points: keep an eye on the screen!');
+    else say('A right answer is worth 12 points, douze points!');
+    if (multi && !lad) { say('Every round starts from zero, and the winner of a round wears a crown in the next one. 👑'); say('After the last round, all your rounds add up!'); }
+    say(fin);
     return L;
   }
   function hostWelcome() {
