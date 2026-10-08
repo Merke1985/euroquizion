@@ -1419,36 +1419,40 @@
     return s;
   }
   // The big screen: lanes, tokens, the Diva and the trophy; the question in a smaller box in the middle.
-  // The runway, seen in 3D: the lanes run up towards the stage, where the trophy stands. Space 1 is at the near end;
-  // the trophy (space 20) is at the far end. The Diva stands at the near end and comes up the runway; the spaces she
-  // has taken are smashed, and the ones she will take next turn flash.
-  function chaseY(pos) { return (1 - Math.max(0, Math.min(CHASE_END, pos)) / CHASE_END) * 100; }
+  // The runway, seen from the side and a little from above: every player has a lane running from left to right,
+  // the Diva comes from the left and the stage with the trophy is on the right. The spaces she has smashed stay dark;
+  // the ones she will smash next turn flash, and a player standing on one of those flashes red: move, or be caught.
+  function chaseX(pos) { return Math.max(0, Math.min(CHASE_END, pos)) / CHASE_END * 100; }
   function chaseShow() {
     var c = G.chase; if (!c) return;
     $('chase').classList.remove('hidden');
     var n = c.order.length;
     if (chaseBuilt !== c.key) {
       chaseBuilt = c.key;
-      var vh = $('chview').clientHeight || 480, vw = $('chview').clientWidth || 1000;
-      var run = $('chrun'); run.style.width = Math.min(vw * 0.62, 150 + n * 110) + 'px'; run.style.height = Math.round(vh * 2.0) + 'px';
-      $('chtiles').style.gridTemplateColumns = 'repeat(' + n + ',1fr)'; $('chtiles').style.gridTemplateRows = 'repeat(' + CHASE_END + ',1fr)';
-      var tiles = ''; for (var r = CHASE_END; r >= 1; r--) for (var ln = 0; ln < n; ln++) tiles += '<i data-r="' + r + '" class="' + (r % 2 ? '' : 'even') + '"></i>';
+      $('chtiles').style.gridTemplateColumns = 'repeat(' + CHASE_END + ',1fr)'; $('chtiles').style.gridTemplateRows = 'repeat(' + n + ',1fr)';
+      var tiles = ''; for (var ln = 0; ln < n; ln++) for (var r = 1; r <= CHASE_END; r++) tiles += '<i data-r="' + r + '" data-l="' + ln + '" class="' + ((r + ln) % 2 ? '' : 'even') + '"></i>';
       $('chtiles').innerHTML = tiles;
-      $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" style="left:' + ((i + 0.5) / n * 100) + '%;top:' + chaseY(c.lanes[k].pos - 0.5) + '%"><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span></div>'; }).join('');
-      $('chtrack').style.setProperty('--tok', Math.max(46, Math.min(96, Math.round(parseFloat(run.style.width) / n * 0.5))) + 'px');
+      $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" style="top:' + ((i + 0.62) / n * 100) + '%;left:' + chaseX(c.lanes[k].pos - 0.5) + '%"><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span></div>'; }).join('');
+      var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
+      $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
     }
-    c.order.forEach(function (k) {
+    var next = c.st === 'diva' || c.st === 'intro' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {};
+    c.order.forEach(function (k, i) {
       var l = c.lanes[k], el = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]'); if (!el) return;
-      el.style.top = chaseY(Math.min(CHASE_END, l.pos) - (l.pos >= CHASE_END ? 0 : 0.5)) + '%';
+      var at = Math.min(CHASE_END, l.pos);
+      el.style.left = chaseX(at - (l.pos >= CHASE_END ? 0 : 0.5)) + '%';
+      if (!l.out) { occ[i + ':' + at] = 1; if (next && at <= c.mon + next && c.st !== 'win' && c.st !== 'move') doomed[k] = 1; }
       el.classList.toggle('out', l.out); el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
-      el.classList.toggle('near', !l.out && l.pos >= CHASE_END - 3 && !c.win);
+      el.classList.toggle('near', !l.out && l.pos >= CHASE_END - 3 && !c.win); el.classList.toggle('doomed', !!doomed[k]);
       var r = el.querySelector('.ch-res'), showR = (c.st === 'show' || c.st === 'move') && l.res != null && !l.out;
       r.classList.toggle('on', showR); r.classList.toggle('zero', !l.res); r.classList.toggle('gold', l.res === 3); r.textContent = showR ? (l.res === 3 ? '★ +3' : '+' + l.res) : '';
     });
-    // smashed and threatened spaces
-    var next = c.st === 'diva' || c.st === 'intro' ? divaStep(c.n + 1) : divaStep(c.n);
-    [].forEach.call($('chtiles').children, function (t) { var r = +t.getAttribute('data-r'); t.classList.toggle('gone', r <= c.mon); t.classList.toggle('warn', r > c.mon && r <= c.mon + next && c.st !== 'win'); });
-    $('chmon').style.top = (chaseY(c.mon) + 3) + '%';   // her feet just behind the first space she has not smashed yet
+    // smashed, threatened and occupied spaces (an occupied space that is threatened: deadly)
+    [].forEach.call($('chtiles').children, function (t) {
+      var r = +t.getAttribute('data-r'), on = !!occ[t.getAttribute('data-l') + ':' + r], warn = r > c.mon && r <= c.mon + next && c.st !== 'win';
+      t.classList.toggle('gone', r <= c.mon); t.classList.toggle('warn', warn && !on); t.classList.toggle('doom', warn && on); t.classList.toggle('occ', on && !warn);
+    });
+    $('chmon').style.left = chaseX(c.mon) + '%';
     $('chmon').classList.toggle('hungry', c.st === 'diva' && divaStep(c.n) > 0); $('chmon').classList.toggle('sleep', c.n < 2 || (c.n === 2 && c.st !== 'diva'));
     $('chn').textContent = c.n ? 'Question ' + c.n + ' · first to the trophy wins' : 'First to the trophy wins';
     // the line under the stage: what the Diva is up to, or that the trophy is within reach
@@ -1456,7 +1460,7 @@
     if (c.st === 'win') note.classList.add('hidden');
     else if (near.length) { note.className = 'chnote'; note.textContent = '🏆 Within reach of the trophy: only a perfect answer (3 out of 3) wins!'; }
     else if (c.n < 2 || (c.n === 2 && c.st !== 'diva')) { var w = 2 - c.n + (c.st === 'intro' ? 0 : 0); note.className = 'chnote red'; note.textContent = '😴 The Diva is waiting… ' + (c.n < 2 ? (2 - c.n) + (2 - c.n === 1 ? ' more question' : ' more questions') : 'last quiet question'); }
-    else if (next) { note.className = 'chnote red'; note.textContent = '⚠️ Next turn the Diva smashes ' + next + (next === 1 ? ' space' : ' spaces'); }
+    else if (next) { var dn = Object.keys(doomed).length; note.className = 'chnote red'; note.textContent = '⚠️ Next turn the Diva smashes ' + next + (next === 1 ? ' space' : ' spaces') + (dn ? ' · ' + dn + (dn === 1 ? ' player is' : ' players are') + ' in danger!' : ''); }
     else note.classList.add('hidden');
     var big = $('chbig');
     if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>Run up the runway to the trophy! Tick every song that fits the question; one space for each one you get right. The Diva waits two questions, then she comes.</small>'; big.classList.remove('hidden'); }

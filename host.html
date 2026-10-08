@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=306">
+<link rel="stylesheet" href="style.css?v=307">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -178,26 +178,33 @@
       <div class="chview" id="chview"><div class="chrun" id="chrun">
         <div class="chtiles" id="chtiles"></div>
         <div class="chtoks" id="chlanes"></div>
-        <div class="chmon" id="chmon"><div class="chbob"><svg class="diva" viewBox="0 0 300 330" aria-hidden="true">
-            <defs><radialGradient id="dvglow" cx="50%" cy="38%" r="60%"><stop offset="0" stop-color="#ff2f6d" stop-opacity=".55"/><stop offset="1" stop-color="#ff2f6d" stop-opacity="0"/></radialGradient>
+        <div class="chmon" id="chmon"><div class="chbob"><svg class="diva" viewBox="0 0 340 340" aria-hidden="true">
+            <defs><radialGradient id="dvglow" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#ff2f6d" stop-opacity=".5"/><stop offset="1" stop-color="#ff2f6d" stop-opacity="0"/></radialGradient>
             <radialGradient id="dvface" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#efe8f6"/><stop offset="1" stop-color="#9c8fb3"/></radialGradient>
-            <linearGradient id="dvgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d0a2b"/><stop offset="1" stop-color="#05020a"/></linearGradient></defs>
-            <ellipse cx="150" cy="140" rx="150" ry="140" fill="url(#dvglow)"/>
-            <path class="dvhair" d="M150 30 C70 20 40 70 34 130 C28 190 4 230 0 300 C34 260 44 230 58 205 C52 250 60 290 48 330 C90 280 92 230 100 190 L200 190 C208 230 210 280 252 330 C240 290 248 250 242 205 C256 230 266 260 300 300 C296 230 272 190 266 130 C260 70 230 20 150 30 Z" fill="#06030b"/>
-            <path d="M100 170 C88 230 70 290 60 330 L240 330 C230 290 212 230 200 170 Z" fill="url(#dvgown)"/>
-            <path d="M60 330 L72 306 L84 330 L98 300 L112 330 L128 304 L142 330 L158 302 L172 330 L188 306 L202 330 L216 300 L230 330 L240 330" fill="#05020a"/>
-            <g fill="#ffd23f" opacity=".85"><circle cx="120" cy="230" r="2.2"/><circle cx="160" cy="250" r="2"/><circle cx="140" cy="285" r="2.5"/><circle cx="180" cy="220" r="1.8"/><circle cx="110" cy="275" r="1.8"/><circle cx="190" cy="290" r="2"/><circle cx="150" cy="210" r="1.6"/></g>
-            <g class="dvarms" fill="none" stroke-linecap="round">
-              <path d="M104 186 C80 170 58 140 46 104" stroke="#2a1238" stroke-width="13"/>
-              <path d="M196 186 C220 170 242 140 254 104" stroke="#2a1238" stroke-width="13"/>
-              <g stroke="#c4002f" stroke-width="4.5"><path d="M46 104 L28 70"/><path d="M46 104 L40 64"/><path d="M46 104 L54 64"/><path d="M46 104 L66 72"/><path d="M254 104 L272 70"/><path d="M254 104 L260 64"/><path d="M254 104 L246 64"/><path d="M254 104 L234 72"/></g>
+            <linearGradient id="dvchrome" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfcfe"/><stop offset=".3" stop-color="#a3acbb"/><stop offset=".55" stop-color="#eef1f6"/><stop offset=".8" stop-color="#6b7384"/><stop offset="1" stop-color="#d9dee6"/></linearGradient>
+            <linearGradient id="dvgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16081f"/><stop offset="1" stop-color="#030106"/></linearGradient></defs>
+            <ellipse cx="150" cy="150" rx="160" ry="150" fill="url(#dvglow)"/>
+            <path class="dvhair" d="M140 26 C70 20 46 70 42 130 C38 190 20 240 10 310 C40 280 52 250 62 222 C58 262 66 300 56 340 C96 300 98 250 104 200 L176 200 C184 250 186 300 226 340 C214 300 222 262 218 222 C230 248 244 276 270 300 C262 236 244 190 238 130 C234 70 210 22 140 26 Z" fill="#05020a"/>
+            <path d="M96 196 C86 250 72 300 64 340 L216 340 C208 300 194 250 184 196 Z" fill="url(#dvgown)"/>
+            <path d="M64 340 L76 314 L88 340 L102 308 L116 340 L132 312 L146 340 L162 310 L176 340 L192 314 L206 340 L216 340" fill="#030106"/>
+            <path d="M100 150 C110 140 170 140 180 150 L184 196 C160 206 120 206 96 196 Z" fill="url(#dvchrome)" stroke="#4b5262" stroke-width="2"/>
+            <path d="M106 160 C130 168 150 168 174 160 M104 176 C130 184 150 184 176 176" stroke="#5d6575" stroke-width="2" fill="none"/>
+            <path d="M96 204 L184 204 L190 222 L140 230 L90 222 Z" fill="url(#dvchrome)" stroke="#4b5262" stroke-width="2"/>
+            <g class="dvarms">
+              <path d="M104 160 C86 140 72 112 66 82" stroke="#0d0512" stroke-width="16" stroke-linecap="round" fill="none"/>
+              <g fill="url(#dvchrome)" stroke="#4b5262" stroke-width="1.5"><path d="M92 146 L110 136 L104 120 L84 128 Z"/><path d="M84 124 L102 114 L96 98 L76 106 Z"/><path d="M76 102 L94 92 L88 78 L68 84 Z"/></g>
+              <g stroke="#0b0b10" stroke-width="5" stroke-linecap="round" fill="none"><path d="M66 82 C60 66 52 52 40 40"/><path d="M66 82 C64 62 62 46 58 30"/><path d="M66 82 C70 62 74 48 80 34"/><path d="M66 82 C54 76 42 72 28 72"/></g>
+              <path d="M176 160 C206 150 236 142 262 136" stroke="#0d0512" stroke-width="16" stroke-linecap="round" fill="none"/>
+              <g fill="url(#dvchrome)" stroke="#4b5262" stroke-width="1.5"><path d="M196 144 L218 140 L222 158 L200 162 Z"/><path d="M222 138 L244 134 L248 152 L226 156 Z"/></g>
+              <g class="dvclaw" stroke="#0b0b10" stroke-width="5" stroke-linecap="round" fill="none"><path d="M262 136 C284 120 304 110 330 104"/><path d="M262 136 C288 128 310 126 336 128"/><path d="M262 136 C288 140 308 148 332 158"/><path d="M262 136 C282 150 296 164 314 180"/></g>
+              <circle cx="262" cy="136" r="9" fill="#0b0b10"/>
             </g>
-            <ellipse cx="150" cy="100" rx="44" ry="58" fill="url(#dvface)"/>
-            <path d="M106 86 C100 40 200 40 194 86 C176 58 124 58 106 86 Z" fill="#06030b"/>
-            <g class="dveyes"><ellipse cx="132" cy="96" rx="12" ry="9" fill="#14061d"/><ellipse cx="168" cy="96" rx="12" ry="9" fill="#14061d"/><circle cx="132" cy="97" r="4" fill="#ff2f6d"/><circle cx="168" cy="97" r="4" fill="#ff2f6d"/></g>
-            <path d="M120 82 L142 88 M180 82 L158 88" stroke="#14061d" stroke-width="3"/>
-            <ellipse class="dvmouth" cx="150" cy="130" rx="12" ry="18" fill="#14061d"/>
-            <path d="M140 118 L144 126 L148 118 L152 126 L156 118 L160 126" stroke="#efe8f6" stroke-width="2" fill="none"/>
+            <ellipse cx="140" cy="96" rx="40" ry="52" fill="url(#dvface)"/>
+            <path d="M98 84 C92 34 190 34 182 84 C172 62 150 54 140 54 C124 54 108 62 98 84 Z" fill="#05020a"/>
+            <path d="M100 70 L112 92 L118 66 L128 88 L134 62 L142 86 L150 62 L156 88 L166 66 L172 92 L182 70 C176 40 106 40 100 70 Z" fill="#05020a"/>
+            <g class="dveyes"><ellipse cx="124" cy="100" rx="11" ry="8" fill="#14061d"/><ellipse cx="156" cy="100" rx="11" ry="8" fill="#14061d"/><circle cx="125" cy="101" r="4" fill="#ff2f6d"/><circle cx="157" cy="101" r="4" fill="#ff2f6d"/></g>
+            <ellipse class="dvmouth" cx="140" cy="128" rx="11" ry="15" fill="#14061d"/>
+            <path d="M131 118 L135 125 L139 118 L143 125 L147 118 L150 124" stroke="#efe8f6" stroke-width="2" fill="none"/>
           </svg></div><span class="chmonname">The Diva</span></div>
       </div></div>
       <div class="chnote hidden" id="chnote"></div>
@@ -222,15 +229,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=306"></script>
-<script src="vendor/qrcode.js?v=306"></script>
-<script src="config.js?v=306"></script>
-<script src="net.js?v=306"></script>
-<script src="music.js?v=306"></script>
-<script src="chars.js?v=306"></script>
-<script src="match.js?v=306"></script>
-<script src="shapes.js?v=306"></script>
-<script src="quiz.js?v=306"></script>
-<script src="host.js?v=306"></script>
+<script src="vendor/supabase.js?v=307"></script>
+<script src="vendor/qrcode.js?v=307"></script>
+<script src="config.js?v=307"></script>
+<script src="net.js?v=307"></script>
+<script src="music.js?v=307"></script>
+<script src="chars.js?v=307"></script>
+<script src="match.js?v=307"></script>
+<script src="shapes.js?v=307"></script>
+<script src="quiz.js?v=307"></script>
+<script src="host.js?v=307"></script>
 </body>
 </html>
