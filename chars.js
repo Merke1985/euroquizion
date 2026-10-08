@@ -15,7 +15,8 @@ var CHARS = [
   { id: 'tyler', name: 'Bonnie Tyler', file: 'Bonnie Tyler, ESC2013 press conference 02 (cropped).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0', pos: '50% 30%' },
   { id: 'duncan', name: 'Duncan Laurence', file: 'Duncan Laurence with the 2019 Eurovision Trophy (cropped2).jpg', by: 'Martin Fjellanger, EuroVisionary', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 20%' },
   { id: 'emmy', name: 'Emmy', file: 'PrepartyES - Emmy 02 (portrait).jpeg', by: 'Pedro J Pacheco', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 30%' },
-  { id: 'dustin', name: 'Dustin the Turkey', file: 'Dustin.jpg', by: 'AcerBen', lic: 'Public domain', licUrl: '', pos: '50% 50%', face: [57, 34], zoom: 1.7 }
+  { id: 'dustin', name: 'Dustin the Turkey', file: 'Dustin.jpg', by: 'AcerBen', lic: 'Public domain', licUrl: '', pos: '50% 50%', face: [57, 34], zoom: 1.7 },
+  { id: 'sieneke', name: 'Sieneke', file: 'Sieneke (cropped).jpg', by: 'Vincent Hasselgård, Aktiv I Oslo.no', lic: 'CC BY-SA 2.0', licUrl: 'https://creativecommons.org/licenses/by-sa/2.0', pos: '50% 60%', face: [56, 58], zoom: 1.3 }
 ];
 var CHAR_BY_ID = {};
 CHARS.forEach(function (c) { CHAR_BY_ID[c.id] = c; });
