@@ -316,11 +316,12 @@
     });
     [].forEach.call(box.querySelectorAll('.climber'), function (n) { if (!seen[n.getAttribute('data-pid')]) n.remove(); });
   }
+var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bagg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff3fa4"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><path d="M8 8.5V6a4 4 0 0 1 8 0v2.5" fill="none" stroke="#ffd34d" stroke-width="2" stroke-linecap="round"/><path d="M3.5 8h17l-1.3 14H4.8z" fill="url(#bagg)"/><path d="M12 19.5c-3-1.9-4.6-3.5-4.6-5.3a2.3 2.3 0 0 1 4.6-.7 2.3 2.3 0 0 1 4.6.7c0 1.8-1.6 3.4-4.6 5.3z" fill="#fff"/></svg>';   // the items on the scoreboard: a Eurovision shopping bag with a heart
   function boardHtml(showGot) {
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (G.fav && G.fav.pid === p.pid ? 'fav ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">🛍️' + p.inv.length : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (G.fav && G.fav.pid === p.pid ? 'fav ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -2256,20 +2257,20 @@
   // Bots and their items: every trivia question a bot with items has a chance to use one,
   // 10% at first and 10% more for every question it waits. The Broken Mic waits for the question to open.
   function botItems() {
-    var alive = list().filter(function (x) { return !x.off; });
-    list().forEach(function (b) {
-      if (!b.bot || b.off || !b.inv || !b.inv.length) return;
+    var alive = list().filter(function (x) { return !x.off; }), done = false;
+    shuffle(list().slice()).forEach(function (b) {   // (at most one bot per question, so they never all go at once)
+      if (done || !b.bot || b.off || !b.inv || !b.inv.length) return;
       var ch = b.useP || 0.1;
       if (Math.random() >= ch) { b.useP = Math.min(1, ch + 0.1); return; }
       var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield'; });
       if (!ids.length) return;
-      b.useP = 0.1;
+      b.useP = 0.1; done = true;
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b; });
       var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'thief';
       if (!self && !others.length) return;
       var t = self ? b : pick(others), key = 'bot' + Date.now() + Math.random();
       if (it.kind === 'sit') {   // the Broken Mic: a few seconds into the question
-        var tries = 0; (function tryMic() { if (++tries > 8 || !players[b.pid]) return; if (G.phase === 'guess' && G.q) { if (!t.sitNow) shopMsg({ pid: b.pid, use: id, target: t.pid, key: key }); return; } setTimeout(tryMic, 1500); })();
+        var tries = 0; (function tryMic() { if (++tries > 8 || !players[b.pid]) return; if (G.phase === 'guess' && G.q) { setTimeout(function () { if (G.phase === 'guess' && G.q && !t.sitNow) shopMsg({ pid: b.pid, use: id, target: t.pid, key: key }); }, 1500 + Math.random() * 3500); return; } setTimeout(tryMic, 1500); })();
         return;
       }
       shopMsg({ pid: b.pid, use: id, target: t.pid, key: key });
@@ -2298,7 +2299,7 @@
       if (it.kind === 'smoke') { if (open) return; inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: it.id, target: p.pid }); Music.blip(); push(); return; }   // the Smoke Machine waits for the next question
       if (open) {   // during a question: it lands right away; the video and the timer stop while it does
         inv.splice(k, 1);
-        shopFreeze(4800, function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopHit(txt, 4600); });
+        shopFreeze(7800, function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopHit(txt, 7600); });
         return;
       }
       inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: m.use, target: t.pid });
@@ -2329,8 +2330,8 @@
       if (i >= q.length) { then(); return; }
       var txt = shopApply(q[i]); if (!txt) { step(i + 1); return; }
       FUN.shopgo = { icon: shopLast.icon, title: 'Special delivery!', sub: txt };
-      funIntro('shopgo', function () { step(i + 1); }, 4800);
-      shopHit(txt, 4600);
+      funIntro('shopgo', function () { step(i + 1); }, 7800);
+      shopHit(txt, 7600);
     };
     step(0);
   }
@@ -2383,7 +2384,7 @@
     shopLast = { icon: '✉️', sound: 'steal', deltas: Object.keys(got).map(function (k) { return { pid: k, n: got[k] }; }) };
     var txt = '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'They share ' + pot + ' points' : pot + ' points') + ' before the Grand Final.';
     FUN.shopgo = { icon: '✉️', title: 'A brown envelope…', sub: txt };
-    funIntro('shopgo', then, 6000); shopHit(txt, 5800);
+    funIntro('shopgo', then, 9000); shopHit(txt, 8800);
   }
   // What an item does; returns the line for the big screen.
   var shopLast = null;   // what the last item did: { icon, deltas: [{ pid, n }] }, for the big announcement

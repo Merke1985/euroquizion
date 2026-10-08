@@ -487,7 +487,7 @@ body.remote .host.ingame>header .brand .logo{display:none}
 .btn.small#lobbyready{box-shadow:none}
 
 /* host: taller video, slimmer score panel, answer bars as wide as the video with the pickers inside on the right */
-.host .game{grid-template-columns:minmax(0,1fr) 250px}
+.host .game{grid-template-columns:minmax(0,1fr) 285px}
 .host .stage{max-height:44vh}
 .host .opts.votelist .optcol{position:relative;display:block}
 .host .opts.votelist .opt{width:100%;padding-right:46%}
@@ -563,7 +563,7 @@ body.embed .phone.compact .readybtn.on{box-shadow:none}
 body.embed .phone.compact #lobbystart{width:auto!important;font-size:.95rem;padding:.5em 1.1em;box-shadow:none}
 
 /* score panel: name | total | +points, each in a fixed column */
-.host aside .board li{display:grid;grid-template-columns:minmax(0,1fr) auto auto 2.6em;align-items:center;gap:6px}
+.host aside .board li{display:grid;grid-template-columns:minmax(0,1fr) auto auto 2.6em;align-items:center;gap:4px}
 .host aside .board .who{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .host aside .board .tot{text-align:right;font-variant-numeric:tabular-nums;min-width:2ch}
 .host aside .board .pts{margin:0;text-align:left;font-variant-numeric:tabular-nums}
@@ -1515,4 +1515,6 @@ aside.recapgone{visibility:hidden}
 .bombov .benv.open .bin{font-size:clamp(1.2rem,2.2vw,2.2rem)}
 /* items in the bag, on the scoreboard */
 #board .binv:empty { padding: 0; background: none; }
-#board .binv { display: inline-block; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,.12); font-size: .72em; font-weight: 700; vertical-align: middle; white-space: nowrap; }
+#board .binv { display: inline-flex; align-items: center; gap: 2px; margin: 0 2px 0 6px; padding: 1px 7px 1px 3px; border-radius: 999px; background: rgba(255,63,164,.16); border: 1px solid rgba(255,63,164,.35); font-size: .8em; font-weight: 800; white-space: nowrap; }
+#board .binv .bagico { width: 1.75em; height: 1.75em; flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+#board .binv:empty { margin: 0; border: 0; }

@@ -183,7 +183,7 @@ function SecondPlayer(elId) {
 // peel ("Behind the curtain"): the silent video is uncovered bit by bit; only on a shared screen (opt.peel).
 // blur ("Out of focus"): the same idea, but the silent video starts blurred and sharpens.
 // flag ("Whose flag?"): a flag on the screen and four songs; one of them was sent by that country. No clip until the answer.
-var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, host: 8 };   // (map, "On the map", is switched off for now: give it a weight here and a switch in host.html to bring it back)
+var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, host: 8, trivia: 10 };   // (map, "On the map", is switched off for now: give it a weight here and a switch in host.html to bring it back)
 // map ("On the map"): the same, with the outline of the country in place of its flag (the smallest states are only a dot: left out).
 function makeFlag(song, allSongs, countries, map) {
   if (map ? !(typeof SHAPES !== 'undefined' && SHAPES[song[1]]) : !flag(song[1])) return null;   // a country that no longer exists has no flag to show
@@ -233,6 +233,55 @@ function makePeel(song, allSongs, countries, opt) {
   shuffle(opts);
   return { subject: 'peel', swap: swap, peel: true, type: 'mc', text: 'Behind the curtain: which song is this? The sooner you know, the more points.', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
 }
+// trivia ("Did you know?"): obscure Eurovision facts. s: the song the fact is about (year, country), played at the reveal if it is in the game.
+// n: the options are numbers or years (shown in order). Each fact comes back only after all the others have had their turn.
+var OBSCURE = [
+  { q: 'In 1969, how many countries shared first place?', a: 'Four', w: ['Two', 'Three', 'Five'], e: 'Spain, the United Kingdom, the Netherlands and France all finished on 18 points, and there was no tie-break rule yet.', s: [1969, 'nl'] },
+  { q: 'How many songs did each country send to the very first contest, in 1956?', a: 'Two', w: ['One', 'Three', 'Four'], e: 'In 1956 every country sent two songs, and only the winner was announced.', s: [1956, 'ch'] },
+  { q: 'Johnny Logan won Eurovision three times. How did he win the third time, in 1992?', a: 'As the songwriter', w: ['As a duet partner', 'As the conductor', 'As a backing singer'], e: 'He wrote “Why Me?”, sung by Linda Martin for Ireland.', s: [1992, 'ie'] },
+  { q: 'Ireland won three years in a row in the 1990s. Which years?', a: '1992, 1993, 1994', w: ['1991, 1992, 1993', '1993, 1994, 1995', '1994, 1995, 1996'], e: 'Linda Martin, Niamh Kavanagh, then Paul Harrington & Charlie McGettigan. Ireland won again in 1996.', s: [1993, 'ie'] },
+  { q: 'By how many points did Céline Dion win for Switzerland in 1988?', a: '1 point', w: ['3 points', '6 points', '12 points'], e: '“Ne partez pas sans moi” beat the United Kingdom by a single point, decided by the very last vote.', s: [1988, 'ch'] },
+  { q: 'Lordi gave Finland its first win in 2006. In which year had Finland first taken part?', a: '1961', w: ['1956', '1965', '1971'], n: true, e: 'Finland waited 45 years for its first win.', s: [2006, 'fi'] },
+  { q: 'France Gall won in 1965 with a song by Serge Gainsbourg. Which country did she represent?', a: 'Luxembourg', w: ['France', 'Monaco', 'Belgium'], e: 'Luxembourg often picked French singers, and won five times.', s: [1965, 'lu'] },
+  { q: 'Which African country took part only once, in 1980?', a: 'Morocco', w: ['Tunisia', 'Egypt', 'Algeria'], e: 'Morocco sent Samira Bensaïd in 1980 and finished second to last.', s: [1980, 'ma'] },
+  { q: 'Australia first took part in 2015. What was the occasion for the invitation?', a: 'The contest’s 60th anniversary', w: ['Australia hosting a semi-final', 'A televote record in Australia', 'The first contest outside Europe'], e: 'It was meant as a one-off, but Australia has been taking part ever since.', s: [2015, 'au'] },
+  { q: 'In which year was the scoring of 1 to 8, 10 and 12 points introduced?', a: '1975', w: ['1971', '1980', '1985'], n: true, e: 'The very first song of 1975, “Ding-a-dong” by Teach-In, went on to win.', s: [1975, 'nl'] },
+  { q: 'From which year were countries free again to sing in any language they liked?', a: '1999', w: ['1990', '1994', '2004'], n: true, e: 'The language rule had also been dropped once before, from 1973 to 1976.', s: [1999, 'se'] },
+  { q: 'In which year did a live orchestra play at Eurovision for the last time?', a: '1998', w: ['1994', '2001', '2004'], n: true, e: 'Birmingham 1998 was the last contest with an orchestra.', s: [1998, 'il'] },
+  { q: 'Since which year have there been two semi-finals?', a: '2008', w: ['2004', '2006', '2010'], n: true, e: 'The first semi-final came in 2004; there were two from 2008 on.', s: [2008, 'ru'] },
+  { q: 'Italy came back to Eurovision in 2011. When had it last taken part before that?', a: '1997', w: ['1993', '2001', '2004'], n: true, e: 'After 13 years away, Italy came back in 2011 and finished second.', s: [2011, 'it'] },
+  { q: 'Serbia won in 2007 with “Molitva”. Which attempt was that as an independent country?', a: 'Its very first', w: ['Its second', 'Its third', 'Its fifth'], e: 'Serbia won the first time it took part on its own.', s: [2007, 'rs'] },
+  { q: 'Sandie Shaw won for the United Kingdom in 1967. What was famous about her performance?', a: 'She sang barefoot', w: ['She sang lying down', 'She wore a mask', 'She sang at a piano'], e: '“Puppet on a String” was the United Kingdom’s first win.', s: [1967, 'gb'] },
+  { q: 'Which winning act pulled the skirts off its two women during the performance?', a: 'Bucks Fizz', w: ['Brotherhood of Man', 'Teach-In', 'Herreys'], e: 'Bucks Fizz won in 1981 with “Making Your Mind Up”.', s: [1981, 'gb'] },
+  { q: 'Sweden’s 1984 winners Herreys are remembered for which footwear?', a: 'Golden boots', w: ['Roller skates', 'Clogs', 'Silver trainers'], e: '“Diggi-Loo Diggi-Ley” and the golden boots.', s: [1984, 'se'] },
+  { q: 'In 1978, as Israel headed for the win, what did Jordanian television show instead?', a: 'A picture of flowers', w: ['A cartoon', 'The news', 'A weather map'], e: 'Jordanian TV then told its viewers that Belgium had won.', s: [1978, 'il'] },
+  { q: 'Which country has finished last more often than any other?', a: 'Norway', w: ['Finland', 'Portugal', 'Belgium'], e: 'Norway has also won three times.', s: [1978, 'no'] },
+  { q: 'How many points did Jahn Teigen score for Norway in 1978?', a: '0', w: ['1', '3', '6'], n: true, e: 'He finished last, and the “nul points” made him even more popular at home.', s: [1978, 'no'] },
+  { q: 'Portugal won for the first time in 2017. In which year had Portugal first taken part?', a: '1964', w: ['1956', '1971', '1980'], n: true, e: 'Portugal waited 53 years for “Amar pelos dois”.', s: [2017, 'pt'] },
+  { q: '“Volare” (Nel blu dipinto di blu) became a worldwide hit. Where did it finish at Eurovision 1958?', a: '3rd', w: ['1st', '2nd', '5th'], n: true, e: 'One of the best-known Eurovision songs ever did not win.', s: [1958, 'it'] },
+  { q: 'How many points did the United Kingdom jury give ABBA’s “Waterloo” in 1974?', a: '0', w: ['3', '8', '10'], n: true, e: 'ABBA won anyway, in Brighton.', s: [1974, 'se'] },
+  { q: 'Very little video of which year’s contest survives, after the tape was lost?', a: '1964', w: ['1956', '1970', '1977'], n: true, e: 'Only a few short clips remain of Copenhagen 1964.', s: [1964, 'it'] },
+  { q: 'In 1996, Germany missed the final for the only time. Why?', a: 'An audio-only pre-selection round', w: ['A boycott', 'A late entry', 'A broken voting line'], e: 'The juries picked the finalists from audio tapes, and Germany was left out.', s: [1996, 'no'] },
+  { q: 'How many points did Alexander Rybak score with “Fairytale” in 2009, a record at the time?', a: '387', w: ['292', '365', '412'], n: true, e: 'The record stood until the new voting system of 2016.', s: [2009, 'no'] },
+  { q: 'Before Loreen in 2023, who was the only performer to have won twice as the lead singer?', a: 'Johnny Logan', w: ['Lys Assia', 'Gigliola Cinquetti', 'Carola'], e: 'Johnny Logan won in 1980 and 1987; Loreen in 2012 and 2023.', s: [2023, 'se'] },
+  { q: 'In which year did San Marino first take part?', a: '2008', w: ['2004', '2011', '2014'], n: true, e: 'San Marino finished last in its semi-final, then stayed away in 2009 and 2010.', s: [2008, 'sm'] },
+  { q: 'Israel won in 1979 but did not host in 1980. Which country hosted instead?', a: 'The Netherlands', w: ['The United Kingdom', 'Ireland', 'Luxembourg'], e: 'The 1980 contest was held in The Hague, and Johnny Logan won it.', s: [1980, 'ie'] },
+  { q: 'Dave Benton, who won for Estonia in 2001, was born where?', a: 'Aruba', w: ['Jamaica', 'Suriname', 'Curaçao'], e: 'He won together with Tanel Padar and 2XL, Estonia’s first win.', s: [2001, 'ee'] },
+  { q: 'Ukraine won in 2004 with Ruslana. How many times had Ukraine taken part before?', a: 'Once', w: ['Never', 'Twice', 'Five times'], e: 'Ukraine’s debut was in 2003.', s: [2004, 'ua'] },
+  { q: 'Which country has won Eurovision with a hard rock song in monster masks?', a: 'Finland', w: ['Norway', 'Iceland', 'Estonia'], e: 'Lordi won in 2006 with “Hard Rock Hallelujah”.', s: [2006, 'fi'] },
+  { q: 'Which country has finished second twice and third twice, but never won?', a: 'Malta', w: ['Iceland', 'Cyprus', 'Hungary'], e: 'Malta was second in 2002 and 2005 (and third in 1992 and 1998), but has never won.', s: [2005, 'mt'] },
+  { q: 'Which singer won Eurovision for Switzerland in 1988, before becoming a world star?', a: 'Céline Dion', w: ['Lara Fabian', 'Patricia Kaas', 'Nana Mouskouri'], e: 'Céline Dion is Canadian; she sang in French for Switzerland.', s: [1988, 'ch'] },
+  { q: 'Lys Assia won the first contest in 1956. How many more times did she take part after that?', a: 'Twice', w: ['Never', 'Once', 'Four times'], e: 'She was back in 1957 and 1958, and tried to qualify again in her late eighties.', s: [1956, 'ch'] },
+  { q: 'Which country won with the song “La, la, la” in 1968?', a: 'Spain', w: ['Italy', 'Portugal', 'Monaco'], e: 'Massiel sang it, after Joan Manuel Serrat had been dropped for wanting to sing in Catalan.', s: [1968, 'es'] }
+];
+var obscureLeft = [];
+function makeObscure(song, allSongs) {
+  if (!obscureLeft.length) obscureLeft = shuffle(OBSCURE.map(function (f, i) { return i; }));
+  var f = OBSCURE[obscureLeft.pop()], opts = [f.a].concat(f.w), swap = null;
+  if (f.n) opts.sort(function (a, b) { return parseInt(a, 10) - parseInt(b, 10); }); else shuffle(opts);
+  if (f.s) allSongs.forEach(function (s) { if (!swap && s[0] === f.s[0] && s[1] === f.s[1]) swap = s; });
+  return { subject: 'trivia', swap: swap, type: 'mc', noclip: true, text: f.q, hint: '', answer: f.a, options: opts, correct: opts.indexOf(f.a), explain: f.e };
+}
 // fast ("Slow motion"; it began as double speed, hence the name): the clip at half speed, picture hidden; four bars with title and artist. Only on a shared screen.
 function makeFast(song, allSongs) {
   var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}; seen[song[4]] = 1;
@@ -274,6 +323,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   if (opt && opt.peel && (subjectSetting === 'blur' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('blur') >= 0 && Math.random() < 0.09))) { var bq = makePeel(song, allSongs, countries, opt); if (bq) { bq.blur = true; bq.subject = 'blur'; bq.text = 'Out of focus: which song is this? The sooner you know, the more points.'; return bq; } }
   if (subjectSetting === 'peel' || subjectSetting === 'blur') subjectSetting = 'facts';
   if (subjectSetting === 'fast') { var xq = opt && opt.peel ? makeFast(song, allSongs) : null; if (xq) return xq; subjectSetting = 'facts'; }
+  if (subjectSetting === 'trivia') return makeObscure(song, allSongs);
   if (subjectSetting === 'host') { var hq = makeHost(song, countries); if (hq) return hq; subjectSetting = 'facts'; }
   if (subjectSetting === 'map') { var mq = makeFlag(song, allSongs, countries, true); if (mq) return mq; subjectSetting = 'facts'; }
   if (subjectSetting === 'flag') { var fq = makeFlag(song, allSongs, countries); if (fq) return fq; subjectSetting = 'facts'; }
@@ -617,7 +667,7 @@ function keepSettings(ids) {
 }
 
 // A question without a clip shows a picture of its own on the stage instead of a plain question mark.
-function noClipArt(q) { return q && q.subject === 'host' ? ['📍', 'Host city'] : q && q.subject === 'map' ? ['🗺️', 'On the map'] : q && q.subject === 'flag' ? [flag(q.flag), 'Whose flag?'] : q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : ['?', '']; }
+function noClipArt(q) { return q && q.subject === 'host' ? ['📍', 'Host city'] : q && q.subject === 'map' ? ['🗺️', 'On the map'] : q && q.subject === 'flag' ? [flag(q.flag), 'Whose flag?'] : q && q.subject === 'odd' ? ['🧩', 'Odd one out'] : q && q.subject === 'lost' ? ['🗣️', 'Language barrier'] : q && q.subject === 'trivia' ? ['🤓', 'Did you know?'] : ['?', '']; }
 
 // A list of switches (question types, minigames, eras) gets a "Select all" switch on top: on switches
 // everything on, pressing it again switches everything off.
