@@ -339,6 +339,8 @@
     if (b.st === 'pick' && mine) {
       $('waittitle').textContent = '💌 Your turn!'; $('waitsub').textContent = 'Pick an envelope. One of them hides a bomb…';
       box.classList.remove('hidden');
+      var bk = b.key + '|' + bombSent + '|' + b.env.map(function (e) { return e.open ? 1 : 0; }).join('');
+      if (box.getAttribute('data-k') === bk && box.innerHTML) return; box.setAttribute('data-k', bk);   // nothing changed: no redraw
       box.innerHTML = b.env.map(function (e, i) { return '<button type="button" class="benvbtn' + (e.open ? ' open' : '') + '" data-i="' + i + '"' + (e.open || bombSent === b.key ? ' disabled' : '') + '>' + (e.open ? (e.bomb ? '💣' : flag(e.code)) : '✉️') + '<b>' + (i + 1) + '</b></button>'; }).join('');
       [].forEach.call(box.querySelectorAll('.benvbtn:not([disabled])'), function (btn) { btn.onclick = function () {
         if (!net || bombSent === b.key) return; bombSent = b.key; var msg = { pid: pid, key: b.key, pick: +btn.getAttribute('data-i') };
@@ -367,6 +369,9 @@
     box.classList.remove('hidden');
     if (shopKey !== sh.id) { shopKey = sh.id; shopSel = []; }
     var mineOffer = sh.offer && sh.offer[pid];   // your own selection of four
+    var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',');
+    if (box.getAttribute('data-k') === drawKey && box.innerHTML) return;   // nothing changed: leave the buttons alone (no flicker on every update)
+    box.setAttribute('data-k', drawKey);
     box.innerHTML = sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
       var n = shopSel.filter(function (x) { return x === it.id; }).length;
       return '<button type="button" class="shopbtn' + (n ? ' on' : '') + '" data-id="' + it.id + '"><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + '</b><small>' + esc(it.desc) + '</small></span></button>';
@@ -388,7 +393,9 @@
     if (!ok) { bagOpen = false; bagItem = null; }
     $('bagpanel').classList.toggle('hidden', !bagOpen);
     if (!bagOpen) return;
-    var p = $('bagpanel');
+    var p = $('bagpanel'), bagKey = inv.join(',') + '|' + (bagItem || '') + '|' + (s.phase === 'guess') + '|' + s.players.map(function (x) { return x.pid + (x.off ? 0 : 1) + (x.sit ? 's' : '') + (s.hide ? '' : x.score); }).join(',');
+    if (p.getAttribute('data-k') === bagKey && p.innerHTML) return;   // nothing changed: no redraw (no flicker)
+    p.setAttribute('data-k', bagKey);
     if (!bagItem) {
       var seen = {}; p.innerHTML = '<h3>Your items</h3>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
         var it = shopItem(id) || { icon: '?', name: id, desc: '' }, wait = (it.kind === 'sit' && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess') || it.kind === 'shield';   // the mic only breaks while a question is open; the smoke goes up before one
