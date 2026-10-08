@@ -1083,9 +1083,9 @@
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
-      if (G.tour && G.tourLast && !G.tourFinal && !G.tourDone) { G.tourDone = true; G.round--; G.total = G.round; G.afterParty = false; G.quizRun = 0; goOn(); return; }   // the tour is over: on to the end (the Final Chase is the grand final)
+      if (G.tour && G.tourLast && !G.tourFinal && !G.tourDone) { G.tourDone = true; G.total = G.round + 2; G.quizRun = 0; G.mgTest = false; }   // the tour is over: one last block of trivia, then the end (the Final Chase)
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; partyGo('shop'); return; }   // the first break: everyone visits the boutique
-      if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
+      if (!G.tourFinal && !G.tourDone && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
       if (G.eraSpin && !(G.quizRun || 0) && G.eraBlock !== G.round) { G.eraBlock = G.round; partIntro(); return; }   // Random or Voted rounds: each block of trivia gets its decade
