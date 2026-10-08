@@ -1461,3 +1461,9 @@ aside.recapgone{visibility:hidden}
 .boutique .bqbubble{bottom:21vh;max-width:30vw;font-size:clamp(1rem,1.8vw,1.6rem)}
 .boutique .bqpen{background:#ff2fa8}
 .boutique .bqfans{top:51vh}
+
+/* the presenters only come on when they have something to say */
+.shosts .ehost{transition:translate .6s cubic-bezier(.3,.8,.3,1),opacity .5s}
+.shosts.away .ehost.him{translate:-160% 0;opacity:0}
+.shosts.away .ehost.her{translate:160% 0;opacity:0}
+.shosts.away .hbub{opacity:0}

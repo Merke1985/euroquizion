@@ -921,7 +921,6 @@
   function tourOver() { return !!(G.tour && G.tourLast && !(G.gallery && (G.gallery.queue.length || G.gallery.vote))); }
   function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
   function reveal() {
-    if (G.phase === 'guess' && G.q && !G.best && !G.draw && !G.sing && G.frozenLeft == null && Math.random() < 0.6) setTimeout(function () { if (G.phase === 'reveal') hostSay('next', pick(HOST_REACT), 3200); }, 900);
     if (G.frozenLeft != null && G.phase === 'guess') { G.revealPending = true; return; }   // an item is landing: the answer waits
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
@@ -2016,16 +2015,23 @@
   function hostsEl() {
     var st = stageEl(); if (!st || REMOTE) return null;
     var h = st.querySelector('.shosts');
-    if (!h) { h = document.createElement('div'); h.className = 'shosts'; h.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; st.appendChild(h); }
+    if (!h) { h = document.createElement('div'); h.className = 'shosts away'; h.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; st.appendChild(h); }   // (off stage until they have something to say)
     return h;
   }
   function hostSay(who, text, ms) {
     var h = hostsEl(); if (!h) return;
     if (who === 'next') { who = hostTurn++ % 2 ? 'her' : 'him'; }
+    if (h.classList.contains('away')) { h.classList.remove('away'); if (!REMOTE) Music.woosh(); }   // they walk on to say it…
     var b = h.querySelector('.hbub.' + who); b.textContent = text; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
     clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { b.classList.remove('on'); }, ms || 3500);
+    clearTimeout(hostT.away); hostT.away = setTimeout(hostsAway, (ms || 3500) + 600);   // …and leave the screen to the game again
   }
-  function hostQuestion() {   // a line for the question that starts now
+  function hostsAway() {
+    var h = hostsEl(); if (!h || h.classList.contains('away') || G.phase === 'opening' || h.querySelector('.hbub.on')) return;
+    h.classList.add('away'); if (!REMOTE) Music.woosh();
+  }
+  function hostQuestion() {   // a line for the question that starts now (not used: the presenters keep out of the way during the questions)
+    return;
     if (!G.q || G.best || G.draw || G.sing || G.quipLoad || G.round <= 1) return;   // (the first song: the welcome is still being said)
     var sub = G.q.blur ? 'peel' : G.q.subject, l = HOST_LINES[sub] || HOST_LINES.any;
     hostSay('next', pick(l), 3800);
@@ -2037,13 +2043,13 @@
     try { yt.pauseVideo(); } catch (e) {}
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard');
     var v = $('v-game'); v.classList.add('opening'); push();
-    var h = hostsEl(); if (h) h.classList.remove('arrive');
+    var h = hostsEl(); if (h) { h.classList.remove('arrive'); h.classList.remove('away'); }
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
     step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
     step(1300, function () { hostSay('him', 'Good evening, Europe! 🇪🇺 I’m Felix…', 3400); Music.ding(); });
     step(2800, function () { hostSay('her', '…and I’m Stella! Welcome to EuroQuizion!', 3600); });
     step(3300, function () { hostSay('him', 'Grab your phones. Let’s get this show started!', 3200); });
-    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); then(); });
+    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); hostsAway(); then(); });
   }
   function hostWelcome() {
     if (G.mgTest) return;   // (a test of the party games or the boutique: straight to it)
