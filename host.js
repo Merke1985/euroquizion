@@ -3027,8 +3027,8 @@
     var rank = 0, prev = null;
     c.innerHTML = '<h3>' + (nRound ? 'End of round ' + nRound + (G.parts > 1 ? ' of ' + G.parts : '') : 'End of the quiz') + '</h3><ol class="board">' + ps.map(function (p, i) {
       if (p.score !== prev) { rank = i + 1; prev = p.score; }
-      var g = gain(p);
-      return '<li class="' + (g === top && top > 0 ? 'best' : '') + '" style="--i:' + i + '"><span class="rk">' + rank + '</span><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="gain">' + (g > 0 ? '+' + g : g < 0 ? '−' + (-g) : '+0') + '</span><span class="tot">' + p.score + '</span></li>';
+      var g = gain(p), first = nRound <= 1;   // after the first round the gains are just the scores: not shown
+      return '<li class="' + (g === top && top > 0 && !first ? 'best' : '') + '" style="--i:' + i + '"><span class="rk">' + rank + '</span><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="gain">' + (first ? '' : g > 0 ? '+' + g : g < 0 ? '−' + (-g) : '+0') + '</span><span class="tot">' + p.score + '</span></li>';
     }).join('') + '</ol><p class="recapnext">' + esc(nextTxt) + '</p>';
     document.body.appendChild(c);
     // it starts exactly where the scoreboard is, and grows into the middle of the screen
