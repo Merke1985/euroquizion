@@ -16,7 +16,7 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  // ---------- The Final Chase: tick the songs that fit ----------
+  // ---------- The Grand Final: tick the songs that fit ----------
   var chReadyKey = '', chKey = '', chMask = 0, chLocked = false, chBarKey = '';
   function chaseSend(lock) {
     if (!net || !chKey) return; var k = chKey, m = chMask;
@@ -27,9 +27,9 @@
     var l = c.lanes[pid];
     var dz = !!(l && l.danger && c.st !== 'win'), dzt = '⚠️ Danger! ' + (c.mname || 'The monster') + ' will smash your space next turn. Get answers right to escape!';
     ['chdanger', 'chdanger2'].forEach(function (id) { $(id).classList.toggle('hidden', !dz); $(id).textContent = dz ? dzt : ''; });
-    if (!l) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'Watch the big screen!'; return; }
+    if (!l) { show('v-wait'); $('waittitle').textContent = '🏁 The Grand Final'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var where = 'Space ' + l.pos + ' of ' + c.end + ' · ' + (c.wake ? (c.mname || 'the monster').replace(/^The /, 'the ') + ' is still waiting' : (c.mname || 'the monster').replace(/^The /, 'the ') + ' is on ' + c.mon);
-    if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Final Chase!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
+    if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Grand Final!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
     if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by ' + (c.mname || 'the monster').replace(/^The /, 'the ') + '!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
     if (c.sd && (!c.act || c.act.indexOf(pid) < 0)) { show('v-wait'); $('waittitle').textContent = l.fell ? '💥 You fell off the stage!' : '🏆 Sudden death on the stage'; $('waitsub').textContent = 'Watch the big screen: the last one standing wins.'; return; }
     if (c.sd && c.st !== 'ask') { show('v-wait'); $('waittitle').textContent = '🏆 Sudden death!'; $('waitsub').textContent = c.st === 'show' || c.st === 'pause' || c.st === 'sdres' ? (l.res != null ? l.res + ' out of 3 right' : '') : 'Get ready: whoever gets fewer right than the others falls off the stage.'; return; }
@@ -43,7 +43,7 @@
       return;
     }
     $('chpbar').parentNode.classList.remove('hidden'); $('chready').classList.add('hidden');
-    if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = (c.mname || 'A former winner') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
+    if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Grand Final'; $('waitsub').textContent = (c.mname || 'A former winner') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
     if (c.st === 'ask') {
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }

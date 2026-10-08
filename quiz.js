@@ -444,8 +444,8 @@ var PARTY_MODE_HELP = {
   one: 'One player picks the next minigame, a different player each time.'
 };
 var FINAL_HELP = {
-  chase: 'Chase the trophy: after the last question everyone races up a runway to the stage, with a monster on their heels. The higher your score, the further ahead you start.',
-  double: 'The Big Five: after the rounds are completed, there will be 5 final questions with double points. The scores stay hidden until the end.',
+  chase: 'Grand Final: after the last question everyone races up a runway to the stage, with a monster on their heels. The higher your score, the further ahead you start.',
+  double: 'Big Five: after the rounds are completed, there will be 5 final questions with double points. The scores stay hidden until the end.',
   standard: 'Standard: the game ends after the final round. No surprises.'
 };
 var SCORING_HELP = {
@@ -641,7 +641,7 @@ function multiAll(box) {
   setTimeout(sync, 0); box._allSync = sync;
 }
 
-// ---------- The Final Chase: three statements, each true or false ----------
+// ---------- The Grand Final: three statements, each true or false ----------
 // Every question has three songs; any number of them (none to all three) fit the question. A player ticks the
 // ones they think fit, and moves one space for each song they judged right (ticked and true, or left and false).
 var CHASE_NOT_HOSTS = ['Monte Carlo', 'Barcelona', 'Milan', 'Berlin', 'Hamburg', 'Cologne', 'Prague', 'Warsaw', 'Budapest', 'Bucharest', 'Sofia', 'Zurich', 'Geneva', 'Lyon', 'Marseille', 'Manchester', 'Glasgow', 'Cork', 'Antwerp', 'Utrecht', 'Florence', 'Venice', 'Porto', 'Seville', 'Valencia', 'Trondheim', 'Aarhus', 'Tampere', 'Krakow', 'Vilnius', 'Minsk', 'Tbilisi', 'Yerevan', 'Chisinau', 'Ljubljana', 'Bratislava', 'Valletta', 'Nicosia', 'Reykjavik', 'Ankara', 'Thessaloniki', 'Split', 'Sarajevo', 'Haifa', 'Salzburg', 'Bruges'];
