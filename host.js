@@ -1435,7 +1435,7 @@
       c.st = 'wheel'; c.wheelAt = Date.now(); push();
       var turns = 0, gaps = [];
       for (var g = 60; turns < 4200; g *= 1.09) { gaps.push(g); turns += g; }
-      var tk = 3000; /* the wheel shows for 3 seconds before the arrow starts */ gaps.forEach(function (g) { tk += g; setTimeout(function () { if (G.chase === c && c.st === 'wheel') Music.plop(3, 0.5); }, tk); });
+      var tk = 1500; /* the wheel shows for 1.5 seconds before the arrow starts */ gaps.forEach(function (g) { tk += g; setTimeout(function () { if (G.chase === c && c.st === 'wheel') Music.plop(3, 0.5); }, tk); });
       chaseTimer = setTimeout(function () {
         if (G.chase !== c || c.st !== 'wheel') return;
         Music.ding(); c.landed = true; push();   // the chosen slice lights up for two seconds
@@ -1443,7 +1443,7 @@
           if (G.chase !== c) return;
           chaseSfx('brk', 0.9, Music.crumble); chaseReady(c);   /* the monster rises */   // the monster rises; the same screen asks everyone to press Ready
         }, 2200);
-      }, 7500);
+      }, 6000);
     }
     var k = c.placeOrder[c.placed], total = c.scores[k] || 0, steps = Math.max(1, Math.min(40, total)), i = 0;
     c.showing = k; c.count = 0; c.counted = false; push();
@@ -1660,7 +1660,7 @@
     }).join('') + '<div class="whwin"></div><div class="wharrow" id="wharrow"></div><div class="whhub"></div></div>';
     var target = (CHASE_MONSTERS.indexOf(c.monster) + 0.5) * 360 / n + (Math.random() - 0.5) * (300 / n) / 2, arr = $('wharrow');
     arr.style.transform = 'rotate(0deg)'; arr.getBoundingClientRect();
-    setTimeout(function () { arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)'; }, 3000);   // a moment to take in the wheel first
+    setTimeout(function () { arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)'; }, 1500);   // a moment to take in the wheel first
   }
   function chaseSnap() {
     var c = G.chase, s = { rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
