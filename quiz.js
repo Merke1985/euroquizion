@@ -427,9 +427,9 @@ var HOST_SCORING_HELP = {
   ladder: ''
 };
 var FINAL_HELP = {
-  chase: 'Final: chase the trophy, a race to the stage with a monster behind you.',
-  double: 'Final: the last three questions count double, and the scores stay hidden until the end.',
-  standard: 'Final: straight to the final scores.'
+  chase: 'Chase the trophy: after the last question everyone races up a runway to the stage, with a monster on their heels. The higher your score, the further ahead you start.',
+  double: 'The Big Five: the last five questions count double, and the scores stay hidden until the very end.',
+  standard: 'Standard: after the last question, straight to the final scores.'
 };
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',

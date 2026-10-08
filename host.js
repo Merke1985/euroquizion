@@ -713,7 +713,7 @@
   var adShown = false;
   function noClipQ() { return !!G.draw || !!(G.q && G.q.noclip); }
   function adNote(on) {
-    if (on && noClipQ()) return;   // never uncover the video of a question that has no clip
+    if (on && (noClipQ() || (G.q && G.q.peel))) return;   // never uncover the video of a question that has no clip, or that hides it (curtain, blur)
     if (on === adShown) return;
     adShown = on;
     document.querySelector('#v-game .shield').classList.toggle('hidden', on);
@@ -1021,7 +1021,8 @@
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
     // Final "Double points": the last three questions count double and the scores are hidden until the end
-    if (G.finalMode === 'double' && !G.tour && !G.tourFinal && G.total < ENDLESS && G.total >= 5 && G.round === G.total - 2 && roundMode() === 'mc') { G.tourFinal = true; funIntro('final', startRound2, 6000); return; }
+    var bigN = G.total >= 10 ? 5 : 3;
+    if (G.finalMode === 'double' && !G.tour && !G.tourFinal && G.total < ENDLESS && G.total >= 5 && G.round === G.total - bigN + 1 && roundMode() === 'mc') { G.tourFinal = true; FUN.bigfive.sub = 'The last ' + (bigN === 5 ? 'five' : 'three') + ' questions: every point counts double! The scores stay hidden until the end.'; funIntro('bigfive', startRound2, 6000); return; }
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     // A party round is announced first, so nobody is surprised by what is asked of them.
@@ -1122,6 +1123,7 @@
   // ---------- the title card before a party round ----------
   var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav'];
   var FUN = {
+    bigfive: { icon: '🖐️', title: 'The Big Five', sub: '' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -1199,7 +1201,7 @@
   }
   function funIntro(kind, then, ms) {
     var f = FUN[kind];
-    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub, plain: kind === 'quiz' || kind === 'final' };
+    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub, plain: kind === 'quiz' || kind === 'final' || kind === 'bigfive' };
     G.phase = 'fun'; G.barMs = 0;
     if (!REMOTE) {
       try { yt.pauseVideo(); } catch (e) {}
@@ -2014,7 +2016,7 @@
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip';
     var rows = [['Songs', G.tour ? 'Until every minigame is played' : G.total >= ENDLESS ? 'Until someone reaches the top' : G.parts > 1 ? G.parts + ' rounds of ' + G.per : G.total], ['Video length', optText('s-time')], ['Era', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
-    if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', G.scoring === 'ladder' ? 'Ladder' : optText('s-scoring')], ['Quiz mode', optText('s-qmode')], ['Final', optText('s-final')]);
+    if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', G.scoring === 'ladder' ? 'Ladder' : optText('s-scoring')], ['Round selection', optText('s-qmode')], ['Final', optText('s-final')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : G.atype === 'quip' ? QUIP_HELP : sing ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
   }
@@ -2752,7 +2754,8 @@
   $('s-final').addEventListener('change', function () { try { localStorage.setItem('esc-final', $('s-final').value); } catch (e) {} singToggle(); });
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : ($('s-qmode').value === 'ladder' && $('s-atype').value === 'mc' ? SCORING_HELP.ladder : HOST_SCORING_HELP[$('s-scoring').value] || '')) + ' ' + (FINAL_HELP[$('s-final').value] || '') + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : ($('s-qmode').value === 'ladder' && $('s-atype').value === 'mc' ? SCORING_HELP.ladder : HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('finalhelp').textContent = FINAL_HELP[$('s-final').value] || '';
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   // ---------- eras: several can be switched on (none or all of them: every year) ----------
