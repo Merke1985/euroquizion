@@ -58,7 +58,7 @@
   function sayHello() { if (recovering || Date.now() - helloAt < 700) return; helloAt = Date.now(); net.send('state', snapshot()); }
   net.on('guess', function (m) {
     var p = m && players[m.pid];
-    if (!p || G.phase !== 'guess' || p.got || p.done || !G.q) return;
+    if (!p || G.phase !== 'guess' || p.got || p.done || !G.q || p.sitNow) return;
     var res, mc = G.q.type === 'mc';
     if (mc) {
       // Multiple choice: the answer is held and can still be changed. Nobody learns whether
@@ -86,6 +86,7 @@
     if (G.phase === 'brief' || G.phase === 'lobby') return !!(G.go && G.go[p.pid]);
     if (G.phase === 'dall') return !!(G.gallery && G.gallery.items[p.pid] && G.gallery.items[p.pid].done);
     if (G.best && G.best.only && p.pid !== G.best.only && G.phase === 'guess') return true;   // only the chooser is waited for
+    if (p.sitNow && G.phase === 'guess') return true;   // sitting out (Broken Mic)
     if (G.phase === 'qall') return !!(G.quips && (!G.quips.items[p.pid] || G.quips.items[p.pid].done));   // answer sent (or no line to finish)
     return G.sing ? !!G.sing.in[p.pid] : (p.got || p.pick != null || !!(G.draw && p.pid === G.draw.pid)); }
   function allIn() {
@@ -112,8 +113,10 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: Math.max(0, G.endsAt - Date.now()),
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '' }; }) };
     if (G.sing) s.sing = singSnapshot();
+    if (G.phase === 'shop' && G.shop) { s.shop = { id: G.shop.id, n: SHOP_PICKS, items: SHOP_ITEMS, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
+    if (G.atype === 'party') s.shopq = (G.shopQ || []).length;
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
     if (hideScores()) s.hide = true;
     if (G.phase === 'end' && !ladderGame()) s.count_up = true;   // the totals were hidden: count them up one by one
@@ -317,6 +320,7 @@
   function render() {
     var ps = list();
     if (G.phase !== 'chase') $('chase').classList.add('hidden');
+    if (G.phase !== 'shop' && $('shopov')) $('shopov').remove();
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -386,6 +390,8 @@
       }
     } else if (G.phase === 'chase') {
       show('v-game'); chaseShow();
+    } else if (G.phase === 'shop') {
+      show('v-game'); shopShow();
     } else {
       show('v-game');
       $('roundlabel').textContent = 'Song ' + G.round + ofTotal(' / ');
@@ -1001,6 +1007,7 @@
   function startRound() {
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
+    list().forEach(function (p) { p.sitNow = ''; });
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
@@ -1030,7 +1037,7 @@
       // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
       var pOn = G.partyOn || {}, two = list().filter(function (p) { return !p.off; }).length >= 2;
-      var games = PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'fav')); });
+      var games = PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'fav' && x !== 'shop')); });
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
@@ -1048,6 +1055,8 @@
     // A party round is announced first, so nobody is surprised by what is asked of them.
     var alone = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll };   // (a game of only one of these)
     if (G.atype !== 'party' && alone[md] && !(md === 'sing' && REMOTE)) { funIntro(md, alone[md]); return; }
+    if (G.atype === 'party' && G.shopQ && G.shopQ.length) { shopDeliver(startRound2); return; }   // Eurofan Shop items used since the last question land first
+    if (G.atype === 'party' && !G.quipLoad) list().forEach(function (p) { if (p.sitout) { p.sitNow = p.sitout; p.sitout = ''; } });   // a Broken Mic: this one sits out
     push(); loadSong();
   }
 
@@ -1141,9 +1150,10 @@
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav'];
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav', 'shop'];
   var FUN = {
     bigfive: { icon: '🖐️', title: 'The Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
+    shop: { icon: '🛍️', title: 'Eurofan Shop', sub: 'Pick ' + SHOP_PICKS + ' free items on your phone. Use them whenever you like: blow points away, steal points, or make someone sit out a question.' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -1157,7 +1167,7 @@
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll, shop: shopAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
@@ -1853,6 +1863,73 @@
       }
     }
   }
+
+  // ---------- Eurofan Shop ----------
+  // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
+  // what was used lands just before the next question: points blown away or stolen, or a mic that breaks.
+  var SHOP_MS = 30000, shopTimer = null;
+  function shopAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (act.length < 2) { quipAll(); return; }
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false };
+    G.phase = 'shop'; G.barMs = SHOP_MS; G.endsAt = Date.now() + SHOP_MS; push();
+    var id = G.shop.id;
+    bots.forEach(function (b) { setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom() }); }, 2000 + Math.random() * 4000); });
+    clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
+  }
+  function shopRandom() { var ids = SHOP_ITEMS.map(function (it) { return it.id; }), out = []; for (var i = 0; i < SHOP_PICKS; i++) out.push(pick(ids)); return out; }
+  function shopMsg(m) {
+    var p = m && players[m.pid]; if (!p) return;
+    if (m.items) {   // shopping
+      var g = G.shop; if (G.phase !== 'shop' || !g || g.over || m.id !== g.id || g.picks[p.pid]) return;
+      var items = (m.items || []).filter(function (x) { return !!shopItem(x); }).slice(0, SHOP_PICKS); if (!items.length) return;
+      g.picks[p.pid] = items; p.inv = (p.inv || []).concat(items);
+      Music.plop(Object.keys(g.picks).length); push();
+      if (list().filter(function (x) { return !x.off; }).every(function (x) { return g.picks[x.pid]; })) { clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, 1500); }
+      return;
+    }
+    if (m.use) {   // using an item: it lands before the next question
+      if (G.atype !== 'party' || ['lobby', 'end', 'brief', 'intro', 'chase'].indexOf(G.phase) >= 0) return;
+      if (m.key && p.useKey === m.key) return; p.useKey = m.key;   // (the phone sends twice, to be sure)
+      var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
+      if (k < 0 || !t || t === p) return;
+      inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: m.use, target: t.pid });
+      Music.blip(); push();
+    }
+  }
+  function shopDone() {
+    var g = G.shop; if (G.phase !== 'shop' || !g || g.over) return;
+    clearTimeout(shopTimer); g.over = true;
+    list().filter(function (p) { return !p.off && !g.picks[p.pid]; }).forEach(function (p) { var it = shopRandom(); g.picks[p.pid] = it; p.inv = (p.inv || []).concat(it); });   // too late: a surprise bag
+    Music.ding(); push();
+    shopTimer = setTimeout(function () { if (G.phase === 'shop') { G.shop = null; startRound(); } }, 3500);
+  }
+  // The used items land: one card on the big screen with everything that happens, then the next question.
+  function shopDeliver(then) {
+    var q = G.shopQ || []; G.shopQ = [];
+    var lines = q.map(function (u) {
+      var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
+      if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': −' + n; }
+      if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, t.score)); t.score -= n2; by.score += n2; return it.icon + ' ' + by.name + ' used a ' + it.name + ' on ' + t.name + ': ' + n2 + ' points stolen'; }
+      if (it.kind === 'sit') { t.sitout = by.name; return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: ' + t.name + ' sits out the next trivia question'; }
+      return '';
+    }).filter(Boolean);
+    if (!lines.length) { then(); return; }
+    FUN.shopgo = { icon: '🛍️', title: 'Special delivery!', sub: lines.join('  •  ') };
+    funIntro('shopgo', function () { then(); }, 3000 + lines.length * 1800);
+  }
+  // The big screen during the shopping: the items, and who has picked already.
+  function shopShow() {
+    var g = G.shop; if (!g) return;
+    var ov = $('shopov'); if (!ov) { ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov'; document.body.appendChild(ov); }
+    var act = list().filter(function (p) { return !p.off; });
+    ov.innerHTML = '<div class="shopcard card"><h2>🛍️ Eurofan Shop</h2><p class="mute">' + (g.over ? 'The shop is closed! Use your items on your phone whenever you like.' : 'Pick ' + SHOP_PICKS + ' free items on your phone') + '</p>' +
+      '<div class="shopitems">' + SHOP_ITEMS.map(function (it) { return '<div class="shopitem"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><small>' + esc(it.desc) + '</small></div>'; }).join('') + '</div>' +
+      '<div class="shoppers">' + act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('') + '</div></div>';
+  }
+  net.on('shop', shopMsg);
 
   // ---------- Beat the Favourite ----------
   // The player in the lead is the favourite. Three ordinary questions follow; on each, everyone else who
@@ -2961,7 +3038,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
@@ -3127,6 +3204,7 @@
   }
   function roundsAddUp() { list().forEach(function (p) { p.rcrown = false; if (p.qbank) { p.score += p.qbank; p.qbank = 0; } }); }   // after the last round: all rounds together
   function goOn() {
+    if (lastSong() && G.shopQ && G.shopQ.length) { shopDeliver(goOn); return; }   // Eurofan Shop items still on their way land before the final scores
     if (lastSong()) roundsAddUp();
     // The Big Five: when the rounds are done, five more questions for double points, with the scores hidden
     if (lastSong() && G.finalMode === 'double' && !G.tourFinal && !G.tour && !ladderGame() && G.total < ENDLESS) { G.tourFinal = true; G.total += 5; G.bigCard = true; G.quizRun = 0; G.eraNow = ''; buildPool(); startRound(); return; }   // (the Big Five: all selected eras again)

@@ -691,3 +691,13 @@ function makeChase(allSongs, countries, used) {
   }
   return null;
 }
+
+// ---------- Eurofan Shop: the merchandise (more to come) ----------
+// kind: 'lose' (the target loses points), 'steal' (the buyer takes them), 'sit' (the target sits out a trivia question)
+var SHOP_ITEMS = [
+  { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 10 points off another player', kind: 'lose', amount: 10 },
+  { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
+  { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Another player sits out a trivia question', kind: 'sit' }
+];
+var SHOP_PICKS = 2;   // free items per visit
+function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }

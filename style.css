@@ -1209,3 +1209,29 @@ aside.recapgone{visibility:hidden}
 .chaseov .ovrow.win{background:var(--yellow);color:#221a00;box-shadow:0 0 24px rgba(255,210,63,.4)}
 .chaseov .ovrow.win .fc{color:#221a00}
 .chaseov .ovrow.dead{filter:grayscale(1) brightness(.5)}
+
+/* ---------- Eurofan Shop ---------- */
+.shopov{position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;background:rgba(6,0,18,.72);backdrop-filter:blur(4px)}
+.shopcard{width:min(900px,92vw);text-align:center;padding:26px 30px;background:#1b0f30}
+.shopcard h2{margin:0;font-size:2.4rem}
+.shopitems{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+.shopitem{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 14px;border-radius:16px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 2px rgba(255,210,63,.35)}
+.shopitem .si{font-size:3rem;line-height:1}
+.shopitem b{font-size:1.25rem}.shopitem small{opacity:.8}
+.shoppers{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.shopper{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:99px;background:rgba(0,0,0,.3);opacity:.45;font-weight:700}
+.shopper .char{width:28px;height:28px}
+.shopper i{font-style:normal}
+.shopper.done{opacity:1;box-shadow:0 0 0 2px var(--ok)}
+.shopper.done i::after{content:' ✓';color:var(--ok)}
+.shopui{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:12px}
+.shopbtn{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:12px 14px;border-radius:14px;border:0;background:rgba(255,255,255,.08);color:inherit;font:inherit;cursor:pointer;box-shadow:inset 0 0 0 2px transparent}
+.shopbtn .si{font-size:2rem}
+.shopbtn .char{width:36px;height:36px;flex:none}
+.shopbtn b{display:block}.shopbtn small{opacity:.75}
+.shopbtn.on{box-shadow:inset 0 0 0 3px var(--yellow);background:rgba(255,210,63,.14)}
+.bagbtn{position:fixed;right:14px;bottom:14px;z-index:40;width:58px;height:58px;border-radius:50%;border:0;background:var(--yellow);font-size:1.7rem;box-shadow:0 6px 20px rgba(0,0,0,.45);cursor:pointer}
+.bagbtn b{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;border-radius:11px;background:#ff2f6d;color:#fff;font-size:.8rem;line-height:22px}
+.bagpanel{position:fixed;left:12px;right:12px;bottom:84px;z-index:41;max-height:70vh;overflow:auto;padding:14px;border-radius:18px;background:#1b0f30;box-shadow:0 10px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:8px}
+.bagpanel h3{margin:0 0 4px}
+.ptoast{position:fixed;left:12px;right:12px;top:12px;z-index:42;padding:12px 14px;border-radius:14px;background:var(--yellow);color:#221a00;font-weight:800;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.45)}

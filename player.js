@@ -132,6 +132,8 @@
   function onState(s) {
     if (kicked) return;
     onState2(s);
+    if (s.phase !== 'shop') $('shopui').classList.add('hidden');
+    bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
     // During a game the screen keeps one fixed skeleton, so nothing jumps between question, waiting and answer.
@@ -219,6 +221,7 @@
       else { show('v-quip'); $('qprompt').textContent = qp; }
     }
     else if (s.phase === 'chase' && s.chase) chaseView(s.chase);
+    else if (s.phase === 'shop' && s.shop) shopView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -237,7 +240,8 @@
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = ''; }
     else if (s.phase === 'guess') {
       var q = s.q || { type: 'open', text: 'Which song is this?', hint: 'Type the title…' };
-      if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct'; $('waitsub').textContent = ptsText(m.pts) + '. Waiting for the others…'; }
+      if (m && m.sit) { show('v-wait'); $('waittitle').textContent = '🎤 Broken mic!'; $('waitsub').textContent = m.sit + ' broke your mic: you sit out this question.'; }
+      else if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct'; $('waitsub').textContent = ptsText(m.pts) + '. Waiting for the others…'; }
       else if (m && m.done) { show('v-wait'); $('waittitle').textContent = 'Incorrect'; $('waitsub').textContent = 'Your answer is locked in. Waiting for the others…'; }
       else {
         show('v-guess'); $('roundlabel').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total);
@@ -320,6 +324,63 @@
     }
   }
 
+
+  // ---------- Eurofan Shop ----------
+  // Shopping: pick the free items (the same one twice is fine). Afterwards the bag button in the corner holds
+  // them: pick an item, then who gets it; it lands just before the next question.
+  var shopKey = '', shopSel = [], bagOpen = false, bagItem = null;
+  function shopName(id) { var it = (typeof shopItem === 'function') && shopItem(id); return it ? it.icon + ' ' + it.name : id; }
+  function shopView(s) {
+    var sh = s.shop, mine = sh.done[pid], box = $('shopui');
+    show('v-wait'); $('waittitle').textContent = '🛍️ Eurofan Shop';
+    if (mine || sh.over) { $('waitsub').textContent = mine ? 'You got: ' + mine.map(shopName).join(' and ') + '. Use them with the 🛍️ button whenever you like.' : 'The shop is closed.'; box.classList.add('hidden'); return; }
+    $('waitsub').textContent = 'Pick ' + sh.n + ' free items (tap one twice to take two)';
+    box.classList.remove('hidden');
+    if (shopKey !== sh.id) { shopKey = sh.id; shopSel = []; }
+    box.innerHTML = sh.items.map(function (it) {
+      var n = shopSel.filter(function (x) { return x === it.id; }).length;
+      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + '" data-id="' + it.id + '"><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + '</b><small>' + esc(it.desc) + '</small></span></button>';
+    }).join('') + '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take them!') + '</button>';
+    [].forEach.call(box.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
+      var id = b.getAttribute('data-id'), have = shopSel.filter(function (x) { return x === id; }).length;
+      if (shopSel.length < sh.n) shopSel.push(id); else if (have) shopSel.splice(shopSel.indexOf(id), 1); else { shopSel.shift(); shopSel.push(id); }
+      shopView(state);
+    }; });
+    $('shopbuy').onclick = function () {
+      if (shopSel.length < sh.n || !net) return; var msg = { pid: pid, id: sh.id, items: shopSel.slice() };
+      net.send('shop', msg); setTimeout(function () { if (state && state.shop && !state.shop.done[pid]) net.send('shop', msg); }, 1500);
+      $('shopbuy').disabled = true; $('shopbuy').textContent = 'Wrapping it up…';
+    };
+  }
+  function bagUpdate(s) {
+    var m = me(), inv = (m && m.inv) || [], ok = s.cfg && s.cfg.atype === 'party' && inv.length && ['lobby', 'end', 'brief', 'intro', 'chase', 'shop'].indexOf(s.phase) < 0;
+    $('bagbtn').classList.toggle('hidden', !ok); $('bagn').textContent = inv.length || '';
+    if (!ok) { bagOpen = false; bagItem = null; }
+    $('bagpanel').classList.toggle('hidden', !bagOpen);
+    if (!bagOpen) return;
+    var p = $('bagpanel');
+    if (!bagItem) {
+      var seen = {}; p.innerHTML = '<h3>Your items</h3>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' };
+        return '<button type="button" class="shopbtn" data-id="' + id + '"><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(it.desc) + '</small></span></button>';
+      }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
+      [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () { bagItem = b.getAttribute('data-id'); bagUpdate(state); }; });
+    } else {
+      var others = s.players.filter(function (x) { return x.pid !== pid && !x.off; });
+      p.innerHTML = '<h3>' + esc(shopName(bagItem)) + ': on who?</h3>' + others.map(function (x) { return '<button type="button" class="shopbtn who" data-pid="' + esc(x.pid) + '">' + charSvg(x.char) + '<span><b>' + esc(x.name) + '</b><small>' + (s.hide ? '' : x.score + ' points') + '</small></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose">Back</button>';
+      [].forEach.call(p.querySelectorAll('.shopbtn.who'), function (b) { b.onclick = function () {
+        var t = b.getAttribute('data-pid'), msg = { pid: pid, use: bagItem, target: t, key: Math.random().toString(36).slice(2, 9) };
+        if (net) { net.send('shop', msg); setTimeout(function () { net.send('shop', msg); }, 1200); }
+        var tn = (s.players.filter(function (x) { return x.pid === t; })[0] || {}).name || '';
+        ptoast(shopName(bagItem) + ' is on its way to ' + tn + '! It lands before the next question.');
+        bagOpen = false; bagItem = null; bagUpdate(state);
+      }; });
+    }
+    $('bagclose').onclick = function () { if (bagItem) bagItem = null; else bagOpen = false; bagUpdate(state); };
+  }
+  $('bagbtn').addEventListener('click', function () { bagOpen = !bagOpen; bagItem = null; if (state) bagUpdate(state); });
+  var ptoastT = null;
+  function ptoast(t) { var e = $('ptoast'); e.textContent = t; e.classList.remove('hidden'); clearTimeout(ptoastT); ptoastT = setTimeout(function () { e.classList.add('hidden'); }, 3500); }
 
   // ---------- Sing! ----------
   // Voting (for the song, then for the best singer) and recording up to 10 seconds of audio.
