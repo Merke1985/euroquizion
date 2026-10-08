@@ -272,12 +272,35 @@ var OBSCURE = [
   { q: 'Which country has finished second twice and third twice, but never won?', a: 'Malta', w: ['Iceland', 'Cyprus', 'Hungary'], e: 'Malta was second in 2002 and 2005 (and third in 1992 and 1998), but has never won.', s: [2005, 'mt'] },
   { q: 'Which singer won Eurovision for Switzerland in 1988, before becoming a world star?', a: 'Céline Dion', w: ['Lara Fabian', 'Patricia Kaas', 'Nana Mouskouri'], e: 'Céline Dion is Canadian; she sang in French for Switzerland.', s: [1988, 'ch'] },
   { q: 'Lys Assia won the first contest in 1956. How many more times did she take part after that?', a: 'Twice', w: ['Never', 'Once', 'Four times'], e: 'She was back in 1957 and 1958, and tried to qualify again in her late eighties.', s: [1956, 'ch'] },
-  { q: 'Which country won with the song “La, la, la” in 1968?', a: 'Spain', w: ['Italy', 'Portugal', 'Monaco'], e: 'Massiel sang it, after Joan Manuel Serrat had been dropped for wanting to sing in Catalan.', s: [1968, 'es'] }
+  { q: 'Which country won with the song “La, la, la” in 1968?', a: 'Spain', w: ['Italy', 'Portugal', 'Monaco'], e: 'Massiel sang it, after Joan Manuel Serrat had been dropped for wanting to sing in Catalan.', s: [1968, 'es'] },
+  { q: 'Emmelie de Forest won in 2013 barefoot, just like which earlier winner?', a: 'Sandie Shaw', w: ['Lulu', 'Lys Assia', 'Dana International'], e: 'Sandie Shaw sang barefoot when she won for the United Kingdom in 1967.', s: [2013, 'dk'] },
+  { q: 'The 2014 contest in Copenhagen was held in what kind of building?', a: 'An old shipyard hall', w: ['A football stadium', 'An airport hangar', 'A concert hall'], e: 'The B&W Hallerne on Refshaleøen used to be part of a shipyard.', s: [2014, 'at'] },
+  { q: 'Sweden’s 2015 winner “Heroes” performed together with what on the screen behind him?', a: 'A little animated stick figure', w: ['A cartoon dog', 'A dancing robot', 'A choir of holograms'], e: 'Måns Zelmerlöw played with the little figure all through the song.', s: [2015, 'se'] },
+  { q: 'From which year were the jury points and the televotes announced separately?', a: '2016', w: ['2013', '2014', '2019'], n: true, e: 'Since 2016 the juries come first, then the televotes for each country as one big total.', s: [2016, 'ua'] },
+  { q: 'Jamala’s winning song “1944” (2016) was partly sung in which language?', a: 'Crimean Tatar', w: ['Ukrainian', 'Russian', 'Turkish'], e: 'The verses are in English, the chorus in Crimean Tatar.', s: [2016, 'ua'] },
+  { q: 'Who wrote “Amar pelos dois”, Portugal’s winner of 2017?', a: 'His sister, Luísa Sobral', w: ['Salvador Sobral himself', 'His father', 'A Swedish songwriting team'], e: 'Luísa Sobral wrote it for her brother Salvador.', s: [2017, 'pt'] },
+  { q: 'Netta’s winning song “Toy” (2018) is famous for which sounds?', a: 'Chicken clucks', w: ['Dog barks', 'Cat meows', 'Duck quacks'], e: 'She made them live, with a looper.', s: [2018, 'il'] },
+  { q: 'Duncan Laurence’s win in 2019 was the Netherlands’ first since which year?', a: '1975', w: ['1969', '1983', '1999'], n: true, e: 'The win before that was Teach-In with “Ding-a-dong”.', s: [2019, 'nl'] },
+  { q: 'Måneskin’s win in 2021 was Italy’s first since which year?', a: '1990', w: ['1964', '1997', '2011'], n: true, e: 'Toto Cutugno won in 1990 with “Insieme: 1992”.', s: [2021, 'it'] },
+  { q: 'Kalush Orchestra won in 2022. Which city held that contest?', a: 'Turin', w: ['Milan', 'Rome', 'Sanremo'], e: 'Italy hosted after Måneskin’s win in 2021.', s: [2022, 'ua'] },
+  { q: 'Why did Liverpool host the 2023 contest?', a: 'On behalf of Ukraine, the 2022 winner', w: ['The UK had won in 2022', 'Fans voted for Liverpool', 'It was the UK’s turn'], e: 'The United Kingdom had come second in 2022 and hosted for Ukraine.', s: [2023, 'gb'] },
+  { q: 'Nemo won for Switzerland in 2024. When had Switzerland last won before that?', a: '1988', w: ['1979', '1993', '2005'], n: true, e: 'The win before that was Céline Dion’s “Ne partez pas sans moi”.', s: [2024, 'ch'] },
+  { q: 'What was shown on TV instead of the cancelled contest of 2020?', a: 'Europe Shine a Light', w: ['Eurovision: Home Edition', 'The Big Night In', 'Songs of Europe'], e: 'The 41 songs of 2020 were all shown, but there was no competition.', s: [2021, 'nl'] },
+  { q: 'Lena’s win in 2010 was Germany’s first since which year?', a: '1982', w: ['1972', '1990', '1999'], n: true, e: 'Nicole won in 1982 with “Ein bißchen Frieden”.', s: [2010, 'de'] },
+  { q: 'In which year did Turkey win its only Eurovision?', a: '2003', w: ['1997', '2008', '2010'], n: true, e: 'Sertab Erener won in Riga with “Everyway That I Can”.', s: [2003, 'tr'] },
+  { q: 'Latvia won in 2002. How many times had Latvia taken part before?', a: 'Twice', w: ['Never', 'Once', 'Five times'], e: 'Latvia made its debut in 2000.', s: [2002, 'lv'] },
+  { q: 'Greece won for the first time in 2005. With which song?', a: 'My Number One', w: ['Shake It', 'Everything', 'Yassou Maria'], e: 'Helena Paparizou won it in Kyiv.', s: [2005, 'gr'] }
 ];
-var obscureLeft = [];
-function makeObscure(song, allSongs) {
-  if (!obscureLeft.length) obscureLeft = shuffle(OBSCURE.map(function (f, i) { return i; }));
-  var f = OBSCURE[obscureLeft.pop()], opts = [f.a].concat(f.w), swap = null;
+var obscureUsed = {};
+function makeObscure(song, allSongs, opt) {
+  // Only facts from the years in play, so they match the era; each one once until all have had their turn.
+  var yrs = {}; ((opt && opt.pool) || allSongs || []).forEach(function (s) { yrs[s[0]] = 1; });
+  var ok = function (f) { var y = f.s ? f.s[0] : 0; return !Object.keys(yrs).length || yrs[y]; };
+  var fit = OBSCURE.filter(ok); if (!fit.length) return null;
+  var fresh = fit.filter(function (f) { return !obscureUsed[f.q]; });
+  if (!fresh.length) { fit.forEach(function (f) { delete obscureUsed[f.q]; }); fresh = fit; }
+  var f = fresh[Math.floor(Math.random() * fresh.length)]; obscureUsed[f.q] = 1;
+  var opts = [f.a].concat(f.w), swap = null;
   if (f.n) opts.sort(function (a, b) { return parseInt(a, 10) - parseInt(b, 10); }); else shuffle(opts);
   if (f.s) allSongs.forEach(function (s) { if (!swap && s[0] === f.s[0] && s[1] === f.s[1]) swap = s; });
   return { subject: 'trivia', swap: swap, type: 'mc', noclip: true, text: f.q, hint: '', answer: f.a, options: opts, correct: opts.indexOf(f.a), explain: f.e };
@@ -323,7 +346,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
   if (opt && opt.peel && (subjectSetting === 'blur' || (subjectSetting === 'random' && opt.types && opt.types.indexOf('blur') >= 0 && Math.random() < 0.09))) { var bq = makePeel(song, allSongs, countries, opt); if (bq) { bq.blur = true; bq.subject = 'blur'; bq.text = 'Out of focus: which song is this? The sooner you know, the more points.'; return bq; } }
   if (subjectSetting === 'peel' || subjectSetting === 'blur') subjectSetting = 'facts';
   if (subjectSetting === 'fast') { var xq = opt && opt.peel ? makeFast(song, allSongs) : null; if (xq) return xq; subjectSetting = 'facts'; }
-  if (subjectSetting === 'trivia') return makeObscure(song, allSongs);
+  if (subjectSetting === 'trivia') { var oq = makeObscure(song, allSongs, opt); if (oq) return oq; subjectSetting = 'facts'; }
   if (subjectSetting === 'host') { var hq = makeHost(song, countries); if (hq) return hq; subjectSetting = 'facts'; }
   if (subjectSetting === 'map') { var mq = makeFlag(song, allSongs, countries, true); if (mq) return mq; subjectSetting = 'facts'; }
   if (subjectSetting === 'flag') { var fq = makeFlag(song, allSongs, countries); if (fq) return fq; subjectSetting = 'facts'; }
