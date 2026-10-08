@@ -1050,7 +1050,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chtok.doomed .ch-face{box-shadow:0 0 0 3px rgba(255,23,68,.6),0 0 18px #ff1744}
 .chwheel{position:absolute;left:44%;top:56%;transform:translate(-50%,-50%);z-index:7}
 .chwheel.hidden{display:none}
-.whl{position:relative;width:min(56vh,440px);height:min(56vh,440px);border-radius:50%;border:6px solid #ffd23f;box-shadow:0 0 0 6px rgba(10,4,20,.9),0 0 50px rgba(255,210,63,.45),inset 0 0 40px rgba(0,0,0,.6);animation:chcardin .4s cubic-bezier(.3,1.5,.5,1)}
+.whl{position:relative;width:min(56vh,440px);height:min(56vh,440px);border-radius:50%;border:6px solid #ffd23f;box-shadow:0 0 0 6px rgba(10,4,20,.9),0 0 50px rgba(255,210,63,.45),inset 0 0 40px rgba(0,0,0,.6);animation:whin .4s cubic-bezier(.3,1.5,.5,1)}
+@keyframes whin{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 .whs{position:absolute;left:25%;top:25%;width:50%;height:50%;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .whs svg{width:72%;height:auto;-webkit-mask-image:linear-gradient(to bottom,#000 60%,transparent 92%);mask-image:linear-gradient(to bottom,#000 60%,transparent 92%)}
 .whs b{font-size:clamp(.7rem,1.2vw,1rem);text-shadow:0 2px 4px #000;white-space:nowrap;margin-top:-8%}
@@ -1062,3 +1063,10 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chmon[data-mon="phoenix"] .chsmoke i{background:radial-gradient(circle,rgba(120,60,20,.8),rgba(80,40,10,.5) 45%,rgba(40,20,5,0) 70%)}
 .chmon .phflames{animation:phflame .5s ease-in-out infinite alternate;transform-origin:140px 60px}
 @keyframes phflame{from{transform:scaleY(.9)}to{transform:scaleY(1.12)}}
+.whwin{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0}
+.chwheel.landed .whwin{animation:whflash .4s ease-in-out infinite alternate}
+@keyframes whflash{from{opacity:.25}to{opacity:1}}
+.whs{transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+.whs.won svg{filter:drop-shadow(0 0 14px #ffd23f) drop-shadow(0 0 4px #fff)}
+.whs.won b{color:#ffd23f}
+.chwheel.landed .whl{box-shadow:0 0 0 6px rgba(10,4,20,.9),0 0 80px rgba(255,210,63,.9),inset 0 0 40px rgba(0,0,0,.6)}
