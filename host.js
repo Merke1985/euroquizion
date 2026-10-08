@@ -42,7 +42,7 @@
         want = pick(left).id; free = true;
       }
       p = players[m.pid] = { pid: m.pid, name: nm, char: want, score: 0, got: false, pts: 0 };
-      if (SHOP_START_ALL && G.atype === 'party' && G.phase !== 'lobby') p.inv = SHOP_ITEMS.map(function (it) { return it.id; });   // joining a Party game later: the items too
+      if (SHOP_START_ALL && G.atype === 'party' && G.starterGiven) p.inv = SHOP_ITEMS.map(function (it) { return it.id; });   // joining a Party game later: the items too
       // Rehosting without a saved game on this device: rebuild it from what the phones remember.
       if (recovering) {
         if (typeof m.score === 'number' && m.score > 0) p.score = Math.floor(m.score);
@@ -1050,6 +1050,12 @@
     if (G.fav && favNext()) return;   // Beat the Favourite: the next of its three questions
     // Party: four quiz questions, then a Sing! or a Draw! round, then four quiz questions again, and so on
     // (Sing! only with a shared screen, and neither without at least two players).
+    if (G.atype === 'party' && SHOP_START_ALL && !G.starterGiven) {   // right before the first question: every (human) player gets a bag with one of each item
+      G.starterGiven = true;
+      list().forEach(function (p) { if (!p.bot) p.inv = (p.inv || []).concat(SHOP_ITEMS.map(function (it) { return it.id; })); });
+      FUN.starter = { icon: '🛍️', title: 'Your Eurofan bag!', sub: 'Everyone gets one of each item from the Eurofan Shop. Use them with the 🛍️ button on your phone, whenever you like.' };
+      funIntro('starter', startRound2, 6500); return;
+    }
     if (G.atype === 'party') {
       // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
@@ -1248,7 +1254,7 @@
   }
   function funIntro(kind, then, ms) {
     var f = FUN[kind];
-    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub, plain: kind === 'quiz' || kind === 'final' || kind === 'bigfive' };
+    G.fun = { kind: kind, icon: f.icon, title: f.title, sub: f.sub, plain: kind === 'quiz' || kind === 'final' || kind === 'bigfive' || kind === 'starter' || kind === 'shopgo' };
     G.phase = 'fun'; G.barMs = 0;
     if (!REMOTE) {
       try { yt.pauseVideo(); } catch (e) {}
@@ -3104,7 +3110,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = SHOP_START_ALL && G.atype === 'party' && !p.bot ? SHOP_ITEMS.map(function (it) { return it.id; }) : []; p.sitout = ''; p.sitNow = ''; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.starterGiven = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
