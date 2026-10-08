@@ -1423,7 +1423,7 @@
     chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; });
     // test bots: a random answer after a few seconds, each song judged right a bit more often than not
     chaseActive().forEach(function (k) { if (!players[k] || !players[k].bot) return; var qk = c.qkey;
-      setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0; c.q.items.forEach(function (it, i) { var right = Math.random() < (c.face ? (c.sd ? 0.55 : 1) : (window.CHASE_SMART || 0.62));   /* face-off test: perfect until the stage, then a coin toss */ if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 2000 + Math.random() * 6500); });
+      setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0; c.q.items.forEach(function (it, i) { var right = Math.random() < (c.face ? (c.sd ? 0.55 : 1) : (window.CHASE_SMART || 0.62));   /* face-off test: perfect until the stage, then a coin toss */ if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 1500 + Math.random() * 5000); });
     push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, CHASE_ASK + 300);
   }
