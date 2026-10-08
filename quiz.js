@@ -782,8 +782,9 @@ var SHOP_PICKS = 2;   // free items per visit
 var SHOP_START_ALL = false;   // every (human) player starts a Party game with one of each item (handy for trying them out)
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }
 
-// Who Stole the Trophy? (a Cluedo-style party game): the suspects, the rooms and the weapons. All made-up characters
-// and things from the show itself. One of each is the secret answer; the others turn up as clues.
+// Who the Hell Is Edgar? (a Cluedo-style party game): a ghost called Edgar has been writing everyone's songs. Who is he
+// possessing, where is he haunting, and what is he writing with? All made-up characters and things from the show itself.
+// One of each is the secret answer; the others turn up as clues.
 var CLUE_WHO = [
   { id: 'lynda', icon: '👠', name: 'Lynda' }, { id: 'felix', icon: '🎩', name: 'Felix' }, { id: 'stella', icon: '💃', name: 'Stella' },
   { id: 'monster', icon: '👹', name: 'The Monster' }, { id: 'manager', icon: '🎧', name: 'The Stage Manager' }, { id: 'scrut', icon: '📋', name: 'The Scrutineer' }];
@@ -792,12 +793,12 @@ var CLUE_WHERE = [
   { id: 'club', icon: '🪩', name: 'Euroclub', in: 'in the Euroclub' }, { id: 'back', icon: '🎭', name: 'Backstage', in: 'backstage' },
   { id: 'shop', icon: '🛍️', name: 'Woodruff’s Boutique', in: 'in Woodruff’s Boutique' }, { id: 'arena', icon: '🏟️', name: 'The Arena', in: 'on the Arena stage' }];
 var CLUE_WHAT = [
-  { id: 'wind', icon: '💨', name: 'Wind Machine' }, { id: 'smoke', icon: '🌫️', name: 'Smoke Machine' }, { id: 'confetti', icon: '🎉', name: 'Confetti Cannon' },
-  { id: 'flag', icon: '🚩', name: 'Giant Flag' }, { id: 'mic', icon: '🎤', name: 'Broken Mic' }, { id: 'env', icon: '✉️', name: 'Brown Envelope' }];
+  { id: 'quill', icon: '🪶', name: 'Feather Quill' }, { id: 'pen', icon: '✒️', name: 'Fountain Pen' }, { id: 'piano', icon: '🎹', name: 'Grand Piano' },
+  { id: 'candle', icon: '🕯️', name: 'Candlestick' }, { id: 'ball', icon: '🔮', name: 'Crystal Ball' }, { id: 'mic', icon: '🎤', name: 'Broken Mic' }];
 var CLUE_SETS = { who: CLUE_WHO, where: CLUE_WHERE, what: CLUE_WHAT };
 var CLUE_N = 4, CLUE_ACC_MS = 45000, CLUE_PART = 4, CLUE_BONUS = 6;   // four clue questions; 4 points per right part of the accusation, 6 more for all three
 function clueCard(key) { var p = String(key).split(':'), set = CLUE_SETS[p[0]] || []; for (var i = 0; i < set.length; i++) if (set[i].id === p[1]) return { kind: p[0], c: set[i] }; return null; }
-function clueText(key) {   // what a clue says: this one is innocent
+function clueText(key) {   // what a clue says: this one is not it
   var x = clueCard(key); if (!x) return '';
-  return x.kind === 'who' ? x.c.icon + ' ' + x.c.name + ' has an alibi.' : x.kind === 'where' ? x.c.icon + ' It did not happen ' + x.c.in + '.' : x.c.icon + ' The ' + x.c.name + ' is clean.';
+  return x.kind === 'who' ? x.c.icon + ' ' + x.c.name + ' is not possessed.' : x.kind === 'where' ? x.c.icon + ' Edgar is not haunting ' + x.c.in.replace(/^(in|on) /, '').replace(' stage', '') + '.' : x.c.icon + ' Edgar is not writing with the ' + x.c.name + '.';
 }

@@ -1572,7 +1572,7 @@ aside.recapgone{visibility:hidden}
 .grov.enter .ehost.her{animation:inRight .9s 1s cubic-bezier(.2,.9,.3,1.08) both}
 .grov.leaving{transition:opacity .9s,transform .9s;opacity:0;transform:scale(1.12)}
 
-/* ---------- Who Stole the Trophy? (on top of the Green Room scene styles: wall, floor, presenters, balloons) ---------- */
+/* ---------- Who the Hell Is Edgar? (on top of the Green Room scene styles: wall, floor, presenters, balloons) ---------- */
 .clueov{background:#0b0616}
 .clueov .grwall{background:radial-gradient(circle,rgba(160,190,255,.25) 0 1.2px,transparent 2px) 0 0/30px 30px,radial-gradient(ellipse at 50% 20%,#1d2350 0%,#120d2c 55%,#0b0616 100%)}
 .clueov .clspot{position:absolute;left:50%;top:-10vh;width:46vw;height:80vh;margin-left:-23vw;background:radial-gradient(ellipse at 50% 100%,rgba(255,240,200,.22),transparent 60%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);pointer-events:none}
@@ -1584,7 +1584,7 @@ aside.recapgone{visibility:hidden}
 .clueov .cltape{position:absolute;left:-14vh;right:-14vh;top:7vh;z-index:2;transform:rotate(-8deg);background:#ffd23f;color:#111;font-weight:900;font-size:clamp(.6rem,1vw,.85rem);letter-spacing:.12em;text-align:center;padding:2px 0;white-space:nowrap;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,.5)}
 .clueov .clrows{position:absolute;left:17vw;right:17vw;top:34vh;display:flex;flex-direction:column;gap:1.4vh;z-index:3}
 .clueov .clrow{display:flex;align-items:center;gap:.8vw}
-.clueov .cllab{width:8vw;flex:none;text-align:right;font-weight:900;font-size:clamp(.8rem,1.3vw,1.1rem);color:#ffd23f}
+.clueov .cllab{width:9vw;flex:none;text-align:right;font-weight:900;font-size:clamp(.7rem,1.1vw,1rem);color:#9dffcf;line-height:1.1}
 .clueov .clcard{flex:1;min-width:0;height:9vh;border-radius:10px;background:linear-gradient(#fdf7e6,#e9dfc2);color:#2a1a00;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 5px 12px rgba(0,0,0,.45);transition:transform .4s,opacity .4s,box-shadow .4s,filter .4s}
 .clueov .clcard span{font-size:3.4vh;line-height:1}
 .clueov .clcard b{font-size:clamp(.6rem,.95vw,.85rem);font-weight:900;text-align:center;line-height:1.1;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
@@ -1612,3 +1612,14 @@ aside.recapgone{visibility:hidden}
 .clbtn i{font-style:normal;font-size:1.2rem}
 .clbtn.out{opacity:.45;text-decoration:line-through}
 .clbtn.sel{border-color:var(--yellow);background:rgba(255,210,63,.2);opacity:1}
+
+/* Edgar: a ghostly green-purple glow, and the ghost himself floating above it all */
+.clueov .grwall{background:radial-gradient(circle,rgba(170,255,210,.22) 0 1.2px,transparent 2px) 0 0/30px 30px,radial-gradient(ellipse at 50% 20%,#1f3a3a 0%,#1a1236 55%,#0b0616 100%)}
+.clueov .clspot{background:radial-gradient(ellipse at 50% 100%,rgba(140,255,200,.18),transparent 60%)}
+.clueov .clsign{border-color:#9dffcf;color:#efffF7;text-shadow:0 0 12px #3ff2a0,0 0 28px #8a4dff;box-shadow:0 0 18px rgba(63,242,160,.5),inset 0 0 18px rgba(138,77,255,.35)}
+.clueov .clgone{bottom:0;font-size:12vh;opacity:.55;filter:drop-shadow(0 0 18px rgba(170,255,220,.8));animation:edgarfloat 3s ease-in-out infinite alternate}
+.clueov .clgone.back{opacity:1;filter:drop-shadow(0 0 30px rgba(170,255,220,1));transform:none;animation:edgarfloat 1.2s ease-in-out infinite alternate}
+.clueov .clq{position:absolute;right:-1vh;top:-1vh;font-size:6vh;font-weight:900;color:#9dffcf;text-shadow:0 0 14px #3ff2a0;animation:edgarfloat 2.2s ease-in-out infinite alternate-reverse}
+.clueov[data-st="reveal"] .clq{opacity:0;transition:opacity .5s}
+.clueov .clcard.hit{box-shadow:0 0 0 4px #9dffcf,0 0 30px rgba(140,255,200,.8)}
+@keyframes edgarfloat{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-2.4vh) rotate(4deg)}}
