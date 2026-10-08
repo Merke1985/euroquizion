@@ -337,8 +337,9 @@
     var b = s.bomb, mine = b.turn === pid, out = b.out.indexOf(pid) >= 0, box = $('bombui');
     show('v-wait');
     if (b.st === 'pick' && mine) {
-      $('waittitle').textContent = '💌 Your turn!'; $('waitsub').textContent = 'Pick an envelope. One of them hides a bomb…';
+      $('waittitle').textContent = '💌 Your turn!' + (b.picks === 1 ? ' (second pick)' : ''); $('waitsub').textContent = 'Pick an envelope. ' + (b.bombs === 1 ? 'One bomb is still in there…' : b.bombs + ' bombs are still in there…');
       box.classList.remove('hidden');
+      box.style.gridTemplateColumns = 'repeat(' + (b.env.length > 9 ? 4 : 3) + ',1fr)';
       box.innerHTML = b.env.map(function (e, i) { return '<button type="button" class="benvbtn' + (e.open ? ' open' : '') + '" data-i="' + i + '"' + (e.open || bombSent === b.key ? ' disabled' : '') + '>' + (e.open ? (e.bomb ? '💣' : flag(e.code)) : '✉️') + '<b>' + (i + 1) + '</b></button>'; }).join('');
       [].forEach.call(box.querySelectorAll('.benvbtn:not([disabled])'), function (btn) { btn.onclick = function () {
         if (!net || bombSent === b.key) return; bombSent = b.key; var msg = { pid: pid, key: b.key, pick: +btn.getAttribute('data-i') };

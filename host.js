@@ -1192,7 +1192,7 @@
   var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav', 'bomb'];
   var FUN = {
     bigfive: { icon: '🖐️', title: 'The Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
-    bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, one hides a bomb. Take turns to open one. Blow up and you are out; the last one standing wins!' },
+    bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, a few hide a bomb. Take turns, two envelopes each. Blow up and you are out; the last one standing wins!' },
     shop: { icon: '🛍️', title: 'The Green Room Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'The Green Room Boutique', sub: '' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
@@ -1977,17 +1977,26 @@
     G.phase = 'bomb'; G.barMs = 0; push();
     bombDeal();
   }
-  function bombDeal() {   // a fresh set: one envelope per player still in, one of them with the bomb
+  function bombDeal() {   // a fresh set: two envelopes per player still in, a few of them with a bomb; everyone picks twice
     var g = G.bomb; if (!g) return;
     g.round++;
-    var codes = shuffle(Object.keys(countries || {})).filter(function (c) { return c.length === 2; }), n = g.alive.length, bomb = Math.floor(Math.random() * n);
-    g.env = []; for (var i = 0; i < n; i++) g.env.push({ bomb: i === bomb, code: codes[i % (codes.length || 1)] || 'se', open: false, by: '' });
+    var codes = shuffle(Object.keys(countries || {})).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }), n = g.alive.length, nEnv = n * 2, nBomb = Math.max(1, Math.round(n / 3));
+    var bombs = shuffle(Array.apply(null, { length: nEnv }).map(function (x, i) { return i; })).slice(0, nBomb);
+    g.env = []; for (var i = 0; i < nEnv; i++) g.env.push({ bomb: bombs.indexOf(i) >= 0, code: codes[i % (codes.length || 1)] || 'se', open: false, by: '' });
+    g.bombs = nBomb; g.left = {}; g.alive.forEach(function (k) { g.left[k] = 2; }); g.turn = 0;   // two picks each this round
     g.st = 'deal'; g.pick = -1; push(); Music.woosh();
     clearTimeout(bombTimer); bombTimer = setTimeout(bombTurn, 2200);
   }
-  function bombWho() { var g = G.bomb; return g.alive[g.turn % g.alive.length]; }
+  function bombWho() { var g = G.bomb; return g.alive[g.turn % Math.max(1, g.alive.length)]; }
+  function bombNext() {   // on to the next player with a pick left (the order goes round); null when this round is done
+    var g = G.bomb;
+    for (var t = 0; t < g.alive.length; t++) { var k = g.alive[g.turn % g.alive.length]; if ((g.left[k] || 0) > 0) return k; g.turn++; }
+    return null;
+  }
   function bombTurn() {   // the next player walks on stage and picks
     var g = G.bomb; if (!g || G.phase !== 'bomb') return;
+    if (g.alive.length <= 1) { bombWin(); return; }
+    if (!bombNext() || !g.bombs) { bombDeal(); return; }   // everyone has had their two picks, or every bomb went off: new envelopes
     g.st = 'pick'; g.pick = -1; g.at = Date.now(); g.ends = Date.now() + BOMB_PICK_MS; push(); Music.blip();
     var who = bombWho(), id = g.id + '-' + g.round + '-' + g.turn;
     g.key = id;
@@ -2006,18 +2015,20 @@
     Music.dread(true);
     bombTimer = setTimeout(function () {
       Music.dread(false);
-      var e = g.env[i], who = bombWho(); e.open = true;
+      var e = g.env[i], who = bombWho(); e.open = true; g.left[who] = (g.left[who] || 1) - 1;
       if (!e.bomb) { g.st = 'safe'; Music.ding(); push(); g.turn++; bombTimer = setTimeout(bombTurn, 2600); return; }
+      g.bombs = Math.max(0, (g.bombs || 1) - 1);
       g.st = 'boom'; chaseSfx('brk', 1, Music.crumble); setTimeout(function () { Music.scream(); }, 300); push();
       bombTimer = setTimeout(function () {
-        g.alive.splice(g.alive.indexOf(who), 1); g.out.push(who); g.turn = g.turn % Math.max(1, g.alive.length);
+        var at = g.alive.indexOf(who); g.alive.splice(at, 1); g.out.push(who); g.turn = at % Math.max(1, g.alive.length);   // the next one in line stands where they stood
         if (g.alive.length <= 1) { bombWin(); return; }
-        bombDeal();
+        bombTurn();
       }, 3200);
     }, 2400);
   }
   function bombWin() {
-    var g = G.bomb, w = players[g.alive[0]], second = players[g.out[g.out.length - 1]];
+    var g = G.bomb; if (!g.alive.length && g.out.length) g.alive = [g.out.pop()];   // everyone blew up: the last one to go wins
+    var w = players[g.alive[0]], second = players[g.out[g.out.length - 1]];
     var big = 6 * partyX(), small = 3 * partyX();
     if (w) { w.score += big; w.pts = big; } if (second) { second.score += small; second.pts = small; }
     g.st = 'win'; g.prize = [big, small]; push(); Music.douze();
@@ -2025,15 +2036,16 @@
   }
   function bombSnap() {
     var g = G.bomb;
-    return { id: g.id, st: g.st, round: g.round, turn: bombWho(), key: g.key, pick: g.pick, alive: g.alive, out: g.out, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, prize: g.prize || null,
+    return { id: g.id, st: g.st, round: g.round, bombs: g.bombs || 0, picks: g.left && g.left[bombWho()] || 0, turn: bombWho(), key: g.key, pick: g.pick, alive: g.alive, out: g.out, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, prize: g.prize || null,
       env: g.env.map(function (e) { return e.open ? { open: 1, bomb: e.bomb ? 1 : 0, code: e.code, by: e.by } : { open: 0 }; }) };   // (what is inside stays on the host until it opens)
   }
   // The big screen: the stage, the two presenters, the player whose turn it is, and the envelopes.
   function bombShow() {
     var g = G.bomb; if (!g) return;
-    var ov = $('bombov'); if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov'; ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="bplayer"></div><div class="benvs"></div><div class="bstrip"></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
+    var ov = $('bombov'); if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov'; ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bscreen"><span class="bsicon">💣</span><b class="bsn"></b><small>bombs in these envelopes</small></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="bplayer"></div><div class="benvs"></div><div class="bstrip"></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
     var who = players[bombWho()], cur = g.st === 'win' ? players[g.alive[0]] : who;
     ov.setAttribute('data-st', g.st);
+    var bsn = ov.querySelector('.bsn'); if (bsn.textContent !== String(g.bombs || 0)) { bsn.textContent = g.bombs || 0; bsn.classList.remove('tick'); void bsn.offsetWidth; bsn.classList.add('tick'); }
     ov.querySelector('.bhead').innerHTML = '💌 The Envelope, Please <small>' + (g.alive.length) + ' still in · round ' + g.round + '</small>';
     var bp = ov.querySelector('.bplayer');   // the player on stage walks in once per turn (not on every update)
     if (cur && bp.getAttribute('data-k') !== cur.pid + '|' + g.round + '|' + g.turn) { bp.setAttribute('data-k', cur.pid + '|' + g.round + '|' + g.turn); bp.innerHTML = '<div class="bme">' + charSvg(cur.char) + '<b>' + esc(cur.name) + '</b></div>'; }
@@ -2045,8 +2057,8 @@
     }).join('');
     ov.querySelector('.bstrip').innerHTML = g.alive.concat(g.out).map(function (k) { var p = players[k]; if (!p) return ''; var o = g.out.indexOf(k) >= 0; return '<span class="bps' + (o ? ' out' : '') + (k === bombWho() && g.st !== 'win' ? ' now' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + (o ? ' 💥' : '') + '</i></span>'; }).join('');
     var e = g.pick >= 0 ? g.env[g.pick] : null, nm = cur ? cur.name : '';
-    ov.querySelector('.bmsg').innerHTML = g.st === 'deal' ? (g.round > 1 ? 'New envelopes! One of them hides a bomb…' : 'One of these envelopes hides a bomb…')
-      : g.st === 'pick' ? esc(nm) + ', pick an envelope on your phone!'
+    ov.querySelector('.bmsg').innerHTML = g.st === 'deal' ? (g.round > 1 ? 'New envelopes! ' : '') + 'Everyone opens two. ' + (g.bombs === 1 ? 'One of them hides a bomb…' : g.bombs + ' of them hide a bomb…')
+      : g.st === 'pick' ? esc(nm) + ', pick an envelope on your phone!' + (g.left && g.left[bombWho()] === 1 ? ' (your second one)' : '')
       : g.st === 'open' ? 'Envelope ' + (g.pick + 1) + '… the envelope, please!'
       : g.st === 'safe' ? 'Phew! ' + flag(e.code) + ' ' + esc(countries[e.code] || '') + ': ' + esc(nm) + ' is safe!'
       : g.st === 'boom' ? '💥 BOOM! ' + esc(nm) + ' is out!'
