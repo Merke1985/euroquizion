@@ -1386,8 +1386,8 @@
       a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () { if (fallback) fallback(); });
     } catch (e) { if (fallback) fallback(); }
   }
-  function chaseSpot() {   // a fresh copy each time, so the clunks can overlap
-    try { var a = new Audio('sounds/spotlight.mp3?v=1'); a.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  function chaseSpot(src) {   // a fresh copy each time, so the clunks can overlap
+    try { var a = new Audio(src || 'sounds/spotlight.mp3?v=1'); a.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
   }
   // The way in: the lights go out on the quiz, a line in the dark, then the chase opens up from a growing circle.
   var CHASE_ENTER = 5400, CHASE_BUILD = 9200;
@@ -1421,7 +1421,7 @@
     Music.dread(true);
     // then the scene is built up: first the background, then the stage moves in, then the runway slides in, then the fans come in (in the dark), then the lights
     chaseCrowd();
-    var ch = $('chase'); ch.classList.add('nostage', 'norunway', 'nolights', 'nocrowd');
+    var ch = $('chase'); ch.classList.add('nostage', 'norunway', 'nolights', 'nocrowd', 'nofire');
     setTimeout(function () { bk.classList.add('gone'); bk.classList.remove('on'); }, CHASE_ENTER - 400);
     setTimeout(function () { ch.classList.remove('nostage'); Music.woosh(); }, CHASE_ENTER + 700);
     setTimeout(function () { ch.classList.remove('norunway'); Music.woosh(); }, CHASE_ENTER + 1700);
@@ -1429,8 +1429,9 @@
     // the lights pop on one by one, each with a spotlight clunk: the four beams, then the stage and the trophy
     var beams = [].slice.call(ch.querySelectorAll('.chbeams')), lights = [3, 2, 1, 0].map(function (k) { return beams.map(function (b) { return b.children[k]; }); });   // each beam, with its glow over the stage
     lights.push([].slice.call(ch.querySelectorAll('.chstg-floor,.chstg-ring,.chtro')));
-    lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 4000 + i * 420 + (i === lights.length - 1 ? 1000 : 0)); });   // a second's pause before the stage lights
-    setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 1150);   // the crowd brightens with the last light
+    lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 4000 + i * 420); });
+    setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 150);   // the crowd brightens with the last light
+    setTimeout(function () { ch.classList.remove('nofire'); [].forEach.call(ch.querySelectorAll('.chpyro'), function (e) { e.classList.remove('ign'); void e.offsetWidth; e.classList.add('ign'); }); chaseSpot('sounds/fire.mp3?v=1'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 2000);   // two seconds after the last light, the flames burst up
     setTimeout(function () { ch.classList.remove('nocrowd'); Music.woosh(); }, CHASE_ENTER + 2800);   // the fans come in, still in the dark
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }

@@ -1192,3 +1192,8 @@ aside.recapgone{visibility:hidden}
 
 /* the spotlights also fall faintly across the LED stage */
 .chstage.over{z-index:3;pointer-events:none;opacity:.32;mix-blend-mode:screen}
+
+/* the stage flames: off while the scene is built, then they burst up */
+.chase.nofire .chpyro{opacity:0}
+.chase .chpyro.ign{animation:chignite .9s ease-out}
+@keyframes chignite{0%{opacity:0;filter:brightness(3)}25%{opacity:1;filter:brightness(2.6)}100%{opacity:1;filter:none}}
