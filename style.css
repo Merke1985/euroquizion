@@ -1404,3 +1404,14 @@ aside.recapgone{visibility:hidden}
 .recap.standings .ebuline{opacity:0;transition:opacity .4s;font-size:1.15rem;color:var(--yellow)}
 .recap.standings .ebuline.on{opacity:1}
 .recap.standings{transform:none}
+
+/* the boutique on the big screen: the shop, the shopkeeper and what she says (the items are on the phones) */
+.boutique .bqbubble{left:30vw;top:52vh;max-width:44vw;font-size:clamp(1.3rem,2.4vw,2.2rem);padding:.8em 1.1em}
+.boutique .shoppers{left:30vw;bottom:6vh}
+
+.boutique .bqshelf{left:30vw;right:3vw;width:auto;display:flex;justify-content:space-around;align-items:flex-end;letter-spacing:0;white-space:normal;padding:0 1vw .3em}
+.boutique .bqshelf.top{top:23vh}.boutique .bqshelf.low{top:38vh}
+.boutique .bqi{display:flex;flex-direction:column;align-items:center;gap:2px;width:7.5vw;text-align:center}
+.boutique .bqi .si{font-size:clamp(1.8rem,3.4vw,3rem);line-height:1}
+.boutique .bqi b{font-size:clamp(.6rem,.9vw,.85rem);line-height:1.1;opacity:.85}
+.boutique .bqbubble{top:55vh}

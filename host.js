@@ -2151,7 +2151,7 @@
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer };
     G.phase = 'shop'; G.barMs = SHOP_MS; G.endsAt = Date.now() + SHOP_MS; push(); Music.ding();
     var id = G.shop.id;
-    bots.forEach(function (b) { if (G.shop.who.indexOf(b.pid) >= 0) setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom(n, offer[b.pid]) }); }, 2000 + Math.random() * 4000); });
+    bots.forEach(function (b) { if (G.shop.who.indexOf(b.pid) >= 0) setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom(n, offer[b.pid]) }); }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
     clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
   }
   function shopRandom(n, from) { var ids = from || SHOP_ITEMS.map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
@@ -2333,13 +2333,15 @@
       ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov boutique enter'; whooshes([0, 300, 650, 950]); setTimeout(function () { ov.classList.remove('enter'); }, 2600);
       var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2; })).slice(0, 22);
       ov.innerHTML = '<div class="bqsign">✨ The Green Room Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span style="--i:' + i + '">' + flag(c) + '</span>'; }).join('') + '</div>' +
-        '<div class="bqshelf top">💃 🎤 🪩 🎟️ 🌈 💌 🎶 👑</div><div class="bqshelf low">🧢 🧣 🎧 🕶️ 🪭 🎊 🍾 ✨</div>' +
-        '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="bqcounter"><div class="shopitems"></div></div><div class="shoppers"></div>';
+        (function () {   // the merchandise on the shelves at the back, with its name (what you can get is on your phone)
+          var shelf = function (items) { return items.map(function (it) { return '<span class="bqi"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b></span>'; }).join(''); }, h = Math.ceil(SHOP_ITEMS.length / 2);
+          return '<div class="bqshelf top">' + shelf(SHOP_ITEMS.slice(0, h)) + '</div><div class="bqshelf low">' + shelf(SHOP_ITEMS.slice(h)) + '</div>';
+        })() +
+        '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div>';
       document.body.appendChild(ov);
     }
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
     ov.querySelector('.bqbubble').textContent = g.over ? 'Thank you, darlings! Use them wisely…' : first ? 'Welcome, darlings! Everyone gets four to choose from: pick one on your phone, it’s on the house!' : 'Congratulations! Four treasures on your phone: take ' + g.n + ', on the house, darling!';
-    ov.querySelector('.shopitems').innerHTML = SHOP_ITEMS.map(function (it, i) { return '<div class="shopitem" style="--i:' + i + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b></div>'; }).join('');
     ov.querySelector('.shoppers').innerHTML = act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('');
   }
   // The big announcement of an item: across the whole screen, with the points flying and a sound.
