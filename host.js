@@ -1558,7 +1558,7 @@
     arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)';
   }
   function chaseSnap() {
-    var c = G.chase, s = { sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster ? c.monster.name : 'The Diva', end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
+    var c = G.chase, s = { sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
     c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });
     return s;
