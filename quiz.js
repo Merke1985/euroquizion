@@ -123,6 +123,15 @@ function makePair(song, kind, allSongs, countries) {
 // player never was. There the second song of a two-clip question plays in the main player instead:
 // same interface as SecondPlayer, but nothing can be loaded ahead, so it starts with a short pause.
 var ONE_PLAYER = typeof navigator !== 'undefined' && (/iP(hone|ad|od)|Android/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform || '')));
+// The music volume setting (Music.vol.music, 0 to 1) applies to the YouTube players too: every setVolume is scaled.
+var YT_PLAYERS = [];
+function ytVolWrap(p) {
+  if (!p || p._volWrapped || typeof p.setVolume !== 'function') return p;
+  var raw = p.setVolume.bind(p); p._volWrapped = true; p._want = 100;
+  p.setVolume = function (v) { p._want = v; try { raw(Math.round(v * (window.Music && Music.vol ? Music.vol.music : 1))); } catch (e) {} };
+  YT_PLAYERS.push(p); return p;
+}
+function ytVolApply() { YT_PLAYERS.forEach(function (p) { try { p.setVolume(p._want == null ? 100 : p._want); } catch (e) {} }); }
 function SharedSecond(main, first) {
   var self = this, id = null, on = false;   // on: the second video is the one in the main player right now
   self.ready = false; self.start = 0; self.shared = true;
@@ -142,7 +151,7 @@ function SecondPlayer(elId) {
   self.make = function () {
     if (p || !window.YT || !YT.Player || !document.getElementById(elId)) return;
     p = new YT.Player(elId, { width: '100%', height: '100%', playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
-      events: { onReady: function () { ok = true; if (want) self.load(want[0], want[1], want[2]); }, onError: function () { if (onFail && !self.ready) onFail(); } } });
+      events: { onReady: function () { ok = true; ytVolWrap(p); if (want) self.load(want[0], want[1], want[2]); }, onError: function () { if (onFail && !self.ready) onFail(); } } });
   };
   self.load = function (id, len, fail) {
     self.ready = false; onFail = fail; clearInterval(poll);
@@ -418,9 +427,8 @@ var HOST_SCORING_HELP = {
   ladder: ''
 };
 var FINAL_HELP = {
-  chase: 'Final: the Final Chase, a race to the stage with a monster behind you.',
+  chase: 'Final: chase the trophy, a race to the stage with a monster behind you.',
   double: 'Final: the last three questions count double, and the scores stay hidden until the end.',
-  ladder: '',
   standard: 'Final: straight to the final scores.'
 };
 var SCORING_HELP = {
