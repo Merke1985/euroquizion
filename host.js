@@ -369,9 +369,15 @@
       if (!endShown) {
         endShown = true;
         $('endlead').textContent = 'Final scores'; $('winner').textContent = '…'; $('winchar').innerHTML = '';
+        var champs0 = list().filter(function (p) { return p.champ; });
+        $('final').classList.toggle('hidden', champs0.length > 0);   // after the chase there is no scoreboard: the chase decided
+        if (champs0.length) {
+          $('endlead').textContent = 'Winner of the Final Chase'; $('winner').textContent = champs0.map(function (w) { return w.name; }).join(' & ');
+          $('winchar').innerHTML = '<div class="winballoon">Thank you Europe!</div><div class="winfaces">' + champs0.slice(0, 4).map(function (w) { return charSvg(w.char); }).join('') + '</div>';
+          Music.douze();
+        } else
         finalBoard($('final'), ps, null, function (wins) {
-          var champs = list().filter(function (p) { return p.champ; }); if (champs.length) wins = champs;   // the Final Chase was played: its winner wins
-          $('endlead').textContent = champs.length ? 'Winner of the Final Chase…' : wins.length ? 'And the winner is…' : 'Final scores';
+          $('endlead').textContent = wins.length ? 'And the winner is…' : 'Final scores';
           $('winner').textContent = wins.length ? wins.map(function (w) { return w.name; }).join(' & ') + ' · ' + ptsLabel(wins[0].score) : 'Nobody scored';
           // the winner's big avatar (with a tie: all of them), with a speech balloon above it
           $('winchar').innerHTML = wins.length ? '<div class="winballoon">Thank you Europe!</div><div class="winfaces">' + wins.slice(0, 4).map(function (w) { return charSvg(w.char); }).join('') + '</div>' : '';
@@ -1669,7 +1675,7 @@
         setTimeout(function () { el.classList.remove('bonk'); }, 1700);
       } else if (el.getAttribute('data-bump') !== c.qkey || c.st !== 'move') { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
       if (!l.out && l.blocked === c.n && c.st === 'move') deny[i + ':' + at] = 1;   // not perfect, so not onto the stage: the space flashes red
-      if (!l.out) { occ[i + ':' + at] = 1; if (next && at <= c.mon + next && c.st !== 'win' && c.st !== 'move') doomed[k] = 1; }
+      if (!l.out) { occ[i + ':' + at] = 1; if (next && l.pos < CHASE_GOAL && at <= c.mon + next && c.st !== 'win' && c.st !== 'move') doomed[k] = 1; }
       el.classList.toggle('out', l.out); el.classList.toggle('vanish', (l.out && !(c.st === 'diva' && l.at === c.n)) || (!!c.wrecked && l.pos < CHASE_GOAL));   // caught: shown with a skull for a moment, then gone el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
       el.classList.toggle('near', !l.out && l.pos >= CHASE_GOAL - 3 && !c.win); el.classList.toggle('doomed', !!doomed[k]);
       var waiting = c.st === 'intro' && c.placeOrder.indexOf(k) >= c.placed; el.classList.toggle('unplaced', waiting);   // not on the runway yet
@@ -2750,12 +2756,15 @@
   try { var fm = localStorage.getItem('esc-final'); if (fm && $('s-final').querySelector('option[value="' + fm + '"]')) $('s-final').value = fm; } catch (e) {}
   if (!$('s-scoring').value) $('s-scoring').value = 'correct';   // (a Ladder saved from before it moved to Quiz mode)
   try { var qm = localStorage.getItem('esc-qmode'); if (qm && $('s-qmode').querySelector('option[value="' + qm + '"]')) $('s-qmode').value = qm; } catch (e) {}
+  $('s-partypick').addEventListener('change', scoreHelp);
   $('s-qmode').addEventListener('change', function () { try { localStorage.setItem('esc-qmode', $('s-qmode').value); } catch (e) {} singToggle(); });
   $('s-final').addEventListener('change', function () { try { localStorage.setItem('esc-final', $('s-final').value); } catch (e) {} singToggle(); });
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : ($('s-qmode').value === 'ladder' && $('s-atype').value === 'mc' ? SCORING_HELP.ladder : HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
-    $('finalhelp').textContent = FINAL_HELP[$('s-final').value] || '';
+    $('scorehelp').textContent = '';
+    var at = $('s-atype').value, qm = $('s-qmode').value;
+    var gameTxt = at === 'party' ? PARTY_HELP + ' ' + (PARTY_MODE_HELP[$('s-partypick').value] || '') : at === 'mc' ? (ROUND_HELP[qm] || '') : '';
+    $('finalhelp').innerHTML = (gameTxt ? '<span>' + esc(gameTxt) + '</span><br>' : '') + '<span>' + esc(FINAL_HELP[$('s-final').value] || '') + '</span>';
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   // ---------- eras: several can be switched on (none or all of them: every year) ----------

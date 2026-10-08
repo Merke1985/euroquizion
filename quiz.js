@@ -426,6 +426,18 @@ var HOST_SCORING_HELP = {
   speed: 'Speedy: the first player with the right answer scores 12 points, the second 10, the third 8, then 7, 6, 5, 4, 3, 2 and 1.',
   ladder: ''
 };
+var ROUND_HELP = {
+  standard: 'Quiz: every round mixes songs from all the eras you picked.',
+  random: 'Random rounds: before each round a spinner picks a decade, and all its questions come from that decade.',
+  vote: 'Voted rounds: before each round everyone votes on their phone for the decade of that round.',
+  ladder: 'Ladder: a right answer takes you a rung up, a wrong one half a rung down; the first to reach the top ends the climb.'
+};
+var PARTY_MODE_HELP = {
+  order: 'Grand tour: three questions, then a minigame, until every minigame has been played.',
+  spin: 'Random: three questions, then a spin picks the next minigame.',
+  vote: 'Everyone votes for the next minigame.',
+  one: 'One player picks the next minigame, a different player each time.'
+};
 var FINAL_HELP = {
   chase: 'Chase the trophy: after the last question everyone races up a runway to the stage, with a monster on their heels. The higher your score, the further ahead you start.',
   double: 'The Big Five: the last five questions count double, and the scores stay hidden until the very end.',
