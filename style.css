@@ -1047,3 +1047,13 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chtok .ch-face{position:relative}
 .chtok.doomed .ch-face::after{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(255,23,68,.45);mix-blend-mode:multiply}
 .chtok.doomed .ch-face{box-shadow:0 0 0 3px rgba(255,23,68,.6),0 0 18px #ff1744}
+.chwheel{position:absolute;left:44%;top:56%;transform:translate(-50%,-50%);z-index:7}
+.chwheel.hidden{display:none}
+.whl{position:relative;width:min(56vh,440px);height:min(56vh,440px);border-radius:50%;border:6px solid #ffd23f;box-shadow:0 0 0 6px rgba(10,4,20,.9),0 0 50px rgba(255,210,63,.45),inset 0 0 40px rgba(0,0,0,.6);animation:chcardin .4s cubic-bezier(.3,1.5,.5,1)}
+.whs{position:absolute;left:25%;top:25%;width:50%;height:50%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.whs svg{width:72%;height:auto;-webkit-mask-image:linear-gradient(to bottom,#000 60%,transparent 92%);mask-image:linear-gradient(to bottom,#000 60%,transparent 92%)}
+.whs b{font-size:clamp(.7rem,1.2vw,1rem);text-shadow:0 2px 4px #000;white-space:nowrap;margin-top:-8%}
+.wharrow{position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:0 0;pointer-events:none}
+.wharrow::before{content:'';position:absolute;left:-9px;top:-46%;width:18px;height:0;border-left:9px solid transparent;border-right:9px solid transparent}
+.wharrow::after{content:'';position:absolute;left:-7px;bottom:0;width:14px;height:calc(min(56vh,440px) * .42);background:linear-gradient(#fff,#ffd23f);border-radius:7px 7px 3px 3px;clip-path:polygon(50% 0,100% 18%,70% 18%,70% 100%,30% 100%,30% 18%,0 18%);box-shadow:0 0 12px rgba(0,0,0,.6)}
+.whhub{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#ffd23f 55%,#b8860b);box-shadow:0 0 12px rgba(0,0,0,.7)}
