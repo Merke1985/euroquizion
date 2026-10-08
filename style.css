@@ -1571,3 +1571,44 @@ aside.recapgone{visibility:hidden}
 .grov.enter .ehost.him{animation:inLeft .9s 1s cubic-bezier(.2,.9,.3,1.08) both}
 .grov.enter .ehost.her{animation:inRight .9s 1s cubic-bezier(.2,.9,.3,1.08) both}
 .grov.leaving{transition:opacity .9s,transform .9s;opacity:0;transform:scale(1.12)}
+
+/* ---------- Who Stole the Trophy? (on top of the Green Room scene styles: wall, floor, presenters, balloons) ---------- */
+.clueov{background:#0b0616}
+.clueov .grwall{background:radial-gradient(circle,rgba(160,190,255,.25) 0 1.2px,transparent 2px) 0 0/30px 30px,radial-gradient(ellipse at 50% 20%,#1d2350 0%,#120d2c 55%,#0b0616 100%)}
+.clueov .clspot{position:absolute;left:50%;top:-10vh;width:46vw;height:80vh;margin-left:-23vw;background:radial-gradient(ellipse at 50% 100%,rgba(255,240,200,.22),transparent 60%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);pointer-events:none}
+.clueov .clsign{top:3vh;border-color:#ffd23f;color:#fff6d6;text-shadow:0 0 12px #ffb000,0 0 26px #ff8a00;box-shadow:0 0 18px rgba(255,180,0,.55),inset 0 0 18px rgba(255,180,0,.3);font-size:clamp(1.5rem,3.2vw,2.8rem)}
+.clueov .clped{position:absolute;left:50%;top:15vh;width:16vh;margin-left:-8vh;height:16vh}
+.clueov .clbase{position:absolute;left:0;right:0;bottom:0;height:5vh;border-radius:6px;background:linear-gradient(#d9d4e6,#8b84a3);box-shadow:0 8px 18px rgba(0,0,0,.5)}
+.clueov .clgone{position:absolute;left:0;right:0;bottom:4.5vh;text-align:center;font-size:9vh;line-height:1;opacity:.12;filter:grayscale(1);transition:opacity .6s,filter .6s,transform .6s}
+.clueov .clgone.back{opacity:1;filter:none;transform:scale(1.15);animation:shpop .6s both}
+.clueov .cltape{position:absolute;left:-14vh;right:-14vh;top:7vh;z-index:2;transform:rotate(-8deg);background:#ffd23f;color:#111;font-weight:900;font-size:clamp(.6rem,1vw,.85rem);letter-spacing:.12em;text-align:center;padding:2px 0;white-space:nowrap;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.clueov .clrows{position:absolute;left:17vw;right:17vw;top:34vh;display:flex;flex-direction:column;gap:1.4vh;z-index:3}
+.clueov .clrow{display:flex;align-items:center;gap:.8vw}
+.clueov .cllab{width:8vw;flex:none;text-align:right;font-weight:900;font-size:clamp(.8rem,1.3vw,1.1rem);color:#ffd23f}
+.clueov .clcard{flex:1;min-width:0;height:9vh;border-radius:10px;background:linear-gradient(#fdf7e6,#e9dfc2);color:#2a1a00;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 5px 12px rgba(0,0,0,.45);transition:transform .4s,opacity .4s,box-shadow .4s,filter .4s}
+.clueov .clcard span{font-size:3.4vh;line-height:1}
+.clueov .clcard b{font-size:clamp(.6rem,.95vw,.85rem);font-weight:900;text-align:center;line-height:1.1;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.clueov .clcard.dim{opacity:.25;filter:grayscale(1);transform:scale(.92)}
+.clueov .clcard.hit{transform:scale(1.14);box-shadow:0 0 0 4px #ffd23f,0 0 30px rgba(255,210,63,.8);z-index:2;animation:shpop .5s both}
+.clueov.enter .clrow{animation:inUp .7s cubic-bezier(.2,.9,.3,1.08) both}
+.clueov.enter .clrow:nth-child(1){animation-delay:.5s}.clueov.enter .clrow:nth-child(2){animation-delay:.7s}.clueov.enter .clrow:nth-child(3){animation-delay:.9s}
+.clueov .clmsg{position:absolute;left:17vw;right:17vw;top:68vh;text-align:center;font-weight:900;font-size:clamp(1rem,2vw,1.6rem);text-shadow:0 3px 10px rgba(0,0,0,.7);z-index:3}
+.clueov .clplayers{position:absolute;left:17vw;right:17vw;bottom:3vh;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;z-index:3}
+.clueov .clp{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:99px;background:rgba(0,0,0,.45);font-weight:800;font-size:clamp(.75rem,1.1vw,.95rem)}
+.clueov .clp .char{width:30px;height:30px}
+.clueov .clp em{font-style:normal;font-size:1.05em;padding:0 2px;border-radius:6px}
+.clueov .clp em.ok{background:rgba(85,194,122,.35)}.clueov .clp em.no{background:rgba(232,69,124,.3);filter:grayscale(.5)}
+.clueov .clp em.wait{opacity:.6}
+.clueov .clp i{font-style:normal;opacity:.6;font-weight:600}
+.clueov .clp strong{color:#ffd23f;margin-left:4px}
+.clueov .clp.solved{box-shadow:0 0 0 3px #ffd23f;background:rgba(255,210,63,.18)}
+.clueov .grbub{top:30vh;max-width:13vw;font-size:clamp(.8rem,1.2vw,1.1rem)}
+.clueov .grhosts .ehost{height:46vh}
+/* the phone: the detective's notebook */
+.clueui{display:flex;flex-direction:column;gap:12px;width:100%;margin-top:10px}
+.clset>span{display:block;font-weight:900;color:var(--yellow);margin-bottom:6px;text-align:left}
+.clset>div{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.clbtn{display:flex;align-items:center;gap:6px;border:2px solid transparent;border-radius:10px;padding:8px;background:rgba(255,255,255,.1);color:inherit;font:inherit;font-weight:800;font-size:.9rem;text-align:left;cursor:pointer}
+.clbtn i{font-style:normal;font-size:1.2rem}
+.clbtn.out{opacity:.45;text-decoration:line-through}
+.clbtn.sel{border-color:var(--yellow);background:rgba(255,210,63,.2);opacity:1}

@@ -43,7 +43,7 @@
       return;
     }
     $('chpbar').parentNode.classList.remove('hidden'); $('chready').classList.add('hidden');
-    if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Grand Final'; $('waitsub').textContent = (c.mname || 'A former winner') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
+    if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Grand Final'; $('waitsub').textContent = (c.mname || 'A Eurovision icon') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
     if (c.st === 'ask') {
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
@@ -55,7 +55,7 @@
     }
     // the answer and the moves
     show('v-wait');
-    $('waittitle').textContent = c.st === 'show' || c.st === 'pause' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A former winner') + ' moves…' : 'Moving…';
+    $('waittitle').textContent = c.st === 'show' || c.st === 'pause' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A Eurovision icon') + ' moves…' : 'Moving…';
     $('waitsub').textContent = where;
   }
   $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); if (state && state.chase) chaseView(state.chase); chaseSend(false); });
@@ -134,6 +134,8 @@
     onState2(s);
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
+    if (s.phase !== 'clueacc') $('clueui').classList.add('hidden');
+    clueToast(s);
     bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
@@ -224,6 +226,7 @@
     else if (s.phase === 'chase' && s.chase) chaseView(s.chase);
     else if (s.phase === 'shop' && s.shop) shopView(s);
     else if (s.phase === 'bomb' && s.bomb) bombView(s);
+    else if ((s.phase === 'clueacc' || s.phase === 'cluerev') && s.clue) clueView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -354,6 +357,54 @@
     var nm = bombName(s, b.turn);
     $('waittitle').textContent = b.st === 'win' ? (b.alive[0] === pid ? '🏆 You win!' : '🏆 ' + bombName(s, b.alive[0]) + ' wins!') : b.st === 'boom' ? (mine ? '💥 BOOM! You are out' : '💥 ' + nm + ' blew up!') : out ? '💥 You blew up' : b.st === 'safe' ? (mine ? 'Phew, safe!' : nm + ' is safe') : b.st === 'open' ? 'Opening envelope ' + (b.pick + 1) + '…' : b.st === 'pick' ? nm + ' is picking…' : '💌 The Envelope, Please';
     $('waitsub').textContent = out && b.st !== 'win' ? 'Watch the others sweat on the big screen.' : b.st === 'deal' ? 'New envelopes are coming out. One hides a bomb.' : 'Watch the big screen!';
+  }
+
+  // ---------- Who Stole the Trophy? ----------
+  // A right answer brings a secret clue: it pops up on the phone. At the end, the notebook: pick who, where and with what
+  // (what your clues ruled out is crossed off), and accuse.
+  var clueToasted = '', clueSel = {}, clueSentId = '';
+  function clueToast(s) {
+    var c = s.clue; if (!c || !c.freshKey || clueToasted === c.freshKey) return;
+    if (s.phase !== 'reveal') return;
+    clueToasted = c.freshKey;
+    var mine = (c.fresh || {})[pid]; if (!mine || !mine.length) return;
+    ptoast('🔍 Secret clue' + (mine.length > 1 ? 's' : '') + ': ' + mine.map(clueText).join(' '));
+    var e = $('ptoast'); clearTimeout(ptoastT); ptoastT = setTimeout(function () { e.classList.add('hidden'); }, 7000);   // (a little longer: worth reading)
+  }
+  function clueView(s) {
+    var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [];
+    show('v-wait');
+    if (s.phase === 'clueacc') {
+      if (clueSentId === c.id || (c.acc || {})[pid]) {
+        box.classList.add('hidden');
+        $('waittitle').textContent = '🔍 Accusation sent!'; $('waitsub').textContent = 'Waiting for the other detectives…'; return;
+      }
+      $('waittitle').textContent = '🔍 Make your accusation'; $('waitsub').textContent = 'Who stole the trophy, where, and with what? What your clues ruled out is crossed off. You have ' + Math.round(CLUE_ACC_MS / 1000) + ' seconds.';
+      box.classList.remove('hidden');
+      if (clueSel.id !== c.id) clueSel = { id: c.id };
+      var key = c.id + '|' + known.join(',') + '|' + clueSel.who + clueSel.where + clueSel.what;
+      if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
+      var lab = { who: 'Who?', where: 'Where?', what: 'With what?' };
+      box.innerHTML = ['who', 'where', 'what'].map(function (k) {
+        return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var out = known.indexOf(k + ':' + x.id) >= 0; return '<button type="button" class="clbtn' + (out ? ' out' : '') + (clueSel[k] === x.id ? ' sel' : '') + '" data-k="' + k + '" data-id="' + x.id + '"><i>' + x.icon + '</i>' + esc(x.name) + '</button>'; }).join('') + '</div></div>';
+      }).join('') + '<button type="button" class="btn big" id="clueaccuse"' + (clueSel.who && clueSel.where && clueSel.what ? '' : ' disabled') + '>🔍 Accuse!</button>';
+      [].forEach.call(box.querySelectorAll('.clbtn'), function (b) { b.onclick = function () { clueSel[b.getAttribute('data-k')] = b.getAttribute('data-id'); clueView(state); }; });
+      $('clueaccuse').onclick = function () {
+        if (!net || !(clueSel.who && clueSel.where && clueSel.what)) return;
+        clueSentId = c.id; var msg = { pid: pid, id: c.id, who: clueSel.who, where: clueSel.where, what: clueSel.what };
+        net.send('clue', msg); setTimeout(function () { if (state && state.phase === 'clueacc') net.send('clue', msg); }, 1500);
+        clueView(state);
+      };
+      return;
+    }
+    box.classList.add('hidden');   // the answer comes out
+    var sol = c.sol || {}, parts = [];
+    if (sol.who) parts.push(clueCard('who:' + sol.who).c.name);
+    if (sol.where) parts.push(clueCard('where:' + sol.where).c.in);
+    if (sol.what) parts.push('with the ' + clueCard('what:' + sol.what).c.name);
+    var r = c.res && c.res[pid];
+    $('waittitle').textContent = r ? (r.n === 3 ? '🏆 You solved the case!' : r.none ? 'No accusation…' : '🔍 ' + r.n + ' of 3 right') : '🔍 And the thief is…';
+    $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '');
   }
 
   // ---------- Eurofan Shop ----------

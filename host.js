@@ -121,6 +121,7 @@
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '', flag: !!p.flagNow }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
+    if (G.clue) s.clue = clueSnap();
     if (G.phase === 'shop' && G.shop) { s.shop = { id: G.shop.id, n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS, offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') s.shopq = (G.shopQ || []).length;
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
@@ -321,7 +322,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (G.fav && G.fav.pid === p.pid ? 'fav ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -331,6 +332,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'shop' && $('shopov')) $('shopov').remove();
     if (G.phase !== 'bomb' && $('bombov')) $('bombov').remove();
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
+    if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -404,6 +406,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); shopShow();
     } else if (G.phase === 'bomb') {
       show('v-game'); bombShow();
+    } else if (G.phase === 'clueacc' || G.phase === 'cluerev') {
+      show('v-game'); clueShow();
     } else {
       show('v-game');
       $('roundlabel').textContent = G.phase === 'opening' ? '' : 'Song ' + G.round + ofTotal(' / ');
@@ -595,7 +599,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var x2 = G.tourFinal && !G.draw ? 2 : 1;
       if (G.draw) worth = String(partyX());
       else if (G.q.battle) worth = String(BATTLE_PTS);
-      else if (G.fav) worth = '';
+      else if (G.clue) worth = '🔍';
       else if (G.q.peel) worth = String(peelPoints((G.barMs || PEEL_MS) - (G.endsAt - Date.now()), G.q.blur) * x2);
       else if (G.scoring === 'speed') worth = String((ESC_POINTS[list().filter(function (p) { return p.pick != null; }).length] || 1) * x2);   // Speedy: what the next one in can still get
       else worth = String((G.scoring === 'random' && G.qWorth ? G.qWorth : 12) * x2);
@@ -837,7 +841,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // points (12, 10, 8, 7 … 1) and stops on what a right answer to this question will be worth.
   var WORTHS = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1], worthTimer = null;
   function worthSpin() {
-    var ok = !REMOTE && G.q && !G.q.battle && !G.fav && !G.draw && !G.sing && !G.quipLoad && !G.best && G.scoring === 'random' && !ladderGame();
+    var ok = !REMOTE && G.q && !G.q.battle && !G.clue && !G.draw && !G.sing && !G.quipLoad && !G.best && G.scoring === 'random' && !ladderGame();
     if (!ok) { G.qWorth = 0; worthHide(); return; }
     if (G.worthRound === G.round && $('ptspin').innerHTML) return;   // a replacement for a broken video keeps what was spun
     // Behind the curtain starts at twelve and falls from there: the light lands on 12.
@@ -985,7 +989,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       right = [];
     }
-    if (G.fav && G.q && !G.best && !G.draw && !G.q.battle) { favPay(right); right = []; }   // Beat the Favourite: no ordinary points, only what is taken from the favourite
+    if (G.clue && G.clue.st === 'ask' && G.q && !G.best && !G.draw && !G.q.battle) { clueGive(right); right = []; }   // Who Stole the Trophy?: no points, a secret clue for a right answer
     right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs, G.q.blur) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
@@ -1068,7 +1072,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.gallery && G.gallery.vote && drawVote()) return;   // and to finish: which drawing was the best?
     G.gallery = null;
     if (G.battle && battleNext()) return;   // Song Battle: the next battle
-    if (G.fav && favNext()) return;   // Beat the Favourite: the next of its three questions
+    if (G.clue && clueNext()) return;   // Who Stole the Trophy?: the next clue question, or the accusation
     // Party: four quiz questions, then a Sing! or a Draw! round, then four quiz questions again, and so on
     // (Sing! only with a shared screen, and neither without at least two players).
     if (G.atype === 'party' && SHOP_START_ALL && !G.starterGiven) {   // right before the first question: every (human) player gets a bag with one of each item
@@ -1083,7 +1087,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
       var pOn = G.partyOn || {}, two = list().filter(function (p) { return !p.off; }).length >= 2;
-      var games = PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'fav' && x !== 'shop' && x !== 'bomb')); });
+      var games = PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'shop' && x !== 'bomb')); });
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
@@ -1100,7 +1104,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     // A party round is announced first, so nobody is surprised by what is asked of them.
-    var alone = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll };   // (a game of only one of these)
+    var alone = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll };   // (a game of only one of these)
     if (G.atype !== 'party' && alone[md] && !(md === 'sing' && REMOTE)) { funIntro(md, alone[md]); return; }
     if (G.atype === 'party' && !G.botRolled) { G.botRolled = true; botItems(); }   // bots with items may use one: 10% chance, 10% more each question they wait
     if (G.atype === 'party' && G.shopQ && G.shopQ.length) { shopDeliver(startRound2); return; }   // Eurofan Shop items used since the last question land first
@@ -1199,14 +1203,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'fav', 'bomb'];   // (Song Battle was taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, one hides a bomb. Take turns to open one. Blow up and you are out; the last one standing wins!' },
     partytime: { icon: '🎉', title: 'Party round!', sub: '' },
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
-    fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
+    clue: { icon: '🔍', title: 'Who Stole the Trophy?', sub: 'The trophy is gone! Answer trivia right to get secret clues on your phone, then accuse: who did it, where, and with what?' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -1219,10 +1223,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll, shop: shopAll, bomb: bombAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null;   // (the winner goes shopping instead of keeping the points)
-    if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }   // the Green Room: the presenters take us there first
+    if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
+    if (kind === 'clue') { clueAll(); return; }   // (the presenters explain it in the scene)   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
   // A presenter hops on screen to announce it, then the party round is chosen.
@@ -1925,7 +1930,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (c.st === 'sdres') { big.innerHTML = (c.sdLost && c.sdLost.length ? nm(c.sdLost) + ' fell off the stage!' : 'Still level! Next question…'); big.classList.remove('hidden'); }
     else if (c.st === 'ready' && c.msgAt && Date.now() < c.msgAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.msgAt - Date.now() + 20); }   // the monster shows itself first
     else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk falling off the stage.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Ready?') + '</div>' + (c.st === 'ready' ? '<div class="chrbar"><i id="chrbar"></i></div>' : '') + '<div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
-    else if (c.st === 'pre') { big.innerHTML = '👑 A former winner is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'pre') { big.innerHTML = '👑 A Eurovision icon is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
     else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)
     else if (c.st === 'intro') { big.innerHTML = 'You have reached the Grand Final!<small>First, let’s see how many jury votes you received: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
@@ -2219,6 +2224,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       : g.st === 'win' ? '🏆 ' + esc(nm) + ' is the last one standing!' + (shopOn() ? '' : ' +' + g.prize[0] + (g.out.length && players[g.out[g.out.length - 1]] ? ' · ' + esc(players[g.out[g.out.length - 1]].name) + ' +' + g.prize[1] : '')) : '';
   }
   net.on('bomb', bombMsg);
+  net.on('clue', clueMsg);
 
   // ---------- Eurofan Shop ----------
   // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
@@ -2559,36 +2565,157 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   net.on('shop', shopMsg);
 
-  // ---------- Beat the Favourite ----------
-  // The player in the lead is the favourite. Three ordinary questions follow; on each, everyone else who
-  // answers right shares a pot of 12 points taken from the favourite (24 when the favourite gets it wrong).
-  // The favourite scores nothing in this round, and never goes below zero.
-  var FAV_N = 3, FAV_POT = 12;
-  function favAll() {
+  // ---------- Who Stole the Trophy? ----------
+  // A Cluedo-style party game. The trophy is gone: one suspect, in one room, with one weapon. The presenters set
+  // the scene, then come four trivia questions; a right answer gets a secret clue on your phone (the fastest right
+  // answer gets two): a card that is NOT the answer. Then everyone accuses on their phone, and the answer comes out,
+  // part by part. 4 points for each right part, 6 more for all three.
+  var clueTimer = null, clueTick = null;
+  function clueAll() {
     var act = list().filter(function (p) { return !p.off; });
-    if (act.length < 2) { G.fav = null; quipAll(); return; }
-    var top = Math.max.apply(null, act.map(function (p) { return p.score; })), lead = act.filter(function (p) { return p.score === top; });
-    var f = pick(lead);
-    G.fav = { pid: f.pid, n: 0, lost: 0 };
-    if (G.atype === 'party' && G.total < ENDLESS) G.total += FAV_N - 1;
-    FUN.favwho = { icon: '🎯', title: f.name + ' is the favourite', sub: 'Beat ' + f.name + ' to the answer and steal their points!' };
-    funIntro('favwho', function () { favNext(); }, 4500);
+    if (act.length < 2 || REMOTE) { G.clue = null; quipAll(); return; }
+    stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    G.clue = { id: 'clue' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', n: 0, known: {}, fresh: {}, acc: {}, step: 0, res: null,
+      sol: { who: pick(CLUE_WHO).id, where: pick(CLUE_WHERE).id, what: pick(CLUE_WHAT).id } };
+    if (G.atype === 'party' && G.total < ENDLESS) G.total += CLUE_N - 1;
+    G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
+    cover(true, '', '', false); masks(true); hostsAway(); push();
+    clueShow();
+    var ov = $('clueov');
+    var at = function (ms, f) { clueTimer = setTimeout(function () { if (G.clue && G.clue.st === 'intro' && $('clueov')) f(); }, ms); };
+    at(1500, function () { Music.dread(true); clueSay('him', 'Breaking news, Europe… the trophy has been stolen! 😱'); });
+    var t = 1500;
+    [['her', 'Who did it, where, and with what? We need detectives!', 3600],
+     ['him', 'Answer the next four questions right, and you get a secret clue on your phone. The fastest right answer gets two!', 3800],
+     ['her', 'After that, you make your accusation. Good luck, detectives! 🔍', 5200]].forEach(function (l) { t += l[2]; (function (l) { at(t, function () { clueSay(l[0], l[1]); }); })(l); });
+    at(t + 4200, function () { clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
   }
-  function favNext() {
-    var g = G.fav;
-    if (!g || g.n >= FAV_N || !players[g.pid]) { G.fav = null; return false; }
-    G.mode = 'mc'; G.phase = 'loading'; push(); loadSong(); return true;
+  function clueSay(who, txt) {
+    var ov = $('clueov'); if (!ov) return;
+    [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); });
+    var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who);
   }
-  function favPay(right) {
-    var g = G.fav, f = players[g.pid]; g.n++;
-    var fr = right.indexOf(f) >= 0, thieves = right.filter(function (p) { return p !== f; });   // (already in answer order)
-    var take = Math.min(Math.max(0, f ? f.score : 0), fr ? FAV_POT : FAV_POT * 2), share = {};
-    if (thieves.length) for (var i = 0; i < take; i++) { var t = thieves[i % thieves.length]; share[t.pid] = (share[t.pid] || 0) + 1; }
-    var taken = 0;
-    thieves.forEach(function (p) { var n = share[p.pid] || 0; if (n) { p.pts = n; p.score += n; p.got = true; taken += n; } });
-    if (f) { f.pts = -taken; f.score -= taken; f.got = false; g.lost += taken; }
-    var nm = f ? f.name : 'The favourite';
-    if (G.q) G.q.explain = (G.q.explain ? G.q.explain + ' ' : '') + '🎯 ' + (!thieves.length ? nm + ' keeps every point: nobody beat the favourite.' : taken ? (fr ? '' : nm + ' got it wrong: double steal! ') + thieves.filter(function (p) { return share[p.pid]; }).map(function (p) { return p.name; }).join(', ') + ' took ' + taken + ' points from ' + nm + '.' : nm + ' has no points left to steal.');
+  function clueLeave(then) {   // the scene zooms away
+    Music.dread(false);
+    var ov = $('clueov'); if (!ov) { then(); return; }
+    [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); });
+    ov.classList.add('leaving'); whooshes([0, 300]);
+    clueTimer = setTimeout(function () { if (ov.parentNode) ov.remove(); then(); }, 1000);
+  }
+  // The next clue question; after the last one, the accusation. False: this game is over.
+  function clueNext() {
+    var g = G.clue; if (!g) return false;
+    if (g.st === 'ask' && g.n < CLUE_N) {
+      G.mode = 'mc'; G.phase = 'loading'; push(); loadSong();
+      if (G.q) G.q.text = '🔍 Clue ' + (g.n + 1) + ' of ' + CLUE_N + ' · ' + G.q.text;
+      return true;
+    }
+    if (g.st === 'ask') { clueAccuse(); return true; }
+    return false;
+  }
+  function cluePool(pid) {   // the cards this player could still be told about: not the answer, not known yet
+    var g = G.clue, known = g.known[pid] || [], out = [];
+    ['who', 'where', 'what'].forEach(function (k) { CLUE_SETS[k].forEach(function (c) { var key = k + ':' + c.id; if (c.id !== g.sol[k] && known.indexOf(key) < 0) out.push(key); }); });
+    return out;
+  }
+  function clueGive(right) {   // the answer is out: a clue for everyone who got it right (in answer order: the first gets two)
+    var g = G.clue; g.n++; g.fresh = {};
+    right.forEach(function (p, i) {
+      for (var k = 0; k < (i === 0 ? 2 : 1); k++) {
+        var pool = cluePool(p.pid); if (!pool.length) break;
+        var c = pick(pool); (g.known[p.pid] = g.known[p.pid] || []).push(c); (g.fresh[p.pid] = g.fresh[p.pid] || []).push(c);
+      }
+      p.got = true; p.pts = 0;
+    });
+    g.freshKey = g.id + ':' + g.n;
+    var names = right.map(function (p) { return p.name; });
+    if (G.q) G.q.explain = (G.q.explain ? G.q.explain + ' ' : '') + (right.length ? '🔍 A secret clue for ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0]) + (right.length > 1 ? ' (' + names[0] + ' was fastest: two clues)' : ' (two clues for being fastest)') + '. Check your phone!' : '🔍 Nobody got it right: no clues this time.');
+  }
+  function clueAccuse() {
+    var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
+    cover(true, '', '', false); masks(true); hostsAway(); push();
+    clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who stole the trophy, where, and with what?'); }, 1400);
+    setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Make your choice on your phone. Use your clues, detectives!'); }, 5200);
+    // bots: a guess among what their clues leave open
+    bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off) return; setTimeout(function () {
+      if (!G.clue || G.clue.st !== 'acc') return;
+      var kn = g.known[b.pid] || [], m = { pid: b.pid, id: g.id };
+      ['who', 'where', 'what'].forEach(function (k) { var open = CLUE_SETS[k].filter(function (c) { return kn.indexOf(k + ':' + c.id) < 0; }); m[k] = pick(open).id; });
+      clueMsg(m);
+    }, 4000 + Math.random() * 9000); });
+    endTimer = setTimeout(clueReveal, CLUE_ACC_MS);
+    clearInterval(clueTick); clueTick = setInterval(function () { if (!G.clue || G.clue.st !== 'acc') { clearInterval(clueTick); return; } clueShow(); }, 1000);   // (the countdown on the screen)
+  }
+  function clueMsg(m) {
+    var g = G.clue; if (!g || G.phase !== 'clueacc' || g.st !== 'acc' || !m || m.id !== g.id || !players[m.pid] || g.acc[m.pid]) return;
+    var ok = ['who', 'where', 'what'].every(function (k) { return CLUE_SETS[k].some(function (c) { return c.id === m[k]; }); }); if (!ok) return;
+    g.acc[m.pid] = { who: m.who, where: m.where, what: m.what }; Music.plop(Object.keys(g.acc).length); push();
+    if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.acc[p.pid]; })) { clearTimeout(endTimer); endTimer = setTimeout(clueReveal, 1500); }
+  }
+  function clueReveal() {
+    var g = G.clue; if (!g || g.st !== 'acc') return;
+    clearTimeout(endTimer); g.st = 'reveal'; g.step = 0; G.phase = 'cluerev'; push();
+    var who = clueCard('who:' + g.sol.who).c, where = clueCard('where:' + g.sol.where).c, what = clueCard('what:' + g.sol.what).c;
+    var step = function (n) { if (!G.clue || G.clue.st !== 'reveal') return; g.step = n; Music.ding(); push(); };
+    var at = function (ms, f) { setTimeout(function () { if (G.clue && G.clue.st === 'reveal') f(); }, ms); };
+    Music.dread(true);
+    at(800, function () { clueSay('him', 'Who stole the trophy? It was…'); });
+    at(3000, function () { step(1); clueSay('her', who.id === 'felix' ? 'Felix?! You?! 😱' : who.id === 'stella' ? '…me?! I only wanted to hold it for a minute! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, how could you? 👠' : who.name + '! 😱'); });
+    at(5600, function () { clueSay('him', who.id === 'felix' ? 'I only borrowed it! And where did I take it?' : 'And where did it happen?'); });
+    at(7600, function () { step(2); clueSay('her', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'); });
+    at(9800, function () { clueSay('him', 'And with what?'); });
+    at(11600, function () { step(3); clueSay('her', 'With the ' + what.name + '! ' + what.icon); });
+    at(14000, function () {   // the points: 4 for each right part, 6 more for all three
+      var solved = [];
+      g.res = {};
+      list().forEach(function (p) {
+        var a = g.acc[p.pid]; if (!a) { g.res[p.pid] = { n: 0, pts: 0, none: true }; return; }
+        var n = (a.who === g.sol.who) + (a.where === g.sol.where) + (a.what === g.sol.what), pts = n * CLUE_PART + (n === 3 ? CLUE_BONUS : 0);
+        g.res[p.pid] = { n: n, pts: pts, a: a }; if (pts) { p.score += pts; p.pts = pts; p.got = true; } if (n === 3) solved.push(p.name);
+      });
+      step(4); Music.dread(false); Music.douze();
+      clueSay('him', solved.length ? (solved.length > 1 ? solved.slice(0, -1).join(', ') + ' and ' + solved[solved.length - 1] + ' solved' : solved[0] + ' solved') + ' the case! 🔍🏆' : 'Nobody solved the case… the thief almost got away with it! 🏃');
+    });
+    at(20500, function () { clueLeave(function () { G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
+  }
+  function clueSnap() {
+    var g = G.clue, acc = {};
+    Object.keys(g.acc).forEach(function (k) { acc[k] = 1; });
+    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step,
+      sol: g.st === 'reveal' ? { who: g.step >= 1 ? g.sol.who : '', where: g.step >= 2 ? g.sol.where : '', what: g.step >= 3 ? g.sol.what : '' } : null, res: g.step >= 4 ? g.res : null };
+  }
+  // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.
+  function clueShow() {
+    var g = G.clue; if (!g) return;
+    var ov = $('clueov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'clueov'; ov.className = 'grov clueov enter';
+      var row = function (k, label) { return '<div class="clrow" data-k="' + k + '"><span class="cllab">' + label + '</span>' + CLUE_SETS[k].map(function (c) { return '<div class="clcard" data-id="' + c.id + '"><span>' + c.icon + '</span><b>' + esc(c.name) + '</b></div>'; }).join('') + '</div>'; };
+      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="clspot"></div>' +
+        '<div class="grsign clsign">🔍 Who Stole the Trophy?</div>' +
+        '<div class="clped"><div class="cltape">CRIME SCENE · DO NOT CROSS · CRIME SCENE</div><div class="clgone">🏆</div><div class="clbase"></div></div>' +
+        '<div class="clrows">' + row('who', 'Who?') + row('where', 'Where?') + row('what', 'With what?') + '</div>' +
+        '<div class="clmsg"></div><div class="clplayers"></div>' +
+        '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
+      document.body.appendChild(ov); whooshes([0, 350, 700]);
+      setTimeout(function () { ov.classList.remove('enter'); }, 2800);
+    }
+    ov.setAttribute('data-st', g.st);
+    ['who', 'where', 'what'].forEach(function (k, i) {
+      var shown = g.st === 'reveal' && g.step >= i + 1;
+      [].forEach.call(ov.querySelectorAll('.clrow[data-k="' + k + '"] .clcard'), function (el) { var hit = shown && el.getAttribute('data-id') === g.sol[k]; el.classList.toggle('hit', hit); el.classList.toggle('dim', shown && !hit); });
+    });
+    ov.querySelector('.clgone').classList.toggle('back', g.st === 'reveal' && g.step >= 4);
+    var msg = g.st === 'intro' ? 'The trophy has vanished from its pedestal!' : g.st === 'acc' ? 'Accuse on your phone: who, where, and with what? ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'reveal' && g.step >= 4 ? 'Case closed!' : g.st === 'reveal' ? 'The envelope, please…' : '';
+    var me = ov.querySelector('.clmsg'); if (me.textContent !== msg) me.textContent = msg;
+    var act = list().filter(function (p) { return !p.off; });
+    var html = act.map(function (p) {
+      var r = g.res && g.res[p.pid], a = r && r.a;
+      var marks = r ? (r.none ? '<i>no accusation</i>' : ['who', 'where', 'what'].map(function (k) { return '<em class="' + (a[k] === g.sol[k] ? 'ok' : 'no') + '">' + clueCard(k + ':' + a[k]).c.icon + '</em>'; }).join('') + '<strong>' + (r.pts ? '+' + r.pts : '0') + '</strong>') : g.st === 'acc' ? (g.acc[p.pid] ? '<em class="ok">✔</em>' : '<em class="wait">…</em>') : '<em>' + ((g.known[p.pid] || []).length) + ' 🔍</em>';
+      return '<div class="clp' + (r && r.n === 3 ? ' solved' : '') + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>' + marks + '</div>';
+    }).join('');
+    var pl = ov.querySelector('.clplayers'); if (pl.getAttribute('data-h') !== html) { pl.setAttribute('data-h', html); pl.innerHTML = html; }
   }
 
   // ---------- Quip! ----------
@@ -3707,7 +3834,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
