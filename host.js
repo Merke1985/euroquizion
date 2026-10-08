@@ -1746,7 +1746,7 @@
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     if (beginGame() === false) return;
-    G.mgTest = true; G.quizRun = 3;
+    G.mgTest = true; G.quizRun = 3; G.partyOn = G.partyOn || {}; G.partyOn.shop = true; G.shopFirst = false;   // the test starts in the boutique
     if (G.phase === 'intro') introEnd();
   });
   // Test the boutique: straight into the shop (everyone picks one), then a winner's trip (two items), then the party games.
