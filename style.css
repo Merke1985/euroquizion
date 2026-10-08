@@ -1263,3 +1263,19 @@ aside.recapgone{visibility:hidden}
 .smoked .opt:nth-child(2n)::after{animation-delay:-2s}.smoked .optcol:nth-child(2n) .opt::after{animation-delay:-3s}
 @keyframes smokedrift{from{transform:translateX(-12%)}to{transform:translateX(12%)}}
 .smoked .opt b{position:relative;z-index:1}
+
+/* an item lands: a big announcement over everything */
+.shophit{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(6,0,18,.72);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .35s ease}
+.shophit.on{opacity:1}
+.shophit .shcard{display:flex;flex-direction:column;align-items:center;gap:18px;max-width:min(1000px,92vw);text-align:center;transform:scale(.6);transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+.shophit.on .shcard{transform:none}
+.shophit .shicon{font-size:clamp(5rem,14vw,10rem);line-height:1;animation:shbounce 1s ease-in-out infinite alternate;filter:drop-shadow(0 0 30px rgba(255,210,63,.5))}
+.shophit .shtxt{font-size:clamp(1.6rem,3.6vw,3rem);font-weight:900;line-height:1.15;text-shadow:0 4px 18px rgba(0,0,0,.7)}
+.shophit .shdel{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+.shophit .shd{display:flex;align-items:center;gap:10px;padding:8px 18px 8px 8px;border-radius:999px;background:rgba(0,0,0,.45);font-size:1.5rem;opacity:0}
+.shophit.on .shd{animation:shpop .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.6s + var(--i) * .35s)}
+.shophit .shd .char{width:52px;height:52px}
+.shophit .shd em{font-style:normal;font-weight:900;font-size:2.2rem}
+.shophit .shd.neg em{color:#ff4d6d}.shophit .shd.pos em{color:#3dff9a}
+@keyframes shbounce{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-14px) rotate(6deg)}}
+@keyframes shpop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}

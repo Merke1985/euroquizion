@@ -1926,7 +1926,7 @@
       if (it.kind === 'smoke') { if (open) return; inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: it.id, target: p.pid }); Music.blip(); push(); return; }   // the Smoke Machine waits for the next question
       if (open) {   // during a question: it lands right away; the video and the timer stop while it does
         inv.splice(k, 1);
-        shopFreeze(3500, function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopFlash(txt); });
+        shopFreeze(4800, function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopHit(txt, 4600); });
         return;
       }
       inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: m.use, target: t.pid });
@@ -1943,26 +1943,32 @@
   // The used items land: one card on the big screen with everything that happens, then the next question.
   function shopDeliver(then) {
     var q = G.shopQ || []; G.shopQ = [];
-    var lines = q.map(shopApply).filter(Boolean);
-    if (!lines.length) { then(); return; }
-    FUN.shopgo = { icon: '🛍️', title: 'Special delivery!', sub: lines.join('  •  ') };
-    funIntro('shopgo', function () { then(); }, 3000 + lines.length * 1800);
+    var step = function (i) {   // one at a time, each with its own big announcement
+      if (i >= q.length) { then(); return; }
+      var txt = shopApply(q[i]); if (!txt) { step(i + 1); return; }
+      FUN.shopgo = { icon: shopLast.icon, title: 'Special delivery!', sub: txt };
+      funIntro('shopgo', function () { step(i + 1); }, 4800);
+      shopHit(txt, 4600);
+    };
+    step(0);
   }
   // What an item does; returns the line for the big screen.
+  var shopLast = null;   // what the last item did: { icon, deltas: [{ pid, n }] }, for the big announcement
   function shopApply(u) {
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
+    shopLast = { icon: it.icon, deltas: [], sound: it.kind };
     var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit') && t.inv ? t.inv.indexOf('umbrella') : -1;
-    if (ui >= 0) { t.inv.splice(ui, 1); Music.blip(); return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
-    if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); Music.woosh(); return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
-    if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; Music.woosh(); return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
+    if (ui >= 0) { t.inv.splice(ui, 1); shopLast = { icon: '☂️', deltas: [], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
+    if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
+    if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
       var rest = list().filter(function (x) { return !x.off && x !== t; }); if (!rest.length) return '';
       var low = Math.min.apply(null, rest.map(function (x) { return x.score; })), to = pick(rest.filter(function (x) { return x.score === low; }));
-      var nb = Math.min(it.amount, Math.max(0, t.score)); t.score -= nb; to.score += nb; Music.woosh();
+      var nb = Math.min(it.amount, Math.max(0, t.score)); t.score -= nb; to.score += nb; shopLast.deltas = [{ pid: t.pid, n: -nb }, { pid: to.pid, n: nb }];
       return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': ' + nb + ' points blown over to ' + (to === by ? by.name + ' (that’s them!)' : to.name);
     }
-    if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, t.score)); t.score -= n2; by.score += n2; Music.ding(); return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + n2 + ' points stolen'; }
-    if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; if (t.got) { t.score -= t.pts || 0; t.got = false; t.pts = 0; } Music.buzz(); return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
+    if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, t.score)); t.score -= n2; by.score += n2; shopLast.deltas = [{ pid: t.pid, n: -n2 }, { pid: by.pid, n: n2 }]; return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + n2 + ' points stolen'; }
+    if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; if (t.got) { shopLast.deltas = [{ pid: t.pid, n: -(t.pts || 0) }]; t.score -= t.pts || 0; t.got = false; t.pts = 0; } return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
     return '';
   }
   // An item used during a question: everything stops for a moment (video, timer), the item lands, then it goes on.
@@ -1993,6 +1999,24 @@
     ov.innerHTML = '<div class="shopcard card"><h2>🛍️ Eurofan Shop</h2><p class="mute">' + (g.over ? 'The shop is closed! Use your items on your phone whenever you like.' : 'Pick ' + SHOP_PICKS + ' free items on your phone') + '</p>' +
       '<div class="shopitems">' + SHOP_ITEMS.map(function (it) { return '<div class="shopitem"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><small>' + esc(it.desc) + '</small></div>'; }).join('') + '</div>' +
       '<div class="shoppers">' + act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('') + '</div></div>';
+  }
+  // The big announcement of an item: across the whole screen, with the points flying and a sound.
+  var shopHitT = null;
+  function shopHit(txt, ms) {
+    var snd = (shopLast && shopLast.sound) || '';
+    if (snd === 'lose') { Music.woosh(); setTimeout(function () { Music.crumble(); }, 250); }
+    else if (snd === 'blow') { Music.woosh(); setTimeout(function () { Music.woosh(); }, 400); }
+    else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
+    else if (snd === 'sit') Music.buzz();
+    else if (snd === 'block') { Music.blip(); setTimeout(function () { Music.ding(); }, 250); }
+    else Music.woosh();
+    if (REMOTE) return;
+    var ov = $('shophit'); if (!ov) { ov = document.createElement('div'); ov.id = 'shophit'; ov.className = 'shophit'; document.body.appendChild(ov); }
+    var ds = (shopLast && shopLast.deltas || []).filter(function (d) { return d.n && players[d.pid]; });
+    ov.innerHTML = '<div class="shcard"><div class="shicon">' + ((shopLast && shopLast.icon) || '🛍️') + '</div><div class="shtxt">' + esc(txt.replace(/^\S+\s/, '')) + '</div>' +
+      (ds.length ? '<div class="shdel">' + ds.map(function (d, i) { var p = players[d.pid]; return '<span class="shd ' + (d.n < 0 ? 'neg' : 'pos') + '" style="--i:' + i + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em>' + (d.n < 0 ? '−' + (-d.n) : '+' + d.n) + '</em></span>'; }).join('') + '</div>' : '') + '</div>';
+    ov.classList.remove('on'); void ov.offsetWidth; ov.classList.add('on');
+    clearTimeout(shopHitT); shopHitT = setTimeout(function () { ov.classList.remove('on'); }, ms || 4500);
   }
   var shopFlashT = null;
   function shopFlash(t) {   // a banner across the top of the big screen
