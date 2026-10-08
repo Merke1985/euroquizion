@@ -1918,8 +1918,8 @@
       if (G.atype !== 'party' || ['lobby', 'end', 'brief', 'intro', 'chase'].indexOf(G.phase) >= 0) return;
       if (m.key && p.useKey === m.key) return; p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
-      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe')) t = p;   // (no target: it is the user's own smoke)
-      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe')))) return;
+      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief')) t = p;   // (no target: it is the user's own smoke)
+      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield') return;   // (the umbrella works by itself)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
@@ -1974,6 +1974,13 @@
     var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit' || it.kind === 'flag') && t.inv ? t.inv.indexOf('umbrella') : -1;
     if (ui >= 0) { t.inv.splice(ui, 1); shopLast = { icon: '☂️', deltas: [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '☂️ blocked' }], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
     if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
+    if (it.kind === 'thief') {   // a random item from a random player's bag (which one stays a secret)
+      var bags = list().filter(function (x) { return x !== by && !x.off && x.inv && x.inv.length; });
+      if (!bags.length) { shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' sneaked backstage, but every bag was empty!'; }
+      var v = pick(bags), gi = Math.floor(Math.random() * v.inv.length), loot = v.inv.splice(gi, 1)[0]; by.inv = (by.inv || []).concat(loot);
+      shopLast.deltas = [{ pid: by.pid, tag: '+1 item' }, { pid: v.pid, tag: '−1 item' }];
+      return it.icon + ' ' + by.name + ' sneaked backstage and stole an item from ' + v.name + '!';
+    }
     if (it.kind === 'flag') { t.flagged = (t.flagged || 0) + (it.amount || 3); shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see the next ' + (it.amount || 3) + ' questions!'; }
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw a Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)

@@ -374,6 +374,11 @@
           if (net) { net.send('shop', bm); setTimeout(function () { net.send('shop', bm); }, 1200); }
           ptoast('✉️ Your envelope is on its way to the EBU… it pays out right before the Grand Final. Shh!'); bagOpen = false; bagUpdate(state); return;
         }
+        if ((shopItem(id) || {}).kind === 'thief') {   // no one to pick: the victim is random
+          var tm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
+          if (net) { net.send('shop', tm); setTimeout(function () { net.send('shop', tm); }, 1200); }
+          ptoast('🎫 You sneak backstage… watch the big screen!'); bagOpen = false; bagUpdate(state); return;
+        }
         if ((shopItem(id) || {}).kind === 'smoke') {   // no one to pick: it is for the next question
           var msg = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', msg); setTimeout(function () { net.send('shop', msg); }, 1200); }
