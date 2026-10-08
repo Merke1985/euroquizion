@@ -697,7 +697,7 @@ function makeChase(allSongs, countries, used) {
 var SHOP_ITEMS = [
   { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 10 points off another player', kind: 'lose', amount: 10 },
   { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
-  { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Another player sits out a trivia question', kind: 'sit' }
+  { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
 ];
 var SHOP_PICKS = 2;   // free items per visit
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }

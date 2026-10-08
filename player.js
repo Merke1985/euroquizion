@@ -361,18 +361,18 @@
     var p = $('bagpanel');
     if (!bagItem) {
       var seen = {}; p.innerHTML = '<h3>Your items</h3>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
-        var it = shopItem(id) || { icon: '?', name: id, desc: '' };
-        return '<button type="button" class="shopbtn" data-id="' + id + '"><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(it.desc) + '</small></span></button>';
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, wait = it.kind === 'sit' && s.phase !== 'guess';   // the mic only breaks while a question is open
+        return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(wait ? 'Only while a question is open' : it.desc) + '</small></span></button>';
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () { bagItem = b.getAttribute('data-id'); bagUpdate(state); }; });
     } else {
-      var others = s.players.filter(function (x) { return x.pid !== pid && !x.off; });
+      var others = s.players.filter(function (x) { return x.pid !== pid && !x.off && !((shopItem(bagItem) || {}).kind === 'sit' && x.sit); });
       p.innerHTML = '<h3>' + esc(shopName(bagItem)) + ': on who?</h3>' + others.map(function (x) { return '<button type="button" class="shopbtn who" data-pid="' + esc(x.pid) + '">' + charSvg(x.char) + '<span><b>' + esc(x.name) + '</b><small>' + (s.hide ? '' : x.score + ' points') + '</small></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose">Back</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn.who'), function (b) { b.onclick = function () {
         var t = b.getAttribute('data-pid'), msg = { pid: pid, use: bagItem, target: t, key: Math.random().toString(36).slice(2, 9) };
         if (net) { net.send('shop', msg); setTimeout(function () { net.send('shop', msg); }, 1200); }
         var tn = (s.players.filter(function (x) { return x.pid === t; })[0] || {}).name || '';
-        ptoast(shopName(bagItem) + ' is on its way to ' + tn + '! It lands before the next question.');
+        ptoast((shopItem(bagItem) || {}).kind === 'sit' ? '🎤 You broke ' + tn + '’s mic: no points for them this question!' : shopName(bagItem) + ' is on its way to ' + tn + '! It lands before the next question.');
         bagOpen = false; bagItem = null; bagUpdate(state);
       }; });
     }
@@ -860,7 +860,7 @@
 
     if (!state) return;
     if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));
-    var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, (endsAt - Date.now()) / ms)) : 0;
+    var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, ((state.frozen ? state.left : endsAt - Date.now())) / ms)) : 0;   // (frozen while an item lands)
     if (state.phase === 'qall') $('qbar').style.transform = 'scaleX(' + f + ')';
     if (state.gallery && state.phase === 'dall') $('dbar').style.transform = 'scaleX(' + f + ')';
     if (state.phase === 'guess') $('pbar').style.transform = 'scaleX(' + f + ')';

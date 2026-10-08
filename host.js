@@ -111,7 +111,7 @@
 
   function list() { return Object.keys(players).map(function (k) { return players[k]; }).sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name); }); }
   function snapshot() {
-    var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: Math.max(0, G.endsAt - Date.now()),
+    var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '' }; }) };
     if (G.sing) s.sing = singSnapshot();
@@ -588,7 +588,7 @@
     }
     if (worth !== worthShown) { worthShown = worth; $('worth').classList.toggle('hidden', !worth); if (worth) { $('worth').textContent = worth; $('worth').classList.remove('tick'); void $('worth').offsetWidth; $('worth').classList.add('tick'); } }
     var timed = G.phase === 'guess' || G.phase === 'dall' || G.phase === 'qall' || (G.sing && (G.phase === 'svote' || G.phase === 'slisten' || G.phase === 'srec' || G.phase === 'sbest'));
-    $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
+    $('tbar').style.transform = 'scaleX(' + (timed ? Math.max(0, Math.min(1, (G.frozenLeft != null ? G.frozenLeft : G.endsAt - Date.now()) / (G.barMs || G.guessMs))) : 0) + ')';
   }, 100);
 
   // ---------- YouTube ----------
@@ -909,6 +909,7 @@
   function tourOver() { return !!(G.tour && G.tourLast && !(G.gallery && (G.gallery.queue.length || G.gallery.vote))); }
   function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
   function reveal() {
+    if (G.frozenLeft != null && G.phase === 'guess') { G.revealPending = true; return; }   // an item is landing: the answer waits
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
     clearTimeout(picksTimer);
@@ -1021,7 +1022,7 @@
   function startRound() {
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
-    list().forEach(function (p) { p.sitNow = ''; });
+    list().forEach(function (p) { p.sitNow = ''; }); G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
     list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
@@ -1167,7 +1168,7 @@
   var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'battle', 'fav', 'shop'];
   var FUN = {
     bigfive: { icon: '🖐️', title: 'The Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
-    shop: { icon: '🛍️', title: 'Eurofan Shop', sub: 'Pick ' + SHOP_PICKS + ' free items on your phone. Use them whenever you like: blow points away, steal points, or make someone sit out a question.' },
+    shop: { icon: '🛍️', title: 'Eurofan Shop', sub: 'Pick ' + SHOP_PICKS + ' free items on your phone. Use them whenever you like: blow points away, steal points, or break someone’s mic during a question.' },
     fav: { icon: '🎯', title: 'Beat the Favourite', sub: 'The leader is the bookies’ favourite. Three questions: everyone who answers right steals points from the favourite, twice as many when the favourite gets it wrong.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -1910,6 +1911,14 @@
       if (m.key && p.useKey === m.key) return; p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
       if (k < 0 || !t || t === p) return;
+      var it = shopItem(m.use); if (!it) return;
+      var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
+      if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
+      if (open) {   // during a question: it lands right away; the video and the timer stop while it does
+        inv.splice(k, 1);
+        shopFreeze(3500, function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopFlash(txt); });
+        return;
+      }
       inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: m.use, target: t.pid });
       Music.blip(); push();
     }
@@ -1924,16 +1933,38 @@
   // The used items land: one card on the big screen with everything that happens, then the next question.
   function shopDeliver(then) {
     var q = G.shopQ || []; G.shopQ = [];
-    var lines = q.map(function (u) {
-      var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
-      if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': −' + n; }
-      if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, t.score)); t.score -= n2; by.score += n2; return it.icon + ' ' + by.name + ' used a ' + it.name + ' on ' + t.name + ': ' + n2 + ' points stolen'; }
-      if (it.kind === 'sit') { t.sitout = by.name; return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: ' + t.name + ' sits out the next trivia question'; }
-      return '';
-    }).filter(Boolean);
+    var lines = q.map(shopApply).filter(Boolean);
     if (!lines.length) { then(); return; }
     FUN.shopgo = { icon: '🛍️', title: 'Special delivery!', sub: lines.join('  •  ') };
     funIntro('shopgo', function () { then(); }, 3000 + lines.length * 1800);
+  }
+  // What an item does; returns the line for the big screen.
+  function shopApply(u) {
+    var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
+    if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; Music.woosh(); return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': −' + n; }
+    if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, t.score)); t.score -= n2; by.score += n2; Music.ding(); return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + n2 + ' points stolen'; }
+    if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; if (t.got) { t.score -= t.pts || 0; t.got = false; t.pts = 0; } Music.buzz(); return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
+    return '';
+  }
+  // An item used during a question: everything stops for a moment (video, timer), the item lands, then it goes on.
+  var freezeT = null;
+  function shopFreeze(ms, apply) {
+    if (G.phase !== 'guess') { apply(); push(); return; }
+    if (G.frozenLeft == null) {
+      G.frozenLeft = Math.max(0, G.endsAt - Date.now()); clearTimeout(endTimer);
+      if (!REMOTE && !isPair()) { try { yt.pauseVideo(); } catch (e) {} }
+    }
+    apply(); push();
+    clearTimeout(freezeT); freezeT = setTimeout(function () {
+      if (G.frozenLeft == null) return;
+      var left = G.frozenLeft; G.frozenLeft = null;
+      if (G.phase !== 'guess') return;
+      G.endsAt = Date.now() + left;
+      if (!REMOTE && !isPair() && !(G.q && G.q.noclip)) { try { yt.playVideo(); } catch (e) {} }
+      push();
+      if (G.revealPending) { G.revealPending = false; reveal(); return; }
+      endTimer = setTimeout(reveal, left); allIn();
+    }, ms);
   }
   // The big screen during the shopping: the items, and who has picked already.
   function shopShow() {
@@ -1943,6 +1974,13 @@
     ov.innerHTML = '<div class="shopcard card"><h2>🛍️ Eurofan Shop</h2><p class="mute">' + (g.over ? 'The shop is closed! Use your items on your phone whenever you like.' : 'Pick ' + SHOP_PICKS + ' free items on your phone') + '</p>' +
       '<div class="shopitems">' + SHOP_ITEMS.map(function (it) { return '<div class="shopitem"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><small>' + esc(it.desc) + '</small></div>'; }).join('') + '</div>' +
       '<div class="shoppers">' + act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('') + '</div></div>';
+  }
+  var shopFlashT = null;
+  function shopFlash(t) {   // a banner across the top of the big screen
+    if (REMOTE) return;
+    var e = $('shopflash'); if (!e) { e = document.createElement('div'); e.id = 'shopflash'; e.className = 'shopflash'; document.body.appendChild(e); }
+    e.textContent = t; e.classList.remove('on'); void e.offsetWidth; e.classList.add('on');
+    clearTimeout(shopFlashT); shopFlashT = setTimeout(function () { e.classList.remove('on'); }, 3500);
   }
   net.on('shop', shopMsg);
 
