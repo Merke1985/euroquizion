@@ -1364,7 +1364,7 @@
     push();
     chaseTimer = setTimeout(chaseIntroNext, 1500);
   }
-  // The start: one by one, lowest score first, each player is shown big in the middle while their televotes count up
+  // The start: one by one, lowest score first, each player is shown big in the middle while their jury votes count up
   // to their score; then they take their place on the runway. When all are on it, the Diva rises from the smoke.
   var chaseCount = null;
   function chaseIntroNext() {
@@ -1569,9 +1569,9 @@
     $('chmon').classList.toggle('lurk', c.st === 'intro'); $('chmon').classList.toggle('rise', c.st === 'rise');
     var cc = $('chcard'), sp = c.st === 'intro' && c.showing ? players[c.showing] : null;
     cc.classList.toggle('hidden', !sp);
-    if (sp && cc.getAttribute('data-k') !== c.showing) { cc.setAttribute('data-k', c.showing); cc.innerHTML = '<div class="chcard-face">' + charSvg(sp.char) + '</div><b>' + esc(sp.name) + '</b><span>Televotes</span><strong id="chcount">' + (c.count || 0) + '</strong>'; }
+    if (sp && cc.getAttribute('data-k') !== c.showing) { cc.setAttribute('data-k', c.showing); cc.innerHTML = '<div class="chcard-face">' + charSvg(sp.char) + '</div><b>' + esc(sp.name) + '</b><span>Jury votes</span><strong id="chcount">' + (c.count || 0) + '</strong>'; }
     cc.classList.toggle('final', !!(sp && c.counted));
-    if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>The televotes are in: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
+    if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>The jury votes are in: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'rise') { big.innerHTML = '👹 ' + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : 'jumped onto the stage: the trophy is theirs!') + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { big.innerHTML = '💀 Caught!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
