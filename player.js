@@ -404,7 +404,7 @@
     if (sol.what) parts.push('writing with the ' + clueCard('what:' + sol.what).c.name);
     var r = c.res && c.res[pid];
     $('waittitle').textContent = r ? (r.n === 3 ? '🏆 You unmasked Edgar!' : r.none ? 'No guess…' : '👻 ' + r.n + ' of 3 right') : '👻 Who the hell is Edgar…?';
-    $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '');
+    $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '') + (c.gift && c.gift.pid === pid ? ' 🎁 Lynda gave you the ' + shopName(c.gift.item) + '! It’s in your bag.' : '');
   }
 
   // ---------- Eurofan Shop ----------

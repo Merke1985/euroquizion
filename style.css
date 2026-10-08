@@ -1623,3 +1623,9 @@ aside.recapgone{visibility:hidden}
 .clueov[data-st="reveal"] .clq{opacity:0;transition:opacity .5s}
 .clueov .clcard.hit{box-shadow:0 0 0 4px #9dffcf,0 0 30px rgba(140,255,200,.8)}
 @keyframes edgarfloat{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-2.4vh) rotate(4deg)}}
+
+/* Lynda pops in with a gift when nobody unmasked Edgar */
+.clueov .clynda{position:absolute;left:20vw;bottom:13vh;height:42vh;z-index:7;animation:inUp .8s cubic-bezier(.2,.9,.3,1.08) both}
+.clueov.withlynda .clrows{opacity:.18;transition:opacity .6s}
+.clueov .clynda .keeper{height:100%;width:auto;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3s ease-in-out infinite alternate}
+.clueov .clynda .grbub.lynda{position:absolute;top:2vh;left:100%;width:34vw;max-width:34vw;margin-left:1vw;border-bottom-left-radius:4px;transform-origin:0 100%;font-size:clamp(1rem,1.7vw,1.4rem)}

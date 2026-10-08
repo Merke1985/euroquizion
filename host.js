@@ -2676,15 +2676,29 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         g.res[p.pid] = { n: n, pts: pts, a: a }; if (pts) { p.score += pts; p.pts = pts; p.got = true; } if (n === 3) solved.push(p.name);
       });
       step(4); Music.dread(false); Music.douze();
+      // Nobody unmasked him: Lynda pops in with a little gift from her boutique for whoever is last
+      if (!solved.length && shopOn()) {
+        var act = list().filter(function (p) { return !p.off; }), low = Math.min.apply(null, act.map(function (p) { return p.score; }));
+        var lp = pick(act.filter(function (p) { return p.score === low; }));
+        if (lp) g.gift = { pid: lp.pid, item: pick(SHOP_ITEMS).id };
+      }
       clueSay('him', solved.length ? (solved.length > 1 ? solved.slice(0, -1).join(', ') + ' and ' + solved[solved.length - 1] + ' unmasked' : solved[0] + ' unmasked') + ' Edgar! 👻🔍' : 'Nobody unmasked Edgar… he’ll be back to write next year’s songs! 👻');
     });
-    at(20500, function () { clueLeave(function () { G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
+    at(17600, function () {   // Lynda and her gift
+      if (!g.gift || !players[g.gift.pid]) return;
+      var gp = players[g.gift.pid], it = shopItem(g.gift.item); gp.inv = (gp.inv || []).concat(g.gift.item); g.step = 5;
+      var ov = $('clueov'); if (ov && !ov.querySelector('.clynda')) { var ly = document.createElement('div'); ly.className = 'clynda'; ly.innerHTML = SHOPKEEPER + '<div class="grbub lynda"></div>'; ov.appendChild(ly); ov.classList.add('withlynda'); }
+      whooshes([0]); Music.blip(); push();
+      setTimeout(function () { var b = $('clueov') && $('clueov').querySelector('.grbub.lynda'); if (!b) return; [].forEach.call($('clueov').querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); b.classList.add('on'); typeSay(b, 'Nobody unmasked him? Never mind, darling! A little gift from my boutique for ' + gp.name + ': the ' + it.name + '! ' + it.icon, 'lynda'); }, 900);
+    });
+    at(20500, function () { if (g.gift) return; clueLeave(function () { G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
+    at(25500, function () { if (!g.gift) return; clueLeave(function () { G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
   }
   function clueSnap() {
     var g = G.clue, acc = {};
     Object.keys(g.acc).forEach(function (k) { acc[k] = 1; });
     return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step,
-      sol: g.st === 'reveal' ? { who: g.step >= 1 ? g.sol.who : '', where: g.step >= 2 ? g.sol.where : '', what: g.step >= 3 ? g.sol.what : '' } : null, res: g.step >= 4 ? g.res : null };
+      sol: g.st === 'reveal' ? { who: g.step >= 1 ? g.sol.who : '', where: g.step >= 2 ? g.sol.where : '', what: g.step >= 3 ? g.sol.what : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
   }
   // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.
   function clueShow() {
@@ -2708,7 +2722,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       [].forEach.call(ov.querySelectorAll('.clrow[data-k="' + k + '"] .clcard'), function (el) { var hit = shown && el.getAttribute('data-id') === g.sol[k]; el.classList.toggle('hit', hit); el.classList.toggle('dim', shown && !hit); });
     });
     ov.querySelector('.clgone').classList.toggle('back', g.st === 'reveal' && g.step >= 4);
-    var msg = g.st === 'intro' ? 'Someone is ghost-writing the songs…' : g.st === 'acc' ? 'Unmask Edgar on your phone: who, where, and with what? ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'reveal' && g.step >= 4 ? 'Edgar has been unmasked!' : g.st === 'reveal' ? 'Who the hell is Edgar…?' : '';
+    var msg = g.st === 'intro' ? 'Someone is ghost-writing the songs…' : g.st === 'acc' ? 'Unmask Edgar on your phone: who, where, and with what? ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar has been unmasked!' : 'Edgar got away… 👻') : g.st === 'reveal' ? 'Who the hell is Edgar…?' : '';
     var me = ov.querySelector('.clmsg'); if (me.textContent !== msg) me.textContent = msg;
     var act = list().filter(function (p) { return !p.off; });
     var html = act.map(function (p) {
