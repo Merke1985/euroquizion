@@ -1012,12 +1012,15 @@
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
-      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 6000); return; }
+      if (G.tour && G.tourLast && !G.tourFinal && !G.tourEnd && G.finalMode !== 'double') { G.tourEnd = true; G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('quiz', startRound2, 4200); return; }   // the tour ends on three ordinary questions
+      if (G.tour && G.tourLast && !G.tourFinal && G.finalMode === 'double') { G.tourFinal = true; G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 6000); return; }
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
+    // Final "Double points": the last three questions count double and the scores are hidden until the end
+    if (G.finalMode === 'double' && !G.tour && !G.tourFinal && G.total < ENDLESS && G.total >= 5 && G.round === G.total - 2 && roundMode() === 'mc') { G.tourFinal = true; funIntro('final', startRound2, 6000); return; }
     var md = roundMode();
     if (!REMOTE && (md === 'sing' || md === 'draw')) { try { yt.pauseVideo(); } catch (e) {} }   // the previous song stops while the next one is chosen
     // A party round is announced first, so nobody is surprised by what is asked of them.
@@ -1344,7 +1347,7 @@
       a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () { if (fallback) fallback(); });
     } catch (e) { if (fallback) fallback(); }
   }
-  function chaseWanted() { return !REMOTE && $('s-chase').value === '1' && !(G.chase && G.chase.done) && list().length > 0; }
+  function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
   function chaseStart(test, face) {
     autoStop(); stopTimers(); clearTimeout(chaseTimer); try { yt.pauseVideo(); } catch (e) {} yt2.pause(); cover(true, '', '', false);
     var ps = list().filter(function (p) { return !p.off; }); if (!ps.length) ps = list();
@@ -1976,7 +1979,7 @@
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip';
     var rows = [['Songs', G.tour ? 'Until every minigame is played' : G.total >= ENDLESS ? 'Until someone reaches the top' : G.parts > 1 ? G.parts + ' rounds of ' + G.per : G.total], ['Video length', optText('s-time')], ['Era', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
-    if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', optText('s-scoring')]);
+    if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', G.finalMode === 'ladder' ? 'Ladder' : optText('s-scoring')], ['Final', optText('s-final')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : G.atype === 'quip' ? QUIP_HELP : sing ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
   }
@@ -2683,12 +2686,13 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
-    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); $('scoringbox').classList.toggle('hidden', party); $('scoringpad').classList.toggle('hidden', party); $('s-partypick').disabled = !party;   // (scoring is a Quiz setting: a Party game scores the standard way)   // the party settings only show for a Party game
+    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); $('scoringbox').classList.toggle('hidden', party);
+    var fl = $('s-final').querySelector('option[value="ladder"]'); if (fl) fl.disabled = party; if (party && $('s-final').value === 'ladder') $('s-final').value = 'chase';   // the Ladder is a Quiz game $('s-partypick').disabled = !party;   // (scoring is a Quiz setting: a Party game scores the standard way)   // the party settings only show for a Party game
     if (lo) lo.disabled = party;
     
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
     var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
-    var lad = !on && !party && $('s-scoring').value === 'ladder';   // Ladder: no song count and no hidden scores
+    var lad = !on && !party && $('s-final').value === 'ladder'; $('s-scoring').disabled = on || lad;   // Ladder: no song count and no hidden scores
     var tour = party && $('s-partypick').value === 'order';   // Grand tour sets its own length: every minigame once
     $('s-rounds').disabled = lad || tour; $('s-show').disabled = lad;
     // Rounds and the spin for the years belong to a plain quiz
@@ -2707,9 +2711,12 @@
   }
   $('s-cat').addEventListener('change', winnersLock); winnersLock();
   $('s-atype').addEventListener('change', singToggle); $('s-scoring').addEventListener('change', singToggle);
+  try { var fm = localStorage.getItem('esc-final'); if (fm && $('s-final').querySelector('option[value="' + fm + '"]')) $('s-final').value = fm; } catch (e) {}
+  if (!$('s-scoring').value) $('s-scoring').value = 'correct';   // (a Ladder chosen before it moved to Final)
+  $('s-final').addEventListener('change', function () { try { localStorage.setItem('esc-final', $('s-final').value); } catch (e) {} singToggle(); });
   function scoreHelp() {
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
-    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : (HOST_SCORING_HELP[$('s-scoring').value] || '')) + show;
+    $('scorehelp').textContent = ($('s-atype').value === 'robin' ? 'Through the Years: a quiz in rounds. Before each round a spin picks the era for its songs, and an era that has been played is out. ' : '') + ($('s-atype').value === 'party' ? PARTY_HELP : $('s-atype').value === 'draw' ? DRAW_HELP : $('s-atype').value === 'quip' ? QUIP_HELP : $('s-atype').value === 'sing' ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : ($('s-final').value === 'ladder' ? SCORING_HELP.ladder : HOST_SCORING_HELP[$('s-scoring').value] || '')) + ' ' + (FINAL_HELP[$('s-final').value] || '') + show;
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
   // ---------- eras: several can be switched on (none or all of them: every year) ----------
@@ -2799,7 +2806,7 @@
   function ytReadyOrRemote() { return REMOTE || ytReady; }
   function beginGame() {
     if (G.phase !== 'lobby') return false;
-    G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : $('s-scoring').value; G.showScore = $('s-show').value;
+    G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.finalMode = $('s-final').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : G.finalMode === 'ladder' ? 'ladder' : $('s-scoring').value || 'correct'; G.showScore = $('s-show').value;
     if (!ytReadyOrRemote() || !buildPool()) return false;
     // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
     // round gets its own decade, picked by a spin; a decade that has been played is out of the draw.
@@ -2812,7 +2819,7 @@
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
-    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;

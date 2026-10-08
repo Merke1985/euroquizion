@@ -417,6 +417,12 @@ var HOST_SCORING_HELP = {
   speed: 'Speedy: the first player with the right answer scores 12 points, the second 10, the third 8, then 7, 6, 5, 4, 3, 2 and 1.',
   ladder: ''
 };
+var FINAL_HELP = {
+  chase: 'Final: the Final Chase, a race to the stage with a monster behind you.',
+  double: 'Final: the last three questions count double, and the scores stay hidden until the end.',
+  ladder: '',
+  standard: 'Final: straight to the final scores.'
+};
 var SCORING_HELP = {
   correct: 'Standard: every right answer scores a flat 12 points.',
   random: 'Random: before each question a light climbs the Eurovision points and stops on what a right answer is worth this time, from 1 to 12.',

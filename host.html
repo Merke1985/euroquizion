@@ -48,6 +48,24 @@
       <div class="settings">
         <div><label for="s-atype">Game type</label><select id="s-atype">
           <option value="mc" selected>Quiz</option><option value="party">Party</option></select></div>
+        <div id="scoringbox"><label for="s-scoring">Scoring</label><select id="s-scoring">
+          <option value="correct" selected>Standard</option><option value="random">Random</option><option value="speed">Speedy</option></select></div>
+        <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="order" selected>Grand tour</option><option value="spin">Random</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
+        <div id="finalbox"><label for="s-final">Final</label><select id="s-final"><option value="chase" selected>Final Chase</option><option value="double">Double points, scores hidden</option><option value="ladder">Ladder</option><option value="standard">Standard</option></select></div>
+        <div class="hidden"><label for="s-era">Era</label><select id="s-era">
+          <option value="1956-2100" selected>All eras</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
+        <div class="multi" id="erabox" data-noneall="1"><label id="eralabel">Era</label>
+          <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="eralabel erasum"><span id="erasum">All eras</span></button>
+          <div class="multipanel hidden">
+            <label class="swrow"><span><b>1956 – 1979</b><small>The early years</small></span><input type="checkbox" data-era="1956-1979" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>1980 – 1999</b><small>The eighties and nineties</small></span><input type="checkbox" data-era="1980-1999" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>2000 – 2012</b><small>Televoting and the first semi-finals</small></span><input type="checkbox" data-era="2000-2012" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>2013 – now</b><small>The modern contest</small></span><input type="checkbox" data-era="2013-2100" checked><i class="sw" aria-hidden="true"></i></label>
+          </div></div>
+        <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+        <div><label for="s-rounds">Songs per round</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+        <details class="adv" style="grid-column:1/-1"><summary>Advanced settings</summary>
+        <div class="settings" style="margin-top:12px">
         <div class="multi" id="typebox" data-noneall="1"><label id="typelabel">Trivia</label>
           <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="typelabel typesum"><span id="typesum">All</span></button>
           <div class="multipanel hidden">
@@ -62,10 +80,6 @@
             <label class="swrow"><span><b>Whose flag?</b><small>A flag on the screen: which song did that country send?</small></span><input type="checkbox" data-type="flag" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Host city</b><small>A dot on the map: which city held the contest there?</small></span><input type="checkbox" data-type="host" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
-        <div id="scoringbox"><label for="s-scoring">Scoring</label><select id="s-scoring">
-          <option value="correct" selected>Standard</option><option value="random">Random</option><option value="speed">Speedy</option><option value="ladder">Ladder</option></select></div>
-        <div id="scoringpad" aria-hidden="true"></div>
-        <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="order" selected>Grand tour</option><option value="spin">Random</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
         <div class="multi" id="partybox"><label id="partylabel">Party minigames</label>
           <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="partylabel partysum"><span id="partysum">All</span></button>
           <div class="multipanel hidden">
@@ -76,16 +90,6 @@
             <label class="swrow"><span><b>Song Battle</b><small>Four songs knock each other out; bet on the winner and vote</small></span><input type="checkbox" data-party="battle" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Beat the Favourite</b><small>The leader is the favourite: answer right to steal their points</small></span><input type="checkbox" data-party="fav" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
-        <div class="hidden"><label for="s-era">Era</label><select id="s-era">
-          <option value="1956-2100" selected>All eras</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
-        <div class="multi" id="erabox" data-noneall="1"><label id="eralabel">Era</label>
-          <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="eralabel erasum"><span id="erasum">All eras</span></button>
-          <div class="multipanel hidden">
-            <label class="swrow"><span><b>1956 – 1979</b><small>The early years</small></span><input type="checkbox" data-era="1956-1979" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>1980 – 1999</b><small>The eighties and nineties</small></span><input type="checkbox" data-era="1980-1999" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>2000 – 2012</b><small>Televoting and the first semi-finals</small></span><input type="checkbox" data-era="2000-2012" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>2013 – now</b><small>The modern contest</small></span><input type="checkbox" data-era="2013-2100" checked><i class="sw" aria-hidden="true"></i></label>
-          </div></div>
         <div class="hidden"><label for="s-cat">Entries</label><select id="s-cat">
           <option value="all" selected>All entries</option><option value="nq">Non-qualifiers</option><option value="final">Finalists</option><option value="win">Winners</option></select></div>
         <div class="multi" id="catbox" data-noneall="1"><label id="catlabel">Entries</label>
@@ -95,17 +99,13 @@
             <label class="swrow"><span><b>Finalists</b><small>In the final, but did not win</small></span><input type="checkbox" data-cat="fin" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Non-qualifiers</b><small>Out in a semi-final (from 2004)</small></span><input type="checkbox" data-cat="nq" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
-        <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-        <div><label for="s-rounds">Songs per round</label><select id="s-rounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
-        <details class="adv" style="grid-column:1/-1"><summary>Advanced settings</summary>
-        <div class="settings" style="margin-top:12px">
+
         <div class="hidden"><label for="s-subject">Category</label><select id="s-subject">
           <option value="random" selected>All</option><option value="facts">Song facts</option><option value="odd">Odd one out</option><option value="mistake">Find the mistake</option><option value="higher">Higher or lower</option><option value="newer">Which is newer</option><option value="lost">Language barrier</option></select></div>
         <div><label for="s-time">Video length</label><select id="s-time"><option value="5">5 sec</option><option value="10">10 sec</option><option value="20" selected>20 sec</option><option value="30">30 sec</option></select></div>
         <div><label for="s-show">Show score</label><select id="s-show">
           <option value="always" selected>Always</option><option value="end">At the end of the round</option></select></div>
         <div><label for="s-skip">Leave out</label><select id="s-skip"><option value="" selected>Nothing</option><option value="il">Israel</option><option value="ru">Russia</option><option value="il,ru">Israel and Russia</option></select></div>
-        <div><label for="s-chase">Final Chase</label><select id="s-chase"><option value="1" selected>On: the game ends with a chase</option><option value="0">Off: straight to the scores</option></select></div>
         <div><label for="s-auto">Autoplay next song</label><select id="s-auto"><option value="1" selected>On</option><option value="0">Off</option></select></div>
         <div><label for="s-autolen">Next song after</label><select id="s-autolen"><option value="10">10 sec</option><option value="20" selected>20 sec</option><option value="30">30 sec</option><option value="end">Complete song</option></select></div>
         </div></details>
