@@ -490,7 +490,8 @@
       if (cu) cu.fresh = false;
       G.noteJust = null; G.plopped = null; return;
     }
-    if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party round: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
+    if (G.phase === 'fun' && G.fun && G.fun.quiet) { $('qtext').textContent = ''; $('qopts').innerHTML = ''; }   // (an announcement by the presenters: the screen says it all)
+    else if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party round: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
       var pt = G.part, head = G.atype === 'party' ? 'Next trivia' : pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
       $('qtext').textContent = pt.eras ? (pt.done ? head + ': ' + pt.label : head + ': which era will it be?') : head;
@@ -2174,14 +2175,14 @@
   // The presenters welcome Europe back, a card appears on the screen between them, they announce what comes, then it starts.
   function studioIntro(icon, title, sub, line, then, kind) {
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
-    G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true }; G.phase = 'fun'; G.barMs = 0;
+    G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
     var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
     if (!on) at(200, function () { hostSay('him', 'Welcome back, Europe! 🇪🇺', 4000); });
     at(2400 + d, function () { G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
     at(3700 + d, function () { hostSay('her', line, 3400); });
-    at(7200 + d, function () { $('cover').classList.remove('introcard'); hostHold = false; then(); });
+    at(7200 + d, function () { hostHold = false; then(); });
     setTimeout(function () { hostHold = false; }, 7600 + d);
   }
   function shopIntro() {
@@ -2189,7 +2190,7 @@
     G.mode = G.lastParty = 'shop'; G.best = null; G.q = null; G.afterParty = true; G.mgBase = null;
     studioIntro('🛍️', 'The Green Room Boutique', FUN.shop.sub, 'It’s time to visit the Green Room Boutique!', function () {
       var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
-      setTimeout(function () { shopVisit(null, 1, function () { v.classList.remove('leaving'); viewEnter('v-game'); startRound(); }); }, 1400);
+      setTimeout(function () { shopVisit(null, 1, function () { startRound(); }); }, 1400);
     }, 'shop');
   }
   // To the boutique: a presenter sends us there, the studio slides away (presenters first), and the shop slides in.
@@ -2199,7 +2200,7 @@
     hostSay('him', 'Let’s go to our beloved shopkeeper!', 2600); Music.ding();
     setTimeout(function () {
       var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
-      setTimeout(function () { shopVisit(who, n, function () { v.classList.remove('leaving'); viewEnter('v-game'); then(); }); }, 1400);
+      setTimeout(function () { shopVisit(who, n, then); }, 1400);
     }, 2200);
   }   // the first visit: everyone, one item each
   // A visit to the boutique: who (null: everyone), how many items each, and what comes after.
@@ -2255,7 +2256,13 @@
     shopTimer = setTimeout(function () {   // the boutique slides away, then the show goes on
       if (G.phase !== 'shop') return;
       var ov = $('shopov'); if (ov) { ov.classList.remove('enter'); ov.classList.add('leaving'); } whooshes([0, 250, 500]);
-      shopTimer = setTimeout(function () { if (G.phase === 'shop') { var then = g.then; G.shop = null; (then || startRound)(); } }, 1300);
+      shopTimer = setTimeout(function () {
+        if (G.phase !== 'shop') return;
+        var then = g.then || startRound, v = $('v-game'); G.shop = null;
+        $('cover').classList.remove('introcard');
+        if (v.classList.contains('leaving')) { v.classList.remove('leaving'); G.phase = 'loading'; cover(true, '', '', false); push(); viewEnter('v-game'); setTimeout(then, 2100); }   // the studio slides back in first
+        else then();
+      }, 1300);
     }, 3800);
   }
   // The used items land: one card on the big screen with everything that happens, then the next question.

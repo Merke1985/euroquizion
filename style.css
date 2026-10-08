@@ -1491,3 +1491,12 @@ aside.recapgone{visibility:hidden}
 .boutique .bqbunting{top:15.6vh}
 .boutique .bqbunting::before{top:0;height:3px;background:rgba(255,255,255,.5)}
 .boutique .bqpen{margin-top:3px}
+
+/* presenters who are off stage stay off while the studio slides in */
+.game.enter .shosts.away .ehost{animation:none}
+/* the rest of the boutique slides in too */
+.boutique.enter .bqdisco,.boutique.enter .bqsale{animation:inTop .8s .2s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqhats,.boutique.enter .bqfans,.boutique.enter .bqfloor{animation:inRight .8s .6s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqrack{animation:inBottom .8s .75s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.enter .bqwall{animation:fadein .6s both}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
