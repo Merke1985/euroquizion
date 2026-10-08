@@ -1264,7 +1264,7 @@
     if (G.atype === 'party' && G.total < ENDLESS) G.total += 2;   // three battles in the place of one song
     stopTimers(); G.draw = null; G.song = null; G.clip = null; G.quipLoad = false; G.quips = null;
     G.best = { pick: true, bpick: true, pids: four.map(function () { return null; }), id: 'bet' + G.round, tally: null, wins: null };
-    G.q = { subject: 'battle', type: 'mc', text: 'Place your bets: which of these four will win the Song Battle?', hint: '', options: four.map(function (s) { return battleLab(s) + ' · ' + flag(s[1]) + ' ' + s[0]; }), correct: -1, answer: '', noclip: true };
+    G.q = { subject: 'battle', type: 'mc', text: 'Place your bets: which of these four will win the Song Battle?', hint: '', options: four.map(function (s) { return battleLab(s) + ' · ' + s[0]; }), correct: -1, answer: '', noclip: true };
     cover(true, '⚔️', 'Song Battle', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo');
     G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = BET_MS; G.endsAt = Date.now() + BET_MS; push();
     endTimer = setTimeout(reveal, BET_MS);
@@ -1297,7 +1297,7 @@
     list().forEach(function (p) { if (p.pick === 0 || p.pick === 1) n[p.pick]++; });
     var tie = n[0] === n[1], w = tie ? (Math.random() < 0.5 ? 0 : 1) : n[0] > n[1] ? 0 : 1, win = q.pair[w];
     q.correct = w; q.answer = q.options[w]; G.song = win; b.wins[b.step] = q.ix[w]; q.votes = n;
-    q.reveal = q.pair.map(function (s, i) { return battleLab(s) + ' · ' + flag(s[1]) + ' ' + s[0] + ' · ' + n[i] + (n[i] === 1 ? ' vote' : ' votes'); });
+    q.reveal = q.pair.map(function (s, i) { return battleLab(s) + ' · ' + s[0] + ' · ' + n[i] + (n[i] === 1 ? ' vote' : ' votes'); });
     q.explain = (b.step === 2 ? '🏆 The winner of the Song Battle: ' : 'Through to the final: ') + battleLab(win) + (tie ? ' (a tie, decided by the toss of a coin).' : '.');
   }
   // After the final: twelve points for everyone who bet on the winner.

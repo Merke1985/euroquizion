@@ -624,7 +624,7 @@ function makeChase(allSongs, countries, used) {
     function () {   // in the final (a semi-final from 2004)
       var y = pick(Object.keys(years).filter(function (y) { return +y >= 2004 && years[y].some(function (s) { return s[5] === 1; }); }));
       if (!y) return null;
-      return { text: 'Which of these were in the ' + y + ' final?', yes: function (s) { return s[5] !== 1; }, pool: years[y], label: function (s) { return lab(s) + ' ' + flag(s[1]); } };
+      return { text: 'Which of these were in the ' + y + ' final?', yes: function (s) { return s[5] !== 1; }, pool: years[y], label: lab };
     },
     function () {   // from this year
       var y = +pick(Object.keys(years)), near = S.filter(function (s) { return Math.abs(s[0] - y) <= 3; });
