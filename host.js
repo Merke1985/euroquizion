@@ -1483,7 +1483,7 @@
     var c = G.chase; if (!c || c.st !== 'ask') return;
     c.st = 'show';
     chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = !l.touched ? 0 : c.q.items.reduce(function (n, it, i) { return n + ((((l.mask >> i) & 1) === 1) === it.ok ? 1 : 0); }, 0); });
-    Music.ding(); push();
+    Music.soft(); push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseMove, 3600);
   }
   function chaseMove() {

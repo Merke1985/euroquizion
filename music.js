@@ -290,6 +290,18 @@ var Music = (function () {
       z.connect(zg); zg.connect(fxOut()); z.start(t + 0.05); z.stop(t + 0.34);
     } catch (e) {}
   }
+  function soft() {   // a gentle two-note chime, for the answer in the chase
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      [[587, 0], [880, 0.09]].forEach(function (n) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = n[0];
+        g.gain.setValueAtTime(0.0001, t + n[1]); g.gain.exponentialRampToValueAtTime(0.05, t + n[1] + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + 0.5);
+        o.connect(g); g.connect(fxOut()); o.start(t + n[1]); o.stop(t + n[1] + 0.55);
+      });
+    } catch (e) {}
+  }
   function stepSnd() { if (!ac()) return; try { var t = ctx.currentTime + 0.01; thump(t, 160, 0.18); } catch (e) {} }
   function setVol(k, v) {
     vol[k] = Math.max(0, Math.min(1, v));
@@ -297,5 +309,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();
