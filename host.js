@@ -1324,7 +1324,7 @@
   chaseTimer = null, chaseBuilt = '';
   // The monster of the chase, and her song, which loops in the background (from YouTube, like every other song in
   // the game). More monsters can be added here; one is picked at random for each chase.
-  var CHASE_MONSTERS = [{ id: 'diva', name: 'The Diva', her: 'her', song: 'Vul5zgC5Yvg' }, { id: 'goblin', name: 'The Neon Goblin', her: 'him', song: 'rNrgQm5z07U' }], chaseLoop = null;
+  var CHASE_MONSTERS = [{ id: 'diva', name: 'The Diva', her: 'her', song: 'Vul5zgC5Yvg' }, { id: 'goblin', name: 'The Neon Goblin', her: 'him', song: 'rNrgQm5z07U' }, { id: 'phoenix', name: 'The Phoenix Queen', her: 'her', song: 'QRUIava4WRM' }], chaseLoop = null;
   function mName() { return G.chase && G.chase.monster ? G.chase.monster.name : 'The Diva'; }
   function chaseMusic(on) {
     clearInterval(chaseLoop); chaseLoop = null;
@@ -1494,7 +1494,7 @@
     if (!on) { w.removeAttribute('data-k'); return; }
     if (w.getAttribute('data-k') === c.key) return;
     w.setAttribute('data-k', c.key);
-    var n = CHASE_MONSTERS.length, cols = { diva: '#7a1140', goblin: '#1f6b12' }, stops = [];
+    var n = CHASE_MONSTERS.length, cols = { diva: '#7a1140', goblin: '#1f6b12', phoenix: '#a8540a' }, stops = [];
     CHASE_MONSTERS.forEach(function (m, i) { stops.push((cols[m.id] || '#333') + ' ' + (i * 360 / n) + 'deg ' + ((i + 1) * 360 / n) + 'deg'); });
     var art = function (id) { var s = $('chmon').querySelector('svg.' + id); return s ? s.outerHTML.replace(/id="([a-z]+)"/g, 'id="w$1"').replace(/url\(#([a-z]+)\)/g, 'url(#w$1)') : ''; };
     w.innerHTML = '<div class="whl" style="background:conic-gradient(' + stops.join(',') + ')">' + CHASE_MONSTERS.map(function (m, i) {

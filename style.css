@@ -1041,7 +1041,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chtok.vanish{opacity:0!important;transition:opacity .8s}
 .chtok.won{transition:left 1.6s ease-in-out,top 1.6s ease-in-out}
 .chbob .goblin{width:100%;height:auto;display:block}
-.chmon[data-mon="diva"] .goblin,.chmon[data-mon="goblin"] .diva,.chmon:not([data-mon]) .goblin{display:none}
+.chbob .phoenix{width:100%;height:auto;display:block}
+.chmon[data-mon="diva"] .goblin,.chmon[data-mon="diva"] .phoenix,.chmon[data-mon="goblin"] .diva,.chmon[data-mon="goblin"] .phoenix,.chmon[data-mon="phoenix"] .diva,.chmon[data-mon="phoenix"] .goblin,.chmon:not([data-mon]) .goblin,.chmon:not([data-mon]) .phoenix{display:none}
 .chmon[data-mon="goblin"] .chmonname{color:#7dff4f}
 .chmon[data-mon="goblin"] .chsmoke i{background:radial-gradient(circle,rgba(40,90,40,.85),rgba(20,60,20,.5) 45%,rgba(10,30,10,0) 70%)}
 .chtok .ch-face{position:relative}
@@ -1057,3 +1058,7 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .wharrow::before{content:'';position:absolute;left:-9px;top:-46%;width:18px;height:0;border-left:9px solid transparent;border-right:9px solid transparent}
 .wharrow::after{content:'';position:absolute;left:-7px;bottom:0;width:14px;height:calc(min(56vh,440px) * .42);background:linear-gradient(#fff,#ffd23f);border-radius:7px 7px 3px 3px;clip-path:polygon(50% 0,100% 18%,70% 18%,70% 100%,30% 100%,30% 18%,0 18%);box-shadow:0 0 12px rgba(0,0,0,.6)}
 .whhub{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#ffd23f 55%,#b8860b);box-shadow:0 0 12px rgba(0,0,0,.7)}
+.chmon[data-mon="phoenix"] .chmonname{color:#ffb347}
+.chmon[data-mon="phoenix"] .chsmoke i{background:radial-gradient(circle,rgba(120,60,20,.8),rgba(80,40,10,.5) 45%,rgba(40,20,5,0) 70%)}
+.chmon .phflames{animation:phflame .5s ease-in-out infinite alternate;transform-origin:140px 60px}
+@keyframes phflame{from{transform:scaleY(.9)}to{transform:scaleY(1.12)}}

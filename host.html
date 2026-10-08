@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=328">
+<link rel="stylesheet" href="style.css?v=329">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -236,6 +236,38 @@
             <path d="M138 98 L134 112 L144 112 Z" fill="#7d8f4a"/>
             <ellipse class="dvmouth" cx="140" cy="126" rx="18" ry="11" fill="#2a0a0a"/>
             <path d="M124 120 L128 128 L132 120 L136 128 L140 120 L144 128 L148 120 L152 128 L156 120" stroke="#f4f4e0" stroke-width="2.2" fill="none"/>
+          </svg>
+          <svg class="phoenix" viewBox="0 0 340 340" aria-hidden="true">
+            <defs><radialGradient id="phglow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ff8a1f" stop-opacity=".55"/><stop offset="1" stop-color="#ff8a1f" stop-opacity="0"/></radialGradient>
+            <linearGradient id="phgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".4" stop-color="#e8c66a"/><stop offset=".7" stop-color="#f7e19a"/><stop offset="1" stop-color="#b8892c"/></linearGradient>
+            <radialGradient id="phface" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffe7b0"/><stop offset="1" stop-color="#c98a3c"/></radialGradient>
+            <pattern id="phlace" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6" fill="#b8892c"/><path d="M10 9 l2 -3 l2 3 l-2 3 Z" fill="#c99a3a" opacity=".8"/></pattern></defs>
+            <circle cx="160" cy="160" r="150" fill="url(#phglow)"/>
+            <g class="dvhair"><path d="M140 30 C84 26 64 74 66 124 C68 160 56 196 62 236 C80 214 86 196 92 176 L98 140 L184 140 L190 176 C196 196 202 214 220 236 C226 196 214 160 216 124 C218 74 196 26 140 30 Z" fill="#3a1f12"/>
+            <path d="M74 120 C66 150 80 170 70 200 M206 120 C214 150 200 170 210 200" stroke="#5a3220" stroke-width="5" fill="none"/></g>
+            <path d="M104 150 C98 220 88 290 84 340 L196 340 C192 290 182 220 176 150 Z" fill="url(#phgold)"/>
+            <path d="M104 150 C98 220 88 290 84 340 L196 340 C192 290 182 220 176 150 Z" fill="url(#phlace)"/>
+            <path d="M100 206 L180 206 L182 218 L98 218 Z" fill="#d4a933" stroke="#8a6416" stroke-width="1.5"/>
+            <path d="M84 340 C90 318 100 326 104 306 C110 324 118 314 124 296 C130 316 140 312 146 292 C152 314 162 316 166 298 C172 318 182 320 196 340 Z" fill="#ff7a1a" opacity=".85"/>
+            <path d="M96 340 C102 326 108 330 112 318 C118 330 126 326 130 314 C136 330 146 330 150 316 C156 330 166 332 172 322 C176 332 184 334 188 340 Z" fill="#ffd23f" opacity=".9"/>
+            <path d="M122 152 L140 176 L158 152" stroke="#b8892c" stroke-width="2.5" fill="none"/>
+            <g class="dvarms">
+              <path d="M110 160 C100 140 108 122 124 116" stroke="url(#phgold)" stroke-width="15" stroke-linecap="round" fill="none"/>
+              <path d="M110 160 C100 140 108 122 124 116" stroke="url(#phlace)" stroke-width="15" stroke-linecap="round" fill="none"/>
+              <path d="M126 124 L138 100" stroke="#111" stroke-width="9" stroke-linecap="round"/><circle cx="139" cy="98" r="7" fill="#2a2a2a"/>
+              <path d="M172 160 C202 154 234 146 262 136" stroke="url(#phgold)" stroke-width="15" stroke-linecap="round" fill="none"/>
+              <path d="M172 160 C202 154 234 146 262 136" stroke="url(#phlace)" stroke-width="15" stroke-linecap="round" fill="none"/>
+              <g class="dvclaw" stroke="#7a2a06" stroke-width="4.5" stroke-linecap="round" fill="none"><path d="M262 136 C284 122 304 114 326 108"/><path d="M262 136 C288 130 308 130 330 132"/><path d="M262 136 C286 142 304 150 324 160"/></g>
+              <circle cx="262" cy="136" r="8" fill="#e8c66a"/>
+            </g>
+            <g class="phflames"><path d="M100 64 C92 40 104 22 110 8 C114 26 122 30 124 44 C128 26 136 16 140 2 C144 16 152 26 156 44 C158 30 166 26 170 8 C176 22 188 40 180 64 Z" fill="#ff7a1a"/><path d="M112 60 C108 44 116 34 120 24 C124 36 130 40 132 50 C136 38 140 30 140 22 C142 30 146 38 148 50 C150 40 156 36 160 24 C164 34 172 44 168 60 Z" fill="#ffd23f"/></g>
+            <ellipse cx="140" cy="94" rx="38" ry="48" fill="url(#phface)"/>
+            <path d="M104 84 C98 44 182 44 176 84 C164 64 116 64 104 84 Z" fill="#3a1f12"/>
+            <g class="dveyes"><path d="M116 92 L134 88 L132 98 Z" fill="#fff6b0"/><path d="M164 92 L146 88 L148 98 Z" fill="#fff6b0"/><circle cx="128" cy="93" r="3" fill="#ff3d00"/><circle cx="152" cy="93" r="3" fill="#ff3d00"/></g>
+            <path d="M114 86 L134 82 M166 86 L146 82" stroke="#3a1f12" stroke-width="3.5" stroke-linecap="round"/>
+            <ellipse class="dvmouth" cx="140" cy="122" rx="12" ry="14" fill="#3a0a06"/>
+            <path d="M130 114 L134 121 L138 114 L142 121 L146 114 L150 120" stroke="#fff3c4" stroke-width="2" fill="none"/>
+            <g fill="#fff3c4"><path d="M100 110 L104 128 L106 110 Z"/><path d="M180 110 L176 128 L174 110 Z"/></g>
           </svg></div><span class="chmonname">The Diva</span></div>
       </div></div>
       <div class="chnote hidden" id="chnote"></div>
@@ -262,15 +294,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=328"></script>
-<script src="vendor/qrcode.js?v=328"></script>
-<script src="config.js?v=328"></script>
-<script src="net.js?v=328"></script>
-<script src="music.js?v=328"></script>
-<script src="chars.js?v=328"></script>
-<script src="match.js?v=328"></script>
-<script src="shapes.js?v=328"></script>
-<script src="quiz.js?v=328"></script>
-<script src="host.js?v=328"></script>
+<script src="vendor/supabase.js?v=329"></script>
+<script src="vendor/qrcode.js?v=329"></script>
+<script src="config.js?v=329"></script>
+<script src="net.js?v=329"></script>
+<script src="music.js?v=329"></script>
+<script src="chars.js?v=329"></script>
+<script src="match.js?v=329"></script>
+<script src="shapes.js?v=329"></script>
+<script src="quiz.js?v=329"></script>
+<script src="host.js?v=329"></script>
 </body>
 </html>
