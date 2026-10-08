@@ -577,7 +577,7 @@
       if (G.draw) worth = String(partyX());
       else if (G.q.battle) worth = String(BATTLE_PTS);
       else if (G.fav) worth = '';
-      else if (G.q.peel) worth = String(peelPoints((G.barMs || PEEL_MS) - (G.endsAt - Date.now())) * x2);
+      else if (G.q.peel) worth = String(peelPoints((G.barMs || PEEL_MS) - (G.endsAt - Date.now()), G.q.blur) * x2);
       else if (G.scoring === 'speed') worth = String((ESC_POINTS[list().filter(function (p) { return p.pick != null; }).length] || 1) * x2);   // Speedy: what the next one in can still get
       else worth = String((G.scoring === 'random' && G.qWorth ? G.qWorth : 12) * x2);
     }
@@ -931,7 +931,7 @@
       right = [];
     }
     if (G.fav && G.q && !G.best && !G.draw && !G.q.battle) { favPay(right); right = []; }   // Beat the Favourite: no ordinary points, only what is taken from the favourite
-    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
+    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs, G.q.blur) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
     // The artist: 12 points shared out over everyone who answered, for each of them who got it (all right: 12).
@@ -1522,9 +1522,9 @@
   // Before the first question: everyone presses Ready on their phone (test bots after three seconds).
   function chaseReady(c) {
     if (G.chase !== c) return;
-    c.st = 'ready'; c.ready = {}; c.readyEnds = Date.now() + 60000; push();
-    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'ready') chaseGo(c); }, 60000);   // a minute at most, ready or not
-    chaseAlive().forEach(function (k) { if (players[k] && players[k].bot) setTimeout(function () { chaseMsg({ pid: k, key: c.key + '-r', ready: 1 }); }, 3000); });
+    c.st = 'ready'; c.ready = {}; c.msgAt = Date.now() + 2000; c.readyEnds = Date.now() + 62000; push();   // two seconds of the monster alone, then the message
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'ready') chaseGo(c); }, 62000);   // a minute at most, ready or not
+    chaseAlive().forEach(function (k) { if (players[k] && players[k].bot) setTimeout(function () { chaseMsg({ pid: k, key: c.key + '-r', ready: 1 }); }, 5000); });
   }
   function chaseGo(c) { c.st = 'go'; chaseMusic(true); push(); clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseAsk, 2500); }
   function chaseMsg(m) {
@@ -1804,6 +1804,7 @@
     if (c.st === 'mwin') {}
     else if (c.st === 'fmsg') { big.innerHTML = 'Sudden death!<small>' + nm(c.finals) + ' reached the stage together. Keep answering: whoever gets fewer right than the others falls off the stage. The last one standing wins!</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'sdres') { big.innerHTML = (c.sdLost && c.sdLost.length ? nm(c.sdLost) + ' fell off the stage!' : 'Still level! Next question…'); big.classList.remove('hidden'); }
+    else if (c.st === 'ready' && c.msgAt && Date.now() < c.msgAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.msgAt - Date.now() + 20); }   // the monster shows itself first
     else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk falling off the stage.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Ready?') + '</div>' + (c.st === 'ready' ? '<div class="chrbar"><i id="chrbar"></i></div>' : '') + '<div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
     else if (c.st === 'pre') { big.innerHTML = '👑 A former winner is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
@@ -3018,16 +3019,16 @@
     var side = $('board').closest('aside'), r = side.getBoundingClientRect();
     var ps = list().slice().sort(function (a, b) { return b.score - a.score; });
     var gain = function (p) { return p.score - (p.rs || 0); }, top = Math.max.apply(null, ps.map(gain));
-    var nRound = G.parts > 1 ? Math.min(G.partN || 1, G.parts) : 0;
+    var nRound = G.parts > 1 ? Math.min(G.partN || 1, G.parts) : 1;
     ps.forEach(function (p) { p.rh = p.rh || []; if (nRound) p.rh[nRound - 1] = gain(p); });
     var nextTxt = !lastSong() ? 'Next up: round ' + (nRound + 1) + (G.parts > 1 ? ' of ' + G.parts : '') : chaseWanted() ? 'Next up: the Final Chase' : G.finalMode === 'double' && G.total < ENDLESS ? 'Next up: The Big Five' : 'And the winner is…';
-    if (lastSong() && G.parts > 1 && nRound >= G.parts) { recapTally(ps, nextTxt); return; }
+    if (lastSong()) { recapTally(ps, nextTxt); return; }   // the last round: from 0, player by player, round by round
     var bg = document.createElement('div'); bg.id = 'recapbg'; bg.className = 'recapbg'; document.body.appendChild(bg);
     var c = document.createElement('div'); c.id = 'recap'; c.className = 'card recap';
     var rank = 0, prev = null;
     c.innerHTML = '<h3>' + (nRound ? 'End of round ' + nRound + (G.parts > 1 ? ' of ' + G.parts : '') : 'End of the quiz') + '</h3><ol class="board">' + ps.map(function (p, i) {
       if (p.score !== prev) { rank = i + 1; prev = p.score; }
-      var g = gain(p), first = nRound <= 1;   // after the first round the gains are just the scores: not shown
+      var g = gain(p), first = true;   // between rounds: just the standings (the points per round are added up at the end)
       return '<li class="' + (g === top && top > 0 && !first ? 'best' : '') + '" style="--i:' + i + '"><span class="rk">' + rank + '</span><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="gain">' + (first ? '' : g > 0 ? '+' + g : g < 0 ? '−' + (-g) : '+0') + '</span><span class="tot">' + p.score + '</span></li>';
     }).join('') + '</ol><p class="recapnext">' + esc(nextTxt) + '</p>';
     document.body.appendChild(c);
@@ -3047,7 +3048,7 @@
     var bg = document.createElement('div'); bg.id = 'recapbg'; bg.className = 'recapbg'; document.body.appendChild(bg);
     var c = document.createElement('div'); c.id = 'recap'; c.className = 'card recap tally'; c.style.setProperty('--R', R);
     var cols = ''; for (var k = 0; k < R; k++) cols += '<span class="rc">Round ' + (k + 1) + '</span>';
-    c.innerHTML = '<h3>All rounds added up</h3><div class="rhead"><span></span>' + cols + '<span class="tot">Total</span></div><ol class="board">' + ps.map(function (p) {
+    c.innerHTML = '<h3>' + (R > 1 ? 'All rounds added up' : 'The scores so far') + '</h3><div class="rhead"><span></span>' + cols + '<span class="tot">Total</span></div><ol class="board">' + ps.map(function (p) {
       var cells = ''; for (var k = 0; k < R; k++) { var g = (p.rh || [])[k] || 0; cells += '<span class="rc" data-k="' + k + '">' + (g < 0 ? '−' + (-g) : g) + '</span>'; }
       return '<li data-pid="' + esc(p.pid) + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span>' + cells + '<span class="tot">0</span></li>';
     }).join('') + '</ol><p class="recapnext">' + esc(nextTxt) + '</p>';

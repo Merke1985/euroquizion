@@ -211,7 +211,9 @@ function makeHost(song, countries) {
 }
 function flagHtml(code) { return '<img class="flagimg" src="https://flagcdn.com/w640/' + code + '.png" alt="" onerror="this.outerHTML=\'' + flag(code) + '\'">'; }
 var PEEL_MS = 60000;
-function peelPoints(ms) { return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
+function peelPoints(ms, blur) {
+  if (blur) { var h = PEEL_MS / 2; return ms < h ? 12 : [10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(8, Math.floor((ms - h) / (h / 9)))]; }   // Out of focus: 12 for the first half, then down to 1
+  return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
 function makePeel(song, allSongs, countries, opt) {
   // always the song itself: four bars with title and artist, the other three from about the same years
   // Only winners, on the screen and on the bars: a song that did not win makes way for a winner (from the years in play, if there is one).
