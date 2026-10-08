@@ -257,9 +257,10 @@
           var bq = q.subject === 'best' && s.best;   // best drawing: a small picture on every button, and your own cannot be picked
           $('opts').innerHTML = mc ? q.options.map(function (o, i) {
             var own = !!s.best && s.best.pids[i] === pid;   // your own drawing or answer cannot be picked
-            return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b>' + esc(o) + (own ? ' (yours)' : '') + '</button>';
+            return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + (own ? ' (yours)' : '') + '</span></button>';
           }).join('') : '';
           $('opts').classList.toggle('bestgrid', !!bq);
+          $('opts').classList.toggle('smoked', !!(q.smoke && q.smoke.indexOf(pid) < 0));   // someone else's Smoke Machine: guess blind
           if (bq) bestPaint();
 
           if (!mc) $('guess').focus();
@@ -361,10 +362,18 @@
     var p = $('bagpanel');
     if (!bagItem) {
       var seen = {}; p.innerHTML = '<h3>Your items</h3>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
-        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, wait = it.kind === 'sit' && s.phase !== 'guess';   // the mic only breaks while a question is open
-        return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(wait ? 'Only while a question is open' : it.desc) + '</small></span></button>';
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, wait = (it.kind === 'sit' && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess');   // the mic only breaks while a question is open; the smoke goes up before one
+        return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(wait ? (it.kind === 'smoke' ? 'Only before a question' : 'Only while a question is open') : it.desc) + '</small></span></button>';
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
-      [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () { bagItem = b.getAttribute('data-id'); bagUpdate(state); }; });
+      [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
+        var id = b.getAttribute('data-id');
+        if ((shopItem(id) || {}).kind === 'smoke') {   // no one to pick: it is for the next question
+          var msg = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
+          if (net) { net.send('shop', msg); setTimeout(function () { net.send('shop', msg); }, 1200); }
+          ptoast('🌫️ The smoke goes up before the next question. Only you will see its answers!'); bagOpen = false; bagUpdate(state); return;
+        }
+        bagItem = id; bagUpdate(state);
+      }; });
     } else {
       var others = s.players.filter(function (x) { return x.pid !== pid && !x.off && !((shopItem(bagItem) || {}).kind === 'sit' && x.sit); });
       p.innerHTML = '<h3>' + esc(shopName(bagItem)) + ': on who?</h3>' + others.map(function (x) { return '<button type="button" class="shopbtn who" data-pid="' + esc(x.pid) + '">' + charSvg(x.char) + '<span><b>' + esc(x.name) + '</b><small>' + (s.hide ? '' : x.score + ' points') + '</small></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose">Back</button>';

@@ -698,7 +698,9 @@ var SHOP_ITEMS = [
   { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
   { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
   { id: 'power', icon: '🔋', name: 'Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
+  { id: 'smoke', icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
 ];
 var SHOP_PICKS = 2;   // free items per visit
+var SHOP_START_ALL = true;   // every (human) player starts a Party game with one of each item (handy for trying them out)
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }

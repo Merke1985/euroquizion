@@ -1255,3 +1255,11 @@ aside.recapgone{visibility:hidden}
 .shopbtn:disabled{opacity:.45;cursor:default}
 .shopflash{position:fixed;left:50%;top:18px;z-index:70;transform:translate(-50%,-160%);padding:12px 22px;border-radius:999px;background:var(--yellow);color:#221a00;font-weight:900;font-size:1.4rem;box-shadow:0 8px 30px rgba(0,0,0,.5);transition:transform .45s cubic-bezier(.3,1.4,.5,1);white-space:nowrap}
 .shopflash.on{transform:translate(-50%,0)}
+
+/* Smoke Machine: the answers disappear in drifting smoke; only the letters stay */
+.smoked .opt{position:relative;overflow:hidden}
+.smoked .opt .otx{filter:blur(9px);opacity:.35}
+.smoked .opt::after{content:'';position:absolute;inset:-20% -40%;pointer-events:none;background:radial-gradient(ellipse at 20% 50%,rgba(225,220,240,.85),transparent 55%),radial-gradient(ellipse at 60% 40%,rgba(200,195,225,.8),transparent 50%),radial-gradient(ellipse at 90% 60%,rgba(235,230,250,.85),transparent 55%);animation:smokedrift 6s ease-in-out infinite alternate}
+.smoked .opt:nth-child(2n)::after{animation-delay:-2s}.smoked .optcol:nth-child(2n) .opt::after{animation-delay:-3s}
+@keyframes smokedrift{from{transform:translateX(-12%)}to{transform:translateX(12%)}}
+.smoked .opt b{position:relative;z-index:1}
