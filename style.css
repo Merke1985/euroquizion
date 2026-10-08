@@ -1487,3 +1487,7 @@ aside.recapgone{visibility:hidden}
 .game.opening .shosts .hbub.her{right:12%;max-width:30%}
 .game.opening .shosts .hbub.him{left:6%;max-width:26%}
 .game.opening .shosts .hbub.her{right:6%;max-width:26%}
+.boutique .bqbunting::before{top:.15em}
+.boutique .bqbunting{top:15.6vh}
+.boutique .bqbunting::before{top:0;height:3px;background:rgba(255,255,255,.5)}
+.boutique .bqpen{margin-top:3px}

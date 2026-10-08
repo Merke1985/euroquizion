@@ -2017,7 +2017,7 @@
     any: ['Listen closely…', 'Here comes the next song!', 'Do you know this one?', 'Ears open, Europe!', 'Phones ready?', 'This one’s a classic!']
   };
   var HOST_REACT = ['Did you get it right?', 'Douze points if you knew that one!', 'Ooh, that was a tricky one!', 'Nul points for the rest of you!', 'The jury has spoken!', 'What a performance!'];
-  var hostTurn = 0, hostT = { him: null, her: null };
+  var hostTurn = 0, hostT = { him: null, her: null }, hostHold = false;   // (hold: they stay on stage for the whole announcement)
   function hostsEl() {
     var st = stageEl(); if (!st || REMOTE) return null;
     var h = st.querySelector('.shosts');
@@ -2033,7 +2033,7 @@
     clearTimeout(hostT.away); hostT.away = setTimeout(hostsAway, (ms || 3500) + 600);   // …and leave the screen to the game again
   }
   function hostsAway() {
-    var h = hostsEl(); if (!h || h.classList.contains('away') || G.phase === 'opening' || h.querySelector('.hbub.on')) return;
+    var h = hostsEl(); if (!h || h.classList.contains('away') || G.phase === 'opening' || hostHold || h.querySelector('.hbub.on')) return;
     h.classList.add('away'); if (!REMOTE) Music.woosh();
   }
   function hostQuestion() {   // a line for the question that starts now (not used: the presenters keep out of the way during the questions)
@@ -2055,7 +2055,7 @@
     step(1300, function () { hostSay('him', 'Good evening, Europe! 🇪🇺 I’m Felix…', 3400); Music.ding(); });
     step(2800, function () { hostSay('her', '…and I’m Stella! Welcome to EuroQuizion!', 3600); });
     step(3300, function () { hostSay('him', 'Grab your phones. Let’s get this show started!', 3200); });
-    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); hostsAway(); then(); });
+    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
   function hostWelcome() {
     if (G.mgTest) return;   // (a test of the party games or the boutique: straight to it)
@@ -2177,10 +2177,12 @@
     G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
-    at(200, function () { hostSay('him', 'Welcome back, Europe! 🇪🇺', 4000); });
-    at(2400, function () { G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
-    at(3700, function () { hostSay('her', line, 3400); });
-    at(7200, function () { $('cover').classList.remove('introcard'); then(); });
+    var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
+    if (!on) at(200, function () { hostSay('him', 'Welcome back, Europe! 🇪🇺', 4000); });
+    at(2400 + d, function () { G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
+    at(3700 + d, function () { hostSay('her', line, 3400); });
+    at(7200 + d, function () { $('cover').classList.remove('introcard'); hostHold = false; then(); });
+    setTimeout(function () { hostHold = false; }, 7600 + d);
   }
   function shopIntro() {
     if (REMOTE) { partyGo('shop'); return; }
