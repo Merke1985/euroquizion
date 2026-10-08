@@ -371,6 +371,7 @@
         $('endlead').textContent = 'Final scores'; $('winner').textContent = '…'; $('winchar').innerHTML = '';
         var champs0 = list().filter(function (p) { return p.champ; });
         $('final').classList.toggle('hidden', champs0.length > 0 || !!G.chaseLost);   // after the chase there is no scoreboard: the chase decided
+        chaseOverview(champs0.length > 0 || !!G.chaseLost);
         if (G.chaseLost) { $('endlead').textContent = 'Everyone lost!'; $('winner').textContent = G.chaseLost + ' grabbed the trophy'; $('winchar').innerHTML = ''; }
         else if (champs0.length) {
           $('endlead').textContent = 'Winner of the Final Chase'; $('winner').textContent = champs0.map(function (w) { return w.name; }).join(' & ');
@@ -869,6 +870,20 @@
   }
   function roundMode() { return G.atype === 'party' ? (G.mode || 'mc') : G.atype; }   // what this round is: quiz ('mc'), 'sing' or 'draw'
   // (a Ladder game in several rounds ends on an ordinary scoreboard: the rounds added up)
+  // After the Final Chase: everyone's points per round and in the chase; the winner on top, the rest greyed out.
+  function chaseOverview(on) {
+    var box = $('chaseov');
+    if (!box) { box = document.createElement('div'); box.id = 'chaseov'; box.className = 'chaseov'; $('v-end').insertBefore(box, $('v-end').querySelector('.endbtns')); }
+    box.classList.toggle('hidden', !on || !G.chaseOv); if (!on || !G.chaseOv) return;
+    var R = 0; G.chaseOv.forEach(function (o) { var p = players[o.pid]; if (p && p.rh) R = Math.max(R, p.rh.length); });
+    var rows = G.chaseOv.filter(function (o) { return players[o.pid]; }).slice().sort(function (a, b) { return (b.win - a.win) || (b.fp - a.fp) || (players[b.pid].score - players[a.pid].score); });
+    var head = '<span></span>'; for (var k = 0; k < R; k++) head += '<span>' + (R > 1 ? 'Round ' + (k + 1) : 'Quiz') + '</span>'; head += '<span class="fc">Final Chase</span>';
+    box.style.setProperty('--R', R);
+    box.innerHTML = '<div class="ovrow ovhead">' + head + '</div>' + rows.map(function (o, i) {
+      var p = players[o.pid], cells = ''; for (var k = 0; k < R; k++) cells += '<span>' + ((p.rh || [])[k] || 0) + '</span>';
+      return '<div class="ovrow' + (o.win ? ' win' : ' dead') + '" style="--i:' + i + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (o.win ? ' 🏆' : '') + '</span>' + cells + '<span class="fc">' + o.fp + '</span></div>';
+    }).join('');
+  }
   function ladderGame() { return G.atype === 'mc' && G.scoring === 'ladder' && !(G.phase === 'end' && G.partLadder); }
   var ENDLESS = 9999;   // Ladder has no song limit: it runs until someone is at the top
   function ofTotal(sep) { return G.total >= ENDLESS ? '' : sep + G.total; }
@@ -1545,7 +1560,7 @@
   function chaseScore() {
     var c = G.chase; if (!c || c.st !== 'ask') return;
     c.st = 'show';
-    chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = !l.touched ? 0 : c.q.items.reduce(function (n, it, i) { return n + ((((l.mask >> i) & 1) === 1) === it.ok ? 1 : 0); }, 0); });
+    chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = !l.touched ? 0 : c.q.items.reduce(function (n, it, i) { return n + ((((l.mask >> i) & 1) === 1) === it.ok ? 1 : 0); }, 0); l.fp = (l.fp || 0) + l.res; });   // (a point per right answer, for the overview at the end)
     Music.soft(); push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseMove, 3600);
   }
@@ -1660,6 +1675,8 @@
     c.done = true;
     G.chaseLost = c.grab ? mName() : '';
     (c.win || []).forEach(function (k) { if (players[k]) players[k].champ = true; });
+    // for the overview at the end: everyone's points in the chase (one per right answer), and who won
+    G.chaseOv = c.order.map(function (k) { return { pid: k, fp: (c.lanes[k] && c.lanes[k].fp) || 0, win: (c.win || []).indexOf(k) >= 0 }; });
     try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push();
   }
   $('chstop').addEventListener('click', function () { var c = G.chase; if (!c) return; if (c.st !== 'win') { var al = chaseAlive(), best = al.length ? Math.max.apply(null, al.map(function (k) { return c.lanes[k].pos; })) : 0; c.win = al.filter(function (k) { return c.lanes[k].pos === best; }); } chaseDone(); });
@@ -2940,7 +2957,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();

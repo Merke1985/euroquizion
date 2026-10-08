@@ -1194,6 +1194,18 @@ aside.recapgone{visibility:hidden}
 .chstage.over{z-index:3;pointer-events:none;opacity:.32;mix-blend-mode:screen}
 
 /* the stage flames: off while the scene is built, then they burst up */
-.chase.nofire .chpyro{opacity:0}
+.chase.nofire .chpyro i{animation:none;opacity:0}   /* the launchers stand on the stage already; only the fire waits */
 .chase .chpyro.ign{animation:chignite .9s ease-out}
-@keyframes chignite{0%{opacity:0;filter:brightness(3)}25%{opacity:1;filter:brightness(2.6)}100%{opacity:1;filter:none}}
+@keyframes chignite{0%{filter:brightness(3.2)}30%{filter:brightness(2.6)}100%{filter:none}}
+
+/* ---------- overview after the Final Chase ---------- */
+.chaseov{width:min(760px,94vw);margin:14px auto 0;display:flex;flex-direction:column;gap:8px}
+.chaseov .ovrow{display:grid;grid-template-columns:minmax(0,1fr) repeat(var(--R),5.2em) 6.4em;align-items:center;gap:10px;padding:.5em .9em;border-radius:12px;background:rgba(0,0,0,.28);font-weight:800;font-size:1.15rem;animation:rcgain .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.6s + var(--i) * .15s)}
+.chaseov .ovrow > span:not(.who){text-align:center;font-variant-numeric:tabular-nums}
+.chaseov .ovhead{background:none;font-size:.85rem;opacity:.7;padding-top:0;padding-bottom:0;animation:none}
+.chaseov .who{display:flex;align-items:center;gap:.5em;min-width:0}
+.chaseov .who .char{width:1.9em;height:1.9em;flex:none}
+.chaseov .fc{color:var(--yellow)}
+.chaseov .ovrow.win{background:var(--yellow);color:#221a00;box-shadow:0 0 24px rgba(255,210,63,.4)}
+.chaseov .ovrow.win .fc{color:#221a00}
+.chaseov .ovrow.dead{filter:grayscale(1) brightness(.5)}
