@@ -2053,10 +2053,30 @@
     var h = hostsEl(); if (h) { h.classList.remove('arrive'); h.classList.remove('away'); }
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
     step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
-    step(1300, function () { hostSay('him', 'Good evening, Europe! 🇪🇺 I’m Felix…', 3400); Music.ding(); });
-    step(2800, function () { hostSay('her', '…and I’m Stella! Welcome to EuroQuizion!', 3600); });
-    step(3300, function () { hostSay('him', 'Grab your phones. Let’s get this show started!', 3200); });
+    // what they say: who they are, what we play tonight and how it works, then off we go
+    var lines = [['him', 'Good evening, Europe! 🇪🇺 I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
+    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
+    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'It’s time to test your knowledge: it’s trivia time! 🧠']);
+    lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
     step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
+  }
+  // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Stella!").
+  function showPlan() {
+    var L = [], fin = G.finalMode === 'chase' ? 'And at the very end… the Grand Final! 🏆' : G.finalMode === 'double' ? 'And at the end: the Big Five, five questions for double points!' : '';
+    if (G.atype === 'party') {
+      var how = { order: 'Tonight it’s Party mode: the Grand Tour! 🎉', random: 'Tonight it’s Party mode, and the wheel decides! 🎡', vote: 'Tonight it’s Party mode, and you vote! 🗳️', one: 'Tonight it’s Party mode, and you take turns to choose!' }[G.partyPick] || 'Tonight it’s Party mode! 🎉';
+      var then = { order: 'First three trivia questions, then a party game, and so on, until every party game has had its turn.', random: 'Three trivia questions, then the wheel picks a party game, and so on.', vote: 'Three trivia questions, then you vote for the next party game, and so on.', one: 'Three trivia questions, then one of you picks the next party game, and so on.' }[G.partyPick] || 'Three trivia questions, then a party game, and so on.';
+      L.push(['him', how], ['her', then]);
+      if (shopOn()) L.push(['him', 'Win a party game and you get to go shopping in the Green Room Boutique! 🛍️']);
+    } else {
+      var rounds = G.parts > 1 ? G.parts + ' rounds of ' + G.per + ' questions' : G.per + ' questions';
+      L.push(['him', 'Tonight: a quiz of ' + rounds + '!']);
+      if (G.parts > 1 && G.qmode === 'random') L.push(['her', 'The wheel picks the era of every round.']);
+      else if (G.parts > 1 && G.qmode === 'vote') L.push(['her', 'Before every round, you vote for the era.']);
+      else if (G.qmode === 'ladder') L.push(['her', 'Climb the ladder: every right answer takes you a rung higher!']);
+    }
+    if (fin) L.push([L[L.length - 1][0] === 'him' ? 'her' : 'him', fin]);
+    return L;
   }
   function hostWelcome() {
     if (G.mgTest) return;   // (a test of the party games or the boutique: straight to it)
