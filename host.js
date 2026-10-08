@@ -1021,7 +1021,7 @@
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
-      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 6000); return; }
+      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.eraNow = ''; buildPool(); G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 6000); return; }
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
@@ -1222,7 +1222,10 @@
   }
 
   // ---------- rounds, and the spin for the years ----------
-  var ERAS = [['1956-1969', '1956 – 1969'], ['1970-1979', 'The 70s'], ['1980-1989', 'The 80s'], ['1990-1999', 'The 90s'], ['2000-2009', 'The 2000s'], ['2010-2019', 'The 2010s'], ['2020-2100', 'The 2020s']];
+  // The eras of the Era setting (all four when nothing is narrowed): Random and Voted rounds pick from these.
+  var ERA_GROUPS = [['1956-1979', '1956 – 1979'], ['1980-1999', '1980 – 1999'], ['2000-2012', '2000 – 2012'], ['2013-2100', '2013 – now']];
+  function eraList() { var sel = G.era && G.era !== '1956-2100' && G.era !== 'spin' ? String(G.era).split(',') : ERA_GROUPS.map(function (g) { return g[0]; }); var l = ERA_GROUPS.filter(function (g) { return sel.indexOf(g[0]) >= 0; }); return l.length ? l : ERA_GROUPS; }
+  var ERAS = ERA_GROUPS;
   var partTimer = null;
   function partIntro() {
     G.partDone = G.partDone || {}; G.partDone[G.round] = 1;
@@ -1236,6 +1239,7 @@
     // Which decades are still in the draw: inside the Era setting, not played yet in this game, and with enough songs.
     var inSel = function (e) { return poolFor(poolFor(playSongs(), G.era === 'spin' ? '1956-2100' : G.era, G.cat), e[0], 'all').length; };
     var ok = function (e) { return inSel(e) >= Math.max(4, Math.min(G.per, 8)); };
+    ERAS = eraList();   // (a played era stays greyed out until every era has had its turn)
     var open = []; ERAS.forEach(function (e, i) { if (G.eraUsed.indexOf(i) < 0 && ok(e)) open.push(i); });
     if (!open.length) { G.eraUsed = []; ERAS.forEach(function (e, i) { if (ok(e)) open.push(i); }); }   // all played: everything is back in
     if (!open.length) { G.eraNow = ''; buildPool(); push(); partTimer = setTimeout(go, 2000); return; }   // a selection too thin to split up
@@ -1381,6 +1385,18 @@
       a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () { if (fallback) fallback(); });
     } catch (e) { if (fallback) fallback(); }
   }
+  // The way in: the lights go out on the quiz, a line in the dark, then the chase opens up from a growing circle.
+  var CHASE_ENTER = 3400;
+  function chaseEnter() {
+    var bk = $('chblack');
+    if (!bk) { bk = document.createElement('div'); bk.id = 'chblack'; bk.className = 'chblack'; document.body.appendChild(bk); }
+    bk.innerHTML = '<div><b>But wait…</b><span>the trophy has not been won yet.</span></div>';
+    bk.classList.remove('gone'); bk.classList.add('on');
+    Music.dread(true);
+    setTimeout(function () { $('chase').classList.add('iris'); chaseSfx('brk', 0.7, Music.crumble); }, CHASE_ENTER - 600);
+    setTimeout(function () { bk.classList.add('gone'); bk.classList.remove('on'); }, CHASE_ENTER + 200);
+    setTimeout(function () { $('chase').classList.remove('iris'); }, CHASE_ENTER + 1800);
+  }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
   function chaseStart(test, face) {
     autoStop(); stopTimers(); clearTimeout(chaseTimer); try { yt.pauseVideo(); } catch (e) {} yt2.pause(); cover(true, '', '', false);
@@ -1394,13 +1410,14 @@
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0 };
     G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
+    G.chase.enterAt = Date.now() + CHASE_ENTER - 600; chaseEnter();
     // the monster starts hidden (no fade-out from the last chase), dressed as this chase's monster
     var mon = $('chmon'); mon.classList.remove('rise', 'defeat', 'hungry', 'sleep'); mon.classList.add('lurk'); mon.setAttribute('data-mon', G.chase.monster.id);
     Object.keys(CHASE_SFX).forEach(function (k) { if (!chaseSfxEl[k]) { chaseSfxEl[k] = new Audio(CHASE_SFX[k]); chaseSfxEl[k].preload = 'auto'; } });
     Music.want(false); Music.dread(true);
     push();
     // first a message in the middle, then it moves up and the jury votes are counted
-    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1100); }, 6200);
+    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1100); }, 6200 + CHASE_ENTER);
   }
   // The start: one by one, lowest score first, each player is shown big in the middle while their jury votes count up
   // to their score; then they take their place on the runway. When all are on it, the Diva rises from the smoke.
@@ -1418,15 +1435,15 @@
       c.st = 'wheel'; c.wheelAt = Date.now(); push();
       var turns = 0, gaps = [];
       for (var g = 60; turns < 4200; g *= 1.09) { gaps.push(g); turns += g; }
-      var tk = 0; gaps.forEach(function (g) { tk += g; setTimeout(function () { if (G.chase === c && c.st === 'wheel') Music.plop(3, 0.5); }, tk); });
+      var tk = 3000; /* the wheel shows for 3 seconds before the arrow starts */ gaps.forEach(function (g) { tk += g; setTimeout(function () { if (G.chase === c && c.st === 'wheel') Music.plop(3, 0.5); }, tk); });
       chaseTimer = setTimeout(function () {
         if (G.chase !== c || c.st !== 'wheel') return;
         Music.ding(); c.landed = true; push();   // the chosen slice lights up for two seconds
         chaseTimer = setTimeout(function () {
           if (G.chase !== c) return;
-          chaseSfx('brk', 0.9, Music.crumble); chaseReady(c);   // the monster rises; the same screen asks everyone to press Ready
+          chaseSfx('brk', 0.9, Music.crumble); chaseReady(c);   /* the monster rises */   // the monster rises; the same screen asks everyone to press Ready
         }, 2200);
-      }, 4500);
+      }, 7500);
     }
     var k = c.placeOrder[c.placed], total = c.scores[k] || 0, steps = Math.max(1, Math.min(40, total)), i = 0;
     c.showing = k; c.count = 0; c.counted = false; push();
@@ -1451,10 +1468,12 @@
   function chaseNear() { var c = G.chase; return chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL - 3; }); }
   // who answers now: everyone still running, or (in a sudden death on the stage) the finalists still standing
   function chaseActive() { var c = G.chase; return c.sd ? c.finals.filter(function (k) { return c.lanes[k] && !c.lanes[k].fell; }) : chaseAlive(); }
+  // The chase asks about all the selected eras (and entries), whatever era the last round had
+  function chasePool() { var p = poolFor(playSongs(), $('s-era').value || '1956-2100', $('s-cat').value || 'all'); return p.length >= 60 ? p : playSongs(); }
   function chaseAlive() { var c = G.chase; return c.order.filter(function (k) { return c.lanes[k] && !c.lanes[k].out; }); }
   function chaseAsk() {
     var c = G.chase; if (!c || G.phase !== 'chase') return;
-    c.n++; c.q = makeChase(playSongs(), playCountries(), c.used) || makeChase(playSongs(), playCountries(), {});
+    c.n++; var cp = chasePool(); c.q = makeChase(cp, playCountries(), c.used) || makeChase(cp, playCountries(), {});
     c.q.items.forEach(function (it) { c.used[it.id] = 1; });
     c.qkey = c.key + '-' + c.n; c.st = 'ask'; c.endsAt = Date.now() + CHASE_ASK;
     chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; });
@@ -1641,7 +1660,7 @@
     }).join('') + '<div class="whwin"></div><div class="wharrow" id="wharrow"></div><div class="whhub"></div></div>';
     var target = (CHASE_MONSTERS.indexOf(c.monster) + 0.5) * 360 / n + (Math.random() - 0.5) * (300 / n) / 2, arr = $('wharrow');
     arr.style.transform = 'rotate(0deg)'; arr.getBoundingClientRect();
-    arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)';
+    setTimeout(function () { arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)'; }, 3000);   // a moment to take in the wheel first
   }
   function chaseSnap() {
     var c = G.chase, s = { rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
@@ -1657,7 +1676,8 @@
   function chaseX(pos) { return Math.max(0, Math.min(CHASE_END, pos)) / CHASE_END * 100; }
   function chaseShow() {
     var c = G.chase; if (!c) return;
-    $('chase').classList.remove('hidden');
+    $('chase').classList.toggle('hidden', !!c.enterAt && Date.now() < c.enterAt);
+    if (c.enterAt && Date.now() < c.enterAt) { setTimeout(function () { if (G.phase === 'chase') render(); }, c.enterAt - Date.now() + 20); }
     var n = c.order.length;
     if (chaseBuilt !== c.key) {
       chaseBuilt = c.key; $('chview').classList.remove('zoom');
@@ -2956,7 +2976,7 @@
     if (G.phase !== 'reveal' && G.phase !== 'paused') return;
     autoStop(); note('');
     // The Big Five: when the rounds are done, five more questions for double points, with the scores hidden
-    if (lastSong() && G.finalMode === 'double' && !G.tourFinal && !G.tour && !ladderGame() && G.total < ENDLESS) { G.tourFinal = true; G.total += 5; G.bigCard = true; G.quizRun = 0; startRound(); return; }
+    if (lastSong() && G.finalMode === 'double' && !G.tourFinal && !G.tour && !ladderGame() && G.total < ENDLESS) { G.tourFinal = true; G.total += 5; G.bigCard = true; G.quizRun = 0; G.eraNow = ''; buildPool(); startRound(); return; }   // (the Big Five: all selected eras again)
     if (lastSong()) {
       // a Ladder game in rounds: the last round is added to what was banked before
       if (G.partLadder) list().forEach(function (p) { p.score = (p.bank || 0) + LADDER[Math.floor(p.rung || 0)]; });

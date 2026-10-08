@@ -1099,3 +1099,13 @@ header{padding-right:66px!important}
 .chmon.grab{transition:left 1.6s cubic-bezier(.5,0,.3,1)}
 .chmon.grab .chbob{animation:chbob .35s ease-in-out infinite}
 .endbtns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+/* the way into the Final Chase: lights out, a line in the dark, then a circle opens on the runway */
+.chblack{position:fixed;inset:0;z-index:80;background:#000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 1s ease}
+.chblack.on{opacity:1}
+.chblack.gone{opacity:0;transition:opacity .6s ease}
+.chblack div{display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff;text-align:center}
+.chblack b{font-size:clamp(2rem,5vw,4rem);font-weight:900;opacity:0;animation:chwhisper 1.2s ease .8s forwards}
+.chblack span{font-size:clamp(1rem,2vw,1.5rem);color:#ff8aa3;opacity:0;animation:chwhisper 1.2s ease 1.6s forwards}
+@keyframes chwhisper{from{opacity:0;transform:translateY(10px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.chase.iris{animation:chiris 1.6s cubic-bezier(.6,0,.2,1) both}
+@keyframes chiris{0%{clip-path:circle(0% at 50% 55%);filter:brightness(2.2)}60%{filter:brightness(1.2)}100%{clip-path:circle(150% at 50% 55%);filter:none}}
