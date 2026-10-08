@@ -1151,12 +1151,12 @@ header{padding-right:66px!important}
 aside.recapgone{visibility:hidden}
 
 .recap.tally{width:min(640px,90vw)}
-.recap.tally .board li{display:grid;grid-template-columns:minmax(0,1fr) 4em 3.4em;align-items:center;gap:12px}
+.recap.tally .board li{display:grid;grid-template-columns:minmax(0,1fr) 3.4em 4em;align-items:center;gap:12px}
 .recap.tally .rstep{text-align:center;margin:0 0 6px;font-weight:800;color:var(--yellow);font-size:1.15rem;min-height:1.4em}
 .recap.tally .rstep.rpop{animation:rcgain .45s cubic-bezier(.3,1.6,.5,1)}
-.recap.tally .gain{opacity:0;animation:none;text-align:right;font-size:1.05em;font-weight:900;color:#3dff9a;text-shadow:0 0 10px rgba(61,255,154,.5);transition:transform .45s ease-in,opacity .45s ease-in}
+.recap.tally .gain{opacity:0;animation:none;text-align:left;font-size:1.05em;font-weight:900;color:#3dff9a;text-shadow:0 0 10px rgba(61,255,154,.5);transition:transform .45s ease-in,opacity .45s ease-in}
 .recap.tally .gain.on{opacity:1;animation:rcpop .4s cubic-bezier(.3,1.6,.5,1)}
-.recap.tally .gain.on.off{animation:none;opacity:0;transform:translateX(2.2em) scale(.6)}
+.recap.tally .gain.on.off{animation:none;opacity:0;transform:translateX(-2.2em) scale(.6)}
 @keyframes rcpop{from{transform:scale(.3)}to{transform:none}}
 .recap.tally .board .tot{font-size:1.15em;text-align:right;font-variant-numeric:tabular-nums}
 .recap.tally .recapnext{opacity:0;transition:opacity .5s}

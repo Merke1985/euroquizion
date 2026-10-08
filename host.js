@@ -231,9 +231,7 @@
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
     if (G.showScore === 'end') return true;
     if (G.tourFinal) return true;   // Grand tour: the last three questions are played blind
-    // The very last song is played blind, so the final scoreboard still has something to reveal
-    // (not on the Ladder, where the ladder itself is the score).
-    return G.round > 0 && lastSong() && !ladderGame();
+    return false;   // (the last song is no longer played blind: the round summary and the final game do the revealing)
   }
   // ---------- Ladder scoring: everyone on one ladder ----------
   // The rungs are drawn once; each player is a small avatar that keeps its element, so a change of
@@ -312,7 +310,7 @@
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (G.fav && G.fav.pid === p.pid ? 'fav ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (G.fav && G.fav.pid === p.pid ? 'fav ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -1244,6 +1242,11 @@
   var partTimer = null;
   function partIntro() {
     G.partDone = G.partDone || {}; G.partDone[G.round] = 1;
+    // every round starts from 0 on the scoreboard; what was scored before is kept aside and added up after the last round
+    if ((G.partN || 0) >= 1 && !G.partLadder && !ladderGame()) {
+      var best = Math.max.apply(null, list().map(function (p) { return p.score; }));   // the winner of the round just played wears a crown in the next one
+      list().forEach(function (p) { p.rcrown = best > 0 && p.score === best; p.qbank = (p.qbank || 0) + p.score; p.score = 0; });
+    }
     list().forEach(function (p) { p.rs = p.score; });   // the round summary shows what was scored from here
     G.partNext = false; G.partN = (G.partN || 0) + 1; G.partStart = G.round;
     var n = G.partN;
@@ -1446,7 +1449,8 @@
     lights.push([].slice.call(ch.querySelectorAll('.chstg-floor,.chstg-ring,.chtro')));
     lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 4000 + i * 420); });
     setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 150);   // the crowd brightens with the last light
-    setTimeout(function () { ch.classList.remove('nofire'); [].forEach.call(ch.querySelectorAll('.chpyro'), function (e) { e.classList.remove('ign'); void e.offsetWidth; e.classList.add('ign'); }); chaseSpot('sounds/fire.mp3?v=1'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 2000);   // two seconds after the last light, the flames burst up
+    setTimeout(function () { ch.classList.remove('nofire'); [].forEach.call(ch.querySelectorAll('.chpyro'), function (e) { e.classList.remove('ign'); void e.offsetWidth; e.classList.add('ign'); }); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 2000);
+    setTimeout(function () { chaseSpot('sounds/fire.mp3?v=1'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 1700);   // the whoosh starts a little early, so the burst lands on it   // two seconds after the last light, the flames burst up
     setTimeout(function () { ch.classList.remove('nocrowd'); Music.woosh(); }, CHASE_ENTER + 2800);   // the fans come in, still in the dark
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
@@ -2910,7 +2914,7 @@
     clearTimeout(picksTimer); stopTimers(); autoStop(); yt2.stop(); singClear(); G.draw = null; clearTimeout(drawTimer); probeRun++; $('probebox').innerHTML = ''; clearTimeout(introTimer); clearTimeout(remoteTimer); G.clip = null; clearInterval(loadTick); loadT0 = 0; stage = 'idle';
     try { yt.stopVideo(); } catch (e) {}
     G.go = {};
-    list().forEach(function (p) { p.score = 0; });   // a game that is over leaves no scores behind
+    list().forEach(function (p) { p.score = 0; p.qbank = 0; p.rcrown = false; });   // a game that is over leaves no scores behind
     $('endask').classList.add('hidden');
     G.phase = 'lobby'; G.round = 0; G.song = null; G.q = null; note(''); push();
   }
@@ -2957,7 +2961,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
@@ -3066,7 +3070,7 @@
     var bg = document.createElement('div'); bg.id = 'recapbg'; bg.className = 'recapbg'; document.body.appendChild(bg);
     var c = document.createElement('div'); c.id = 'recap'; c.className = 'card recap tally'; c.style.setProperty('--R', R);
     c.innerHTML = '<h3>' + (R > 1 ? 'All rounds added up' : 'The scores so far') + '</h3><p class="rstep">&nbsp;</p><ol class="board">' + ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="gain"></span><span class="tot">0</span></li>';
+      return '<li data-pid="' + esc(p.pid) + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">0</span><span class="gain"></span></li>';
     }).join('') + '</ol><p class="recapnext">' + esc(nextTxt) + '</p>';
     document.body.appendChild(c);
     var w = c.offsetWidth, h = c.offsetHeight, L = Math.round((innerWidth - w) / 2), T = Math.round((innerHeight - h) / 2);
@@ -3121,7 +3125,9 @@
     if (recapDue()) { recapShow(); return; }
     goOn();
   }
+  function roundsAddUp() { list().forEach(function (p) { p.rcrown = false; if (p.qbank) { p.score += p.qbank; p.qbank = 0; } }); }   // after the last round: all rounds together
   function goOn() {
+    if (lastSong()) roundsAddUp();
     // The Big Five: when the rounds are done, five more questions for double points, with the scores hidden
     if (lastSong() && G.finalMode === 'double' && !G.tourFinal && !G.tour && !ladderGame() && G.total < ENDLESS) { G.tourFinal = true; G.total += 5; G.bigCard = true; G.quizRun = 0; G.eraNow = ''; buildPool(); startRound(); return; }   // (the Big Five: all selected eras again)
     if (lastSong()) {
