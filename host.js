@@ -1729,7 +1729,7 @@
         setTimeout(function () { t.classList.remove('crumble'); t.classList.add('gone'); }, 1350 + Math.random() * 200);
       }
       if (r <= c.mon) return;
-      t.classList.toggle('warn', warn); t.classList.remove('doom'); t.classList.toggle('occ', on && !warn);   // a player in danger: only their avatar shows it
+      if (warn && !t.classList.contains('warn')) t.style.animationDelay = -(performance.now() % 1400) + 'ms'; /* all marked tiles blink in step */ t.classList.toggle('warn', warn); t.classList.remove('doom'); t.classList.toggle('occ', on && !warn);   // a player in danger: only their avatar shows it
       t.classList.toggle('deny', !!deny[t.getAttribute('data-l') + ':' + r]);
     });
     $('chvoid').style.width = chaseX(c.mon) + '%';
