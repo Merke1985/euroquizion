@@ -404,7 +404,7 @@
     } else {
       show('v-game');
       $('roundlabel').textContent = 'Song ' + G.round + ofTotal(' / ');
-      renderQuestion(); renderAnswered();
+      renderQuestion(); renderAnswered(); hostsEl();
       $('qopts').classList.toggle('smoked', G.phase === 'guess' && !!(G.smoke && G.smoke.length));   // Smoke Machine: the answers are hidden until the reveal
       var between = G.phase === 'reveal' || G.phase === 'paused';
       $('guessui').classList.toggle('hidden', G.phase === 'paused');   // the question stays in place at the reveal, so nothing jumps
@@ -856,6 +856,7 @@
   }
   function worthHide() { clearTimeout(worthTimer); $('ptspin').classList.add('hidden'); $('ptspin').innerHTML = ''; }
   function beginGuess() {
+    setTimeout(hostQuestion, 600);
     worthHide();
     if (G.quipLoad) { quipWrite(); return; }   // Quip!: the clip comes with a question to write an answer to
     $('err').textContent = '';
@@ -919,6 +920,7 @@
   function tourOver() { return !!(G.tour && G.tourLast && !(G.gallery && (G.gallery.queue.length || G.gallery.vote))); }
   function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
   function reveal() {
+    if (G.phase === 'guess' && G.q && !G.best && !G.draw && !G.sing && G.frozenLeft == null && Math.random() < 0.6) setTimeout(function () { if (G.phase === 'reveal') hostSay('next', pick(HOST_REACT), 3200); }, 900);
     if (G.frozenLeft != null && G.phase === 'guess') { G.revealPending = true; return; }   // an item is landing: the answer waits
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
@@ -1035,6 +1037,7 @@
     }, 400);
   }
   function startRound() {
+    if (!G.round) setTimeout(hostWelcome, 300);   // the very first song: the presenters say hello
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
     list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
@@ -1967,6 +1970,37 @@
     '</svg>';
 
   var BOMB_PICK_MS = 20000, bombTimer = null;
+  // ---------- the presenters on the big screen ----------
+  // The two presenters stand in front of the video screen for the whole game and talk in speech balloons.
+  var HOST_LINES = {
+    lost: ['Language barrier! What does this title mean?', 'Lost in translation, anyone?'], peel: ['Behind the curtain… who is hiding there?'], flag: ['Whose flag is this?', 'Name that flag!'],
+    host: ['Where was the party that year?'], odd: ['Spot the odd one out!'], mistake: ['One of these is a lie…', 'Find the mistake, darlings!'], higher: ['Two songs: which one did better?'], newer: ['Two songs: which one is newer?'],
+    any: ['Listen closely…', 'Here comes the next song!', 'Do you know this one?', 'Ears open, Europe!', 'Phones ready?', 'This one’s a classic!']
+  };
+  var HOST_REACT = ['Did you get it right?', 'Douze points if you knew that one!', 'Ooh, that was a tricky one!', 'Nul points for the rest of you!', 'The jury has spoken!', 'What a performance!'];
+  var hostTurn = 0, hostT = { him: null, her: null };
+  function hostsEl() {
+    var st = stageEl(); if (!st || REMOTE) return null;
+    var h = st.querySelector('.shosts');
+    if (!h) { h = document.createElement('div'); h.className = 'shosts'; h.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; st.appendChild(h); }
+    return h;
+  }
+  function hostSay(who, text, ms) {
+    var h = hostsEl(); if (!h) return;
+    if (who === 'next') { who = hostTurn++ % 2 ? 'her' : 'him'; }
+    var b = h.querySelector('.hbub.' + who); b.textContent = text; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+    clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { b.classList.remove('on'); }, ms || 3500);
+  }
+  function hostQuestion() {   // a line for the question that starts now
+    if (!G.q || G.best || G.draw || G.sing || G.quipLoad || G.round <= 1) return;   // (the first song: the welcome is still being said)
+    var sub = G.q.blur ? 'peel' : G.q.subject, l = HOST_LINES[sub] || HOST_LINES.any;
+    hostSay('next', pick(l), 3800);
+  }
+  function hostWelcome() {
+    hostSay('him', 'Good evening, Europe! 🇪🇺', 3200);
+    setTimeout(function () { hostSay('her', 'Welcome to EuroQuizion! Grab your phones: here comes the first song!', 4200); }, 2600);
+  }
+
   function bombAll() {
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2) { quipAll(); return; }
