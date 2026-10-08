@@ -1365,7 +1365,7 @@
   chaseTimer = null, chaseBuilt = '';
   // The monster of the chase, and her song, which loops in the background (from YouTube, like every other song in
   // the game). More monsters can be added here; one is picked at random for each chase.
-  var CHASE_MONSTERS = [{ id: 'diva', name: 'The Diva', her: 'her', song: 'Vul5zgC5Yvg' }, { id: 'goblin', name: 'The Neon Goblin', her: 'him', song: 'rNrgQm5z07U' }, { id: 'phoenix', name: 'The Phoenix Queen', her: 'her', song: 'QRUIava4WRM' }], chaseLoop = null;
+  var CHASE_MONSTERS = [{ id: 'diva', name: 'The Diva', her: 'her', song: 'Vul5zgC5Yvg' }, { id: 'goblin', name: 'The Neon Goblin', her: 'him', song: 'rNrgQm5z07U' }, { id: 'phoenix', name: 'The Phoenix Queen', her: 'her', song: 'QRUIava4WRM', cry: 'Rise like a phoenix!' }], chaseLoop = null;
   function mName() { return G.chase && G.chase.monster ? G.chase.monster.name : 'The Diva'; }
   function chaseMusic(on) {
     clearInterval(chaseLoop); chaseLoop = null;
@@ -1386,16 +1386,19 @@
     } catch (e) { if (fallback) fallback(); }
   }
   // The way in: the lights go out on the quiz, a line in the dark, then the chase opens up from a growing circle.
-  var CHASE_ENTER = 5400;
+  var CHASE_ENTER = 5400, CHASE_BUILD = 3600;
   function chaseEnter() {
     var bk = $('chblack');
     if (!bk) { bk = document.createElement('div'); bk.id = 'chblack'; bk.className = 'chblack'; document.body.appendChild(bk); }
     bk.innerHTML = '<div><b>But wait…</b><span>the trophy has not been won yet.</span></div>';
     bk.classList.remove('gone'); bk.classList.add('on');
     Music.dread(true);
-    setTimeout(function () { $('chase').classList.add('iris'); chaseSfx('brk', 0.7, Music.crumble); }, CHASE_ENTER - 600);
-    setTimeout(function () { bk.classList.add('gone'); bk.classList.remove('on'); }, CHASE_ENTER + 200);
-    setTimeout(function () { $('chase').classList.remove('iris'); }, CHASE_ENTER + 1800);
+    // then the scene is built up: first the background, then the stage moves in, then the runway slides in, then the lights
+    var ch = $('chase'); ch.classList.add('nostage', 'norunway', 'nolights');
+    setTimeout(function () { bk.classList.add('gone'); bk.classList.remove('on'); }, CHASE_ENTER - 400);
+    setTimeout(function () { ch.classList.remove('nostage'); Music.woosh(); }, CHASE_ENTER + 700);
+    setTimeout(function () { ch.classList.remove('norunway'); Music.woosh(); }, CHASE_ENTER + 1700);
+    setTimeout(function () { ch.classList.remove('nolights'); chaseSfx('brk', 0.6, Music.crumble); Music.ding(); }, CHASE_ENTER + 2900);
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
   function chaseStart(test, face) {
@@ -1410,14 +1413,14 @@
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0 };
     G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
-    G.chase.enterAt = Date.now() + CHASE_ENTER - 600; chaseEnter();
+    G.chase.enterAt = Date.now() + CHASE_ENTER - 600; G.chase.builtAt = Date.now() + CHASE_ENTER + CHASE_BUILD; chaseEnter();
     // the monster starts hidden (no fade-out from the last chase), dressed as this chase's monster
     var mon = $('chmon'); mon.classList.remove('rise', 'defeat', 'hungry', 'sleep'); mon.classList.add('lurk'); mon.setAttribute('data-mon', G.chase.monster.id);
     Object.keys(CHASE_SFX).forEach(function (k) { if (!chaseSfxEl[k]) { chaseSfxEl[k] = new Audio(CHASE_SFX[k]); chaseSfxEl[k].preload = 'auto'; } });
     Music.want(false); Music.dread(true);
     push();
     // first a message in the middle, then it moves up and the jury votes are counted
-    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1100); }, 6200 + CHASE_ENTER);
+    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1100); }, 6200 + CHASE_ENTER + CHASE_BUILD);
   }
   // The start: one by one, lowest score first, each player is shown big in the middle while their jury votes count up
   // to their score; then they take their place on the runway. When all are on it, the Diva rises from the smoke.
@@ -1772,11 +1775,12 @@
     if (c.st === 'mwin') {}
     else if (c.st === 'fmsg') { big.innerHTML = 'Sudden death!<small>' + nm(c.finals) + ' reached the stage together. Keep answering: whoever gets fewer right than the others falls off the stage. The last one standing wins!</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'sdres') { big.innerHTML = (c.sdLost && c.sdLost.length ? nm(c.sdLost) + ' fell off the stage!' : 'Still level! Next question…'); big.classList.remove('hidden'); }
-    else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk falling off the stage.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Ready?') + '</div>' + (c.st === 'ready' ? '<div class="chrbar"><i id="chrbar"></i></div>' : '') + '<div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
+    else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk falling off the stage.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Ready?') + '</div>' + (c.st === 'ready' ? '<div class="chrbar"><i id="chrbar"></i></div>' : '') + '<div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
     else if (c.st === 'pre') { big.innerHTML = '👑 A former winner is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
+    else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)
     else if (c.st === 'intro') { big.innerHTML = 'You have reached the Final Chase!<small>First, let’s see how many jury votes you received: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
-    else if (c.st === 'rise') { big.innerHTML = esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'rise') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : (c.sd ? 'last one standing on the stage: the trophy is theirs!' : 'jumped onto the stage: the trophy is theirs!')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { big.innerHTML = '💀 Caught!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'near') { big.innerHTML = '🏆 ' + esc((c.nearNew || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + ' within reach of the stage!<small>Only a perfect answer (all three right) gets you onto the stage. Anything less and you bounce back.</small>'; big.classList.remove('hidden'); }

@@ -1109,3 +1109,19 @@ header{padding-right:66px!important}
 @keyframes chwhisper{from{opacity:0;transform:translateY(10px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 .chase.iris{animation:chiris 1.6s cubic-bezier(.6,0,.2,1) both}
 @keyframes chiris{0%{clip-path:circle(0% at 50% 55%);filter:brightness(2.2)}60%{filter:brightness(1.2)}100%{clip-path:circle(150% at 50% 55%);filter:none}}
+/* the Phoenix Queen: a battle cry when she is picked, and when she is defeated she bursts into flames and feathers */
+.chcry{font-size:.55em;color:#ffb347;text-shadow:0 0 18px rgba(255,140,0,.8);margin-bottom:6px}
+.phburst{position:absolute;left:42%;top:45%;width:0;height:0;z-index:4;pointer-events:none}
+.phburst i{position:absolute;left:0;top:0;font-style:normal;font-size:2rem;opacity:0}
+.chmon[data-mon="phoenix"].defeat .phburst i{animation:phfly 1.6s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes phfly{0%{opacity:0;transform:translate(0,0) scale(.3)}12%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(1.2)}}
+.chmon[data-mon="phoenix"].defeat .chbob{animation:phburn 1.4s ease-in forwards}
+@keyframes phburn{0%{transform:none;filter:none;opacity:1}35%{transform:scale(1.08);filter:brightness(2.4) saturate(1.6) drop-shadow(0 0 40px #ff8c00);opacity:1}100%{transform:scale(1.25) translateY(-6%);filter:brightness(4) drop-shadow(0 0 60px #ffb347);opacity:0}}
+/* building the scene on the way in */
+.chase .chstg,.chase .chtiles,.chase .chbeams,.chase .chstg-ring,.chase .chpyro{transition:transform 1s cubic-bezier(.2,.9,.3,1.1),opacity .8s ease}
+.chase.nostage .chstg{transform:translateX(120%);opacity:0}
+.chase.norunway .chtiles{transform:translateX(-110%);opacity:0}
+.chase.nolights .chbeams{opacity:0}
+.chase.nolights .chstg-ring,.chase.nolights .chpyro{opacity:0}
+.chase.nolights .chtro{filter:brightness(.4)}
+.chase.nolights .chstg-floor i{animation:none;opacity:.15}
