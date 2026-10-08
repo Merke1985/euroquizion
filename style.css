@@ -1150,15 +1150,15 @@ header{padding-right:66px!important}
 @keyframes rcgain{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
 aside.recapgone{visibility:hidden}
 
-.recap.tally{width:min(860px,94vw)}
-.recap.tally .rhead,.recap.tally .board li{display:grid;grid-template-columns:minmax(0,1fr) repeat(var(--R),4.6em) 3.6em;align-items:center;gap:10px}
-.recap.tally .rhead{padding:6px .9em 0;font-size:.85rem;font-weight:800;opacity:.75}
-.recap.tally .rc{text-align:center;font-variant-numeric:tabular-nums}
-.recap.tally .rhead .rc{opacity:.35;transition:opacity .3s}
-.recap.tally .rhead .rc.on{opacity:1;color:var(--yellow)}
-.recap.tally .board .rc{opacity:0;transform:scale(.3);transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1);color:var(--ok)}
-.recap.tally .board .rc.on{opacity:1;transform:none}
-.recap.tally .board .tot{font-size:1.15em}
+.recap.tally{width:min(640px,90vw)}
+.recap.tally .board li{display:grid;grid-template-columns:minmax(0,1fr) 4em 3.4em;align-items:center;gap:12px}
+.recap.tally .rstep{text-align:center;margin:0 0 6px;font-weight:800;color:var(--yellow);font-size:1.15rem;min-height:1.4em}
+.recap.tally .rstep.rpop{animation:rcgain .45s cubic-bezier(.3,1.6,.5,1)}
+.recap.tally .gain{opacity:0;animation:none;text-align:right;font-size:1.05em;font-weight:900;color:#3dff9a;text-shadow:0 0 10px rgba(61,255,154,.5);transition:transform .45s ease-in,opacity .45s ease-in}
+.recap.tally .gain.on{opacity:1;animation:rcpop .4s cubic-bezier(.3,1.6,.5,1)}
+.recap.tally .gain.on.off{animation:none;opacity:0;transform:translateX(2.2em) scale(.6)}
+@keyframes rcpop{from{transform:scale(.3)}to{transform:none}}
+.recap.tally .board .tot{font-size:1.15em;text-align:right;font-variant-numeric:tabular-nums}
 .recap.tally .recapnext{opacity:0;transition:opacity .5s}
 .recap.tally .recapnext.on{opacity:.85}
 .recap.tally li.best{outline:2px solid var(--yellow);box-shadow:0 0 22px rgba(255,210,63,.45)}
@@ -1189,3 +1189,6 @@ aside.recapgone{visibility:hidden}
 .chase.nocrowd .chcrowd.back{transform:translateY(60%);opacity:0}
 .chase.nocrowd .chcrowd.front{transform:translateY(110%);opacity:0}
 .recap{background:#1b0f30}
+
+/* the spotlights also fall faintly across the LED stage */
+.chstage.over{z-index:3;pointer-events:none;opacity:.32;mix-blend-mode:screen}

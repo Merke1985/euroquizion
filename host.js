@@ -1390,7 +1390,7 @@
     try { var a = new Audio('sounds/spotlight.mp3?v=1'); a.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
   }
   // The way in: the lights go out on the quiz, a line in the dark, then the chase opens up from a growing circle.
-  var CHASE_ENTER = 5400, CHASE_BUILD = 8200;
+  var CHASE_ENTER = 5400, CHASE_BUILD = 9200;
   // The audience: fans on both sides of the runway, jumping, dancing and waving, made up afresh for every chase.
   var FAN_COLS = ['#ff2fa8', '#ffd23f', '#2fd3ff', '#9b5cff', '#3dff9a', '#ff7a2f', '#ff4d6d', '#ffffff'];
   function fanSvg(front) {
@@ -1427,10 +1427,10 @@
     setTimeout(function () { ch.classList.remove('norunway'); Music.woosh(); }, CHASE_ENTER + 1700);
     [].forEach.call(ch.querySelectorAll('.lit'), function (e) { e.classList.remove('lit'); });
     // the lights pop on one by one, each with a spotlight clunk: the four beams, then the stage and the trophy
-    var lights = [].slice.call(ch.querySelectorAll('.chbeams i')).reverse().map(function (e) { return [e]; });
+    var beams = [].slice.call(ch.querySelectorAll('.chbeams')), lights = [3, 2, 1, 0].map(function (k) { return beams.map(function (b) { return b.children[k]; }); });   // each beam, with its glow over the stage
     lights.push([].slice.call(ch.querySelectorAll('.chstg-floor,.chstg-ring,.chtro')));
-    lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 4000 + i * 420); });
-    setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 150);   // the crowd brightens with the last light
+    lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 4000 + i * 420 + (i === lights.length - 1 ? 1000 : 0)); });   // a second's pause before the stage lights
+    setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 1150);   // the crowd brightens with the last light
     setTimeout(function () { ch.classList.remove('nocrowd'); Music.woosh(); }, CHASE_ENTER + 2800);   // the fans come in, still in the dark
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
@@ -3047,10 +3047,8 @@
     var side = $('board').closest('aside'), r = side.getBoundingClientRect(), R = G.parts;
     var bg = document.createElement('div'); bg.id = 'recapbg'; bg.className = 'recapbg'; document.body.appendChild(bg);
     var c = document.createElement('div'); c.id = 'recap'; c.className = 'card recap tally'; c.style.setProperty('--R', R);
-    var cols = ''; for (var k = 0; k < R; k++) cols += '<span class="rc">Round ' + (k + 1) + '</span>';
-    c.innerHTML = '<h3>' + (R > 1 ? 'All rounds added up' : 'The scores so far') + '</h3><div class="rhead"><span></span>' + cols + '<span class="tot">Total</span></div><ol class="board">' + ps.map(function (p) {
-      var cells = ''; for (var k = 0; k < R; k++) { var g = (p.rh || [])[k] || 0; cells += '<span class="rc" data-k="' + k + '">' + (g < 0 ? '−' + (-g) : g) + '</span>'; }
-      return '<li data-pid="' + esc(p.pid) + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span>' + cells + '<span class="tot">0</span></li>';
+    c.innerHTML = '<h3>' + (R > 1 ? 'All rounds added up' : 'The scores so far') + '</h3><p class="rstep">&nbsp;</p><ol class="board">' + ps.map(function (p) {
+      return '<li data-pid="' + esc(p.pid) + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="gain"></span><span class="tot">0</span></li>';
     }).join('') + '</ol><p class="recapnext">' + esc(nextTxt) + '</p>';
     document.body.appendChild(c);
     var w = c.offsetWidth, h = c.offsetHeight, L = Math.round((innerWidth - w) / 2), T = Math.round((innerHeight - h) / 2);
@@ -3070,21 +3068,22 @@
     var count = function (el, from, to) {   // the total counts up
       var t0 = Date.now(), d = 700; (function f() { if (!el.isConnected) return; var q = Math.min(1, (Date.now() - t0) / d); el.textContent = Math.round(from + (to - from) * q); if (q < 1) requestAnimationFrame(f); })();
     };
-    var STEP = 1400 + ps.length * 180;
+    var STEP = 1900 + ps.length * 180;
     for (var k = 0; k < R; k++) (function (k) {
       setTimeout(function () {
         if (!G.recap) return;
-        c.querySelectorAll('.rhead .rc')[k].classList.add('on');
+        var stp = c.querySelector('.rstep'); stp.textContent = R > 1 ? 'Round ' + (k + 1) : ''; stp.classList.remove('rpop'); void stp.offsetWidth; stp.classList.add('rpop');
         ps.forEach(function (p, i) {
           setTimeout(function () {
             if (!G.recap) return;
             var li = ol.querySelector('li[data-pid="' + p.pid + '"]'); if (!li) return;
-            li.querySelector('.rc[data-k="' + k + '"]').classList.add('on');
-            var g = (p.rh || [])[k] || 0, from = tot[p.pid]; tot[p.pid] += g; count(li.querySelector('.tot'), from, tot[p.pid]);
+            var g = (p.rh || [])[k] || 0, from = tot[p.pid], ge = li.querySelector('.gain');
+            ge.textContent = g < 0 ? '−' + (-g) : '+' + g; ge.classList.remove('on', 'off'); void ge.offsetWidth; ge.classList.add('on');   // the +points pop up …
+            setTimeout(function () { tot[p.pid] += g; count(li.querySelector('.tot'), from, tot[p.pid]); ge.classList.add('off'); }, 450);   // … and fly into the total
             Music.plop(i);
           }, i * 180);
         });
-        setTimeout(function () { if (G.recap) resort(); }, ps.length * 180 + 750);
+        setTimeout(function () { if (G.recap) resort(); }, ps.length * 180 + 1250);
       }, 1300 + k * STEP);
     })(k);
     setTimeout(function () { if (!G.recap) return; var f = ol.firstElementChild, hi = f ? tot[f.getAttribute('data-pid')] : 0; [].forEach.call(ol.children, function (li) { if (tot[li.getAttribute('data-pid')] === hi) li.classList.add('best'); }); c.querySelector('.recapnext').classList.add('on'); Music.ding(); }, 1300 + R * STEP + 300);
