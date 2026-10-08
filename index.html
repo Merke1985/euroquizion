@@ -63,7 +63,7 @@
     <p id="briefwait" class="mute" style="text-align:center;margin:0"></p>
   </section>
 
-  <section id="v-wait" class="center hidden"><div class="avatarrow hidden" id="profile"><div id="mychar" class="mychar"></div><strong id="myname"></strong><div class="editrow"><button class="btn alt small" id="changename" type="button">Edit name</button><button class="btn alt small" id="changechar" type="button">Change avatar</button></div></div><div class="mute" id="waitlabel"></div><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p><button class="btn big readybtn hidden" id="lobbyready" type="button" aria-pressed="false"><span class="tick"></span><span id="lobbyreadytext">Ready</span></button><button class="btn big hidden" id="lobbystart" type="button" style="width:100%">Start game</button></section>
+  <section id="v-wait" class="center hidden"><p class="chdanger hidden" id="chdanger2"></p><div class="avatarrow hidden" id="profile"><div id="mychar" class="mychar"></div><strong id="myname"></strong><div class="editrow"><button class="btn alt small" id="changename" type="button">Edit name</button><button class="btn alt small" id="changechar" type="button">Change avatar</button></div></div><div class="mute" id="waitlabel"></div><h1 class="huge" id="waittitle"></h1><p class="mute" id="waitsub"></p><button class="btn big readybtn hidden" id="lobbyready" type="button" aria-pressed="false"><span class="tick"></span><span id="lobbyreadytext">Ready</span></button><button class="btn big hidden" id="lobbystart" type="button" style="width:100%">Start game</button></section>
 
   <section id="v-guess" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="mute" id="roundlabel"></div>
@@ -127,6 +127,7 @@
 
   <section id="v-chase" class="hidden" style="display:flex;flex-direction:column;gap:12px">
     <div class="mute" id="chstat">The Final Chase</div>
+    <p class="chdanger hidden" id="chdanger"></p>
     <h2 id="chtext" style="margin:0"></h2>
     <p class="mute" id="chhelp" style="margin:0">Tick every song that fits: none, some or all. One space forward for each one you get right.</p>
     <div class="opts chopts" id="chopts"></div>

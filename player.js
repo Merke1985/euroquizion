@@ -25,6 +25,8 @@
   }
   function chaseView(c) {
     var l = c.lanes[pid];
+    var dz = !!(l && l.danger && c.st !== 'win'), dzt = '⚠️ Danger! ' + (c.mname || 'The monster') + ' will smash your space next turn. Get answers right to escape!';
+    ['chdanger', 'chdanger2'].forEach(function (id) { $(id).classList.toggle('hidden', !dz); $(id).textContent = dz ? dzt : ''; });
     if (!l) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var where = 'Space ' + l.pos + ' of ' + c.end + ' · ' + (c.wake ? (c.mname || 'the monster').replace(/^The /, 'the ') + ' is still waiting' : (c.mname || 'the monster').replace(/^The /, 'the ') + ' is on ' + c.mon);
     if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Final Chase!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
@@ -34,7 +36,9 @@
     if (c.st === 'ready' || c.st === 'go') {
       var rd = !!(c.ready && c.ready[pid]) || chReadyKey === c.rkey;
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = rd ? 'You’re ready!' : 'Are you ready?';
-      $('chhelp').textContent = rd ? 'Waiting for the others…' : 'The chase starts when everyone is ready.'; $('chopts').innerHTML = ''; $('chpbar').parentNode.classList.add('hidden');
+      $('chhelp').textContent = rd ? 'Waiting for the others…' : 'The chase starts when everyone is ready.'; $('chopts').innerHTML = '';
+      if (c.st === 'ready' && chBarKey !== c.rkey) { chBarKey = c.rkey; var rb = $('chpbar'); rb.style.transition = 'none'; rb.style.width = (c.rleft / 600) + '%'; rb.getBoundingClientRect(); rb.style.transition = 'width ' + c.rleft + 'ms linear'; rb.style.width = '0%'; }
+      $('chpbar').parentNode.classList.toggle('hidden', c.st !== 'ready');
       $('chlock').classList.add('hidden'); $('chready').classList.remove('hidden'); $('chready').classList.toggle('on', rd); $('chready').setAttribute('aria-pressed', rd ? 'true' : 'false'); $('chreadytext').textContent = rd ? 'Ready!' : 'Ready';
       return;
     }
@@ -188,6 +192,7 @@
       return;
     }
     $('v-wait').classList.toggle('lobbyview', s.phase === 'lobby');
+    if (s.phase !== 'chase') { $('chdanger2').classList.add('hidden'); $('chdanger').classList.add('hidden'); }
     if (s.phase !== 'lobby') { $('lobbyready').classList.add('hidden'); $('lobbystart').classList.add('hidden'); }
     if (s.phase === 'lobby') {
       var emb = document.body.classList.contains('embed');   // the host already sees the lobby around this frame
