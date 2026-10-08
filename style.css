@@ -1467,3 +1467,11 @@ aside.recapgone{visibility:hidden}
 .shosts.away .ehost.him{translate:-160% 0;opacity:0}
 .shosts.away .ehost.her{translate:160% 0;opacity:0}
 .shosts.away .hbub{opacity:0}
+
+/* the boutique slides away */
+.boutique.leaving .bqbubble{animation:outBottom .5s cubic-bezier(.6,0,.8,.4) forwards}
+.boutique.leaving .bqkeeper{animation:outLeft .7s .1s cubic-bezier(.6,0,.8,.4) forwards}
+.boutique.leaving .bqshelf,.boutique.leaving .bqhats,.boutique.leaving .bqfans,.boutique.leaving .bqfloor{animation:outRight .7s .25s cubic-bezier(.6,0,.8,.4) forwards}
+.boutique.leaving .bqrack,.boutique.leaving .shoppers{animation:outBottom .7s .25s cubic-bezier(.6,0,.8,.4) forwards}
+.boutique.leaving .bqsign,.boutique.leaving .bqbunting,.boutique.leaving .bqdisco,.boutique.leaving .bqsale{animation:outTop .7s .4s cubic-bezier(.6,0,.8,.4) forwards}
+.boutique.leaving{transition:background-color .4s 1s}

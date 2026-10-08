@@ -2223,7 +2223,11 @@
     clearTimeout(shopTimer); g.over = true;
     g.who.forEach(function (k) { var p = players[k]; if (!p || p.off || g.picks[k]) return; var it = shopRandom(g.n, (g.offer || {})[k]); g.picks[k] = it; p.inv = (p.inv || []).concat(it); });   // too late: a surprise bag
     Music.ding(); push();
-    shopTimer = setTimeout(function () { if (G.phase === 'shop') { var then = g.then; G.shop = null; (then || startRound)(); } }, 3500);
+    shopTimer = setTimeout(function () {   // the boutique slides away, then the show goes on
+      if (G.phase !== 'shop') return;
+      var ov = $('shopov'); if (ov) { ov.classList.remove('enter'); ov.classList.add('leaving'); } whooshes([0, 250, 500]);
+      shopTimer = setTimeout(function () { if (G.phase === 'shop') { var then = g.then; G.shop = null; (then || startRound)(); } }, 1300);
+    }, 3800);
   }
   // The used items land: one card on the big screen with everything that happens, then the next question.
   function shopDeliver(then) {
@@ -2380,7 +2384,8 @@
       document.body.appendChild(ov);
     }
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
-    ov.querySelector('.bqbubble').textContent = g.over ? 'Thank you, darlings! Use them wisely…' : first ? 'Welcome, darlings! Everyone gets four to choose from: pick one on your phone, it’s on the house!' : 'Congratulations! Four treasures on your phone: take ' + g.n + ', on the house, darling!';
+    var one = act.length === 1;
+    ov.querySelector('.bqbubble').textContent = g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'Welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.';
     ov.querySelector('.shoppers').innerHTML = act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('');
   }
   // The big announcement of an item: across the whole screen, with the points flying and a sound.
