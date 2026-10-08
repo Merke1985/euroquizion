@@ -1389,7 +1389,7 @@
     try { var a = new Audio('sounds/spotlight.mp3?v=1'); a.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
   }
   // The way in: the lights go out on the quiz, a line in the dark, then the chase opens up from a growing circle.
-  var CHASE_ENTER = 5400, CHASE_BUILD = 6000;
+  var CHASE_ENTER = 5400, CHASE_BUILD = 7000;
   function chaseEnter() {
     var bk = $('chblack');
     if (!bk) { bk = document.createElement('div'); bk.id = 'chblack'; bk.className = 'chblack'; document.body.appendChild(bk); }
