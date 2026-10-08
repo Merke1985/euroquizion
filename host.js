@@ -1320,7 +1320,7 @@
   // further ahead by their score. Each question has three songs, any number of which fit; you move one space for
   // each song you judge right. After everyone has moved, the Diva moves (faster as it goes on), and whoever she
   // reaches is caught. The first to reach the trophy wins the game.
-  var CHASE_END = 20, CHASE_GOAL = 21, CHASE_ASK = 10000,   // twenty spaces of runway; the stage is one step beyond the last
+  var CHASE_END = 20, CHASE_GOAL = 21, CHASE_ASK = 8000,   // twenty spaces of runway; the stage is one step beyond the last
   chaseTimer = null, chaseBuilt = '';
   // The monster of the chase, and her song, which loops in the background (from YouTube, like every other song in
   // the game). More monsters can be added here; one is picked at random for each chase.
