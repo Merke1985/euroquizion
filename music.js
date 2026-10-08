@@ -95,6 +95,19 @@ var Music = (function () {
       });
     } catch (e) {}
   }
+  // Talking: one short, soft syllable blip; 'him' is lower, 'her' higher, each a little different so it sounds like speech.
+  function talk(who) {
+    try {
+      if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
+      if (ctx.state === 'suspended') ctx.resume();
+      var t = ctx.currentTime + 0.005, base = who === 'her' ? 330 : 190, f = base * (0.85 + Math.random() * 0.35);
+      var o = ctx.createOscillator(), g = ctx.createGain(), bp = ctx.createBiquadFilter();
+      o.type = 'square'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random() < 0.5 ? 0.9 : 1.08), t + 0.07);
+      bp.type = 'bandpass'; bp.frequency.value = f * 3; bp.Q.value = 1.2;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.075);
+      o.connect(bp); bp.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.09);
+    } catch (e) {}
+  }
   // A soft "plop": a sine that drops in pitch. n shifts it a little so a row of them does not sound identical.
   function plop(n, vol) {   // vol: 1 by default, lower for a quiet tick
     try {
@@ -309,5 +322,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

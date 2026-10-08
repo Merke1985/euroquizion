@@ -2023,7 +2023,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     any: ['Listen closely…', 'Here comes the next song!', 'Do you know this one?', 'Ears open, Europe!', 'Phones ready?', 'This one’s a classic!']
   };
   var HOST_REACT = ['Did you get it right?', 'Douze points if you knew that one!', 'Ooh, that was a tricky one!', 'Nul points for the rest of you!', 'The jury has spoken!', 'What a performance!'];
-  var hostTurn = 0, hostT = { him: null, her: null }, hostHold = false;   // (hold: they stay on stage for the whole announcement)
+  var hostTurn = 0, hostT = { him: null, her: null }, hostType = {}, hostHold = false;   // (hold: they stay on stage for the whole announcement)
   function hostsEl() {
     var st = stageEl(); if (!st || REMOTE) return null;
     var h = st.querySelector('.shosts');
@@ -2034,9 +2034,22 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var h = hostsEl(); if (!h) return;
     if (who === 'next') { who = hostTurn++ % 2 ? 'her' : 'him'; }
     if (h.classList.contains('away')) { h.classList.remove('away'); if (!REMOTE) Music.woosh(); }   // they walk on to say it…
-    var b = h.querySelector('.hbub.' + who); b.textContent = text; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
-    clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { b.classList.remove('on'); }, ms || 3500);
-    clearTimeout(hostT.away); hostT.away = setTimeout(hostsAway, (ms || 3500) + 600);   // …and leave the screen to the game again
+    var b = h.querySelector('.hbub.' + who); b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+    // The words come out letter by letter, with a little blip now and then, so it looks (and sounds) like they are talking.
+    // The rest of the line is already there, invisible, so the balloon has its full size from the start.
+    var chars = Array.from(String(text)), n = 0, per = 26, typing = chars.length * per;
+    clearInterval(hostType[who]);
+    var draw = function () { b.innerHTML = '<span>' + esc(chars.slice(0, n).join('')) + '</span><span class="unsaid">' + esc(chars.slice(n).join('')) + '</span>'; };
+    draw(); b.classList.toggle('talking', true);
+    hostType[who] = setInterval(function () {
+      n++; draw();
+      var c = chars[n - 1];
+      if (!REMOTE && c && /[A-Za-zÀ-ÿ0-9]/.test(c) && n % 3 === 1) Music.talk(who);
+      if (n >= chars.length) { clearInterval(hostType[who]); b.classList.remove('talking'); }
+    }, per);
+    ms = Math.max(ms || 3500, typing + 1600);
+    clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { b.classList.remove('on'); }, ms);
+    clearTimeout(hostT.away); hostT.away = setTimeout(hostsAway, ms + 600);   // …and leave the screen to the game again
   }
   function hostsAway() {
     var h = hostsEl(); if (!h || h.classList.contains('away') || G.phase === 'opening' || hostHold || h.querySelector('.hbub.on')) return;
