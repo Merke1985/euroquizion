@@ -1044,3 +1044,6 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chmon[data-mon="diva"] .goblin,.chmon[data-mon="goblin"] .diva,.chmon:not([data-mon]) .goblin{display:none}
 .chmon[data-mon="goblin"] .chmonname{color:#7dff4f}
 .chmon[data-mon="goblin"] .chsmoke i{background:radial-gradient(circle,rgba(40,90,40,.85),rgba(20,60,20,.5) 45%,rgba(10,30,10,0) 70%)}
+.chtok .ch-face{position:relative}
+.chtok.doomed .ch-face::after{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(255,23,68,.45);mix-blend-mode:multiply}
+.chtok.doomed .ch-face{box-shadow:0 0 0 3px rgba(255,23,68,.6),0 0 18px #ff1744}
