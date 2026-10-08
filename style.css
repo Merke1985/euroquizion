@@ -1010,3 +1010,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 @keyframes chjump{0%{transform:translateY(0)}45%{transform:translateY(-120%)}100%{transform:translateY(0)}}
 .chtok.won{z-index:5}
 .chbig.winbox{top:84%}
+.chtok.unplaced{opacity:0}
+.chtok.unplaced .ch-face{transform:scale(.3)}
+.chtok .ch-face{transition:transform .35s cubic-bezier(.3,1.6,.5,1),border-color .3s}
+.chbig.introbox{top:10.5%;transform:translateX(-50%);font-size:clamp(1.1rem,2.2vw,1.8rem);padding:10px 22px;max-width:62%}
+.chbig.introbox small{font-size:.5em}

@@ -1339,14 +1339,24 @@
   function chaseStart(test) {
     autoStop(); stopTimers(); clearTimeout(chaseTimer); try { yt.pauseVideo(); } catch (e) {} yt2.pause(); cover(true, '', '', false);
     var ps = list().filter(function (p) { return !p.off; }); if (!ps.length) ps = list();
-    var sc = ps.map(function (p) { return test ? Math.floor(Math.random() * 100) : p.score; }), lo = Math.min.apply(null, sc), hi = Math.max.apply(null, sc);
-    var lanes = {}; ps.forEach(function (p, i) { lanes[p.pid] = { pos: 1 + (hi > lo ? Math.round(6 * (sc[i] - lo) / (hi - lo)) : 0), out: false, res: null, mask: 0, lock: false, touched: false, at: 0 }; });
-    G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false };
+    // Starting spaces: the lowest score on space 1, the highest four spaces ahead, everyone else in between by their score.
+    // (A test chase makes up scores, in steps of the usual 12 points.)
+    var sc = ps.map(function (p) { return test ? 12 * Math.floor(Math.random() * 15) : p.score; }), lo = Math.min.apply(null, sc), hi = Math.max.apply(null, sc);
+    var lanes = {}, scores = {}; ps.forEach(function (p, i) { scores[p.pid] = sc[i]; lanes[p.pid] = { pos: 1 + (hi > lo ? Math.round(4 * (sc[i] - lo) / (hi - lo)) : 0), out: false, res: null, mask: 0, lock: false, touched: false, at: 0 }; });
+    // they are put on the runway one by one, half a second apart, the lowest score first
+    var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
+    G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0 };
     G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
     chaseMusic(true);
     Music.want(false); Music.dread(true); setTimeout(function () { if (G.phase === 'chase') Music.creep(); }, 1500);
     push();
-    chaseTimer = setTimeout(chaseAsk, 5000);
+    var put = function () {
+      var c = G.chase; if (!c || G.phase !== 'chase' || c.st !== 'intro') return;
+      if (c.placed >= c.placeOrder.length) { chaseTimer = setTimeout(chaseAsk, 2500); return; }
+      c.placed++; Music.plop(c.placed); push();
+      chaseTimer = setTimeout(put, 500);
+    };
+    chaseTimer = setTimeout(put, 1800);
   }
   // The Diva sleeps through the first two questions, then comes: two spaces a turn, three from the ninth question.
   function divaStep(n) { return n <= 2 ? 0 : n <= 8 ? 2 : 3; }
@@ -1463,6 +1473,9 @@
       if (!l.out) { occ[i + ':' + at] = 1; if (next && at <= c.mon + next && c.st !== 'win' && c.st !== 'move') doomed[k] = 1; }
       el.classList.toggle('out', l.out); el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
       el.classList.toggle('near', !l.out && l.pos >= CHASE_GOAL - 3 && !c.win); el.classList.toggle('doomed', !!doomed[k]);
+      var waiting = c.st === 'intro' && c.placeOrder.indexOf(k) >= c.placed; el.classList.toggle('unplaced', waiting);   // not on the runway yet
+      if (waiting) delete occ[i + ':' + at];
+      el.querySelector('.ch-name').textContent = (players[k] ? players[k].name : '?') + (c.st === 'intro' ? ' · ' + c.scores[k] : '');
       var r = el.querySelector('.ch-res'), showR = (c.st === 'show' || c.st === 'move') && l.res != null && !l.out;
       r.classList.toggle('on', showR); r.classList.toggle('zero', !l.res); r.classList.toggle('gold', l.res === 3); r.textContent = showR ? (l.res === 3 ? '★ +3' : '+' + l.res) : '';
     });
@@ -1496,12 +1509,12 @@
     $('chn').textContent = c.n ? 'Question ' + c.n + ' · first to the trophy wins' : 'First to the trophy wins';
     // the line under the stage: what the Diva is up to, or that the trophy is within reach
     var note = $('chnote'), near = chaseNear();
-    if (c.st === 'win') note.classList.add('hidden');
+    if (c.st === 'win' || c.st === 'intro') note.classList.add('hidden');
     else if (near.length) { note.className = 'chnote'; note.textContent = '🏆 Within reach of the stage: only a perfect answer (3 out of 3) gets you on it!'; }
     else if (c.n < 2 || (c.n === 2 && c.st !== 'diva')) { var w = 2 - c.n + (c.st === 'intro' ? 0 : 0); note.className = 'chnote red'; note.textContent = '😴 The Diva is waiting… ' + (c.n < 2 ? (2 - c.n) + (2 - c.n === 1 ? ' more question' : ' more questions') : 'last quiet question'); }
     else if (next) { var dn = Object.keys(doomed).length; note.className = 'chnote red'; note.textContent = '⚠️ Next turn the Diva smashes ' + next + (next === 1 ? ' space' : ' spaces') + (dn ? ' · ' + dn + (dn === 1 ? ' player is' : ' players are') + ' in danger!' : ''); }
     else note.classList.add('hidden');
-    var big = $('chbig'); big.classList.toggle('winbox', c.st === 'win');
+    var big = $('chbig'); big.classList.toggle('winbox', c.st === 'win'); big.classList.toggle('introbox', c.st === 'intro');
     if (c.st === 'intro') { big.innerHTML = 'The Final Chase<small>Run up the runway to the trophy! Tick every song that fits the question; one space for each one you get right. The Diva waits two questions, then she comes.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : 'jumped onto the stage: the trophy is theirs!') + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { big.innerHTML = '💀 Caught!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
