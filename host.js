@@ -330,6 +330,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'chase') $('chase').classList.add('hidden');
     if (G.phase !== 'shop' && $('shopov')) $('shopov').remove();
     if (G.phase !== 'bomb' && $('bombov')) $('bombov').remove();
+    if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -1221,6 +1222,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, fav: favAll, shop: shopAll, bomb: bombAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null;   // (the winner goes shopping instead of keeping the points)
+    if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
   // A presenter hops on screen to announce it, then the party round is chosen.
@@ -2594,6 +2596,46 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // on their phone while the clip runs on; then all answers are shown without names and everyone
   // votes for the best one (not their own).
   var quipTimer = null;
+  // The Green Room: the presenters take everyone to the green room, where the stars sit waiting on their sofas
+  // (the players on the front sofa). They explain the game, then the performance starts and the question comes.
+  var GR_SOFAS = ['#8e1b3a', '#1d6b6b', '#5b2a86', '#a8641a', '#25507f'];
+  function greenRoom(then) {
+    stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    G.fun = { kind: 'groom', icon: FUN.quip.icon, title: FUN.quip.title, sub: FUN.quip.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
+    cover(true, '', '', false); masks(true); push();
+    hostsAway();
+    var old = $('grov'); if (old) old.remove();
+    var act = list().filter(function (p) { return !p.off; });
+    var taken = {}; act.forEach(function (p) { taken[p.char] = 1; });
+    var stars = shuffle(CHARS.filter(function (c) { return !taken[c.id]; })).slice(0, 12);
+    var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }));
+    var person = function (charId, name, i, flag) {   // someone on a sofa: body, head, and now and then a flag to wave
+      var col = ['#e8457c', '#f2b134', '#3fb6c9', '#9b6bf2', '#55c27a', '#f07a3a'][i % 6];
+      return '<div class="grp' + (Math.random() < 0.45 ? ' hop' : '') + '" style="--d:' + (-Math.random() * 3).toFixed(2) + 's">' +
+        (flag ? '<span class="grflag"><img src="https://flagcdn.com/w80/' + flag + '.png" alt=""></span>' : '') +
+        '<span class="grbody" style="background:' + col + '"></span>' + charSvg(charId) + '</div>';
+    };
+    var sofa = function (people, k, names) { return '<div class="grsofa" style="--c:' + GR_SOFAS[k % GR_SOFAS.length] + '"><div class="grseat">' + people.join('') + '</div><span class="grfront"></span>' + (names ? '<div class="grnames">' + names.map(function (n) { return '<b>' + esc(n) + '</b>'; }).join('') + '</div>' : '') + '</div>'; };
+    var row = function (ppl, per, cls, k0, names) { var h = ''; for (var i = 0; i < ppl.length; i += per) h += sofa(ppl.slice(i, i + per), k0 + i / per, names ? names.slice(i, i + per) : null); return '<div class="grrow ' + cls + '">' + h + '</div>'; };
+    var back = stars.slice(0, 6).map(function (c, i) { return person(c.id, '', i, i % 2 ? codes[i] : ''); });
+    var mid = stars.slice(6, 12).map(function (c, i) { return person(c.id, '', i + 3, i % 2 ? '' : codes[i + 6]); });
+    var front = act.map(function (p, i) { return person(p.char, p.name, i + 1, ''); });
+    var ov = document.createElement('div'); ov.id = 'grov'; ov.className = 'grov enter';
+    ov.innerHTML = '<div class="grwall"></div><div class="grflags">' + codes.slice(12, 30).map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div>' +
+      '<div class="grsign">🛋️ Green Room</div><div class="grfloor"></div>' +
+      row(back, 3, 'back', 0) + row(mid, 3, 'mid', 2) + row(front, front.length > 6 ? Math.ceil(front.length / 2) : 6, 'front', 1, act.map(function (p) { return p.name; })) +
+      '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
+    document.body.appendChild(ov);
+    whooshes([0, 350, 700]); setTimeout(function () { ov.classList.remove('enter'); }, 2800);
+    var at = function (ms, f) { setTimeout(function () { if (ov.isConnected && G.phase === 'fun' && G.fun && G.fun.kind === 'groom') f(); }, ms); };
+    var say = function (who, txt) { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); };
+    at(1500, function () { Music.ding(); say('him', 'Welcome to the Green Room, where all the stars are waiting for their results! 🛋️'); });
+    at(5300, function () { say('her', 'We’re going to watch a performance together, and then we have a question for you.'); });
+    at(9100, function () { say('him', 'Write the funniest answer you can think of on your phone…'); });
+    at(12300, function () { say('her', '…and then everyone votes for the best one. Here comes the performance! 🎤'); });
+    at(16300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
+    at(17300, function () { ov.remove(); then(); });
+  }
   function quipAll() {
     G.quipLoad = true; G.quips = null; G.draw = null; G.best = null; G.q = null;
     G.phase = 'loading'; push(); loadSong();

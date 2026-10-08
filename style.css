@@ -1521,3 +1521,53 @@ aside.recapgone{visibility:hidden}
 
 /* presenters talking: the rest of the line waits, invisible, so the balloon keeps its size */
 .hbub .unsaid, .bqbubble .unsaid { visibility: hidden; }
+
+/* ---------- The Green Room scene (the presenters take everyone there before a Green Room game) ---------- */
+.grov{position:fixed;inset:0;z-index:55;overflow:hidden;background:#120724;font-family:inherit;color:#fff}
+.grov .grwall{position:absolute;inset:0 0 30% 0;background:
+  radial-gradient(circle,rgba(255,220,150,.55) 0 1.5px,transparent 2.5px) 0 0/34px 34px,
+  radial-gradient(ellipse at 50% 30%,#3a1d66 0%,#21103f 55%,#120724 100%)}
+.grov .grwall::after{content:'';position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(transparent,#120724)}
+.grov .grfloor{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(#2a1450,#160a2c);box-shadow:inset 0 10px 30px rgba(0,0,0,.5)}
+.grov .grsign{position:absolute;top:9vh;left:0;right:0;margin:0 auto;width:fit-content;z-index:3;font-weight:900;font-size:clamp(1.8rem,4vw,3.4rem);padding:.15em .7em;border-radius:18px;background:rgba(18,7,36,.7);border:3px solid #6ff2b0;color:#eafff4;text-shadow:0 0 12px #3ff29a,0 0 28px #3ff29a;box-shadow:0 0 18px rgba(63,242,154,.6),inset 0 0 18px rgba(63,242,154,.35);white-space:nowrap;animation:bqneon 3s ease-in-out infinite}
+.grov .grflags{position:absolute;top:1vh;left:0;right:0;display:flex;justify-content:space-between;padding:0 2vw;pointer-events:none}
+.grov .grflags i{width:4.2vw;max-width:56px;aspect-ratio:3/2;transform-origin:50% 0;animation:bqsway 2.6s ease-in-out infinite alternate;box-shadow:0 3px 8px rgba(0,0,0,.4);background:#3a2560}
+.grov .grflags i:nth-child(odd){animation-delay:-1.3s;margin-top:1.2vh}
+.grov .grflags img{width:100%;height:100%;object-fit:cover;display:block}
+/* the sofas, in three tiers: the stars at the back, the players at the front */
+.grov .grrow{position:absolute;left:15vw;right:15vw;display:flex;justify-content:center;align-items:flex-end;gap:2.5vw}
+.grov .grrow.back{bottom:45vh;transform:scale(.72);transform-origin:50% 100%;filter:brightness(.8)}
+.grov .grrow.mid{bottom:25vh;transform:scale(.86);transform-origin:50% 100%;filter:brightness(.9)}
+.grov .grrow.front{bottom:3.5vh}
+.grov .grsofa{position:relative;padding:0 1.8vh 3.4vh;--c:#8e1b3a}
+.grov .grsofa::before{content:'';position:absolute;left:0;right:0;bottom:6vh;height:15vh;border-radius:3vh 3vh 1vh 1vh;background:linear-gradient(color-mix(in srgb,var(--c) 85%,#fff),var(--c));box-shadow:0 8px 20px rgba(0,0,0,.45)}
+.grov .grseat{position:relative;display:flex;gap:1.2vh;align-items:flex-end}
+.grov .grfront{position:absolute;left:-.8vh;right:-.8vh;bottom:3.4vh;height:9vh;border-radius:1.8vh;background:linear-gradient(color-mix(in srgb,var(--c) 70%,#fff),color-mix(in srgb,var(--c) 75%,#000));box-shadow:0 6px 14px rgba(0,0,0,.5);z-index:2}
+.grov .grnames{position:absolute;left:1.8vh;right:1.8vh;bottom:0;display:flex;gap:1.2vh;z-index:3}
+.grov .grnames b{width:11vh;margin:0 -.6vh;text-align:center;font-size:clamp(.7rem,1.15vw,1rem);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 6px rgba(0,0,0,.8)}
+.grov .grp{position:relative;width:11vh;height:22vh;animation:grbob 2.4s ease-in-out infinite alternate;animation-delay:var(--d)}
+.grov .grp.hop{animation:grhop 1.6s ease-in-out infinite;animation-delay:var(--d)}
+.grov .grp .char{position:absolute;left:50%;bottom:11.5vh;width:9.6vh;height:9.6vh;margin-left:-4.8vh;border:3px solid rgba(255,255,255,.85);box-shadow:0 4px 10px rgba(0,0,0,.45);z-index:1}
+.grov .grp .grbody{position:absolute;left:50%;bottom:2vh;width:10vh;margin-left:-5vh;height:10.5vh;border-radius:5vh 5vh 1.2vh 1.2vh;box-shadow:inset 0 -8px 12px rgba(0,0,0,.25)}
+.grov .grflag{position:absolute;bottom:13vh;left:70%;width:2px;height:11vh;background:#ddd;z-index:2;transform-origin:50% 100%;animation:grwave 1.1s ease-in-out infinite alternate;animation-delay:var(--d)}
+.grov .grflag img{position:absolute;top:0;left:2px;width:6.5vh;aspect-ratio:3/2;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.4);background:#3a2560}
+/* the presenters, at the sides, with their own balloons */
+.grov .grhosts .ehost{position:absolute;bottom:4vh;height:54vh;width:auto;z-index:4;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3.2s ease-in-out infinite alternate}
+.grov .grhosts .him{left:2vw}.grov .grhosts .her{right:2vw;animation-delay:-1.6s}
+.grov .grbub{position:absolute;top:22vh;max-width:30vw;z-index:6;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(1rem,1.7vw,1.4rem);line-height:1.25;padding:.65em 1em;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:scale(.6);transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.grov .grbub.him{left:4vw;border-bottom-left-radius:4px;transform-origin:0 100%}
+.grov .grbub.her{right:4vw;border-bottom-right-radius:4px;transform-origin:100% 100%}
+.grov .grbub.on{opacity:1;transform:none}
+.grov .grbub .unsaid{visibility:hidden}
+@keyframes grbob{from{transform:translateY(0)}to{transform:translateY(-.6vh)}}
+@keyframes grhop{0%,55%,100%{transform:translateY(0)}70%{transform:translateY(-2.8vh)}85%{transform:translateY(0)}}
+@keyframes grwave{from{transform:rotate(-14deg)}to{transform:rotate(12deg)}}
+/* coming in, and going (on to the performance) */
+.grov.enter{animation:fadein .5s both}
+.grov.enter .grsign{animation:inTop .8s .2s cubic-bezier(.2,.9,.3,1.08) both}
+.grov.enter .grrow.back .grsofa{animation:inUp .7s .4s cubic-bezier(.2,.9,.3,1.08) both}
+.grov.enter .grrow.mid .grsofa{animation:inUp .7s .65s cubic-bezier(.2,.9,.3,1.08) both}
+.grov.enter .grrow.front .grsofa{animation:inUp .7s .9s cubic-bezier(.2,.9,.3,1.08) both}
+.grov.enter .ehost.him{animation:inLeft .9s 1s cubic-bezier(.2,.9,.3,1.08) both}
+.grov.enter .ehost.her{animation:inRight .9s 1s cubic-bezier(.2,.9,.3,1.08) both}
+.grov.leaving{transition:opacity .9s,transform .9s;opacity:0;transform:scale(1.12)}
