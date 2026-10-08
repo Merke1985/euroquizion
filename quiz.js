@@ -701,6 +701,7 @@ var SHOP_ITEMS = [
   { id: 'smoke', icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'umbrella', icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
   { id: 'flag', icon: '🚩', name: 'Giant Eurovision Flag', desc: 'Wave it in front of another player: for 3 questions they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
+  { id: 'bribe', icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe. Nothing happens now… but right before the Grand Final it pays out', kind: 'bribe' },
   { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
 ];
 var SHOP_PICKS = 2;   // free items per visit

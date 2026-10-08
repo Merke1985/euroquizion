@@ -369,6 +369,11 @@
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
         var id = b.getAttribute('data-id');
+        if ((shopItem(id) || {}).kind === 'bribe') {   // no one to pick, and nothing to see yet
+          var bm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
+          if (net) { net.send('shop', bm); setTimeout(function () { net.send('shop', bm); }, 1200); }
+          ptoast('✉️ Your envelope is on its way to the EBU… it pays out right before the Grand Final. Shh!'); bagOpen = false; bagUpdate(state); return;
+        }
         if ((shopItem(id) || {}).kind === 'smoke') {   // no one to pick: it is for the next question
           var msg = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', msg); setTimeout(function () { net.send('shop', msg); }, 1200); }

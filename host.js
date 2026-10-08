@@ -1064,7 +1064,7 @@
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
-      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.eraNow = ''; buildPool(); G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; funIntro('final', startRound2, 6000); return; }
+      if (G.tour && G.tourLast && !G.tourFinal) { G.tourFinal = true; G.eraNow = ''; buildPool(); G.total = G.round + 2; G.afterParty = false; G.quizRun = 0; ebuPay(function () { funIntro('final', startRound2, 6000); }); return; }
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
@@ -1182,7 +1182,7 @@
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
     bluff: { icon: '🤥', title: 'Lost in Translation', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
-    final: { icon: '✨', title: 'Trivia finale', sub: 'The last three questions: every point counts double! The scores stay hidden until the final reveal.' },
+    final: { icon: '✨', title: 'Grand Final', sub: 'The last three questions: every point counts double! The scores stay hidden until the final reveal.' },
     quiz: { icon: '🎧', title: 'Trivia', sub: 'Trivia time: three questions coming up.' },
     sing: { icon: '🎤', title: 'Jury Show', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
   };
@@ -1918,11 +1918,12 @@
       if (G.atype !== 'party' || ['lobby', 'end', 'brief', 'intro', 'chase'].indexOf(G.phase) >= 0) return;
       if (m.key && p.useKey === m.key) return; p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
-      var it0 = shopItem(m.use); if (it0 && it0.kind === 'smoke') t = p;   // (no target: it is the user's own smoke)
-      if (k < 0 || !t || (t === p && !(it0 && it0.kind === 'smoke'))) return;
+      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe')) t = p;   // (no target: it is the user's own smoke)
+      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield') return;   // (the umbrella works by itself)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
+      if (it.kind === 'bribe') { inv.splice(k, 1); (G.bribes = G.bribes || []).push(p.pid); push(); return; }   // secret: it pays out right before the final
       if (it.kind === 'smoke') { if (open) return; inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: it.id, target: p.pid }); Music.blip(); push(); return; }   // the Smoke Machine waits for the next question
       if (open) {   // during a question: it lands right away; the video and the timer stop while it does
         inv.splice(k, 1);
@@ -1951,6 +1952,19 @@
       shopHit(txt, 4600);
     };
     step(0);
+  }
+  // The envelopes for the EBU: right before the final, a tenth of the leader's score is shared among everyone who sent one
+  // (two envelopes from one player: two shares).
+  function ebuPay(then) {
+    var bs = (G.bribes || []).filter(function (k) { return players[k]; }); G.bribes = [];
+    if (!bs.length) { then(); return; }
+    var top = Math.max.apply(null, list().map(function (p) { return p.score; })), pot = Math.max(bs.length, Math.round(top * 0.1)), each = Math.floor(pot / bs.length), got = {};
+    bs.forEach(function (k) { got[k] = (got[k] || 0) + each; });
+    var names = Object.keys(got).map(function (k) { players[k].score += got[k]; return players[k].name; });
+    shopLast = { icon: '✉️', sound: 'steal', deltas: Object.keys(got).map(function (k) { return { pid: k, n: got[k] }; }) };
+    var txt = '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'They share ' + pot + ' points' : pot + ' points') + ' before the Grand Final.';
+    FUN.shopgo = { icon: '✉️', title: 'A brown envelope…', sub: txt };
+    funIntro('shopgo', then, 6000); shopHit(txt, 5800);
   }
   // What an item does; returns the line for the big screen.
   var shopLast = null;   // what the last item did: { icon, deltas: [{ pid, n }] }, for the big announcement
@@ -3139,7 +3153,7 @@
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.starterGiven = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
@@ -3307,6 +3321,7 @@
   function goOn() {
     if (lastSong() && G.shopQ && G.shopQ.length) { shopDeliver(goOn); return; }   // Eurofan Shop items still on their way land before the final scores
     if (lastSong()) roundsAddUp();
+    if (lastSong() && G.bribes && G.bribes.length) { ebuPay(goOn); return; }   // the envelopes for the EBU pay out before the final
     // The Big Five: when the rounds are done, five more questions for double points, with the scores hidden
     if (lastSong() && G.finalMode === 'double' && !G.tourFinal && !G.tour && !ladderGame() && G.total < ENDLESS) { G.tourFinal = true; G.total += 5; G.bigCard = true; G.quizRun = 0; G.eraNow = ''; buildPool(); startRound(); return; }   // (the Big Five: all selected eras again)
     if (lastSong()) {
