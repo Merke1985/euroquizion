@@ -370,8 +370,9 @@
         endShown = true;
         $('endlead').textContent = 'Final scores'; $('winner').textContent = '…'; $('winchar').innerHTML = '';
         var champs0 = list().filter(function (p) { return p.champ; });
-        $('final').classList.toggle('hidden', champs0.length > 0);   // after the chase there is no scoreboard: the chase decided
-        if (champs0.length) {
+        $('final').classList.toggle('hidden', champs0.length > 0 || !!G.chaseLost);   // after the chase there is no scoreboard: the chase decided
+        if (G.chaseLost) { $('endlead').textContent = 'Everyone lost!'; $('winner').textContent = G.chaseLost + ' grabbed the trophy'; $('winchar').innerHTML = ''; }
+        else if (champs0.length) {
           $('endlead').textContent = 'Winner of the Final Chase'; $('winner').textContent = champs0.map(function (w) { return w.name; }).join(' & ');
           $('winchar').innerHTML = '<div class="winballoon">Thank you Europe!</div><div class="winfaces">' + champs0.slice(0, 4).map(function (w) { return charSvg(w.char); }).join('') + '</div>';
           Music.douze();
@@ -475,7 +476,7 @@
     }
     if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party round: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
-      var pt = G.part, head = pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
+      var pt = G.part, head = G.atype === 'party' ? 'Next trivia' : pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
       $('qtext').textContent = pt.eras ? (pt.done ? head + ': ' + pt.label : head + ': which era will it be?') : head;
       $('qopts').innerHTML = pt.eras ? pt.eras.map(function (e, i) { return '<div class="optcol"><div class="opt' + (i === pt.roll ? (pt.done ? ' right picked' : ' rolling') : e.out ? ' dim' : '') + '">' + esc(e.label) + (e.out ? ' <span class="mute" style="font-size:.8em">played</span>' : '') + '</div></div>'; }).join('') : '';
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
@@ -999,7 +1000,7 @@
       G.ladderWon = false; G.partNext = true;
     }
     var due = ladderGame() ? !!G.partNext : !!G.per && (G.round - 1) % G.per === 0 && !(G.partDone || {})[G.round];
-    if ((G.parts > 1 || G.eraSpin) && due) { partIntro(); return; }
+    if ((G.parts > 1 || G.eraSpin) && due && G.atype !== 'party') { partIntro(); return; }
     startRound2();
   }
   function startRound2() {
@@ -1024,6 +1025,7 @@
       if (!G.tourFinal && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyChoose(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
+      if (G.eraSpin && !(G.quizRun || 0) && G.eraBlock !== G.round) { G.eraBlock = G.round; partIntro(); return; }   // Random or Voted rounds: each block of trivia gets its decade
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
     // Final "Double points": the last three questions count double and the scores are hidden until the end
@@ -1513,7 +1515,7 @@
       if (stepN) chaseSfx('brk', 0.9, Music.crumble);
       if (caught.length) setTimeout(function () { if (G.phase === 'chase') { Music.chomp(); Music.scream(); } }, 900);
       chaseTimer = setTimeout(function () {
-        if (!chaseAlive().length) { var best = Math.max.apply(null, caught.map(function (k) { return c.lanes[k].pos; })); chaseWin(caught.filter(function (k) { return c.lanes[k].pos === best; })); return; }
+        if (!chaseAlive().length) { chaseMonsterWins(c); return; }   // everyone caught: the monster takes the trophy
         if (chaseAlive().length && caught.length) Music.dread(true, true);   // getting tight: the heart beats faster
         // someone has come within reach of the stage: a big message for five seconds, then the next question
         var fresh = c.nearShown ? [] : chaseNear();   // (only the first time anyone gets close)
@@ -1557,6 +1559,19 @@
   }
   function chaseDie(c) { c.monsterDead = true; chaseMusic(false); Music.dread(false); Music.short(); setTimeout(function () { Music.defeat(); }, 350); push(); }
   function chaseWreck(c) { c.wrecked = true; c.mon = CHASE_END; chaseSfx('brk', 1, Music.crumble); push(); }   // the whole runway breaks away
+  // Nobody left: the monster smashes the rest of the runway, rushes onto the stage and grabs the trophy. Everyone lost.
+  function chaseMonsterWins(c) {
+    c.wreckWarn = true; c.st = 'mrush'; Music.buzz(); push();
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () {
+      if (G.chase !== c) return;
+      chaseWreck(c);
+      chaseTimer = setTimeout(function () {
+        if (G.chase !== c) return;
+        c.grab = true; c.st = 'mwin'; c.win = []; chaseMusic(false); Music.dread(false); Music.chomp(); setTimeout(function () { Music.douze(); }, 500); push();
+        chaseTimer = setTimeout(chaseDone, 8000);
+      }, 1800);
+    }, 2000);
+  }
   function chaseWin(pids) {
     var c = G.chase; if (!c) return;
     var onStage = chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL; });
@@ -1588,7 +1603,7 @@
     $('chase').classList.add('hidden');
     if (!c) return;
     c.done = true;
-    if (c.test) { G.chase = null; G.phase = 'lobby'; push(); return; }
+    G.chaseLost = c.grab ? mName() : '';
     (c.win || []).forEach(function (k) { if (players[k]) players[k].champ = true; });
     try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push();
   }
@@ -1714,7 +1729,9 @@
     }
     if (c.st !== 'win') { view.classList.remove('zoom'); clearTimeout(view._zt); view._zt = null; }
     [].forEach.call(document.querySelectorAll('#chase .chpyro'), function (p) { p.classList.toggle('boom', c.st === 'win' || chaseNear().length > 0); });
-    $('chmon').style.left = chaseX(c.mon) + '%';
+    $('chmon').style.left = (c.grab ? 112 : chaseX(c.mon)) + '%';
+    $('chtro').classList.toggle('taken', !!c.grab);
+    $('chmon').classList.toggle('grab', !!c.grab);
     if (c.monster) { $('chmon').querySelector('.chmonname').textContent = c.monster.name; $('chmon').setAttribute('data-mon', c.monster.id); }
     $('chmon').classList.toggle('hungry', c.st === 'diva' && divaStep(c.n) > 0); $('chmon').classList.toggle('sleep', c.n < 2 || (c.n === 2 && c.st !== 'diva'));
     $('chn').textContent = c.n ? 'Question ' + c.n + ' · first to the trophy wins' : 'First to the trophy wins';
@@ -1731,8 +1748,10 @@
     cc.classList.toggle('hidden', !sp);
     if (sp && cc.getAttribute('data-k') !== c.showing) { cc.setAttribute('data-k', c.showing); cc.innerHTML = '<div class="chcard-face">' + charSvg(sp.char) + '</div><b>' + esc(sp.name) + '</b><span>Jury votes</span><strong id="chcount">' + (c.count || 0) + '</strong>'; }
     cc.classList.toggle('final', !!(sp && c.counted));
+    if (c.st === 'mwin') { big.innerHTML = esc(mName()) + ' grabbed the trophy!<small>Everyone lost.</small>'; big.classList.remove('hidden'); big.classList.add('winbox'); }
     var nm = function (ks) { return esc(ks.map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')); };
-    if (c.st === 'fmsg') { big.innerHTML = 'Sudden death!<small>' + nm(c.finals) + ' reached the stage together. Keep answering: whoever gets fewer right than the others falls off the stage. The last one standing wins!</small>'; big.classList.remove('hidden'); }
+    if (c.st === 'mwin') {}
+    else if (c.st === 'fmsg') { big.innerHTML = 'Sudden death!<small>' + nm(c.finals) + ' reached the stage together. Keep answering: whoever gets fewer right than the others falls off the stage. The last one standing wins!</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'sdres') { big.innerHTML = (c.sdLost && c.sdLost.length ? nm(c.sdLost) + ' fell off the stage!' : 'Still level! Next question…'); big.classList.remove('hidden'); }
     else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk falling off the stage.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Ready?') + '</div>' + (c.st === 'ready' ? '<div class="chrbar"><i id="chrbar"></i></div>' : '') + '<div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
     else if (c.st === 'pre') { big.innerHTML = '👑 A former winner is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
@@ -2729,7 +2748,7 @@
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
-    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); $('qmodebox').classList.toggle('hidden', party); $('scoringbox').classList.toggle('hidden', party); $('s-partypick').disabled = !party;   // (scoring is a Quiz setting: a Party game scores the standard way)   // the party settings only show for a Party game
+    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); var qlo = $('s-qmode').querySelector('option[value="ladder"]'); if (qlo) qlo.disabled = party; if (party && $('s-qmode').value === 'ladder') $('s-qmode').value = 'standard';   // the Ladder is a Quiz game $('scoringbox').classList.toggle('hidden', party); $('s-partypick').disabled = !party;   // (scoring is a Quiz setting: a Party game scores the standard way)   // the party settings only show for a Party game
     if (lo) lo.disabled = party;
     
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
@@ -2763,7 +2782,7 @@
     var show = $('s-show').value === 'end' ? ' Totals stay hidden until the final scoreboard.' : '';
     $('scorehelp').textContent = '';
     var at = $('s-atype').value, qm = $('s-qmode').value;
-    var gameTxt = at === 'party' ? PARTY_HELP + ' ' + (PARTY_MODE_HELP[$('s-partypick').value] || '') : at === 'mc' ? (ROUND_HELP[qm] || '') : '';
+    var gameTxt = at === 'party' ? PARTY_HELP + ' ' + (PARTY_MODE_HELP[$('s-partypick').value] || '') + (qm === 'random' || qm === 'vote' ? ' ' + ROUND_HELP[qm].replace('each round', 'each block of questions') : '') : at === 'mc' ? (ROUND_HELP[qm] || '') : '';
     $('finalhelp').innerHTML = (gameTxt ? '<span>' + esc(gameTxt) + '</span><br>' : '') + '<span>' + esc(FINAL_HELP[$('s-final').value] || '') + '</span>';
   }
   $('s-scoring').addEventListener('change', scoreHelp); $('s-show').addEventListener('change', scoreHelp); scoreHelp();
@@ -2862,11 +2881,12 @@
     G.per = +$('s-rounds').value; G.parts = G.atype === 'mc' ? +$('s-parts').value || 1 : 1;
     G.partLadder = G.atype === 'mc' && G.scoring === 'ladder' && G.parts > 1; G.partN = 0; G.partNext = true; G.partStart = 1;
     list().forEach(function (p) { p.bank = 0; });
-    G.qmode = G.atype === 'mc' ? $('s-qmode').value : 'standard'; G.eraSpin = G.robin || G.qmode === 'random' || G.qmode === 'vote';   /* (ladder: G.scoring) */ G.eraVote = G.qmode === 'vote'; G.eraNow = ''; G.eraUsed = []; G.part = null; G.partDone = {};
+    G.qmode = G.atype === 'mc' || (G.atype === 'party' && $('s-qmode').value !== 'ladder') ? $('s-qmode').value : 'standard'; G.eraBlock = -1; var oneEra = G.era && G.era.indexOf(',') < 0 && G.era !== '1956-2100';   // only one era picked: that era is the rule, no spin or vote
+    G.eraSpin = G.robin || (!oneEra && (G.qmode === 'random' || G.qmode === 'vote'));   /* (ladder: G.scoring) */ G.eraVote = G.qmode === 'vote'; G.eraNow = ''; G.eraUsed = []; G.part = null; G.partDone = {};
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rung = 0; p.moved = ''; }); G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.fav = null; G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourEnd = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
@@ -2943,7 +2963,8 @@
       try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push();
     } else startRound();   // nobody is 'ready' for the next game yet
   }
-  $('again').addEventListener('click', toLobby);
+  $('again').addEventListener('click', toLobby);   // End game: back to the lobby
+  $('again2').addEventListener('click', function () { toLobby(); setTimeout(function () { if (G.phase === 'lobby' && list().length) beginGame(); }, 300); });   // a new game straight away, same players and settings
 
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) {
     songs = d.songs; countries = d.countries;

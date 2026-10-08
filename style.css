@@ -1094,3 +1094,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .volpanel input{width:100%;accent-color:#ffd23f}
 header{padding-right:66px!important}
 .chhead{padding-right:66px!important}
+.chtro{transition:opacity .5s .9s,transform .6s .9s}
+.chtro.taken{opacity:0;transform:translate(-50%,-140%) rotateX(-26deg) scale(.4)}
+.chmon.grab{transition:left 1.6s cubic-bezier(.5,0,.3,1)}
+.chmon.grab .chbob{animation:chbob .35s ease-in-out infinite}
+.endbtns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
