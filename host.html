@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=303">
+<link rel="stylesheet" href="style.css?v=304">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -30,7 +30,7 @@
         <h3>Players <span class="mute" id="pcount"></span></h3>
         <div class="players" id="players" style="margin-top:12px"></div>
         <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. When all rings are green, anyone can start the game from their phone.</p>
-        <p id="botrow" style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt small" id="botadd" type="button">Add a test bot</button><button class="btn alt small hidden" id="botclear" type="button">Remove bots</button><button class="btn alt small hidden" id="clearplayers" type="button">Remove all players</button></p>
+        <p id="botrow" style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt small" id="botadd" type="button">Add a test bot</button><button class="btn alt small hidden" id="botclear" type="button">Remove bots</button><button class="btn alt small" id="chasetest" type="button">Test the Final Chase</button><button class="btn alt small hidden" id="clearplayers" type="button">Remove all players</button></p>
       </div>
       <div class="rehost hidden">
         <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
@@ -105,6 +105,7 @@
         <div><label for="s-show">Show score</label><select id="s-show">
           <option value="always" selected>Always</option><option value="end">At the end of the round</option></select></div>
         <div><label for="s-skip">Leave out</label><select id="s-skip"><option value="" selected>Nothing</option><option value="il">Israel</option><option value="ru">Russia</option><option value="il,ru">Israel and Russia</option></select></div>
+        <div><label for="s-chase">Final Chase</label><select id="s-chase"><option value="1" selected>On: the game ends with a chase</option><option value="0">Off: straight to the scores</option></select></div>
         <div><label for="s-auto">Autoplay next song</label><select id="s-auto"><option value="1" selected>On</option><option value="0">Off</option></select></div>
         <div><label for="s-autolen">Next song after</label><select id="s-autolen"><option value="10">10 sec</option><option value="20" selected>20 sec</option><option value="30">30 sec</option><option value="end">Complete song</option></select></div>
         </div></details>
@@ -162,6 +163,41 @@
 
   <iframe id="selfplay" class="selfplay hidden" title="Your own game" allow="autoplay; microphone"></iframe>
 
+  <div id="chase" class="chase hidden">
+    <div class="chhead"><b>🏁 The Final Chase</b><span id="chn"></span><button class="btn alt small" id="chstop" type="button">End chase</button></div>
+    <div class="chtrack" id="chtrack">
+      <div class="chdanger" id="chdanger"></div>
+      <div class="chlanes" id="chlanes"></div>
+      <div class="chmon" id="chmon"><div class="chbob"><svg class="diva" viewBox="0 0 220 300" aria-hidden="true">
+          <defs><radialGradient id="dvglow" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ff3fb4" stop-opacity=".55"/><stop offset="1" stop-color="#ff3fb4" stop-opacity="0"/></radialGradient>
+          <linearGradient id="dvgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0b3d"/><stop offset="1" stop-color="#0b0414"/></linearGradient></defs>
+          <ellipse cx="110" cy="130" rx="110" ry="130" fill="url(#dvglow)"/>
+          <path class="dvhair" d="M70 40 C20 30 -5 70 4 120 C10 160 -6 200 10 240 C30 200 22 170 40 150 C30 200 40 230 30 270 C60 230 58 190 70 160 Z" fill="#07030c"/>
+          <path d="M60 150 C50 200 40 250 30 300 L190 300 C176 250 166 200 156 150 Z" fill="url(#dvgown)"/>
+          <g fill="#ffd23f" opacity=".85"><circle cx="80" cy="200" r="2"/><circle cx="120" cy="230" r="2"/><circle cx="100" cy="260" r="2.4"/><circle cx="140" cy="205" r="1.8"/><circle cx="70" cy="250" r="1.8"/><circle cx="150" cy="270" r="2"/><circle cx="110" cy="190" r="1.6"/></g>
+          <path class="dvarm" d="M150 160 C180 150 200 140 214 128 L220 120 M214 128 L222 132 M214 128 L218 140" stroke="#1a0826" stroke-width="12" stroke-linecap="round" fill="none"/>
+          <path class="dvarm2" d="M140 175 C170 180 196 176 212 168 M212 168 L220 164 M212 168 L218 176" stroke="#140619" stroke-width="10" stroke-linecap="round" fill="none"/>
+          <ellipse cx="108" cy="92" rx="46" ry="56" fill="#1b0a25"/>
+          <path d="M62 70 C60 20 150 10 156 70 C140 40 90 40 62 70 Z" fill="#07030c"/>
+          <path d="M150 60 C170 30 200 30 214 44 C190 46 176 56 160 80 Z" fill="#07030c"/>
+          <g class="dveyes"><ellipse cx="92" cy="88" rx="11" ry="7" fill="#ff2fa8"/><ellipse cx="128" cy="88" rx="11" ry="7" fill="#ff2fa8"/><circle cx="95" cy="88" r="3" fill="#fff"/><circle cx="131" cy="88" r="3" fill="#fff"/></g>
+          <path d="M84 112 Q110 136 138 112 Q110 124 84 112 Z" fill="#ff2fa8"/>
+          <path d="M88 114 L92 121 L96 116 L100 123 L104 117 L108 124 L112 117 L116 123 L120 116 L124 121 L130 114" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="M96 30 L104 6 L110 26 L118 4 L124 28 Z" fill="#ffd23f"/>
+        </svg></div><span class="chmonname">The Diva</span></div>
+      <div class="chfin" id="chfin"><svg viewBox="0 0 120 260" aria-hidden="true">
+          <defs><linearGradient id="fnglass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f7ff"/><stop offset=".5" stop-color="#9fd9ff"/><stop offset="1" stop-color="#e8f7ff"/></linearGradient></defs>
+          <g class="fnrays" stroke="#ffd23f" stroke-width="3" opacity=".6"><line x1="60" y1="70" x2="60" y2="6"/><line x1="60" y1="70" x2="14" y2="24"/><line x1="60" y1="70" x2="106" y2="24"/><line x1="60" y1="70" x2="2" y2="72"/><line x1="60" y1="70" x2="118" y2="72"/></g>
+          <ellipse cx="60" cy="70" rx="26" ry="30" fill="url(#fnglass)" stroke="#fff" stroke-width="3"/>
+          <path d="M44 62 Q60 50 76 62" stroke="#fff" stroke-width="3" fill="none" opacity=".8"/>
+          <path d="M50 98 L70 98 L64 190 L56 190 Z" fill="url(#fnglass)" stroke="#fff" stroke-width="3"/>
+          <rect x="34" y="190" width="52" height="18" rx="4" fill="#ffd23f"/>
+          <path d="M60 232 C48 220 34 214 34 202 C34 194 42 190 48 194 C54 197 58 202 60 206 C62 202 66 197 72 194 C78 190 86 194 86 202 C86 214 72 220 60 232 Z" fill="#ff2fa8" transform="translate(0 16) scale(1 .9)"/>
+        </svg><span>Douze points!</span></div>
+    </div>
+    <div class="chq hidden" id="chq"><div class="chqt" id="chqt"></div><div class="chqs" id="chqs"></div><div class="chqi" id="chqi"></div><div class="chbar"><i id="chbar"></i></div></div>
+    <div class="chbig hidden" id="chbig"></div>
+  </div>
   <section id="v-end" class="end hidden">
     <p class="mute" style="font-size:1.3rem;margin:0" id="endlead">Final scores</p>
     <div class="endhead"><div id="winchar" class="winchar"></div><h1 id="winner"></h1></div>
@@ -179,15 +215,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=303"></script>
-<script src="vendor/qrcode.js?v=303"></script>
-<script src="config.js?v=303"></script>
-<script src="net.js?v=303"></script>
-<script src="music.js?v=303"></script>
-<script src="chars.js?v=303"></script>
-<script src="match.js?v=303"></script>
-<script src="shapes.js?v=303"></script>
-<script src="quiz.js?v=303"></script>
-<script src="host.js?v=303"></script>
+<script src="vendor/supabase.js?v=304"></script>
+<script src="vendor/qrcode.js?v=304"></script>
+<script src="config.js?v=304"></script>
+<script src="net.js?v=304"></script>
+<script src="music.js?v=304"></script>
+<script src="chars.js?v=304"></script>
+<script src="match.js?v=304"></script>
+<script src="shapes.js?v=304"></script>
+<script src="quiz.js?v=304"></script>
+<script src="host.js?v=304"></script>
 </body>
 </html>

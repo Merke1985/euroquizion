@@ -6,7 +6,7 @@
 <title>EuroQuizion – join</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=303">
+<link rel="stylesheet" href="style.css?v=304">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -125,6 +125,14 @@
     <p id="sfb" class="fb"></p>
   </section>
 
+  <section id="v-chase" class="hidden" style="display:flex;flex-direction:column;gap:12px">
+    <div class="mute" id="chstat">The Final Chase</div>
+    <h2 id="chtext" style="margin:0"></h2>
+    <p class="mute" id="chhelp" style="margin:0">Tick every song that fits: none, some or all. One space forward for each one you get right.</p>
+    <div class="opts chopts" id="chopts"></div>
+    <div class="bar"><i id="chpbar"></i></div>
+    <button class="btn big" id="chlock" type="button" style="width:100%">Lock in</button>
+  </section>
   <section id="v-reveal" class="center hidden">
     <div class="mute" id="rround"></div>
     <div class="vblock"><div class="qrow"><p id="verdict" class="fb verdict"></p><span id="rnext" class="nextin"></span></div><p id="rpts" class="rpts"></p></div>
@@ -148,13 +156,13 @@
     <button class="btn">Send</button>
   </form>
 </div>
-<script src="vendor/supabase.js?v=303"></script>
-<script src="config.js?v=303"></script>
-<script src="match.js?v=303"></script>
-<script src="quiz.js?v=303"></script>
-<script src="net.js?v=303"></script>
-<script src="music.js?v=303"></script>
-<script src="chars.js?v=303"></script>
-<script src="player.js?v=303"></script>
+<script src="vendor/supabase.js?v=304"></script>
+<script src="config.js?v=304"></script>
+<script src="match.js?v=304"></script>
+<script src="quiz.js?v=304"></script>
+<script src="net.js?v=304"></script>
+<script src="music.js?v=304"></script>
+<script src="chars.js?v=304"></script>
+<script src="player.js?v=304"></script>
 </body>
 </html>

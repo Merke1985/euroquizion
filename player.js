@@ -16,7 +16,36 @@
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
   fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
+  // ---------- The Final Chase: tick the songs that fit ----------
+  var chKey = '', chMask = 0, chLocked = false, chBarKey = '';
+  function chaseSend(lock) {
+    if (!net || !chKey) return; var k = chKey, m = chMask;
+    net.send('chase', { pid: pid, key: k, mask: m, lock: !!lock });
+    if (lock) [700, 2000].forEach(function (ms) { setTimeout(function () { if (net && chKey === k && state && state.chase && state.chase.st === 'ask') net.send('chase', { pid: pid, key: k, mask: m, lock: true }); }, ms); });
+  }
+  function chaseView(c) {
+    var l = c.lanes[pid];
+    if (!l) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'Watch the big screen!'; return; }
+    var where = 'Space ' + l.pos + ' of ' + c.end + ' · the Diva is on ' + c.mon;
+    if (c.st === 'win') { var me2 = c.win && c.win.indexOf(pid) >= 0; show('v-wait'); $('waittitle').textContent = me2 ? '🏆 You win the Final Chase!' : '🏁 The chase is over'; $('waitsub').textContent = me2 ? 'Thank you Europe!' : 'Watch the big screen.'; return; }
+    if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by the Diva!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
+    if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Final Chase'; $('waitsub').textContent = 'The Diva is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
+    if (c.st === 'ask') {
+      if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
+      if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
+      show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = c.text;
+      $('chopts').innerHTML = c.items.map(function (it, i) { return '<button type="button" class="opt' + ((chMask >> i) & 1 ? ' on' : '') + '" data-i="' + i + '"><b>' + ((chMask >> i) & 1 ? '✓' : 'ABC'[i]) + '</b>' + esc(it) + '</button>'; }).join('');
+      if (chBarKey !== c.key) { chBarKey = c.key; var b = $('chpbar'); b.style.transition = 'none'; b.style.width = (c.left / 100) + '%'; b.getBoundingClientRect(); b.style.transition = 'width ' + c.left + 'ms linear'; b.style.width = '0%'; }
+      return;
+    }
+    // the answer and the moves
+    show('v-wait');
+    $('waittitle').textContent = c.st === 'show' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? 'The Diva moves…' : 'Moving…';
+    $('waitsub').textContent = where;
+  }
+  $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); if (state && state.chase) chaseView(state.chase); chaseSend(false); });
+  $('chlock').addEventListener('click', function () { if (chLocked) return; chLocked = true; chaseSend(true); if (state && state.chase) chaseView(state.chase); });
+  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-chase', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && ((state.phase === 'guess' && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -169,6 +198,7 @@
       else if (s.quips.done[pid] || quipSent) { show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
       else { show('v-quip'); $('qprompt').textContent = qp; }
     }
+    else if (s.phase === 'chase' && s.chase) chaseView(s.chase);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];

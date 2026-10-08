@@ -609,3 +609,50 @@ function multiAll(box) {
   });
   setTimeout(sync, 0); box._allSync = sync;
 }
+
+// ---------- The Final Chase: three statements, each true or false ----------
+// Every question has three songs; any number of them (none to all three) fit the question. A player ticks the
+// ones they think fit, and moves one space for each song they judged right (ticked and true, or left and false).
+function makeChase(allSongs, countries, used) {
+  var ok = function (s) { return s[9] !== 'cancelled' && !(used && used[s[4]]); };
+  var S = allSongs.filter(ok); if (S.length < 40) S = allSongs.filter(function (s) { return s[9] !== 'cancelled'; });
+  var lab = function (s) { return s[3] + ' – ' + s[2]; };
+  var pickN = function (arr, n, not) { return shuffle(arr.filter(function (s) { return not.indexOf(s) < 0; })).slice(0, n); };
+  var years = {}; S.forEach(function (s) { (years[s[0]] = years[s[0]] || []).push(s); });
+  var kinds = [
+    function () {   // in the final (a semi-final from 2004)
+      var y = pick(Object.keys(years).filter(function (y) { return +y >= 2004 && years[y].some(function (s) { return s[5] === 1; }); }));
+      if (!y) return null;
+      return { text: 'Which of these were in the ' + y + ' final?', yes: function (s) { return s[5] !== 1; }, pool: years[y], label: function (s) { return lab(s) + ' ' + flag(s[1]); } };
+    },
+    function () {   // from this year
+      var y = +pick(Object.keys(years)), near = S.filter(function (s) { return Math.abs(s[0] - y) <= 3; });
+      return { text: 'Which of these were in the ' + y + ' contest?', yes: function (s) { return s[0] === y; }, pool: near, label: lab };
+    },
+    function () {   // sent by this country
+      var c = pick(Object.keys(countries).filter(function (k) { return S.filter(function (s) { return s[1] === k; }).length >= 6; }));
+      if (!c) return null;
+      return { text: 'Which of these did ' + countries[c] + ' send?', yes: function (s) { return s[1] === c; }, pool: S, label: lab, mixed: function (s) { return s[1] === c; } };
+    },
+    function () {   // winners
+      return { text: 'Which of these won Eurovision?', yes: function (s) { return s[5] === 2; }, pool: S.filter(function (s) { return s[5] === 2 || (s[6] != null && s[6] <= 6); }), label: function (s) { return lab(s) + ' (' + s[0] + ')'; } };
+    },
+    function () {   // top five
+      return { text: 'Which of these finished in the top 5?', yes: function (s) { return s[6] != null && s[6] <= 5; }, pool: S.filter(function (s) { return s[6] != null && (s[6] <= 5 || s[6] >= 10); }), label: function (s) { return lab(s) + ' (' + s[0] + ')'; } };
+    },
+    function () {   // not in English
+      return { text: 'Which of these were NOT sung in English?', yes: function (s) { return s[10] && s[10] !== 'english'; }, pool: S.filter(function (s) { return s[0] >= 1999; }), label: function (s) { return lab(s) + ' ' + flag(s[1]); } };
+    }
+  ];
+  for (var tries = 0; tries < 30; tries++) {
+    var k = pick(kinds)(); if (!k) continue;
+    var n = Math.floor(Math.random() * 4), yes = k.pool.filter(k.yes), no = k.pool.filter(function (s) { return !k.yes(s); });
+    if (k.mixed) { var y0 = pick(yes); if (!y0) continue; no = S.filter(function (s) { return !k.yes(s) && Math.abs(s[0] - y0[0]) <= 8; }); }
+    if (yes.length < n || no.length < 3 - n) continue;
+    var a = pickN(yes, n, []), b = pickN(no, 3 - n, a), items = shuffle(a.concat(b));
+    var seen = {}, dup = items.some(function (s) { var t = s[3].toLowerCase(); if (seen[t]) return true; seen[t] = 1; return false; });
+    if (dup) continue;
+    return { text: k.text, items: items.map(function (s) { return { label: k.label(s), ok: !!k.yes(s), id: s[4] }; }) };
+  }
+  return null;
+}
