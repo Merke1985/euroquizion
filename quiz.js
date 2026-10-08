@@ -36,7 +36,7 @@ function makeLost(song, allSongs, opt) {
   if (picks.length < 4) shuffle(allSongs.slice()).forEach(add);
   if (picks.length < 4) return null;
   picks = shuffle(picks);
-  return { subject: 'lost', type: 'mc', text: 'Language barrier: which song is “' + TITLE_EN[song[4]] + '”?', hint: '', answer: song[3],
+  return { subject: 'lost', type: 'mc', text: 'Language barrier: which song is “' + TITLE_EN[song[4]].replace(/\s*[(\[][^)\]]*[)\]]/g, '').replace(/\s+/g, ' ').trim() + '”?'   /* without the bit in brackets */, hint: '', answer: song[3],
     options: picks.map(function (s) { return s[3]; }), reveal: picks.map(function (s) { return s[3] + ' – ' + s[2]; }), correct: picks.indexOf(song), noclip: true, swap: swap };
 }
 function makeOdd(song, allSongs, countries) {
