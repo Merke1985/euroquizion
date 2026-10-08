@@ -339,7 +339,7 @@
       li.style.transition = 'none'; li.style.transform = 'translateY(' + dy + 'px)'; li.style.zIndex = dy > 0 ? 2 : 1; li.getBoundingClientRect();
       li.style.transition = 'transform .9s cubic-bezier(.22,.8,.3,1)'; li.style.transform = '';
     });
-    $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores';
+    $('boardtitle').textContent = hideScores() ? 'Scores at the end' : ladderGame() ? 'Ladder' : 'Scores' + (G.parts > 1 && G.partN && G.atype !== 'party' && G.phase !== 'lobby' && G.phase !== 'end' ? ' – Round ' + Math.min(G.partN, G.parts) : '');
     renderLadder();
     $('endgame').classList.toggle('hidden', G.phase === 'lobby' || G.phase === 'intro' || G.phase === 'paused' || G.phase === 'end');
     $('newgame').classList.toggle('hidden', !(G.phase === 'intro' || G.phase === 'paused'));   // not while a game is playing: only during the countdown and after a restore
