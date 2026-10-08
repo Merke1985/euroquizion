@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=323">
+<link rel="stylesheet" href="style.css?v=324">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -183,11 +183,11 @@
           </svg><span>Douze points!</span></div></div>
         <div class="chtoks" id="chlanes"></div>
         <div class="chmon" id="chmon"><div class="chsmoke"><i></i><i></i><i></i><i></i><i></i></div><div class="chbob"><svg class="diva" viewBox="0 0 340 340" aria-hidden="true">
-            <defs><radialGradient id="dvglow" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#ff2f6d" stop-opacity=".5"/><stop offset="1" stop-color="#ff2f6d" stop-opacity="0"/></radialGradient>
+            <defs><radialGradient id="dvglow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ff2f6d" stop-opacity=".5"/><stop offset="1" stop-color="#ff2f6d" stop-opacity="0"/></radialGradient>
             <radialGradient id="dvface" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#efe8f6"/><stop offset="1" stop-color="#9c8fb3"/></radialGradient>
             <linearGradient id="dvchrome" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9b8a0"/><stop offset=".45" stop-color="#b48f78"/><stop offset="1" stop-color="#8a6b5a"/></linearGradient><linearGradient id="dvsleeve" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c7a48c" stop-opacity=".95"/><stop offset="1" stop-color="#9e7c68" stop-opacity=".95"/></linearGradient>
             <linearGradient id="dvgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16081f"/><stop offset="1" stop-color="#030106"/></linearGradient></defs>
-            <ellipse cx="150" cy="150" rx="160" ry="150" fill="url(#dvglow)"/>
+            <circle cx="160" cy="160" r="150" fill="url(#dvglow)"/>
             <path class="dvhair" d="M140 26 C70 20 46 70 42 130 C38 190 20 240 10 310 C40 280 52 250 62 222 C58 262 66 300 56 340 C96 300 98 250 104 200 L176 200 C184 250 186 300 226 340 C214 300 222 262 218 222 C230 248 244 276 270 300 C262 236 244 190 238 130 C234 70 210 22 140 26 Z" fill="#05020a"/>
             <path d="M96 196 C86 250 72 300 64 340 L216 340 C208 300 194 250 184 196 Z" fill="url(#dvchrome)"/><path d="M92 240 L188 240 M86 280 L194 280" stroke="#5a3e33" stroke-width="2" opacity=".6"/><path d="M140 206 L140 340" stroke="#5a3e33" stroke-width="1.5" opacity=".5"/>
             <path d="M64 340 L76 314 L88 340 L102 308 L116 340 L132 312 L146 340 L162 310 L176 340 L192 314 L206 340 L216 340" fill="#030106"/>
@@ -211,10 +211,10 @@
             <path d="M131 118 L135 125 L139 118 L143 125 L147 118 L150 124" stroke="#efe8f6" stroke-width="2" fill="none"/>
           </svg>
           <svg class="goblin" viewBox="0 0 340 340" aria-hidden="true">
-            <defs><radialGradient id="gbglow" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#39ff14" stop-opacity=".45"/><stop offset="1" stop-color="#39ff14" stop-opacity="0"/></radialGradient>
+            <defs><radialGradient id="gbglow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#39ff14" stop-opacity=".45"/><stop offset="1" stop-color="#39ff14" stop-opacity="0"/></radialGradient>
             <radialGradient id="gbpuff" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#c8ff9a"/><stop offset=".45" stop-color="#4dff1f"/><stop offset="1" stop-color="#14a800"/></radialGradient>
             <radialGradient id="gbskin" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#c9d68f"/><stop offset="1" stop-color="#7d8f4a"/></radialGradient></defs>
-            <ellipse cx="150" cy="150" rx="160" ry="150" fill="url(#gbglow)"/>
+            <circle cx="160" cy="160" r="150" fill="url(#gbglow)"/>
             <path d="M104 210 L92 340 L188 340 L176 210 Z" fill="#0b0b0f"/><path d="M110 230 L104 340 M170 230 L176 340" stroke="#3a3a46" stroke-width="3"/><path d="M98 212 L182 212" stroke="#2a2a33" stroke-width="10"/>
             <path d="M104 150 C100 180 102 200 104 214 L176 214 C178 200 180 180 176 150 Z" fill="url(#gbskin)"/>
             <path d="M118 178 C128 184 152 184 162 178 M140 186 L140 210 M124 196 C132 200 148 200 156 196" stroke="#5f6e33" stroke-width="2" fill="none"/>
@@ -261,15 +261,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=323"></script>
-<script src="vendor/qrcode.js?v=323"></script>
-<script src="config.js?v=323"></script>
-<script src="net.js?v=323"></script>
-<script src="music.js?v=323"></script>
-<script src="chars.js?v=323"></script>
-<script src="match.js?v=323"></script>
-<script src="shapes.js?v=323"></script>
-<script src="quiz.js?v=323"></script>
-<script src="host.js?v=323"></script>
+<script src="vendor/supabase.js?v=324"></script>
+<script src="vendor/qrcode.js?v=324"></script>
+<script src="config.js?v=324"></script>
+<script src="net.js?v=324"></script>
+<script src="music.js?v=324"></script>
+<script src="chars.js?v=324"></script>
+<script src="match.js?v=324"></script>
+<script src="shapes.js?v=324"></script>
+<script src="quiz.js?v=324"></script>
+<script src="host.js?v=324"></script>
 </body>
 </html>
