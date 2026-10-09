@@ -1007,7 +1007,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       right = [];
     }
     if (G.clue && G.clue.st === 'ask' && G.q && !G.best && !G.draw && !G.q.battle) { clueGive(right); right = []; }   // Where the Hell Is Edgar?: no points, secret clues for a right answer
-    right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs, G.q.blur) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
+    right.forEach(function (p, rank) { p.pts = G.draw ? drawPts(p) : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs, G.q.blur) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
     // The artist: 12 points shared out over everyone who answered, for each of them who got it (all right: 12).
@@ -1124,7 +1124,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var alone = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll };   // (a game of only one of these)
     if (G.atype !== 'party' && alone[md] && !(md === 'sing' && REMOTE)) { funIntro(md, alone[md]); return; }
     if (G.atype === 'party' && !G.botRolled) { G.botRolled = true; botItems(); }   // bots with items may use one: 10% chance, 10% more each question they wait
-    if (G.atype === 'party' && G.shopQ && G.shopQ.length) { shopDeliver(startRound2); return; }   // Eurofan Shop items used since the last question land first
+    if (G.atype === 'party' && G.shopQ && G.shopQ.length) { shopDeliver(questionGo); return; }   // Eurofan Shop items used since the last question land first (then straight on to this question: it was already counted)
+    questionGo();
+  }
+  function questionGo() {
     G.botRolled = false;
     if (G.atype === 'party' && !G.quipLoad) list().forEach(function (p) { if (p.sitout) { p.sitNow = p.sitout; p.sitout = ''; } if (p.flagged > 0) { p.flagNow = true; p.flagged--; } });   // (a Giant Flag: this question is blocked from view)   // a Broken Mic: this one sits out
     push(); loadSong();
@@ -1169,6 +1172,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // question for the others, one by one, with the artist's four songs as the answers.
   var drawTimer = null, DRAW_GUESS_MS = 20000;
   // Nobody there to guess (a game with one player): do not sit out the whole guessing time.
+  // Postcard: a right guess is worth more the faster it comes (in a Party game 4 to 12 points), so it rarely ends in a tie.
+  function drawPts(p) { var ms = G.barMs || drawGuessMs(), f = 1 - Math.max(0, Math.min(1, (p.pickMs || ms) / ms)); return Math.max(1, Math.round(partyX() * (1 + 2 * f))); }
   function drawGuessMs() { return list().some(function (p) { return !p.off && G.draw && p.pid !== G.draw.pid; }) ? DRAW_GUESS_MS : 6000; }
   function drawFallback() { G.gallery = null; G.draw = null; G.phase = 'loading'; push(); loadSong(); }   // nothing to guess: a quiz question instead
   function drawAll() {
@@ -2725,7 +2730,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="bqfloor"><span>🛍️</span><span>🎁</span><span>🛍️</span><span>🎈</span><span>🎁</span></div>' +
         (function () {   // the merchandise on the shelves at the back, with its name (what you can get is on your phone)
           var shelf = function (items) { return items.map(function (it) { return '<span class="bqi" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + shopPrice(it) + ' pts</i></span>'; }).join(''); }, av = shopAvail();
-          return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">Items work in the trivia rounds, not in the party games</div></div>';
+          return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">⚡ Instant items: during a question · 📦 Deliveries: any time, they land before the next question</div></div>';
         })() +
         '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div><div class="bqtimer"></div>';
       document.body.appendChild(ov);
@@ -2746,7 +2751,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else typeSay(bq, g.over ? 'Fabulous choice' + (one ? ', darling' : 's, darlings') + '! Enjoy the show. 😘' : 'I picked two items for ' + (one ? 'you' : 'each of you') + '. Choose ' + (g.n > 1 ? g.n : 'one') + ' on your phone! 🛍️', 'lynda');
     var on = {}; Object.keys(g.offer || {}).forEach(function (k) { (g.offer[k] || []).forEach(function (id) { on[id] = 1; }); });
     [].forEach.call(ov.querySelectorAll('.bqi'), function (x) { x.classList.toggle('offer', !!on[x.getAttribute('data-id')]); });
-    ov.querySelector('.shoppers').innerHTML = act.map(function (p) { var pk = g.picks[p.pid], free = g.buy && (g.free || []).indexOf(p.pid) >= 0, tag = free ? '<em class="free">🎁 free</em>' : g.buy && pk ? (pk.length ? '<em class="paid">−' + (g.paid[p.pid] || 0) + '</em>' : '<em class="nobuy">no thanks</em>') : ''; return '<span class="shopper' + (pk ? ' done' : '') + (g.buy && pk && !pk.length ? ' skip' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i>' + tag + '</span>'; }).join('');
+    ov.querySelector('.shoppers').innerHTML = act.map(function (p) { var pk = g.picks[p.pid], free = g.buy && (g.free || []).indexOf(p.pid) >= 0, tag = free ? '<em class="free">🎁 free</em>' : g.buy && pk ? (pk.length ? '<em class="paid">🛍️</em>' : '<em class="nobuy">no thanks</em>') : ''; return '<span class="shopper' + (pk ? ' done' : '') + (g.buy && pk && !pk.length ? ' skip' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i>' + tag + '</span>'; }).join('');
+    // a purchase: a shower of coins from the buyer to Lynda's till (with the ka-ching)
+    ov._coined = ov._coined || {};
+    act.forEach(function (p, i) {
+      if (!g.paid || !g.paid[p.pid] || ov._coined[g.id + p.pid]) return; ov._coined[g.id + p.pid] = 1;
+      var chip = ov.querySelectorAll('.shoppers .shopper')[i], kp = ov.querySelector('.bqkeeper'); if (!chip || !kp) return;
+      var a = chip.getBoundingClientRect(), b = kp.getBoundingClientRect(), tx = b.left + b.width * 0.7, ty = b.top + b.height * 0.55;
+      for (var c = 0; c < 12; c++) (function (c) {
+        var e = document.createElement('i'); e.className = 'bqcoin'; e.textContent = '🪙';
+        var x0 = a.left + 20 + Math.random() * Math.max(10, a.width - 40), y0 = a.top + a.height / 2;
+        e.style.left = x0 + 'px'; e.style.top = y0 + 'px'; e.style.setProperty('--dx', (tx - x0) + 'px'); e.style.setProperty('--dy', (ty - y0) + 'px'); e.style.setProperty('--h', (-80 - Math.random() * 120) + 'px'); e.style.animationDelay = (c * 0.06) + 's';
+        ov.appendChild(e); setTimeout(function () { e.remove(); }, 1800 + c * 60);
+      })(c);
+    });
     ov.classList.toggle('buying', !!g.buy); var sale = ov.querySelector('.bqsale'); if (sale) sale.innerHTML = g.buy ? 'PRICES<br><b>IN POINTS</b>' : 'SALE<br><b>100% OFF</b>';
   }
   // Someone used an item: everything stops, a police siren wails and the screen flashes red and blue for three seconds,
@@ -3090,7 +3108,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       lines: [['him', 'Time to get creative, Europe! Your phones are about to become sketchbooks! ✏️'],
         ['her', 'Everyone gets four songs. Pick one, and draw it on your phone, all within one minute.'],
         ['him', 'Then we show every drawing, and the others guess which song it is.'],
-        ['her', 'A right guess scores points… and the artist scores too, for everyone who guessed it!'],
+        ['her', 'A right guess scores points, more the faster you are… and the artist scores too, for everyone who guessed it!'],
         ['him', 'At the end you give your 12, 10 and 8 points to the best drawings. Pencils ready? 🎨']] },
     sing: { sign: '🎤 Jury Show', theme: 'jury',
       art: '<div class="hsjury"><div class="hsmic">🎙️</div><div class="hsdesk"><span>12</span><span>10</span><span>8</span><span>7</span></div><div class="hsdesklabel">THE JURY</div></div>',
