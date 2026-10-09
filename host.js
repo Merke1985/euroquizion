@@ -333,6 +333,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'shop' && $('shopov')) $('shopov').remove();
     if (G.phase !== 'bomb' && $('bombov')) $('bombov').remove();
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
+    if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'scene') && $('hsov')) $('hsov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }   // (the game is over, or was ended)
@@ -1238,7 +1239,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null;   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
     if (kind === 'clue') { clueAll(); return; }   // (the presenters explain it in the scene)
-    if (kind === 'note') { noteAll(); return; }   // the Green Room: the presenters take us there first
+    if (kind === 'note') { noteAll(); return; }
+    if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
   // A presenter hops on screen to announce it, then the party round is chosen.
@@ -2853,6 +2855,57 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
 
 
+
+  // ---------- The presenters introduce every party game ----------
+  // One shared scene: a themed stage with its own sign and centrepiece, Felix and Stella on either side,
+  // and their story in speech balloons (letter by letter). Then the game itself starts.
+  var SCENES = {
+    draw: { sign: '🎨 Postcard', theme: 'postcard',
+      art: '<div class="hspost"><div class="hspcard"><div class="hspl"><b>Greetings from</b><i>Eurovision!</i><span class="hsdoodle">🎤✨🎶</span></div><div class="hspr"><span class="hsstamp">12</span><span class="hsline"></span><span class="hsline"></span><span class="hsline"></span></div></div><span class="hspencil">✏️</span></div>',
+      lines: [['him', 'Time to get creative, Europe! Your phones are about to become sketchbooks! ✏️'],
+        ['her', 'Everyone gets four songs. Pick one, and draw it on your phone, all within one minute.'],
+        ['him', 'Then we show every drawing, and the others guess which song it is.'],
+        ['her', 'A right guess scores points… and the artist scores too, for everyone who guessed it!'],
+        ['him', 'At the end you give your 12, 10 and 8 points to the best drawings. Pencils ready? 🎨']] },
+    sing: { sign: '🎤 Jury Show', theme: 'jury',
+      art: '<div class="hsjury"><div class="hsmic">🎙️</div><div class="hsdesk"><span>12</span><span>10</span><span>8</span><span>7</span></div><div class="hsdesklabel">THE JURY</div></div>',
+      lines: [['him', 'Welcome to the Jury Show! Tonight YOU are the singers… 🎤'],
+        ['her', '…and everyone else is the jury! First, vote for the song you all want to sing.'],
+        ['him', 'Listen closely, then record yourself singing it on your phone. Up to ten seconds!'],
+        ['her', 'Then we play every performance, and the jury votes for the best one.'],
+        ['him', 'The most votes gets 12 points, then 10, then 8… Warm up those voices! 🎶']] },
+    bluff: { sign: '🌍 Lost in Translation', theme: 'bluff',
+      art: '<div class="hsbluff"><div class="hsbook">📖</div><span class="hsw" style="--x:-34vh;--y:-6vh">Magyar?</span><span class="hsw" style="--x:30vh;--y:-10vh">Suomi?</span><span class="hsw" style="--x:-28vh;--y:12vh">Shqip?</span><span class="hsw" style="--x:34vh;--y:10vh">Ελληνικά?</span><span class="hsw" style="--x:0vh;--y:-20vh">Polski?</span></div>',
+      lines: [['him', 'Lost in Translation! A song title in a language you probably don’t speak… 🌍'],
+        ['her', 'Make up an English translation that sounds real enough to fool everyone.'],
+        ['him', 'Then all the translations appear, with the real one hidden among them.'],
+        ['her', 'Find the real one for 12 points…'],
+        ['him', '…and get 2 points for every player who falls for your fake! Good luck, liars! 🤥']] },
+    bomb: { sign: '💌 The Envelope, Please', theme: 'bomb',
+      art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
+      lines: [['him', 'The envelope, please! 💌 Golden envelopes are coming on stage.'],
+        ['her', 'Most of them hide a flag… but one of them hides a bomb! 💣'],
+        ['him', 'Take turns to open one on your phone. Find the bomb, and you’re out.'],
+        ['her', 'Then there’s a fresh set, until only one of you is left. The last one standing wins!']] }
+  };
+  function hostScene(kind, then) {
+    var sc = SCENES[kind], f = FUN[kind]; if (!sc || REMOTE) { funIntro(kind, then, 8000); return; }
+    stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    G.fun = { kind: 'scene', icon: f.icon, title: f.title, sub: f.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
+    cover(true, '', '', false); masks(true); hostsAway(); push();
+    var old = $('hsov'); if (old) old.remove();
+    var ov = document.createElement('div'); ov.id = 'hsov'; ov.className = 'grov hsov hs-' + sc.theme + ' enter';
+    ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="hsspot"></div><div class="grsign hssign">' + sc.sign + '</div>' +
+      '<div class="hsart">' + sc.art + '</div><div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
+    document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
+    setTimeout(function () { ov.classList.remove('enter'); }, 2600);
+    var say = function (who, txt) { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); };
+    var at = function (ms, fn) { setTimeout(function () { if (ov.isConnected && G.phase === 'fun' && G.fun && G.fun.kind === 'scene') fn(); }, ms); };
+    var t = 1600;
+    sc.lines.forEach(function (l) { (function (l, t0) { at(t0, function () { say(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2500); });
+    at(t, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
+    at(t + 1000, function () { ov.remove(); then(); });
+  }
   // ---------- Hold That Note ----------
   // Technical problems: one of the stars keeps getting cut off in the middle of her high note. A diva rises on stage
   // in an enormous gown; everyone guesses on their phone how long she will hold it this time (10 to 20 seconds);

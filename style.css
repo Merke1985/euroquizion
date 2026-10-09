@@ -1796,3 +1796,55 @@ aside.recapgone{visibility:hidden}
 .noteov:not(.diva-on) .ntdiva{transform:translateX(calc(-50% + 100vw));opacity:1}
 .noteov.diva-on .ntstage,.noteov.diva-on .ntdiva{transform:translateX(-50%)}
 .noteov.diva-on .ntdiva{transition-delay:0s}
+
+/* ---------- The presenters' scene for each party game (on top of the Green Room scene styles) ---------- */
+.hsov .hssign{top:4vh;left:0;right:0;margin:0 auto;width:fit-content;font-size:clamp(1.6rem,3.6vw,3rem)}
+.hsov .hsspot{position:absolute;left:50%;top:-10vh;width:50vw;height:100vh;margin-left:-25vw;background:radial-gradient(ellipse at 50% 80%,rgba(255,255,255,.2),transparent 60%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);pointer-events:none}
+.hsov .hsart{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);z-index:2}
+.hsov.enter .hsart{animation:shpop .8s .5s cubic-bezier(.3,1.5,.5,1) both}
+.hsov.enter .ehost.him{animation:inLeft .9s .6s cubic-bezier(.2,.9,.3,1.08) both}
+.hsov.enter .ehost.her{animation:inRight .9s .6s cubic-bezier(.2,.9,.3,1.08) both}
+.hsov .grhosts .ehost{height:50vh;bottom:4vh}
+.hsov .grbub{top:27vh;max-width:25vw;font-size:clamp(.9rem,1.4vw,1.2rem);z-index:6}
+.hsov .grbub.him{left:9vw;border-bottom-left-radius:4px}.hsov .grbub.her{right:9vw;border-bottom-right-radius:4px}
+.hsov.leaving{transition:opacity .9s,transform .9s;opacity:0;transform:scale(1.1)}
+/* Postcard: an art studio in pastels, a giant postcard with a stamp */
+.hs-postcard .grwall{background:radial-gradient(circle,rgba(255,255,255,.3) 0 1.5px,transparent 2.5px) 0 0/28px 28px,radial-gradient(ellipse at 50% 30%,#6f5bd6 0%,#3b2a8a 55%,#1a1240 100%)}
+.hs-postcard .hssign{border-color:#ffd166;color:#fff8e6;text-shadow:0 0 12px #ffb000;box-shadow:0 0 18px rgba(255,209,102,.5)}
+.hspost{position:relative}
+.hspcard{width:46vh;height:30vh;background:#fffaf0;border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,.5);display:flex;transform:rotate(-5deg);padding:2vh;gap:2vh;color:#2a1a40}
+.hspl{flex:1.3;border-right:2px dashed #c9b8e8;display:flex;flex-direction:column;justify-content:center}
+.hspl b{font-size:2vh;font-weight:800;opacity:.7}.hspl i{font-size:4.2vh;font-weight:900;font-style:italic;color:#e8457c;line-height:1}
+.hsdoodle{font-size:3.6vh;margin-top:1.4vh;letter-spacing:.4vh}
+.hspr{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:2.2vh}
+.hsstamp{width:7vh;height:8.5vh;background:#ffd166;border:3px dotted #fff;outline:2px solid #ffd166;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3.4vh;color:#7a3b00}
+.hsline{display:block;width:100%;height:2px;background:#c9b8e8}
+.hspencil{position:absolute;right:-6vh;bottom:-5vh;font-size:9vh;transform:rotate(-20deg);animation:hspen 1.2s ease-in-out infinite alternate}
+@keyframes hspen{from{transform:rotate(-20deg) translate(0,0)}to{transform:rotate(-8deg) translate(-2vh,-1vh)}}
+/* Jury Show: a jury desk with score cards, and the microphone waiting */
+.hs-jury .grwall{background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,transparent 2px 70px),radial-gradient(ellipse at 50% 25%,#1f6fbf 0%,#14306a 55%,#0a1230 100%)}
+.hs-jury .hssign{border-color:#7fd8ff;color:#eefaff;text-shadow:0 0 12px #3fa9ff;box-shadow:0 0 18px rgba(63,169,255,.5)}
+.hsjury{display:flex;flex-direction:column;align-items:center}
+.hsmic{font-size:16vh;line-height:1;filter:drop-shadow(0 0 24px rgba(127,216,255,.7));animation:ehbob 2s ease-in-out infinite alternate}
+.hsdesk{display:flex;gap:1.4vh;margin-top:2vh;padding:1.6vh 2.4vh;background:linear-gradient(#3a3f66,#1e2140);border-radius:10px 10px 4px 4px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.hsdesk span{width:7vh;height:8vh;border-radius:6px;background:#fff;color:#14306a;font-weight:900;font-size:4vh;display:flex;align-items:center;justify-content:center;animation:hscard 1.8s ease-in-out infinite;animation-delay:calc(var(--d,0) * 1s)}
+.hsdesk span:nth-child(1){--d:0;background:#ffd23f}.hsdesk span:nth-child(2){--d:.25}.hsdesk span:nth-child(3){--d:.5}.hsdesk span:nth-child(4){--d:.75}
+.hsdesklabel{margin-top:1vh;font-weight:900;letter-spacing:.4em;font-size:1.8vh;opacity:.8}
+@keyframes hscard{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(-2.2vh)}}
+/* Lost in Translation: a dictionary, with names of languages floating around it */
+.hs-bluff .grwall{background:radial-gradient(circle,rgba(255,255,255,.2) 0 1.2px,transparent 2px) 0 0/30px 30px,radial-gradient(ellipse at 50% 30%,#0f8f86 0%,#0a4d5e 55%,#061c2e 100%)}
+.hs-bluff .hssign{border-color:#7ff0d6;color:#ecfffa;text-shadow:0 0 12px #2fe0b8;box-shadow:0 0 18px rgba(47,224,184,.5)}
+.hsbluff{position:relative;width:1px;height:1px}
+.hsbook{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-size:18vh;filter:drop-shadow(0 12px 24px rgba(0,0,0,.5))}
+.hsw{position:absolute;left:0;top:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y)));white-space:nowrap;background:#fff;color:#0a4d5e;font-weight:900;font-size:2.4vh;padding:.6vh 1.4vh;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.4);animation:hsfloat 3s ease-in-out infinite alternate}
+.hsw:nth-child(odd){animation-delay:-1.5s}
+@keyframes hsfloat{from{margin-top:0}to{margin-top:-1.6vh}}
+/* The Envelope, Please: golden envelopes, and a bomb with a fizzing fuse */
+.hs-bomb .grwall{background:radial-gradient(ellipse at 50% 120%,#5a1a7a 0%,#2a0d45 45%,#0c0418 80%)}
+.hs-bomb .hssign{border-color:#ffd23f;color:#fff6d6;text-shadow:0 0 12px #ffb000;box-shadow:0 0 18px rgba(255,180,0,.55)}
+.hsbomb{position:relative;width:1px;height:1px}
+.hsenv{position:absolute;left:0;top:0;font-size:12vh;transform:translate(calc(-50% + var(--x)),-50%) rotate(var(--r));filter:sepia(1) saturate(3) hue-rotate(5deg) drop-shadow(0 10px 20px rgba(0,0,0,.5))}
+.hsenv.hsboom{animation:hsshake .6s ease-in-out infinite}
+.hsfuse{position:absolute;left:0;top:0;font-size:7vh;transform:translate(calc(-50% + 8vh),calc(-50% - 9vh));animation:hsfizz .4s steps(2) infinite}
+@keyframes hsshake{0%,100%{transform:translate(calc(-50% + var(--x)),-50%) rotate(var(--r))}50%{transform:translate(calc(-50% + var(--x) + .6vh),-50%) rotate(calc(var(--r) + 4deg))}}
+@keyframes hsfizz{0%{filter:drop-shadow(0 0 4px #ff7a00)}100%{filter:drop-shadow(0 0 14px #ffd23f)}}
