@@ -1817,8 +1817,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.mode = G.lastParty = 'shop'; G.afterParty = true; G.mgBase = null;
     shopGo(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
       var nm = players[lucky[0]] ? players[lucky[0]].name : '';
-      FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: nm + ' wins this party game, and a free item from the boutique! Everyone else can buy one with points.' };
-      shopVisit(null, 1, function () { backFromShop(2, startRound); }, true, '', lucky);
+      FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: nm + ' wins this party game, and may buy an item in the boutique!' };
+      shopVisit(lucky, 1, function () { backFromShop(1, startRound); }, true, '', true);
     });
   });
   // Testing: every human player gets an envelope for the EBU in their bag (to try it out)
@@ -2317,7 +2317,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lp = pick(ps.filter(function (p) { return p.score === low; }));
     return lp ? lp.pid : wins[0];
   }
-  function underdogLine(nm) { return nm + ', darling, come in! It was a tie, but I have a soft spot for the underdog! 💖 Your item is on the house.'; }
+  function underdogLine(nm) { return nm + ', darling, come in! It was a tie, but I have a soft spot for the underdog! 💖'; }
   function underdog(wins, back) {
     var w = underdogOf(wins), nm = players[w] ? players[w].name : '';
     if (REMOTE) { mgGo([w], back, underdogLine(nm)); return; }
@@ -2328,8 +2328,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function mgGo(wins, back, line) {
     var names = wins.map(function (k) { return players[k].name; });
-    FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a free item from the boutique! Everyone else can buy one with points.' };
-    Music.douze(); shopVisit(null, 1, function () { backFromShop(2, back); }, true, line, wins);   // the boutique opens for everyone: the winner's item is free, the rest can buy one   // straight to the boutique: the winner chooses one
+    FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and may buy an item in the boutique!' };
+    Music.douze(); shopVisit(wins, 1, function () { backFromShop(wins.length, back); }, true, line, true);   // only the winner shops: one item from each shelf, to buy with points   // straight to the boutique: the winner chooses one
   }
   // The tie-break vote: which fake translation was the funniest?
   var funnyDone = null, FUNNY_MS = 15000;
@@ -2411,7 +2411,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // everyone gets their own selection of two, and Lynda spreads her stock: as many different items as possible go round
     var stock = !win && !buy ? shopAvail().filter(function (it) { return it.tier === 1; }) : shopAvail();   // (the free welcome item comes from the bargain shelf)
     var offer = {}, deck = [], deal = function (mine) { if (!deck.length) deck = shuffle(stock.map(function (it) { return it.id; })); var i = 0; while (i < deck.length && mine.indexOf(deck[i]) >= 0) i++; if (i === deck.length) { deck = deck.concat(shuffle(stock.map(function (it) { return it.id; }))); while (mine.indexOf(deck[i]) >= 0) i++; } return deck.splice(i, 1)[0]; };
-    act.forEach(function (p) { var mine = []; while (mine.length < Math.min(SHOP_OFFER, stock.length)) mine.push(deal(mine)); offer[p.pid] = mine; });
+    if (buy) act.forEach(function (p) { offer[p.pid] = [3, 2, 1].map(function (t) { var row = stock.filter(function (it) { return it.tier === t; }); return row.length ? pick(row).id : null; }).filter(Boolean); });   // the winner's trip: one from each shelf
+    else act.forEach(function (p) { var mine = []; while (mine.length < Math.min(SHOP_OFFER, stock.length)) mine.push(deal(mine)); offer[p.pid] = mine; });
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
     var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = 7600, TALK2 = 6000;
@@ -2705,8 +2706,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           var shelf = function (items) { return items.map(function (it) { return '<span class="bqi" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + shopPrice(it) + ' pts</i></span>'; }).join(''); }, av = shopAvail();
           return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">Items work in the trivia rounds, not in the party games</div></div>';
         })() +
-        '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div>';
+        '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div><div class="bqtimer"></div>';
       document.body.appendChild(ov);
+      var tick = setInterval(function () {   // the 30 seconds to choose, counting down
+        if (!ov.isConnected) { clearInterval(tick); return; }
+        var sg = G.shop, tm = ov.querySelector('.bqtimer'), on = !!sg && !sg.over && !sg.talk && G.phase === 'shop', left = on ? Math.max(0, Math.ceil((G.endsAt - Date.now()) / 1000)) : 0;
+        tm.classList.toggle('on', on); tm.classList.toggle('hurry', on && left <= 10); if (on) tm.textContent = '⏱ ' + left;
+      }, 250);
     }
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
     var one = act.length === 1, wn = act.map(function (p) { return p.name; }), wnames = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
@@ -2714,7 +2720,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.talk === 1) typeSay(bq, 'Welcome to Woodruff’s Boutique, darling' + (one ? '' : 's') + '! 💋 This is where you get items to use in the trivia rounds. Not during the party games, mind you!', 'lynda');
     else if (g.talk === 2) typeSay(bq, 'And as a token of goodwill, I’m giving everyone one item for free! 🎁', 'lynda');
     else if (g.line && !g.over && !g.buy) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
-    else if (g.buy) { var fw = (g.free || []).map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), fn = fw.length > 1 ? fw.slice(0, -1).join(', ') + ' and ' + fw[fw.length - 1] : fw[0], bought = act.some(function (p) { return (g.picks[p.pid] || []).length; }); typeSay(bq, g.over ? (bought ? 'Pleasure doing business, darlings! 😘' : 'Next time then, darlings! 😘') : (g.line ? g.line + ' ' : fn ? 'Congratulations, ' + fn + '! 🛍️ Your item is on the house. ' : '') + 'Everyone else: fancy one of my two picks? It will cost you, darling! 💸', 'lynda'); }
+    else if (g.buy) { var fw = (g.free || []).map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), fn = fw.length > 1 ? fw.slice(0, -1).join(', ') + ' and ' + fw[fw.length - 1] : fw[0], bought = act.some(function (p) { return (g.picks[p.pid] || []).length; }); typeSay(bq, g.over ? (bought ? 'Pleasure doing business, darling' + (one ? '' : 's') + '! 😘' : 'Next time then, darling' + (one ? '' : 's') + '! 😘') : (g.line ? g.line + ' ' : 'Congratulations, ' + wnames + '! 🛍️ ') + 'One item from each shelf, just for ' + (one ? 'you' : 'you two') + '. Fancy one? It will cost you, darling! 💸', 'lynda'); }
     else if (g.win) typeSay(bq, g.over ? (one ? 'Fabulous choice, darling! Use it wisely. 😘' : 'Fabulous choices, darlings! Use them wisely. 😘') : 'Congratulations, ' + wnames + '! 🛍️ I picked two items just for ' + (one ? 'you' : 'each of you') + '. Choose one on your phone!', 'lynda');
     else typeSay(bq, g.over ? 'Fabulous choice' + (one ? ', darling' : 's, darlings') + '! Enjoy the show. 😘' : 'I picked two items for ' + (one ? 'you' : 'each of you') + '. Choose ' + (g.n > 1 ? g.n : 'one') + ' on your phone! 🛍️', 'lynda');
     var on = {}; Object.keys(g.offer || {}).forEach(function (k) { (g.offer[k] || []).forEach(function (id) { on[id] = 1; }); });

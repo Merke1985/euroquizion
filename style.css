@@ -2081,3 +2081,16 @@ aside.recapgone{visibility:hidden}
 @keyframes fanblow{0%{transform:none;opacity:1}30%{transform:translateX(-6px) rotate(-2deg)}100%{transform:translateX(120%) rotate(18deg);opacity:0;visibility:hidden}}
 /* crisper items on the shelves: a soft shadow and just a hint of glow */
 .shopov.boutique .bqi .si,.shopov.boutique .bqi.offer .si{filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)) drop-shadow(0 0 4px rgba(255,214,120,.35))}
+/* everything below the sign a little lower: the bunting hangs just under it */
+.shopov.boutique .bqbunting{top:19vh}
+.shopov.boutique .bqcase{top:29vh}
+.shopov.boutique .bqbubble{top:29vh}
+.shopov.boutique .bqsale{top:26vh}
+.shopov.boutique .bqkeeper{height:50vh}
+/* the 30 seconds to shop: on the big screen and on the phone */
+.shopov.boutique .bqtimer{position:absolute;right:3vw;bottom:3vh;padding:.3em .8em;border-radius:99px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.25);font-weight:900;font-size:clamp(1rem,1.8vw,1.6rem);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .3s}
+.shopov.boutique .bqtimer.on{opacity:1}
+.shopov.boutique .bqtimer.hurry{color:#ff6b7f;border-color:#ff6b7f;animation:alpulse2 .5s ease-in-out infinite alternate}
+@keyframes alpulse2{to{transform:scale(1.08)}}
+.shoptime{margin:0 0 10px;font-weight:800;font-size:.95rem;opacity:.85;font-variant-numeric:tabular-nums}
+.shoptime.hurry{color:#ff6b7f;opacity:1}

@@ -482,7 +482,7 @@
     var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',') + '|' + free + '|' + myPts;
     if (box.getAttribute('data-k') === drawKey && box.innerHTML) return;   // nothing changed: leave the buttons alone (no flicker on every update)
     box.setAttribute('data-k', drawKey);
-    box.innerHTML = sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
+    box.innerHTML = '<p id="shoptime" class="shoptime" data-free="' + (free ? 1 : 0) + '"></p>' + sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
       var n = shopSel.filter(function (x) { return x === it.id; }).length, pr = it.price || 0, poor = !free && pr > myPts;
       return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (!free ? ' <em class="price">' + pr + ' pts</em>' : '') + '</b><small>' + esc(poor ? 'Not enough points for this one' : it.desc) + '</small></span></button>';
     }).join('') + (free ? '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take ' + (sh.n > 1 ? 'them' : 'it') + '!') + '</button>'
@@ -1054,6 +1054,7 @@
     $('rnext').textContent = nx && state ? (state.round >= state.total || state.last ? 'Final scores in ' : 'Next question in ') + clock(nx) : '';   // same line as "All players answered"
 
     if (!state) return;
+    if (state.phase === 'shop' && $('shoptime')) { var stl = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)); $('shoptime').textContent = '⏱ ' + stl + ' s · ' + ($('shoptime').getAttribute('data-free') === '1' ? 'then Lynda picks one for you' : 'then the boutique closes'); $('shoptime').classList.toggle('hurry', stl <= 10); }
     if (state.phase === 'intro') $('briefwait').textContent = 'Starting in ' + Math.max(1, Math.ceil((endsAt - Date.now()) / 1000));
     var ms = state.bar_ms || state.total_ms, f = ms ? Math.max(0, Math.min(1, ((state.frozen ? state.left : endsAt - Date.now())) / ms)) : 0;   // (frozen while an item lands)
     if (state.phase === 'qall') $('qbar').style.transform = 'scaleX(' + f + ')';
