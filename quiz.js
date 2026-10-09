@@ -782,24 +782,24 @@ var SHOP_PICKS = 2;   // free items per visit
 var SHOP_START_ALL = false;   // every (human) player starts a Party game with one of each item (handy for trying them out)
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }
 
-// Who the Hell Is Edgar? (a Cluedo-style party game): a ghost called Edgar has been writing everyone's songs. Who is he
-// possessing, where is he haunting, and what is he writing with? All made-up characters and things from the show itself.
-// One of each is the secret answer; the others turn up as clues.
+// Where the Hell Is Edgar? (a Cluedo-style party game): Edgar, the show's mascot (a cartoon inspired by Edgar Allan Poe),
+// has been abducted. Who took him, where is he hidden, and how did they carry him off? All made-up characters and
+// things from the show itself. One of each is the secret answer; the others turn up as clues.
 var CLUE_WHO = [
   { id: 'lynda', icon: '👠', name: 'Lynda' }, { id: 'felix', icon: '🎩', name: 'Felix' }, { id: 'stella', icon: '💃', name: 'Stella' },
   { id: 'monster', icon: '👹', name: 'The Monster' }, { id: 'manager', icon: '🎧', name: 'The Stage Manager' }];
 var CLUE_WHERE = [
-  { id: 'green', icon: '🛋️', name: 'Green Room', in: 'in the Green Room' },
-  { id: 'club', icon: '🪩', name: 'Euroclub', in: 'in the Euroclub' }, { id: 'back', icon: '🎭', name: 'Backstage', in: 'backstage' },
-  { id: 'shop', icon: '🛍️', name: 'Woodruff’s Boutique', in: 'in Woodruff’s Boutique' }, { id: 'arena', icon: '🏟️', name: 'The Arena', in: 'on the Arena stage' }];
+  { id: 'green', icon: '🛋️', name: 'Green Room', in: 'in the Green Room' }, { id: 'club', icon: '🪩', name: 'Euroclub', in: 'in the Euroclub' },
+  { id: 'back', icon: '🎭', name: 'Backstage', in: 'backstage' }, { id: 'shop', icon: '🛍️', name: 'Woodruff’s Boutique', in: 'in Woodruff’s Boutique' },
+  { id: 'arena', icon: '🏟️', name: 'The Arena', in: 'under the Arena stage' }];
 var CLUE_WHAT = [
-  { id: 'quill', icon: '🪶', name: 'Feather Quill' }, { id: 'pen', icon: '✒️', name: 'Fountain Pen' }, { id: 'piano', icon: '🎹', name: 'Grand Piano' },
-  { id: 'candle', icon: '🕯️', name: 'Candlestick' }, { id: 'ball', icon: '🔮', name: 'Crystal Ball' }];
+  { id: 'basket', icon: '🧺', name: 'Laundry Basket' }, { id: 'flag', icon: '🚩', name: 'Giant Flag' }, { id: 'smoke', icon: '🌫️', name: 'Smoke Machine' },
+  { id: 'wind', icon: '💨', name: 'Wind Machine' }, { id: 'confetti', icon: '🎉', name: 'Confetti Cannon' }];
 var CLUE_SETS = { who: CLUE_WHO, where: CLUE_WHERE, what: CLUE_WHAT };
 var CLUE_N = 4, CLUE_ACC_MS = 45000, CLUE_PART = 4, CLUE_BONUS = 6, CLUE_GIVE = 3, CLUE_FAST = 4;   // four clue questions; a right answer brings 3 clues, the fastest 4;
 // 4 points per right part of the guess, 6 more for all three. (Five cards a row and these clues: someone solves it in most games.)
 function clueCard(key) { var p = String(key).split(':'), set = CLUE_SETS[p[0]] || []; for (var i = 0; i < set.length; i++) if (set[i].id === p[1]) return { kind: p[0], c: set[i] }; return null; }
 function clueText(key) {   // what a clue says: this one is not it
   var x = clueCard(key); if (!x) return '';
-  return x.kind === 'who' ? x.c.icon + ' ' + x.c.name + ' is not possessed.' : x.kind === 'where' ? x.c.icon + ' Edgar is not haunting ' + x.c.in.replace(/^(in|on) /, '').replace(' stage', '') + '.' : x.c.icon + ' Edgar is not writing with the ' + x.c.name + '.';
+  return x.kind === 'who' ? x.c.icon + ' ' + x.c.name + ' has an alibi.' : x.kind === 'where' ? x.c.icon + ' Edgar is not hidden ' + x.c.in + '.' : x.c.icon + ' The ' + x.c.name + ' was not used.';
 }

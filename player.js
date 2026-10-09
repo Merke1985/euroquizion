@@ -359,7 +359,7 @@
     $('waitsub').textContent = out && b.st !== 'win' ? 'Watch the others sweat on the big screen.' : b.st === 'deal' ? 'New envelopes are coming out. One hides a bomb.' : 'Watch the big screen!';
   }
 
-  // ---------- Who the Hell Is Edgar? ----------
+  // ---------- Where the Hell Is Edgar? ----------
   // A right answer brings a secret clue: it pops up on the phone. At the end, the notebook: pick who, where and with what
   // (what your clues ruled out is crossed off), and accuse.
   var clueToasted = '', clueSel = {}, clueSentId = '';
@@ -368,7 +368,7 @@
     if (s.phase !== 'reveal') return;
     clueToasted = c.freshKey;
     var mine = (c.fresh || {})[pid]; if (!mine || !mine.length) return;
-    ptoast('👻 Secret clue' + (mine.length > 1 ? 's' : '') + ': ' + mine.map(clueText).join(' '));
+    ptoast('🔍 Secret clue' + (mine.length > 1 ? 's' : '') + ': ' + mine.map(clueText).join(' '));
     var e = $('ptoast'); clearTimeout(ptoastT); ptoastT = setTimeout(function () { e.classList.add('hidden'); }, 7000);   // (a little longer: worth reading)
   }
   function clueView(s) {
@@ -377,17 +377,17 @@
     if (s.phase === 'clueacc') {
       if (clueSentId === c.id || (c.acc || {})[pid]) {
         box.classList.add('hidden');
-        $('waittitle').textContent = '👻 Guess sent!'; $('waitsub').textContent = 'Waiting for the other ghost hunters…'; return;
+        $('waittitle').textContent = '🔍 Accusation sent!'; $('waitsub').textContent = 'Waiting for the other detectives…'; return;
       }
-      $('waittitle').textContent = '👻 Unmask Edgar'; $('waitsub').textContent = 'Who is he possessing, where is he haunting, and what is he writing with? What your clues ruled out is crossed off. You have ' + Math.round(CLUE_ACC_MS / 1000) + ' seconds.';
+      $('waittitle').textContent = '🔍 Find Edgar'; $('waitsub').textContent = 'Who took him, where is he hidden, and how did they carry him off? What your clues ruled out is crossed off. You have ' + Math.round(CLUE_ACC_MS / 1000) + ' seconds.';
       box.classList.remove('hidden');
       if (clueSel.id !== c.id) clueSel = { id: c.id };
       var key = c.id + '|' + known.join(',') + '|' + clueSel.who + clueSel.where + clueSel.what;
       if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
-      var lab = { who: 'Who is he possessing?', where: 'Where is he haunting?', what: 'What is he writing with?' };
+      var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'How did they carry him off?' };
       box.innerHTML = ['who', 'where', 'what'].map(function (k) {
         return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var out = known.indexOf(k + ':' + x.id) >= 0; return '<button type="button" class="clbtn' + (out ? ' out' : '') + (clueSel[k] === x.id ? ' sel' : '') + '" data-k="' + k + '" data-id="' + x.id + '"><i>' + x.icon + '</i>' + esc(x.name) + '</button>'; }).join('') + '</div></div>';
-      }).join('') + '<button type="button" class="btn big" id="clueaccuse"' + (clueSel.who && clueSel.where && clueSel.what ? '' : ' disabled') + '>👻 Unmask Edgar!</button>';
+      }).join('') + '<button type="button" class="btn big" id="clueaccuse"' + (clueSel.who && clueSel.where && clueSel.what ? '' : ' disabled') + '>🔍 Accuse!</button>';
       [].forEach.call(box.querySelectorAll('.clbtn'), function (b) { b.onclick = function () { clueSel[b.getAttribute('data-k')] = b.getAttribute('data-id'); clueView(state); }; });
       $('clueaccuse').onclick = function () {
         if (!net || !(clueSel.who && clueSel.where && clueSel.what)) return;
@@ -401,9 +401,9 @@
     var sol = c.sol || {}, parts = [];
     if (sol.who) parts.push(clueCard('who:' + sol.who).c.name);
     if (sol.where) parts.push(clueCard('where:' + sol.where).c.in);
-    if (sol.what) parts.push('writing with the ' + clueCard('what:' + sol.what).c.name);
+    if (sol.what) parts.push('with the ' + clueCard('what:' + sol.what).c.name);
     var r = c.res && c.res[pid];
-    $('waittitle').textContent = r ? (r.n === 3 ? '🏆 You unmasked Edgar!' : r.none ? 'No guess…' : '👻 ' + r.n + ' of 3 right') : '👻 Who the hell is Edgar…?';
+    $('waittitle').textContent = r ? (r.n === 3 ? '🏆 You found Edgar!' : r.none ? 'No accusation…' : '🔍 ' + r.n + ' of 3 right') : '🔍 Who took Edgar…?';
     $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '') + (c.gift && c.gift.pid === pid ? ' 🎁 Lynda gave you the ' + shopName(c.gift.item) + '! It’s in your bag.' : '');
   }
 

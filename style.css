@@ -1572,7 +1572,7 @@ aside.recapgone{visibility:hidden}
 .grov.enter .ehost.her{animation:inRight .9s 1s cubic-bezier(.2,.9,.3,1.08) both}
 .grov.leaving{transition:opacity .9s,transform .9s;opacity:0;transform:scale(1.12)}
 
-/* ---------- Who the Hell Is Edgar? (on top of the Green Room scene styles: wall, floor, presenters, balloons) ---------- */
+/* ---------- Where the Hell Is Edgar? (on top of the Green Room scene styles: wall, floor, presenters, balloons) ---------- */
 .clueov{background:#0b0616}
 .clueov .grwall{background:radial-gradient(circle,rgba(160,190,255,.25) 0 1.2px,transparent 2px) 0 0/30px 30px,radial-gradient(ellipse at 50% 20%,#1d2350 0%,#120d2c 55%,#0b0616 100%)}
 .clueov .clspot{position:absolute;left:50%;top:-10vh;width:46vw;height:80vh;margin-left:-23vw;background:radial-gradient(ellipse at 50% 100%,rgba(255,240,200,.22),transparent 60%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);pointer-events:none}
@@ -1613,17 +1613,20 @@ aside.recapgone{visibility:hidden}
 .clbtn.out{opacity:.45;text-decoration:line-through}
 .clbtn.sel{border-color:var(--yellow);background:rgba(255,210,63,.2);opacity:1}
 
-/* Edgar: a ghostly green-purple glow, and the ghost himself floating above it all */
-.clueov .grwall{background:radial-gradient(circle,rgba(170,255,210,.22) 0 1.2px,transparent 2px) 0 0/30px 30px,radial-gradient(ellipse at 50% 20%,#1f3a3a 0%,#1a1236 55%,#0b0616 100%)}
-.clueov .clspot{background:radial-gradient(ellipse at 50% 100%,rgba(140,255,200,.18),transparent 60%)}
-.clueov .clsign{border-color:#9dffcf;color:#efffF7;text-shadow:0 0 12px #3ff2a0,0 0 28px #8a4dff;box-shadow:0 0 18px rgba(63,242,160,.5),inset 0 0 18px rgba(138,77,255,.35)}
-.clueov .clgone{bottom:0;font-size:12vh;opacity:.55;filter:drop-shadow(0 0 18px rgba(170,255,220,.8));animation:edgarfloat 3s ease-in-out infinite alternate}
-.clueov .clgone.back{opacity:1;filter:drop-shadow(0 0 30px rgba(170,255,220,1));transform:none;animation:edgarfloat 1.2s ease-in-out infinite alternate}
-.clueov .clq{position:absolute;right:-1vh;top:-1vh;font-size:6vh;font-weight:900;color:#9dffcf;text-shadow:0 0 14px #3ff2a0;animation:edgarfloat 2.2s ease-in-out infinite alternate-reverse}
-.clueov[data-st="reveal"] .clq{opacity:0;transition:opacity .5s}
-.clueov .clcard.hit{box-shadow:0 0 0 4px #9dffcf,0 0 30px rgba(140,255,200,.8)}
-@keyframes edgarfloat{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-2.4vh) rotate(4deg)}}
-
+/* Edgar, the mascot: a MISSING poster while he is gone, and Edgar himself, back on stage, at the end */
+.clueov .clsign{border-color:#ffd23f;color:#fff6d6;text-shadow:0 0 12px #ffb000,0 0 26px #ff8a00;box-shadow:0 0 18px rgba(255,180,0,.55),inset 0 0 18px rgba(255,180,0,.3)}
+.clueov .cllab{color:#ffd23f}
+.clueov .clposter{position:absolute;left:50%;top:12.5vh;width:15vh;margin-left:-7.5vh;padding:.8vh .8vh 1vh;background:#f4ead2;color:#3a2600;text-align:center;border-radius:4px;box-shadow:0 8px 20px rgba(0,0,0,.55);transform:rotate(-3deg);transition:opacity .5s,transform .5s}
+.clueov .clposter b{display:block;font-size:2.4vh;letter-spacing:.12em;color:#b3122e;line-height:1}
+.clueov .clposter .edgar{display:block;height:13vh;width:auto;margin:.4vh auto;background:#e6dcc2;border-radius:3px}
+.clueov .clposter small{display:block;font-size:1.2vh;font-weight:800}
+.clueov.found .clposter{opacity:0;transform:rotate(-20deg) scale(.6)}
+.clueov .cledgar{position:absolute;left:50%;top:12vh;height:21vh;margin-left:-7vh;opacity:0;transform:translateY(4vh) scale(.6);transition:opacity .5s,transform .6s cubic-bezier(.3,1.6,.5,1);z-index:4}
+.clueov .cledgar .edgar{height:100%;width:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.6))}
+.clueov.found .cledgar{opacity:1;transform:none;animation:edgarhop 1s .6s ease-in-out infinite alternate}
+.clueov .edraven{transform-origin:160px 160px;animation:edgarcaw 2.2s ease-in-out infinite}
+@keyframes edgarhop{from{translate:0 0}to{translate:0 -1.6vh}}
+@keyframes edgarcaw{0%,80%,100%{transform:none}88%{transform:rotate(-8deg)}}
 /* Lynda pops in with a gift when nobody unmasked Edgar */
 .clueov .clynda{position:absolute;left:20vw;bottom:13vh;height:42vh;z-index:7;animation:inUp .8s cubic-bezier(.2,.9,.3,1.08) both}
 .clueov.withlynda .clrows{opacity:.18;transition:opacity .6s}
