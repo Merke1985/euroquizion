@@ -2066,3 +2066,13 @@ aside.recapgone{visibility:hidden}
 .shopov.boutique .bqbubble{left:2vw;top:20vh;bottom:auto;max-width:27vw;font-size:clamp(.9rem,1.35vw,1.2rem);border-radius:22px 22px 22px 22px}
 .shopov.boutique .bqbubble::after{content:'';position:absolute;left:7vw;bottom:-14px;border:14px solid transparent;border-top-color:#fff;border-bottom:0}
 .shopov.boutique .shoppers{left:31vw}
+/* below the bunting */
+.shopov.boutique .bqcase{top:25vh}
+.shopov.boutique .bqbubble{top:25vh}
+.shopov.boutique .bqsale{top:22vh}
+/* every item on the shelves shines and bobs (not only today's picks) */
+.shopov.boutique .bqi,.shopov.boutique .bqi.offer{opacity:1;filter:none}
+.shopov.boutique .bqi .si{filter:drop-shadow(0 0 12px rgba(255,214,120,.9));animation:bqoffer 1.6s ease-in-out infinite alternate}
+.shopov.boutique .bqi:nth-child(odd) .si{animation-delay:-.8s}
+.shopov.boutique .bqi:nth-child(3n) .si{animation-delay:-.4s}
+.shopov.boutique .bqi.offer b::before{content:none}

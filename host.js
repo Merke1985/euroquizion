@@ -125,7 +125,7 @@
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
     if (G.note && G.phase === 'note') s.note = noteSnap();
-    if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS, offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
+    if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
     if (hideScores()) s.hide = true;
@@ -2409,8 +2409,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
     var old = $('shopov'); if (old) old.remove();   // (a fresh boutique, sliding in)
     // everyone gets their own selection of two, and Lynda spreads her stock: as many different items as possible go round
-    var offer = {}, deck = [], deal = function (mine) { if (!deck.length) deck = shuffle(shopAvail().map(function (it) { return it.id; })); var i = 0; while (i < deck.length && mine.indexOf(deck[i]) >= 0) i++; if (i === deck.length) { deck = deck.concat(shuffle(shopAvail().map(function (it) { return it.id; }))); while (mine.indexOf(deck[i]) >= 0) i++; } return deck.splice(i, 1)[0]; };
-    act.forEach(function (p) { var mine = []; while (mine.length < SHOP_OFFER) mine.push(deal(mine)); offer[p.pid] = mine; });
+    var stock = !win && !buy ? shopAvail().filter(function (it) { return it.tier === 1; }) : shopAvail();   // (the free welcome item comes from the bargain shelf)
+    var offer = {}, deck = [], deal = function (mine) { if (!deck.length) deck = shuffle(stock.map(function (it) { return it.id; })); var i = 0; while (i < deck.length && mine.indexOf(deck[i]) >= 0) i++; if (i === deck.length) { deck = deck.concat(shuffle(stock.map(function (it) { return it.id; }))); while (mine.indexOf(deck[i]) >= 0) i++; } return deck.splice(i, 1)[0]; };
+    act.forEach(function (p) { var mine = []; while (mine.length < Math.min(SHOP_OFFER, stock.length)) mine.push(deal(mine)); offer[p.pid] = mine; });
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
     var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = 7600, TALK2 = 6000;
@@ -2425,12 +2426,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     bots.forEach(function (b) { if (G.shop.who.indexOf(b.pid) >= 0) setTimeout(function () {
       if (!buy) { shopMsg({ pid: b.pid, id: id, items: shopRandom(n, offer[b.pid]) }); return; }
       if (G.shop && G.shop.free.indexOf(b.pid) >= 0) { shopMsg({ pid: b.pid, id: id, items: shopRandom(1, offer[b.pid]) }); return; }
-      var p = players[b.pid], can = (offer[b.pid] || []).filter(function (x) { return p && (shopItem(x).price || 0) <= p.score; });
+      var p = players[b.pid], can = (offer[b.pid] || []).filter(function (x) { return p && shopPrice(shopItem(x)) <= p.score; });
       shopMsg(can.length && Math.random() < 0.75 ? { pid: b.pid, id: id, items: [pick(can)] } : { pid: b.pid, id: id, items: [], skip: 1 });
     }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
     clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
   }
   function shopLater(it) { return it.kind === 'bribe' || it.kind === 'heel'; }   // items that do nothing until the Grand Final
+  function shopPrice(it) { return shopPriceOf(it, G.block || 3); }   // (more questions per block of trivia: dearer)
   function shopAvail() { return SHOP_ITEMS.filter(function (it) { return !it.final || G.finalMode === 'chase'; }); }
   function shopRandom(n, from) { var ids = from || shopAvail().map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
   // Bots and their items: every trivia question a bot with items has a chance to use one,
@@ -2462,7 +2464,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var own = (g.offer || {})[p.pid], items = (m.items || []).filter(function (x) { return !!shopItem(x) && (!own || own.indexOf(x) >= 0); }).slice(0, g.n || SHOP_PICKS);
       if (g.buy) {   // after a party game: one item each, free for the winner, paid for with points by the rest (or nothing)
         if (m.skip) items = [];
-        else { items = items.slice(0, 1); var pr = items.length && g.free.indexOf(p.pid) < 0 ? (shopItem(items[0]).price || 0) : 0; if (!items.length || pr > p.score) return; p.score -= pr; g.paid[p.pid] = pr; }
+        else { items = items.slice(0, 1); var pr = items.length && g.free.indexOf(p.pid) < 0 ? shopPrice(shopItem(items[0])) : 0; if (!items.length || pr > p.score) return; p.score -= pr; g.paid[p.pid] = pr; }
       } else if (!items.length) return;
       g.picks[p.pid] = items; p.inv = (p.inv || []).concat(items);
       Music.plop(Object.keys(g.picks).length); push();
@@ -2691,8 +2693,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="bqrack"><i class="rail"></i><span>👕</span><span>🧣</span><span>👗</span><span>🧥</span><span>🧣</span><span>👕</span></div>' +
         '<div class="bqfloor"><span>🛍️</span><span>🎁</span><span>🛍️</span><span>🎈</span><span>🎁</span></div>' +
         (function () {   // the merchandise on the shelves at the back, with its name (what you can get is on your phone)
-          var shelf = function (items) { return items.map(function (it) { return '<span class="bqi" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + (it.price || 0) + ' pts</i></span>'; }).join(''); }, av = shopAvail();
-          return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + tr.price + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">✨ = in today’s selection · items work in the trivia rounds, not in the party games</div></div>';
+          var shelf = function (items) { return items.map(function (it) { return '<span class="bqi" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + shopPrice(it) + ' pts</i></span>'; }).join(''); }, av = shopAvail();
+          return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">Items work in the trivia rounds, not in the party games</div></div>';
         })() +
         '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div>';
       document.body.appendChild(ov);
