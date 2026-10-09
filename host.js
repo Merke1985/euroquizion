@@ -1239,7 +1239,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null;   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
-    if (kind === 'clue') { setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
+    if (kind === 'clue') { if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); } setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
