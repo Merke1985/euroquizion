@@ -1969,7 +1969,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       } else if (el.getAttribute('data-bump') !== c.qkey || c.st !== 'move') { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
       if (!l.out && l.blocked === c.n && c.st === 'move') deny[i + ':' + at] = 1;   // not perfect, so not onto the stage: the space flashes red
       if (!l.out) { occ[i + ':' + at] = 1; if (next && l.pos < CHASE_GOAL && at <= c.mon + next && c.st !== 'win' && c.st !== 'move' && c.st !== 'pause') doomed[k] = 1; }
-      el.classList.toggle('out', l.out); el.classList.toggle('vanish', (l.out && !(c.st === 'diva' && l.at === c.n)) || (!!c.wrecked && l.pos < CHASE_GOAL));   // caught: shown with a skull for a moment, then gone el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
+      el.classList.toggle('out', l.out); el.classList.toggle('vanish', (l.out && !(c.st === 'diva' && l.at === c.n)) || (!!c.wrecked && l.pos < CHASE_GOAL));   // caught: shown with a skull for a moment, then gone
+      el.classList.toggle('locked', c.st === 'ask' && l.lock); el.classList.toggle('won', !!(c.win && c.win.indexOf(k) >= 0));
       el.classList.toggle('near', !l.out && l.pos >= CHASE_GOAL - 3 && !c.win); el.classList.toggle('doomed', !!doomed[k]);
       var waiting = c.st === 'intro' && c.placeOrder.indexOf(k) >= c.placed; el.classList.toggle('unplaced', waiting);   // not on the runway yet
       if (waiting) delete occ[i + ':' + at];
@@ -3578,7 +3579,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // of them, the rest packed behind (only the newcomers jump in; up to 14 shown, the number says the rest)
       for (var j = have; j < want; j++) {
         var w = document.createElement('div'), fx, fy, front = j < 4;
-        if (front) { fx = [-0.78, 0.78, -1.3, 1.3][j]; fy = 0; }   // (a gap in the middle: the player peeks through) else { var kk = j - 4, row = Math.floor(kk / 5); fx = (kk % 5 - 2) * 0.58 + (row ? 0.29 : 0); fy = 0.32 + row * 0.24; }
+        if (front) { fx = [-0.78, 0.78, -1.3, 1.3][j]; fy = 0; }   /* (a gap in the middle: the player peeks through) */ else { var kk = j - 4, row = Math.floor(kk / 5); fx = (kk % 5 - 2) * 0.58 + (row ? 0.29 : 0); fy = 0.32 + row * 0.24; }
         w.className = 'sff ' + (front ? 'front' : 'back') + (have ? ' new' : ''); w.style.setProperty('--fx', fx.toFixed(2)); w.style.setProperty('--fy', fy.toFixed(2)); w.style.setProperty('--j', String(j - have));
         w.innerHTML = fanSvg(true); cr.appendChild(w);
       }
@@ -4581,7 +4582,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Party has Sing! and Draw! rounds with their own points, so the Ladder cannot be used there.
     var party = $('s-atype').value === 'party', lo = $('s-scoring').querySelector('option[value="ladder"]');
     var robin = $('s-atype').value === 'robin';
-    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); var qlo = $('s-qmode').querySelector('option[value="ladder"]'); if (qlo) qlo.disabled = party; if (party && $('s-qmode').value === 'ladder') $('s-qmode').value = 'standard';   // the Ladder is a Quiz game $('scoringbox').classList.toggle('hidden', party); $('s-partypick').disabled = !party;   // (scoring is a Quiz setting: a Party game scores the standard way)   // the party settings only show for a Party game
+    $('partybox').classList.toggle('hidden', !party); $('partypickbox').classList.toggle('hidden', !party); var qlo = $('s-qmode').querySelector('option[value="ladder"]'); if (qlo) qlo.disabled = party; if (party && $('s-qmode').value === 'ladder') $('s-qmode').value = 'standard';   // the Ladder is a Quiz game
+    $('scoringbox').classList.toggle('hidden', party); $('s-partypick').disabled = !party;   // (scoring is a Quiz setting: a Party game scores the standard way)   // the party settings only show for a Party game
     if (lo) lo.disabled = party;
     
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
