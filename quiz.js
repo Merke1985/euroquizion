@@ -777,7 +777,8 @@ var SHOP_ITEMS = [
   { id: 'bribe', icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it quickly, before someone steals it! Right before the Grand Final it pays out', kind: 'bribe' },
   { id: 'pass', icon: '🎟️', name: 'Euroclub Wristband', desc: 'Get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
   { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
-  { id: 'heel', icon: '👠', name: 'Broken Heel', desc: 'Break another player’s heel any time before the Grand Final: they can’t move on its first question', kind: 'heel', final: true }   // (only in the boutique when the Grand Final is on)
+  { id: 'heel', icon: '👠', name: 'Broken Heel', desc: 'Break another player’s heel any time before the Grand Final: they can’t move on its first question', kind: 'heel', final: true },
+  { id: 'skates', icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
 ];
 var SHOP_PICKS = 2;   // free items per visit
 var SHOP_START_ALL = false;   // every (human) player starts a Party game with one of each item (handy for trying them out)

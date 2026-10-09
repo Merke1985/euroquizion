@@ -1561,6 +1561,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // (A test chase makes up scores, in steps of the usual 12 points.)
     var sc = ps.map(function (p) { return face ? 60 : test ? 12 * Math.floor(Math.random() * 15) : p.score; }), lo = Math.min.apply(null, sc), hi = Math.max.apply(null, sc);
     var lanes = {}, scores = {}; ps.forEach(function (p, i) { scores[p.pid] = sc[i]; lanes[p.pid] = { pos: 1 + (hi > lo ? Math.round((ps.length < 4 ? 2 : 4) * (sc[i] - lo) / (hi - lo)) : 0), out: false, res: null, mask: 0, lock: false, touched: false, at: 0 }; });
+    // Ice Skates in the bag: they glide 2 spaces ahead (every pair counts), and the skates are used up
+    ps.forEach(function (p) { var n = (p.inv || []).filter(function (id) { return id === 'skates'; }).length; if (!n) return; p.inv = p.inv.filter(function (id) { return id !== 'skates'; }); lanes[p.pid].pos = Math.min(CHASE_END, lanes[p.pid].pos + 2 * n); lanes[p.pid].skates = 2 * n; });
     // they are put on the runway one by one, half a second apart, the lowest score first
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0 };
@@ -1888,7 +1890,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       $('chtiles').style.gridTemplateColumns = 'repeat(' + CHASE_END + ',1fr)'; $('chtiles').style.gridTemplateRows = 'repeat(' + n + ',1fr)';
       var tiles = ''; for (var ln = 0; ln < n; ln++) for (var r = 1; r <= CHASE_END; r++) tiles += '<i data-r="' + r + '" data-l="' + ln + '" class="' + ((r + ln) % 2 ? '' : 'even') + '"></i>';
       $('chtiles').innerHTML = tiles;
-      $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" style="top:' + ((i + 0.62) / n * 100) + '%;left:' + chaseX(c.lanes[k].pos - 0.5) + '%"><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span></div>'; }).join('');
+      $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" data-sk="' + (c.lanes[k].skates || '') + '" style="top:' + ((i + 0.62) / n * 100) + '%;left:' + chaseX(c.lanes[k].pos - 0.5) + '%"><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span>' + (c.lanes[k].skates ? '<span class="ch-sk">⛸️ +' + c.lanes[k].skates + '</span>' : '') + '</div>'; }).join('');
       var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
       $('chase').classList.toggle('many', n >= 9);
       $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
@@ -1927,7 +1929,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var r = el.querySelector('.ch-res'), showR = (c.st === 'show' || c.st === 'pause') && l.res != null && !l.out;
       r.classList.toggle('on', showR); r.classList.toggle('zero', !l.res); r.classList.toggle('gold', l.res === 3); r.textContent = showR ? (l.res === 3 ? '★ +3' : '+' + l.res) : '';
       var heeled = (!!players[k] && !!players[k].heel && (c.st === 'show' || c.st === 'pause')) || (l.heelAt === c.n && c.st === 'move');   // a broken heel: this time they stay where they are
-      el.classList.toggle('heeled', heeled); if (heeled && showR) { r.textContent = '👠 stuck!'; r.classList.add('zero'); r.classList.remove('gold'); }
+      el.classList.toggle('heeled', heeled); el.classList.toggle('skated', !!l.skates && c.n === 0); if (heeled && showR) { r.textContent = '👠 stuck!'; r.classList.add('zero'); r.classList.remove('gold'); }
     });
     // smashed, threatened and occupied spaces (an occupied space that is threatened: deadly)
     [].forEach.call($('chtiles').children, function (t) {
@@ -2425,7 +2427,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (done || !b.bot || b.off || !b.inv || !b.inv.length) return;
       var ch = b.useP || 0.1;
       if (Math.random() >= ch) { b.useP = Math.min(1, ch + 0.1); return; }
-      var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield'; });
+      var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield' && it.kind !== 'skates'; });
       if (!ids.length) return;
       b.useP = 0.1; done = true;
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b; });
@@ -2455,7 +2457,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
       var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief')) t = p;   // (no target: it is the user's own smoke)
       if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief')))) return;
-      var it = shopItem(m.use); if (!it || it.kind === 'shield') return;   // (the umbrella works by itself)
+      var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates') return;   // (the umbrella works by itself)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
       if (it.kind === 'bribe') { inv.splice(k, 1); (G.bribes = G.bribes || []).push(p.pid); push(); return; }   // secret: it pays out right before the final

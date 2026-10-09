@@ -2021,3 +2021,7 @@ aside.recapgone{visibility:hidden}
 .chtok.heeled .ch-face{animation:chlimp .5s ease-in-out infinite alternate}
 .chtok.heeled::after{content:'👠';position:absolute;right:-.4em;bottom:1.2em;font-size:calc(var(--tok,56px) * .45);transform:rotate(-25deg);filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
 @keyframes chlimp{from{transform:rotate(-8deg) translateY(0)}to{transform:rotate(6deg) translateY(8%)}}
+/* Ice Skates in the Grand Final: they glide in ahead of the others */
+.chtok .ch-sk{display:none;position:absolute;left:50%;bottom:100%;margin-bottom:4px;transform:translateX(-50%);white-space:nowrap;font-weight:900;font-size:calc(var(--tok,56px) * .34);color:#06324a;background:linear-gradient(#e6fbff,#9fe6ff);padding:.15em .55em;border-radius:99px;box-shadow:0 0 12px #3fc8ff,0 3px 8px rgba(0,0,0,.5);z-index:3}
+.chtok.skated .ch-sk{display:block;animation:rcpop .5s cubic-bezier(.3,1.6,.5,1)}
+.chtok.skated .ch-face{box-shadow:0 0 0 4px rgba(150,230,255,.7),0 0 20px #7fdcff}
