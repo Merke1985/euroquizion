@@ -3135,7 +3135,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="hsspot"></div><div class="grsign hssign">🎨 Postcard</div>' +
         '<div class="pcmid"><div class="pcstage">' +
           '<div class="pcblank"><div class="hspcard"><div class="hspl"><b>Greetings from</b><i>Eurovision!</i><span class="hsdoodle">🎤✨🎶</span></div><div class="hspr"><span class="hsstamp">12</span><span class="hsline"></span><span class="hsline"></span><span class="hsline"></span></div></div><span class="hspencil">✏️</span><b class="pcbusy">Everyone is drawing…</b></div>' +
-          '<div class="pcslot">📬<b>Next postcard…</b></div>' +
+          '<div class="pcslot">📬<b class="pcslotb">Next postcard…</b></div>' +
           '<div class="pccard"><div class="pcfront"><canvas width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas></div><span class="pcstamp">12</span><span class="pcpost">EUROVISION</span><span class="pcfrom"></span><span class="pcmark"></span></div>' +
           '<div class="pcbest"></div>' +
         '</div><div class="pcq"><div class="bar"><i></i></div><h2></h2></div><div class="pcopts opts"></div><div class="pcans answered"></div></div>' +
@@ -3144,6 +3144,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     var st = G.best ? 'best' : G.phase === 'dall' ? 'dall' : G.draw && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal') ? 'card' : 'wait';
     ov.setAttribute('data-st', st); ov.classList.toggle('rev', G.phase === 'reveal');
+    var firstCard = !pcCard; ov.querySelector('.pcslotb').textContent = firstCard ? 'The first postcard…' : 'Next postcard…';
     // what is underneath: the question, the time, the answers, who is still drawing (copied from the usual screen)
     ov.querySelector('.pcq h2').textContent = st === 'wait' ? '' : $('qtext').textContent;
     ov.querySelector('.pcq i').style.transform = $('tbar').style.transform;
@@ -3161,7 +3162,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var cv = ov.querySelector('.pcfront canvas'), cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage($('drawview'), 0, 0, cv.width, cv.height);
         ov.querySelector('.pcfrom').textContent = 'From: ' + (dp ? dp.name : '?');
         var c = ov.querySelector('.pccard'); c.style.setProperty('--r', (Math.random() * 6 - 3).toFixed(1) + 'deg'); c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); whooshes([0]);
-        if (dp) hostSay('next', pick(PC_IN).replace('{n}', dp.name), 4200);
+        if (dp) hostSay('next', (firstCard ? 'Here’s the first postcard, from {n}! 💌 Which song did they draw?' : pick(PC_IN)).replace('{n}', dp.name), 4200);
       }
       if (G.phase === 'reveal' && pcRev !== d.id) {
         pcRev = d.id;
