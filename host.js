@@ -2433,7 +2433,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
     clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
   }
-  function shopLater(it) { return it.kind === 'bribe' || it.kind === 'heel'; }   // items that do nothing until the Grand Final
+  function shopLater(it) { return it.kind === 'bribe' || it.kind === 'heel' || it.kind === 'smoke'; }   // secret and delivery items: any time, even during a party game
   function qKeyNow() { return G.round + '|' + (G.q ? G.q.text : ''); }
   // Someone gets an item (bought, free or picked by Lynda): a cash-register "ka-ching"
   var itemGetEl = null;
@@ -2444,6 +2444,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function shopRandom(n, from) { var ids = from || shopAvail().map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
   // Bots and their items: every trivia question a bot with items has a chance to use one,
   // 10% at first and 10% more for every question it waits. The Broken Mic waits for the question to open.
+  var SHOP_OPEN_ONLY = ['sit', 'blow', 'lose', 'steal', 'thief', 'flag'];   // instant items: only while a question is open
   function botItems() {
     var alive = list().filter(function (x) { return !x.off; }), done = false;
     shuffle(list().slice()).forEach(function (b) {   // (at most one bot per question, so they never all go at once)
@@ -2457,8 +2458,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'thief';
       if (!self && !others.length) return;
       var t = self ? b : pick(others), key = 'bot' + Date.now() + Math.random();
-      if (it.kind === 'sit') {   // the Broken Mic: a few seconds into the question
-        var tries = 0; (function tryMic() { if (++tries > 8 || !players[b.pid]) return; if (G.phase === 'guess' && G.q) { setTimeout(function () { if (G.phase === 'guess' && G.q && !t.sitNow) shopMsg({ pid: b.pid, use: id, target: t.pid, key: key }); }, 1500 + Math.random() * 3500); return; } setTimeout(tryMic, 1500); })();
+      if (SHOP_OPEN_ONLY.indexOf(it.kind) >= 0) {   // the Broken Mic and the other instant items: a few seconds into the question
+        var tries = 0; (function tryMic() { if (++tries > 8 || !players[b.pid]) return; if (G.phase === 'guess' && G.q) { setTimeout(function () { if (G.phase === 'guess' && G.q && !(it.kind === 'sit' && t.sitNow)) shopMsg({ pid: b.pid, use: id, target: t.pid, key: key }); }, 1500 + Math.random() * 3500); return; } setTimeout(tryMic, 1500); })();
         return;
       }
       shopMsg({ pid: b.pid, use: id, target: t.pid, key: key });
@@ -2488,6 +2489,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
+      if (SHOP_OPEN_ONLY.indexOf(it.kind) >= 0 && !open) return;   // these too: only while a question is open, and then they land straight away
       if (it.kind === 'fan') {   // the Eurovision Fan: on your own phone, half of the wrong answers of this question blow away (quietly: no siren)
         var q = G.q; if (!open || !q || q.type !== 'mc' || !(q.correct >= 0) || !q.options) return;
         var key = qKeyNow(); if (!G.fanQ || G.fanQ.key !== key) G.fanQ = { key: key, map: {} }; if (G.fanQ.map[p.pid]) return;   // (once per question)
@@ -2496,8 +2498,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         shopFlash('🪭 ' + p.name + ' waves the Eurovision Fan!'); return;
       }
       if (it.kind === 'bribe') { inv.splice(k, 1); p.bribed = 1; (G.bribes = G.bribes || []).push(p.pid); push(); return; }   // secret: it pays out right before the final
-      if (it.kind === 'smoke') { if (open) return; inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: it.id, target: p.pid }); Music.blip(); push(); return; }   // the Smoke Machine waits for the next question
-      if (open) {   // during a question: it lands right away; the video and the timer stop while it does
+      if (it.kind === 'smoke') { inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: it.id, target: p.pid }); Music.blip(); push(); return; }   // the Smoke Machine waits for the next question
+      if (open && it.kind !== 'heel') {   // during a question: it lands right away (the Broken Heel is always a delivery, before the next question); the video and the timer stop while it does
         inv.splice(k, 1);
         shopFreeze(7800 + ALARM_MS, function () { itemAlarm(function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopHit(txt, 7600); push(); }); });
         return;
@@ -2638,7 +2640,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub and left with an item from ' + v.name + '!';
     }
     if (it.kind === 'heel') { t.heel = 1; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '👠 stuck in the Grand Final' }]; return it.icon + ' ' + by.name + ' broke ' + t.name + '’s heel! ' + t.name + ' can’t move on the first question of the Grand Final!'; }
-    if (it.kind === 'flag') { t.flagged = (t.flagged || 0) + (it.amount || 3); shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see the next ' + (it.amount || 3) + ' questions!'; }
+    if (it.kind === 'flag') { if (G.phase === 'guess') { t.flagNow = true; t.flagged = (t.flagged || 0) + (it.amount || 3) - 1; } else t.flagged = (t.flagged || 0) + (it.amount || 3);   // (straight away: this question counts as the first of three)
+ shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see ' + (G.phase === 'guess' ? 'this question or the next ' + ((it.amount || 3) - 1) : 'the next ' + (it.amount || 3) + ' questions') + '!'; }
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw Marc’s Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
       var rest = list().filter(function (x) { return !x.off && x !== t; }); if (!rest.length) return '';

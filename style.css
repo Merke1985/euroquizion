@@ -2094,3 +2094,6 @@ aside.recapgone{visibility:hidden}
 @keyframes alpulse2{to{transform:scale(1.08)}}
 .shoptime{margin:0 0 10px;font-weight:800;font-size:.95rem;opacity:.85;font-variant-numeric:tabular-nums}
 .shoptime.hurry{color:#ff6b7f;opacity:1}
+/* how an item works, on the phones */
+.shopbtn small.imode{display:block;font-weight:800;font-size:.75rem;margin:1px 0 2px;opacity:1}
+.imode.m-instant{color:#ffd23f}.imode.m-delivery{color:#7fdcff}.imode.m-self{color:#9ff2b8}.imode.m-secret{color:#ffb3e1}

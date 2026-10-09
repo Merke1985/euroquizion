@@ -768,14 +768,14 @@ function makeChase(allSongs, countries, used) {
 // ---------- Eurofan Shop: the merchandise (more to come) ----------
 // kind: 'lose' (the target loses points), 'blow' (they go to whoever has the fewest), 'steal' (the buyer takes them), 'sit' (no points for the open question)
 var SHOP_ITEMS = [
-  { id: 'wind', tier: 1, icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
-  { id: 'hack', tier: 2, icon: '📲', name: 'Televote Hacking Device', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
-  { id: 'power', tier: 1, icon: '🔋', name: 'Marc’s Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
+  { id: 'wind', tier: 1, icon: '💨', name: 'Wind Machine', desc: 'During a question: blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
+  { id: 'hack', tier: 2, icon: '📲', name: 'Televote Hacking Device', desc: 'During a question: steal 8 points from another player', kind: 'steal', amount: 8 },
+  { id: 'power', tier: 1, icon: '🔋', name: 'Marc’s Powerbank', desc: 'During a question: throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'umbrella', tier: 3, icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
-  { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'Wave it in front of another player: for 3 questions they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
-  { id: 'bribe', tier: 2, icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it and right before the Grand Final it pays out. One per player, and nobody can steal it', kind: 'bribe' },
-  { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'Get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
+  { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'During a question: wave it in front of another player: for 3 questions (starting with this one) they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
+  { id: 'bribe', tier: 3, icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it and right before the Grand Final it pays out. One per player, and nobody can steal it', kind: 'bribe' },
+  { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
   { id: 'mic', tier: 1, icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
   { id: 'heel', tier: 3, icon: '👠', name: 'Broken Heel', desc: 'Break another player’s heel any time before the Grand Final: they can’t move on its first question', kind: 'heel', final: true },
   { id: 'fan', tier: 2, icon: '🪭', name: 'Eurovision Fan', desc: 'Wave it during a question: half of the wrong answers blow away on your phone. 3 uses', kind: 'fan', uses: 3 },
@@ -788,6 +788,15 @@ var SHOP_PICKS = 2;   // free items per visit
 var SHOP_TIERS = { 3: { name: 'Luxury', icon: '💎', per: 7 }, 2: { name: 'Popular', icon: '⭐', per: 5 }, 1: { name: 'Bargains', icon: '🏷️', per: 3 } };
 function shopPriceOf(it, block) { return (SHOP_TIERS[it && it.tier] || SHOP_TIERS[2]).per * Math.max(1, block || 3); }
 var SHOP_START_ALL = false;   // every (human) player starts a Party game with one of each item (handy for trying them out)
+// How an item works, shown on the phones: instant (only while a question is open), a delivery (any time, even during
+// a party game: it lands before the next trivia question), by itself (keep it in your bag), or a secret (the Grand Final).
+function itemMode(it) {
+  var k = it && it.kind;
+  if (k === 'shield' || k === 'skates') return { id: 'self', icon: '🛡️', label: 'Works by itself: keep it in your bag' };
+  if (k === 'bribe') return { id: 'secret', icon: '🤫', label: 'Secret: send it any time, it pays out before the Grand Final' };
+  if (k === 'smoke' || k === 'heel') return { id: 'delivery', icon: '📦', label: 'Delivery: use it any time, it lands before the next trivia question' };
+  return { id: 'instant', icon: '⚡', label: 'Instant: only while a question is open' };
+}
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }
 
 // Where the Hell Is Edgar? (a Cluedo-style party game): Edgar, the show's mascot (a cartoon inspired by Edgar Allan Poe),
