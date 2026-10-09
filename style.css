@@ -2472,3 +2472,10 @@ aside.recapgone{visibility:hidden}
 .jmt.falling .char{animation:jmrun .18s ease-in-out infinite alternate}
 .jmt.falling .jmbody i:first-child{animation:jmarm .22s ease-in-out infinite alternate-reverse}
 .jmt.falling .jmbody i:last-child{animation:jmarm .22s ease-in-out infinite alternate}
+/* the presenters north of the players (between them and Juliet), standing still; players the same size as them */
+.jmov.v3 .grhosts{z-index:1}
+.jmov.v3 .grhosts .ehost{animation:none!important;z-index:1}
+.jmov.v3 .jmgroup{z-index:2}
+.jmov.v3 .jmt{scale:var(--ps,1);transform-origin:50% 100%}
+.jmov.v3 .grbub{bottom:calc(100vh - var(--hy) + var(--hh,30vh) + 1vh)}
+.jmov.v3 .jmt{transform-origin:50% 50%}
