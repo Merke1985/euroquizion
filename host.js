@@ -2617,10 +2617,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ];
     var t = 1500;
     lines.forEach(function (l) {
-      (function (l, at0) { at(at0, function () {
+      (function (l, at0, first) { at(at0, function () {
         clueSay(l[0], l[1]);
+        if (first) setTimeout(function () { if (!$('clueov')) return; try { var w = new Audio('sounds/who_the_hell.mp3'); w.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }, 1300);   // "Who the hell…?!" as he says Edgar's name
         var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.toggle('lit', !!l[2] && r.getAttribute('data-k') === l[2]); });
-      }); })(l, t);
+      }); })(l, t, l === lines[0]);
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
     });
     at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); }); clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
