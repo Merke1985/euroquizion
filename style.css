@@ -2269,3 +2269,4 @@ aside.recapgone{visibility:hidden}
 .vrroad{height:19vh;bottom:3vh}
 .vrp{top:calc(50% - 2.6vh + var(--off,0) * 1vh)}
 .vrp b{font-size:clamp(.5rem,.7vw,.68rem);background:rgba(0,0,0,.45);padding:0 .3em;border-radius:4px}
+.vrov[data-st=done] .vrp.won{left:100%!important;transition:left 2.4s cubic-bezier(.4,.1,.3,1);z-index:20}
