@@ -385,7 +385,7 @@
       var key = c.id + '|' + known.join(',') + '|' + clueSel.who + clueSel.where + clueSel.what;
       if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
       var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'How did they carry him off?' };
-      box.innerHTML = ['who', 'where', 'what'].map(function (k) {
+      box.innerHTML = ['where', 'what', 'who'].map(function (k) {   // (the place on top, who did it at the bottom, like the big screen)
         return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var out = known.indexOf(k + ':' + x.id) >= 0; return '<button type="button" class="clbtn' + (out ? ' out' : '') + (clueSel[k] === x.id ? ' sel' : '') + '" data-k="' + k + '" data-id="' + x.id + '"><i>' + x.icon + '</i>' + esc(x.name) + '</button>'; }).join('') + '</div></div>';
       }).join('') + '<button type="button" class="btn big" id="clueaccuse"' + (clueSel.who && clueSel.where && clueSel.what ? '' : ' disabled') + '>🔍 Accuse!</button>';
       [].forEach.call(box.querySelectorAll('.clbtn'), function (b) { b.onclick = function () { clueSel[b.getAttribute('data-k')] = b.getAttribute('data-id'); clueView(state); }; });
@@ -399,9 +399,9 @@
     }
     box.classList.add('hidden');   // the answer comes out
     var sol = c.sol || {}, parts = [];
-    if (sol.who) parts.push(clueCard('who:' + sol.who).c.name);
-    if (sol.where) parts.push(clueCard('where:' + sol.where).c.in);
+    if (sol.where) parts.push('Hidden ' + clueCard('where:' + sol.where).c.in);
     if (sol.what) parts.push('with the ' + clueCard('what:' + sol.what).c.name);
+    if (sol.who) parts.push('by ' + clueCard('who:' + sol.who).c.name);
     var r = c.res && c.res[pid];
     $('waittitle').textContent = r ? (r.n === 3 ? '🏆 You found Edgar!' : r.none ? 'No accusation…' : '🔍 ' + r.n + ' of 3 right') : '🔍 Who took Edgar…?';
     $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '') + (c.gift && c.gift.pid === pid ? ' 🎁 Lynda gave you the ' + shopName(c.gift.item) + '! It’s in your bag.' : '');

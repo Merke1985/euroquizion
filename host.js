@@ -2674,13 +2674,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var who = clueCard('who:' + g.sol.who).c, where = clueCard('where:' + g.sol.where).c, what = clueCard('what:' + g.sol.what).c;
     var step = function (n) { if (!G.clue || G.clue.st !== 'reveal') return; g.step = n; Music.ding(); push(); };
     var at = function (ms, f) { setTimeout(function () { if (G.clue && G.clue.st === 'reveal') f(); }, ms); };
-    at(800, function () { clueSay('him', 'Who abducted Edgar? It was…'); });
-    at(3000, function () { step(1); clueSay('her', who.id === 'felix' ? 'Felix?! You took our own mascot?! 😱' : who.id === 'stella' ? '…me?! I only wanted a cuddle! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, Edgar is not for sale! 👠' : who.name + '! 😱'); });
-    at(5600, function () { clueSay('him', who.id === 'felix' ? 'I just wanted a selfie with him! And where did I hide him?' : 'And where was he hidden?'); });
-    at(7600, function () { step(2); clueSay('her', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'); });
-    at(9800, function () { clueSay('him', 'And how did they carry him off?'); });
-    at(11600, function () { step(3); clueSay('her', 'With the ' + what.name + '! ' + what.icon); });
-    at(14000, function () {   // the points: 4 for each right part, 6 more for all three
+    // top row first, the culprit last: where, then with what, then who
+    at(800, function () { clueSay('him', 'Where was Edgar hidden?'); });
+    at(2800, function () { step(1); clueSay('her', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'); });
+    at(5000, function () { clueSay('him', 'And how did they carry him off?'); });
+    at(6800, function () { step(2); clueSay('her', 'With the ' + what.name + '! ' + what.icon); });
+    at(9000, function () { clueSay('him', 'And who abducted Edgar? It was…'); });
+    at(11200, function () { step(3); clueSay('her', who.id === 'felix' ? 'Felix?! You took our own mascot?! 😱' : who.id === 'stella' ? '…me?! I only wanted a cuddle! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, Edgar is not for sale! 👠' : who.name + '! 😱'); });
+    if (who.id === 'felix') at(13200, function () { clueSay('him', 'I just wanted a selfie with him! 🤳'); });
+    at(14800, function () {   // the points: 4 for each right part, 6 more for all three
       var solved = [];
       g.res = {};
       list().forEach(function (p) {
@@ -2697,21 +2699,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }
       clueSay('him', solved.length ? (solved.length > 1 ? solved.slice(0, -1).join(', ') + ' and ' + solved[solved.length - 1] + ' found' : solved[0] + ' found') + ' Edgar! Welcome back, Edgar! 🎉' : 'Nobody found him… luckily, Edgar found his own way back! 😅');
     });
-    at(17600, function () {   // Lynda and her gift
+    at(18400, function () {   // Lynda and her gift
       if (!g.gift || !players[g.gift.pid]) return;
       var gp = players[g.gift.pid], it = shopItem(g.gift.item); gp.inv = (gp.inv || []).concat(g.gift.item); g.step = 5;
       var ov = $('clueov'); if (ov && !ov.querySelector('.clynda')) { var ly = document.createElement('div'); ly.className = 'clynda'; ly.innerHTML = SHOPKEEPER + '<div class="grbub lynda"></div>'; ov.appendChild(ly); ov.classList.add('withlynda'); }
       whooshes([0]); Music.blip(); push();
       setTimeout(function () { var b = $('clueov') && $('clueov').querySelector('.grbub.lynda'); if (!b) return; [].forEach.call($('clueov').querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); b.classList.add('on'); typeSay(b, 'Nobody found Edgar? Never mind, darling! A little gift from my boutique for ' + gp.name + ': the ' + it.name + '! ' + it.icon, 'lynda'); }, 900);
     });
-    at(20500, function () { if (g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
-    at(25500, function () { if (!g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
+    at(21300, function () { if (g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
+    at(26300, function () { if (!g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
   }
   function clueSnap() {
     var g = G.clue, acc = {};
     Object.keys(g.acc).forEach(function (k) { acc[k] = 1; });
     return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step,
-      sol: g.st === 'reveal' ? { who: g.step >= 1 ? g.sol.who : '', where: g.step >= 2 ? g.sol.where : '', what: g.step >= 3 ? g.sol.what : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
+      sol: g.st === 'reveal' ? { where: g.step >= 1 ? g.sol.where : '', what: g.step >= 2 ? g.sol.what : '', who: g.step >= 3 ? g.sol.who : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
   }
   // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.
   function clueShow() {
@@ -2723,14 +2725,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="clspot"></div>' +
         '<div class="grsign clsign">🔍 Where the Hell Is Edgar?</div>' +
         '<div class="clposter"><b>MISSING</b>' + EDGAR + '<small>Have you seen Edgar?</small></div><div class="cledgar">' + EDGAR + '</div>' +
-        '<div class="clrows">' + row('who', 'Who took him?') + row('where', 'Hidden where?') + row('what', 'Carried off with?') + '</div>' +
+        '<div class="clrows">' + row('where', 'Hidden where?') + row('what', 'Carried off with?') + row('who', 'Who took him?') + '</div>' +
         '<div class="clmsg"></div><div class="clplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
     }
     ov.setAttribute('data-st', g.st);
-    ['who', 'where', 'what'].forEach(function (k, i) {
+    ['where', 'what', 'who'].forEach(function (k, i) {   // (top row first, the culprit last)
       var shown = g.st === 'reveal' && g.step >= i + 1;
       [].forEach.call(ov.querySelectorAll('.clrow[data-k="' + k + '"] .clcard'), function (el) { var hit = shown && el.getAttribute('data-id') === g.sol[k]; el.classList.toggle('hit', hit); el.classList.toggle('dim', shown && !hit); });
     });
@@ -2740,7 +2742,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off; });
     var html = act.map(function (p) {
       var r = g.res && g.res[p.pid], a = r && r.a;
-      var marks = r ? (r.none ? '<i>no accusation</i>' : ['who', 'where', 'what'].map(function (k) { return '<em class="' + (a[k] === g.sol[k] ? 'ok' : 'no') + '">' + clueCard(k + ':' + a[k]).c.icon + '</em>'; }).join('') + '<strong>' + (r.pts ? '+' + r.pts : '0') + '</strong>') : g.st === 'acc' ? (g.acc[p.pid] ? '<em class="ok">✔</em>' : '<em class="wait">…</em>') : '<em>' + ((g.known[p.pid] || []).length) + ((g.known[p.pid] || []).length === 1 ? ' clue' : ' clues') + '</em>';
+      var marks = r ? (r.none ? '<i>no accusation</i>' : ['where', 'what', 'who'].map(function (k) { return '<em class="' + (a[k] === g.sol[k] ? 'ok' : 'no') + '">' + clueCard(k + ':' + a[k]).c.icon + '</em>'; }).join('') + '<strong>' + (r.pts ? '+' + r.pts : '0') + '</strong>') : g.st === 'acc' ? (g.acc[p.pid] ? '<em class="ok">✔</em>' : '<em class="wait">…</em>') : '<em>' + ((g.known[p.pid] || []).length) + ((g.known[p.pid] || []).length === 1 ? ' clue' : ' clues') + '</em>';
       return '<div class="clp' + (r && r.n === 3 ? ' solved' : '') + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>' + marks + '</div>';
     }).join('');
     var pl = ov.querySelector('.clplayers'); if (pl.getAttribute('data-h') !== html) { pl.setAttribute('data-h', html); pl.innerHTML = html; }
