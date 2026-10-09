@@ -1112,7 +1112,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!G.tourFinal && (G.quizRun || 0) >= (G.block || 3) && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; shopIntro(); return; }   // the first break: everyone visits the boutique
       if (!G.tourFinal && !G.tourDone && (G.quizRun || 0) >= (G.block || 3) && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyTime(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
-      if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
+      if (G.afterParty) { G.afterParty = false; var nb = G.block || 3; FUN.quiz.sub = 'Trivia time: ' + (nb === 1 ? 'one question' : (['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][nb] || nb) + ' questions') + ' coming up.'; funIntro('quiz', startRound2, 4200); return; }
       if (G.eraSpin && !(G.quizRun || 0) && G.eraBlock !== G.round) { G.eraBlock = G.round; partIntro(); return; }   // Random or Voted rounds: each block of trivia gets its decade
       G.quizRun = (G.quizRun || 0) + 1;
     } else G.mode = G.atype;
@@ -1263,7 +1263,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
-    studioIntro('🎉', 'Party round!', '', 'It’s time for a party game! Let’s see what it’s going to be…', function () { partyChoose(games); }, 'partytime');
+    studioIntro('🎉', 'Party round!', '', vary('party'), function () { partyChoose(games); }, 'partytime');
   }
   function partyChoose(games) {
     var how = games.length < 2 ? 'single' : (G.partyPick || 'order');
@@ -2114,6 +2114,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, TALK_MS);
     return chars.length * TALK_MS;
   }
+  // The presenters don't say the same thing every time: a random line from a set, never the one they used last.
+  var VARY_LAST = {};
+  var LINES = {
+    back: ['Welcome back, Europe!', 'And we’re back, Europe! 📺', 'Hello again, Europe! Did you miss us?', 'Welcome back to EuroQuizion!', 'We’re back, and the glitter hasn’t settled yet! ✨', 'Good to see you again, Europe! 💖'],
+    party: ['It’s time for a party game! Let’s see what it’s going to be…', 'Party time! 🎉 Which game will it be this time?', 'Enough thinking for a moment: it’s time to play! 🎡', 'Grab your phones and your sequins: party game time! 🎉', 'The jury needs a coffee break, so… party game! ☕🎉', 'Let’s shake things up with a party game! 💃', 'Wind machines on, it’s party game time! 💨'],
+    trivia: ['It’s time again for trivia! 🧠', 'Brains on, Europe: trivia time! 🧠', 'Back to the questions! 🎧', 'Let’s see what you really know about Eurovision! 🧠', 'Phones ready: here come the questions! 📱', 'Trivia time! Douze points for the know-it-alls! 🧠', 'Time to sort the fans from the superfans! 🤓', 'Ears open, Europe: the music is back! 🎶'],
+    first: ['It’s time to test your knowledge: it’s trivia time! 🧠', 'Let’s find out who the real Eurovision expert is: trivia time! 🧠', 'First up: trivia! Show us what you know! 🧠', 'We start with some trivia. Ears open, Europe! 🎧'],
+    souvenir: ['I hope you got a nice souvenir!', 'Ooh, shopping bags! I hope you spent wisely! 🛍️', 'Lynda will be counting her coins tonight! 💰', 'Back from the boutique, and looking fabulous! ✨', 'Did anyone buy something dangerous? I hope not! 😬', 'I spotted something shiny in that bag… 👀'],
+    onward: ['Let’s get on with the show!', 'On with the show!', 'The show must go on!', 'Back to business!', 'Where were we? Ah, yes!'],
+    lynda: ['Let’s go and see our beloved Lynda!', 'To the boutique! Lynda is waiting… 🛍️', 'Shopping time! Don’t keep Lynda waiting! 🛍️', 'Lynda has opened her doors… let’s pay her a visit! 👠', 'Wallets out, Europe: off to Lynda! 💸']
+  };
+  function vary(key) { var l = LINES[key] || [''], c = l.filter(function (x) { return x !== VARY_LAST[key]; }), t = pick(c.length ? c : l); VARY_LAST[key] = t; return t; }
   function hostSay(who, text, ms) {
     if (who === 'next') { who = hostTurn++ % 2 ? 'her' : 'him'; }
     var pc = !REMOTE && $('pcov');
@@ -2157,7 +2169,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // what they say: who they are, what we play tonight and how it works, then off we go
     var lines = [['him', 'Good evening, Europe! I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
     lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
-    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'It’s time to test your knowledge: it’s trivia time! 🧠']);
+    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', vary('first')]);
     lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
     step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
@@ -2371,7 +2383,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
     var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
-    if (!on) at(200, function () { hostSay('him', 'Welcome back, Europe!', 4000); });
+    if (!on) at(200, function () { hostSay('him', vary('back'), 4000); });
     if (hh) hh.classList.add('together');
     at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
       G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
@@ -2384,8 +2396,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) { then(); return; }
     G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
     hostHold = true; clearTimeout(hostT.away);
-    hostSay('him', 'I hope you got ' + (n > 1 ? 'some nice souvenirs' : 'a nice souvenir') + '! Let’s get on with the show!', 3600);
-    setTimeout(function () { hostSay('her', G.mgTest ? 'On to the next party game! 🎉' : 'It’s time again for trivia! 🧠', 3000); }, 3300);   // (testing the party games: there is no trivia in between)
+    hostSay('him', vary('souvenir') + ' ' + vary('onward'), 3600);
+    setTimeout(function () { hostSay('her', G.mgTest ? 'On to the next party game! 🎉' : vary('trivia'), 3000); }, 3300);   // (testing the party games: there is no trivia in between)
     setTimeout(function () { hostHold = false; then(); }, 6400);
   }
   function shopIntro() {
@@ -2400,7 +2412,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function shopGo(who, n, then) {
     if (REMOTE || $('v-game').classList.contains('hidden')) { shopVisit(who, n, then); return; }
     stopTimers(); hostsEl();
-    hostSay('him', 'Let’s go and see our beloved Lynda!', 2600); Music.ding();
+    hostSay('him', vary('lynda'), 2600); Music.ding();
     setTimeout(function () {
       var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
       setTimeout(function () { shopVisit(who, n, then); }, 1400);
