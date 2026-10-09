@@ -2932,7 +2932,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function noteCut() {
     var g = G.note; if (!g) return;
-    g.st = 'cut'; noteAudio(false); Music.micdrop();   // oops: she drops her microphone
+    g.st = 'cut'; noteAudio(false);   // oops: an electric shock, and she drops her microphone
+    if (!REMOTE) try { var zz = new Audio('sounds/shock.mp3'); zz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var zp = zz.play(); if (zp && zp.catch) zp.catch(function () {}); } catch (e) {}
+    setTimeout(function () { Music.micdrop(); }, 500);   // (the thud as it lands)
     var act = list().filter(function (p) { return !p.off; }), best = Infinity;
     act.forEach(function (p) { var v = g.guess[p.pid]; if (v != null && v >= g.len) best = Math.min(best, v - g.len); });   // the closest of those still in (not passed)
     g.win = act.filter(function (p) { var v = g.guess[p.pid]; return v != null && v >= g.len && v - g.len === best; }).map(function (p) { return p.pid; });
