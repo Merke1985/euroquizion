@@ -2590,7 +2590,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The last clue question: no more loops, the tune plays its current round to the end (it ends near the answer);
   // if anything is still playing when the accusation starts, it fades out instead of stopping dead.
   var poeFade = null;
-  function clueSongLast() { if (poeAudio) poeAudio.loop = false; }
+  // If the round that is playing would end soon (within 15 seconds: too early, in the middle of the question),
+  // it goes round once more and only that next round is the last.
+  function clueSongLast() {
+    var a = poeAudio; if (!a || a.paused) return;
+    var left = (a.duration || 26) - (a.currentTime || 0);
+    if (left >= 15) { a.loop = false; return; }
+    var last = a.currentTime;
+    var watch = function () { if (a.currentTime < last) { a.loop = false; a.removeEventListener('timeupdate', watch); } else last = a.currentTime; };   // (it just wrapped round: this round is the last)
+    a.addEventListener('timeupdate', watch);
+  }
   function clueSongFade() {
     if (!poeAudio || poeAudio.paused) return;
     var a = poeAudio, v0 = a.volume, n = 0; clearInterval(poeFade);
