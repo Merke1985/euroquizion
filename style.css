@@ -2387,3 +2387,32 @@ aside.recapgone{visibility:hidden}
 .jmov.v3 .jmgroup{left:var(--jx,50vw);top:var(--jy,56vh)}
 .jmov .jmholes{display:none}
 .jmov .jmmist{height:26vh;background:radial-gradient(ellipse 30% 60% at 20% 30%,rgba(255,255,255,.45),transparent 70%),radial-gradient(ellipse 30% 60% at 80% 25%,rgba(255,255,255,.4),transparent 70%),radial-gradient(ellipse 40% 70% at 50% 75%,rgba(235,230,250,.7),transparent 70%),linear-gradient(rgba(27,18,54,.95),rgba(210,200,235,.45) 60%,transparent)}
+/* Juliet on her tower (in 3D), mist around its foot */
+.jmov.v3 .jmbalc{left:var(--bx);top:var(--by);width:16vh;height:20vh;margin:-18.5vh 0 0 -8vh}
+.jmov.v3 .jmbalc .jmrail{display:none}
+.jmov.v3 .jmjul{bottom:0;height:17vh}
+.jmov.v3 .jmmist{top:calc(var(--by) + 3vh);height:22vh;background:radial-gradient(ellipse 22% 50% at 30% 50%,rgba(240,235,255,.7),transparent 70%),radial-gradient(ellipse 26% 55% at 70% 45%,rgba(240,235,255,.65),transparent 70%),radial-gradient(ellipse 45% 60% at 50% 55%,rgba(230,222,250,.85),transparent 72%)}
+/* little bodies that run */
+.jmt .jmbody{top:4.6vh;width:4vh;height:3.6vh;border-radius:45% 45% 25% 25%;background:linear-gradient(#5a3a9a,#3a2470);z-index:1}
+.jmt .jmbody i{position:absolute;top:.6vh;width:1.1vh;height:2.8vh;border-radius:1vh;background:#4a2f85;transform-origin:50% 0}
+.jmt .jmbody i:first-child{left:-.7vh;rotate:20deg}.jmt .jmbody i:last-child{right:-.7vh;rotate:-20deg}
+.jmlegs{position:absolute;top:7.6vh;left:50%;width:3vh;height:3vh;margin-left:-1.5vh;z-index:0}
+.jmlegs i{position:absolute;top:0;width:1.1vh;height:2.8vh;border-radius:.6vh;background:#2a1a4a;transform-origin:50% 0}
+.jmlegs i:first-child{left:.3vh}.jmlegs i:last-child{right:.3vh}
+.jmt b{margin-top:5vh}
+.jmt.run .jmlegs i:first-child,.jmt.falling .jmlegs i:first-child{animation:jmleg .22s ease-in-out infinite alternate}
+.jmt.run .jmlegs i:last-child,.jmt.falling .jmlegs i:last-child{animation:jmleg .22s ease-in-out infinite alternate-reverse}
+.jmt.run .jmbody i:first-child{animation:jmarm .22s ease-in-out infinite alternate-reverse}
+.jmt.run .jmbody i:last-child{animation:jmarm .22s ease-in-out infinite alternate}
+@keyframes jmleg{from{rotate:-32deg}to{rotate:32deg}}
+@keyframes jmarm{from{rotate:-40deg}to{rotate:40deg}}
+/* Juliet's tower: a backdrop rising out of the mist in the middle */
+.jmtower{position:absolute;left:50%;top:-4vh;width:22vh;height:34vh;margin-left:-11vh;z-index:2;pointer-events:none}
+.jmtower .tw{position:absolute;left:3vh;right:3vh;top:6vh;bottom:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 2px,transparent 2px 2.6vh),repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 2px,transparent 2px 4vh),linear-gradient(90deg,#c9b48e,#efe0c0 40%,#d8c4a0 70%,#b49e78);box-shadow:0 0 40px rgba(0,0,0,.5)}
+.jmtower .tw::before{content:'';position:absolute;left:50%;top:5vh;width:4vh;height:7vh;margin-left:-2vh;border-radius:2vh 2vh 0 0;background:linear-gradient(#ffd27a,#e88a3a);box-shadow:0 0 20px rgba(255,190,110,.8)}
+.jmtower .tr{position:absolute;left:0;right:0;top:0;height:7vh;background:linear-gradient(135deg,#c86a42,#8a3a20);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.jmov.v3 .jmbalc{left:50%;top:5vh;width:18vh;height:20vh;margin:0 0 0 -9vh;z-index:3}
+.jmov.v3 .jmbalc .jmrail{display:block;bottom:1vh;height:4vh;left:-1vh;right:-1vh}
+.jmov.v3 .jmjul{bottom:4vh;height:15vh}
+.jmov.v3 .jmmist{top:16vh;height:20vh;z-index:3}
+.jmov.v3 .jmmist{top:14vh;height:22vh;background:radial-gradient(ellipse 18% 55% at 40% 50%,rgba(240,235,255,.85),transparent 70%),radial-gradient(ellipse 18% 55% at 60% 45%,rgba(240,235,255,.85),transparent 70%),radial-gradient(ellipse 34% 60% at 50% 55%,rgba(232,225,252,.92),transparent 72%)}

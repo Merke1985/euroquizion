@@ -3621,13 +3621,22 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rn = new T.WebGLRenderer({ antialias: true, alpha: false }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.shadowMap.type = T.PCFSoftShadowMap;
     rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.ACESFilmicToneMapping; rn.toneMappingExposure = .95;
     host.appendChild(rn.domElement);
-    var sc = new T.Scene(); sc.background = new T.Color('#1b1236'); sc.fog = new T.Fog('#2a1a40', 34, 78);
-    var cam = new T.PerspectiveCamera(52, w / h, 0.5, 200); cam.position.set(0, 17.5, 6.2); cam.lookAt(0, 0, -.7);
+    var sc = new T.Scene(); sc.background = new T.Color('#1b1236'); sc.fog = new T.Fog('#3a2a52', 30, 95);
+    var cam = new T.PerspectiveCamera(52, w / h, 0.5, 200); cam.position.set(0, 16, 9); cam.lookAt(0, 0, -3.2);
     sc.add(new T.HemisphereLight('#8a7ac8', '#4a2a20', 0.55));
     var moon = new T.DirectionalLight('#b8c4ff', 0.75); moon.position.set(-14, 26, -18); moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024);
     var sh = moon.shadow.camera; sh.left = -30; sh.right = 30; sh.top = 30; sh.bottom = -30; sh.near = 1; sh.far = 90; moon.shadow.bias = -0.0008; sc.add(moon);
     var lamp = new T.PointLight('#ffb866', 2.4, 26, 1.6); lamp.position.set(0, 6.5, 0); sc.add(lamp);   // the crossroads lamp, always over the group
     var city = new T.Group(); sc.add(city);
+    var towerTex = v3Facade('#efe0c4', 7); towerTex.repeat.set(2, 7);
+    var tower = new T.Group(), tw = new T.MeshStandardMaterial({ map: towerTex, roughness: .9 });
+    var tb = new T.Mesh(new T.BoxGeometry(9, 46, 9), [tw, tw, capMat0(), capMat0(), tw, tw]); tb.position.y = 23; tower.add(tb);
+    var bal = new T.Mesh(new T.BoxGeometry(6.5, .5, 3), new T.MeshStandardMaterial({ color: '#f4ead4', roughness: .7 })); bal.position.set(0, 38, 5.5); tower.add(bal);
+    var rail = new T.Mesh(new T.BoxGeometry(6.5, 1.4, .3), new T.MeshStandardMaterial({ color: '#efe2c8', roughness: .7 })); rail.position.set(0, 38.9, 6.9); tower.add(rail);
+    var tr = new T.Mesh(new T.ConeGeometry(7, 6, 4), new T.MeshStandardMaterial({ color: '#b4532f', roughness: .8, flatShading: true })); tr.rotation.y = Math.PI / 4; tr.position.y = 49; tower.add(tr);
+    var glow = new T.PointLight('#ffb0d0', 1.6, 30, 1.5); glow.position.set(0, 41, 9); tower.add(glow);
+    tower.position.set(0, 0, -70);   /* (not shown: the tower is the backdrop above the mist) */
+    function capMat0() { return new T.MeshStandardMaterial({ color: '#7a3a22', roughness: .9 }); }
     var cob = v3Tex(function (x, W, H) { x.fillStyle = '#6a5c54'; x.fillRect(0, 0, W, H); for (var yy = 0; yy < 16; yy++) for (var xx = 0; xx < 16; xx++) { var v = 80 + ((xx * 37 + yy * 61) % 40); x.fillStyle = 'rgb(' + (v + 18) + ',' + (v + 6) + ',' + v + ')'; x.beginPath(); x.ellipse(xx * 16 + 8 + (yy % 2) * 8, yy * 16 + 8, 7, 6.5, 0, 0, Math.PI * 2); x.fill(); } }, 256, 256);
     cob.repeat.set(150, 150);
     var ground = new T.Mesh(new T.PlaneGeometry(400, 400), new T.MeshStandardMaterial({ map: cob, roughness: .95 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; city.add(ground);
@@ -3674,6 +3683,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var t0 = performance.now(); (function grow() { var k = Math.min(1, (performance.now() - t0) / 400); var s = .01 + .99 * (1 - Math.pow(1 - k, 3)); g.scale.set(s, s, s); if (k < 1) requestAnimationFrame(grow); })();
       },
       clearHoles: function () { holes.forEach(function (g) { city.remove(g); }); holes = []; },
+      balcony: function () { cam.updateMatrixWorld(); var v = new T.Vector3(0, 39, -64.5); v.project(cam); return [(v.x + 1) / 2 * host.clientWidth, (1 - v.y) / 2 * host.clientHeight]; },
       screen: function (wx, wz) {   // where a point on the ground (relative to the group) shows on screen, in px
         cam.updateMatrixWorld(); var v = new T.Vector3(wx * V3_C, 0, wz * V3_C); v.project(cam); return [(v.x + 1) / 2 * host.clientWidth, (1 - v.y) / 2 * host.clientHeight];
       }
@@ -3693,13 +3703,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('qjov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
-      ov.innerHTML = '<div class="jm3h"></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
+      ov.innerHTML = '<div class="jm3h"></div><div class="jmtower"><i class="tw"></i><i class="tr"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
-      V3 = null; v3Load(function () { var hh = ov.querySelector('.jm3h'); if (!hh || !hh.isConnected) return; V3 = v3Init(hh); if (V3) { ov.classList.add('v3'); var c0 = V3.screen(0, 0); ov.style.setProperty('--jx', c0[0] + 'px'); ov.style.setProperty('--jy', c0[1] + 'px'); } qjShow(); });
+      V3 = null; v3Load(function () { var hh = ov.querySelector('.jm3h'); if (!hh || !hh.isConnected) return; V3 = v3Init(hh); if (V3) { ov.classList.add('v3'); var c0 = V3.screen(0, 0), bq = [innerWidth / 2, innerHeight * .2]; ov.style.setProperty('--jx', c0[0] + 'px'); ov.style.setProperty('--jy', c0[1] + 'px'); ov.style.setProperty('--bx', bq[0] + 'px'); ov.style.setProperty('--by', bq[1] + 'px'); } qjShow(); });
     }
     ov.setAttribute('data-st', g.st);
     ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + g.round + ' step' + (g.round === 1 ? '' : 's') : '';
@@ -3721,7 +3731,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var grp = ov.querySelector('.jmgroup'), act = g.order.filter(function (k) { return players[k]; }), inGroup = act.filter(function (k) { return g.alive.indexOf(k) >= 0 || (g.st === 'done' && g.win.indexOf(k) >= 0); });
     act.forEach(function (k) {
       var p = players[k], el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]');
-      if (!el) { el = document.createElement('div'); el.className = 'jmt'; el.setAttribute('data-pid', k); el.innerHTML = '<div class="jmbody"></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
+      if (!el) { el = document.createElement('div'); el.className = 'jmt'; el.setAttribute('data-pid', k); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
       var j = inGroup.indexOf(k), n = inGroup.length, ang = n > 1 ? j / n * Math.PI * 2 : 0, rad = n > 1 ? Math.min(9.5, 3.2 + n * 0.9) : 0;
       el.style.setProperty('--gx', (Math.cos(ang) * rad).toFixed(2) + 'vh'); el.style.setProperty('--gy', (Math.sin(ang) * rad * 0.8).toFixed(2) + 'vh');
       var f = g.falls && g.falls[k];
