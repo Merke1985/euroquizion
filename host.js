@@ -325,7 +325,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + (G.atype === 'party' && shielded(p) ? ' <span class="rshield" title="Protected by an umbrella: no items can be used on them">☂️</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -1670,7 +1670,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var x = list0[i], l;
       if (x.kind === 'heel') {
         var t = players[x.to], u = t && t.inv ? t.inv.indexOf('umbrella') : -1;
-        x.blocked = u >= 0; if (x.blocked) t.inv.splice(u, 1); else if ((l = c.lanes[x.to])) l.heel = x.by;
+        x.blocked = u >= 0; if (!x.blocked && (l = c.lanes[x.to])) l.heel = x.by;   // (an umbrella bought after the heel was broken still protects)
         Music.blip(); setTimeout(function () { if (G.phase === 'chase') Music.crumble(); }, 250);
       } else if ((l = c.lanes[x.pid])) { l.pos = Math.min(CHASE_END, l.pos + x.n); l.skates = (l.skates || 0) + x.n; itemGetSnd(); }
       c.st = 'perk'; c.perk = x; push();
@@ -2488,6 +2488,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
     clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
   }
+  function shielded(p) { return !!(p && p.inv && p.inv.indexOf('umbrella') >= 0); }   // the Eurovision Umbrella: nobody can use an item on you
   function shopLater(it) { return it.kind === 'bribe' || it.kind === 'heel' || it.kind === 'smoke'; }   // (the heel and the envelope: secrets)   // secret and delivery items: any time, even during a party game
   function qKeyNow() { return G.round + '|' + (G.q ? G.q.text : ''); }
   // Someone gets an item (bought, free or picked by Lynda): a cash-register "ka-ching"
@@ -2513,7 +2514,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield' && it.kind !== 'skates' && it.kind !== 'fan'; });
       if (!ids.length) return;
       b.useP = 0.1; done = true;
-      var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b; });
+      var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && !shielded(x); });
       var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'thief';
       if (!self && !others.length) return;
       var t = self ? b : pick(others), key = 'bot' + Date.now() + Math.random();
@@ -2547,6 +2548,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief' || it0.kind === 'fan')) t = p;   // (no target: it is the user's own smoke)
       if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief' || it0.kind === 'fan')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates') return;   // (the umbrella works by itself)
+      if (t !== p && shielded(t)) return;   // under an umbrella: out of reach
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
@@ -2698,7 +2700,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
     if (it.kind === 'thief') {   // a random item from a random player's bag (which one stays a secret)
       var loose = function (x) { return (x.inv || []).map(function (id, i) { return id === 'bribe' ? -1 : i; }).filter(function (i) { return i >= 0; }); };   // (an envelope for the EBU cannot be stolen)
-      var bags = list().filter(function (x) { return x !== by && !x.off && loose(x).length; });
+      var bags = list().filter(function (x) { return x !== by && !x.off && !shielded(x) && loose(x).length; });
       if (!bags.length) { shopLast.sound = 'empty'; shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub, but every bag was empty!'; }
       var v = pick(bags), gi = pick(loose(v)), loot = v.inv.splice(gi, 1)[0];
       if (loot === 'fan') { var nf = v.inv.filter(function (x) { return x === 'fan'; }).length, mv = Math.max(1, (v.fanLeft || 0) - nf * 3); v.fanLeft = Math.max(0, (v.fanLeft || 0) - mv); by.fanLeft = (by.fanLeft || 0) + mv; }   // (a fan goes with the uses it has left) by.inv = (by.inv || []).concat(loot);
