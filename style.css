@@ -1786,3 +1786,7 @@ aside.recapgone{visibility:hidden}
 /* (before she is announced she is completely out of sight, below the stage) */
 .noteov:not(.diva-on) .ntdiva{transform:translateX(-50%) translateY(130%);opacity:0}
 .noteov .ntdiva{transition:transform 1.6s cubic-bezier(.2,.9,.3,1.05),opacity .4s}
+
+/* her mouth: closed (a little smile) until she starts singing */
+.noteov:not([data-st="sing"]):not([data-st="cut"]):not([data-st="done"]) .dvmouth{transform:scale(1.1,.18)}
+.noteov:not([data-st="sing"]):not([data-st="cut"]):not([data-st="done"]) .dvtongue{opacity:0}
