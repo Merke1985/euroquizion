@@ -777,7 +777,7 @@ var SHOP_ITEMS = [
   { id: 'bribe', tier: 3, icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it, and right before the Grand Final it pays out: 10 to 20% of the leader’s score. One per player, and nobody can steal it', kind: 'bribe' },
   { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
   { id: 'mic', tier: 1, icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
-  { id: 'heel', tier: 3, icon: '👠', name: 'Broken Heel', desc: 'Break another player’s heel any time before the Grand Final: they can’t move on its first question', kind: 'heel', final: true },
+  { id: 'heel', tier: 3, icon: '👠', name: 'Broken Heel', desc: 'Secretly break another player’s heel any time before the Grand Final: they can’t move on its first question (an umbrella blocks it)', kind: 'heel', final: true },
   { id: 'fan', tier: 2, icon: '🪭', name: 'Eurovision Fan', desc: 'Wave it during a question: half of the wrong answers blow away on your phone. 3 uses', kind: 'fan', uses: 3 },
   { id: 'skates', tier: 3, icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
 ];
@@ -794,7 +794,8 @@ function itemMode(it) {
   var k = it && it.kind;
   if (k === 'shield' || k === 'skates') return { id: 'self', icon: '🛡️', label: 'Works by itself: keep it in your bag' };
   if (k === 'bribe') return { id: 'secret', icon: '🤫', label: 'Secret: send it any time, it pays out before the Grand Final' };
-  if (k === 'smoke' || k === 'heel') return { id: 'delivery', icon: '📦', label: 'Delivery: use it any time, it lands before the next trivia question' };
+  if (k === 'heel') return { id: 'secret', icon: '🤫', label: 'Secret: use it any time, it is revealed when the Grand Final starts' };
+  if (k === 'smoke') return { id: 'delivery', icon: '📦', label: 'Delivery: use it any time, it lands before the next trivia question' };
   return { id: 'instant', icon: '⚡', label: 'Instant: only while a question is open' };
 }
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }
