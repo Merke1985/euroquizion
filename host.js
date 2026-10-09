@@ -335,7 +335,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
-    if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); Music.diva(false); }   // (the game is over, or was ended)
+    if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }   // (the game is over, or was ended)
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -2867,6 +2867,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.note = { id: 'note' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', guess: {}, len: Math.round((NOTE_MIN + Math.random() * (NOTE_MAX - NOTE_MIN)) * 10) / 10, t0: 0, ends: 0, win: [] };
     G.phase = 'note'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); noteShow();
+    if (!REMOTE && !ntAudio) { try { ntAudio = new Audio('sounds/long_note.mp3'); ntAudio.preload = 'auto'; ntAudio.load(); } catch (e) {} }   // (loaded in advance: the note starts on time)
     var g = G.note, at = function (ms, f) { clearTimeout(f._t); setTimeout(function () { if (G.note === g && $('noteov')) f(); }, ms); };
     var lines = [
       ['him', 'Oh no, Europe… we have technical problems! 😱'],
@@ -2878,6 +2879,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t = 1800;
     lines.forEach(function (l, i) { (function (l, t0) { at(t0, function () { noteSay(l[0], l[1]); if (i === lines.length - 1) { $('noteov').classList.add('diva-on'); Music.douze(); whooshes([0, 300]); } }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
     at(t + 800, function () { noteGuess(); });
+  }
+  // The diva's note: a recording of over two minutes, played from the start and stopped dead when the mic drops.
+  var ntAudio = null;
+  function noteAudio(on) {
+    if (REMOTE) return;
+    try {
+      if (!on) { if (ntAudio) ntAudio.pause(); return; }
+      if (!ntAudio) { ntAudio = new Audio('sounds/long_note.mp3'); ntAudio.preload = 'auto'; }
+      ntAudio.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); ntAudio.currentTime = 0;
+      var pr = ntAudio.play(); if (pr && pr.catch) pr.catch(function () {});
+    } catch (e) {}
   }
   function noteSay(who, txt) {
     var ov = $('noteov'); if (!ov) return;
@@ -2901,7 +2913,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function noteSing() {
     var g = G.note; if (!g || g.st !== 'guess') return;
     clearInterval(noteTick); g.st = 'sing'; g.t0 = Date.now(); push(); noteShow();
-    Music.diva(true);
+    noteAudio(true);
     var tick = function () {
       if (G.note !== g || g.st !== 'sing') return;
       var el = (Date.now() - g.t0) / 1000;
@@ -2912,7 +2924,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function noteCut() {
     var g = G.note; if (!g) return;
-    g.st = 'cut'; Music.diva(false); Music.micdrop();   // oops: she drops her microphone
+    g.st = 'cut'; noteAudio(false); Music.micdrop();   // oops: she drops her microphone
     var act = list().filter(function (p) { return !p.off; }), best = Infinity;
     act.forEach(function (p) { var v = g.guess[p.pid]; if (v != null) best = Math.min(best, Math.abs(v - g.len)); });
     g.win = act.filter(function (p) { var v = g.guess[p.pid]; return v != null && Math.abs(v - g.len) === best; }).map(function (p) { return p.pid; });
