@@ -787,14 +787,14 @@ function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITE
 // things from the show itself. One of each is the secret answer; the others turn up as clues.
 var CLUE_WHO = [
   { id: 'lynda', icon: '👠', name: 'Lynda' }, { id: 'felix', icon: '🎩', name: 'Felix' }, { id: 'stella', icon: '💃', name: 'Stella' },
-  { id: 'monster', icon: '👹', name: 'The Monster' }, { id: 'manager', icon: '🎧', name: 'The Stage Manager' }];
+  { id: 'dancer', icon: '🕺', name: 'Loreen’s Backup Dancer' }, { id: 'manager', icon: '🎧', name: 'The Stage Manager' }];
 var CLUE_WHERE = [
   { id: 'green', icon: '🛋️', name: 'Green Room', in: 'in the Green Room' }, { id: 'club', icon: '🪩', name: 'Euroclub', in: 'in the Euroclub' },
   { id: 'back', icon: '🎭', name: 'Backstage', in: 'backstage' }, { id: 'shop', icon: '🛍️', name: 'Woodruff’s Boutique', in: 'in Woodruff’s Boutique' },
   { id: 'arena', icon: '🏟️', name: 'The Arena', in: 'under the Arena stage' }];
 var CLUE_WHAT = [   // what he is hidden inside: big props from the show
   { id: 'trunk', icon: '🧳', name: 'Costume Trunk' }, { id: 'piano', icon: '🎹', name: 'Grand Piano' }, { id: 'ball', icon: '🪩', name: 'Giant Disco Ball' },
-  { id: 'egg', icon: '🥚', name: 'Giant Stage Egg' }, { id: 'box', icon: '🗳️', name: 'Ballot Box' }];
+  { id: 'wheel', icon: '🐹', name: 'Giant Hamster Wheel' }, { id: 'box', icon: '🗳️', name: 'Ballot Box' }];
 var CLUE_SETS = { who: CLUE_WHO, where: CLUE_WHERE, what: CLUE_WHAT };
 var CLUE_N = 4, CLUE_ACC_MS = 45000, CLUE_PART = 4, CLUE_BONUS = 6, CLUE_GIVE = 3, CLUE_FAST = 4;   // four clue questions; a right answer brings 3 clues, the fastest 4;
 // 4 points per right part of the guess, 6 more for all three. (Five cards a row and these clues: someone solves it in most games.)
