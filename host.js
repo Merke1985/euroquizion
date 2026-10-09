@@ -3631,7 +3631,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       for (var d = 0; d < 3; d++) { var DX = (d + .2) * w / 3, DW = w / 3 * .6; var g2 = x.createLinearGradient(0, h * .82, 0, h); g2.addColorStop(0, '#fff0c0'); g2.addColorStop(1, '#e8962f'); x.fillStyle = '#3a2418'; x.fillRect(DX - 4, h * .81, DW + 8, h * .19); x.fillStyle = g2; x.fillRect(DX, h * .83, DW, h * .17); x.fillStyle = ['#a8283a', '#2a6a4a', '#2a4a8a'][(d + seed) % 3]; x.fillRect(DX - 6, h * .8, DW + 12, h * .035); }
     }, 256, 256);
   }
-  function v3Init(host) {
+  function v3Init(host, over) {
     if (!window.THREE) return null;
     var T = THREE, w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
     var rn = new T.WebGLRenderer({ antialias: true, alpha: false }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.shadowMap.type = T.PCFSoftShadowMap;
@@ -3639,10 +3639,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     host.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#1b1236'); sc.fog = new T.Fog('#3a2a52', 30, 95);
     var cam = new T.PerspectiveCamera(52, w / h, 0.5, 200); cam.position.set(0, 16, 9); cam.lookAt(0, 0, -3.2);
-    sc.add(new T.HemisphereLight('#8a7ac8', '#4a2a20', 0.55));
-    var moon = new T.DirectionalLight('#b8c4ff', 0.75); moon.position.set(-14, 26, -18); moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024);
+    var hemi = new T.HemisphereLight('#8a7ac8', '#4a2a20', 0.55); hemi.layers.enable(1); sc.add(hemi);
+    var moon = new T.DirectionalLight('#b8c4ff', 0.75); moon.position.set(-14, 26, -18); moon.layers.enable(1); moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024);
     var sh = moon.shadow.camera; sh.left = -30; sh.right = 30; sh.top = 30; sh.bottom = -30; sh.near = 1; sh.far = 90; moon.shadow.bias = -0.0008; sc.add(moon);
-    var lamp = new T.PointLight('#ffb866', 2.4, 26, 1.6); lamp.position.set(0, 6.5, 0); sc.add(lamp);   // the crossroads lamp, always over the group
+    var lamp = new T.PointLight('#ffb866', 2.4, 26, 1.6); lamp.position.set(0, 6.5, 0); lamp.layers.enable(1); sc.add(lamp);   // the crossroads lamp, always over the group
+    var rn2 = null, cam2 = null;
+    if (over) { rn2 = new T.WebGLRenderer({ antialias: true, alpha: true }); rn2.setPixelRatio(rn.getPixelRatio()); rn2.setSize(w, h); rn2.setClearColor(0x000000, 0); rn2.shadowMap.enabled = true; rn2.shadowMap.type = T.PCFSoftShadowMap; rn2.outputEncoding = T.sRGBEncoding; rn2.toneMapping = T.ACESFilmicToneMapping; rn2.toneMappingExposure = rn.toneMappingExposure; over.appendChild(rn2.domElement); cam2 = cam.clone(); cam2.layers.set(1); }
     var city = new T.Group(); sc.add(city);
     var towerTex = v3Facade('#efe0c4', 7); towerTex.repeat.set(2, 7);
     var tower = new T.Group(), tw = new T.MeshStandardMaterial({ map: towerTex, roughness: .9 });
@@ -3681,13 +3683,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var st = { x: 0, y: 0, fx: 0, fy: 0, tx: 0, ty: 0, t0: 0, dur: 600, alive: true };
     function frame() {
       if (!st.alive) return;
-      if (!host.isConnected) { st.alive = false; rn.dispose(); return; }
+      if (!host.isConnected) { st.alive = false; rn.dispose(); if (rn2) rn2.dispose(); return; }
       var k = st.t0 ? Math.min(1, (performance.now() - st.t0) / st.dur) : 1, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       st.x = st.fx + (st.tx - st.fx) * e; st.y = st.fy + (st.ty - st.fy) * e;
       city.position.set(-st.x * V3_C, 0, -st.y * V3_C);
       lamp.intensity = 2.3 + Math.sin(performance.now() / 300) * .08;
       var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && h2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
-      rn.render(sc, cam); requestAnimationFrame(frame);
+      rn.render(sc, cam);
+      if (rn2) {   // the blocks in front of the crossroads (towards the camera), once more, over the players
+        Object.keys(blocks).forEach(function (k) { var b = blocks[k], fz = b.position.z + city.position.z > 1; if (b.userData.front !== fz) { b.userData.front = fz; b.traverse(function (o) { if (fz) o.layers.enable(1); else o.layers.disable(1); }); } });
+        if (w2 && h2 && (w2 !== rn2.domElement.width / rn2.getPixelRatio() || h2 !== rn2.domElement.height / rn2.getPixelRatio())) rn2.setSize(w2, h2);
+        cam2.position.copy(cam.position); cam2.quaternion.copy(cam.quaternion); cam2.aspect = cam.aspect; cam2.updateProjectionMatrix();
+        var bg = sc.background; sc.background = null; rn2.render(sc, cam2); sc.background = bg;
+      }
+      requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
     var api = {
@@ -3700,6 +3709,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       },
       clearHoles: function () { holes.forEach(function (g) { city.remove(g); }); holes = []; },
       balcony: function () { cam.updateMatrixWorld(); var v = new T.Vector3(0, 39, -64.5); v.project(cam); return [(v.x + 1) / 2 * host.clientWidth, (1 - v.y) / 2 * host.clientHeight]; },
+      screen3: function (wx, wy, wz) { cam.updateMatrixWorld(); var v = new T.Vector3(wx * V3_C, wy, wz * V3_C); v.project(cam); return [(v.x + 1) / 2 * host.clientWidth, (1 - v.y) / 2 * host.clientHeight]; },
       screen: function (wx, wz) {   // where a point on the ground (relative to the group) shows on screen, in px
         cam.updateMatrixWorld(); var v = new T.Vector3(wx * V3_C, 0, wz * V3_C); v.project(cam); return [(v.x + 1) / 2 * host.clientWidth, (1 - v.y) / 2 * host.clientHeight];
       }
@@ -3719,13 +3729,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('qjov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
-      ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
+      ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmtfront">' + JM_TFRONT + '</div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
-      V3 = null; v3Load(function () { var hh = ov.querySelector('.jm3h'); if (!hh || !hh.isConnected) return; V3 = v3Init(hh); if (V3) { ov.classList.add('v3'); var c0 = V3.screen(0, 0), bq = [innerWidth / 2, innerHeight * .2]; ov.style.setProperty('--jx', c0[0] + 'px'); ov.style.setProperty('--jy', c0[1] + 'px'); ov.style.setProperty('--bx', bq[0] + 'px'); ov.style.setProperty('--by', bq[1] + 'px'); } qjShow(); });
+      V3 = null; v3Load(function () { var hh = ov.querySelector('.jm3h'); if (!hh || !hh.isConnected) return; V3 = v3Init(hh, ov.querySelector('.jm3o')); if (V3) { ov.classList.add('v3'); var hm = V3.screen(-.075, .44), hf = V3.screen(.075, .44), ht = V3.screen3(0, 3.6, .44); ov.style.setProperty('--h1x', hm[0] + 'px'); ov.style.setProperty('--h2x', hf[0] + 'px'); ov.style.setProperty('--hy', hm[1] + 'px'); ov.style.setProperty('--hh', Math.max(120, hm[1] - ht[1]) + 'px'); var c0 = V3.screen(0, 0), bq = [innerWidth / 2, innerHeight * .2]; ov.style.setProperty('--jx', c0[0] + 'px'); ov.style.setProperty('--jy', c0[1] + 'px'); ov.style.setProperty('--bx', bq[0] + 'px'); ov.style.setProperty('--by', bq[1] + 'px'); } qjShow(); });
     }
     ov.setAttribute('data-st', g.st);
     ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + g.round + ' step' + (g.round === 1 ? '' : 's') : '';
@@ -3750,7 +3760,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var p = players[k], el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]');
       if (!el) { el = document.createElement('div'); el.className = 'jmt'; el.setAttribute('data-pid', k); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
       var j = inGroup.indexOf(k), n = inGroup.length, ang = n > 1 ? j / n * Math.PI * 2 : 0, rad = n > 1 ? Math.min(9.5, 3.2 + n * 0.9) : 0;
-      el.style.setProperty('--gx', (Math.cos(ang) * rad).toFixed(2) + 'vh'); el.style.setProperty('--gy', (Math.sin(ang) * rad * 0.8).toFixed(2) + 'vh');
+      el.style.setProperty('--gx', (Math.cos(ang) * rad).toFixed(2) + 'vh'); el.style.setProperty('--gy', (Math.sin(ang) * rad * 0.8).toFixed(2) + 'vh'); el.style.zIndex = String(100 + Math.round(Math.sin(ang) * rad * 8));   // (lower on screen = closer: in front)
       var f = g.falls && g.falls[k];
       if (f && !el.classList.contains('falling')) {
         var c0 = V3 ? V3.screen(0, 0) : [0, 0], c1 = V3 ? V3.screen(JM_DIRS[f.d][0] * .55, JM_DIRS[f.d][1] * .55) : [JM_DIRS[f.d][0] * 300, JM_DIRS[f.d][1] * 200];
