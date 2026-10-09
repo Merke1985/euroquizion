@@ -1640,7 +1640,8 @@ aside.recapgone{visibility:hidden}
 .clueov .clrow.lit{transform:scale(1.04);filter:drop-shadow(0 0 14px rgba(255,210,63,.7))}
 .clueov .clrow.lit .cllab{color:#fff;text-shadow:0 0 10px #ffd23f}
 .clbtn.ro{cursor:default}
-.clbtn.new{opacity:.8;border-color:#55c27a;background:rgba(85,194,122,.22);animation:shpop .5s both}
+.clbtn.new{opacity:1;text-decoration:none;border-color:#55c27a;background:rgba(85,194,122,.25);box-shadow:0 0 12px rgba(85,194,122,.6);animation:shpop .4s both}
+.clbtn{transition:opacity .35s,background .35s,border-color .35s}
 
 /* Edgar's story first: no cards yet, the MISSING poster big in the middle, the presenters close together;
    then they step apart and the rows come in one by one as they are explained */

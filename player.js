@@ -376,14 +376,21 @@
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [], fresh = (c.fresh || {})[pid] || [];
     show('v-wait');
     $('waittitle').textContent = fresh.length ? '🔍 ' + fresh.length + ' new clues!' : '🔍 Your clues';
-    $('waitsub').textContent = (fresh.length ? 'Right answer! The new ones are marked. ' : 'No new clues this time. ') + 'Crossed off = not the answer. Clue question ' + c.n + ' of ' + c.of + '.';
+    $('waitsub').textContent = (fresh.length ? 'Right answer! Here they come… ' : 'No new clues this time. ') + 'Crossed off = not the answer. Clue question ' + c.n + ' of ' + c.of + '.';
     box.classList.remove('hidden');
     var key = 'notes|' + c.id + '|' + c.n + '|' + known.join(',');
     if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
     var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
+    // The cards you already knew are crossed off; the new ones are still open, and come in one by one:
+    // a green border, then half a second later grey and crossed off like the rest.
     box.innerHTML = ['where', 'what', 'who'].map(function (k) {
-      return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var id = k + ':' + x.id, out = known.indexOf(id) >= 0; return '<div class="clbtn ro' + (out ? ' out' : '') + (fresh.indexOf(id) >= 0 ? ' new' : '') + '"><i>' + x.icon + '</i>' + esc(x.name) + '</div>'; }).join('') + '</div></div>';
+      return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var id = k + ':' + x.id, isNew = fresh.indexOf(id) >= 0, out = known.indexOf(id) >= 0 && !isNew; return '<div class="clbtn ro' + (out ? ' out' : '') + '" data-c="' + id + '"><i>' + x.icon + '</i>' + esc(x.name) + '</div>'; }).join('') + '</div></div>';
     }).join('');
+    var order = ['where', 'what', 'who'], seq = fresh.slice().sort(function (a, b) { return order.indexOf(a.split(':')[0]) - order.indexOf(b.split(':')[0]); });
+    seq.forEach(function (id, i) {
+      setTimeout(function () { var el = box.querySelector('[data-c="' + id + '"]'); if (!el || box.getAttribute('data-k') !== key) return; el.classList.add('new'); try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {} }, 700 + i * 650);
+      setTimeout(function () { var el = box.querySelector('[data-c="' + id + '"]'); if (!el || box.getAttribute('data-k') !== key) return; el.classList.remove('new'); el.classList.add('out'); }, 700 + i * 650 + 500);
+    });
   }
   function clueView(s) {
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [];
