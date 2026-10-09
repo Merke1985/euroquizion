@@ -768,9 +768,9 @@ function makeChase(allSongs, countries, used) {
 // ---------- Eurofan Shop: the merchandise (more to come) ----------
 // kind: 'lose' (the target loses points), 'blow' (they go to whoever has the fewest), 'steal' (the buyer takes them), 'sit' (no points for the open question)
 var SHOP_ITEMS = [
-  { id: 'wind', tier: 2, icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
+  { id: 'wind', tier: 1, icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
   { id: 'hack', tier: 2, icon: '📲', name: 'Televote Hacking Device', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
-  { id: 'power', tier: 2, icon: '🔋', name: 'Marc’s Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
+  { id: 'power', tier: 1, icon: '🔋', name: 'Marc’s Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'umbrella', tier: 3, icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
   { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'Wave it in front of another player: for 3 questions they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
