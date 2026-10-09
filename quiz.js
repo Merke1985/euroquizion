@@ -774,9 +774,10 @@ var SHOP_ITEMS = [
   { id: 'smoke', icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'umbrella', icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
   { id: 'flag', icon: '🚩', name: 'Giant Eurovision Flag', desc: 'Wave it in front of another player: for 3 questions they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
-  { id: 'bribe', icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe. Nothing happens now… but right before the Grand Final it pays out', kind: 'bribe' },
+  { id: 'bribe', icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it quickly, before someone steals it! Right before the Grand Final it pays out', kind: 'bribe' },
   { id: 'pass', icon: '🎟️', name: 'Euroclub Wristband', desc: 'Get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
-  { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' }
+  { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
+  { id: 'heel', icon: '👠', name: 'Broken Heel', desc: 'Break another player’s heel any time before the Grand Final: they can’t move on its first question', kind: 'heel', final: true }   // (only in the boutique when the Grand Final is on)
 ];
 var SHOP_PICKS = 2;   // free items per visit
 var SHOP_START_ALL = false;   // every (human) player starts a Party game with one of each item (handy for trying them out)

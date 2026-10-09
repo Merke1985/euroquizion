@@ -2017,3 +2017,7 @@ aside.recapgone{visibility:hidden}
 .chaseov .silvercrown{display:inline-block;filter:grayscale(1) brightness(1.55) contrast(1.1) drop-shadow(0 0 6px rgba(220,230,255,.8));animation:silvershine 2.4s ease-in-out infinite alternate}
 @keyframes silvershine{from{transform:rotate(-8deg)}to{transform:rotate(8deg) scale(1.1)}}
 .chaseov .ovrow.silver.dead{filter:grayscale(.5) brightness(.85)}
+/* the Broken Heel in the Grand Final: a shoe on the token, and a limp */
+.chtok.heeled .ch-face{animation:chlimp .5s ease-in-out infinite alternate}
+.chtok.heeled::after{content:'👠';position:absolute;right:-.4em;bottom:1.2em;font-size:calc(var(--tok,56px) * .45);transform:rotate(-25deg);filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+@keyframes chlimp{from{transform:rotate(-8deg) translateY(0)}to{transform:rotate(6deg) translateY(8%)}}

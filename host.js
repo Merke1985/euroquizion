@@ -1672,7 +1672,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (c.sd) { chaseSdMove(); return; }
     c.st = 'move';
     // Only a perfect answer (all three right) takes the trophy: anything less stops at the last space.
-    chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); l.blocked = 0; if (to >= CHASE_GOAL && l.res < 3) { to = CHASE_END; l.blocked = c.n; /* not perfect: they bump into the stage and fall back onto the last space */ } l.pos = Math.max(l.pos, to); });
+    chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); l.blocked = 0;
+      if (players[k] && players[k].heel) { players[k].heel = 0; l.heelAt = c.n; to = l.pos; }   // a broken heel: no step this time, whatever they answered
+      if (to >= CHASE_GOAL && l.res < 3) { to = CHASE_END; l.blocked = c.n; /* not perfect: they bump into the stage and fall back onto the last space */ } l.pos = Math.max(l.pos, to); });
     if (chaseAlive().some(function (k) { return c.lanes[k].res > 0; })) Music.woosh();
     if (chaseAlive().some(function (k) { return c.lanes[k].blocked === c.n; })) setTimeout(function () { if (G.phase === 'chase') Music.buzz(); }, 650);   // in front of the stage, but not perfect
     push();
@@ -1924,6 +1926,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       el.querySelector('.ch-name').textContent = (players[k] ? players[k].name : '?');
       var r = el.querySelector('.ch-res'), showR = (c.st === 'show' || c.st === 'pause') && l.res != null && !l.out;
       r.classList.toggle('on', showR); r.classList.toggle('zero', !l.res); r.classList.toggle('gold', l.res === 3); r.textContent = showR ? (l.res === 3 ? '★ +3' : '+' + l.res) : '';
+      var heeled = (!!players[k] && !!players[k].heel && (c.st === 'show' || c.st === 'pause')) || (l.heelAt === c.n && c.st === 'move');   // a broken heel: this time they stay where they are
+      el.classList.toggle('heeled', heeled); if (heeled && showR) { r.textContent = '👠 stuck!'; r.classList.add('zero'); r.classList.remove('gold'); }
     });
     // smashed, threatened and occupied spaces (an occupied space that is threatened: deadly)
     [].forEach.call($('chtiles').children, function (t) {
@@ -2403,7 +2407,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
     var old = $('shopov'); if (old) old.remove();   // (a fresh boutique, sliding in)
     // everyone gets their own selection of two, and Lynda spreads her stock: as many different items as possible go round
-    var offer = {}, deck = [], deal = function (mine) { if (!deck.length) deck = shuffle(SHOP_ITEMS.map(function (it) { return it.id; })); var i = 0; while (i < deck.length && mine.indexOf(deck[i]) >= 0) i++; if (i === deck.length) { deck = deck.concat(shuffle(SHOP_ITEMS.map(function (it) { return it.id; }))); while (mine.indexOf(deck[i]) >= 0) i++; } return deck.splice(i, 1)[0]; };
+    var offer = {}, deck = [], deal = function (mine) { if (!deck.length) deck = shuffle(shopAvail().map(function (it) { return it.id; })); var i = 0; while (i < deck.length && mine.indexOf(deck[i]) >= 0) i++; if (i === deck.length) { deck = deck.concat(shuffle(shopAvail().map(function (it) { return it.id; }))); while (mine.indexOf(deck[i]) >= 0) i++; } return deck.splice(i, 1)[0]; };
     act.forEach(function (p) { var mine = []; while (mine.length < SHOP_OFFER) mine.push(deal(mine)); offer[p.pid] = mine; });
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '' };
     G.phase = 'shop'; G.barMs = SHOP_MS; G.endsAt = Date.now() + SHOP_MS; push(); Music.ding();
@@ -2411,7 +2415,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     bots.forEach(function (b) { if (G.shop.who.indexOf(b.pid) >= 0) setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom(n, offer[b.pid]) }); }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
     clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
   }
-  function shopRandom(n, from) { var ids = from || SHOP_ITEMS.map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
+  function shopAvail() { return SHOP_ITEMS.filter(function (it) { return !it.final || G.finalMode === 'chase'; }); }
+  function shopRandom(n, from) { var ids = from || shopAvail().map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
   // Bots and their items: every trivia question a bot with items has a chance to use one,
   // 10% at first and 10% more for every question it waits. The Broken Mic waits for the question to open.
   function botItems() {
@@ -2581,7 +2586,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function shopApply(u) {
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
     shopLast = { icon: it.icon, deltas: [], sound: it.kind };
-    var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit' || it.kind === 'flag') && t.inv ? t.inv.indexOf('umbrella') : -1;
+    var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit' || it.kind === 'flag' || it.kind === 'heel') && t.inv ? t.inv.indexOf('umbrella') : -1;
     if (ui >= 0) { t.inv.splice(ui, 1); shopLast = { icon: '☂️', deltas: [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '☂️ blocked' }], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
     if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
     if (it.kind === 'thief') {   // a random item from a random player's bag (which one stays a secret)
@@ -2591,6 +2596,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       shopLast.deltas = [{ pid: by.pid, tag: '+1 item' }, { pid: v.pid, tag: '−1 item' }];
       return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub and left with an item from ' + v.name + '!';
     }
+    if (it.kind === 'heel') { t.heel = 1; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '👠 stuck in the Grand Final' }]; return it.icon + ' ' + by.name + ' broke ' + t.name + '’s heel! ' + t.name + ' can’t move on the first question of the Grand Final!'; }
     if (it.kind === 'flag') { t.flagged = (t.flagged || 0) + (it.amount || 3); shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see the next ' + (it.amount || 3) + ' questions!'; }
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, t.score)); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw Marc’s Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
@@ -2661,8 +2667,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="bqrack"><i class="rail"></i><span>👕</span><span>🧣</span><span>👗</span><span>🧥</span><span>🧣</span><span>👕</span></div>' +
         '<div class="bqfloor"><span>🛍️</span><span>🎁</span><span>🛍️</span><span>🎈</span><span>🎁</span></div>' +
         (function () {   // the merchandise on the shelves at the back, with its name (what you can get is on your phone)
-          var shelf = function (items) { return items.map(function (it) { return '<span class="bqi" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b></span>'; }).join(''); }, h = Math.ceil(SHOP_ITEMS.length / 2);
-          return '<div class="bqcase"><div class="bqshelf top">' + shelf(SHOP_ITEMS.slice(0, h)) + '</div><div class="bqshelf low">' + shelf(SHOP_ITEMS.slice(h)) + '</div><div class="bqcasenote">✨ = in today’s selection</div></div>';
+          var shelf = function (items) { return items.map(function (it) { return '<span class="bqi" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b></span>'; }).join(''); }, av = shopAvail(), h = Math.ceil(av.length / 2);
+          return '<div class="bqcase"><div class="bqshelf top">' + shelf(av.slice(0, h)) + '</div><div class="bqshelf low">' + shelf(av.slice(h)) + '</div><div class="bqcasenote">✨ = in today’s selection</div></div>';
         })() +
         '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div>';
       document.body.appendChild(ov);
@@ -2685,6 +2691,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (snd === 'blow') { Music.woosh(); setTimeout(function () { Music.woosh(); }, 400); }
     else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
     else if (snd === 'sit') Music.buzz();
+    else if (snd === 'heel') { Music.blip(); setTimeout(function () { Music.crumble(); }, 200); }
     else if (snd === 'block') { Music.blip(); setTimeout(function () { Music.ding(); }, 250); }
     else Music.woosh();
     if (REMOTE) return;
@@ -4394,7 +4401,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
