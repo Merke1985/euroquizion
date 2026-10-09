@@ -380,7 +380,7 @@
     box.classList.remove('hidden');
     var key = 'notes|' + c.id + '|' + c.n + '|' + known.join(',');
     if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
-    var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'How did they carry him off?' };
+    var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
     box.innerHTML = ['where', 'what', 'who'].map(function (k) {
       return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var id = k + ':' + x.id, out = known.indexOf(id) >= 0; return '<div class="clbtn ro' + (out ? ' out' : '') + (fresh.indexOf(id) >= 0 ? ' new' : '') + '"><i>' + x.icon + '</i>' + esc(x.name) + '</div>'; }).join('') + '</div></div>';
     }).join('');
@@ -393,12 +393,12 @@
         box.classList.add('hidden');
         $('waittitle').textContent = '🔍 Accusation sent!'; $('waitsub').textContent = 'Waiting for the other detectives…'; return;
       }
-      $('waittitle').textContent = '🔍 Find Edgar'; $('waitsub').textContent = 'Who took him, where is he hidden, and how did they carry him off? What your clues ruled out is crossed off. You have ' + Math.round(CLUE_ACC_MS / 1000) + ' seconds.';
+      $('waittitle').textContent = '🔍 Find Edgar'; $('waitsub').textContent = 'Who took him, where is he hidden, and what is he hidden inside? What your clues ruled out is crossed off. You have ' + Math.round(CLUE_ACC_MS / 1000) + ' seconds.';
       box.classList.remove('hidden');
       if (clueSel.id !== c.id) clueSel = { id: c.id };
       var key = c.id + '|' + known.join(',') + '|' + clueSel.who + clueSel.where + clueSel.what;
       if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
-      var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'How did they carry him off?' };
+      var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
       box.innerHTML = ['where', 'what', 'who'].map(function (k) {   // (the place on top, who did it at the bottom, like the big screen)
         return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var out = known.indexOf(k + ':' + x.id) >= 0; return '<button type="button" class="clbtn' + (out ? ' out' : '') + (clueSel[k] === x.id ? ' sel' : '') + '" data-k="' + k + '" data-id="' + x.id + '"><i>' + x.icon + '</i>' + esc(x.name) + '</button>'; }).join('') + '</div></div>';
       }).join('') + '<button type="button" class="btn big" id="clueaccuse"' + (clueSel.who && clueSel.where && clueSel.what ? '' : ' disabled') + '>🔍 Accuse!</button>';
@@ -414,7 +414,7 @@
     box.classList.add('hidden');   // the answer comes out
     var sol = c.sol || {}, parts = [];
     if (sol.where) parts.push('Hidden ' + clueCard('where:' + sol.where).c.in);
-    if (sol.what) parts.push('with the ' + clueCard('what:' + sol.what).c.name);
+    if (sol.what) parts.push('inside the ' + clueCard('what:' + sol.what).c.name);
     if (sol.who) parts.push('by ' + clueCard('who:' + sol.who).c.name);
     var r = c.res && c.res[pid];
     $('waittitle').textContent = r ? (r.n === 3 ? '🏆 You found Edgar!' : r.none ? 'No accusation…' : '🔍 ' + r.n + ' of 3 right') : '🔍 Who took Edgar…?';

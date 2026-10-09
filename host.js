@@ -1212,7 +1212,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     partytime: { icon: '🎉', title: 'Party round!', sub: '' },
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
-    clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and how did they carry him off?' },
+    clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -2571,7 +2571,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
 
   // ---------- Where the Hell Is Edgar? ----------
   // A Cluedo-style party game. Edgar, the show's mascot, has been abducted: by one suspect, hidden in one place,
-  // carried off with one thing. The presenters set
+  // hidden inside one thing. The presenters set
   // the scene, then come four trivia questions; a right answer gets three secret clues on your phone (the fastest right
   // answer gets four), each one a card that is NOT the answer, from the row where the player still has the most options. Then everyone accuses on their phone, and the answer comes out,
   // part by part. 4 points for each right part, 6 more for all three.
@@ -2634,9 +2634,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
       ['him', 'Breaking news, Europe… Edgar, our beloved mascot, has been abducted! 😱'],
-      ['her', 'Someone took him, hid him somewhere in the building, and carried him off with something.'],
+      ['her', 'Someone took him, and hid him inside something, somewhere in the building.'],
       ['him', 'Look at the cards. The top row: where he could be hidden.', 'where'],
-      ['her', 'The middle row: what they carried him off with.', 'what'],
+      ['her', 'The middle row: what he is hidden inside.', 'what'],
       ['him', 'And the bottom row: who took him.', 'who'],
       ['her', 'In each row, one card is the truth. We need detectives to find out which!'],
       ['him', 'Here’s how it works: four trivia questions are coming. Answer right, and your phone gets secret clues.'],
@@ -2706,7 +2706,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
     cover(true, '', '', false); masks(true); hostsAway(); push(); clueSongFade();
-    clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who took Edgar, where is he hidden, and how did they carry him off?'); }, 1400);
+    clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who took Edgar, where is he hidden, and what is he hidden inside?'); }, 1400);
     setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Make your choice on your phone. Use your clues, detectives!'); }, 5200);
     // bots: a guess among what their clues leave open
     bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off) return; setTimeout(function () {
@@ -2736,7 +2736,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.dimmed = {};
     var lines = {
       where: ['Where was Edgar hidden?', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'],
-      what: ['And how did they carry him off?', 'With the ' + what.name + '! ' + what.icon],
+      what: ['And what was he hidden inside?', 'Inside the ' + what.name + '! ' + what.icon],
       who: ['And who abducted Edgar? It was…', who.id === 'felix' ? 'Felix?! You took our own mascot?! 😱' : who.id === 'stella' ? '…me?! I only wanted a cuddle! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, Edgar is not for sale! 👠' : who.name + '! 😱']
     };
     var t = 800;
@@ -2803,7 +2803,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="clspot"></div>' +
         '<div class="grsign clsign">🔍 Where the Hell Is Edgar?</div>' +
         '<div class="clposter"><b>MISSING</b>' + EDGAR + '<small>Have you seen Edgar?</small></div><div class="cledgar">' + EDGAR + '</div>' +
-        '<div class="clrows">' + row('where', 'Hidden where?') + row('what', 'Carried off with?') + row('who', 'Who took him?') + '</div>' +
+        '<div class="clrows">' + row('where', 'Hidden where?') + row('what', 'Hidden inside?') + row('who', 'Who took him?') + '</div>' +
         '<div class="clmsg"></div><div class="clplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
