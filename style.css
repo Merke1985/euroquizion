@@ -2076,3 +2076,6 @@ aside.recapgone{visibility:hidden}
 .shopov.boutique .bqi:nth-child(odd) .si{animation-delay:-.8s}
 .shopov.boutique .bqi:nth-child(3n) .si{animation-delay:-.4s}
 .shopov.boutique .bqi.offer b::before{content:none}
+/* the Eurovision Fan: blown-away answers fly off the phone */
+.opt.blown{animation:fanblow .8s cubic-bezier(.5,0,.8,.4) forwards;pointer-events:none}
+@keyframes fanblow{0%{transform:none;opacity:1}30%{transform:translateX(-6px) rotate(-2deg)}100%{transform:translateX(120%) rotate(18deg);opacity:0;visibility:hidden}}

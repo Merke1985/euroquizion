@@ -275,6 +275,10 @@
 
           if (!mc) $('guess').focus();
         }
+        if (mc) {   // the Eurovision Fan: the answers it blew away (on this phone only)
+          var fan = (q.fan && q.fan[pid]) || [];
+          [].forEach.call($('opts').querySelectorAll('.opt'), function (b) { var gone = fan.indexOf(+b.getAttribute('data-i')) >= 0; if (gone && !b.classList.contains('blown')) { b.classList.add('blown'); b.disabled = true; setTimeout(function () { b.style.display = 'none'; }, 800); } });
+        }
       }
     }
     else if (s.phase === 'reveal' && s.clue && s.clue.st === 'ask') clueNotes(s);   // Edgar: after each question, your notebook
@@ -510,7 +514,7 @@
     p.setAttribute('data-k', bagKey);
     if (!bagItem) {
       var seen = {}; p.innerHTML = '<h3>Your items</h3><p class="bagrule">' + (s.mg ? '🎉 A party game is on: items wait until the trivia (only the Grand Final ones can go now).' : 'Items are for the trivia rounds, not the party games. Used between questions, they land before the next one.') + '</p>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
-        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, later = it.kind === 'bribe' || it.kind === 'heel', mgw = !!s.mg && !later && it.kind !== 'shield' && it.kind !== 'skates', wait = mgw || (it.kind === 'sit' && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess') || it.kind === 'shield' || it.kind === 'skates';   // the mic only breaks while a question is open; the smoke goes up before one
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, later = it.kind === 'bribe' || it.kind === 'heel', mgw = !!s.mg && !later && it.kind !== 'shield' && it.kind !== 'skates', wait = mgw || ((it.kind === 'sit' || it.kind === 'fan') && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess') || it.kind === 'shield' || it.kind === 'skates';   // the mic only breaks while a question is open; the smoke goes up before one
         return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(it.kind === 'shield' ? 'Protects you by itself: it blocks the next item used on you' : it.kind === 'skates' ? 'Work by themselves: keep them in your bag, and you glide 2 spaces ahead at the start of the Grand Final' : mgw ? 'Not during a party game: use it in the trivia rounds' : wait ? (it.kind === 'smoke' ? 'Only before a question' : 'Only while a question is open') : it.desc) + '</small></span></button>';
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
@@ -524,6 +528,11 @@
           var tm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', tm); setTimeout(function () { net.send('shop', tm); }, 1200); }
           ptoast('🎟️ Wristband on, into the Euroclub… watch the big screen!'); bagOpen = false; bagUpdate(state); return;
+        }
+        if ((shopItem(id) || {}).kind === 'fan') {   // no one to pick: it works on your own phone, right now
+          var fm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
+          if (net) { net.send('shop', fm); setTimeout(function () { net.send('shop', fm); }, 1200); }
+          ptoast('🪭 Whoosh! Half of the wrong answers blow away…'); bagOpen = false; bagUpdate(state); return;
         }
         if ((shopItem(id) || {}).kind === 'smoke') {   // no one to pick: it is for the next question
           var msg = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
