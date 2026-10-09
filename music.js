@@ -257,6 +257,41 @@ var Music = (function () {
       s.connect(f); f.connect(g); g.connect(fxOut()); s.start(t); s.stop(t + 0.8);
     } catch (e) {}
   }
+  // Hold That Note: the diva's high note (a sung "aah": a buzzy tone through two vowel formants, with vibrato),
+  // held until it is cut off; then the cut itself, a crackle and a falling glitch.
+  var divaV = null;
+  function diva(on) {
+    if (divaV) { try { var v = divaV; v.g.gain.cancelScheduledValues(ctx.currentTime); v.g.gain.setValueAtTime(v.g.gain.value, ctx.currentTime); v.g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.04); setTimeout(function () { try { v.o.stop(); v.o2.stop(); v.lfo.stop(); } catch (e) {} }, 120); } catch (e) {} divaV = null; }
+    if (!on || !ac()) return;
+    try {
+      var t = ctx.currentTime + 0.02, f0 = 880;
+      var o = ctx.createOscillator(), o2 = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain(), g = ctx.createGain();
+      var f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), mix = ctx.createGain();
+      o.type = 'sawtooth'; o2.type = 'triangle'; o.frequency.setValueAtTime(f0 * 0.94, t); o.frequency.exponentialRampToValueAtTime(f0, t + 0.35); o2.frequency.value = f0 * 2;
+      lfo.frequency.value = 5.6; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(14, t + 1.6);   // the vibrato comes in after the attack
+      lfo.connect(lg); lg.connect(o.frequency); lg.connect(o2.frequency);
+      f1.type = 'bandpass'; f1.frequency.value = 1050; f1.Q.value = 5; f2.type = 'bandpass'; f2.frequency.value = 2900; f2.Q.value = 7;
+      var og2 = ctx.createGain(); og2.gain.value = 0.25;
+      o.connect(f1); o.connect(f2); o2.connect(og2); og2.connect(mix); f1.connect(mix); f2.connect(mix); mix.connect(g); g.connect(fxOut());
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.45); g.gain.linearRampToValueAtTime(0.45, t + 12);
+      o.start(t); o2.start(t); lfo.start(t);
+      divaV = { o: o, o2: o2, lfo: lfo, g: g };
+    } catch (e) {}
+  }
+  function zap() {   // the note is cut: crackle and a falling glitch
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      var crackle = function (at, len, vol, hp) {   // (through the effects volume, not the menu music)
+        var n = ctx.sampleRate * len, buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < 0.3 ? 1 : 0.2);
+        var src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), gg = ctx.createGain(); src.buffer = buf; f.type = 'highpass'; f.frequency.value = hp;
+        gg.gain.setValueAtTime(vol, at); gg.gain.exponentialRampToValueAtTime(0.0001, at + len); src.connect(f); f.connect(gg); gg.connect(fxOut()); src.start(at); src.stop(at + len + 0.02);
+      };
+      crackle(t, 0.35, 0.5, 1500); crackle(t + 0.12, 0.2, 0.35, 3000);
+      var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.5);
+      g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55); o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.6);
+    } catch (e) {}
+  }
   function buzz() {   // not good enough: a short error buzzer, two low notes
     if (!ac()) return;
     try {
@@ -322,5 +357,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

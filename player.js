@@ -135,6 +135,7 @@
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
+    if (!(s.phase === 'note' && s.note && s.note.st === 'guess')) $('noteui').classList.add('hidden');
     bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
@@ -226,6 +227,7 @@
     else if (s.phase === 'shop' && s.shop) shopView(s);
     else if (s.phase === 'bomb' && s.bomb) bombView(s);
     else if ((s.phase === 'clueacc' || s.phase === 'cluerev') && s.clue) clueView(s);
+    else if (s.phase === 'note' && s.note) noteView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -427,6 +429,31 @@
     var r = c.res && c.res[pid];
     $('waittitle').textContent = r ? (r.n === 3 ? '🏆 You found Edgar!' : r.none ? 'No accusation…' : '🔍 ' + r.n + ' of 3 right') : '🔍 Who took Edgar…?';
     $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '') + (c.gift && c.gift.pid === pid ? ' 🎁 Lynda gave you the ' + shopName(c.gift.item) + '! It’s in your bag.' : '');
+  }
+
+  // ---------- Hold That Note ----------
+  // Guess how long the diva holds her note: a slider from 10 to 20 seconds, then lock it in.
+  var noteSent = '', noteMine = null;
+  $('ntrange').addEventListener('input', function () { $('ntv').textContent = (+this.value).toFixed(1); });
+  $('ntgo').addEventListener('click', function () {
+    var s = state; if (!net || !s || !s.note || s.note.st !== 'guess' || noteSent === s.note.id) return;
+    noteSent = s.note.id; noteMine = Math.round(+$('ntrange').value * 10) / 10;
+    var msg = { pid: pid, id: s.note.id, guess: noteMine };
+    net.send('note', msg); setTimeout(function () { if (state && state.note && state.note.st === 'guess') net.send('note', msg); }, 1500);
+    noteView(state);
+  });
+  function noteView(s) {
+    var n = s.note, box = $('noteui'), mine = noteSent === n.id || (n.locked || {})[pid];
+    show('v-wait');
+    if (box.getAttribute('data-id') !== n.id) { box.setAttribute('data-id', n.id); $('ntrange').value = 15; $('ntv').textContent = '15.0'; noteMine = null; }
+    if (n.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
+    if (n.st === 'guess' && !mine) { $('waittitle').textContent = '🎤 How long will she hold it?'; $('waitsub').textContent = 'Between 10 and 20 seconds. The closest guess wins!'; box.classList.remove('hidden'); return; }
+    box.classList.add('hidden');
+    var g = n.guess && n.guess[pid] != null ? n.guess[pid] : noteMine;
+    if (n.st === 'guess' || n.st === 'sing') { $('waittitle').textContent = n.st === 'sing' ? '🎶 Hold it… hold it…' : '🎤 Locked in!'; $('waitsub').textContent = (g != null ? 'Your guess: ' + g.toFixed(1) + ' seconds. ' : '') + 'Watch the big screen!'; return; }
+    var won = n.win && n.win.indexOf(pid) >= 0;
+    $('waittitle').textContent = won ? '🏆 Closest!' : '⚡ Cut at ' + n.len.toFixed(1) + ' s';
+    $('waitsub').textContent = g != null ? 'She held it for ' + n.len.toFixed(1) + ' seconds. You guessed ' + g.toFixed(1) + ': ' + Math.abs(g - n.len).toFixed(1) + ' off.' : 'She held it for ' + n.len.toFixed(1) + ' seconds.';
   }
 
   // ---------- Eurofan Shop ----------
