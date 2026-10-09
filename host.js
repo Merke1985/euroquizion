@@ -1663,6 +1663,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Before the first question: the secrets come out. Who got a broken heel from whom (unless an umbrella blocks it),
   // then who has ice skates (they glide forward right then).
   var PERK_MS = 5200;
+  var boneEl = null;
+  function boneCrack() { if (REMOTE) return; try { if (!boneEl) boneEl = new Audio('sounds/bone_crack.mp3'); boneEl.currentTime = 0; boneEl.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var pr = boneEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function chasePerks(c, done) {
     var list0 = c.perks.filter(function (x) { return x.kind === 'heel'; }).concat(c.perks.filter(function (x) { return x.kind === 'skates'; }));
     var step = function (i) {
@@ -1672,7 +1674,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (x.kind === 'heel') {
         var t = players[x.to];
         x.blocked = false; if ((l = c.lanes[x.to])) l.heel = x.by;   // (an umbrella does not help against a broken heel)
-        Music.blip(); setTimeout(function () { if (G.phase === 'chase') Music.crumble(); }, 250);
+        boneCrack();
       } else if ((l = c.lanes[x.pid])) { l.pos = Math.min(CHASE_END, l.pos + x.n); l.skates = (l.skates || 0) + x.n; itemGetSnd(); }
       c.st = 'perk'; c.perk = x; push();
       clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { step(i + 1); }, PERK_MS);
@@ -2008,7 +2010,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var note = $('chnote'), near = chaseNear();
     note.classList.add('hidden'); void near; void doomed;   /* no line about the monster's next move any more */
     var big = $('chbig'); big.classList.toggle('winbox', c.st === 'win'); big.classList.toggle('introbox', (c.st === 'intro' && !!c.introTop) || c.st === 'wheel');
-    $('chmon').classList.toggle('lurk', c.st === 'intro' || c.st === 'wheel' || c.st === 'pre');
+    $('chmon').classList.toggle('lurk', c.st === 'intro' || c.st === 'perk' || c.st === 'wheel' || c.st === 'pre');   // (hidden until the wheel has chosen)
     chaseWheel(c); $('chmon').classList.toggle('rise', c.st === 'rise' || c.st === 'ready' || c.st === 'go');
     var cc = $('chcard'), sp = c.st === 'intro' && c.showing ? players[c.showing] : null;
     cc.classList.toggle('hidden', !sp);
