@@ -774,12 +774,12 @@ var SHOP_ITEMS = [
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'umbrella', tier: 3, icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
   { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'During a question: wave it in front of another player: for 3 questions (starting with this one) they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
-  { id: 'bribe', tier: 3, icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it, and right before the Grand Final it pays out: 10 to 20% of the leader’s score. One per player, and nobody can steal it', kind: 'bribe' },
+  { id: 'bribe', tier: 3, stock: 1, icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it, and right before the Grand Final it pays out: 10 to 20% of the leader’s score. One per player, and nobody can steal it', kind: 'bribe' },
   { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
   { id: 'mic', tier: 1, icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
-  { id: 'heel', tier: 3, icon: '👠', name: 'Broken Heel', desc: 'Secretly break another player’s heel any time before the Grand Final: they can’t move on its first question (an umbrella blocks it)', kind: 'heel', final: true },
+  { id: 'heel', tier: 3, stock: 1, icon: '👠', name: 'Broken Heel', desc: 'Secretly break another player’s heel any time before the Grand Final: they can’t move on its first question (an umbrella blocks it)', kind: 'heel', final: true },
   { id: 'fan', tier: 2, icon: '🪭', name: 'Eurovision Fan', desc: 'Wave it during a question: half of the wrong answers blow away on your phone. 3 uses', kind: 'fan', uses: 3 },
-  { id: 'skates', tier: 3, icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
+  { id: 'skates', tier: 3, stock: 1, icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
 ];
 var SHOP_PICKS = 2;   // free items per visit
 // The boutique's three shelves: tier 3 on top (the most expensive), 2 in the middle, 1 at the bottom (bargains).

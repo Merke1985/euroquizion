@@ -479,12 +479,12 @@
     box.classList.remove('hidden');
     if (shopKey !== sh.id) { shopKey = sh.id; shopSel = []; }
     var mineOffer = sh.offer && sh.offer[pid];   // your own selection of two
-    var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',') + '|' + free + '|' + myPts;
+    var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',') + '|' + free + '|' + myPts + '|' + (sh.sold || []).join(',');
     if (box.getAttribute('data-k') === drawKey && box.innerHTML) return;   // nothing changed: leave the buttons alone (no flicker on every update)
     box.setAttribute('data-k', drawKey);
     box.innerHTML = '<p id="shoptime" class="shoptime" data-free="' + (free ? 1 : 0) + '"></p>' + sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
-      var n = shopSel.filter(function (x) { return x === it.id; }).length, pr = it.price || 0, poor = !free && pr > myPts;
-      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (!free ? ' <em class="price">' + pr + ' pts</em>' : '') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(poor ? 'Not enough points for this one' : it.desc) + '</small></span></button>';
+      var n = shopSel.filter(function (x) { return x === it.id; }).length, pr = it.price || 0, gone = (sh.sold || []).indexOf(it.id) >= 0, poor = gone || (!free && pr > myPts);
+      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (!free ? ' <em class="price">' + pr + ' pts</em>' : '') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(gone ? 'Sold out! Someone was quicker' : poor ? 'Not enough points for this one' : it.desc) + '</small></span></button>';
     }).join('') + (free ? '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take ' + (sh.n > 1 ? 'them' : 'it') + '!') + '</button>'
       : '<button type="button" class="btn big" id="shopbuy"' + (!shopSel.length ? ' disabled' : '') + '>' + (!shopSel.length ? 'Pick one to buy' : 'Buy for ' + ((sh.items.filter(function (it) { return it.id === shopSel[0]; })[0] || {}).price || 0) + ' points') + '</button><button type="button" class="btn alt" id="shopskip">No thanks</button>');
     [].forEach.call(box.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
