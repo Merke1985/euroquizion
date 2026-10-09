@@ -3512,7 +3512,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       g.show = -1; g.st = 'input'; var ms = 4500 + g.round * 1300; g.ends = Date.now() + ms; push(); qjShow(); Music.ding();
       bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; var n = 0, step = function () {
         if (G.qj !== g || g.st !== 'input' || g.fail[b.pid] || (g.prog[b.pid] || 0) >= g.round) return;
-        var ok = Math.random() < 0.985 - 0.03 * g.round, d = ok ? g.route[g.prog[b.pid] || 0] : (g.route[g.prog[b.pid] || 0] + 1 + Math.floor(Math.random() * 3)) % 4;
+        var ok = G.mgTest || Math.random() < 0.985 - 0.03 * g.round, d = ok ? g.route[g.prog[b.pid] || 0] : (g.route[g.prog[b.pid] || 0] + 1 + Math.floor(Math.random() * 3)) % 4;
         qjMsg({ pid: b.pid, id: g.id, round: g.round, i: g.prog[b.pid] || 0, dir: d }); n++; setTimeout(step, 380 + Math.random() * 520);
       }; setTimeout(step, 900 + Math.random() * 900); });
       clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, ms);
@@ -3536,7 +3536,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t = 900, at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); }, left = g.alive.slice();
     for (var i = 0; i < g.round; i++) (function (i) {
       var fall = left.filter(function (k) { return g.fail[k] && (g.prog[k] || 0) === i; });
-      if (fall.length) { at(t, function () { fall.forEach(function (k) { g.falls[k] = { i: i, d: g.wrong[k] }; }); push(); qjShow(); Music.woosh(); setTimeout(function () { if (G.qj === g) { Music.crumble(); Music.scream(); } }, 650); }); t += 1700; left = left.filter(function (k) { return fall.indexOf(k) < 0; }); }
+      if (fall.length) {   // who went wrong here runs off that way, out of the picture: one direction at a time
+        [0, 1, 2, 3].forEach(function (d) {
+          var grp = fall.filter(function (k) { return g.wrong[k] === d; }); if (!grp.length) return;
+          at(t, function () { grp.forEach(function (k) { g.falls[k] = { i: i, d: d }; }); push(); qjShow(); Music.step(); setTimeout(function () { if (G.qj === g) Music.buzz(); }, 300); }); t += 1500;
+        });
+        left = left.filter(function (k) { return fall.indexOf(k) < 0; });
+      }
       if (!left.length) return;
       at(t, function () { g.pos = i + 1; push(); qjShow(); Music.step(); setTimeout(function () { Music.step(); }, 180); }); t += 650;
     })(i);
@@ -3763,11 +3769,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       el.style.setProperty('--gx', (Math.cos(ang) * rad).toFixed(2) + 'vh'); el.style.setProperty('--gy', (Math.sin(ang) * rad * 0.8).toFixed(2) + 'vh'); el.style.zIndex = String(100 + Math.round(Math.sin(ang) * rad * 8));   // (lower on screen = closer: in front)
       var f = g.falls && g.falls[k];
       if (f && !el.classList.contains('falling')) {
-        var c0 = V3 ? V3.screen(0, 0) : [0, 0], c1 = V3 ? V3.screen(JM_DIRS[f.d][0] * .55, JM_DIRS[f.d][1] * .55) : [JM_DIRS[f.d][0] * 300, JM_DIRS[f.d][1] * 200];
+        var c0 = V3 ? V3.screen(0, 0) : [0, 0], c1 = V3 ? V3.screen(JM_DIRS[f.d][0] * 1.6, JM_DIRS[f.d][1] * (f.d === 1 ? 1.3 : 1.6)) : [JM_DIRS[f.d][0] * 900, JM_DIRS[f.d][1] * 600];   // (far down that street: out of the picture)
         el.style.setProperty('--fx', (c1[0] - c0[0]) + 'px'); el.style.setProperty('--fy', (c1[1] - c0[1]) + 'px');
         el.classList.add('falling');
         if (!ov._holes) ov._holes = {}; var hk = f.i + ':' + f.d;
-        if (V3 && !ov._holes[hk]) { ov._holes[hk] = 1; V3.hole(x, y, f.d); }
+        ov._holes[hk] = 1;
       }
       if (!f && el.classList.contains('falling')) el.classList.remove('falling');
       el.classList.toggle('out', j < 0 && !f);
