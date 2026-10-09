@@ -299,6 +299,12 @@ var Music = (function () {
       var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.35);
       g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.5);
       [0.08, 0.2, 0.29].forEach(function (d, i) { var c = ctx.createOscillator(), cg = ctx.createGain(); c.type = 'square'; c.frequency.value = 520 - i * 90; cg.gain.setValueAtTime(0.12 / (i + 1), t + d); cg.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.06); c.connect(cg); cg.connect(out); c.start(t + d); c.stop(t + d + 0.08); });
+      // static: a hiss of white noise that crackles and fades, like a sound system breaking down
+      var len = 1.8, n = Math.floor(ctx.sampleRate * len), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+      for (var k = 0; k < n; k++) { var crack = Math.random() < 0.002 ? 1 : 0; d[k] = (Math.random() * 2 - 1) * (0.55 + 0.45 * Math.sin(k / ctx.sampleRate * 2 * Math.PI * 11)) + (crack ? (Math.random() < 0.5 ? -1 : 1) : 0); }
+      var st = ctx.createBufferSource(), sf = ctx.createBiquadFilter(), sg = ctx.createGain(); st.buffer = buf; sf.type = 'bandpass'; sf.frequency.value = 3000; sf.Q.value = 0.6;
+      sg.gain.setValueAtTime(0.0001, t + 0.02); sg.gain.exponentialRampToValueAtTime(0.32, t + 0.08); sg.gain.setValueAtTime(0.32, t + 0.9); sg.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      st.connect(sf); sf.connect(sg); sg.connect(out); st.start(t + 0.02); st.stop(t + len + 0.05);
       var f = ctx.createOscillator(), fg = ctx.createGain(); f.type = 'sine'; f.frequency.setValueAtTime(2600, t + 0.35); f.frequency.linearRampToValueAtTime(3100, t + 1.2);
       fg.gain.setValueAtTime(0.0001, t + 0.35); fg.gain.exponentialRampToValueAtTime(0.08, t + 0.6); fg.gain.exponentialRampToValueAtTime(0.0001, t + 1.3); f.connect(fg); fg.connect(out); f.start(t + 0.35); f.stop(t + 1.35);
     } catch (e) {}

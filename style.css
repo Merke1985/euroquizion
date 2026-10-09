@@ -1751,3 +1751,8 @@ aside.recapgone{visibility:hidden}
 .noteov .ntpin::after{height:calc(.6vh + var(--i) * 6vh)}
 .noteov .ntpin .char{width:3.4vh;height:3.4vh}
 .noteov .ntmsg{top:auto;bottom:12vh;z-index:6}
+
+/* her eyes: open (looking at us) until the note starts, closed while she holds it */
+.noteov .dveyesc{display:none}
+.noteov[data-st="sing"]:not(.lead) .dveyesc{display:inline}
+.noteov[data-st="sing"]:not(.lead) .dveyeso{display:none}
