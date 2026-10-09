@@ -1848,3 +1848,9 @@ aside.recapgone{visibility:hidden}
 .hsfuse{position:absolute;left:0;top:0;font-size:7vh;transform:translate(calc(-50% + 8vh),calc(-50% - 9vh));animation:hsfizz .4s steps(2) infinite}
 @keyframes hsshake{0%,100%{transform:translate(calc(-50% + var(--x)),-50%) rotate(var(--r))}50%{transform:translate(calc(-50% + var(--x) + .6vh),-50%) rotate(calc(var(--r) + 4deg))}}
 @keyframes hsfizz{0%{filter:drop-shadow(0 0 4px #ff7a00)}100%{filter:drop-shadow(0 0 14px #ffd23f)}}
+/* Hold That Note: each guess hangs from the bar itself (its line starts on the bar), and when she passes it,
+   it drops straight down from that spot (no sideways drift) */
+.noteov .ntpin{top:.6vh}
+.noteov .ntpin::after{height:calc(1.2vh + var(--i) * 6vh)}
+.noteov .ntpin.out{animation:ntout2 .9s cubic-bezier(.5,0,1,.6) forwards}
+@keyframes ntout2{0%{opacity:1;translate:0 0}20%{opacity:1;translate:0 -.8vh}100%{opacity:0;translate:0 26vh}}
