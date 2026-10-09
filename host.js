@@ -125,6 +125,7 @@
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
     if (G.note && G.phase === 'note') s.note = noteSnap();
+    if (G.qj && G.phase === 'qj') s.qj = qjSnap();
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
@@ -239,7 +240,7 @@
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   var viewNow = '';
-  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
+  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || G.phase === 'qj' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -338,7 +339,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'scene') && $('hsov')) $('hsov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
-    if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }   // (the game is over, or was ended)
+    if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
+    if (G.phase !== 'qj' && $('qjov')) $('qjov').remove();   // (the game is over, or was ended)
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -416,6 +418,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); clueShow();
     } else if (G.phase === 'note') {
       show('v-game'); noteShow();
+    } else if (G.phase === 'qj') {
+      show('v-game'); qjShow();
     } else {
       show('v-game');
       $('roundlabel').textContent = G.phase === 'opening' ? '' : 'Song ' + G.round + ofTotal(' / ');
@@ -1225,7 +1229,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, one hides a bomb. Take turns to open one. Blow up and you are out; the last one standing wins!' },
@@ -1233,6 +1237,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
+    queue: { icon: '🚪', title: 'Queue Jump', sub: 'The arena doors open soon! Every round: sneak past the one in front of you, watch your back (not twice in a row), or bribe the steward. Whoever is first in line after five rounds wins.' },
     note: { icon: '🎤', title: 'Hold That Note', sub: 'Technical problems! How long will the diva hold her high note this time? Guess between 10 seconds and one minute on your phone. Once she sings past your time you are out: the closest guess that is still in wins.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -1246,12 +1251,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
     if (kind === 'clue') { if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); } setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
+    if (kind === 'queue') { qjAll(); return; }
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
@@ -1259,7 +1265,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The party games that can be played now: switched on, and possible with this group (most need two players or more).
   function partyGames(pOn, two) {
     pOn = pOn || G.partyOn || {}; if (two == null) two = list().filter(function (p) { return !p.off; }).length >= 2;
-    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'shop' && x !== 'bomb')); });
+    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb')); });
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
@@ -2346,6 +2352,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   net.on('bomb', bombMsg);
   net.on('clue', clueMsg);
   net.on('note', noteMsg);
+  net.on('qj', qjMsg);
 
   // ---------- Eurofan Shop ----------
   // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
@@ -3449,6 +3456,134 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var me = ov.querySelector('.ntmsg'); if (me.textContent !== msg) me.textContent = msg;
     var ph = act.map(function (p) { return '<div class="clp">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="' + (g.guess[p.pid] != null ? 'ok' : 'wait') + '">' + (g.guess[p.pid] != null ? '✔' : '…') + '</em></div>'; }).join('');
     var pl = ov.querySelector('.ntplayers'); if (g.st !== 'guess') ph = ''; if (pl.getAttribute('data-h') !== ph) { pl.setAttribute('data-h', ph); pl.innerHTML = ph; }
+  }
+  // ---------- Queue Jump ----------
+  // The doors of the arena open soon, and everybody wants to be first in line. Every round each player picks a move on
+  // their phone: sneak past the one in front of you, keep watch behind you (a sneaker you catch goes to the back), or
+  // bribe the steward to jump two places (only if you are the only one: two bribes and the steward sends both to the back).
+  // After five rounds the doors open: the front of the queue wins.
+  var QJ_PICK_MS = 15000, QJ_ROUNDS = 5, QJ_EV_MS = 2600, qjTimer = null, qjTick = null, QJ_PTS = [12, 8, 4];
+  var QJ_MOVES = { sneak: { icon: '🏃', name: 'Sneak ahead' }, watch: { icon: '👀', name: 'Watch your back' }, bribe: { icon: '🎁', name: 'Bribe the steward' } };
+  var STEWARD = '<svg class="steward" viewBox="0 0 200 420" aria-hidden="true"><ellipse cx="100" cy="414" rx="62" ry="7" fill="rgba(0,0,0,.35)"/><rect x="68" y="290" width="26" height="118" rx="9" fill="#23262f"/><rect x="106" y="290" width="26" height="118" rx="9" fill="#2b2f3a"/><path d="M60 402 h38 v14 h-44 q-2-8 6-14z M102 402 h38 q8 6 6 14 h-44z" fill="#111"/><path d="M52 170 Q100 150 148 170 L156 300 Q100 312 44 300 Z" fill="#2c3140"/><path d="M60 172 Q100 156 140 172 L146 296 Q100 306 54 296 Z" fill="#d7f23a"/><rect x="58" y="226" width="88" height="10" fill="#e8eef5" opacity=".9"/><rect x="56" y="262" width="92" height="10" fill="#e8eef5" opacity=".9"/><rect x="92" y="178" width="16" height="118" fill="#2c3140" opacity=".25"/><text x="100" y="205" font-size="15" font-weight="900" text-anchor="middle" fill="#2c3140">STEWARD</text><path d="M52 176 Q30 214 40 256" stroke="#2c3140" stroke-width="20" fill="none" stroke-linecap="round"/><circle cx="41" cy="262" r="11" fill="#c9915f"/><path d="M148 176 Q172 200 170 236" stroke="#2c3140" stroke-width="20" fill="none" stroke-linecap="round"/><rect x="150" y="226" width="34" height="44" rx="4" fill="#8a5a2b" transform="rotate(-8 167 248)"/><rect x="155" y="232" width="24" height="32" rx="2" fill="#f4f1e8" transform="rotate(-8 167 248)"/><circle cx="168" cy="244" r="11" fill="#c9915f"/><rect x="88" y="132" width="24" height="26" rx="8" fill="#c9915f"/><ellipse cx="100" cy="102" rx="38" ry="42" fill="#c9915f"/><path d="M84 96 h10 M106 96 h10" stroke="#2a1a10" stroke-width="5" stroke-linecap="round"/><path d="M80 86 l16 4 M120 86 l-16 4" stroke="#2a1a10" stroke-width="4" stroke-linecap="round"/><path d="M88 124 h24" stroke="#5a2a1a" stroke-width="4" stroke-linecap="round"/><path d="M60 82 Q62 50 100 48 Q138 50 140 82 Z" fill="#1d2230"/><path d="M58 82 h84 q6 0 4 8 q-46 6 -92 0 q-2-8 4-8z" fill="#141824"/><rect x="92" y="58" width="16" height="12" rx="2" fill="#d7f23a"/><path d="M134 108 q10 4 8 16" stroke="#1d2230" stroke-width="3" fill="none"/><circle cx="141" cy="126" r="4" fill="#1d2230"/></svg>';   // (an original character: a strict steward in a hi-vis vest, with a clipboard)
+  function qjAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (act.length < 2 || REMOTE) { quipAll(); return; }
+    stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    G.qj = { id: 'qj' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', round: 0, rounds: QJ_ROUNDS, order: shuffle(act.map(function (p) { return p.pid; })).sort(function (a, b) { return players[a].score - players[b].score; }), watched: {}, pick: {}, shown: {}, ev: null, ends: 0, win: [] };
+    G.phase = 'qj'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
+    cover(true, '', '', false); masks(true); hostsAway(); push(); qjShow();
+    var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
+    var lines = [
+      ['him', 'Europe, the doors of the arena open in a few minutes… and look at that queue! 😱'],
+      ['her', 'Everybody wants the best spot right in front of the stage. Whoever is first in line gets in first!'],
+      ['him', 'Every round you choose on your phone. 🏃 Sneak past the person in front of you…'],
+      ['her', '…👀 or watch your back: catch someone sneaking past you, and they’re sent to the back of the queue!'],
+      ['him', 'Or 🎁 bribe the steward and jump two places. But only if you’re the only one: two bribes, and the steward sends you all to the back! 😠'],
+      ['her', 'Careful: nobody can keep watch two rounds in a row. Your eyes need a rest! And the lowest scores start at the front. 😉'],
+      ['her', 'Five rounds. Whoever is at the front when the doors open wins! 🚪✨']
+    ];
+    var t = 2200;
+    lines.forEach(function (l) { (function (l, t0) { at(t0, function () { qjSay(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
+    at(t + 400, function () { qjRound(); });
+  }
+  function qjSay(who, txt) {
+    var ov = $('qjov'); if (!ov) return;
+    [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); });
+    if (!who) return;
+    var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who);
+  }
+  function qjRound() {
+    var g = G.qj; if (!g) return;
+    g.round++; g.st = 'pick'; g.pick = {}; g.shown = {}; g.ev = null; g.ends = Date.now() + QJ_PICK_MS; qjSay(''); push(); qjShow(); Music.ding();
+    bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off || g.order.indexOf(b.pid) < 0) return; setTimeout(function () {
+      var i = g.order.indexOf(b.pid), r = Math.random(), tired = g.watched[b.pid] === g.round - 1, mv = i === 0 ? (tired ? null : 'watch') : r < 0.45 ? 'sneak' : r < 0.8 && !tired ? 'watch' : r < 0.9 ? 'sneak' : 'bribe';
+      if (mv) qjMsg({ pid: b.pid, id: g.id, round: g.round, move: mv });
+    }, 2500 + Math.random() * 8000); });
+    clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, QJ_PICK_MS);
+    clearInterval(qjTick); qjTick = setInterval(function () { if (!G.qj || G.qj.st !== 'pick') { clearInterval(qjTick); return; } qjShow(); }, 1000);
+  }
+  function qjMsg(m) {
+    var g = G.qj; if (!g || G.phase !== 'qj' || g.st !== 'pick' || !m || m.id !== g.id || m.round !== g.round || !players[m.pid] || g.pick[m.pid] || !QJ_MOVES[m.move] || g.order.indexOf(m.pid) < 0) return;
+    if (m.move === 'sneak' && g.order[0] === m.pid) return;   // (the first in line has nobody to sneak past)
+    if (m.move === 'watch' && g.watched[m.pid] === g.round - 1) return;   // (nobody can keep watch two rounds in a row: the eyes need a rest)
+    if (m.move === 'watch') g.watched[m.pid] = g.round;
+    g.pick[m.pid] = m.move; Music.plop(Object.keys(g.pick).length); push(); qjShow();
+    if (g.order.filter(function (k) { return players[k] && !players[k].off; }).every(function (k) { return g.pick[k]; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 1200); }
+  }
+  // What happens: first the bribes (one alone works, more than one: all of them to the back), then the sneakers from the
+  // front of the queue to the back (caught by a watcher in front of them: to the back; else past them).
+  function qjResolve() {
+    var g = G.qj; if (!g || g.st !== 'pick') return;
+    clearInterval(qjTick); g.st = 'show'; g.shown = {}; g.order.forEach(function (k) { g.shown[k] = g.pick[k] || 'none'; }); push(); qjShow(); Music.ding();
+    var o = g.order.slice(), evs = [], nm = function (k) { return players[k] ? players[k].name : '?'; }, mv = function (k, to) { var i = o.indexOf(k); o.splice(i, 1); o.splice(Math.max(0, Math.min(o.length, to)), 0, k); };
+    var bribers = o.filter(function (k) { return g.pick[k] === 'bribe'; });
+    if (bribers.length === 1) { var bk = bribers[0], bi = o.indexOf(bk); mv(bk, bi - 2); evs.push({ order: o.slice(), who: [bk], kind: 'bribe', txt: bi === 0 ? '🎁 ' + nm(bk) + ' bribed the steward… but was already at the front! Money well spent? 😅' : '🎁 ' + nm(bk) + ' slipped the steward a little something… and jumps ' + Math.min(2, bi) + (Math.min(2, bi) > 1 ? ' places' : ' place') + ' forward!' }); }
+    else if (bribers.length > 1) { bribers.forEach(function (k) { mv(k, o.length); }); evs.push({ order: o.slice(), who: bribers.slice(), kind: 'busted', txt: '😠 ' + bribers.length + ' bribes?! The steward is suspicious: ' + bribers.map(nm).join(', ').replace(/, ([^,]*)$/, ' and $1') + ' to the back of the queue!' }); }
+    o.filter(function (k) { return g.pick[k] === 'sneak'; }).forEach(function (k) {
+      var i = o.indexOf(k); if (i <= 0) return;
+      var f = o[i - 1];
+      if (g.pick[f] === 'watch') { mv(k, o.length); evs.push({ order: o.slice(), who: [k, f], kind: 'caught', txt: '👀 ' + nm(f) + ' caught ' + nm(k) + ' sneaking! Back of the queue! 🚫' }); }
+      else { mv(k, i - 1); evs.push({ order: o.slice(), who: [k, f], kind: 'sneak', txt: '🏃 ' + nm(k) + ' sneaked past ' + nm(f) + '!' }); }
+    });
+    if (!evs.length) evs.push({ order: o.slice(), who: [], kind: 'calm', txt: 'Nobody moved… the queue stays calm. 😴' });
+    var at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); };
+    evs.forEach(function (e, i) { at(1800 + i * QJ_EV_MS, function () { g.order = e.order; g.ev = e; push(); qjShow(); if (e.kind === 'caught' || e.kind === 'busted') Music.buzz(); else if (e.kind === 'calm') Music.blip(); else Music.ding(); }); });
+    at(1800 + evs.length * QJ_EV_MS + 600, function () { g.ev = null; if (g.round >= g.rounds) qjEnd(); else qjRound(); });
+  }
+  function qjEnd() {
+    var g = G.qj; if (!g) return;
+    g.st = 'doors'; g.ev = null; push(); qjShow(); Music.douze();
+    var act = g.order.filter(function (k) { return players[k] && !players[k].off; }), pts = QJ_PTS.slice(0, Math.max(1, act.length - 1));
+    act.forEach(function (k, i) { if (pts[i]) { var p = players[k]; p.score += pts[i]; p.pts = pts[i]; p.got = true; } });
+    g.win = act.slice(0, 1);
+    var at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); };
+    at(1200, function () { qjSay('him', 'The doors are open! 🚪 ' + (players[g.win[0]] ? players[g.win[0]].name : '') + ' is first inside and grabs the best spot in front of the stage! 🏆'); });
+    at(5600, function () { qjSay('her', act.length > 2 ? 'Right behind: ' + act.slice(1, 3).map(function (k) { return players[k].name; }).join(' and ') + '. Enjoy the show, everyone! 🎶' : 'Enjoy the show, everyone! 🎶'); g.st = 'done'; push(); qjShow(); });
+    at(10200, function () {
+      var ov = $('qjov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
+      setTimeout(function () { if (G.qj !== g) return; G.qj = null; G.phase = 'loading'; push(); startRound2(); }, 1000);
+    });
+  }
+  function qjSnap() {
+    var g = G.qj, locked = {};
+    Object.keys(g.pick).forEach(function (k) { locked[k] = 1; });
+    return { id: g.id, st: g.st, round: g.round, rounds: g.rounds, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, order: g.order, locked: locked, tired: (function () { var t = {}; Object.keys(g.watched).forEach(function (k) { if (g.watched[k] === g.round - 1) t[k] = 1; }); return t; })(), shown: g.st === 'show' ? g.shown : null, ev: g.ev ? { kind: g.ev.kind, who: g.ev.who, txt: g.ev.txt } : null, win: g.win };
+  }
+  // The big screen: the arena with its doors and the steward, the queue in front of it, the presenters on either side.
+  function qjShow() {
+    var g = G.qj; if (!g) return;
+    var ov = $('qjov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov enter';
+      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="qjarena"><div class="qjneon">ARENA</div><div class="qjdoors"><i class="l"></i><i class="r"></i><div class="qjlight"></div></div><div class="qjrope"></div></div>' +
+        '<div class="grsign qjsign">🚪 Queue Jump</div><div class="qjsteward">' + STEWARD + '<div class="qjsbub"></div></div><div class="qjline"></div><div class="qjmsg"></div><div class="qjround"></div>' +
+        '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
+      document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
+      setTimeout(function () { ov.classList.remove('enter'); }, 2800);
+    }
+    ov.setAttribute('data-st', g.st);
+    var n = g.order.length, sp = Math.min(8.5, 40 / Math.max(1, n));   // (vw between two in the queue: closer together with more players)
+    ov.style.setProperty('--qsz', Math.max(5.2, Math.min(10, 64 / Math.max(1, n))).toFixed(2) + 'vh');
+    var line = ov.querySelector('.qjline');
+    g.order.forEach(function (k) {
+      var p = players[k]; if (!p) return;
+      var el = line.querySelector('.qjp[data-pid="' + k.replace(/"/g, '') + '"]');
+      if (!el) { el = document.createElement('div'); el.className = 'qjp'; el.setAttribute('data-pid', k); el.style.setProperty('--c', 'hsl(' + (k.split('').reduce(function (a, ch) { return a + ch.charCodeAt(0); }, 0) * 47 % 360) + ',65%,55%)'); el.innerHTML = '<div class="qjbody"></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><span class="qjno"></span><span class="qjmove"></span><span class="qjok">✔</span>'; line.appendChild(el); }
+      var i = g.order.indexOf(k);
+      el.style.left = (49 - i * sp) + 'vw'; el.style.zIndex = 50 - i;
+      el.querySelector('.qjno').textContent = '#' + (i + 1);
+      var mvk = g.st === 'show' && g.shown ? g.shown[k] : '';
+      el.querySelector('.qjmove').textContent = mvk && QJ_MOVES[mvk] ? QJ_MOVES[mvk].icon : mvk === 'none' ? '💤' : '';
+      el.classList.toggle('picked', g.st === 'pick' && !!g.pick[k]);
+      el.classList.toggle('act', !!(g.ev && g.ev.who && g.ev.who.indexOf(k) >= 0));
+      el.classList.toggle('caught', !!(g.ev && (g.ev.kind === 'caught' && g.ev.who[0] === k || g.ev.kind === 'busted' && g.ev.who.indexOf(k) >= 0)));
+      el.classList.toggle('won', (g.st === 'doors' || g.st === 'done') && g.win.indexOf(k) >= 0);
+    });
+    var msg = g.st === 'pick' ? 'Round ' + g.round + ' of ' + g.rounds + ': choose your move on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.ev ? g.ev.txt : g.st === 'show' ? 'Let’s see what everyone did…' : g.st === 'doors' || g.st === 'done' ? '🚪 The doors are open!' : '';
+    var me = ov.querySelector('.qjmsg'); if (me.textContent !== msg) { me.textContent = msg; me.classList.remove('qjpop'); void me.offsetWidth; if (g.ev) me.classList.add('qjpop'); }
+    ov.querySelector('.qjround').textContent = g.round ? 'Round ' + Math.min(g.round, g.rounds) + ' / ' + g.rounds : '';
+    var sb = ov.querySelector('.qjsbub'), st = g.ev && g.ev.kind === 'busted' ? 'Two of you?! OUT! 😠' : g.ev && g.ev.kind === 'bribe' ? 'I saw nothing… 🤫' : g.st === 'pick' ? 'No pushing!' : g.st === 'doors' || g.st === 'done' ? 'Doors open! 🎟️' : '';
+    if (sb.textContent !== st) { sb.textContent = st; sb.classList.toggle('on', !!st); }
   }
   // ---------- Quip! ----------
   // A song plays, and with it comes a question about that song. Everyone writes their funniest answer
@@ -4578,7 +4713,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.qj = null; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).

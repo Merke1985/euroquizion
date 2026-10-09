@@ -136,6 +136,7 @@
     if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (!(s.phase === 'note' && s.note && s.note.st === 'guess')) $('noteui').classList.add('hidden');
+    if (!(s.phase === 'qj' && s.qj && s.qj.st === 'pick')) $('qjui').classList.add('hidden');
     bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
@@ -229,6 +230,7 @@
     else if (s.phase === 'bomb' && s.bomb) bombView(s);
     else if ((s.phase === 'clueacc' || s.phase === 'cluerev') && s.clue) clueView(s);
     else if (s.phase === 'note' && s.note) noteView(s);
+    else if (s.phase === 'qj' && s.qj) qjView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -461,6 +463,40 @@
     var won = n.win && n.win.indexOf(pid) >= 0;
     $('waittitle').textContent = won ? '🏆 Closest, and still in!' : n.out && n.out[pid] ? '💥 She sang past your time' : '💥 She dropped the mic at ' + ntTime(n.len, true);
     $('waitsub').textContent = g != null ? 'She held it for ' + ntTime(n.len, true) + '. You guessed ' + ntTime(g) + ': ' + Math.abs(g - n.len).toFixed(1) + ' seconds off.' : 'She held it for ' + ntTime(n.len, true) + '.';
+  }
+
+  // ---------- Queue Jump ----------
+  // Every round: three big buttons. Sneak ahead, watch your back, or bribe the steward.
+  var qjSent = '', qjMine = '';
+  var QJ_LBL = { sneak: '🏃 Sneak ahead', watch: '👀 Watch your back', bribe: '🎁 Bribe the steward', none: '💤 Nothing' };
+  [].forEach.call(document.querySelectorAll('#qjui .qjbtn'), function (b) { b.addEventListener('click', function () {
+    var s = state; if (!net || !s || !s.qj || s.qj.st !== 'pick' || b.disabled) return;
+    var key = s.qj.id + ':' + s.qj.round; if (qjSent === key) return;
+    qjSent = key; qjMine = b.getAttribute('data-move');
+    var msg = { pid: pid, id: s.qj.id, round: s.qj.round, move: qjMine };
+    net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'pick' && !(state.qj.locked || {})[pid]) net.send('qj', msg); }, 1500);
+    qjView(state);
+  }); });
+  function qjView(s) {
+    var q = s.qj, box = $('qjui'), pos = (q.order || []).indexOf(pid), key = q.id + ':' + q.round, mine = qjSent === key || (q.locked || {})[pid];
+    show('v-wait');
+    var where = pos >= 0 ? 'You are #' + (pos + 1) + ' of ' + q.order.length + ' in the queue.' : '';
+    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🚪 Queue Jump'; $('waitsub').textContent = where + ' Watch the big screen!'; return; }
+    if (q.st === 'pick' && !mine && pos >= 0) {
+      $('waittitle').textContent = '🚪 Round ' + q.round + ' of ' + q.rounds; $('waitsub').textContent = where + ' What do you do?';
+      box.classList.remove('hidden');
+      [].forEach.call(box.querySelectorAll('.qjbtn'), function (b) {
+        var m = b.getAttribute('data-move'), off = (m === 'sneak' && pos === 0) || (m === 'watch' && (q.tired || {})[pid]);
+        b.disabled = !!off; b.classList.toggle('off', !!off);
+        b.querySelector('small').textContent = m === 'sneak' && pos === 0 ? 'You are at the front: nobody to sneak past' : m === 'watch' && (q.tired || {})[pid] ? 'Your eyes need a rest: not two rounds in a row' : m === 'sneak' ? 'Past the one in front of you, unless they watch' : m === 'watch' ? 'Catch a sneaker: they go to the back' : 'Jump 2 places, if you are the only one';
+      });
+      return;
+    }
+    box.classList.add('hidden');
+    if (q.st === 'pick') { $('waittitle').textContent = '🔒 ' + (QJ_LBL[qjMine] || 'Locked in!'); $('waitsub').textContent = where + ' Waiting for the others…'; return; }
+    if (q.st === 'show') { $('waittitle').textContent = q.ev ? q.ev.txt.split(' ')[0] : '👀'; $('waitsub').textContent = (q.ev ? q.ev.txt.replace(/^\S+\s/, '') + ' ' : '') + where; return; }
+    var won = q.win && q.win.indexOf(pid) >= 0;
+    $('waittitle').textContent = won ? '🏆 First inside!' : '🚪 The doors are open!'; $('waitsub').textContent = won ? 'You got the best spot in front of the stage!' : 'You got in as #' + (pos + 1) + '.';
   }
 
   // ---------- Eurofan Shop ----------
