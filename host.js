@@ -240,7 +240,7 @@
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   var viewNow = '';
-  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || G.phase === 'qj' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
+  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -340,7 +340,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
-    if (G.phase !== 'qj' && $('qjov')) $('qjov').remove();   // (the game is over, or was ended)
+    if (G.phase !== 'qj' && $('qjov')) { $('qjov').remove(); if (!REMOTE) try { yt.pauseVideo(); } catch (e) {} }   // (the game is over, or was ended)
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -3493,19 +3493,36 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'qj'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); qjShow();
     var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
-    var lines = [
-      ['him', 'Europe, we’re lost… lost in Verona! 🌹 The streets here are a real maze.'],
-      ['her', 'But look up there: Juliet, on her balcony! She knows the way. 💃'],
-      ['him', 'She calls out the route: first one step, then two, then three… one more every time!'],
-      ['her', 'Remember them all, and tap the whole route on your phone. One step at a time! ✨'],
-      ['him', 'One wrong step and you’re lost in Verona! 😵 The last one left wins.'],
-      ['him', 'Good luck, everyone! 🍀'],
-      ['her', 'See you back at the studio! 👋']
+    // outside: Stella feels better, and the presenters run off home; then Juliet comes out on her balcony
+    var l0 = 'Ahh… I feel much better! 😌 See you back at the studio… bye for now! 👋';
+    at(2400, function () { qjSay('her', l0); });
+    var t = 2400 + Array.from(l0).length * TALK_MS + 1800;
+    at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Stella and Felix run off north, into the clouds
+    t += 3600;
+    at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // a few seconds later: Juliet steps out
+    var jl = [
+      'Hi guys, I’m Juliet! 🌹 I know this city pretty well.',
+      'If you want to find your way back to the studio, just follow my instructions!',
+      'I’ll call out the way: one step, then two, then three… one more every time. Tap the whole route on your phone!',
+      'One wrong turn and you’re lost in Verona! 😵 The last one left wins. Ready?'
     ];
-    var t = 2200;
-    lines.forEach(function (l) { (function (l, t0) { at(t0, function () { qjSay(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
-    at(t - 600, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // and off they run, north, into the clouds
-    at(t + 2400, function () { qjRound(); });
+    t += 1200;
+    jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200); });
+    at(t, function () { jmJul(''); jmSong(true); qjRound(); });
+  }
+  // Juliet's own speech balloon, next to her balcony
+  function jmJul(txt) {
+    var ov = $('qjov'), b = ov && ov.querySelector('.jmjbub'); if (!b) return;
+    if (!txt) { b.classList.remove('on'); return; }
+    b._said = ''; b.classList.add('on'); typeSay(b, txt, 'her');
+  }
+  // "Verona" (Estonia 2017) plays during the game
+  function jmSong(on) {
+    if (REMOTE) return;
+    try {
+      if (on) { if (G.qj) G.qj.song = true; Music.want(false); yt.loadVideoById({ videoId: 'NxqPpzWYN1c', startSeconds: 0 }); yt.unMute(); yt.setVolume(55); }
+      else yt.pauseVideo();
+    } catch (e) {}
   }
   function qjSay(who, txt) {
     var ov = $('qjov'); if (!ov) return;
@@ -3599,6 +3616,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(800, function () { qjSay('her', g.win.map(nm).join(' and ') + (g.win.length > 1 ? ' find' : ' finds') + ' the way to Juliet! 🌹 Bravissimo!'); });
     at(5200, function () { qjSay('him', 'And the rest of you… still lost in Verona! 🗺️😂'); });
     at(9800, function () {
+      jmSong(false);
       var ov = $('qjov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
       setTimeout(function () { if (G.qj !== g) return; G.qj = null; G.phase = 'loading'; push(); startRound2(); }, 1000);
     });
@@ -3755,7 +3773,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
       ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
-        '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmtfront">' + JM_TFRONT + '</div>' +
+        '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmnews"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();

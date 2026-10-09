@@ -2486,3 +2486,9 @@ aside.recapgone{visibility:hidden}
 .jmnews{position:absolute;left:50%;top:27vh;transform:translateX(-50%);z-index:5;max-width:56vw;padding:.5em 1.1em;border-radius:16px;background:rgba(18,10,40,.78);color:#fff;font-weight:900;font-size:clamp(.95rem,1.6vw,1.35rem);text-align:center;opacity:0;transition:opacity .3s}
 .jmnews.on{opacity:1}
 .jmnews .unsaid{visibility:hidden}
+/* Juliet stays inside until the presenters have gone, then steps out onto her balcony */
+.jmov.v3 .jmjul{transition:translate .7s cubic-bezier(.3,1.5,.5,1),opacity .4s;translate:0 60%;opacity:0}
+.jmov.v3.julon .jmjul{translate:0 0;opacity:1}
+.jmjbub{position:absolute;left:calc(50% + 9vh);top:2vh;z-index:6;max-width:30vw;padding:.65em 1em;border-radius:18px;border-bottom-left-radius:4px;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(.9rem,1.45vw,1.25rem);line-height:1.25;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:scale(.6);transform-origin:0 100%;transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.jmjbub.on{opacity:1;transform:none}
+.jmjbub .unsaid{visibility:hidden}
