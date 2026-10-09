@@ -3467,25 +3467,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // goes wrong in the same round, whoever got furthest that round wins.
   var JM_COLS = 7, JM_ROWS = 6, JM_MAX = 14, JM_PTS = [12, 8, 4], JM_DIRS = [[-1, 0], [0, -1], [1, 0], [0, 1]], JM_ARROW = ['⬅️', '⬆️', '➡️', '⬇️'], qjTimer = null, qjTick = null;
   var JULIET = '<svg class="juliet" viewBox="0 0 200 300" aria-hidden="true"><path d="M58 58 Q60 14 100 12 Q140 14 142 58 L150 150 Q100 162 50 150 Z" fill="#3a1a14"/><rect x="88" y="94" width="24" height="22" rx="8" fill="#f2c9a8"/><ellipse cx="100" cy="68" rx="32" ry="36" fill="#f2c9a8"/><path d="M68 56 Q72 26 100 26 Q128 26 132 56 Q118 40 100 42 Q82 40 68 56 Z" fill="#3a1a14"/><circle cx="88" cy="70" r="4" fill="#2a1410"/><circle cx="112" cy="70" r="4" fill="#2a1410"/><path d="M84 62 q4 -3 8 0 M108 62 q4 -3 8 0" stroke="#2a1410" stroke-width="2" fill="none"/><path d="M90 86 Q100 94 110 86" stroke="#b0303a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="80" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><ellipse cx="120" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><circle cx="100" cy="30" r="5" fill="#ffd23f"/><circle cx="90" cy="33" r="3" fill="#fff"/><circle cx="110" cy="33" r="3" fill="#fff"/><path d="M66 118 Q100 104 134 118 L150 240 Q100 252 50 240 Z" fill="#c2185b"/><path d="M80 116 Q100 126 120 116 L118 132 Q100 140 82 132 Z" fill="#ffd6e6"/><path d="M66 122 Q40 150 46 176" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="46" cy="180" r="8" fill="#f2c9a8"/><path class="jarm" d="M134 122 Q166 104 172 70" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle class="jhand" cx="172" cy="64" r="8" fill="#f2c9a8"/><circle cx="168" cy="52" r="7" fill="#e0245e"/><path d="M168 59 l0 14" stroke="#2f7a3a" stroke-width="3"/></svg>';   // (an original character: Juliet with a rose)
-  function jmRoute() {   // a route through the grid that never crosses itself, from the bottom middle, mostly upwards
-    for (var tries = 0; tries < 400; tries++) {
-      var x = Math.floor(JM_COLS / 2), y = JM_ROWS - 1, seen = {}, r = []; seen[x + ',' + y] = 1;
-      for (var i = 0; i < JM_MAX; i++) {
-        var opts = [0, 1, 2, 3].filter(function (d) { var nx = x + JM_DIRS[d][0], ny = y + JM_DIRS[d][1]; return nx >= 0 && ny >= 0 && nx < JM_COLS && ny < JM_ROWS && !seen[nx + ',' + ny]; });
-        if (!opts.length) break;
-        var w = []; opts.forEach(function (d) { for (var k = 0; k < (d === 1 ? 3 : d === 3 ? 1 : 2); k++) w.push(d); });
-        var d = pick(w); x += JM_DIRS[d][0]; y += JM_DIRS[d][1]; seen[x + ',' + y] = 1; r.push(d);
-      }
-      if (r.length === JM_MAX) return r;
-    }
-    return [1, 1, 2, 1, 0, 0, 1, 2, 2, 2, 3, 2, 1, 1].slice(0, JM_MAX);
+  function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards
+    var r = [], prev = -1;
+    for (var i = 0; i < JM_MAX; i++) { var w = []; [0, 1, 2, 3].forEach(function (d) { if (prev >= 0 && d === (prev + 2) % 4) return; for (var k = 0; k < (d === 1 ? 3 : d === 3 ? 1 : 2); k++) w.push(d); }); prev = pick(w); r.push(prev); }
+    return r;
   }
   function jmCell(g, n) { var x = Math.floor(JM_COLS / 2), y = JM_ROWS - 1; for (var i = 0; i < n; i++) { x += JM_DIRS[g.route[i]][0]; y += JM_DIRS[g.route[i]][1]; } return [x, y]; }
   function qjAll() {
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2 || REMOTE) { quipAll(); return; }
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
-    G.qj = { id: 'jm' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', round: 0, route: jmRoute(), order: act.map(function (p) { return p.pid; }), alive: act.map(function (p) { return p.pid; }), prog: {}, fail: {}, outAt: {}, best: {}, lit: 0, show: -1, ends: 0, win: [], rank: null };
+    G.qj = { id: 'jm' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', round: 0, route: jmRoute(), wrong: {}, falls: {}, pos: 0, order: act.map(function (p) { return p.pid; }), alive: act.map(function (p) { return p.pid; }), prog: {}, fail: {}, outAt: {}, best: {}, lit: 0, show: -1, ends: 0, win: [], rank: null };
     G.phase = 'qj'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); qjShow();
     var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
@@ -3510,7 +3502,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Juliet calls out the route so far, one arrow at a time; then everyone taps it.
   function qjRound() {
     var g = G.qj; if (!g) return;
-    g.round++; g.st = 'show'; g.prog = {}; g.fail = {}; g.show = -1; g.lit = 0; push(); qjShow();   /* (the maze goes dark again: from memory only) */
+    g.round++; g.st = 'show'; g.prog = {}; g.fail = {}; g.wrong = {}; g.show = -1; g.pos = 0; g.falls = {}; push(); qjShow();
     var STEP = Math.max(560, 900 - g.round * 25), at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
     for (var i = 0; i < g.round; i++) (function (i) {
       at(1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4][g.route[i]]); });
@@ -3531,19 +3523,32 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.qj; if (!g || G.phase !== 'qj' || g.st !== 'input' || !m || m.id !== g.id || m.round !== g.round || g.alive.indexOf(m.pid) < 0 || g.fail[m.pid]) return;
     var p = g.prog[m.pid] || 0; if (m.i !== p || p >= g.round) return;
     var d = Math.floor(Number(m.dir)); if (!(d >= 0 && d < 4)) return;
-    if (d === g.route[p]) { g.prog[m.pid] = p + 1; g.lit = Math.max(g.lit, p + 1); Music.plop([2, 6, 9, 4][d]); }
-    else { g.fail[m.pid] = 1; Music.buzz(); }
+    if (d === g.route[p]) { g.prog[m.pid] = p + 1; Music.plop([2, 6, 9, 4][d]); }
+    else { g.fail[m.pid] = 1; g.wrong[m.pid] = d; Music.blip(); }
     push(); qjShow();
     if (g.alive.every(function (k) { return g.fail[k] || (g.prog[k] || 0) >= g.round || !players[k] || players[k].off; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 700); }
   }
   function qjResolve() {
     var g = G.qj; if (!g || g.st !== 'input') return;
     clearInterval(qjTick);
+    g.alive.forEach(function (k) { if (!g.fail[k] && (g.prog[k] || 0) < g.round) { g.fail[k] = 1; var c = g.route[g.prog[k] || 0], o = [0, 1, 2, 3].filter(function (d) { return d !== c; }); g.wrong[k] = pick(o); } });   // (too slow: lost at the step they were on)
+    g.st = 'run'; g.pos = 0; g.falls = {}; push(); qjShow();
+    var t = 900, at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); }, left = g.alive.slice();
+    for (var i = 0; i < g.round; i++) (function (i) {
+      var fall = left.filter(function (k) { return g.fail[k] && (g.prog[k] || 0) === i; });
+      if (fall.length) { at(t, function () { fall.forEach(function (k) { g.falls[k] = { i: i, d: g.wrong[k] }; }); push(); qjShow(); Music.woosh(); setTimeout(function () { if (G.qj === g) { Music.crumble(); Music.scream(); } }, 650); }); t += 1700; left = left.filter(function (k) { return fall.indexOf(k) < 0; }); }
+      if (!left.length) return;
+      at(t, function () { g.pos = i + 1; push(); qjShow(); Music.step(); setTimeout(function () { Music.step(); }, 180); }); t += 650;
+    })(i);
+    at(t + 500, qjJudge);
+  }
+  function qjJudge() {
+    var g = G.qj; if (!g || g.st !== 'run') return;
     var ok = g.alive.filter(function (k) { return !g.fail[k] && (g.prog[k] || 0) >= g.round; }), lost = g.alive.filter(function (k) { return ok.indexOf(k) < 0; });
     lost.forEach(function (k) { g.outAt[k] = g.round; g.best[k] = g.prog[k] || 0; });
     var nm = function (k) { return players[k] ? players[k].name : '?'; };
     g.st = 'res'; push(); qjShow();
-    var end = false, line;
+    var end = false, line;   // (who fell, and who is still in)
     if (!ok.length) {   // everyone left went wrong: whoever got furthest this round wins
       var top = Math.max.apply(null, lost.map(function (k) { return g.prog[k] || 0; }));
       g.win = lost.filter(function (k) { return (g.prog[k] || 0) === top; }); end = true;
@@ -3563,7 +3568,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     act.sort(function (a, b) { return score(b) - score(a); });
     var rank = {}, r = 0; act.forEach(function (k, i) { if (i > 0 && score(k) !== score(act[i - 1])) r = i; rank[k] = r; });
     act.forEach(function (k) { var pts = rank[k] < Math.max(1, act.length - 1) ? JM_PTS[rank[k]] || 0 : 0; if (pts) { var p = players[k]; p.score += pts; p.pts = pts; p.got = true; } });
-    g.rank = rank; g.st = 'done'; g.lit = Math.max(g.lit, g.round); push(); qjShow(); Music.douze();
+    g.rank = rank; g.st = 'done'; push(); qjShow(); Music.douze();
     var nm = function (k) { return players[k] ? players[k].name : '?'; };
     var at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); };
     at(800, function () { qjSay('her', g.win.map(nm).join(' and ') + (g.win.length > 1 ? ' find' : ' finds') + ' the way to Juliet! 🌹 Bravissimo!'); });
@@ -3577,18 +3582,30 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.qj;
     return { id: g.id, st: g.st, round: g.round, alive: g.alive, prog: g.prog, fail: g.fail, left: g.st === 'input' ? Math.max(0, g.ends - Date.now()) : 0, win: g.win, outAt: g.outAt };
   }
-  // The big screen: Juliet on her balcony calling out the arrows, and the maze: dark, except where the right steps have
-  // been walked. Everyone's token walks it from the gate at the bottom.
+  // The big screen: a crossroads in Verona seen from above, the group in the middle, Juliet's balcony at the top in the
+  // mist. When the group walks, the city slides the other way; who goes wrong runs into a side street and falls in a hole.
+  var JM_TILE = null;
+  function jmTile() {   // one city block around a crossroads (the roads cross in the middle of the tile)
+    if (JM_TILE) return JM_TILE;
+    var roof = function (x, y, c1, c2) { return '<rect x="' + x + '" y="' + y + '" width="34" height="34" rx="2" fill="' + c1 + '"/><path d="M' + x + ' ' + (y + 17) + ' h34" stroke="' + c2 + '" stroke-width="1.6"/>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<path d="M' + (x + 2 + i * 6) + ' ' + (y + 2) + ' v30" stroke="' + c2 + '" stroke-width=".7" opacity=".55"/>'; }).join('') + '<rect x="' + (x + 24) + '" y="' + (y + 5) + '" width="5" height="5" fill="#5a2a20" opacity=".7"/>'; };
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#8a7a6e"/>' +
+      '<g stroke="#7a6a5e" stroke-width=".5" opacity=".7">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(function (i) { return '<path d="M0 ' + (i * 5) + ' h100 M' + (i * 5) + ' 0 v100"/>'; }).join('') + '</g>' +
+      '<rect x="0" y="0" width="36" height="36" fill="#d8c8a8"/><rect x="64" y="0" width="36" height="36" fill="#d8c8a8"/><rect x="0" y="64" width="36" height="36" fill="#d8c8a8"/><rect x="64" y="64" width="36" height="36" fill="#d8c8a8"/>' +
+      roof(0, 0, '#c4623e', '#9a4528') + roof(66, 0, '#b8562f', '#8e3e20') + roof(0, 66, '#d0703f', '#a24f2a') + roof(66, 66, '#c05a35', '#94401f') +
+      '<circle cx="30" cy="30" r="4" fill="#3f7a3a"/><circle cx="70" cy="70" r="4" fill="#3f7a3a"/></svg>';
+    JM_TILE = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+    return JM_TILE;
+  }
   function qjShow() {
     var g = G.qj; if (!g) return;
     var ov = $('qjov');
     if (!ov) {
-      ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov vrov jmov enter';
-      var cells = ''; for (var y = 0; y < JM_ROWS; y++) for (var x = 0; x < JM_COLS; x++) cells += '<i data-c="' + x + ',' + y + '"></i>';
-      ov.innerHTML = '<div class="grwall"></div><div class="vrmoon"></div><div class="vrtown"></div><div class="grfloor"></div><div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div>' +
+      ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
+      ov.innerHTML = '<div class="jmcity"></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div>' +
-        '<div class="jmmaze"><div class="jmgrid" style="grid-template-columns:repeat(' + JM_COLS + ',1fr)">' + cells + '</div><div class="jmtoks"></div><div class="jmgate">🏛️</div></div><div class="qjmsg jmmsg"></div>' +
+        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
+      ov.querySelector('.jmcity').style.backgroundImage = jmTile();
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
     }
@@ -3598,21 +3615,37 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var say = ov.querySelector('.jmsay'), sv = g.st === 'show' && g.show >= 0 ? JM_ARROW[g.route[g.show]] : '';
     if (say.getAttribute('data-v') !== (sv ? g.show + sv : '')) { say.setAttribute('data-v', sv ? g.show + sv : ''); say.innerHTML = sv ? '<b>' + sv + '</b><small>' + (g.show + 1) + '</small>' : ''; say.classList.toggle('on', !!sv); }
     ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show');
-    // the maze: the start, and the steps walked right
-    var lit = {}; for (var i = 0; i <= g.lit; i++) lit[jmCell(g, i).join(',')] = i;
-    [].forEach.call(ov.querySelectorAll('.jmgrid i'), function (c) { var k = c.getAttribute('data-c'), on = lit[k] != null; if (c.classList.contains('lit') !== on) { c.classList.toggle('lit', on); if (on) c.style.setProperty('--n', String(lit[k])); } c.classList.toggle('goal', g.st === 'done' && lit[k] === g.lit && g.lit > 0); });
-    // the tokens: where everyone is on the route this round
-    var toks = ov.querySelector('.jmtoks'), act = g.order.filter(function (k) { return players[k]; }), here = {};
+    // the city: where the group is on the route (it slides the other way)
+    var x = 0, y = 0; for (var i = 0; i < (g.pos || 0); i++) { x += JM_DIRS[g.route[i]][0]; y += JM_DIRS[g.route[i]][1]; }
+    var city = ov.querySelector('.jmcity'), ck = x + ',' + y, back = (g.pos || 0) === 0 && city.getAttribute('data-p') && city.getAttribute('data-p') !== '0,0';
+    if (city.getAttribute('data-p') !== ck) {
+      city.setAttribute('data-p', ck);
+      if (back) { city.classList.add('jump'); void city.offsetWidth; }   // (a new round: back to the start in one go)
+      city.style.setProperty('--x', String(x)); city.style.setProperty('--y', String(y));
+      if (back) setTimeout(function () { city.classList.remove('jump'); }, 60);
+      ov.querySelector('.jmholes').innerHTML = '';
+    }
+    // the group: everyone still in, together in the middle; whoever goes wrong runs into a side street and falls
+    var grp = ov.querySelector('.jmgroup'), act = g.order.filter(function (k) { return players[k]; }), inGroup = act.filter(function (k) { return g.alive.indexOf(k) >= 0 || (g.st === 'done' && g.win.indexOf(k) >= 0); });
     act.forEach(function (k) {
-      var p = players[k], el = toks.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]');
-      if (!el) { el = document.createElement('div'); el.className = 'jmt'; el.setAttribute('data-pid', k); el.innerHTML = charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; toks.appendChild(el); }
-      var out = g.alive.indexOf(k) < 0 && !(g.st === 'done' && g.win.indexOf(k) >= 0), n = out ? 0 : g.st === 'input' || g.st === 'res' ? g.prog[k] || 0 : g.st === 'done' && g.win.indexOf(k) >= 0 ? g.lit : 0;
-      var c = jmCell(g, n), key = c.join(','), slot = here[key] = (here[key] || 0) + 1;
-      el.style.left = ((c[0] + 0.5) / JM_COLS * 100) + '%'; el.style.top = ((c[1] + 0.5) / JM_ROWS * 100) + '%'; el.style.setProperty('--s', String(slot - 1));
-      el.classList.toggle('out', out); el.classList.toggle('fail', !!g.fail[k] && g.st !== 'show');
+      var p = players[k], el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]');
+      if (!el) { el = document.createElement('div'); el.className = 'jmt'; el.setAttribute('data-pid', k); el.innerHTML = '<div class="jmbody"></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
+      var j = inGroup.indexOf(k), n = inGroup.length, ang = n > 1 ? j / n * Math.PI * 2 : 0, rad = n > 1 ? Math.min(9.5, 3.2 + n * 0.9) : 0;
+      el.style.setProperty('--gx', (Math.cos(ang) * rad).toFixed(2) + 'vh'); el.style.setProperty('--gy', (Math.sin(ang) * rad * 0.8).toFixed(2) + 'vh');
+      var f = g.falls && g.falls[k];
+      if (f && !el.classList.contains('falling')) {
+        el.style.setProperty('--fx', (JM_DIRS[f.d][0] * 17) + 'vh'); el.style.setProperty('--fy', (JM_DIRS[f.d][1] * 17) + 'vh');
+        el.classList.add('falling');
+        var h = document.createElement('div'); h.className = 'jmhole'; h.style.setProperty('--fx', (JM_DIRS[f.d][0] * 17) + 'vh'); h.style.setProperty('--fy', (JM_DIRS[f.d][1] * 17) + 'vh'); ov.querySelector('.jmholes').appendChild(h);
+      }
+      if (!f && el.classList.contains('falling')) el.classList.remove('falling');
+      el.classList.toggle('out', j < 0 && !f);
+      el.classList.toggle('run', g.st === 'run' && !f && j >= 0);
+      el.classList.toggle('done', g.st === 'input' && j >= 0 && ((g.prog[k] || 0) >= g.round || !!g.fail[k]));
       el.classList.toggle('won', g.st === 'done' && g.win.indexOf(k) >= 0);
     });
-    var msg = g.st === 'show' ? '🤫 Listen to Juliet…' : g.st === 'input' ? 'Tap the route on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'done' ? '🌹 To the balcony!' : '';
+    var tapped = inGroup.filter(function (k) { return (g.prog[k] || 0) >= g.round || g.fail[k]; }).length;
+    var msg = g.st === 'show' ? '🤫 Listen to Juliet…' : g.st === 'input' ? 'Tap the route on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's · ' + tapped + '/' + inGroup.length : g.st === 'run' ? 'Andiamo! 🏃' : g.st === 'done' ? '🌹 To the balcony!' : '';
     var me = ov.querySelector('.qjmsg'); if (me.textContent !== msg) me.textContent = msg;
   }
   // ---------- Quip! ----------
