@@ -434,10 +434,11 @@
   // ---------- Hold That Note ----------
   // Guess how long the diva holds her note: a slider from 10 to 20 seconds, then lock it in.
   var noteSent = '', noteMine = null;
-  $('ntrange').addEventListener('input', function () { $('ntv').textContent = (+this.value).toFixed(1); });
+  function ntTime(s, tenths) { var m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + (tenths ? r.toFixed(1) : Math.floor(r)); }
+  $('ntrange').addEventListener('input', function () { $('ntv').textContent = ntTime(+this.value); });
   $('ntgo').addEventListener('click', function () {
     var s = state; if (!net || !s || !s.note || s.note.st !== 'guess' || noteSent === s.note.id) return;
-    noteSent = s.note.id; noteMine = Math.round(+$('ntrange').value * 10) / 10;
+    noteSent = s.note.id; noteMine = Math.round(+$('ntrange').value);
     var msg = { pid: pid, id: s.note.id, guess: noteMine };
     net.send('note', msg); setTimeout(function () { if (state && state.note && state.note.st === 'guess') net.send('note', msg); }, 1500);
     noteView(state);
@@ -445,15 +446,15 @@
   function noteView(s) {
     var n = s.note, box = $('noteui'), mine = noteSent === n.id || (n.locked || {})[pid];
     show('v-wait');
-    if (box.getAttribute('data-id') !== n.id) { box.setAttribute('data-id', n.id); $('ntrange').value = 15; $('ntv').textContent = '15.0'; noteMine = null; }
+    if (box.getAttribute('data-id') !== n.id) { box.setAttribute('data-id', n.id); $('ntrange').value = 75; $('ntv').textContent = ntTime(75); noteMine = null; }
     if (n.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
-    if (n.st === 'guess' && !mine) { $('waittitle').textContent = '🎤 How long will she hold it?'; $('waitsub').textContent = 'Between 10 and 20 seconds. The closest guess wins!'; box.classList.remove('hidden'); return; }
+    if (n.st === 'guess' && !mine) { $('waittitle').textContent = '🎤 How long will she hold it?'; $('waitsub').textContent = 'Between 30 seconds and 2 minutes. The closest guess wins!'; box.classList.remove('hidden'); return; }
     box.classList.add('hidden');
     var g = n.guess && n.guess[pid] != null ? n.guess[pid] : noteMine;
-    if (n.st === 'guess' || n.st === 'sing') { $('waittitle').textContent = n.st === 'sing' ? '🎶 Hold it… hold it…' : '🎤 Locked in!'; $('waitsub').textContent = (g != null ? 'Your guess: ' + g.toFixed(1) + ' seconds. ' : '') + 'Watch the big screen!'; return; }
+    if (n.st === 'guess' || n.st === 'sing') { $('waittitle').textContent = n.st === 'sing' ? '🎶 Hold it… hold it…' : '🎤 Locked in!'; $('waitsub').textContent = (g != null ? 'Your guess: ' + ntTime(g) + '. ' : '') + 'Watch the big screen!'; return; }
     var won = n.win && n.win.indexOf(pid) >= 0;
-    $('waittitle').textContent = won ? '🏆 Closest!' : '⚡ Cut at ' + n.len.toFixed(1) + ' s';
-    $('waitsub').textContent = g != null ? 'She held it for ' + n.len.toFixed(1) + ' seconds. You guessed ' + g.toFixed(1) + ': ' + Math.abs(g - n.len).toFixed(1) + ' off.' : 'She held it for ' + n.len.toFixed(1) + ' seconds.';
+    $('waittitle').textContent = won ? '🏆 Closest!' : '💥 She dropped the mic at ' + ntTime(n.len, true);
+    $('waitsub').textContent = g != null ? 'She held it for ' + ntTime(n.len, true) + '. You guessed ' + ntTime(g) + ': ' + Math.abs(g - n.len).toFixed(1) + ' seconds off.' : 'She held it for ' + ntTime(n.len, true) + '.';
   }
 
   // ---------- Eurofan Shop ----------

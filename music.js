@@ -292,6 +292,17 @@ var Music = (function () {
       g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55); o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.6);
     } catch (e) {}
   }
+  function micdrop() {   // she drops her microphone: a thud, a clatter, and a squeal of feedback
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01, out = fxOut();
+      var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.35);
+      g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.5);
+      [0.08, 0.2, 0.29].forEach(function (d, i) { var c = ctx.createOscillator(), cg = ctx.createGain(); c.type = 'square'; c.frequency.value = 520 - i * 90; cg.gain.setValueAtTime(0.12 / (i + 1), t + d); cg.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.06); c.connect(cg); cg.connect(out); c.start(t + d); c.stop(t + d + 0.08); });
+      var f = ctx.createOscillator(), fg = ctx.createGain(); f.type = 'sine'; f.frequency.setValueAtTime(2600, t + 0.35); f.frequency.linearRampToValueAtTime(3100, t + 1.2);
+      fg.gain.setValueAtTime(0.0001, t + 0.35); fg.gain.exponentialRampToValueAtTime(0.08, t + 0.6); fg.gain.exponentialRampToValueAtTime(0.0001, t + 1.3); f.connect(fg); fg.connect(out); f.start(t + 0.35); f.stop(t + 1.35);
+    } catch (e) {}
+  }
   function buzz() {   // not good enough: a short error buzzer, two low notes
     if (!ac()) return;
     try {
@@ -357,5 +368,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();
