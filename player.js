@@ -225,6 +225,7 @@
     }
     else if (s.phase === 'chase' && s.chase) chaseView(s.chase);
     else if (s.phase === 'shop' && s.shop) shopView(s);
+    else if (s.phase === 'shop') { show('v-wait'); $('waittitle').textContent = 'Welcome to the boutique! 🛍️'; $('waitsub').textContent = 'Lynda is talking… watch the big screen.'; }
     else if (s.phase === 'bomb' && s.bomb) bombView(s);
     else if ((s.phase === 'clueacc' || s.phase === 'cluerev') && s.clue) clueView(s);
     else if (s.phase === 'note' && s.note) noteView(s);
@@ -496,13 +497,13 @@
     if (!ok) { bagOpen = false; bagItem = null; }
     $('bagpanel').classList.toggle('hidden', !bagOpen);
     if (!bagOpen) return;
-    var p = $('bagpanel'), bagKey = inv.join(',') + '|' + (bagItem || '') + '|' + (s.phase === 'guess') + '|' + s.players.map(function (x) { return x.pid + (x.off ? 0 : 1) + (x.sit ? 's' : '') + (s.hide ? '' : x.score); }).join(',');
+    var p = $('bagpanel'), bagKey = inv.join(',') + '|' + (bagItem || '') + '|' + (s.phase === 'guess') + '|' + !!s.mg + '|' + s.players.map(function (x) { return x.pid + (x.off ? 0 : 1) + (x.sit ? 's' : '') + (s.hide ? '' : x.score); }).join(',');
     if (p.getAttribute('data-k') === bagKey && p.innerHTML) return;   // nothing changed: no redraw (no flicker)
     p.setAttribute('data-k', bagKey);
     if (!bagItem) {
-      var seen = {}; p.innerHTML = '<h3>Your items</h3>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
-        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, wait = (it.kind === 'sit' && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess') || it.kind === 'shield' || it.kind === 'skates';   // the mic only breaks while a question is open; the smoke goes up before one
-        return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(it.kind === 'shield' ? 'Protects you by itself: it blocks the next item used on you' : it.kind === 'skates' ? 'Work by themselves: keep them in your bag, and you glide 2 spaces ahead at the start of the Grand Final' : wait ? (it.kind === 'smoke' ? 'Only before a question' : 'Only while a question is open') : it.desc) + '</small></span></button>';
+      var seen = {}; p.innerHTML = '<h3>Your items</h3><p class="bagrule">' + (s.mg ? '🎉 A party game is on: items wait until the trivia (only the Grand Final ones can go now).' : 'Items are for the trivia rounds, not the party games. Used between questions, they land before the next one.') + '</p>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, later = it.kind === 'bribe' || it.kind === 'heel', mgw = !!s.mg && !later && it.kind !== 'shield' && it.kind !== 'skates', wait = mgw || (it.kind === 'sit' && s.phase !== 'guess') || (it.kind === 'smoke' && s.phase === 'guess') || it.kind === 'shield' || it.kind === 'skates';   // the mic only breaks while a question is open; the smoke goes up before one
+        return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small>' + esc(it.kind === 'shield' ? 'Protects you by itself: it blocks the next item used on you' : it.kind === 'skates' ? 'Work by themselves: keep them in your bag, and you glide 2 spaces ahead at the start of the Grand Final' : mgw ? 'Not during a party game: use it in the trivia rounds' : wait ? (it.kind === 'smoke' ? 'Only before a question' : 'Only while a question is open') : it.desc) + '</small></span></button>';
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
         var id = b.getAttribute('data-id');
