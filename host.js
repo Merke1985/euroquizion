@@ -187,7 +187,7 @@
     if (G.phase === 'lobby' || G.phase === 'end') G.go = {};   // games saved before Sing! moved to Category
     eraSet(G.era); catSet(G.cat);
     $('s-atype').value = G.robin ? 'robin' : G.atype; $('s-subject').value = G.subject; $('s-subject').disabled = $('s-scoring').disabled = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip'; scoreHelp();
-    if ([5, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].indexOf(G.total) >= 0) $('s-rounds').value = G.total;
     if ([5, 10, 20, 30].indexOf(G.guessMs / 1000 - AFTER) < 0) G.guessMs = (20 + AFTER) * 1000;   // games saved with the old Guessing time setting
     $('s-time').value = G.guessMs / 1000 - AFTER;
     if (!$('s-time').value) { $('s-time').value = '20'; G.guessMs = (20 + AFTER) * 1000; }   // a saved game with a length that is no longer on offer (15 s)
@@ -4048,10 +4048,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (lo) lo.disabled = party;
     
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
-    var five = $('s-rounds').querySelector('option'); if (five) five.disabled = false;
     var lad = !on && !party && $('s-qmode').value === 'ladder'; $('s-scoring').disabled = on || lad;   // the Ladder is its own way of scoring   // Ladder: no song count and no hidden scores
     var tour = party && $('s-partypick').value === 'order';   // Grand tour sets its own length: every minigame once
-    $('s-rounds').disabled = lad; $('s-show').disabled = lad;   // (a Grand Tour too: the questions are spread over the gaps between the party games)
+    $('s-rounds').disabled = lad; $('s-show').disabled = lad;   // (a Grand Tour too: the questions in each round between the party games)
     // Rounds and the spin for the years belong to a plain quiz
     // Round Robin: several rounds, each with its own era from the spin. Rounds only counts there, and
     // the Era setting has nothing to choose then.
@@ -4184,10 +4183,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
-    // Trivia between the party games: three questions a block; on a Grand Tour the number of questions set is
-    // spread over the gaps between the party games (before each one, and one last block before the end).
-    G.block = 3;
-    if (G.tour) { var ng = partyGames(G.partyOn, list().filter(function (p) { return !p.off; }).length >= 2).length; G.block = Math.max(1, Math.round(G.per / (ng + 1))); }
+    // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
+    // questions in each round between the party games (and in the last round before the end).
+    G.block = G.tour ? Math.max(1, G.per) : 3;
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
