@@ -2268,7 +2268,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
     hostHold = true; clearTimeout(hostT.away);
     hostSay('him', 'I hope you got ' + (n > 1 ? 'some nice souvenirs' : 'a nice souvenir') + '! Let’s get on with the show!', 3600);
-    setTimeout(function () { hostSay('her', 'It’s time again for trivia! 🧠', 3000); }, 3300);
+    setTimeout(function () { hostSay('her', G.mgTest ? 'On to the next party game! 🎉' : 'It’s time again for trivia! 🧠', 3000); }, 3300);   // (testing the party games: there is no trivia in between)
     setTimeout(function () { hostHold = false; then(); }, 6400);
   }
   function shopIntro() {
