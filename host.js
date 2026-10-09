@@ -1220,7 +1220,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
-    note: { icon: '🎤', title: 'Hold That Note', sub: 'Technical problems! How long will the diva hold her high note this time? Guess between 30 seconds and 2 minutes on your phone: the closest guess wins.' },
+    note: { icon: '🎤', title: 'Hold That Note', sub: 'Technical problems! How long will the diva hold her high note this time? Guess between 30 seconds and 2 minutes on your phone. Once she sings past your time you are out: the closest guess that is still in wins.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
     draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -2868,7 +2868,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2 || REMOTE) { quipAll(); return; }
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
-    G.note = { id: 'note' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', guess: {}, len: Math.round((NOTE_MIN + Math.random() * (NOTE_MAX - NOTE_MIN)) * 10) / 10, t0: 0, ends: 0, win: [] };
+    G.note = { id: 'note' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', guess: {}, out: {}, len: Math.round((NOTE_MIN + Math.random() * (NOTE_MAX - NOTE_MIN)) * 10) / 10, t0: 0, ends: 0, win: [] };
     G.phase = 'note'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); noteShow();
     if (!REMOTE && !ntAudio) { try { ntAudio = new Audio('sounds/long_note.mp3'); ntAudio.preload = 'auto'; ntAudio.load(); } catch (e) {} }   // (loaded in advance: the note starts on time)
@@ -2878,8 +2878,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['her', 'One of our stars keeps getting cut off in the middle of her big high note!'],
       ['him', 'Our engineers need your help: they want to find the exact moment the sound system breaks down! 🔧'],
       ['her', 'So: how long will she hold her note before it all goes wrong?'],
-      ['him', 'Guess on your phone: anywhere between 30 seconds and 2 minutes. The closest guess wins! 🎯'],
-      ['her', 'Ladies and gentlemen… our diva! 💃']
+      ['him', 'Guess on your phone: anywhere between 30 seconds and 2 minutes.'],
+      ['her', 'But careful: once she sings past your time, you’re out! The closest guess that’s still in at the end wins. 🎯'],
+      ['him', 'Ladies and gentlemen… our diva! 💃']
     ];
     var t = 1800;
     lines.forEach(function (l, i) { (function (l, t0) { at(t0, function () { noteSay(l[0], l[1]); if (i === lines.length - 1) { $('noteov').classList.add('diva-on'); Music.douze(); whooshes([0, 300]); } }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
@@ -2923,6 +2924,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.note !== g || g.st !== 'sing') return;
       var el = noteElapsed(g);
       if (el >= g.len) { noteCut(); return; }
+      var gone = Object.keys(g.guess).filter(function (k) { return !g.out[k] && g.guess[k] < el; });   // she sang past these guesses: out
+      if (gone.length) { gone.forEach(function (k) { g.out[k] = 1; }); Music.buzz(); push(); }
       noteShow(); noteTick = requestAnimationFrame(tick);
     };
     noteTick = requestAnimationFrame(tick);
@@ -2931,15 +2934,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.note; if (!g) return;
     g.st = 'cut'; noteAudio(false); Music.micdrop();   // oops: she drops her microphone
     var act = list().filter(function (p) { return !p.off; }), best = Infinity;
-    act.forEach(function (p) { var v = g.guess[p.pid]; if (v != null) best = Math.min(best, Math.abs(v - g.len)); });
-    g.win = act.filter(function (p) { var v = g.guess[p.pid]; return v != null && Math.abs(v - g.len) === best; }).map(function (p) { return p.pid; });
+    act.forEach(function (p) { var v = g.guess[p.pid]; if (v != null && v >= g.len) best = Math.min(best, v - g.len); });   // the closest of those still in (not passed)
+    g.win = act.filter(function (p) { var v = g.guess[p.pid]; return v != null && v >= g.len && v - g.len === best; }).map(function (p) { return p.pid; });
     g.win.forEach(function (k) { var p = players[k]; p.score += 12; p.pts = 12; p.got = true; });
     push(); noteShow();
     var at = function (ms, f) { setTimeout(function () { if (G.note === g) f(); }, ms); };
     at(1400, function () { noteSay('him', 'Oops… she dropped her microphone! 🎤💥 She held the note for ' + noteTime(g.len, true) + '!'); });
     at(4600, function () {
       var w = g.win.map(function (k) { return players[k] ? players[k].name + ' (' + noteTime(g.guess[k]) + ')' : ''; }).filter(Boolean);
-      noteSay('her', w.length ? (w.length > 1 ? w.slice(0, -1).join(', ') + ' and ' + w[w.length - 1] + ' were' : w[0] + ' was') + ' closest! 🏆' : 'Nobody made a guess… what a shame!');
+      noteSay('her', w.length ? (w.length > 1 ? w.slice(0, -1).join(', ') + ' and ' + w[w.length - 1] + ' were' : w[0] + ' was') + ' closest, and still in! 🏆' : Object.keys(g.guess).length ? 'She sang past every guess… nobody is left! 😅' : 'Nobody made a guess… what a shame!');
       g.st = 'done'; push(); noteShow(); Music.douze();
     });
     at(9600, function () {
@@ -2951,7 +2954,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.note, locked = {};
     Object.keys(g.guess).forEach(function (k) { locked[k] = 1; });
     return { id: g.id, st: g.st, left: g.st === 'guess' ? Math.max(0, g.ends - Date.now()) : 0, locked: locked,
-      guess: g.st === 'cut' || g.st === 'done' ? g.guess : null, len: g.st === 'cut' || g.st === 'done' ? g.len : null, win: g.st === 'done' ? g.win : null, min: NOTE_MIN, max: NOTE_MAX };
+      guess: g.st === 'cut' || g.st === 'done' ? g.guess : null, out: g.out, len: g.st === 'cut' || g.st === 'done' ? g.len : null, win: g.st === 'done' ? g.win : null, min: NOTE_MIN, max: NOTE_MAX };
   }
   // The big screen: the stage, the diva (once she is announced), a timer, and a line from 0 to 20 seconds
   // with everyone's guess on it (shown when she starts) and a needle running along it while she sings.
@@ -2976,14 +2979,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.querySelector('.nttimer').textContent = noteTime(el, true);
     ov.querySelector('.ntneedle').style.left = Math.min(100, el / NOTE_MAX * 100) + '%';
     var act = list().filter(function (p) { return !p.off; });
-    var pinKey = g.st + '|' + Object.keys(g.guess).length;
+    var pinKey = (g.st === 'intro' || g.st === 'guess' ? 'none' : 'pins') + '|' + Object.keys(g.guess).length;
     var pins = ov.querySelector('.ntpins');
     if (pins.getAttribute('data-k') !== pinKey) {   // the guesses go up on the line when she starts to sing
       pins.setAttribute('data-k', pinKey);
-      pins.innerHTML = g.st === 'intro' || g.st === 'guess' ? '' : act.filter(function (p) { return g.guess[p.pid] != null; }).map(function (p, i) {
-        return '<div class="ntpin' + (g.st === 'done' && g.win.indexOf(p.pid) >= 0 ? ' win' : '') + '" style="left:' + (g.guess[p.pid] / NOTE_MAX * 100) + '%;--i:' + (i % 2) + '">' + charSvg(p.char) + '<b>' + esc(p.name) + ' ' + noteTime(g.guess[p.pid]) + '</b></div>';
+      var sorted = act.filter(function (p) { return g.guess[p.pid] != null; }).sort(function (a, b) { return g.guess[a.pid] - g.guess[b.pid]; });
+      pins.innerHTML = g.st === 'intro' || g.st === 'guess' ? '' : sorted.map(function (p, i) {
+        return '<div class="ntpin" data-pid="' + esc(p.pid) + '" style="left:' + (g.guess[p.pid] / NOTE_MAX * 100) + '%;--i:' + (i % 2) + '">' + charSvg(p.char) + '<b>' + esc(p.name) + ' ' + noteTime(g.guess[p.pid]) + '</b></div>';
       }).join('');
     }
+    [].forEach.call(pins.querySelectorAll('.ntpin'), function (el) { var k = el.getAttribute('data-pid'); el.classList.toggle('out', !!g.out[k]); el.classList.toggle('win', g.st === 'done' && g.win.indexOf(k) >= 0); });
     var msg = g.st === 'intro' ? '' : g.st === 'guess' ? 'How long will she hold it? Guess on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'sing' ? (noteElapsed(g) < 0 ? 'She takes a deep breath… 🌬️' : 'Hold it… hold it…') : g.st === 'cut' ? '💥 Oops!' : '';
     var me = ov.querySelector('.ntmsg'); if (me.textContent !== msg) me.textContent = msg;
     var ph = act.map(function (p) { return '<div class="clp">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="' + (g.guess[p.pid] != null ? 'ok' : 'wait') + '">' + (g.guess[p.pid] != null ? '✔' : '…') + '</em></div>'; }).join('');

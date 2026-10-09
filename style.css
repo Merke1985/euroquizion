@@ -1756,3 +1756,9 @@ aside.recapgone{visibility:hidden}
 .noteov .dveyesc{display:none}
 .noteov[data-st="sing"]:not(.lead) .dveyesc{display:inline}
 .noteov[data-st="sing"]:not(.lead) .dveyeso{display:none}
+
+/* Hold That Note: 10% smaller, so the guesses on the line stay clear of her hair; a guess she sings past drops off */
+.noteov .ntdiva{height:83vh;bottom:-17vh}
+.noteov .ntpin{transition:opacity .3s}
+.noteov .ntpin.out{animation:ntout .9s cubic-bezier(.5,0,1,.6) forwards}
+@keyframes ntout{0%{opacity:1;translate:0 0;rotate:0deg}25%{translate:0 -1.5vh;rotate:-10deg}100%{opacity:0;translate:0 30vh;rotate:120deg}}
