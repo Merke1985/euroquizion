@@ -2270,3 +2270,43 @@ aside.recapgone{visibility:hidden}
 .vrp{top:calc(50% - 2.6vh + var(--off,0) * 1vh)}
 .vrp b{font-size:clamp(.5rem,.7vw,.68rem);background:rgba(0,0,0,.45);padding:0 .3em;border-radius:4px}
 .vrov[data-st=done] .vrp.won{left:100%!important;transition:left 2.4s cubic-bezier(.4,.1,.3,1);z-index:20}
+/* ---------- Lost in Verona: Juliet's maze ---------- */
+.jmov .vrtown{opacity:.6}
+.jmbalc{position:absolute;right:3vw;top:10vh;width:17vw;height:30vh;z-index:3}
+.jmjul{position:absolute;left:50%;bottom:7vh;height:22vh;transform:translateX(-50%)}
+.jmjul .juliet{height:100%;width:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5))}
+.jmjul.talk .jarm,.jmjul.talk .jhand{animation:jwave .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:0 100%}
+@keyframes jwave{to{transform:rotate(-14deg)}}
+.jmrail{position:absolute;left:0;right:0;bottom:2vh;height:7vh;border-radius:6px 6px 0 0;background:repeating-linear-gradient(90deg,#e8dcc4 0 1.2vh,#b8a888 1.2vh 1.6vh,transparent 1.6vh 2.6vh),linear-gradient(#efe4cc,#c9b896);box-shadow:0 8px 18px rgba(0,0,0,.5);border-top:1.2vh solid #f4ead4}
+.jmrail::after{content:'';position:absolute;left:-1vw;right:-1vw;bottom:-2vh;height:2vh;background:#d8c9a8;border-radius:0 0 8px 8px}
+.jmsay{position:absolute;right:100%;top:2vh;margin-right:1vw;display:flex;flex-direction:column;align-items:center;justify-content:center;width:12vh;height:12vh;border-radius:50%;background:#fff;color:#1a1147;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:scale(.4);transition:opacity .15s,transform .2s cubic-bezier(.3,1.6,.5,1)}
+.jmsay.on{opacity:1;transform:none}
+.jmsay b{font-size:7vh;line-height:1}.jmsay small{font-weight:900;font-size:1.6vh;color:#c2185b}
+.jmmaze{position:absolute;left:50%;top:15vh;height:60vh;aspect-ratio:7/6;transform:translateX(-50%);z-index:2;border-radius:12px;background:#120a1e;box-shadow:0 0 0 6px #3a2a20,0 0 0 10px #7a5a3a,0 20px 50px rgba(0,0,0,.6)}
+.jmgrid{position:absolute;inset:0;display:grid;gap:3px;padding:3px}
+.jmgrid i{border-radius:4px;background:radial-gradient(circle at 50% 50%,#1e1430,#140c22);transition:background .5s,box-shadow .5s}
+.jmgrid i.lit{background:repeating-linear-gradient(45deg,#b8a07a 0 6px,#a88f68 6px 12px);box-shadow:inset 0 0 0 2px rgba(255,236,190,.6),0 0 14px rgba(255,220,140,.5);animation:jmlit .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes jmlit{from{transform:scale(.4);opacity:.3}}
+.jmgrid i.goal{background:radial-gradient(circle,#ff7aa8,#c2185b);box-shadow:0 0 30px #ff4d8a}
+.jmtoks{position:absolute;inset:0}
+.jmt{position:absolute;width:5vh;margin:-2.5vh 0 0 -2.5vh;display:flex;flex-direction:column;align-items:center;transition:left .35s cubic-bezier(.3,1.3,.5,1),top .35s cubic-bezier(.3,1.3,.5,1),opacity .4s;translate:calc((var(--s) % 3 - 1) * 1.6vh) calc(var(--s) * -.9vh);z-index:3}
+.jmt .char{width:5vh;height:5vh;border:2px solid #fff;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,.6)}
+.jmt b{font-size:clamp(.45rem,.65vw,.62rem);font-weight:900;white-space:nowrap;background:rgba(0,0,0,.55);padding:0 .3em;border-radius:4px;margin-top:-.4vh}
+.jmt.fail .char{box-shadow:0 0 0 3px #ff4d6a,0 0 14px #ff4d6a;animation:fsshake .12s linear infinite alternate}
+.jmt.out{opacity:.25;filter:grayscale(1)}
+.jmt.won .char{box-shadow:0 0 0 4px #ffd23f,0 0 24px #ffd23f}
+.jmgate{position:absolute;left:50%;bottom:-5.5vh;transform:translateX(-50%);font-size:4vh}
+.jmmsg{top:auto;bottom:4vh}
+.jmov .grbub{top:12vh}
+.jmov .grbub.her{right:auto;left:2vw;top:34vh}
+/* the phone: four arrows in a cross, and the steps so far */
+.jmpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-areas:". u ." "l . r" ". d .";gap:8px;width:100%;max-width:340px;margin:6px auto 0}
+.jmpad [data-dir="1"]{grid-area:u}.jmpad [data-dir="0"]{grid-area:l}.jmpad [data-dir="2"]{grid-area:r}.jmpad [data-dir="3"]{grid-area:d}
+.jmb.hit{animation:jmhit .25s ease-out}
+@keyframes jmhit{50%{transform:scale(.88);background:rgba(255,210,63,.35)}}
+.jmdots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;min-height:14px;margin-top:6px}
+.jmdots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.2)}
+.jmdots i.on{background:#ffd23f}
+.jmov .grbub.her{right:2vw;left:auto;top:42vh;max-width:18vw}
+.jmov .grbub.him{max-width:18vw}
+.jmgrid i:not(.lit){transition:background 1.2s,box-shadow 1.2s}

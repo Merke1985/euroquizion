@@ -136,7 +136,7 @@
     if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (!(s.phase === 'note' && s.note && s.note.st === 'guess')) $('noteui').classList.add('hidden');
-    if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'ready' || s.qj.st === 'go'))) $('qjui').classList.add('hidden');
+    if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'show' || s.qj.st === 'input'))) $('qjui').classList.add('hidden');
     bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
@@ -465,34 +465,38 @@
     $('waitsub').textContent = g != null ? 'She held it for ' + ntTime(n.len, true) + '. You guessed ' + ntTime(g) + ': ' + Math.abs(g - n.len).toFixed(1) + ' seconds off.' : 'She held it for ' + ntTime(n.len, true) + '.';
   }
 
-  // ---------- Lost in Verona ----------
-  // Three arrows: read the street signs on the big screen and tap the way to Juliet's balcony, fast.
-  var qjSent = '', qjMine = -1;
+  // ---------- Lost in Verona (Juliet's maze) ----------
+  // Four arrows: tap the route Juliet called out, step by step, from memory.
+  var jmKey = '', jmN = 0;
   function qjView(s) {
-    var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, mine = qjSent === key || (q.locked || {})[pid], st = (q.steps || {})[pid] || 0;
+    var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, alive = (q.alive || []).indexOf(pid) >= 0, failed = (q.fail || {})[pid];
     show('v-wait');
-    var where = st + ' step' + (st === 1 ? '' : 's') + ' towards the balcony 🌹';
-    if (box.getAttribute('data-b') !== '1') {
-      box.setAttribute('data-b', '1');
-      box.innerHTML = '<div class="vrarrows"><button type="button" class="vrbtn" data-dir="0">⬅️</button><button type="button" class="vrbtn" data-dir="1">⬆️</button><button type="button" class="vrbtn" data-dir="2">➡️</button></div>';
-      [].forEach.call(box.querySelectorAll('.vrbtn'), function (b) { b.addEventListener('pointerdown', function (e) {
+    if (jmKey !== key) { jmKey = key; jmN = 0; }
+    if (box.getAttribute('data-b') !== 'jm') {
+      box.setAttribute('data-b', 'jm');
+      box.innerHTML = '<div class="jmdots"></div><div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button></div>';
+      [].forEach.call(box.querySelectorAll('.jmb'), function (b) { b.addEventListener('pointerdown', function (e) {
         e.preventDefault();
-        var st2 = state; if (!net || !st2 || !st2.qj || st2.qj.st !== 'go') return;
-        var k2 = st2.qj.id + ':' + st2.qj.round; if (qjSent === k2) return;
-        qjSent = k2; qjMine = +b.getAttribute('data-dir');
-        var msg = { pid: pid, id: st2.qj.id, round: st2.qj.round, dir: qjMine };
-        net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'go' && !(state.qj.locked || {})[pid]) net.send('qj', msg); }, 1200);
+        var st = state, qq = st && st.qj; if (!net || !qq || qq.st !== 'input' || (qq.fail || {})[pid] || (qq.alive || []).indexOf(pid) < 0) return;
+        var k2 = qq.id + ':' + qq.round; if (jmKey !== k2) { jmKey = k2; jmN = 0; }
+        if (jmN >= qq.round) return;
+        var msg = { pid: pid, id: qq.id, round: qq.round, i: jmN, dir: +b.getAttribute('data-dir') };
+        jmN++; net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'input' && ((state.qj.prog || {})[pid] || 0) <= msg.i && !(state.qj.fail || {})[pid]) net.send('qj', msg); }, 1100);
+        b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit');
         qjView(state);
       }); });
     }
-    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch the big screen: read the street signs there, tap the way here!'; return; }
-    if (q.st === 'ready') { box.classList.remove('hidden'); box.classList.add('wait'); $('waittitle').textContent = '👀 Crossroads ' + q.round + ' of ' + q.rounds; $('waitsub').textContent = 'Eyes on the big screen… get ready!'; return; }
-    if (q.st === 'go' && !mine) { box.classList.remove('hidden'); box.classList.remove('wait'); $('waittitle').textContent = '⚡ Which way?'; $('waitsub').textContent = 'Find Juliet’s Balcony on the big screen!'; return; }
+    var dots = ''; for (var i = 0; i < q.round; i++) dots += '<i class="' + (i < jmN ? 'on' : '') + '"></i>';
+    box.querySelector('.jmdots').innerHTML = q.st === 'input' ? dots : '';
+    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch Juliet on the big screen and remember her route!'; return; }
+    if (!alive && !(q.st === 'done')) { box.classList.add('hidden'); $('waittitle').textContent = '😵 Lost in Verona!'; $('waitsub').textContent = 'You took a wrong step. Watch the others try…'; return; }
+    if (q.st === 'show') { box.classList.remove('hidden'); box.classList.add('wait'); $('waittitle').textContent = '🤫 Listen to Juliet!'; $('waitsub').textContent = 'Route: ' + q.round + ' step' + (q.round === 1 ? '' : 's') + '. Remember them all!'; return; }
+    if (q.st === 'input' && !failed && jmN < q.round) { box.classList.remove('hidden'); box.classList.remove('wait'); $('waittitle').textContent = '👣 Step ' + (jmN + 1) + ' of ' + q.round; $('waitsub').textContent = 'Tap the route from memory!'; return; }
     box.classList.add('hidden');
-    if (q.st === 'go') { $('waittitle').textContent = ['⬅️', '⬆️', '➡️'][qjMine] || '🔒'; $('waitsub').textContent = 'Locked in! Waiting for the others…'; return; }
-    if (q.st === 'res') { var gn = (q.gain || {})[pid] || 0, a = (q.mine || {})[pid]; $('waittitle').textContent = gn ? (gn === 3 ? '⚡ Fastest! +3' : '✅ +' + gn) : a ? '😵 Wrong way!' : '💤 Too late!'; $('waitsub').textContent = where; return; }
+    if (q.st === 'input') { $('waittitle').textContent = failed ? '😵 Wrong way!' : '✅ Route done!'; $('waitsub').textContent = failed ? 'Lost in Verona…' : 'Waiting for the others…'; return; }
+    if (q.st === 'res') { $('waittitle').textContent = failed || ((q.prog || {})[pid] || 0) < q.round ? '😵 Lost!' : '✅ Still in!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var won = q.win && q.win.indexOf(pid) >= 0;
-    $('waittitle').textContent = won ? '🌹 You reached the balcony!' : '🗺️ Still lost in Verona…'; $('waitsub').textContent = where;
+    $('waittitle').textContent = won ? '🌹 You found Juliet!' : '🗺️ Lost in Verona…'; $('waitsub').textContent = won ? 'Bravissimo!' : 'Better luck next time!';
   }
 
   // ---------- Eurofan Shop ----------
