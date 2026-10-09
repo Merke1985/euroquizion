@@ -1981,3 +1981,27 @@ aside.recapgone{visibility:hidden}
 .fssiren{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;background:conic-gradient(from 0deg at 50% 0%,transparent 0 40%,rgba(255,40,60,.35) 45%,transparent 50% 90%,rgba(255,40,60,.35) 95%,transparent 100%);transition:opacity .4s}
 .fsov.siren .fssiren{opacity:1;animation:fssiren 1.2s linear infinite}
 @keyframes fssiren{to{filter:hue-rotate(0deg);transform:rotate(360deg) scale(2.2)}}
+/* ---------- The boutique, tidied up: a display cabinet, Lynda's balloon in a free spot, less clutter ---------- */
+.shopov.boutique .bqrack,.shopov.boutique .bqhats{display:none}
+.shopov.boutique .bqkeeper{left:3vw;bottom:4vh;height:60vh}
+.shopov.boutique .bqsale{left:15vw;top:24vh}
+.shopov.boutique .bqcase{position:absolute;left:27vw;right:3vw;top:22vh;padding:1.4vh 1.4vw 1vh;border-radius:20px;background:linear-gradient(rgba(255,255,255,.08),rgba(255,255,255,.03));border:2px solid rgba(255,214,120,.45);box-shadow:inset 0 0 40px rgba(255,47,168,.15),0 18px 40px rgba(0,0,0,.45)}
+.shopov.boutique .bqshelf{position:relative;left:auto;right:auto;top:auto;width:auto;display:flex;justify-content:space-around;align-items:flex-end;padding:.6vh .6vw .5vh;border-bottom:9px solid #7a4422;box-shadow:0 6px 0 -3px #4a2814;filter:none}
+.shopov.boutique .bqshelf.low{margin-top:2.2vh}
+.shopov.boutique .bqi{width:7vw;gap:.5vh;opacity:.5;filter:saturate(.6);transition:opacity .4s,filter .4s,transform .4s}
+.shopov.boutique .bqi .si{font-size:clamp(1.7rem,3.2vw,2.8rem);transition:transform .4s}
+.shopov.boutique .bqi b{font-size:clamp(.6rem,.85vw,.82rem);opacity:1}
+.shopov.boutique .bqi.offer{opacity:1;filter:none}
+.shopov.boutique .bqi.offer .si{filter:drop-shadow(0 0 12px rgba(255,214,120,.9));animation:bqoffer 1.6s ease-in-out infinite alternate}
+.shopov.boutique .bqi.offer b::before{content:'✨ ';}
+@keyframes bqoffer{from{transform:translateY(0) scale(1)}to{transform:translateY(-.6vh) scale(1.08)}}
+.shopov.boutique .bqcasenote{text-align:right;font-size:clamp(.6rem,.8vw,.78rem);font-weight:800;opacity:.6;margin-top:.8vh}
+.shopov.boutique .bqbubble{left:23vw;top:auto;bottom:31vh;max-width:36vw;font-size:clamp(1rem,1.75vw,1.55rem);line-height:1.3;border-radius:22px 22px 22px 4px;padding:.75em 1.1em}
+.shopov.boutique .bqfans{left:auto;right:4vw;top:auto;bottom:24vh}
+.shopov.boutique .bqfloor{right:3vw;bottom:11vh}
+.shopov.boutique .shoppers{left:24vw;right:3vw;bottom:3.5vh;justify-content:flex-start;gap:12px}
+.shopov.boutique .shopper{padding:5px 14px 5px 5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);opacity:.6;font-size:clamp(.8rem,1.1vw,1rem)}
+.shopov.boutique .shopper .char{width:32px;height:32px}
+.shopov.boutique .shopper.done{opacity:1;background:rgba(61,255,154,.14);border-color:transparent}
+.boutique.enter .bqcase{animation:inRight .8s .55s cubic-bezier(.2,.9,.3,1.08) both}
+.boutique.leaving .bqcase{animation:outRight .7s .25s cubic-bezier(.6,0,.8,.4) forwards}

@@ -471,7 +471,7 @@
     $('waitsub').textContent = (sh.n > 1 ? 'Take ' + sh.n + ' of these (tap one twice to take two)' : 'Take one of these') + '. It’s free!';
     box.classList.remove('hidden');
     if (shopKey !== sh.id) { shopKey = sh.id; shopSel = []; }
-    var mineOffer = sh.offer && sh.offer[pid];   // your own selection of four
+    var mineOffer = sh.offer && sh.offer[pid];   // your own selection of two
     var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',');
     if (box.getAttribute('data-k') === drawKey && box.innerHTML) return;   // nothing changed: leave the buttons alone (no flicker on every update)
     box.setAttribute('data-k', drawKey);
