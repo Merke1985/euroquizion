@@ -1676,3 +1676,8 @@ aside.recapgone{visibility:hidden}
 /* Edgar: the fastest right answer gets an extra clue, and stands out */
 .host .opts.votelist .voters span.fastest,.host .opts.votelist .opt.right+.voters span.fastest{background:#ffd23f;color:#2a1a00;box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,210,63,.9)}
 .host .opts.votelist .voters span.fastest b{color:#2a1a00}
+
+/* Edgar: the balloons right by the presenters' heads (they may cover the cards) */
+.clueov .grbub{top:31vh;max-width:24vw}
+.clueov .grbub.him{left:9vw;border-bottom-left-radius:4px}.clueov .grbub.her{right:9vw;border-bottom-right-radius:4px}
+.clueov.story .grbub.him{left:15vw}.clueov.story .grbub.her{right:15vw}

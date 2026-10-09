@@ -2596,6 +2596,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var poeFade = null, poeWatch = null;
   // If the round that is playing would end soon (within 15 seconds: too early, in the middle of the question),
   // it goes round once more and only that next round is the last.
+  // When the tune's current round is over, then(): it stops looping, and the reveal waits for its last note
+  // (with a safety net in case the sound never ends, e.g. blocked by the browser).
+  function poeThen(then) {
+    var a = poeAudio, done = false, go = function () { if (done) return; done = true; a && a.removeEventListener('ended', go); then(); };
+    if (REMOTE || !a || a.paused || a.ended) { then(); return; }
+    a.loop = false; a.addEventListener('ended', go);
+    setTimeout(go, Math.max(1, ((a.duration || 26) - (a.currentTime || 0))) * 1000 + 1500);
+  }
   function clueSongLast() {
     var a = poeAudio; if (!a || a.paused) return;
     var left = (a.duration || 26) - (a.currentTime || 0);
@@ -2645,9 +2653,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['him', 'And the bottom row: who took him.', 'who'],
       ['her', 'In each row, one card is the truth. We need detectives to find out which!'],
       ['him', 'Here’s how it works: four trivia questions are coming. Answer right, and your phone gets secret clues.'],
-      ['her', 'A clue is a card that is NOT the answer. Three clues for a right answer, four for the fastest!'],
-      ['him', 'After every question, your phone shows which cards are still possible.'],
-      ['her', 'After the last question, you make your accusation: where, with what, and who. Let’s bring Edgar home! 🔍']
+      ['her', 'A clue is a card that is NOT the answer. A right answer gets you three clues…'],
+      ['him', '…and be quick: the fastest right answer gets an extra clue! ⚡'],
+      ['her', 'After every question, your phone shows which cards are still possible.'],
+      ['him', 'After the last question, you make your accusation: where, inside what, and who. Let’s bring Edgar home! 🔍']
     ];
     var t = 6600;   // (the poster first, the photo, the presenters walking on: then the story)
     lines.forEach(function (l) {
@@ -2678,7 +2687,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueNext() {
     var g = G.clue; if (!g) return false;
     if (g.st === 'ask' && g.n < CLUE_N) {
-      G.mode = 'mc'; G.phase = 'loading'; clueSong(); if (g.n === CLUE_N - 1) clueSongLast(); push(); loadSong();   // (Edgar's tune: only during the four clue questions)
+      G.mode = 'mc'; G.phase = 'loading'; clueSong(); push(); loadSong();   // (Edgar's tune: on through the questions and the accusation)
       if (G.q) G.q.text = '🔍 Clue ' + (g.n + 1) + ' of ' + CLUE_N + ' · ' + G.q.text;
       return true;
     }
@@ -2710,7 +2719,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueAccuse() {
     var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSongFade();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong();   // (the tune plays on)
     clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who took Edgar, where is he hidden, and what is he hidden inside?'); }, 1400);
     setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Make your choice on your phone. Use your clues, detectives!'); }, 5200);
     // bots: a guess among what their clues leave open
@@ -2720,14 +2729,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['who', 'where', 'what'].forEach(function (k) { var open = CLUE_SETS[k].filter(function (c) { return kn.indexOf(k + ':' + c.id) < 0; }); m[k] = pick(open).id; });
       clueMsg(m);
     }, 4000 + Math.random() * 9000); });
-    endTimer = setTimeout(clueReveal, CLUE_ACC_MS);
-    clearInterval(clueTick); clueTick = setInterval(function () { if (!G.clue || G.clue.st !== 'acc') { clearInterval(clueTick); return; } clueShow(); }, 1000);   // (the countdown on the screen)
+    endTimer = setTimeout(function () { poeThen(clueReveal); }, CLUE_ACC_MS);
+    clearInterval(clueTick); clueTick = setInterval(function () {
+      if (!G.clue || G.clue.st !== 'acc') { clearInterval(clueTick); return; }
+      clueShow();
+      // the tune: the round that ends closest to the end of the timer is the last one
+      var a = poeAudio; if (a && a.loop && !a.paused && a.duration) { var accLeft = (g.ends - Date.now()) / 1000, loopLeft = a.duration - a.currentTime; if (accLeft <= loopLeft + 0.5) a.loop = false; }
+    }, 1000);   // (the countdown on the screen)
   }
   function clueMsg(m) {
     var g = G.clue; if (!g || G.phase !== 'clueacc' || g.st !== 'acc' || !m || m.id !== g.id || !players[m.pid] || g.acc[m.pid]) return;
     var ok = ['who', 'where', 'what'].every(function (k) { return CLUE_SETS[k].some(function (c) { return c.id === m[k]; }); }); if (!ok) return;
     g.acc[m.pid] = { who: m.who, where: m.where, what: m.what }; Music.plop(Object.keys(g.acc).length); push();
-    if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.acc[p.pid]; })) { clearTimeout(endTimer); endTimer = setTimeout(clueReveal, 1500); }
+    if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.acc[p.pid]; })) { clearTimeout(endTimer); g.allIn = true; clueShow(); poeThen(clueReveal); }   // everyone locked in: this round of the tune is the last; the reveal comes when it ends
   }
   function clueReveal() {
     var g = G.clue; if (!g || g.st !== 'acc') return;
@@ -2820,7 +2834,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       [].forEach.call(ov.querySelectorAll('.clrow[data-k="' + k + '"] .clcard'), function (el) { var hit = shown && el.getAttribute('data-id') === g.sol[k]; el.classList.toggle('hit', hit); el.classList.toggle('dim', (shown && !hit) || !!(g.dimmed && g.dimmed[k + ':' + el.getAttribute('data-id')])); });
     });
     ov.classList.toggle('found', g.st === 'reveal' && g.step >= 4);
-    var msg = g.st === 'intro' ? 'Edgar, the EuroQuizion mascot, is missing!' : g.st === 'acc' ? 'Accuse on your phone: who, where, and with what? ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar is back! 🎉' : 'Edgar found his own way back… 😅') : g.st === 'reveal' ? 'Who took Edgar…?' : '';
+    var msg = g.st === 'intro' ? 'Edgar, the EuroQuizion mascot, is missing!' : g.st === 'acc' ? (g.allIn ? 'Everyone has made their accusation… 🎶' : Date.now() > g.ends ? 'Time’s up! 🎶' : 'Accuse on your phone: who, where, and with what? ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's') : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar is back! 🎉' : 'Edgar found his own way back… 😅') : g.st === 'reveal' ? 'Who took Edgar…?' : '';
     var me = ov.querySelector('.clmsg'); if (me.textContent !== msg) me.textContent = msg;
     var act = list().filter(function (p) { return !p.off; });
     var html = act.map(function (p) {
