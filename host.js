@@ -4155,13 +4155,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var toEnd = $('autolen').value === 'end';
     // After a drawing the song only plays for ten seconds (there are as many drawings as players); everything else keeps the setting.
     if (G.draw && !lastSong()) { toEnd = false; }
+    if (triviaQ()) toEnd = false;   // (no song plays at this answer: Did you know?, and Edgar's questions)
     // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
     autoEnd = Date.now() + (G.clue && G.clue.st === 'ask' ? 6 : toEnd ? REMOTE ? (G.remain > 0 ? Math.max(5, G.remain + 1 - (G.q && G.q.noclip ? 0 : Math.min(clipSecs(), (Date.now() - (G.guessAt || Date.now())) / 1000))) : 30) : 20 : G.draw && !lastSong() ? Math.min(10, +$('autolen').value || 10) : +$('autolen').value) * 1000;
     var t0 = Date.now(), last = t0, held = false;
     var draw = function () {
       if (G.phase !== 'reveal') { autoStop(); return; }
       // An ad in front of the song (or the song has not started yet): the countdown waits for it.
-      var now = Date.now(), hold = REMOTE || G.sing || (isPair() && G.q.correct === 1) ? '' : revealHold(yt, clipStart);
+      var now = Date.now(), hold = REMOTE || G.sing || triviaQ() || (isPair() && G.q.correct === 1) ? '' : revealHold(yt, clipStart);   // (nothing to wait for when no video plays)
       if (hold && now - t0 < (hold === 'ad' ? 120000 : 12000)) {
         autoEnd = toEnd ? now + 20000 : autoEnd + (now - last); last = now; held = true;
         $('autoleft').textContent = hold === 'ad' ? 'Waiting for the ad to finish' : '';
