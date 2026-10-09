@@ -2079,3 +2079,5 @@ aside.recapgone{visibility:hidden}
 /* the Eurovision Fan: blown-away answers fly off the phone */
 .opt.blown{animation:fanblow .8s cubic-bezier(.5,0,.8,.4) forwards;pointer-events:none}
 @keyframes fanblow{0%{transform:none;opacity:1}30%{transform:translateX(-6px) rotate(-2deg)}100%{transform:translateX(120%) rotate(18deg);opacity:0;visibility:hidden}}
+/* crisper items on the shelves: a soft shadow and just a hint of glow */
+.shopov.boutique .bqi .si,.shopov.boutique .bqi.offer .si{filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)) drop-shadow(0 0 4px rgba(255,214,120,.35))}
