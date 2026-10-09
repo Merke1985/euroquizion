@@ -120,7 +120,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], sit: p.sitNow || '', flag: !!p.flagNow }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], fanLeft: p.fanLeft || 0, sit: p.sitNow || '', flag: !!p.flagNow }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
@@ -2438,7 +2438,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Someone gets an item (bought, free or picked by Lynda): a cash-register "ka-ching"
   var itemGetEl = null;
   function itemGetSnd() { if (REMOTE) return; try { if (!itemGetEl) itemGetEl = new Audio('sounds/item_get.mp3'); itemGetEl.currentTime = 0; itemGetEl.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var pr = itemGetEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
-  function shopGive(ids) { var out = []; ids.forEach(function (id) { var it = shopItem(id), n = (it && it.uses) || 1; for (var i = 0; i < n; i++) out.push(id); }); return out; }   // (an item with 3 uses: three in the bag)
+  function shopGive(p, ids) { ids.forEach(function (id) { var it = shopItem(id); if (it && it.uses) p.fanLeft = (p.fanLeft || 0) + it.uses; }); return ids; }   // (the Eurovision Fan: one item in the bag, with 3 uses)
+  function fanSync(p) { var want = Math.ceil(Math.max(0, p.fanLeft || 0) / 3), inv = p.inv || []; while (inv.filter(function (x) { return x === 'fan'; }).length > want) inv.splice(inv.lastIndexOf('fan'), 1); }   // (an item with 3 uses: three in the bag)
   function shopPrice(it) { return shopPriceOf(it, G.block || 3); }   // (more questions per block of trivia: dearer)
   function shopAvail() { return SHOP_ITEMS.filter(function (it) { return !it.final || G.finalMode === 'chase'; }); }
   function shopRandom(n, from) { var ids = from || shopAvail().map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
@@ -2474,7 +2475,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (m.skip) items = [];
         else { items = items.slice(0, 1); var pr = items.length && g.free.indexOf(p.pid) < 0 ? shopPrice(shopItem(items[0])) : 0; if (!items.length || pr > p.score) return; p.score -= pr; g.paid[p.pid] = pr; }
       } else if (!items.length) return;
-      g.picks[p.pid] = items; p.inv = (p.inv || []).concat(shopGive(items));
+      g.picks[p.pid] = items; p.inv = (p.inv || []).concat(shopGive(p, items));
       if (items.length) itemGetSnd(); else Music.plop(Object.keys(g.picks).length); push();
       if (g.who.filter(function (k) { return players[k] && !players[k].off; }).every(function (k) { return g.picks[k]; })) { clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, 1500); }
       return;
@@ -2491,10 +2492,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
       if (SHOP_OPEN_ONLY.indexOf(it.kind) >= 0 && !open) return;   // these too: only while a question is open, and then they land straight away
       if (it.kind === 'fan') {   // the Eurovision Fan: on your own phone, half of the wrong answers of this question blow away (quietly: no siren)
-        var q = G.q; if (!open || !q || q.type !== 'mc' || !(q.correct >= 0) || !q.options) return;
+        var q = G.q; if (!open || !q || q.type !== 'mc' || !(q.correct >= 0) || !q.options || q.options.length !== 4) return;   // (only on a question with four answers)
         var key = qKeyNow(); if (!G.fanQ || G.fanQ.key !== key) G.fanQ = { key: key, map: {} }; if (G.fanQ.map[p.pid]) return;   // (once per question)
         var wrong = shuffle(q.options.map(function (o, i) { return i; }).filter(function (i) { return i !== q.correct; }));
-        G.fanQ.map[p.pid] = wrong.slice(0, Math.min(wrong.length - 1, Math.round(wrong.length / 2)));   // (half, rounded: three wrong answers lose two; one always stays) inv.splice(k, 1); Music.blip(); push();
+        G.fanQ.map[p.pid] = wrong.slice(0, Math.min(wrong.length - 1, Math.round(wrong.length / 2)));   // (half, rounded: three wrong answers lose two; one always stays)
+        p.fanLeft = Math.max(0, (p.fanLeft || 1) - 1); fanSync(p); Music.blip(); push();
         shopFlash('🪭 ' + p.name + ' waves the Eurovision Fan!'); return;
       }
       if (it.kind === 'bribe') { inv.splice(k, 1); p.bribed = 1; (G.bribes = G.bribes || []).push(p.pid); push(); return; }   // secret: it pays out right before the final
@@ -2512,7 +2514,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.shop; if (G.phase !== 'shop' || !g || g.over) return;
     clearTimeout(shopTimer); g.over = true;
     g.who.forEach(function (k) { var p = players[k]; if (!p || p.off || g.picks[k]) return; if (g.buy && g.free.indexOf(k) < 0) { g.picks[k] = []; return; }   // (buying: too late is no sale; the winner's free item comes anyway)
-      var it = shopRandom(g.n, (g.offer || {})[k]); g.picks[k] = it; p.inv = (p.inv || []).concat(shopGive(it)); itemGetSnd(); });   // too late: a surprise bag
+      var it = shopRandom(g.n, (g.offer || {})[k]); g.picks[k] = it; p.inv = (p.inv || []).concat(shopGive(p, it)); itemGetSnd(); });   // too late: a surprise bag
     Music.ding(); push();
     shopTimer = setTimeout(function () {   // the boutique slides away, then the show goes on
       if (G.phase !== 'shop') return;
@@ -2635,7 +2637,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var loose = function (x) { return (x.inv || []).map(function (id, i) { return id === 'bribe' ? -1 : i; }).filter(function (i) { return i >= 0; }); };   // (an envelope for the EBU cannot be stolen)
       var bags = list().filter(function (x) { return x !== by && !x.off && loose(x).length; });
       if (!bags.length) { shopLast.sound = 'empty'; shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub, but every bag was empty!'; }
-      var v = pick(bags), gi = pick(loose(v)), loot = v.inv.splice(gi, 1)[0]; by.inv = (by.inv || []).concat(loot);
+      var v = pick(bags), gi = pick(loose(v)), loot = v.inv.splice(gi, 1)[0];
+      if (loot === 'fan') { var nf = v.inv.filter(function (x) { return x === 'fan'; }).length, mv = Math.max(1, (v.fanLeft || 0) - nf * 3); v.fanLeft = Math.max(0, (v.fanLeft || 0) - mv); by.fanLeft = (by.fanLeft || 0) + mv; }   // (a fan goes with the uses it has left) by.inv = (by.inv || []).concat(loot);
       shopLast.deltas = [{ pid: by.pid, tag: '+1 item' }, { pid: v.pid, tag: '−1 item' }];
       return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub and left with an item from ' + v.name + '!';
     }
@@ -2655,10 +2658,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // An item used during a question: everything stops for a moment (video, timer), the item lands, then it goes on.
   var freezeT = null;
+  // After an item: make sure the video really runs again (the player can miss a single play command after a long pause).
+  var frozeWasPlaying = false;
+  function ytNudge() {
+    if (REMOTE || !frozeWasPlaying) return;
+    [700, 1600, 3000].forEach(function (ms) { setTimeout(function () {
+      if (G.frozenLeft != null || isPair() || (G.q && G.q.noclip) || ['guess', 'picks'].indexOf(G.phase) < 0) return;
+      try { var st = yt.getPlayerState(); if (st === 2 || st === 5 || st === -1) yt.playVideo(); } catch (e) {}
+    }, ms); });
+  }
   function shopFreeze(ms, apply) {
     if (G.phase !== 'guess') { apply(); push(); return; }
     if (G.frozenLeft == null) {
       G.frozenLeft = Math.max(0, G.endsAt - Date.now()); clearTimeout(endTimer);
+      frozeWasPlaying = false; try { var ps = yt.getPlayerState(); frozeWasPlaying = ps === 1 || ps === 3; } catch (e) {}   // (was the video running? then it must run again afterwards)
       if (!REMOTE && !isPair()) { try { yt.pauseVideo(); } catch (e) {} }
     }
     apply(); push();
@@ -2667,7 +2680,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var left = G.frozenLeft; G.frozenLeft = null;
       if (G.phase !== 'guess') return;
       G.endsAt = Date.now() + left;
-      if (!REMOTE && !isPair() && !(G.q && G.q.noclip)) { try { yt.playVideo(); } catch (e) {} }
+      if (!REMOTE && !isPair() && !(G.q && G.q.noclip)) { try { yt.playVideo(); } catch (e) {} ytNudge(); }
       push();
       if (G.revealPending) { G.revealPending = false; reveal(); return; }
       endTimer = setTimeout(reveal, left); allIn();
@@ -2741,7 +2754,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var ALARM_MS = 3000, sirenEl = null;
   function itemAlarm(then) {
     if (REMOTE) { then(); return; }
-    try { yt.pauseVideo(); } catch (e) {}
+    if (!(G.phase === 'guess' && isPair())) { try { yt.pauseVideo(); } catch (e) {} }   // (a question with two songs runs on: its clips have their own timing, and nothing would start it again)
     try { if (!sirenEl) sirenEl = new Audio('sounds/siren.mp3'); sirenEl.currentTime = 0; sirenEl.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var pr = sirenEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
     var ov = $('alarmov'); if (ov) ov.remove();
     ov = document.createElement('div'); ov.id = 'alarmov'; ov.className = 'alarmov';
@@ -4471,7 +4484,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; }); G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.fanLeft = 0; }); G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
