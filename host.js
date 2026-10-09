@@ -239,7 +239,7 @@
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   var viewNow = '';
-  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue); }   // menu music until the fanfare
+  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -2564,16 +2564,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ebuCalc() {   // who sent an envelope, and what each gets (not paid yet); null when nobody did
     var bs = (G.bribes || []).filter(function (k) { return players[k]; }); G.bribes = [];
     if (!bs.length) return null;
-    var top = Math.max.apply(null, list().map(function (p) { return p.score; })), pot = Math.max(bs.length, Math.round(top * 0.1)), each = Math.floor(pot / bs.length), got = {};
-    bs.forEach(function (k) { got[k] = (got[k] || 0) + each; });
+    var top = Math.max.apply(null, list().map(function (p) { return p.score; })), got = {}, pot = 0;
+    bs.forEach(function (k) { var v = Math.max(1, Math.round(top * (0.1 + Math.random() * 0.1))); got[k] = (got[k] || 0) + v; pot += v; });   // every envelope: a random 10 to 20% of the leader's score
     var names = Object.keys(got).map(function (k) { return players[k].name; });
-    return { got: got, pot: pot, names: names, txt: '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'They share ' + pot + ' points.' : pot + ' points for them.') };
+    return { got: got, pot: pot, names: names, txt: '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'Extra points for all of them.' : pot + ' points for them.') };
   }
   // Party: before the Grand Final, the presenters show the scores in their studio. If anyone sent an envelope to the
   // EBU, a courier rushes in with a brown envelope, the presenters open it in front of everyone, and the bribes pay out.
   var COURIER = '<svg class="courier" viewBox="0 0 220 440" aria-hidden="true"><ellipse cx="110" cy="432" rx="70" ry="8" fill="rgba(0,0,0,.35)"/><g class="cleg l"><rect x="80" y="290" width="26" height="120" rx="10" fill="#5a3a1c"/><path d="M72 404 h40 v18 h-46 q-4-10 6-18z" fill="#222"/></g><g class="cleg r"><rect x="114" y="290" width="26" height="120" rx="10" fill="#6b4522"/><path d="M110 404 h40 q10 8 6 18 h-46z" fill="#222"/></g><path d="M66 170 Q110 150 154 170 L162 300 Q110 312 58 300 Z" fill="#8a5a2b"/><path d="M66 170 Q110 150 154 170 L150 196 Q110 182 70 196 Z" fill="#a26c36"/><rect x="58" y="282" width="104" height="16" rx="4" fill="#4a2e14"/><rect x="102" y="282" width="16" height="16" rx="3" fill="#ffd166"/><rect x="74" y="210" width="32" height="20" rx="4" fill="#ffd166"/><text x="90" y="225" font-size="13" font-weight="900" text-anchor="middle" fill="#5a3a1c">EXP</text><path d="M66 176 Q40 220 50 270" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="51" cy="274" r="12" fill="#e8b58f"/><path class="carm" d="M154 176 Q190 200 196 236" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="196" cy="242" r="12" fill="#e8b58f"/><rect x="98" y="132" width="24" height="26" rx="8" fill="#e8b58f"/><ellipse cx="110" cy="100" rx="40" ry="44" fill="#e8b58f"/><ellipse cx="96" cy="100" rx="5" ry="6" fill="#222"/><ellipse cx="124" cy="100" rx="5" ry="6" fill="#222"/><path d="M96 122 Q110 134 124 122" stroke="#7a2a1a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="84" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><ellipse cx="136" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><path d="M68 84 Q70 48 110 46 Q150 48 152 84 Z" fill="#6b4522"/><path d="M62 84 h104 q6 0 4 8 q-56 6 -112 0 q-2-8 4-8z" fill="#4a2e14"/><rect x="100" y="56" width="20" height="14" rx="3" fill="#ffd166"/></svg>';   // (an original character: a courier in a brown uniform)
   function partyStandings(then) {
     var gf = chaseWanted(), e = ebuCalc();
+    try { yt.pauseVideo(); } catch (e2) {} G.fsMusic = true; Music.want(true);   // the song stops: the studio music plays under the scores
+    var then0 = then; then = function () { G.fsMusic = false; Music.want(false); then0(); };
     var old = $('fsov'); if (old) old.remove();
     var ov = document.createElement('div'); ov.id = 'fsov'; ov.className = 'grov hsov hs-scores fsov enter';
     var ps = list().slice().sort(function (a, b) { return b.score - a.score; }), n = ps.length;
@@ -2609,8 +2611,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       at(3400, function () { ov.querySelector('.fscbub').classList.remove('on'); ov.classList.add('cgive'); Music.blip(); });   // the envelope changes hands
       at(1100, function () { ov.classList.add('cout'); whooshes([0]); });   // and off he goes
       at(1400, function () { ov.classList.add('envbig'); whooshes([0]); var h = 'Let’s open it… 🥁'; say('her', h); });
-      at(2600, function () { ov.classList.add('envopen'); Music.ping(); ov.querySelector('.fsletter span').textContent = 'With thanks to ' + nm + ' for their… very generous gifts. 💸 ' + (e.names.length > 1 ? 'Shared: ' : '') + '+' + paid + ' points'; });
-      var sc = 'Scandalous! ' + nm + (e.names.length > 1 ? ' bribed' : ' bribed') + ' the EBU! 🤑 ' + (e.names.length > 1 ? 'They share ' + paid + ' points!' : paid + ' points for ' + nm + '!');
+      at(2600, function () { ov.classList.add('envopen'); Music.ping(); ov.querySelector('.fsletter span').textContent = 'With thanks for the… very generous gifts. 💸 ' + Object.keys(e.got).map(function (k) { return (players[k] ? players[k].name : '') + ' +' + e.got[k]; }).join(' · '); });
+      var sc = 'Scandalous! ' + nm + ' bribed the EBU! 🤑 ' + (e.names.length > 1 ? 'Extra points for all of them!' : paid + ' points for ' + nm + '!');
       at(1800, function () { ov.classList.add('siren'); say('her', sc); Music.buzz && Music.buzz(); });
       var rr = 'Well… the EBU has spoken. Rules are rules! 🤷'; t += lineMs(sc) - 1200;
       at(0, function () { say('him', rr); ov.classList.remove('siren'); });
@@ -2638,7 +2640,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var got = e.got, pot = e.pot, names = e.names;
     Object.keys(got).forEach(function (k) { players[k].score += got[k]; });
     shopLast = { icon: '✉️', sound: 'steal', deltas: Object.keys(got).map(function (k) { return { pid: k, n: got[k] }; }) };
-    var txt = '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'They share ' + pot + ' points' : pot + ' points') + ' before the Grand Final.';
+    var txt = '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'Extra points for all of them' : pot + ' points') + ' before the Grand Final.';
     FUN.shopgo = { icon: '✉️', title: 'A brown envelope…', sub: txt };
     funIntro('shopgo', then, 9000); shopHit(txt, 8800);
   }
