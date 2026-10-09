@@ -446,9 +446,9 @@
   function noteView(s) {
     var n = s.note, box = $('noteui'), mine = noteSent === n.id || (n.locked || {})[pid];
     show('v-wait');
-    if (box.getAttribute('data-id') !== n.id) { box.setAttribute('data-id', n.id); $('ntrange').value = 75; $('ntv').textContent = ntTime(75); noteMine = null; }
+    if (box.getAttribute('data-id') !== n.id) { box.setAttribute('data-id', n.id); $('ntrange').value = 35; $('ntv').textContent = ntTime(35); noteMine = null; }
     if (n.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
-    if (n.st === 'guess' && !mine) { $('waittitle').textContent = '🎤 How long will she hold it?'; $('waitsub').textContent = 'Between 30 seconds and 2 minutes. Once she sings past your time you’re out: the closest guess that’s still in wins!'; box.classList.remove('hidden'); return; }
+    if (n.st === 'guess' && !mine) { $('waittitle').textContent = '🎤 How long will she hold it?'; $('waitsub').textContent = 'Between 10 seconds and one minute. Once she sings past your time you’re out: the closest guess that’s still in wins!'; box.classList.remove('hidden'); return; }
     box.classList.add('hidden');
     var g = n.guess && n.guess[pid] != null ? n.guess[pid] : noteMine;
     if (n.st === 'sing' && n.out && n.out[pid]) { $('waittitle').textContent = '💥 You’re out!'; $('waitsub').textContent = 'She sang past your time' + (g != null ? ' (' + ntTime(g) + ')' : '') + '. Watch the others sweat!'; return; }

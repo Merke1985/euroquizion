@@ -1713,7 +1713,7 @@ aside.recapgone{visibility:hidden}
 .noteov[data-st="sing"] .nttimer,.noteov[data-st="cut"] .nttimer,.noteov[data-st="done"] .nttimer{opacity:1}
 .noteov[data-st="cut"] .nttimer,.noteov[data-st="done"] .nttimer{color:#ff5a5a;text-shadow:0 0 20px rgba(255,60,60,.9)}
 .noteov .ntline{position:absolute;left:8vw;right:8vw;bottom:5vh;height:1.2vh;border-radius:99px;background:rgba(255,255,255,.18);z-index:5;opacity:0;transition:opacity .5s}
-.noteov .ntline::before{content:'';position:absolute;left:25%;right:0;top:0;bottom:0;border-radius:0 99px 99px 0;background:linear-gradient(90deg,rgba(255,63,176,.45),rgba(255,210,63,.45))}
+.noteov .ntline::before{content:'';position:absolute;left:16.67%;right:0;top:0;bottom:0;border-radius:0 99px 99px 0;background:linear-gradient(90deg,rgba(255,63,176,.45),rgba(255,210,63,.45))}
 .noteov[data-st="sing"] .ntline,.noteov[data-st="cut"] .ntline,.noteov[data-st="done"] .ntline{opacity:1}
 .noteov .ntscale span{position:absolute;top:1.8vh;transform:translateX(-50%);font-size:clamp(.7rem,1vw,.9rem);font-weight:800;opacity:.7}
 .noteov .ntneedle{position:absolute;top:-1.4vh;width:.6vh;height:4vh;margin-left:-.3vh;background:#fff;border-radius:99px;box-shadow:0 0 12px #fff;left:0}
