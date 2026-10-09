@@ -1290,7 +1290,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hop = function () {
       if (G.phase !== 'pspin') return;
       G.pspin.roll = idx(games[(start + k) % games.length]); if (!REMOTE) Music.plop(k); render();
-      if (k >= hops) { funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin.done = true; if (!REMOTE) Music.ding(); push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); }, LAND); return; }   // the light lands on the winner first, then that tile turns green
+      if (k >= hops) { funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin.done = true; if (!REMOTE) Music.ding(); if (chosen === 'clue') { clueSting(); G.clueSting = true; } push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); }, LAND); return; }   // the light lands on the winner first, then that tile turns green
       k++; funTimer = setTimeout(hop, 70 + Math.pow(k / hops, 2.4) * 520);
     };
     push(); clearTimeout(funTimer); funTimer = setTimeout(hop, 2200);   // a moment to take in the cards before the light starts running
@@ -2232,7 +2232,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
   // what was used lands just before the next question: points blown away or stolen, or a mic that breaks.
   var SHOP_MS = 30000, shopTimer = null;
-  function shopOn() { return G.atype === 'party' && (G.partyOn || {}).shop !== false; }
+  function shopOn() { return G.atype === 'party'; }   // Woodruff's Boutique is part of every Party game (no switch)
   function mgScores() { var o = {}; list().forEach(function (p) { o[p.pid] = p.score; }); return o; }
   // A party game is over: what it scored is taken back, and whoever scored the most in it (a tie: all of them) wins a visit to the boutique.
   function mgPrize() {
@@ -2293,14 +2293,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 2200);
   }   // the first visit: everyone, one item each
   // A visit to the boutique: who (null: everyone), how many items each, and what comes after.
-  function shopVisit(who, n, then, win) {
+  function shopVisit(who, n, then, win, line) {
     var act = list().filter(function (p) { return !p.off && (!who || who.indexOf(p.pid) >= 0); });
     if (!act.length) { then(); return; }
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
     var old = $('shopov'); if (old) old.remove();   // (a fresh boutique, sliding in)
     var offer = {}; act.forEach(function (p) { offer[p.pid] = shuffle(SHOP_ITEMS.map(function (it) { return it.id; })).slice(0, 4); });   // everyone gets their own selection of four
-    G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win };
+    G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '' };
     G.phase = 'shop'; G.barMs = SHOP_MS; G.endsAt = Date.now() + SHOP_MS; push(); Music.ding();
     var id = G.shop.id;
     bots.forEach(function (b) { if (G.shop.who.indexOf(b.pid) >= 0) setTimeout(function () { shopMsg({ pid: b.pid, id: id, items: shopRandom(n, offer[b.pid]) }); }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
@@ -2533,7 +2533,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
     var one = act.length === 1, wn = act.map(function (p) { return p.name; }), wnames = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
     var bq = ov.querySelector('.bqbubble');
-    if (g.win) typeSay(bq, g.over ? (one ? 'Good choice, darling!' : 'Good choices, darlings!') : 'Congratulations, ' + wnames + '! You can choose an item out of my selection of four. Enjoy!', 'lynda');
+    if (g.line && !g.over) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game)
+    else if (g.win) typeSay(bq, g.over ? (one ? 'Good choice, darling!' : 'Good choices, darlings!') : 'Congratulations, ' + wnames + '! You can choose an item out of my selection of four. Enjoy!', 'lynda');
     else typeSay(bq, g.over ? 'Nice choice' + (one ? ', sweetie' : 's, sweeties') + '! Enjoy the rest of the show.' : 'I’m Lynda, welcome to my boutique, darling' + (one ? '' : 's') + '! I selected four for ' + (one ? 'you' : 'each of you') + ': pick ' + (['', 'one', 'two', 'three', 'four'][g.n] || g.n) + ' on your device.', 'lynda');
     ov.querySelector('.shoppers').innerHTML = act.map(function (p) { return '<span class="shopper' + (g.picks[p.pid] ? ' done' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>'; }).join('');
   }
@@ -2575,8 +2576,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // answer gets four), each one a card that is NOT the answer, from the row where the player still has the most options. Then everyone accuses on their phone, and the answer comes out,
   // part by part. 4 points for each right part, 6 more for all three.
   var clueTimer = null, clueTick = null;
-  // Edgar's own tune loops through the four clue questions (and only there). Those questions are only ones without
-  // a video, so nothing else plays over it.
+  // Edgar's own tune loops from the start of his game through the four clue questions. Those questions are only ones
+  // without a video, so nothing else plays over it.
   var poeAudio = null;
   function clueSong() {
     if (REMOTE) return;
@@ -2606,6 +2607,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var a = poeAudio, v0 = a.volume, n = 0; clearInterval(poeFade);
     poeFade = setInterval(function () { n++; a.volume = Math.max(0, v0 * (1 - n / 15)); if (n >= 15) { clearInterval(poeFade); try { a.pause(); } catch (e) {} a.volume = v0; } }, 100);
   }
+  // "Who the hell…?!": when the spin lands on this game (or as it starts, when it was not spun)
+  function clueSting() { if (REMOTE) return; try { var w = new Audio('sounds/who_the_hell.mp3'); w.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function clueSongStop() { if (poeAudio) try { poeAudio.pause(); } catch (e) {} if (egghAudio) try { egghAudio.pause(); } catch (e) {} }
   var egghAudio = null;
   clueReveal.music = function () {   // the reveal's own track (once, not looped)
@@ -2624,7 +2627,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.atype === 'party' && G.total < ENDLESS) G.total += CLUE_N - 1;
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
-    clueShow();
+    clueShow(); clueSong();   // Edgar's tune: from the start of the game to the end of the clue questions
+    if (!G.clueSting) clueSting(); G.clueSting = false;   // (no spin landed on it: the sting plays now)
     var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); }   // first only the news: the poster big, the presenters close together; the cards come later
     var at = function (ms, f) { clueTimer = setTimeout(function () { if (G.clue && G.clue.st === 'intro' && $('clueov')) f(); }, ms); };
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
@@ -2642,14 +2646,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ];
     var t = 1500;
     lines.forEach(function (l) {
-      (function (l, at0, first) { at(at0, function () {
+      (function (l, at0) { at(at0, function () {
         clueSay(l[0], l[1]);
-        if (first) setTimeout(function () { if (!$('clueov')) return; try { var w = new Audio('sounds/who_the_hell.mp3'); w.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }, Math.max(0, Array.from(l[1]).join('').indexOf('Edgar')) * TALK_MS);   // "Who the hell…?!" right as the word Edgar comes out
         var ov2 = $('clueov'); if (ov2) {
           if (l[2]) { if (ov2.classList.contains('story')) whooshes([0, 250]); ov2.classList.remove('story'); }   // on to the clues: the presenters step apart, the rows come in one by one
           [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { var me = !!l[2] && r.getAttribute('data-k') === l[2]; r.classList.toggle('lit', me); if (me) r.classList.add('on'); });
         }
-      }); })(l, t, l === lines[0]);
+      }); })(l, t);
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
     });
     at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); r.classList.add('on'); }); clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
@@ -2746,32 +2749,43 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     if (who.id === 'felix') at(t - 600, function () { clueSay('him', 'I just wanted a selfie with him! 🤳'); });
     var T0 = t + (who.id === 'felix' ? 1600 : 0);
-    at(T0, function () {   // the points: 4 for each right part, 6 more for all three
-      var solved = [];
+    at(T0, function () {   // the result. With the boutique on, the prize is a trip there (no points); without it: 4 points a right part, 6 more for all three
+      var solved = [], shop = shopOn(), base = G.mgBase;
       g.res = {};
       list().forEach(function (p) {
         var a = g.acc[p.pid]; if (!a) { g.res[p.pid] = { n: 0, pts: 0, none: true }; return; }
-        var n = (a.who === g.sol.who) + (a.where === g.sol.where) + (a.what === g.sol.what), pts = n * CLUE_PART + (n === 3 ? CLUE_BONUS : 0);
-        g.res[p.pid] = { n: n, pts: pts, a: a }; if (pts) { p.score += pts; p.pts = pts; p.got = true; } if (n === 3) solved.push(p.name);
+        var n = (a.who === g.sol.who) + (a.where === g.sol.where) + (a.what === g.sol.what), pts = shop ? 0 : n * CLUE_PART + (n === 3 ? CLUE_BONUS : 0);
+        g.res[p.pid] = { n: n, pts: pts, a: a }; if (pts) { p.score += pts; p.pts = pts; p.got = true; } if (n === 3) solved.push(p);
       });
-      step(4); Music.dread(false); Music.douze();
-      // Nobody unmasked him: Lynda pops in with a little gift from her boutique for whoever is last
-      if (!solved.length && shopOn()) {
-        var act = list().filter(function (p) { return !p.off; }), low = Math.min.apply(null, act.map(function (p) { return p.score; }));
-        var lp = pick(act.filter(function (p) { return p.score === low; }));
-        if (lp) g.gift = { pid: lp.pid, item: pick(SHOP_ITEMS).id };
+      if (shop) { G.mgBase = null; if (base) list().forEach(function (p) { if (base[p.pid] != null) p.score = base[p.pid]; }); }   // (this game hands out its own prize: no general winner's trip)
+      step(4); Music.douze();
+      var names = function (ps) { var n = ps.map(function (p) { return p.name; }); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0]; };
+      if (solved.length) {
+        g.prize = { who: solved.map(function (p) { return p.pid; }), solved: true };
+        clueSay('him', names(solved) + (solved.length > 1 ? ' were true detectives and found' : ' was a true detective and found') + ' all the clues' + (shop ? ', and ' + (solved.length > 1 ? 'are' : 'is') + ' rewarded with a visit to Woodruff’s Boutique! 🛍️' : '! Welcome back, Edgar! 🎉'));
+      } else {
+        clueSay('him', 'Unfortunately, nobody discovered the truth… 😢');
+        if (shop) {
+          var act = list().filter(function (p) { return !p.off; }), low = Math.min.apply(null, act.map(function (p) { return p.score; }));
+          var lp = pick(act.filter(function (p) { return p.score === low; }));
+          if (lp) { g.prize = { who: [lp.pid], solved: false }; at(4000, function () { clueSay('her', 'But Lynda sent us a message: she’d like to offer the lowest scoring player, ' + lp.name + ', something anyway! 💌'); }); }
+        }
       }
-      clueSay('him', solved.length ? (solved.length > 1 ? solved.slice(0, -1).join(', ') + ' and ' + solved[solved.length - 1] + ' found' : solved[0] + ' found') + ' Edgar! Welcome back, Edgar! 🎉' : 'Nobody found him… luckily, Edgar found his own way back! 😅');
     });
-    at(T0 + 3600, function () {   // Lynda and her gift
-      if (!g.gift || !players[g.gift.pid]) return;
-      var gp = players[g.gift.pid], it = shopItem(g.gift.item); gp.inv = (gp.inv || []).concat(g.gift.item); g.step = 5;
-      var ov = $('clueov'); if (ov && !ov.querySelector('.clynda')) { var ly = document.createElement('div'); ly.className = 'clynda'; ly.innerHTML = SHOPKEEPER + '<div class="grbub lynda"></div>'; ov.appendChild(ly); ov.classList.add('withlynda'); }
-      whooshes([0]); Music.blip(); push();
-      setTimeout(function () { var b = $('clueov') && $('clueov').querySelector('.grbub.lynda'); if (!b) return; [].forEach.call($('clueov').querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); b.classList.add('on'); typeSay(b, 'Nobody found Edgar? Never mind, darling! A little gift from my boutique for ' + gp.name + ': the ' + it.name + '! ' + it.icon, 'lynda'); }, 900);
+    var lynda = function () {   // what Lynda says in the boutique: about Edgar (and a confession, if she took him)
+      var pr = g.prize, ws = pr.who.map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), nm = ws.length > 1 ? ws.slice(0, -1).join(', ') + ' and ' + ws[ws.length - 1] : ws[0], took = g.sol.who === 'lynda';
+      if (pr.solved && took) return 'Alright, alright, ' + nm + ', you caught me! 👠 Edgar just looked SO good in sequins… To say sorry, pick one item from my selection. Don’t tell the police, darling!';
+      if (pr.solved) return 'Darling ' + nm + ', what a detective! Edgar popped in to say thank you, and his raven won’t stop squawking at my hats! 🐦 Pick one item from my selection, on the house!';
+      if (took) return 'Shh, ' + nm + ', between us… Edgar was in my changing room all along! 👠 Here’s something to keep you quiet, darling: pick one item from my selection!';
+      return nm + ', darling, nobody found the truth, but Edgar whispered to me that you could use a little help! 🐦 Pick one item from my selection.';
+    };
+    var done = function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); };
+    at(T0 + 8500, function () {
+      var pr = g.prize;
+      if (!pr || !shopOn() || !pr.who.some(function (k) { return players[k] && !players[k].off; })) { clueLeave(done); return; }
+      var line = lynda();
+      clueLeave(function () { clueSongStop(); G.clue = null; shopVisit(pr.who, 1, function () { backFromShop(pr.who.length, function () { startRound2(); }); }, true, line); });
     });
-    at(T0 + 6500, function () { if (g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
-    at(T0 + 11500, function () { if (!g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
   }
   function clueSnap() {
     var g = G.clue, acc = {};
@@ -2806,7 +2820,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off; });
     var html = act.map(function (p) {
       var r = g.res && g.res[p.pid], a = r && r.a;
-      var marks = r ? (r.none ? '<i>no accusation</i>' : ['where', 'what', 'who'].map(function (k) { return '<em class="' + (a[k] === g.sol[k] ? 'ok' : 'no') + '">' + clueCard(k + ':' + a[k]).c.icon + '</em>'; }).join('') + '<strong>' + (r.pts ? '+' + r.pts : '0') + '</strong>') : g.st === 'acc' ? (g.acc[p.pid] ? '<em class="ok">✔</em>' : '<em class="wait">…</em>') : '<em>' + ((g.known[p.pid] || []).length) + ((g.known[p.pid] || []).length === 1 ? ' clue' : ' clues') + '</em>';
+      var marks = r ? (r.none ? '<i>no accusation</i>' : ['where', 'what', 'who'].map(function (k) { return '<em class="' + (a[k] === g.sol[k] ? 'ok' : 'no') + '">' + clueCard(k + ':' + a[k]).c.icon + '</em>'; }).join('') + '<strong>' + (shopOn() ? (r.n === 3 ? '🏆' : r.n + '/3') : (r.pts ? '+' + r.pts : '0')) + '</strong>') : g.st === 'acc' ? (g.acc[p.pid] ? '<em class="ok">✔</em>' : '<em class="wait">…</em>') : '<em>' + ((g.known[p.pid] || []).length) + ((g.known[p.pid] || []).length === 1 ? ' clue' : ' clues') + '</em>';
       return '<div class="clp' + (r && r.n === 3 ? ' solved' : '') + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>' + marks + '</div>';
     }).join('');
     var pl = ov.querySelector('.clplayers'); if (pl.getAttribute('data-h') !== html) { pl.setAttribute('data-h', html); pl.innerHTML = html; }
