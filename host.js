@@ -2876,9 +2876,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lines = [
       ['him', 'Oh no, Europe… we have technical problems! 😱'],
       ['her', 'One of our stars keeps getting cut off in the middle of her big high note!'],
-      ['him', 'The engineers say it’s fixed now… but how long will she hold it this time?'],
-      ['her', 'Guess on your phone: anywhere between 30 seconds and 2 minutes. The closest guess wins! 🎯'],
-      ['him', 'Ladies and gentlemen… our diva! 💃']
+      ['him', 'Our engineers need your help: they want to find the exact moment the sound system breaks down! 🔧'],
+      ['her', 'So: how long will she hold her note before it all goes wrong?'],
+      ['him', 'Guess on your phone: anywhere between 30 seconds and 2 minutes. The closest guess wins! 🎯'],
+      ['her', 'Ladies and gentlemen… our diva! 💃']
     ];
     var t = 1800;
     lines.forEach(function (l, i) { (function (l, t0) { at(t0, function () { noteSay(l[0], l[1]); if (i === lines.length - 1) { $('noteov').classList.add('diva-on'); Music.douze(); whooshes([0, 300]); } }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
