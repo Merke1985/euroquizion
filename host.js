@@ -584,7 +584,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Until that reveal the video itself is kept invisible, so not even a flash of it can give the song away.
     var dShow = !!G.draw && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal'), dSide = !!G.draw && G.phase === 'reveal';
     $('drawview').classList.toggle('hidden', !dShow); $('drawview').classList.toggle('side', dSide);
-    bestRender();
+    bestRender(); pcSync();
     var stg = document.querySelector('#v-game .stage'); stg.classList.toggle('withdraw', dSide); stg.classList.toggle('novideo', (!!G.draw || !!(G.q && G.q.noclip)) && (G.phase !== 'reveal' || triviaQ()));   // no clip in this question: not a glimpse of the video before the answer
     $('briefcd').textContent = '';
     if (G.phase === 'intro') { $('start').disabled = false; $('start').textContent = 'Start now · ' + Math.max(1, Math.ceil((G.endsAt - Date.now()) / 1000)); }
@@ -2076,8 +2076,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return chars.length * TALK_MS;
   }
   function hostSay(who, text, ms) {
-    var h = hostsEl(); if (!h) return;
     if (who === 'next') { who = hostTurn++ % 2 ? 'her' : 'him'; }
+    var pc = !REMOTE && $('pcov');
+    if (pc) {   // the Postcard studio: they are on stage already, and talk there
+      [].forEach.call(pc.querySelectorAll('.grbub'), function (x) { if (!x.classList.contains(who)) x.classList.remove('on'); });
+      var pb = pc.querySelector('.grbub.' + who); pb.classList.add('on'); pb._said = ''; var tp = typeSay(pb, text, who);
+      clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { pb.classList.remove('on'); }, Math.max(ms || 3500, tp + 1600));
+      return;
+    }
+    var h = hostsEl(); if (!h) return;
     if (h.classList.contains('away')) { h.classList.remove('away'); if (!REMOTE) Music.woosh(); }   // they walk on to say it…
     var b = h.querySelector('.hbub.' + who); b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
     // The words come out letter by letter, with a little blip now and then, so it looks (and sounds) like they are talking.
@@ -2466,37 +2473,69 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var names = Object.keys(got).map(function (k) { return players[k].name; });
     return { got: got, pot: pot, names: names, txt: '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'They share ' + pot + ' points.' : pot + ' points for them.') };
   }
-  // Party: before the Grand Final, the final scores, where the envelopes for the EBU pay out.
+  // Party: before the Grand Final, the presenters show the scores in their studio. If anyone sent an envelope to the
+  // EBU, a courier rushes in with a brown envelope, the presenters open it in front of everyone, and the bribes pay out.
+  var COURIER = '<svg class="courier" viewBox="0 0 220 440" aria-hidden="true"><ellipse cx="110" cy="432" rx="70" ry="8" fill="rgba(0,0,0,.35)"/><g class="cleg l"><rect x="80" y="290" width="26" height="120" rx="10" fill="#5a3a1c"/><path d="M72 404 h40 v18 h-46 q-4-10 6-18z" fill="#222"/></g><g class="cleg r"><rect x="114" y="290" width="26" height="120" rx="10" fill="#6b4522"/><path d="M110 404 h40 q10 8 6 18 h-46z" fill="#222"/></g><path d="M66 170 Q110 150 154 170 L162 300 Q110 312 58 300 Z" fill="#8a5a2b"/><path d="M66 170 Q110 150 154 170 L150 196 Q110 182 70 196 Z" fill="#a26c36"/><rect x="58" y="282" width="104" height="16" rx="4" fill="#4a2e14"/><rect x="102" y="282" width="16" height="16" rx="3" fill="#ffd166"/><rect x="74" y="210" width="32" height="20" rx="4" fill="#ffd166"/><text x="90" y="225" font-size="13" font-weight="900" text-anchor="middle" fill="#5a3a1c">EXP</text><path d="M66 176 Q40 220 50 270" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="51" cy="274" r="12" fill="#e8b58f"/><path class="carm" d="M154 176 Q190 200 196 236" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="196" cy="242" r="12" fill="#e8b58f"/><rect x="98" y="132" width="24" height="26" rx="8" fill="#e8b58f"/><ellipse cx="110" cy="100" rx="40" ry="44" fill="#e8b58f"/><ellipse cx="96" cy="100" rx="5" ry="6" fill="#222"/><ellipse cx="124" cy="100" rx="5" ry="6" fill="#222"/><path d="M96 122 Q110 134 124 122" stroke="#7a2a1a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="84" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><ellipse cx="136" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><path d="M68 84 Q70 48 110 46 Q150 48 152 84 Z" fill="#6b4522"/><path d="M62 84 h104 q6 0 4 8 q-56 6 -112 0 q-2-8 4-8z" fill="#4a2e14"/><rect x="100" y="56" width="20" height="14" rx="3" fill="#ffd166"/></svg>';   // (an original character: a courier in a brown uniform)
   function partyStandings(then) {
-    var bg = document.createElement('div'); bg.id = 'recapbg'; bg.className = 'recapbg'; document.body.appendChild(bg);
-    var c = document.createElement('div'); c.id = 'recap'; c.className = 'card recap tally standings';
-    var ps = list().slice().sort(function (a, b) { return b.score - a.score; }), tot = {}; ps.forEach(function (p) { tot[p.pid] = p.score; });
-    c.innerHTML = '<h3>The final scores</h3><p class="rstep">' + (chaseWanted() ? 'before the Grand Final' : '') + '</p><ol class="board">' + ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '"><span class="who">' + charSvg(p.char) + esc(p.name) + '</span><span class="tot">' + p.score + '</span><span class="gain"></span></li>';
-    }).join('') + '</ol><p class="recapnext ebuline"></p>';
-    document.body.appendChild(c);
-    c.style.left = Math.round((innerWidth - c.offsetWidth) / 2) + 'px'; c.style.top = Math.round((innerHeight - c.offsetHeight) / 2) + 'px';
-    c.classList.add('go'); bg.classList.add('on'); whooshes([0, 300]);
-    var ol = c.querySelector('ol'), done = function () { c.classList.add('leave'); bg.classList.remove('on'); setTimeout(function () { c.remove(); bg.remove(); }, 550); then(); };
-    var e = ebuCalc();
-    if (!e) { setTimeout(done, 5500); return; }
-    setTimeout(function () {   // the envelopes: the points pop up next to the totals and count in
-      var line = c.querySelector('.ebuline'); line.textContent = e.txt; line.classList.add('on'); Music.ping(); setTimeout(function () { Music.ding(); }, 300);
-      Object.keys(e.got).forEach(function (k, i) {
-        var p = players[k], li = ol.querySelector('li[data-pid="' + k.replace(/"/g, '') + '"]'); if (!p || !li) return;
-        setTimeout(function () {
-          var ge = li.querySelector('.gain'), from = p.score; p.score += e.got[k]; ge.textContent = '✉️ +' + e.got[k]; ge.classList.add('on'); Music.plop(i);
-          setTimeout(function () { ge.classList.add('off'); var t0 = Date.now(), el = li.querySelector('.tot'); (function f() { var q = Math.min(1, (Date.now() - t0) / 700); el.textContent = Math.round(from + e.got[k] * q); if (q < 1) requestAnimationFrame(f); })(); }, 700);
-        }, 600 + i * 500);
+    var gf = chaseWanted(), e = ebuCalc();
+    var old = $('fsov'); if (old) old.remove();
+    var ov = document.createElement('div'); ov.id = 'fsov'; ov.className = 'grov hsov hs-scores fsov enter';
+    var ps = list().slice().sort(function (a, b) { return b.score - a.score; }), n = ps.length;
+    ov.style.setProperty('--rh', Math.min(7.5, 66 / Math.max(1, n)).toFixed(2) + 'vh');
+    ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="hsspot"></div><div class="fssiren"></div><div class="grsign hssign">🏆 The Final Scores</div>' +
+      '<div class="fsboard"><ol>' + ps.map(function (p, i) { return '<li data-pid="' + esc(p.pid) + '"><b class="rk">' + (i + 1) + '</b><span class="who">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></span><span class="gain"></span><span class="tot">' + p.score + '</span></li>'; }).join('') + '</ol></div>' +
+      '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>' +
+      '<div class="fscour">' + COURIER + '<div class="fscbub"></div></div><div class="fsenv"><div class="fsback"></div><div class="fsletter"><b>EBU</b><i>Official notice</i><span></span></div><div class="fsfront"></div><div class="fsflap"></div><div class="fsseal">EBU</div></div>';
+    document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding(); hostHold = true;
+    setTimeout(function () { ov.classList.remove('enter'); }, 2600);
+    var say = function (who, txt) { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); return typeSay(b, txt, who); };
+    var t = 0, at = function (ms, f) { t += ms; setTimeout(function () { if (ov.isConnected) f(); }, t); };
+    var lineMs = function (txt) { return Math.max(3400, Array.from(txt).length * TALK_MS + 2200); };
+    var lead = function () { var top = Math.max.apply(null, list().map(function (p) { return p.score; })), ls = ps.filter(function (p) { return p.score === top; }).map(function (p) { return p.name; }); return ls.length > 1 ? ls.slice(0, -1).join(', ') + ' and ' + ls[ls.length - 1] + ' share the lead with ' + top + ' points! 👑' : ls[0] + ' is in the lead with ' + top + ' points! 👑'; };
+    var reorder = function () {
+      var ol = ov.querySelector('ol'), lis = [].slice.call(ol.children), was = {}; lis.forEach(function (li) { was[li.getAttribute('data-pid')] = li.getBoundingClientRect().top; });
+      lis.sort(function (a, b) { return (players[b.getAttribute('data-pid')] || {}).score - (players[a.getAttribute('data-pid')] || {}).score; }).forEach(function (li, i) { ol.appendChild(li); li.querySelector('.rk').textContent = i + 1; });
+      lis.forEach(function (li) { var dy = was[li.getAttribute('data-pid')] - li.getBoundingClientRect().top; if (Math.abs(dy) < 2) return; li.style.transition = 'none'; li.style.transform = 'translateY(' + dy + 'px)'; li.getBoundingClientRect(); li.style.transition = 'transform .9s cubic-bezier(.22,.8,.3,1)'; li.style.transform = ''; });
+      ps = list().slice().sort(function (a, b) { return b.score - a.score; }); push();
+    };
+    var l1 = gf ? 'Europe, before the Grand Final… let’s look at the scores! 📊' : 'Europe, it’s time for the final scores! 📊';
+    at(1600, function () { say('him', l1); });
+    at(lineMs(l1) - 1200, function () { [].slice.call(ov.querySelectorAll('li')).reverse().forEach(function (li, i) { setTimeout(function () { li.classList.add('on'); Music.plop(i % 8); }, i * 380); }); });   // last place first
+    at(n * 380 + 900, function () { ov.querySelector('li').classList.add('top'); say('her', lead()); });
+    var l2 = lead(); t += lineMs(l2);
+    if (e) {
+      var nm = e.names.length > 1 ? e.names.slice(0, -1).join(', ') + ' and ' + e.names[e.names.length - 1] : e.names[0], paid = Object.keys(e.got).reduce(function (a, k) { return a + e.got[k]; }, 0);
+      at(0, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); Music.thump && Music.thump(); [0, 260, 520].forEach(function (d) { setTimeout(function () { Music.step(); }, d); }); });   // knock, knock, knock
+      var k1 = 'Wait… is somebody knocking? 🚪'; at(900, function () { say('him', k1); });
+      at(lineMs(k1) - 800, function () { ov.classList.add('cin'); var steps = setInterval(function () { if (!ov.isConnected || !ov.classList.contains('cin') || ov.classList.contains('cstop')) { clearInterval(steps); return; } Music.step(); }, 330); });   // the courier runs in
+      at(2600, function () { ov.classList.add('cstop'); var cb = ov.querySelector('.fscbub'); cb.classList.add('on'); typeSay(cb, 'Special delivery from the EBU! 📦 Sign here, please!', 'him'); });
+      at(3600, function () { say('him', 'A brown envelope… from the EBU?! 😱'); ov.classList.add('shock'); Music.dread(true); });
+      at(3400, function () { ov.querySelector('.fscbub').classList.remove('on'); ov.classList.add('cgive'); Music.blip(); });   // the envelope changes hands
+      at(1100, function () { ov.classList.add('cout'); whooshes([0]); });   // and off he goes
+      at(1400, function () { ov.classList.add('envbig'); whooshes([0]); var h = 'Let’s open it… 🥁'; say('her', h); });
+      at(2600, function () { ov.classList.add('envopen'); Music.ping(); ov.querySelector('.fsletter span').textContent = 'With thanks to ' + nm + ' for their… very generous gifts. 💸 ' + (e.names.length > 1 ? 'Shared: ' : '') + '+' + paid + ' points'; });
+      var sc = 'Scandalous! ' + nm + (e.names.length > 1 ? ' bribed' : ' bribed') + ' the EBU! 🤑 ' + (e.names.length > 1 ? 'They share ' + paid + ' points!' : paid + ' points for ' + nm + '!');
+      at(1800, function () { ov.classList.add('siren'); say('her', sc); Music.buzz && Music.buzz(); });
+      var rr = 'Well… the EBU has spoken. Rules are rules! 🤷'; t += lineMs(sc) - 1200;
+      at(0, function () { say('him', rr); ov.classList.remove('siren'); });
+      at(lineMs(rr) - 1400, function () {   // the envelope goes, and the points count in on the board
+        ov.classList.remove('envbig'); ov.classList.remove('envopen'); ov.classList.add('envgone'); ov.classList.remove('shock'); Music.dread(false);
+        Object.keys(e.got).forEach(function (k, i) {
+          var p = players[k], li = ov.querySelector('li[data-pid="' + k.replace(/"/g, '') + '"]'); if (!p || !li) return;
+          setTimeout(function () {
+            var ge = li.querySelector('.gain'), el = li.querySelector('.tot'), from = p.score; p.score += e.got[k]; ge.textContent = '✉️ +' + e.got[k]; ge.classList.add('on'); li.classList.add('bribed'); Music.plop(i);
+            setTimeout(function () { var t0 = Date.now(); (function f() { var q = Math.min(1, (Date.now() - t0) / 700); el.textContent = Math.round(from + e.got[k] * q); if (q < 1) requestAnimationFrame(f); })(); }, 700);
+          }, 600 + i * 500);
+        });
       });
-      setTimeout(function () {   // and the order changes if it has to
-        var lis = [].slice.call(ol.children), was = {}; lis.forEach(function (li) { was[li.getAttribute('data-pid')] = li.getBoundingClientRect().top; });
-        lis.sort(function (a, b) { return (players[b.getAttribute('data-pid')] || {}).score - (players[a.getAttribute('data-pid')] || {}).score; }).forEach(function (li) { ol.appendChild(li); });
-        lis.forEach(function (li) { var dy = was[li.getAttribute('data-pid')] - li.getBoundingClientRect().top; if (Math.abs(dy) < 2) return; li.style.transition = 'none'; li.style.transform = 'translateY(' + dy + 'px)'; li.getBoundingClientRect(); li.style.transition = 'transform .8s cubic-bezier(.22,.8,.3,1)'; li.style.transform = ''; });
-        push();
-      }, 2200 + Object.keys(e.got).length * 500);
-      setTimeout(done, 6500 + Object.keys(e.got).length * 500);
-    }, 2400);
+      at(1900 + Object.keys(e.got).length * 500, function () { [].forEach.call(ov.querySelectorAll('li.top'), function (x) { x.classList.remove('top'); }); reorder(); setTimeout(function () { var f = ov.querySelector('li'); if (f) f.classList.add('top'); }, 900); });
+      var l3 = ''; at(1400, function () { l3 = lead(); say('her', l3); });
+      t += 3800;
+    }
+    var bye = gf ? 'And now… it’s time for the Grand Final! 🏆' : 'What a game, Europe! 🎉';
+    at(0, function () { say('him', bye); });
+    at(lineMs(bye), function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
+    at(1000, function () { hostHold = false; ov.remove(); then(); });
   }
   function ebuPay(then) {
     var e = ebuCalc(); if (!e) { then(); return; }
@@ -2968,8 +3007,88 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = function (ms, fn) { setTimeout(function () { if (ov.isConnected && G.phase === 'fun' && G.fun && G.fun.kind === 'scene') fn(); }, ms); };
     var t = 1600;
     sc.lines.forEach(function (l) { (function (l, t0) { at(t0, function () { say(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2500); });
+    if (kind === 'draw') {   // Postcard: the game itself is played in this same studio, so no goodbye
+      at(t, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.querySelector('.hsart').classList.add('pcgo'); whooshes([0]); });
+      at(t + 700, function () { then(); pcSync(); setTimeout(function () { ov.remove(); }, 60); });
+      return;
+    }
     at(t, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
     at(t + 1000, function () { ov.remove(); then(); });
+  }
+  // ---------- Postcard: the whole game in the presenters' studio ----------
+  // From the drawing to the vote for the best one, Felix and Stella stay on stage. Every drawing arrives as a real
+  // postcard (the drawing on the front, a stamp, who sent it), the answers sit underneath, and at the answer
+  // the song title is stamped on the card.
+  var pcSt = '', pcCard = '', pcBest = '', pcRev = '';
+  var PC_IN = ['A postcard from {n}! 💌 Which song did they draw?', 'Look what came in the mail from {n}! 📬 What is it?', 'Next postcard, from {n}! ✏️ Any idea?', 'Fresh from {n}’s pencil! 🎨 Which song is this?'];
+  function pcOn() { return !REMOTE && roundMode() === 'draw' && !!G.gallery && ['dall', 'loading', 'guess', 'picks', 'reveal'].indexOf(G.phase) >= 0 && !G.clue && !G.shop && (!G.best || !!G.best.ranked); }
+  function pcSync() {
+    var ov = $('pcov');
+    if (!pcOn()) { if (ov) ov.remove(); pcSt = pcCard = pcBest = pcRev = ''; return; }
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'pcov'; ov.className = 'grov hsov hs-postcard pcov';
+      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="hsspot"></div><div class="grsign hssign">🎨 Postcard</div>' +
+        '<div class="pcmid"><div class="pcstage">' +
+          '<div class="pcblank"><div class="hspcard"><div class="hspl"><b>Greetings from</b><i>Eurovision!</i><span class="hsdoodle">🎤✨🎶</span></div><div class="hspr"><span class="hsstamp">12</span><span class="hsline"></span><span class="hsline"></span><span class="hsline"></span></div></div><span class="hspencil">✏️</span><b class="pcbusy">Everyone is drawing…</b></div>' +
+          '<div class="pcslot">📬<b>Next postcard…</b></div>' +
+          '<div class="pccard"><div class="pcfront"><canvas width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas></div><span class="pcstamp">12</span><span class="pcpost">EUROVISION</span><span class="pcfrom"></span><span class="pcmark"></span></div>' +
+          '<div class="pcbest"></div>' +
+        '</div><div class="pcq"><div class="bar"><i></i></div><h2></h2></div><div class="pcopts opts"></div><div class="pcans answered"></div></div>' +
+        '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
+      document.body.appendChild(ov);
+    }
+    var st = G.best ? 'best' : G.phase === 'dall' ? 'dall' : G.draw && (G.phase === 'guess' || G.phase === 'picks' || G.phase === 'reveal') ? 'card' : 'wait';
+    ov.setAttribute('data-st', st); ov.classList.toggle('rev', G.phase === 'reveal');
+    // what is underneath: the question, the time, the answers, who is still drawing (copied from the usual screen)
+    ov.querySelector('.pcq h2').textContent = st === 'wait' ? '' : $('qtext').textContent;
+    ov.querySelector('.pcq i').style.transform = $('tbar').style.transform;
+    var po = ov.querySelector('.pcopts'), qo = st === 'wait' || st === 'dall' ? '' : $('qopts').innerHTML; if (po._h !== qo) { po._h = qo; po.innerHTML = qo; }
+    var pa = ov.querySelector('.pcans'), an = st === 'dall' ? $('answered').innerHTML : ''; if (pa._h !== an) { pa._h = an; pa.innerHTML = an; }
+    if (st !== pcSt) {
+      pcSt = st;
+      if (st === 'dall') hostSay('him', 'Pencils out! Everyone is drawing now… ✏️', 3600);
+      if (st === 'best') hostSay('her', 'All postcards are in! Now give your 12, 10 and 8 points to the best ones! 🏆', 5000);
+    }
+    if (st === 'card') {
+      var d = G.draw, dp = players[d.pid];
+      if (pcCard !== d.id) {
+        pcCard = d.id; pcRev = '';
+        var cv = ov.querySelector('.pcfront canvas'), cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage($('drawview'), 0, 0, cv.width, cv.height);
+        ov.querySelector('.pcfrom').textContent = 'From: ' + (dp ? dp.name : '?');
+        var c = ov.querySelector('.pccard'); c.style.setProperty('--r', (Math.random() * 6 - 3).toFixed(1) + 'deg'); c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); whooshes([0]);
+        if (dp) hostSay('next', pick(PC_IN).replace('{n}', dp.name), 4200);
+      }
+      if (G.phase === 'reveal' && pcRev !== d.id) {
+        pcRev = d.id;
+        var mk = ov.querySelector('.pcmark'), song = d.options[d.chosen];
+        mk.textContent = song ? song[3] : ''; setTimeout(function () { if (mk.isConnected) { mk.classList.add('on'); Music.ding(); } }, 600);
+        setTimeout(function () {
+          if (!G.draw || G.draw.id !== d.id || G.phase !== 'reveal') return;
+          var ok = list().filter(function (p) { return p.pid !== d.pid && !p.off && (p.pts || 0) > 0; }).length, art = players[d.pid];
+          hostSay('her', 'It was “' + (song ? song[3] : '?') + '”! 🎶 ' + (ok ? ok + (ok > 1 ? ' of you' : ' player') + ' recognised it' + (art && art.pts ? ', and ' + art.name + ' scores ' + art.pts + ' as the artist!' : '!') : 'Nobody recognised it this time… 🙈'), 5200);
+        }, 1400);
+      }
+      if (G.phase !== 'reveal') ov.querySelector('.pcmark').classList.remove('on');
+    }
+    if (st === 'best') {
+      var bv = $('bestview'), bb = ov.querySelector('.pcbest');
+      if (pcBest !== G.best.id) {
+        pcBest = G.best.id;
+        var src = bv.querySelectorAll('.tile');
+        bb.className = 'pcbest n' + Math.min(8, src.length);
+        bb.innerHTML = [].map.call(src, function (t, i) { return '<div class="pctile" style="--r:' + ((i % 2 ? 1 : -1) * (1 + (i * 7) % 3)) + 'deg;--d:' + (i * 0.12).toFixed(2) + 's"><canvas width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas><span>' + t.querySelector('span').innerHTML + '</span></div>'; }).join('');
+        [].forEach.call(bb.querySelectorAll('canvas'), function (cv, i) { var s0 = src[i].querySelector('canvas'), cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(s0, 0, 0, cv.width, cv.height); });
+      }
+      var tl = bv.querySelectorAll('.tile');
+      [].forEach.call(bb.querySelectorAll('.pctile'), function (t, i) { if (!tl[i]) return; t.classList.toggle('win', tl[i].classList.contains('win')); t.classList.toggle('lose', tl[i].classList.contains('lose')); });
+      if (G.phase === 'reveal' && pcRev !== 'best' + G.best.id) {
+        pcRev = 'best' + G.best.id;
+        setTimeout(function () {
+          var w = [].map.call(ov.querySelectorAll('.pctile.win span'), function (x) { return x.textContent.replace(/^[A-Z] /, ''); });
+          if (w.length) hostSay('him', (w.length > 1 ? 'The best postcards come from ' + w.slice(0, -1).join(', ') + ' and ' + w[w.length - 1] : 'The best postcard comes from ' + w[0]) + '! 🏆🎨', 4600);
+        }, 1200);
+      }
+    }
   }
   // ---------- Hold That Note ----------
   // Technical problems: one of the stars keeps getting cut off in the middle of her high note. A diva rises on stage
