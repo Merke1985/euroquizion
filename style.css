@@ -2492,3 +2492,18 @@ aside.recapgone{visibility:hidden}
 .jmjbub{position:absolute;left:calc(50% + 9vh);top:2vh;z-index:6;max-width:30vw;padding:.65em 1em;border-radius:18px;border-bottom-left-radius:4px;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(.9rem,1.45vw,1.25rem);line-height:1.25;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:scale(.6);transform-origin:0 100%;transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
 .jmjbub.on{opacity:1;transform:none}
 .jmjbub .unsaid{visibility:hidden}
+
+/* Lost in Verona on the phone: timer bar on top, the steps you tapped, the four arrows at the bottom */
+.qjui.play{position:fixed;inset:0;z-index:40;margin:0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));gap:12px;background:linear-gradient(170deg,#2a0f3a,#0b0633 70%);justify-content:flex-start}
+.jmbar{display:none;height:16px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden;flex:none}
+.qjui.play .jmbar{display:block}
+.jmbar i{display:block;height:100%;width:100%;border-radius:9px;background:linear-gradient(90deg,#ff4d6a,#ffd23f 40%,#3ddc84)}
+.qjui.wait .jmbar i{background:rgba(255,255,255,.3)}
+.jmtell{display:none;text-align:center;flex:none}
+.qjui.play .jmtell{display:block}
+.jmtell b{display:block;font-size:1.9rem;line-height:1.15;color:#ffd23f}
+.jmtell span{display:block;margin-top:4px;font-size:1.05rem;color:var(--mute)}
+.jmlog{display:flex;justify-content:center;align-content:center;flex-wrap:wrap;gap:5px;flex:1;min-height:40px}
+.jmlog i{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 2px rgba(255,255,255,.15);font-style:normal;font-size:1.25rem;display:flex;align-items:center;justify-content:center}
+.jmlog i.on{background:rgba(255,210,63,.25);box-shadow:inset 0 0 0 2px #ffd23f}
+.qjui.play .jmpad{margin-top:auto;max-width:380px;flex:none}

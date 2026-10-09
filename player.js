@@ -467,31 +467,48 @@
 
   // ---------- Lost in Verona (Juliet's maze) ----------
   // Four arrows: tap the route Juliet called out, step by step, from memory.
-  var jmKey = '', jmN = 0;
+  var jmKey = '', jmN = 0, jmLog = [], jmBarKey = '', JM_ARW = ['⬅️', '⬆️', '➡️', '⬇️'];
   function qjView(s) {
     var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, alive = (q.alive || []).indexOf(pid) >= 0, failed = (q.fail || {})[pid];
     show('v-wait');
-    if (jmKey !== key) { jmKey = key; jmN = 0; }
+    if (jmKey !== key) { jmKey = key; jmN = 0; jmLog = []; }
     if (box.getAttribute('data-b') !== 'jm') {
       box.setAttribute('data-b', 'jm');
-      box.innerHTML = '<div class="jmdots"></div><div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button></div>';
+      box.innerHTML = '<div class="jmbar"><i></i></div><div class="jmtell"><b></b><span></span></div><div class="jmlog"></div><div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button></div>';
       [].forEach.call(box.querySelectorAll('.jmb'), function (b) { b.addEventListener('pointerdown', function (e) {
         e.preventDefault();
         var st = state, qq = st && st.qj; if (!net || !qq || qq.st !== 'input' || (qq.fail || {})[pid] || (qq.alive || []).indexOf(pid) < 0) return;
-        var k2 = qq.id + ':' + qq.round; if (jmKey !== k2) { jmKey = k2; jmN = 0; }
+        var k2 = qq.id + ':' + qq.round; if (jmKey !== k2) { jmKey = k2; jmN = 0; jmLog = []; }
         if (jmN >= qq.round) return;
         var msg = { pid: pid, id: qq.id, round: qq.round, i: jmN, dir: +b.getAttribute('data-dir') };
-        jmN++; net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'input' && ((state.qj.prog || {})[pid] || 0) <= msg.i && !(state.qj.fail || {})[pid]) net.send('qj', msg); }, 1100);
+        jmN++; jmLog.push(msg.dir); net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'input' && ((state.qj.prog || {})[pid] || 0) <= msg.i && !(state.qj.fail || {})[pid]) net.send('qj', msg); }, 1100);
         b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit');
         qjView(state);
       }); });
     }
-    var dots = ''; for (var i = 0; i < q.round; i++) dots += '<i class="' + (i < jmN ? 'on' : '') + '"></i>';
-    box.querySelector('.jmdots').innerHTML = q.st === 'input' ? dots : '';
-    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch Juliet on the big screen and remember her route!'; return; }
-    if (!alive && !(q.st === 'done')) { box.classList.add('hidden'); $('waittitle').textContent = '😵 Lost in Verona!'; $('waitsub').textContent = 'You took a wrong step. Watch the others try…'; return; }
-    if (q.st === 'show') { box.classList.remove('hidden'); box.classList.add('wait'); $('waittitle').textContent = '🤫 Listen to Juliet!'; $('waitsub').textContent = 'Route: ' + q.round + ' step' + (q.round === 1 ? '' : 's') + '. Remember them all!'; return; }
-    if (q.st === 'input' && !failed && jmN < q.round) { box.classList.remove('hidden'); box.classList.remove('wait'); $('waittitle').textContent = '👣 Step ' + (jmN + 1) + ' of ' + q.round; $('waitsub').textContent = 'Tap the route from memory!'; return; }
+    var log = ''; for (var i = 0; i < q.round; i++) log += i < jmLog.length ? '<i class="on">' + JM_ARW[jmLog[i]] + '</i>' : '<i></i>';
+    box.querySelector('.jmlog').innerHTML = q.st === 'input' ? log : '';
+    var bar = box.querySelector('.jmbar i');
+    if (q.st === 'intro') { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch Juliet on the big screen and remember her route!'; return; }
+    if (!alive && !(q.st === 'done')) { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '😵 Lost in Verona!'; $('waitsub').textContent = 'You took a wrong step. Watch the others try…'; return; }
+    var tell = box.querySelector('.jmtell');
+    if (q.st === 'show') {
+      box.classList.remove('hidden'); box.classList.add('play', 'wait'); jmBarKey = '';
+      bar.style.transition = 'none'; bar.style.width = '100%';
+      tell.querySelector('b').textContent = '👀 Watch the big screen!'; tell.querySelector('span').textContent = 'Remember Juliet’s route: ' + q.round + ' step' + (q.round === 1 ? '' : 's') + '. Then tap it here.';
+      return;
+    }
+    if (q.st === 'input' && !failed && jmN < q.round) {
+      box.classList.remove('hidden', 'wait'); box.classList.add('play');
+      if (jmBarKey !== key) {   /* the timer bar: starts where the time left is, runs down to zero */
+        jmBarKey = key; var tot = 4500 + q.round * 1300, lft = Math.max(0, q.left || 0);
+        bar.style.transition = 'none'; bar.style.width = Math.min(100, lft / tot * 100) + '%'; void bar.offsetWidth;
+        bar.style.transition = 'width ' + lft + 'ms linear'; bar.style.width = '0%';
+      }
+      tell.querySelector('b').textContent = '👆 Tap Juliet’s route!'; tell.querySelector('span').textContent = 'Step ' + (jmN + 1) + ' of ' + q.round + ': which way next?';
+      return;
+    }
+    box.classList.remove('play');
     box.classList.add('hidden');
     if (q.st === 'input') { $('waittitle').textContent = failed ? '😵 Wrong way!' : '✅ Route done!'; $('waitsub').textContent = failed ? 'Lost in Verona…' : 'Waiting for the others…'; return; }
     if (q.st === 'res') { $('waittitle').textContent = failed || ((q.prog || {})[pid] || 0) < q.round ? '😵 Lost!' : '✅ Still in!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
