@@ -1783,3 +1783,6 @@ aside.recapgone{visibility:hidden}
 .noteov[data-st="cut"] .dvmic{filter:drop-shadow(0 0 6px #9fe2ff)}
 @keyframes ntzap{0%{opacity:1}10%{opacity:.2}18%{opacity:1}30%{opacity:.4}38%{opacity:1}55%{opacity:.3}62%{opacity:.9}80%{opacity:.2}90%{opacity:.6}100%{opacity:0}}
 @keyframes ntzaprot{0%{transform:rotate(0) scale(1)}33%{transform:rotate(25deg) scale(1.1)}66%{transform:rotate(-20deg) scale(.95)}}
+/* (before she is announced she is completely out of sight, below the stage) */
+.noteov:not(.diva-on) .ntdiva{transform:translateX(-50%) translateY(130%);opacity:0}
+.noteov .ntdiva{transition:transform 1.6s cubic-bezier(.2,.9,.3,1.05),opacity .4s}
