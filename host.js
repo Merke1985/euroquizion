@@ -3137,10 +3137,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Bluff!: the same round, but the question is what a title in another language means. Everyone makes up
   // a translation; the real one is mixed in, and everyone tries to find it. Hard languages go first.
   var EASY_LANG = { english: 1, french: 1, german: 1, dutch: 1, spanish: 1, italian: 1 };
-  function lookAlike(title, en) {   // a word of the title starts like a word of the translation (4 letters or more): too easy to guess
+  function lookAlike(title, en) {   // a word of the title is in the translation, or starts like a word of the translation (4 letters or more): too easy to guess
     var norm = function (x) { return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
     var a = norm(title).match(/[a-z]+/g) || [], b = norm(en).match(/[a-z]+/g) || [];
     if (norm(title).trim() === norm(en).trim()) return true;
+    if (b.some(function (w) { return w.length >= 2 && a.indexOf(w) >= 0; })) return true;   // the same word in both (Amor = Love is fine, Love Me Tonight = Love Me Tonight is not)
     return b.some(function (w) { return w.length >= 4 && a.some(function (v) { return v.length >= 4 && v.slice(0, 4) === w.slice(0, 4); }); });
   }
   // Lost in Translation: every answer is shown the same way (a capital first, the rest small, no quotes or
