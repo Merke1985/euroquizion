@@ -1764,7 +1764,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     if (beginGame() === false) return;
-    G.mgTest = true; G.quizRun = 3; G.skipOpening = true; G.shopFirst = true;   // the test starts straight with a party game (no opening, no first boutique visit; winners still go shopping)
+    G.mgTest = true; G.quizRun = 3; G.skipOpening = true; G.shopFirst = true; G.partyOn = G.partyOn || {}; G.partyOn.shop = true;   // the test starts straight with a party game (no opening, no first boutique visit); after each one, the winner goes shopping
     if (G.phase === 'intro') introEnd();
   });
   // Test the boutique: straight into the shop (everyone picks one), then a winner's trip (two items), then the party games.
@@ -2239,6 +2239,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var best = Math.max.apply(null, Object.keys(gain).map(function (k) { return gain[k]; }));
     var wins = best > 0 ? Object.keys(gain).filter(function (k) { return gain[k] === best && players[k] && !players[k].off; }) : [];
     var back = function () { startRound2(); };   // (then on as usual: the trivia card, or the Grand Final)
+    if (!wins.length && G.mgTest) { var any = list().filter(function (p) { return !p.off; }); if (any.length) wins = [pick(any).pid]; }   // (testing: always a trip to the boutique, even without a winner)
     if (!wins.length) { back(); return; }
     var names = wins.map(function (k) { return players[k].name; });
     FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
