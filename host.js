@@ -2602,12 +2602,28 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     clueShow(); clueSong();
     var ov = $('clueov');
     var at = function (ms, f) { clueTimer = setTimeout(function () { if (G.clue && G.clue.st === 'intro' && $('clueov')) f(); }, ms); };
-    at(1500, function () { clueSay('him', 'Breaking news, Europe… Edgar, our beloved mascot, has been abducted! 😱'); });
+    // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
+    var lines = [
+      ['him', 'Breaking news, Europe… Edgar, our beloved mascot, has been abducted! 😱'],
+      ['her', 'Someone took him, hid him somewhere in the building, and carried him off with something.'],
+      ['him', 'Look at the cards. The top row: where he could be hidden.', 'where'],
+      ['her', 'The middle row: what they carried him off with.', 'what'],
+      ['him', 'And the bottom row: who took him.', 'who'],
+      ['her', 'In each row, one card is the truth. We need detectives to find out which!'],
+      ['him', 'Here’s how it works: four trivia questions are coming. Answer right, and your phone gets secret clues.'],
+      ['her', 'A clue is a card that is NOT the answer. Three clues for a right answer, four for the fastest!'],
+      ['him', 'After every question, your phone shows which cards are still possible.'],
+      ['her', 'After the last question, you make your accusation: where, with what, and who. Let’s bring Edgar home! 🔍']
+    ];
     var t = 1500;
-    [['her', 'Who took him, where is he hidden, and how did they carry him off? We need detectives!', 4400],
-     ['him', 'Answer the next four questions right, and you get three secret clues on your phone. The fastest right answer gets four!', 3800],
-     ['her', 'After that, you make your accusation. Let’s bring Edgar home! 🔍', 5200]].forEach(function (l) { t += l[2]; (function (l) { at(t, function () { clueSay(l[0], l[1]); }); })(l); });
-    at(t + 4200, function () { clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
+    lines.forEach(function (l) {
+      (function (l, at0) { at(at0, function () {
+        clueSay(l[0], l[1]);
+        var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.toggle('lit', !!l[2] && r.getAttribute('data-k') === l[2]); });
+      }); })(l, t);
+      t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
+    });
+    at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); }); clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
   }
   function clueSay(who, txt) {
     var ov = $('clueov'); if (!ov) return;

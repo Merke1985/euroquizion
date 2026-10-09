@@ -1632,3 +1632,12 @@ aside.recapgone{visibility:hidden}
 .clueov.withlynda .clrows{opacity:.18;transition:opacity .6s}
 .clueov .clynda .keeper{height:100%;width:auto;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3s ease-in-out infinite alternate}
 .clueov .clynda .grbub.lynda{position:absolute;top:2vh;left:100%;width:34vw;max-width:34vw;margin-left:1vw;border-bottom-left-radius:4px;transform-origin:0 100%;font-size:clamp(1rem,1.7vw,1.4rem)}
+
+/* Edgar: wider balloons up top (the cards fill the middle), a row lights up while it is explained, and the phone notebook */
+.clueov .grbub{top:13vh;max-width:25vw;font-size:clamp(.85rem,1.3vw,1.15rem)}
+.clueov .grbub.him{left:2vw}.clueov .grbub.her{right:2vw}
+.clueov .clrow{transition:transform .4s,filter .4s}
+.clueov .clrow.lit{transform:scale(1.04);filter:drop-shadow(0 0 14px rgba(255,210,63,.7))}
+.clueov .clrow.lit .cllab{color:#fff;text-shadow:0 0 10px #ffd23f}
+.clbtn.ro{cursor:default}
+.clbtn.new{opacity:.8;border-color:#55c27a;background:rgba(85,194,122,.22);animation:shpop .5s both}

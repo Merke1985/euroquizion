@@ -134,8 +134,7 @@
     onState2(s);
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
-    if (s.phase !== 'clueacc') $('clueui').classList.add('hidden');
-    clueToast(s);
+    if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
@@ -275,6 +274,7 @@
         }
       }
     }
+    else if (s.phase === 'reveal' && s.clue && s.clue.st === 'ask') clueNotes(s);   // Edgar: after each question, your notebook
     else if (s.phase === 'reveal' || s.phase === 'end') {
       show('v-reveal');
       var r = s.reveal || {};
@@ -370,6 +370,20 @@
     var mine = (c.fresh || {})[pid]; if (!mine || !mine.length) return;
     ptoast('🔍 Secret clue' + (mine.length > 1 ? 's' : '') + ': ' + mine.map(clueText).join(' '));
     var e = $('ptoast'); clearTimeout(ptoastT); ptoastT = setTimeout(function () { e.classList.add('hidden'); }, 7000);   // (a little longer: worth reading)
+  }
+  // After each clue question: the notebook, read only. What your clues ruled out is crossed off; the new ones glow.
+  function clueNotes(s) {
+    var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [], fresh = (c.fresh || {})[pid] || [];
+    show('v-wait');
+    $('waittitle').textContent = fresh.length ? '🔍 ' + fresh.length + ' new clues!' : '🔍 Your clues';
+    $('waitsub').textContent = (fresh.length ? 'Right answer! The new ones are marked. ' : 'No new clues this time. ') + 'Crossed off = not the answer. Clue question ' + c.n + ' of ' + c.of + '.';
+    box.classList.remove('hidden');
+    var key = 'notes|' + c.id + '|' + c.n + '|' + known.join(',');
+    if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
+    var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'How did they carry him off?' };
+    box.innerHTML = ['where', 'what', 'who'].map(function (k) {
+      return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var id = k + ':' + x.id, out = known.indexOf(id) >= 0; return '<div class="clbtn ro' + (out ? ' out' : '') + (fresh.indexOf(id) >= 0 ? ' new' : '') + '"><i>' + x.icon + '</i>' + esc(x.name) + '</div>'; }).join('') + '</div></div>';
+    }).join('');
   }
   function clueView(s) {
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [];
