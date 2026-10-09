@@ -1261,7 +1261,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (REMOTE) { qjAll(); return; }
       autoStop(); stopTimers(); try { yt.pauseVideo(); } catch (e) {} G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
       hostHold = true; clearTimeout(hostT.away);
-      var l1 = 'Phew… I need a smoke. 🚬', l2 = '…I mean, some fresh air, of course! 😇 If you can all follow me outside, that would be lovely!';
+      var l1 = 'Good timing, I need a smoke. 🚬', l2 = '…I mean, some fresh air, of course! 😇 If you can all follow me outside, that would be lovely!';
       setTimeout(function () { hostSay('her', l1, 2600); }, 400);
       setTimeout(function () { hostSay('her', l2, 4800); }, 400 + Array.from(l1).length * TALK_MS + 1500);
       setTimeout(function () {
