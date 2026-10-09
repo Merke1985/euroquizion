@@ -1693,7 +1693,11 @@ aside.recapgone{visibility:hidden}
 .noteov .ntdiva .diva{height:100%;width:auto;display:block;filter:drop-shadow(0 0 30px rgba(255,255,255,.45))}
 .noteov.diva-on .ntdiva{transform:translateX(-50%) translateY(0)}
 .noteov[data-st="sing"] .ntdiva .diva{animation:ntsway 2.4s ease-in-out infinite alternate}
-.noteov[data-st="sing"] .dvmouth{animation:ntmouth .35s ease-in-out infinite alternate;transform-origin:300px 146px}
+.noteov .dvmouth{transform-origin:300px 140px;transition:transform .25s}
+.noteov[data-st="sing"].lead .dvmouth{animation:ntchat .13s ease-in-out infinite alternate}
+.noteov[data-st="sing"]:not(.lead) .dvmouth{transform:scale(1.25,1.7);animation:nthold .5s ease-in-out infinite alternate}
+@keyframes ntchat{from{transform:scaleY(.25)}to{transform:scaleY(1.15)}}
+@keyframes nthold{from{transform:scale(1.22,1.62)}to{transform:scale(1.3,1.78)}}
 .noteov .ntnotes{position:absolute;left:50%;top:6%;width:0;height:0}
 .noteov .ntnotes i{position:absolute;font-style:normal;font-size:5vh;color:#ffd23f;opacity:0;text-shadow:0 0 10px rgba(255,210,63,.8)}
 .noteov[data-st="sing"] .ntnotes i{animation:ntfloat 2.4s linear infinite}
@@ -1737,3 +1741,13 @@ aside.recapgone{visibility:hidden}
 .noteui .ntval{font-weight:800;font-size:1.1rem;text-align:center}.noteui .ntval b{font-size:3rem;color:var(--yellow);font-variant-numeric:tabular-nums}
 .noteui input[type=range]{width:100%;height:44px;accent-color:#ff3fb0}
 .noteui .ntends{display:flex;justify-content:space-between;font-weight:700;opacity:.7;margin-top:-8px}
+
+/* Hold That Note: the timeline above her head, with everyone's guess hanging below it; the timer top right; the text lower down */
+.noteov .ntdiva{bottom:-17vh}
+.noteov .nttimer{top:2vh;right:7vw;font-size:clamp(2rem,4.6vw,4rem)}
+.noteov .ntline{top:15vh;bottom:auto;left:8vw;right:8vw}
+.noteov .ntscale span{top:auto;bottom:1.6vh}
+.noteov .ntpin{bottom:auto;top:1.2vh;transform:translateX(-50%) translateY(calc(var(--i) * 6vh));flex-direction:column-reverse}
+.noteov .ntpin::after{height:calc(.6vh + var(--i) * 6vh)}
+.noteov .ntpin .char{width:3.4vh;height:3.4vh}
+.noteov .ntmsg{top:auto;bottom:12vh;z-index:6}
