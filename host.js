@@ -959,6 +959,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var top = Math.max.apply(null, tally), tops = [];
       tally.forEach(function (n, i) { if (top > 0 && n === top) tops.push(i); });
       if (G.best.bpick) { battleBets(); return; }   // Song Battle: the bets are in, on to the first battle
+      if (G.best.funny) { funnyPicked(tops); return; }
       if (G.best.eraPick) { eraPicked(tops); return; }
       if (G.best.pick) { partyPicked(tops); return; }   // not a question: the choice of the next party round
       G.best.tally = tally; G.best.wins = tops; G.q.correct = tops.length ? tops[0] : -1;
@@ -1238,7 +1239,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null;   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
-    if (kind === 'clue') { clueAll(); return; }   // (the presenters explain it in the scene)
+    if (kind === 'clue') { setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
@@ -2260,9 +2261,37 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var back = function () { startRound2(); };   // (then on as usual: the trivia card, or the Grand Final)
     if (!wins.length && G.mgTest) { var any = list().filter(function (p) { return !p.off; }); if (any.length) wins = [pick(any).pid]; }   // (testing: always a trip to the boutique, even without a winner)
     if (!wins.length) { back(); return; }
+    // Lost in Translation ends in a tie: everyone votes for the funniest fake translation of those tied, and that one wins the trip
+    if (wins.length > 1 && G.lastParty === 'bluff' && G.bluffFakes && wins.every(function (k) { return G.bluffFakes[k]; })) {
+      var bf = G.bluffFakes; G.bluffFakes = null;
+      funnyVote(wins, bf, function (w) { mgGo([w], back); }); return;
+    }
+    mgGo(wins, back);
+  }
+  function mgGo(wins, back) {
     var names = wins.map(function (k) { return players[k].name; });
     FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
     Music.douze(); shopVisit(wins, 1, function () { backFromShop(wins.length, back); }, true);   // straight to the boutique: the winner chooses one
+  }
+  // The tie-break vote: which fake translation was the funniest?
+  var funnyDone = null, FUNNY_MS = 15000;
+  function funnyVote(wins, fakes, done) {
+    stopTimers(); G.draw = null; G.song = null; G.clip = null; funnyDone = done;
+    G.best = { pick: true, funny: true, pids: wins.slice(), id: 'funny' + G.round, tally: null, wins: null };
+    G.q = { subject: 'pick', type: 'mc', text: 'It’s a tie! Vote for the funniest fake translation:', hint: '', options: wins.map(function (k) { return '“' + fakes[k] + '” (' + players[k].name + ')'; }), correct: -1, answer: '', noclip: true };
+    list().forEach(function (p) { p.pick = null; });
+    if (!REMOTE) { cover(true, '😂', 'Tie-break!', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); hostSay('him', 'It’s a tie! Which fake translation was the funniest? Vote on your phone! 😂', 4600); }
+    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = FUNNY_MS; G.endsAt = Date.now() + FUNNY_MS; push();
+    endTimer = setTimeout(reveal, FUNNY_MS);
+  }
+  function funnyPicked(tops) {
+    clearTimeout(picksTimer); stopTimers();
+    var w = tops.length ? G.best.pids[pick(tops)] : pick(G.best.pids), nm = players[w] ? players[w].name : '';
+    list().forEach(function (p) { p.pick = null; });
+    G.best = null; G.q = null; G.phase = 'loading'; push();
+    if (!REMOTE) hostSay('her', nm + '’s translation was the funniest! Off to Lynda’s boutique! 🛍️', 3600);
+    var d = funnyDone; funnyDone = null;
+    setTimeout(function () { if (d) d(w); }, 3800);
   }
   function shopAll() { shopGo(null, 1, function () { startRound(); }); }
   // The first visit: the presenters welcome Europe back, the boutique appears on the screen between them,
@@ -3206,6 +3235,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (opts.length) {
         opts = shuffle(opts.slice(0, 11).concat([{ pid: null, text: g.bluff.real }]));
         stopTimers();
+        G.bluffFakes = {}; opts.forEach(function (o) { if (o.pid) G.bluffFakes[o.pid] = sameCase(o.text); });   // (kept for a tie-break: the funniest fake)
         G.best = { quip: true, bluff: true, id: g.id, pids: opts.map(function (o) { return o.pid; }), real: opts.map(function (o) { return o.pid; }).indexOf(null), tally: null, wins: null };
         G.q = { subject: 'bluff', type: 'mc', text: 'What does “' + g.bluff.title + '” really mean?', hint: '', options: opts.map(function (o) { return sameCase(o.text); }), correct: -1, answer: '' };
         var bms = list().filter(function (p) { return !p.off; }).length >= 2 ? QUIP_VOTE_MS : 7000;
