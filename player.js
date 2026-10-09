@@ -375,9 +375,9 @@
   function clueNotes(s) {
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [], fresh = (c.fresh || {})[pid] || [];
     show('v-wait');
-    $('waittitle').textContent = fresh.length ? '🔍 ' + fresh.length + ' new clues!' : '🔍 Your clues';
-    $('waitsub').textContent = (fresh.length ? 'Right answer! Here they come… ' : 'No new clues this time. ') + 'Crossed off = not the answer. Clue question ' + c.n + ' of ' + c.of + '.';
-    box.classList.remove('hidden');
+    $('waittitle').textContent = fresh.length ? '🔍 ' + fresh.length + ' new clues!' : '🔍 No new clues';
+    $('waitsub').textContent = '';   // (nothing else on the screen: every card in view while the new clues come in)
+    box.classList.remove('hidden'); box.classList.add('compact');
     var key = 'notes|' + c.id + '|' + c.n + '|' + known.join(',');
     if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
     var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
@@ -394,6 +394,7 @@
   }
   function clueView(s) {
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [];
+    box.classList.remove('compact');
     show('v-wait');
     if (s.phase === 'clueacc') {
       if (clueSentId === c.id || (c.acc || {})[pid]) {

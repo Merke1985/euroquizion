@@ -1655,3 +1655,20 @@ aside.recapgone{visibility:hidden}
 .clueov.story .grhosts .him{left:27vw}.clueov.story .grhosts .her{right:27vw}
 .clueov .grbub{transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1),left .9s,right .9s}
 .clueov.story .grbub.him{left:14vw}.clueov.story .grbub.her{right:14vw}
+
+/* Edgar's start: the poster alone, then a framed photo of Teya & Salena (top right), then the presenters walk on */
+.clueov .clframe{position:absolute;right:5vw;top:13vh;width:17vh;padding:1vh 1vh 1.4vh;background:linear-gradient(135deg,#d9b44a,#8a6a1c);border-radius:4px;box-shadow:0 10px 24px rgba(0,0,0,.6),inset 0 0 0 3px rgba(0,0,0,.25);transform:rotate(3deg);transition:opacity .8s,transform .8s cubic-bezier(.3,1.4,.5,1);z-index:2}
+.clueov .clframe img{display:block;width:100%;aspect-ratio:1;object-fit:cover;object-position:50% 40%;border:3px solid #2a1c0a;background:#3a2c4a}
+.clueov .clframe small{display:block;margin-top:.6vh;font-size:1.05vh;font-weight:800;line-height:1.2;color:#2a1c0a;text-align:center}
+.clueov.noframe .clframe{opacity:0;transform:rotate(3deg) scale(.6)}
+.clueov.nohosts .grhosts .ehost{opacity:0;translate:0 14vh}
+.clueov .grhosts .ehost{transition:left .9s cubic-bezier(.3,1.1,.5,1),right .9s cubic-bezier(.3,1.1,.5,1),opacity .7s,translate .8s cubic-bezier(.3,1.3,.5,1)}
+.clueov.intro.enter .ehost.him,.clueov.intro.enter .ehost.her{animation:none}
+
+.clueov.intro.enter .clrow{animation:none}
+/* the phone notebook after a question: compact, so every card is in view while the new clues come in */
+.clueui.compact{gap:6px;margin-top:2px}
+.clueui.compact .clset>span{margin-bottom:3px;font-size:.85rem}
+.clueui.compact .clset>div{gap:4px}
+.clueui.compact .clbtn{padding:5px 8px;font-size:.8rem;border-radius:8px}
+.clueui.compact .clbtn i{font-size:1rem}

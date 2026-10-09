@@ -29,3 +29,8 @@ function charSvg(id) {
   var tf = z > 1 ? ';transform:translate(' + ((50 - f[0]) * z).toFixed(1) + '%,' + ((50 - f[1]) * z).toFixed(1) + '%) scale(' + z + ')' : '';
   return '<span class="char"><img src="' + commons(c.file) + '" alt="' + c.name + '" style="object-position:' + (c.pos || '50% 20%') + tf + '"></span>';
 }
+
+// Other photos in the game (not player characters), with their credits.
+var EXTRA_PHOTOS = [
+  { id: 'teyasalena', name: 'Teya & Salena (in Where the Hell Is Edgar?)', file: 'Teya and Salena (cropped).jpg', by: 'ESC Discord', lic: 'CC BY-SA 2.0', licUrl: 'https://creativecommons.org/licenses/by-sa/2.0' }
+];

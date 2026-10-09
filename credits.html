@@ -6,7 +6,7 @@
 <title>EuroQuizion – photo credits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=448">
+<link rel="stylesheet" href="style.css?v=450">
 </head>
 <body>
 <main class="credits">
@@ -16,12 +16,15 @@
   <ul id="list" style="list-style:none;padding:0;margin:24px 0"></ul>
   <p><a href="./">Back to the game</a></p>
 </main>
-<script src="chars.js?v=448"></script>
+<script src="chars.js?v=450"></script>
 <script>
 document.getElementById('list').innerHTML = CHARS.filter(function (c) { return c.file; }).map(function (c) {
   var page = 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(c.file.replace(/ /g, '_'));
   return '<li>' + charSvg(c.id) + '<div><strong>' + c.name + '</strong><br>Photo by ' + c.by + ', ' + (c.licUrl ? '<a href="' + c.licUrl + '" target="_blank" rel="noopener">' + c.lic + '</a>' : c.lic) + ', via <a href="' + page + '" target="_blank" rel="noopener">Wikimedia Commons</a></div></li>';
-}).join('');
+}).join('') + (typeof EXTRA_PHOTOS !== 'undefined' ? EXTRA_PHOTOS.map(function (c) {
+  var page = 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(c.file.replace(/ /g, '_'));
+  return '<li><span class="char"><img src="' + commons(c.file) + '" alt=""></span><div><strong>' + c.name + '</strong><br>Photo by ' + c.by + ', <a href="' + c.licUrl + '" target="_blank" rel="noopener">' + c.lic + '</a>, via <a href="' + page + '" target="_blank" rel="noopener">Wikimedia Commons</a></div></li>';
+}).join('') : '');
 </script>
 </body>
 </html>

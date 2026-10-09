@@ -2629,7 +2629,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     cover(true, '', '', false); masks(true); hostsAway(); push();
     clueShow(); clueSong();   // Edgar's tune: from the start of the game to the end of the clue questions
     if (!G.clueSting) clueSting(); G.clueSting = false;   // (no spin landed on it: the sting plays now)
-    var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); }   // first only the news: the poster big, the presenters close together; the cards come later
+    var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); ov.classList.add('nohosts'); ov.classList.add('noframe'); }
+    setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('noframe'); Music.blip(); } }, 2600);   // the framed photo, a little later
+    setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('nohosts'); whooshes([0, 200]); } }, 4800);   // then the presenters walk on   // first only the news: the poster big, the presenters close together; the cards come later
     var at = function (ms, f) { clueTimer = setTimeout(function () { if (G.clue && G.clue.st === 'intro' && $('clueov')) f(); }, ms); };
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
@@ -2644,7 +2646,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['him', 'After every question, your phone shows which cards are still possible.'],
       ['her', 'After the last question, you make your accusation: where, with what, and who. Let’s bring Edgar home! 🔍']
     ];
-    var t = 1500;
+    var t = 6600;   // (the poster first, the photo, the presenters walking on: then the story)
     lines.forEach(function (l) {
       (function (l, at0) { at(at0, function () {
         clueSay(l[0], l[1]);
@@ -2802,7 +2804,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var row = function (k, label) { return '<div class="clrow" data-k="' + k + '"><span class="cllab">' + label + '</span>' + CLUE_SETS[k].map(function (c) { return '<div class="clcard" data-id="' + c.id + '"><span>' + c.icon + '</span><b>' + esc(c.name) + '</b></div>'; }).join('') + '</div>'; };
       ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="clspot"></div>' +
         '<div class="grsign clsign">🔍 Where the Hell Is Edgar?</div>' +
-        '<div class="clposter"><b>MISSING</b>' + EDGAR + '<small>Have you seen Edgar?</small></div><div class="cledgar">' + EDGAR + '</div>' +
+        '<div class="clposter"><b>MISSING</b>' + EDGAR + '<small>Have you seen Edgar?</small></div><div class="clframe"><img src="' + commons(EXTRA_PHOTOS[0].file) + '" alt=""><small>With love to Teya &amp; Salena · Austria 2023</small></div><div class="cledgar">' + EDGAR + '</div>' +
         '<div class="clrows">' + row('where', 'Hidden where?') + row('what', 'Hidden inside?') + row('who', 'Who took him?') + '</div>' +
         '<div class="clmsg"></div><div class="clplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
