@@ -239,7 +239,7 @@
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   var viewNow = '';
-  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
+  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
