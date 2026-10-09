@@ -1672,3 +1672,7 @@ aside.recapgone{visibility:hidden}
 .clueui.compact .clset>div{gap:4px}
 .clueui.compact .clbtn{padding:5px 8px;font-size:.8rem;border-radius:8px}
 .clueui.compact .clbtn i{font-size:1rem}
+
+/* Edgar: the fastest right answer gets an extra clue, and stands out */
+.host .opts.votelist .voters span.fastest,.host .opts.votelist .opt.right+.voters span.fastest{background:#ffd23f;color:#2a1a00;box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,210,63,.9)}
+.host .opts.votelist .voters span.fastest b{color:#2a1a00}

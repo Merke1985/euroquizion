@@ -322,7 +322,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -513,7 +513,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
       if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
       return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + '</span></div><div class="voters">' +
-        who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '">' + charSvg(p.char) + esc(p.name) + (rev && p.got && i === q.correct && !G.best ? ' <b>+' + p.pts + '</b>' : '') + '</span>'; }).join('') + '</div></div>';
+        who.map(function (p) {
+          var cq = rev && G.clue && G.clue.st === 'ask' && i === q.correct, fast = cq && G.clue.fast === p.pid;   // Edgar: no points, clues; the fastest gets an extra one
+          return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + (fast ? ' fastest' : '') + '">' + charSvg(p.char) + esc(p.name) + (cq ? (fast ? ' <b>🔍 +extra clue</b>' : '') : rev && p.got && i === q.correct && !G.best ? ' <b>+' + p.pts + '</b>' : '') + '</span>';
+        }).join('') + '</div></div>';
     }).join('') : '';
     G.plopped = null;   // the pop-in only plays once
     $('qopts').classList.toggle('votelist', !!(on && q.options));
@@ -2688,7 +2691,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return out;
   }
   function clueGive(right) {   // the answer is out: a clue for everyone who got it right (in answer order: the first gets two)
-    var g = G.clue; g.n++; g.fresh = {};
+    var g = G.clue; g.n++; g.fresh = {}; g.fast = right.length ? right[0].pid : '';
     right.forEach(function (p, i) {
       for (var k = 0; k < (i === 0 ? CLUE_FAST : CLUE_GIVE); k++) {
         // a smart clue: from the row where this player still has the most options left, so the clues add up to an answer
