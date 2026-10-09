@@ -2965,7 +2965,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov = document.createElement('div'); ov.id = 'noteov'; ov.className = 'grov noteov enter';
       ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="ntspot"></div><div class="grsign ntsign">🎤 Hold That Note</div>' +
         '<div class="ntstage"><div class="ntstop"></div><div class="ntsfront"></div></div>' +
-        '<div class="ntdiva">' + DIVA + '<div class="ntnotes"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></div><div class="ntsparks"></div></div>' +
+        '<div class="ntdiva">' + DIVA + '<div class="ntnotes"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></div><div class="ntsparks"></div><div class="ntshock"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="16" fill="#e9f8ff" opacity=".9"/><g fill="none" stroke="#dff6ff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="50,50 40,36 47,30 34,12"/><polyline points="50,50 64,40 60,30 78,18"/><polyline points="50,50 66,58 74,52 94,60"/><polyline points="50,50 58,68 50,74 60,94"/><polyline points="50,50 36,62 30,56 10,70"/><polyline points="50,50 32,46 28,52 6,40"/></g></svg></div></div>' +
         '<div class="nttimer">0:00.0</div><div class="ntline"><div class="ntscale"></div><div class="ntpins"></div><div class="ntneedle"></div></div>' +
         '<div class="ntmsg"></div><div class="ntplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';

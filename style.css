@@ -1707,7 +1707,7 @@ aside.recapgone{visibility:hidden}
 .noteov[data-st="cut"] .dvmic,.noteov[data-st="done"] .dvmic{animation:ntdrop 1s cubic-bezier(.5,0,1,.6) forwards}
 .noteov[data-st="cut"] .dvmouth,.noteov[data-st="done"] .dvmouth{transform:scaleY(1.4);transform-origin:300px 146px}
 @keyframes ntdrop{0%{transform:none}100%{transform:translate(-40px,640px) rotate(260deg)}}
-.noteov[data-st="cut"] .ntsparks{position:absolute;left:24%;top:82%;width:12vh;height:12vh;background:radial-gradient(circle,#fff 0 8%,#ffd23f 20%,transparent 60%);animation:shpop .4s both,fadeout 1.2s .4s forwards;border-radius:50%}
+.noteov[data-st="cut"] .ntsparks{display:none;position:absolute;left:24%;top:82%;width:12vh;height:12vh;background:radial-gradient(circle,#fff 0 8%,#ffd23f 20%,transparent 60%);animation:shpop .4s both,fadeout 1.2s .4s forwards;border-radius:50%}
 .noteov .nttimer{position:absolute;right:5vw;top:13vh;font-weight:900;font-size:clamp(2.6rem,7vw,6rem);font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 0 20px rgba(255,63,176,.8);opacity:0;transition:opacity .5s;z-index:4}
 .noteov .nttimer small{font-size:.4em;margin-left:.1em;opacity:.8}
 .noteov[data-st="sing"] .nttimer,.noteov[data-st="cut"] .nttimer,.noteov[data-st="done"] .nttimer{opacity:1}
@@ -1773,3 +1773,13 @@ aside.recapgone{visibility:hidden}
 .noteov .ntsfront{height:5.5vh;background:linear-gradient(#ff8fd0,#d81b8a 55%,#7a0a52);box-shadow:0 0 24px rgba(255,63,176,.8),inset 0 2px 0 rgba(255,255,255,.7)}
 .noteov .ntdiva{height:62vh;bottom:8.5vh}
 .noteov.diva-on .ntdiva{transition-delay:.4s}
+
+/* the cause of it all: an electric shock in her microphone, just before it drops */
+.noteov .ntshock{position:absolute;left:33%;top:13%;width:22%;aspect-ratio:1;transform:translate(-50%,-50%);opacity:0;pointer-events:none;z-index:3;filter:drop-shadow(0 0 6px #7fd8ff) drop-shadow(0 0 14px #3fa9ff)}
+.noteov .ntshock svg{width:100%;height:100%;display:block}
+.noteov[data-st="cut"] .ntshock{animation:ntzap 1.2s steps(1) forwards}
+.noteov[data-st="cut"] .ntshock svg{animation:ntzaprot .12s steps(1) infinite}
+.noteov[data-st="cut"] .dvmic,.noteov[data-st="done"] .dvmic{animation-delay:.5s}
+.noteov[data-st="cut"] .dvmic{filter:drop-shadow(0 0 6px #9fe2ff)}
+@keyframes ntzap{0%{opacity:1}10%{opacity:.2}18%{opacity:1}30%{opacity:.4}38%{opacity:1}55%{opacity:.3}62%{opacity:.9}80%{opacity:.2}90%{opacity:.6}100%{opacity:0}}
+@keyframes ntzaprot{0%{transform:rotate(0) scale(1)}33%{transform:rotate(25deg) scale(1.1)}66%{transform:rotate(-20deg) scale(.95)}}
