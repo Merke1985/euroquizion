@@ -465,38 +465,42 @@
     $('waitsub').textContent = g != null ? 'She held it for ' + ntTime(n.len, true) + '. You guessed ' + ntTime(g) + ': ' + Math.abs(g - n.len).toFixed(1) + ' seconds off.' : 'She held it for ' + ntTime(n.len, true) + '.';
   }
 
-  // ---------- Queue Jump ----------
-  // Every round: three big buttons. Sneak ahead, watch your back, or bribe the steward.
-  var qjSent = '', qjMine = '';
-  var QJ_LBL = { sneak: '🏃 Sneak ahead', watch: '👀 Watch your back', bribe: '🎁 Bribe the steward', none: '💤 Nothing' };
-  [].forEach.call(document.querySelectorAll('#qjui .qjbtn'), function (b) { b.addEventListener('click', function () {
-    var s = state; if (!net || !s || !s.qj || s.qj.st !== 'pick' || b.disabled) return;
-    var key = s.qj.id + ':' + s.qj.round; if (qjSent === key) return;
-    qjSent = key; qjMine = b.getAttribute('data-move');
-    var msg = { pid: pid, id: s.qj.id, round: s.qj.round, move: qjMine };
-    net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'pick' && !(state.qj.locked || {})[pid]) net.send('qj', msg); }, 1500);
-    qjView(state);
-  }); });
+  // ---------- Dodge the Superfans ----------
+  // Every hall: a button for each door. Everyone at the same door ends up with all the fans at that door.
+  var qjSent = '', qjMine = -1;
   function qjView(s) {
-    var q = s.qj, box = $('qjui'), pos = (q.order || []).indexOf(pid), key = q.id + ':' + q.round, mine = qjSent === key || (q.locked || {})[pid];
+    var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, mine = qjSent === key || (q.locked || {})[pid], f = (q.fans || {})[pid] || 1;
     show('v-wait');
-    var where = pos >= 0 ? 'You are #' + (pos + 1) + ' of ' + q.order.length + ' in the queue.' : '';
-    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🚪 Queue Jump'; $('waitsub').textContent = where + ' Watch the big screen!'; return; }
-    if (q.st === 'pick' && !mine && pos >= 0) {
-      $('waittitle').textContent = '🚪 Round ' + q.round + ' of ' + q.rounds; $('waitsub').textContent = where + ' What do you do?';
+    var have = 'You have ' + f + ' annoying fan' + (f === 1 ? '' : 's') + ' 🕺';
+    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🕺 Dodge the Superfans'; $('waitsub').textContent = have + '. Watch the big screen!'; return; }
+    if (q.st === 'pick' && !mine && q.fans && q.fans[pid] != null) {
+      $('waittitle').textContent = '🚪 Hall ' + q.round + ' of ' + q.rounds; $('waitsub').textContent = have + '. Which door do you take?';
+      if (box.getAttribute('data-k') !== key) {
+        box.setAttribute('data-k', key);
+        var h = ''; for (var d = 0; d < q.doors; d++) h += '<button type="button" class="qjdoor" data-door="' + d + '"><span>🚪</span><b>Door ' + (d + 1) + '</b></button>';
+        box.innerHTML = h;
+        [].forEach.call(box.querySelectorAll('.qjdoor'), function (b) { b.onclick = function () {
+          var st = state; if (!net || !st || !st.qj || st.qj.st !== 'pick') return;
+          var k2 = st.qj.id + ':' + st.qj.round; if (qjSent === k2) return;
+          qjSent = k2; qjMine = +b.getAttribute('data-door');
+          var msg = { pid: pid, id: st.qj.id, round: st.qj.round, door: qjMine };
+          net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'pick' && !(state.qj.locked || {})[pid]) net.send('qj', msg); }, 1500);
+          qjView(state);
+        }; });
+      }
       box.classList.remove('hidden');
-      [].forEach.call(box.querySelectorAll('.qjbtn'), function (b) {
-        var m = b.getAttribute('data-move'), off = (m === 'sneak' && pos === 0) || (m === 'watch' && (q.tired || {})[pid]);
-        b.disabled = !!off; b.classList.toggle('off', !!off);
-        b.querySelector('small').textContent = m === 'sneak' && pos === 0 ? 'You are at the front: nobody to sneak past' : m === 'watch' && (q.tired || {})[pid] ? 'Your eyes need a rest: not two rounds in a row' : m === 'sneak' ? 'Past the one in front of you, unless they watch' : m === 'watch' ? 'Catch a sneaker: they go to the back' : 'Jump 2 places, if you are the only one';
-      });
       return;
     }
     box.classList.add('hidden');
-    if (q.st === 'pick') { $('waittitle').textContent = '🔒 ' + (QJ_LBL[qjMine] || 'Locked in!'); $('waitsub').textContent = where + ' Waiting for the others…'; return; }
-    if (q.st === 'show') { $('waittitle').textContent = q.ev ? q.ev.txt.split(' ')[0] : '👀'; $('waitsub').textContent = (q.ev ? q.ev.txt.replace(/^\S+\s/, '') + ' ' : '') + where; return; }
+    if (q.st === 'pick') { $('waittitle').textContent = '🔒 Door ' + (qjMine + 1); $('waitsub').textContent = have + '. Waiting for the others…'; return; }
+    if (q.st === 'walk' || q.st === 'merge') {
+      var d0 = q.at ? q.at[pid] : qjMine, with0 = q.at ? Object.keys(q.at).filter(function (k) { return k !== pid && q.at[k] === d0; }).length : 0;
+      $('waittitle').textContent = q.st === 'walk' ? '🚪 Through door ' + (d0 + 1) + '…' : with0 ? '😱 ' + f + ' annoying fans!' : '😎 A door of your own!';
+      $('waitsub').textContent = q.st === 'walk' ? 'Watch the big screen!' : with0 ? 'You shared door ' + (d0 + 1) + ' with ' + with0 + (with0 > 1 ? ' others' : ' other') + '.' : 'You keep your ' + f + ' fan' + (f === 1 ? '' : 's') + '.';
+      return;
+    }
     var won = q.win && q.win.indexOf(pid) >= 0;
-    $('waittitle').textContent = won ? '🏆 First inside!' : '🚪 The doors are open!'; $('waitsub').textContent = won ? 'You got the best spot in front of the stage!' : 'You got in as #' + (pos + 1) + '.';
+    $('waittitle').textContent = won ? '🏆 Fewest fans!' : '🕺 ' + f + ' annoying fans'; $('waitsub').textContent = won ? 'Only ' + f + ' annoying fan' + (f === 1 ? '' : 's') + ': you win!' : 'Enjoy the show with your new friends! 😂';
   }
 
   // ---------- Eurofan Shop ----------
@@ -550,7 +554,7 @@
     p.setAttribute('data-k', bagKey);
     if (!bagItem) {
       var seen = {}; p.innerHTML = '<h3>Your items</h3><p class="bagrule">' + (s.mg ? '🎉 A party game is on: only 📦 delivery and 🤫 secret items can be used now.' : '⚡ Instant items work only while a question is open. 📦 Deliveries can go any time and land before the next question.') + '</p>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).map(function (id) {
-        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, later = it.kind === 'bribe' || it.kind === 'heel' || it.kind === 'smoke', mgw = !!s.mg && !later && it.kind !== 'shield' && it.kind !== 'skates', wait = mgw || (['sit', 'fan', 'blow', 'lose', 'steal', 'thief', 'flag', 'half'].indexOf(it.kind) >= 0 && s.phase !== 'guess') || (it.kind === 'fan' && !(s.q && s.q.type === 'mc' && s.q.options && s.q.options.length === 4)) || it.kind === 'shield' || it.kind === 'skates';   // the mic only breaks while a question is open; the smoke goes up before one
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, later = it.kind === 'bribe' || it.kind === 'heel' || it.kind === 'smoke', mgw = !!s.mg && !later && it.kind !== 'shield' && it.kind !== 'skates', wait = mgw || (['sit', 'fan', 'blow', 'lose', 'steal', 'thief', 'flag', 'half', 'card'].indexOf(it.kind) >= 0 && s.phase !== 'guess') || (it.kind === 'fan' && !(s.q && s.q.type === 'mc' && s.q.options && s.q.options.length === 4)) || it.kind === 'shield' || it.kind === 'skates';   // the mic only breaks while a question is open; the smoke goes up before one
         return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (it.uses ? (function () { var u = ((m && m.uses) || {})[id] || seen[id] * it.uses; return ' · ' + u + ' use' + (u === 1 ? '' : 's') + ' left'; })() : seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(it.kind === 'shield' ? 'Protects you by itself: nobody can aim an item at you (smoke, the wristband and a broken heel still get you)' : it.kind === 'skates' ? 'Work by themselves: keep them in your bag, and you glide 2 spaces ahead at the start of the Grand Final' : mgw ? 'Not during a party game: wait for the next question' : wait ? (it.kind === 'fan' && s.phase === 'guess' ? 'Only on a question with four answers' : 'Only while a question is open') : it.desc) + '</small></span></button>';
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {

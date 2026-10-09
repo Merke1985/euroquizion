@@ -2153,7 +2153,7 @@ aside.recapgone{visibility:hidden}
 .qjp.act .char{box-shadow:0 0 0 4px #ffd23f,0 0 20px #ffd23f}
 .qjp.caught .char{box-shadow:0 0 0 4px #ff4d6a,0 0 20px #ff4d6a;animation:fsshake .12s linear infinite alternate}
 .qjp.won .char{box-shadow:0 0 0 5px #ffd23f,0 0 30px #ffd23f}
-.qjov[data-st=done] .qjp.won{left:68vw!important;opacity:0;transition:left 1.6s ease-in,opacity .6s 1.2s}
+.qjov:not(.sfov)[data-st=done] .qjp.won{left:68vw!important;opacity:0;transition:left 1.6s ease-in,opacity .6s 1.2s}
 .qjmsg{position:absolute;left:18vw;right:18vw;top:13vh;z-index:5;text-align:center;font-weight:900;font-size:clamp(1rem,2vw,1.7rem);text-shadow:0 3px 10px rgba(0,0,0,.8);line-height:1.3}
 
 .qjround{position:absolute;right:2vw;top:3vh;font-weight:900;font-size:clamp(.8rem,1.3vw,1.1rem);opacity:.8}
@@ -2175,3 +2175,52 @@ aside.recapgone{visibility:hidden}
 .qjbtn.off{opacity:.4}
 .qjmsg.qjpop{animation:rcpop .45s cubic-bezier(.3,1.6,.5,1)}
 .qjround{right:auto;left:2vw}
+/* ---------- Dodge the Superfans: a hall with doors, everyone with their crowd of dancing fans ---------- */
+.sfov .grwall{background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 80px),radial-gradient(ellipse at 50% 20%,#4b2a7a 0%,#2a1650 55%,#120a26 100%)}
+.sfov .grfloor{height:40%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 6vw,transparent 6vw 12vw),linear-gradient(#5a2a52,#2a1530 50%,#160c20)}
+.sfov .qjsign{border-color:#ff8fd8;color:#fff0fa;text-shadow:0 0 12px #ff3fa4;box-shadow:0 0 18px rgba(255,63,164,.5)}
+.sfhall{position:absolute;left:2vw;top:3vh;font-weight:900;font-size:clamp(.8rem,1.3vw,1.1rem);opacity:.85}
+.sfdoors{position:absolute;inset:0;z-index:1;pointer-events:none}
+.sfdoor{position:absolute;top:22vh;width:min(11vw,15vh);height:34vh;transform:translateX(-50%);perspective:500px;background:radial-gradient(ellipse at 50% 70%,#fff8d8,#ffd27a 60%,#c27a2a);border-radius:10vh 10vh 0 0;box-shadow:0 0 0 5px #2a1530,0 0 0 9px #c9a227,0 14px 30px rgba(0,0,0,.5)}
+.sfdoors.in .sfdoor{animation:sfdoorin .7s var(--d) cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes sfdoorin{from{transform:translateX(-50%) translateY(-30vh);opacity:0}to{transform:translateX(-50%);opacity:1}}
+.sfdoor i{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#3a1f6e,#5a34a0 50%,#3a1f6e);border:2px solid #1a0f30;transition:transform 1s cubic-bezier(.4,.1,.3,1)}
+.sfdoor i.l{left:0;transform-origin:0 50%;border-radius:10vh 0 0 0}.sfdoor i.r{right:0;transform-origin:100% 50%;border-radius:0 10vh 0 0}
+.sfdoors.open .sfdoor i.l{transform:rotateY(-75deg)}.sfdoors.open .sfdoor i.r{transform:rotateY(75deg)}
+.sfdoor b{position:absolute;left:50%;top:-6vh;transform:translateX(-50%);width:5vh;height:5vh;border-radius:50%;background:#ffd23f;color:#1a1147;font-weight:900;font-size:2.8vh;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,210,63,.7)}
+.sfov .qjline{z-index:4}
+.sfp{bottom:5vh;transition:left 1.6s cubic-bezier(.4,.1,.3,1)}
+.sfp.atdoor{bottom:9vh}
+.sfp .sfn{position:absolute;top:calc(var(--qsz,8vh) * -1.6);white-space:nowrap;font-weight:900;font-size:clamp(.7rem,1.1vw,1rem);padding:.1em .5em;border-radius:99px;background:rgba(0,0,0,.55);color:#ffd23f;z-index:4}
+.sfp.grew .sfn{animation:rcpop .5s cubic-bezier(.3,1.6,.5,1);background:#ff3f6a;color:#fff}
+.sfcrowd{position:absolute;left:50%;bottom:calc(var(--qsz,8vh) * .6);width:calc(var(--qsz,8vh) * 2.2);height:calc(var(--qsz,8vh) * 1.6);transform:translateX(-50%);z-index:0;pointer-events:none}
+.sfcrowd i{position:absolute;left:calc(50% + var(--x) * .9);bottom:calc(var(--y) * var(--qsz,8vh) * .35);font-style:normal;font-size:calc(var(--qsz,8vh) * .62);transform:translateX(-50%);animation:sfdance .5s var(--dl) ease-in-out infinite alternate;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.sfcrowd i.new{animation:sfjoin .6s calc(var(--j) * .05s) cubic-bezier(.3,1.6,.5,1) both,sfdance .5s calc(.6s + var(--dl)) ease-in-out infinite alternate}
+@keyframes sfdance{from{transform:translateX(-50%) translateY(0) rotate(-8deg)}to{transform:translateX(-50%) translateY(-28%) rotate(8deg)}}
+@keyframes sfjoin{from{transform:translateX(-50%) scale(0) translateY(60%);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.sfp .char{z-index:2}
+.sfp.won .char{box-shadow:0 0 0 5px #ffd23f,0 0 30px #ffd23f}
+.qjdoor{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;border:0;background:rgba(255,255,255,.09);color:inherit;font:inherit;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.1)}
+.qjdoor span{font-size:2rem}.qjdoor b{font-size:1.25rem}
+.qjdoor:active{transform:scale(.98)}
+/* the superfans: Grand Final crowd figures, as tall as the player, in front of and behind them */
+.sfp{--fh:calc(var(--qsz,8vh) * 2.25);--fw:calc(var(--fh) * .5)}
+.sfp .char,.sfp .qjbody{position:relative;z-index:2}
+.sfp .sfcrowd{position:absolute;left:50%;bottom:calc(var(--qsz,8vh) * .2);width:0;height:0;transform:none;z-index:auto}
+.sff{position:absolute;left:0;bottom:0;width:var(--fw);height:var(--fh);transform:translate(calc(-50% + var(--fx) * var(--fw)),calc(var(--fy) * var(--fh) * -1))}
+.sff.front{z-index:4}
+.sff.back{z-index:1;filter:brightness(.8)}
+.sff .fan{width:100%;height:100%;overflow:visible;transform-origin:50% 100%;animation:fanjump var(--d) ease-in-out infinite alternate;animation-delay:var(--dl)}
+.sff .fan .arm{transform-box:fill-box;animation:fanwave calc(var(--d) * 1.3) ease-in-out infinite alternate;animation-delay:var(--dl)}
+.sff .fan .arm.l{transform-origin:100% 100%}.sff .fan .arm.r{transform-origin:0 100%}
+.sff .fan.p0 .arm.l,.sff .fan.p2 .arm.l{animation-name:fanwavel}
+.sff .fan .stick{filter:drop-shadow(0 0 3px currentColor)}
+.sff.new{animation:sffin .6s calc(var(--j) * .07s) cubic-bezier(.3,1.5,.5,1) both}
+@keyframes sffin{from{opacity:0;margin-bottom:-40%;scale:.4}to{opacity:1;margin-bottom:0;scale:1}}
+.sfp .sfn{top:calc(var(--qsz,8vh) * -2.1)}
+.sfp b{position:relative;z-index:5}
+.sfp .char{box-shadow:0 0 0 3px rgba(255,255,255,.9),0 4px 12px rgba(0,0,0,.6)}
+.sfp b{background:rgba(10,4,24,.6);padding:0 .4em;border-radius:6px}
+.sfov[data-st=done] .sfp.won{z-index:6;animation:sfwin .5s ease-in-out infinite alternate}
+@keyframes sfwin{to{translate:0 -2vh}}
+.sfp.won .sfn{background:#ffd23f;color:#1a1147}
