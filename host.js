@@ -3497,17 +3497,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['him', 'Europe, we’re lost… lost in Verona! 🌹 The streets here are a real maze.'],
       ['her', 'But look up there: Juliet, on her balcony! She knows the way. 💃'],
       ['him', 'She calls out the route: first one step, then two, then three… one more every time!'],
-      ['her', 'Remember them all, and tap the whole route on your phone. Every right step lights up the maze. ✨'],
+      ['her', 'Remember them all, and tap the whole route on your phone. One step at a time! ✨'],
       ['him', 'One wrong step and you’re lost in Verona! 😵 The last one left wins.'],
-      ['her', 'Shh… Juliet is about to speak!']
+      ['him', 'Good luck, everyone! 🍀'],
+      ['her', 'See you back at the studio! 👋']
     ];
     var t = 2200;
     lines.forEach(function (l) { (function (l, t0) { at(t0, function () { qjSay(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
-    at(t + 400, function () { qjSay(''); qjRound(); });
+    at(t - 600, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // and off they run, north, into the clouds
+    at(t + 2400, function () { qjRound(); });
   }
   function qjSay(who, txt) {
     var ov = $('qjov'); if (!ov) return;
     [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); });
+    var nw = ov.querySelector('.jmnews');
+    if (ov.classList.contains('hostsgone')) {   // the presenters have gone: their lines come up as a caption
+      if (!nw) return; if (!who) { nw.classList.remove('on'); return; }
+      nw.classList.add('on'); nw._said = ''; typeSay(nw, txt, who); return;
+    }
     if (!who) return;
     var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who);
   }
@@ -3749,7 +3756,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
       ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmtfront">' + JM_TFRONT + '</div>' +
-        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div>' +
+        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmnews"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);

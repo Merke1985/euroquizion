@@ -2479,3 +2479,10 @@ aside.recapgone{visibility:hidden}
 .jmov.v3 .jmt{scale:var(--ps,1);transform-origin:50% 100%}
 .jmov.v3 .grbub{bottom:calc(100vh - var(--hy) + var(--hh,30vh) + 1vh)}
 .jmov.v3 .jmt{transform-origin:50% 50%}
+/* the presenters run off north, into the clouds */
+.jmov.v3 .grhosts .ehost{transition:translate 2.4s cubic-bezier(.5,0,.7,.4),scale 2.4s cubic-bezier(.5,0,.7,.4),opacity .6s 1.8s;transform-origin:50% 100%}
+.jmov.v3.hostsgone .grhosts .ehost{translate:-50% -34vh;scale:.35;opacity:0;animation:jmhostrun .2s ease-in-out infinite alternate!important}
+@keyframes jmhostrun{to{rotate:5deg}}
+.jmnews{position:absolute;left:50%;top:27vh;transform:translateX(-50%);z-index:5;max-width:56vw;padding:.5em 1.1em;border-radius:16px;background:rgba(18,10,40,.78);color:#fff;font-weight:900;font-size:clamp(.95rem,1.6vw,1.35rem);text-align:center;opacity:0;transition:opacity .3s}
+.jmnews.on{opacity:1}
+.jmnews .unsaid{visibility:hidden}
