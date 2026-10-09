@@ -768,19 +768,23 @@ function makeChase(allSongs, countries, used) {
 // ---------- Eurofan Shop: the merchandise (more to come) ----------
 // kind: 'lose' (the target loses points), 'blow' (they go to whoever has the fewest), 'steal' (the buyer takes them), 'sit' (no points for the open question)
 var SHOP_ITEMS = [
-  { id: 'wind', icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
-  { id: 'hack', icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
-  { id: 'power', icon: '🔋', name: 'Marc’s Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
-  { id: 'smoke', icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
-  { id: 'umbrella', icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
-  { id: 'flag', icon: '🚩', name: 'Giant Eurovision Flag', desc: 'Wave it in front of another player: for 3 questions they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
-  { id: 'bribe', icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it quickly, before someone steals it! Right before the Grand Final it pays out', kind: 'bribe' },
-  { id: 'pass', icon: '🎟️', name: 'Euroclub Wristband', desc: 'Get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
-  { id: 'mic', icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
-  { id: 'heel', icon: '👠', name: 'Broken Heel', desc: 'Break another player’s heel any time before the Grand Final: they can’t move on its first question', kind: 'heel', final: true },
-  { id: 'skates', icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
+  { id: 'wind', tier: 2, icon: '💨', name: 'Wind Machine', desc: 'Blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
+  { id: 'hack', tier: 3, icon: '📲', name: 'Televote Hack', desc: 'Steal 8 points from another player', kind: 'steal', amount: 8 },
+  { id: 'power', tier: 2, icon: '🔋', name: 'Marc’s Powerbank', desc: 'Throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
+  { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
+  { id: 'umbrella', tier: 1, icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: it blocks the next item used on you', kind: 'shield' },
+  { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'Wave it in front of another player: for 3 questions they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
+  { id: 'bribe', tier: 3, icon: '✉️', name: 'Envelope for the EBU', desc: 'A little bribe for the EBU. Send it quickly, before someone steals it! Right before the Grand Final it pays out', kind: 'bribe' },
+  { id: 'pass', tier: 1, icon: '🎟️', name: 'Euroclub Wristband', desc: 'Get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
+  { id: 'mic', tier: 1, icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
+  { id: 'heel', tier: 3, icon: '👠', name: 'Broken Heel', desc: 'Break another player’s heel any time before the Grand Final: they can’t move on its first question', kind: 'heel', final: true },
+  { id: 'skates', tier: 3, icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
 ];
 var SHOP_PICKS = 2;   // free items per visit
+// The boutique's three shelves: tier 3 on top (the most expensive), 2 in the middle, 1 at the bottom (bargains).
+// An item's price (in points) comes from its shelf. Free on the first visit and for the winner of a party game.
+var SHOP_TIERS = { 3: { name: 'Luxury', icon: '💎', price: 15 }, 2: { name: 'Popular', icon: '⭐', price: 10 }, 1: { name: 'Bargains', icon: '🏷️', price: 6 } };
+SHOP_ITEMS.forEach(function (it) { it.price = (SHOP_TIERS[it.tier] || SHOP_TIERS[2]).price; });
 var SHOP_START_ALL = false;   // every (human) player starts a Party game with one of each item (handy for trying them out)
 function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITEMS[i].id === id) return SHOP_ITEMS[i]; return null; }
 

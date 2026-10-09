@@ -2042,3 +2042,27 @@ aside.recapgone{visibility:hidden}
 @keyframes alpulse{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.08)}}
 @keyframes alspin{0%{transform:rotate(-15deg) scale(1)}50%{transform:rotate(15deg) scale(1.15)}100%{transform:rotate(-15deg) scale(1)}}
 .bagrule{margin:-4px 0 10px;font-size:.85rem;font-weight:700;opacity:.8;line-height:1.3}
+/* buying after a party game: prices on the shelves, on the phone, and who paid what */
+.shopov.boutique .bqi .bqp{display:none;font-style:normal;font-weight:900;font-size:clamp(.6rem,.85vw,.8rem);color:#1a1147;background:#ffd23f;border-radius:99px;padding:.05em .55em;margin-top:.2vh}
+.shopov.boutique.buying .bqi .bqp{display:inline-block}
+.shopper em{font-style:normal;font-weight:900;margin-left:4px;font-size:.9em}
+.shopper em.paid{color:#ff8f8f}.shopper em.free{color:#ffd23f}.shopper em.nobuy{opacity:.7;font-weight:700}
+.shopper.skip{opacity:.7}
+.shopbtn .price{font-style:normal;margin-left:.4em;padding:.05em .5em;border-radius:99px;background:#ffd23f;color:#1a1147;font-size:.85em;white-space:nowrap}
+.shopbtn.poor{opacity:.45}
+#shopskip{width:100%;margin-top:8px}
+/* three shelves: luxury on top, popular in the middle, bargains at the bottom; Lynda's balloon above her head */
+.shopov.boutique .bqfans,.shopov.boutique .bqfloor,.shopov.boutique .bqdisco{display:none}
+.shopov.boutique .bqcase{left:31vw;right:3vw;top:20vh;padding:1vh 1.2vw .8vh}
+.shopov.boutique .bqshelf{position:relative;padding-top:3.6vh}
+.shopov.boutique .bqshelf.t2,.shopov.boutique .bqshelf.t1{margin-top:1.6vh}
+.shopov.boutique .bqtier{position:absolute;left:.4vw;top:.2vh;font-size:clamp(.6rem,.85vw,.82rem);font-weight:900;letter-spacing:.04em;text-transform:uppercase;opacity:.85}
+.shopov.boutique .bqtier em{font-style:normal;color:#ffd23f;margin-left:.3em}
+.shopov.boutique .bqshelf.t3{border-bottom-color:#c9a227;box-shadow:0 6px 0 -3px #8a6a10,0 0 24px rgba(255,210,63,.25)}
+.shopov.boutique .bqshelf.t3 .bqtier{color:#ffe28a}
+.shopov.boutique .bqi .si{font-size:clamp(1.5rem,2.8vw,2.5rem)}
+.shopov.boutique .bqkeeper{left:4vw;bottom:3vh;height:52vh}
+.shopov.boutique .bqsale{left:auto;right:1.5vw;top:15.5vh;z-index:3;font-size:clamp(.7rem,1vw,.95rem)}
+.shopov.boutique .bqbubble{left:2vw;top:20vh;bottom:auto;max-width:27vw;font-size:clamp(.9rem,1.35vw,1.2rem);border-radius:22px 22px 22px 22px}
+.shopov.boutique .bqbubble::after{content:'';position:absolute;left:7vw;bottom:-14px;border:14px solid transparent;border-top-color:#fff;border-bottom:0}
+.shopov.boutique .shoppers{left:31vw}

@@ -468,27 +468,35 @@
     var sh = s.shop, mine = sh.done[pid], box = $('shopui');
     show('v-wait'); $('waittitle').textContent = '🛍️ Woodruff’s Boutique';
     if (sh.who && sh.who.indexOf(pid) < 0) { var sw = s.players.filter(function (x) { return sh.who.indexOf(x.pid) >= 0; }).map(function (x) { return x.name; }); $('waitsub').textContent = sw.join(' and ') + (sw.length > 1 ? ' are' : ' is') + ' shopping… win a party game to go shopping too!'; box.classList.add('hidden'); return; }
+    var free = !sh.buy || (sh.free || []).indexOf(pid) >= 0, myPts = (me() || {}).score || 0;   // after a party game: the winner's item is free, the rest pay with points
+    if (mine && !mine.length) { $('waitsub').textContent = 'No shopping this time. Maybe next time!'; box.classList.add('hidden'); return; }
     if (mine || sh.over) { $('waitsub').textContent = mine ? 'You got: ' + mine.map(shopName).join(' and ') + '. Use ' + (mine.length > 1 ? 'them' : 'it') + ' with the 🛍️ button whenever you like.' : 'The shop is closed.'; box.classList.add('hidden'); return; }
-    $('waitsub').textContent = (sh.n > 1 ? 'Take ' + sh.n + ' of these (tap one twice to take two)' : 'Take one of these') + '. It’s free!';
+    $('waitsub').textContent = !free ? 'Buy one with your points (you have ' + myPts + '), or skip.' : (sh.n > 1 ? 'Take ' + sh.n + ' of these (tap one twice to take two)' : 'Take one of these') + (sh.buy ? '. It’s free: you won! 🏆' : '. It’s free!');
     box.classList.remove('hidden');
     if (shopKey !== sh.id) { shopKey = sh.id; shopSel = []; }
     var mineOffer = sh.offer && sh.offer[pid];   // your own selection of two
-    var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',');
+    var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',') + '|' + free + '|' + myPts;
     if (box.getAttribute('data-k') === drawKey && box.innerHTML) return;   // nothing changed: leave the buttons alone (no flicker on every update)
     box.setAttribute('data-k', drawKey);
     box.innerHTML = sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
-      var n = shopSel.filter(function (x) { return x === it.id; }).length;
-      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + '" data-id="' + it.id + '"><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + '</b><small>' + esc(it.desc) + '</small></span></button>';
-    }).join('') + '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take them!') + '</button>';
+      var n = shopSel.filter(function (x) { return x === it.id; }).length, pr = it.price || 0, poor = !free && pr > myPts;
+      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (!free ? ' <em class="price">' + pr + ' pts</em>' : '') + '</b><small>' + esc(poor ? 'Not enough points for this one' : it.desc) + '</small></span></button>';
+    }).join('') + (free ? '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take ' + (sh.n > 1 ? 'them' : 'it') + '!') + '</button>'
+      : '<button type="button" class="btn big" id="shopbuy"' + (!shopSel.length ? ' disabled' : '') + '>' + (!shopSel.length ? 'Pick one to buy' : 'Buy for ' + ((sh.items.filter(function (it) { return it.id === shopSel[0]; })[0] || {}).price || 0) + ' points') + '</button><button type="button" class="btn alt" id="shopskip">No thanks</button>');
     [].forEach.call(box.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
       var id = b.getAttribute('data-id'), have = shopSel.filter(function (x) { return x === id; }).length;
       if (shopSel.length < sh.n) shopSel.push(id); else if (have) shopSel.splice(shopSel.indexOf(id), 1); else { shopSel.shift(); shopSel.push(id); }
       shopView(state);
     }; });
     $('shopbuy').onclick = function () {
-      if (shopSel.length < sh.n || !net) return; var msg = { pid: pid, id: sh.id, items: shopSel.slice() };
+      if (!net || (free ? shopSel.length < sh.n : !shopSel.length)) return; var msg = { pid: pid, id: sh.id, items: free ? shopSel.slice() : shopSel.slice(0, 1) };
       net.send('shop', msg); setTimeout(function () { if (state && state.shop && !state.shop.done[pid]) net.send('shop', msg); }, 1500);
       $('shopbuy').disabled = true; $('shopbuy').textContent = 'Wrapping it up…';
+    };
+    if ($('shopskip')) $('shopskip').onclick = function () {
+      if (!net) return; var msg = { pid: pid, id: sh.id, items: [], skip: 1 };
+      net.send('shop', msg); setTimeout(function () { if (state && state.shop && !state.shop.done[pid]) net.send('shop', msg); }, 1500);
+      $('shopskip').disabled = true;
     };
   }
   function bagUpdate(s) {
