@@ -2865,6 +2865,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Bluff!: the same round, but the question is what a title in another language means. Everyone makes up
   // a translation; the real one is mixed in, and everyone tries to find it. Hard languages go first.
   var EASY_LANG = { english: 1, french: 1, german: 1, dutch: 1, spanish: 1, italian: 1 };
+  function lookAlike(title, en) {   // a word of the title starts like a word of the translation (4 letters or more): too easy to guess
+    var norm = function (x) { return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+    var a = norm(title).match(/[a-z]+/g) || [], b = norm(en).match(/[a-z]+/g) || [];
+    if (norm(title).trim() === norm(en).trim()) return true;
+    return b.some(function (w) { return w.length >= 4 && a.some(function (v) { return v.length >= 4 && v.slice(0, 4) === w.slice(0, 4); }); });
+  }
   // Lost in Translation: every answer is shown the same way (a capital first, the rest small, no quotes or
   // full stop at the end), so the real translation cannot be told apart by how it was typed.
   function sameCase(t) {
@@ -2901,7 +2907,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
     if (!can.length) can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !BAD_VIDEOS[s[4]]; });
     if (!can.length) { quipAll(); return; }   // nothing to translate in this selection: a Quip! instead
-    var hard = can.filter(function (s) { return !EASY_LANG[String(s[10]).toLowerCase()]; });
+    // Always a hard one: not in a language most people half know (French, Spanish, …), and not a title that gives itself
+    // away because it looks like the English (Foi Magia = It Was Magic, Moja Generacija = My Generation).
+    // None in this selection: a hard one from any year, rather than an easy one.
+    var hardOk = function (s) { return !EASY_LANG[String(s[10]).toLowerCase()] && !lookAlike(s[3], TITLE_EN[s[4]]); };
+    var hard = can.filter(hardOk);
+    if (!hard.length) hard = playSongs().filter(function (s) { return TITLE_EN[s[4]] && !BAD_VIDEOS[s[4]] && !G.used[s[4]] && hardOk(s); });
     G.bluffSong = pick(hard.length ? hard : can);
     G.quipLoad = true; G.quips = null; G.draw = null; G.best = null; G.q = null;
     G.phase = 'loading'; push(); loadSong(G.bluffSong);
