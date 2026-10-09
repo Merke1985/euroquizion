@@ -1860,3 +1860,6 @@ aside.recapgone{visibility:hidden}
 .noteov .ntpin.out{animation:ntout3 .9s cubic-bezier(.5,0,1,.6) forwards}
 @keyframes ntpinin{from{opacity:0;scale:.3}to{opacity:1;scale:1}}
 @keyframes ntout3{0%{opacity:1;transform:translateY(0)}20%{opacity:1;transform:translateY(-.8vh)}100%{opacity:0;transform:translateY(26vh)}}
+/* (the lower row hangs on a longer line, so every line starts right on the bar) */
+.noteov .ntpin{translate:-50% 0}
+.noteov .ntpin::after{height:calc(1.2vh + var(--i) * 6vh)}

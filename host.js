@@ -1092,18 +1092,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       funIntro('starter', startRound2, 6500); return;
     }
     if (G.atype === 'party' && G.afterParty && G.mgBase) { mgPrize(); return; }
-    if (G.atype === 'party' && G.mgTest) { G.afterParty = false; G.quizRun = Math.max(G.quizRun || 0, 3); }   // testing the party games: no trivia in between   // a party game is over: the winner goes shopping
+    if (G.atype === 'party' && G.mgTest) { G.afterParty = false; G.quizRun = Math.max(G.quizRun || 0, G.block || 3); }   // testing the party games: no trivia in between   // a party game is over: the winner goes shopping
     if (G.atype === 'party') {
       // Party: three quiz questions, then a party round, and so on. Which party round is decided by a spin
       // over the ones that are switched on (Advanced settings); the one just played sits a turn out.
       var pOn = G.partyOn || {}, two = list().filter(function (p) { return !p.off; }).length >= 2;
-      var games = PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'shop' && x !== 'bomb')); });
+      var games = partyGames(pOn, two);
       G.mode = 'mc';
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
-      if (G.tour && G.tourLast && !G.tourFinal && !G.tourDone) { G.tourDone = true; G.total = G.round + 2; G.quizRun = 0; G.mgTest = false; }   // the tour is over: one last block of trivia, then the end (the Grand Final)
-      if (!G.tourFinal && (G.quizRun || 0) >= 3 && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; shopIntro(); return; }   // the first break: everyone visits the boutique
-      if (!G.tourFinal && !G.tourDone && (G.quizRun || 0) >= 3 && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyTime(games); return; }
+      if (G.tour && G.tourLast && !G.tourFinal && !G.tourDone) { G.tourDone = true; G.total = G.round + (G.block || 3) - 1; G.quizRun = 0; G.mgTest = false; }   // the tour is over: one last block of trivia, then the end (the Grand Final)
+      if (!G.tourFinal && (G.quizRun || 0) >= (G.block || 3) && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; shopIntro(); return; }   // the first break: everyone visits the boutique
+      if (!G.tourFinal && !G.tourDone && (G.quizRun || 0) >= (G.block || 3) && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyTime(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; funIntro('quiz', startRound2, 4200); return; }
       if (G.eraSpin && !(G.quizRun || 0) && G.eraBlock !== G.round) { G.eraBlock = G.round; partIntro(); return; }   // Random or Voted rounds: each block of trivia gets its decade
@@ -1244,6 +1244,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
   // A presenter hops on screen to announce it, then the party round is chosen.
+  // The party games that can be played now: switched on, and possible with this group (most need two players or more).
+  function partyGames(pOn, two) {
+    pOn = pOn || G.partyOn || {}; if (two == null) two = list().filter(function (p) { return !p.off; }).length >= 2;
+    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'shop' && x !== 'bomb')); });
+  }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
     studioIntro('🎉', 'Party round!', '', 'It’s time for a party game! Let’s see what it’s going to be…', function () { partyChoose(games); }, 'partytime');
@@ -1777,7 +1782,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     if (beginGame() === false) return;
-    G.mgTest = true; G.quizRun = 3; G.skipOpening = true; G.shopFirst = true; G.partyOn = G.partyOn || {}; G.partyOn.shop = true;   // the test starts straight with a party game (no opening, no first boutique visit); after each one, the winner goes shopping
+    G.mgTest = true; G.quizRun = 99; G.skipOpening = true; G.shopFirst = true; G.partyOn = G.partyOn || {}; G.partyOn.shop = true;   // the test starts straight with a party game (no opening, no first boutique visit); after each one, the winner goes shopping
     if (G.phase === 'intro') introEnd();
   });
   // Test the boutique: straight into the shop (everyone picks one), then a winner's trip (two items), then the party games.
@@ -1789,7 +1794,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (beginGame() === false) return;
     G.mgTest = true; G.skipOpening = true;
     if (G.phase === 'intro') introEnd();
-    G.shopFirst = true; G.quizRun = 3; clearTimeout(funTimer); stopTimers();
+    G.shopFirst = true; G.quizRun = 99; clearTimeout(funTimer); stopTimers();
     var first = list().filter(function (p) { return !p.off; }), lucky = [pick(first).pid];
     G.mode = G.lastParty = 'shop'; G.afterParty = true; G.mgBase = null;
     shopGo(null, 1, function () {   // then a pretend win, so the winner's trip can be seen too
@@ -2119,7 +2124,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // 1. What we play tonight
     if (party) {
       say({ order: 'Tonight it’s Party mode: the Grand Tour! 🎉', random: 'Tonight it’s Party mode, and the wheel decides! 🎡', vote: 'Tonight it’s Party mode, and you vote! 🗳️', one: 'Tonight it’s Party mode, and you take turns to choose!' }[G.partyPick] || 'Tonight it’s Party mode! 🎉');
-      say({ order: 'First three trivia questions, then a party game, and so on, until every party game has had its turn.', random: 'Three trivia questions, then the wheel picks a party game, and so on.', vote: 'Three trivia questions, then you vote for the next party game, and so on.', one: 'Three trivia questions, then one of you picks the next party game, and so on.' }[G.partyPick] || 'Three trivia questions, then a party game, and so on.');
+      say({ order: 'First ' + (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')).toLowerCase() + ', then a party game, and so on, until every party game has had its turn.', random: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then the wheel picks a party game, and so on.', vote: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then you vote for the next party game, and so on.', one: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then one of you picks the next party game, and so on.' }[G.partyPick] || (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then a party game, and so on.');
     } else if (lad) say(G.parts > 1 ? 'Tonight we play the Ladder, in ' + G.parts + ' rounds! 🪜' : 'Tonight we play the Ladder! 🪜');
     else say(multi ? 'Tonight it’s a quiz in ' + G.parts + ' rounds, of ' + G.per + ' questions each! 🎤' : 'Tonight it’s a quiz: ' + G.per + ' questions about Eurovision songs! 🎤');
     // 2. Which songs: the era, and which entries
@@ -4043,10 +4048,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (lo) lo.disabled = party;
     
     // Party needs ten songs to fit both Sing! and Draw!: five is not on offer there.
-    var five = $('s-rounds').querySelector('option'); if (five) five.disabled = party; if (party && $('s-rounds').value === '5') $('s-rounds').value = '10';
+    var five = $('s-rounds').querySelector('option'); if (five) five.disabled = false;
     var lad = !on && !party && $('s-qmode').value === 'ladder'; $('s-scoring').disabled = on || lad;   // the Ladder is its own way of scoring   // Ladder: no song count and no hidden scores
     var tour = party && $('s-partypick').value === 'order';   // Grand tour sets its own length: every minigame once
-    $('s-rounds').disabled = lad || tour; $('s-show').disabled = lad;
+    $('s-rounds').disabled = lad; $('s-show').disabled = lad;   // (a Grand Tour too: the questions are spread over the gaps between the party games)
     // Rounds and the spin for the years belong to a plain quiz
     // Round Robin: several rounds, each with its own era from the spin. Rounds only counts there, and
     // the Era setting has nothing to choose then.
@@ -4179,6 +4184,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.round = 0; G.used = {}; fails = 0; note('');
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; }); G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    // Trivia between the party games: three questions a block; on a Grand Tour the number of questions set is
+    // spread over the gaps between the party games (before each one, and one last block before the end).
+    G.block = 3;
+    if (G.tour) { var ng = partyGames(G.partyOn, list().filter(function (p) { return !p.off; }).length >= 2).length; G.block = Math.max(1, Math.round(G.per / (ng + 1))); }
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
