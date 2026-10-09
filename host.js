@@ -333,7 +333,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'bomb' && $('bombov')) $('bombov').remove();
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
-    if (!G.clue && poeAudio && !poeAudio.paused) clueSongStop();   // (the game is over, or was ended)
+    if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();   // (the game is over, or was ended)
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
@@ -2575,8 +2575,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // answer gets four), each one a card that is NOT the answer, from the row where the player still has the most options. Then everyone accuses on their phone, and the answer comes out,
   // part by part. 4 points for each right part, 6 more for all three.
   var clueTimer = null, clueTick = null;
-  // Edgar's own tune loops through the whole game (story, clue questions, accusation and reveal). The clue questions
-  // are only ones without a video, so nothing else plays over it.
+  // Edgar's own tune loops through the four clue questions (and only there). Those questions are only ones without
+  // a video, so nothing else plays over it.
   var poeAudio = null;
   function clueSong() {
     if (REMOTE) return;
@@ -2586,7 +2586,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (poeAudio.paused) { poeAudio.currentTime = 0; var pr = poeAudio.play(); if (pr && pr.catch) pr.catch(function () {}); }
     } catch (e) {}
   }
-  function clueSongStop() { if (poeAudio) try { poeAudio.pause(); } catch (e) {} }
+  function clueSongStop() { if (poeAudio) try { poeAudio.pause(); } catch (e) {} if (egghAudio) try { egghAudio.pause(); } catch (e) {} }
+  var egghAudio = null;
+  clueReveal.music = function () {   // the reveal's own track (once, not looped)
+    if (REMOTE) return;
+    try { if (!egghAudio) egghAudio = new Audio('sounds/egghh.mp3'); egghAudio.volume = Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.music : 1))); egghAudio.currentTime = 0; var pr = egghAudio.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+  };
   var CLUE_TYPES = ['trivia', 'flag', 'host', 'odd', 'lost'];   // question types without a video
   // Edgar, the show's mascot: a big-headed cartoon inspired by Edgar Allan Poe, with his little raven on his shoulder.
   var EDGAR = '<svg class="edgar" viewBox="0 0 200 300" aria-hidden="true"><defs><radialGradient id="edskin" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#fff4e8"/><stop offset="1" stop-color="#e9d2bd"/></radialGradient><linearGradient id="edcoat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3466"/><stop offset="1" stop-color="#1d1a3c"/></linearGradient></defs><ellipse cx="100" cy="292" rx="58" ry="7" fill="rgba(0,0,0,.35)"/><rect x="70" y="250" width="22" height="34" rx="8" fill="#1d1a3c"/><rect x="108" y="250" width="22" height="34" rx="8" fill="#1d1a3c"/><ellipse cx="78" cy="286" rx="18" ry="8" fill="#111"/><ellipse cx="122" cy="286" rx="18" ry="8" fill="#111"/><path d="M44 190 Q46 150 100 148 Q154 150 156 190 L162 258 Q100 274 38 258 Z" fill="url(#edcoat)"/><path d="M100 150 L84 150 L100 210 L116 150 Z" fill="#fff"/><path d="M100 166 L82 156 L82 176 Z M100 166 L118 156 L118 176 Z" fill="#111"/><circle cx="100" cy="166" r="5" fill="#222"/><circle cx="100" cy="222" r="4" fill="#d9b44a"/><circle cx="100" cy="240" r="4" fill="#d9b44a"/><path d="M46 178 Q22 196 24 226" stroke="url(#edcoat)" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="24" cy="230" r="12" fill="#fff"/><path d="M154 178 Q182 160 182 132" stroke="url(#edcoat)" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="182" cy="126" r="12" fill="#fff"/><ellipse cx="100" cy="92" rx="66" ry="70" fill="url(#edskin)"/><ellipse cx="38" cy="98" rx="10" ry="16" fill="#e9d2bd"/><ellipse cx="162" cy="98" rx="10" ry="16" fill="#e9d2bd"/><path d="M34 92 Q26 40 70 24 Q104 10 140 26 Q176 44 168 96 Q160 70 148 62 Q150 44 126 40 Q130 52 116 50 Q96 44 84 52 Q62 58 54 74 Q42 80 34 92 Z" fill="#1a1420"/><path d="M34 92 Q30 112 40 128 Q38 108 46 96 Z M168 96 Q172 116 160 130 Q162 110 154 98 Z" fill="#1a1420"/><path d="M64 80 Q76 72 88 80" stroke="#1a1420" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M112 80 Q124 72 136 80" stroke="#1a1420" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="78" cy="96" rx="11" ry="13" fill="#fff"/><ellipse cx="122" cy="96" rx="11" ry="13" fill="#fff"/><circle cx="80" cy="98" r="7" fill="#2a1c3a"/><circle cx="124" cy="98" r="7" fill="#2a1c3a"/><circle cx="82" cy="95" r="2.5" fill="#fff"/><circle cx="126" cy="95" r="2.5" fill="#fff"/><ellipse cx="66" cy="116" rx="9" ry="5" fill="#f2a7a7" opacity=".55"/><ellipse cx="134" cy="116" rx="9" ry="5" fill="#f2a7a7" opacity=".55"/><path d="M100 104 Q96 116 102 118" stroke="#cfa98a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M100 124 Q86 118 72 128 Q84 130 100 128 Q116 130 128 128 Q114 118 100 124 Z" fill="#1a1420"/><path d="M88 136 Q100 144 112 136" stroke="#7a3b3b" stroke-width="3" fill="none" stroke-linecap="round"/><g class="edraven"><path d="M136 160 Q140 140 158 138 Q172 138 176 150 Q182 158 176 168 Q160 176 140 170 Z" fill="#15121c"/><path d="M146 166 L132 178 L150 172 Z" fill="#15121c"/><circle cx="164" cy="148" r="3.2" fill="#fff"/><circle cx="165" cy="148" r="1.6" fill="#111"/><path d="M174 150 L188 154 L174 157 Z" fill="#f2b134"/></g></svg>';
@@ -2599,8 +2604,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.atype === 'party' && G.total < ENDLESS) G.total += CLUE_N - 1;
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
-    clueShow(); clueSong();
-    var ov = $('clueov');
+    clueShow();
+    var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); }   // first only the news: the poster big, the presenters close together; the cards come later
     var at = function (ms, f) { clueTimer = setTimeout(function () { if (G.clue && G.clue.st === 'intro' && $('clueov')) f(); }, ms); };
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
@@ -2620,11 +2625,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       (function (l, at0, first) { at(at0, function () {
         clueSay(l[0], l[1]);
         if (first) setTimeout(function () { if (!$('clueov')) return; try { var w = new Audio('sounds/who_the_hell.mp3'); w.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }, Math.max(0, Array.from(l[1]).join('').indexOf('Edgar')) * TALK_MS);   // "Who the hell…?!" right as the word Edgar comes out
-        var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.toggle('lit', !!l[2] && r.getAttribute('data-k') === l[2]); });
+        var ov2 = $('clueov'); if (ov2) {
+          if (l[2]) { if (ov2.classList.contains('story')) whooshes([0, 250]); ov2.classList.remove('story'); }   // on to the clues: the presenters step apart, the rows come in one by one
+          [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { var me = !!l[2] && r.getAttribute('data-k') === l[2]; r.classList.toggle('lit', me); if (me) r.classList.add('on'); });
+        }
       }); })(l, t, l === lines[0]);
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
     });
-    at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); }); clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
+    at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); r.classList.add('on'); }); clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
   }
   function clueSay(who, txt) {
     var ov = $('clueov'); if (!ov) return;
@@ -2642,7 +2650,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueNext() {
     var g = G.clue; if (!g) return false;
     if (g.st === 'ask' && g.n < CLUE_N) {
-      G.mode = 'mc'; G.phase = 'loading'; push(); loadSong();
+      G.mode = 'mc'; G.phase = 'loading'; clueSong(); push(); loadSong();   // (Edgar's tune: only during the four clue questions)
       if (G.q) G.q.text = '🔍 Clue ' + (g.n + 1) + ' of ' + CLUE_N + ' · ' + G.q.text;
       return true;
     }
@@ -2674,7 +2682,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueAccuse() {
     var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSongStop();
     clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who took Edgar, where is he hidden, and how did they carry him off?'); }, 1400);
     setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Make your choice on your phone. Use your clues, detectives!'); }, 5200);
     // bots: a guess among what their clues leave open
@@ -2699,15 +2707,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var who = clueCard('who:' + g.sol.who).c, where = clueCard('where:' + g.sol.where).c, what = clueCard('what:' + g.sol.what).c;
     var step = function (n) { if (!G.clue || G.clue.st !== 'reveal') return; g.step = n; Music.ding(); push(); };
     var at = function (ms, f) { setTimeout(function () { if (G.clue && G.clue.st === 'reveal') f(); }, ms); };
-    // top row first, the culprit last: where, then with what, then who
-    at(800, function () { clueSay('him', 'Where was Edgar hidden?'); });
-    at(2800, function () { step(1); clueSay('her', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'); });
-    at(5000, function () { clueSay('him', 'And how did they carry him off?'); });
-    at(6800, function () { step(2); clueSay('her', 'With the ' + what.name + '! ' + what.icon); });
-    at(9000, function () { clueSay('him', 'And who abducted Edgar? It was…'); });
-    at(11200, function () { step(3); clueSay('her', who.id === 'felix' ? 'Felix?! You took our own mascot?! 😱' : who.id === 'stella' ? '…me?! I only wanted a cuddle! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, Edgar is not for sale! 👠' : who.name + '! 😱'); });
-    if (who.id === 'felix') at(13200, function () { clueSay('him', 'I just wanted a selfie with him! 🤳'); });
-    at(14800, function () {   // the points: 4 for each right part, 6 more for all three
+    // The reveal, row by row (top row first, the culprit last): a question, then the wrong cards drop out one by one
+    // until only the right one is left, which lights up. Its own music plays underneath.
+    clueSongStop(); clueReveal.music();
+    g.dimmed = {};
+    var lines = {
+      where: ['Where was Edgar hidden?', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'],
+      what: ['And how did they carry him off?', 'With the ' + what.name + '! ' + what.icon],
+      who: ['And who abducted Edgar? It was…', who.id === 'felix' ? 'Felix?! You took our own mascot?! 😱' : who.id === 'stella' ? '…me?! I only wanted a cuddle! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, Edgar is not for sale! 👠' : who.name + '! 😱']
+    };
+    var t = 800;
+    ['where', 'what', 'who'].forEach(function (k, n) {
+      at(t, function () { clueSay('him', lines[k][0]); });
+      var wrong = shuffle(CLUE_SETS[k].filter(function (c) { return c.id !== g.sol[k]; }));
+      wrong.forEach(function (c, m) { at(t + 1800 + m * 1000, function () { g.dimmed[k + ':' + c.id] = 1; Music.plop(m * 2, 0.8); clueShow(); }); });
+      at(t + 1800 + wrong.length * 1000 + 400, function () { step(n + 1); clueSay('her', lines[k][1]); });
+      t += 1800 + wrong.length * 1000 + 2600;
+    });
+    if (who.id === 'felix') at(t - 600, function () { clueSay('him', 'I just wanted a selfie with him! 🤳'); });
+    var T0 = t + (who.id === 'felix' ? 1600 : 0);
+    at(T0, function () {   // the points: 4 for each right part, 6 more for all three
       var solved = [];
       g.res = {};
       list().forEach(function (p) {
@@ -2724,15 +2743,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }
       clueSay('him', solved.length ? (solved.length > 1 ? solved.slice(0, -1).join(', ') + ' and ' + solved[solved.length - 1] + ' found' : solved[0] + ' found') + ' Edgar! Welcome back, Edgar! 🎉' : 'Nobody found him… luckily, Edgar found his own way back! 😅');
     });
-    at(18400, function () {   // Lynda and her gift
+    at(T0 + 3600, function () {   // Lynda and her gift
       if (!g.gift || !players[g.gift.pid]) return;
       var gp = players[g.gift.pid], it = shopItem(g.gift.item); gp.inv = (gp.inv || []).concat(g.gift.item); g.step = 5;
       var ov = $('clueov'); if (ov && !ov.querySelector('.clynda')) { var ly = document.createElement('div'); ly.className = 'clynda'; ly.innerHTML = SHOPKEEPER + '<div class="grbub lynda"></div>'; ov.appendChild(ly); ov.classList.add('withlynda'); }
       whooshes([0]); Music.blip(); push();
       setTimeout(function () { var b = $('clueov') && $('clueov').querySelector('.grbub.lynda'); if (!b) return; [].forEach.call($('clueov').querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); b.classList.add('on'); typeSay(b, 'Nobody found Edgar? Never mind, darling! A little gift from my boutique for ' + gp.name + ': the ' + it.name + '! ' + it.icon, 'lynda'); }, 900);
     });
-    at(21300, function () { if (g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
-    at(26300, function () { if (!g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
+    at(T0 + 6500, function () { if (g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
+    at(T0 + 11500, function () { if (!g.gift) return; clueLeave(function () { clueSongStop(); G.clue = null; G.phase = 'loading'; push(); startRound2(); }); });
   }
   function clueSnap() {
     var g = G.clue, acc = {};
@@ -2759,7 +2778,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.setAttribute('data-st', g.st);
     ['where', 'what', 'who'].forEach(function (k, i) {   // (top row first, the culprit last)
       var shown = g.st === 'reveal' && g.step >= i + 1;
-      [].forEach.call(ov.querySelectorAll('.clrow[data-k="' + k + '"] .clcard'), function (el) { var hit = shown && el.getAttribute('data-id') === g.sol[k]; el.classList.toggle('hit', hit); el.classList.toggle('dim', shown && !hit); });
+      [].forEach.call(ov.querySelectorAll('.clrow[data-k="' + k + '"] .clcard'), function (el) { var hit = shown && el.getAttribute('data-id') === g.sol[k]; el.classList.toggle('hit', hit); el.classList.toggle('dim', (shown && !hit) || !!(g.dimmed && g.dimmed[k + ':' + el.getAttribute('data-id')])); });
     });
     ov.classList.toggle('found', g.st === 'reveal' && g.step >= 4);
     var msg = g.st === 'intro' ? 'Edgar, the EuroQuizion mascot, is missing!' : g.st === 'acc' ? 'Accuse on your phone: who, where, and with what? ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar is back! 🎉' : 'Edgar found his own way back… 😅') : g.st === 'reveal' ? 'Who took Edgar…?' : '';

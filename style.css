@@ -1641,3 +1641,16 @@ aside.recapgone{visibility:hidden}
 .clueov .clrow.lit .cllab{color:#fff;text-shadow:0 0 10px #ffd23f}
 .clbtn.ro{cursor:default}
 .clbtn.new{opacity:.8;border-color:#55c27a;background:rgba(85,194,122,.22);animation:shpop .5s both}
+
+/* Edgar's story first: no cards yet, the MISSING poster big in the middle, the presenters close together;
+   then they step apart and the rows come in one by one as they are explained */
+.clueov .clposter{transition:top .9s cubic-bezier(.3,1.2,.5,1),transform .9s cubic-bezier(.3,1.2,.5,1),opacity .5s}
+.clueov.story .clposter{top:24vh;transform:rotate(-3deg) scale(2.1)}
+.clueov.intro .clrow:not(.on){opacity:0;transform:translateY(4vh);pointer-events:none}
+.clueov .clrow{transition:opacity .6s,transform .6s,filter .4s}
+.clueov.story .clmsg,.clueov.story .clplayers{opacity:0}
+.clueov .clmsg,.clueov .clplayers{transition:opacity .6s}
+.clueov .grhosts .ehost{transition:left .9s cubic-bezier(.3,1.1,.5,1),right .9s cubic-bezier(.3,1.1,.5,1)}
+.clueov.story .grhosts .him{left:27vw}.clueov.story .grhosts .her{right:27vw}
+.clueov .grbub{transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1),left .9s,right .9s}
+.clueov.story .grbub.him{left:14vw}.clueov.story .grbub.her{right:14vw}
