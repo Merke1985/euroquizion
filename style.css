@@ -2416,3 +2416,25 @@ aside.recapgone{visibility:hidden}
 .jmov.v3 .jmjul{bottom:4vh;height:15vh}
 .jmov.v3 .jmmist{top:16vh;height:20vh;z-index:3}
 .jmov.v3 .jmmist{top:14vh;height:22vh;background:radial-gradient(ellipse 18% 55% at 40% 50%,rgba(240,235,255,.85),transparent 70%),radial-gradient(ellipse 18% 55% at 60% 45%,rgba(240,235,255,.85),transparent 70%),radial-gradient(ellipse 34% 60% at 50% 55%,rgba(232,225,252,.92),transparent 72%)}
+/* the top of the screen: a sky full of clouds that stays put; Juliet's tower far away, rising out of it */
+.jmsky{position:absolute;left:0;right:0;top:0;height:34vh;z-index:2;pointer-events:none}
+.jmsky:not(.front){background:linear-gradient(#120a2e 0%,#2e1c5a 45%,#6a3f7a 80%,rgba(140,100,150,0) 100%)}
+.jmsky .cb{position:absolute;inset:0;background:radial-gradient(ellipse 14% 40% at 12% 70%,rgba(200,185,230,.55),transparent 70%),radial-gradient(ellipse 16% 42% at 86% 68%,rgba(200,185,230,.55),transparent 70%),radial-gradient(circle at 78% 22%,#fff8e0 0 2.2vh,rgba(255,248,224,.25) 2.4vh,transparent 7vh)}
+.jmsky.front{top:12vh;height:28vh;z-index:3}
+.jmsky.front i{position:absolute;left:-20%;right:-20%;height:100%;top:0}
+.jmsky.front .c1{background:radial-gradient(ellipse 18% 46% at 10% 55%,#e9e2f6 0 40%,transparent 72%),radial-gradient(ellipse 20% 50% at 34% 50%,#ded4f0 0 40%,transparent 72%),radial-gradient(ellipse 22% 48% at 58% 58%,#e9e2f6 0 40%,transparent 72%),radial-gradient(ellipse 18% 46% at 82% 52%,#ded4f0 0 40%,transparent 72%),radial-gradient(ellipse 16% 40% at 102% 56%,#e9e2f6 0 40%,transparent 72%);opacity:.95;animation:jmdrift 40s linear infinite alternate}
+.jmsky.front .c2{top:22%;background:radial-gradient(ellipse 22% 46% at 20% 60%,#cfc3e8 0 40%,transparent 74%),radial-gradient(ellipse 24% 50% at 50% 66%,#d8cdee 0 40%,transparent 74%),radial-gradient(ellipse 22% 46% at 80% 60%,#cfc3e8 0 40%,transparent 74%);opacity:.9;animation:jmdrift 55s linear infinite alternate-reverse}
+.jmsky.front .c3{top:46%;background:linear-gradient(rgba(214,204,236,0),rgba(214,204,236,.85) 40%,rgba(180,160,210,.35) 80%,transparent);animation:none}
+@keyframes jmdrift{to{transform:translateX(8%)}}
+.jmov.v3 .jmmist{display:none}
+.jmtower{top:2vh;width:10vh;height:26vh;margin-left:-5vh;z-index:2;transform-origin:50% 100%;scale:calc(1 + var(--near,0) * .06);transition:scale .6s}
+.jmtower .tw{left:1.6vh;right:1.6vh;top:3.4vh;filter:brightness(.85) saturate(.8)}
+.jmtower .tw::before{width:2vh;height:3.4vh;margin-left:-1vh;top:6vh}
+.jmtower .tr{height:3.6vh}
+.jmov.v3 .jmbalc{top:1vh;width:9vh;height:11vh;margin-left:-4.5vh;z-index:2;transform-origin:50% 100%;scale:calc(1 + var(--near,0) * .06);transition:scale .6s}
+.jmov.v3 .jmjul{bottom:1.6vh;height:8vh}
+.jmov.v3 .jmbalc .jmrail{height:2.2vh;bottom:.4vh}
+.jmov.v3 .jmsay{width:9vh;height:9vh;top:0}
+.jmov.v3 .jmsay b{font-size:5vh}
+.jmtower{top:-1vh;height:30vh}
+.jmov.v3 .jmbalc{top:6.5vh}

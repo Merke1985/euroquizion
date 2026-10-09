@@ -3703,7 +3703,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('qjov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
-      ov.innerHTML = '<div class="jm3h"></div><div class="jmtower"><i class="tw"></i><i class="tr"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
+      ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower"><i class="tw"></i><i class="tr"></i></div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
@@ -3719,6 +3719,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show');
     // the city: where the group is on the route (it slides the other way)
     var x = 0, y = 0; for (var i = 0; i < (g.pos || 0); i++) { x += JM_DIRS[g.route[i]][0]; y += JM_DIRS[g.route[i]][1]; }
+    ov.style.setProperty('--near', String(Math.max(0, Math.min(10, -y))));   // (north: the tower comes a little closer)
     var ck = x + ',' + y, was = (ov.getAttribute('data-p') || '0,0').split(',').map(Number);
     if (V3 && ov.getAttribute('data-p') !== ck) {
       ov.setAttribute('data-p', ck);
