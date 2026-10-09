@@ -517,7 +517,7 @@ var PARTY_MODE_HELP = {
   one: 'One player picks the next minigame, a different player each time.'
 };
 var FINAL_HELP = {
-  chase: 'Grand Final: after the last question everyone races up a runway to the stage, with a monster on their heels. The higher your score, the further ahead you start.',
+  chase: 'Grand Final: after the last question everyone races up a runway to the stage, for the Eurovision trophy. The higher your score, the further ahead you start.',
   double: 'Big Five: after the rounds are completed, there will be 5 final questions with double points. The scores stay hidden until the end.',
   standard: 'Standard: the game ends after the final round. No surprises.'
 };

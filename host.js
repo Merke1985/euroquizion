@@ -2113,7 +2113,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function showPlan() {
     var L = [], who = 'him', say = function (t) { L.push([who, t]); who = who === 'him' ? 'her' : 'him'; };
     var party = G.atype === 'party', lad = !party && (ladderGame() || G.partLadder), multi = !party && G.parts > 1;
-    var fin = G.finalMode === 'chase' ? 'And our final game tonight: the Grand Final! Race your way to the trophy, before the monster catches you… 🏆'
+    var fin = G.finalMode === 'chase' ? 'And our final game tonight: the Grand Final! You’ll race each other for the Eurovision trophy… 🏆'
       : G.finalMode === 'double' ? 'And our final game tonight: the Big Five! Five extra questions at the end, all for double points. ⭐'
       : 'No final game tonight: whoever has the most points after the last question wins!';
     // 1. What we play tonight
