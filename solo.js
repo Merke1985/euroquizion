@@ -374,7 +374,7 @@
       if (toEnd) { var rem = songLeft(); if (rem != null) autoEnd = Date.now() + rem * 1000; }
       var left = Math.ceil((autoEnd - Date.now()) / 1000);
       if (left <= 0) { autoStop(); goNext(); return; }
-      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (S.round >= S.total ? 'Final score in ' : 'Next song in ') + clock(left);
+      if (toEnd) $('autoleft').textContent = ''; else $('autoleft').textContent = (S.round >= S.total ? 'Final score in ' : 'Next question in ') + clock(left);
     };
     draw(); autoTick = setInterval(draw, 200);
   }
