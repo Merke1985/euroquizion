@@ -2264,19 +2264,37 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Lost in Translation ends in a tie: everyone votes for the funniest fake translation of those tied, and that one wins the trip
     if (wins.length > 1 && G.lastParty === 'bluff' && G.bluffFakes && wins.every(function (k) { return G.bluffFakes[k]; })) {
       var bf = G.bluffFakes; G.bluffFakes = null;
-      funnyVote(wins, bf, function (w) { mgGo([w], back); }); return;
+      funnyVote(wins, bf, function (w) { mgGo([w], back); }, function () { underdog(wins, back); }); return;
     }
+    if (wins.length > 1) { underdog(wins, back); return; }
     mgGo(wins, back);
   }
-  function mgGo(wins, back) {
+  // A tie: Lynda has a soft spot for the underdog, so the one of them with the lowest score goes shopping.
+  function underdogOf(wins) {
+    var ps = wins.map(function (k) { return players[k]; }).filter(function (p) { return p && !p.off; });
+    var low = Math.min.apply(null, ps.map(function (p) { return p.score; }));
+    var lp = pick(ps.filter(function (p) { return p.score === low; }));
+    return lp ? lp.pid : wins[0];
+  }
+  function underdogLine(nm) { return nm + ', darling, come in! It was a tie, but I have a soft spot for the underdog! 💖 Pick one item from my selection.'; }
+  function underdog(wins, back) {
+    var w = underdogOf(wins), nm = players[w] ? players[w].name : '';
+    if (REMOTE) { mgGo([w], back, underdogLine(nm)); return; }
+    stopTimers(); G.phase = 'loading'; G.q = null; G.best = null; push();
+    hostSay('him', 'It’s a tie! But only one can go shopping…', 3400);
+    setTimeout(function () { hostSay('her', 'Lynda sent us a message: she has a soft spot for the underdog, so ' + nm + ', the lowest scorer of the tied players, goes to the boutique! 💌', 5600); }, 3600);
+    setTimeout(function () { mgGo([w], back, underdogLine(nm)); }, 3600 + 5800);
+  }
+  function mgGo(wins, back, line) {
     var names = wins.map(function (k) { return players[k].name; });
     FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and a trip to the boutique: pick ' + SHOP_PICKS + ' items!' };
-    Music.douze(); shopVisit(wins, 1, function () { backFromShop(wins.length, back); }, true);   // straight to the boutique: the winner chooses one
+    Music.douze(); shopVisit(wins, 1, function () { backFromShop(wins.length, back); }, true, line);   // straight to the boutique: the winner chooses one
   }
   // The tie-break vote: which fake translation was the funniest?
   var funnyDone = null, FUNNY_MS = 15000;
-  function funnyVote(wins, fakes, done) {
-    stopTimers(); G.draw = null; G.song = null; G.clip = null; funnyDone = done;
+  var funnyTie = null;
+  function funnyVote(wins, fakes, done, tie) {
+    stopTimers(); G.draw = null; G.song = null; G.clip = null; funnyDone = done; funnyTie = tie || null;
     G.best = { pick: true, funny: true, pids: wins.slice(), id: 'funny' + G.round, tally: null, wins: null };
     G.q = { subject: 'pick', type: 'mc', text: 'It’s a tie! Vote for the funniest fake translation:', hint: '', options: wins.map(function (k) { return '“' + fakes[k] + '” (' + players[k].name + ')'; }), correct: -1, answer: '', noclip: true };
     list().forEach(function (p) { p.pick = null; });
@@ -2286,6 +2304,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function funnyPicked(tops) {
     clearTimeout(picksTimer); stopTimers();
+    var tie = funnyTie; funnyTie = null;
+    if (tie && tops.length !== 1) {   // the vote is a tie too (or nobody voted): Lynda picks the underdog
+      list().forEach(function (p) { p.pick = null; }); G.best = null; G.q = null; funnyDone = null; tie(); return;
+    }
     var w = tops.length ? G.best.pids[pick(tops)] : pick(G.best.pids), nm = players[w] ? players[w].name : '';
     list().forEach(function (p) { p.pick = null; });
     G.best = null; G.q = null; G.phase = 'loading'; push();
@@ -2823,8 +2845,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       step(4); Music.douze();
       var names = function (ps) { var n = ps.map(function (p) { return p.name; }); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0]; };
       if (solved.length) {
-        g.prize = { who: solved.map(function (p) { return p.pid; }), solved: true };
-        clueSay('him', names(solved) + (solved.length > 1 ? ' were true detectives and found' : ' was a true detective and found') + ' all the clues' + (shop ? ', and ' + (solved.length > 1 ? 'are' : 'is') + ' rewarded with a visit to Woodruff’s Boutique! 🛍️' : '! Welcome back, Edgar! 🎉'));
+        var sw = solved.map(function (p) { return p.pid; });
+        if (shop && sw.length > 1) {   // a tie: Lynda has a soft spot for the underdog
+          var ud = underdogOf(sw);
+          g.prize = { who: [ud], solved: true, under: true };
+          clueSay('him', names(solved) + ' were true detectives and found all the clues! 🎉');
+          at(4000, function () { clueSay('her', 'But only one can go shopping… Lynda has a soft spot for the underdog, so ' + (players[ud] ? players[ud].name : '') + ', with the lowest score, is off to Woodruff’s Boutique! 💌'); });
+        } else {
+          g.prize = { who: sw, solved: true };
+          clueSay('him', names(solved) + (solved.length > 1 ? ' were true detectives and found' : ' was a true detective and found') + ' all the clues' + (shop ? ', and ' + (solved.length > 1 ? 'are' : 'is') + ' rewarded with a visit to Woodruff’s Boutique! 🛍️' : '! Welcome back, Edgar! 🎉'));
+        }
       } else {
         clueSay('him', 'Unfortunately, nobody discovered the truth… 😢');
         if (shop) {
@@ -2837,6 +2867,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lynda = function () {   // what Lynda says in the boutique: about Edgar (and a confession, if she took him)
       var pr = g.prize, ws = pr.who.map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), nm = ws.length > 1 ? ws.slice(0, -1).join(', ') + ' and ' + ws[ws.length - 1] : ws[0], took = g.sol.who === 'lynda';
       if (pr.solved && took) return 'Alright, alright, ' + nm + ', you caught me! 👠 Edgar just looked SO good in sequins… To say sorry, pick one item from my selection. Don’t tell the police, darling!';
+      if (pr.solved && pr.under) return 'Darling ' + nm + ', I have a soft spot for the underdog! 💖 Edgar popped in to say thank you, and his raven won’t stop squawking at my hats! 🐦 Pick one item from my selection, on the house!';
       if (pr.solved) return 'Darling ' + nm + ', what a detective! Edgar popped in to say thank you, and his raven won’t stop squawking at my hats! 🐦 Pick one item from my selection, on the house!';
       if (took) return 'Shh, ' + nm + ', between us… Edgar was in my changing room all along! 👠 Here’s something to keep you quiet, darling: pick one item from my selection!';
       return nm + ', darling, nobody found the truth, but Edgar whispered to me that you could use a little help! 🐦 Pick one item from my selection.';
