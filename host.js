@@ -2582,14 +2582,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (!poeAudio) poeAudio = new Audio('sounds/poe.mp3');
-      clearInterval(poeFade); poeAudio.loop = true;
+      clearInterval(poeFade); poeAudio.loop = true; if (poeWatch && poeAudio.paused) { poeAudio.removeEventListener('timeupdate', poeWatch); poeWatch = null; }
       poeAudio.volume = Math.max(0, Math.min(1, 0.6 * (Music.vol ? Music.vol.music : 1)));
       if (poeAudio.paused) { poeAudio.currentTime = 0; var pr = poeAudio.play(); if (pr && pr.catch) pr.catch(function () {}); }
     } catch (e) {}
   }
   // The last clue question: no more loops, the tune plays its current round to the end (it ends near the answer);
   // if anything is still playing when the accusation starts, it fades out instead of stopping dead.
-  var poeFade = null;
+  var poeFade = null, poeWatch = null;
   // If the round that is playing would end soon (within 15 seconds: too early, in the middle of the question),
   // it goes round once more and only that next round is the last.
   function clueSongLast() {
@@ -2597,7 +2597,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var left = (a.duration || 26) - (a.currentTime || 0);
     if (left >= 15) { a.loop = false; return; }
     var last = a.currentTime;
-    var watch = function () { if (a.currentTime < last) { a.loop = false; a.removeEventListener('timeupdate', watch); } else last = a.currentTime; };   // (it just wrapped round: this round is the last)
+    if (poeWatch) a.removeEventListener('timeupdate', poeWatch);
+    var watch = poeWatch = function () { if (a.currentTime < last) { a.loop = false; a.removeEventListener('timeupdate', watch); } else last = a.currentTime; };   // (it just wrapped round: this round is the last)
     a.addEventListener('timeupdate', watch);
   }
   function clueSongFade() {
