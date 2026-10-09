@@ -1762,3 +1762,14 @@ aside.recapgone{visibility:hidden}
 .noteov .ntpin{transition:opacity .3s}
 .noteov .ntpin.out{animation:ntout .9s cubic-bezier(.5,0,1,.6) forwards}
 @keyframes ntout{0%{opacity:1;translate:0 0;rotate:0deg}25%{translate:0 -1.5vh;rotate:-10deg}100%{opacity:0;translate:0 30vh;rotate:120deg}}
+
+/* Hold That Note: she stands on a square, lit stage (white top with pink LED chevrons, a glowing pink front) */
+.noteov .ntstage{position:absolute;left:50%;bottom:2vh;width:50vw;transform:translateX(-50%) translateY(40vh);transition:transform 1.2s cubic-bezier(.2,.9,.3,1.05);z-index:1;filter:drop-shadow(0 0 30px rgba(255,80,180,.6))}
+.noteov.diva-on .ntstage{transform:translateX(-50%)}
+.noteov .ntstop{height:9vh;clip-path:polygon(9% 0,91% 0,100% 100%,0 100%);background:
+  repeating-linear-gradient(60deg,rgba(255,92,184,.55) 0 6px,transparent 6px 28px),
+  repeating-linear-gradient(-60deg,rgba(255,92,184,.55) 0 6px,transparent 6px 28px),
+  linear-gradient(#fff6fb,#ffd2ec)}
+.noteov .ntsfront{height:5.5vh;background:linear-gradient(#ff8fd0,#d81b8a 55%,#7a0a52);box-shadow:0 0 24px rgba(255,63,176,.8),inset 0 2px 0 rgba(255,255,255,.7)}
+.noteov .ntdiva{height:62vh;bottom:8.5vh}
+.noteov.diva-on .ntdiva{transition-delay:.4s}

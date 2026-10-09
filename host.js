@@ -2964,6 +2964,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'noteov'; ov.className = 'grov noteov enter';
       ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="ntspot"></div><div class="grsign ntsign">🎤 Hold That Note</div>' +
+        '<div class="ntstage"><div class="ntstop"></div><div class="ntsfront"></div></div>' +
         '<div class="ntdiva">' + DIVA + '<div class="ntnotes"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></div><div class="ntsparks"></div></div>' +
         '<div class="nttimer">0:00.0</div><div class="ntline"><div class="ntscale"></div><div class="ntpins"></div><div class="ntneedle"></div></div>' +
         '<div class="ntmsg"></div><div class="ntplayers"></div>' +
