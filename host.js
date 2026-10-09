@@ -1237,7 +1237,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
-    queue: { icon: '🕺', title: 'Dodge the Superfans', sub: 'Everyone has an annoying superfan. Five halls, each with a few doors: everyone at the same door gets all the fans at that door. Fewest fans at the end wins!' },
+    queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Eight crossroads, three street signs each: only one points to Juliet’s balcony. Read the big screen and tap that way on your phone, fast! Closest to the balcony wins.' },
     note: { icon: '🎤', title: 'Hold That Note', sub: 'Technical problems! How long will the diva hold her high note this time? Guess between 10 seconds and one minute on your phone. Once she sings past your time you are out: the closest guess that is still in wins.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
@@ -3460,31 +3460,34 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ph = act.map(function (p) { return '<div class="clp">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="' + (g.guess[p.pid] != null ? 'ok' : 'wait') + '">' + (g.guess[p.pid] != null ? '✔' : '…') + '</em></div>'; }).join('');
     var pl = ov.querySelector('.ntplayers'); if (g.st !== 'guess') ph = ''; if (pl.getAttribute('data-h') !== ph) { pl.setAttribute('data-h', ph); pl.innerHTML = ph; }
   }
-  // ---------- Dodge the Superfans ----------
-  // Inside the arena everyone has picked up an annoying superfan, jumping and dancing in front of them. On the way to
-  // the seats are five halls, each with doors (half as many as there are players). Everyone picks a door on their phone;
-  // all who take the same door end up with ALL the fans at that door (alone: you keep your own). Fewest fans wins.
-  var QJ_PICK_MS = 15000, QJ_ROUNDS = 5, qjTimer = null, qjTick = null, QJ_PTS = [12, 8, 4], SF_ICONS = ['🕺', '💃', '🙋', '🤳', '📣', '🕺', '💃', '🙌'];
+  // ---------- Lost in Verona ----------
+  // Lost in the little streets of Verona, on the way to Juliet's balcony. At every crossroads the big screen shows three
+  // street signs (left, straight on, right); only one points to the balcony. The phones only have three arrows: read the
+  // big screen and tap the right way, fast. Fastest right answer 3 steps, second 2, any other right answer 1, wrong 0.
+  // After eight crossroads the one closest to the balcony wins. Later on the signs turn Italian, and then come the look-alikes.
+  var VR_N = 8, VR_GO_MS = 6000, VR_PTS = [12, 8, 4], qjTimer = null, qjTick = null;
+  var VR_PLACES = [['🏟️', 'The Arena', 'Arena'], ['🌉', 'Ponte Pietra', 'Ponte Pietra'], ['⛪', 'The Duomo', 'Duomo'], ['⛲', 'Piazza delle Erbe', 'Piazza delle Erbe'], ['🏰', 'Castelvecchio', 'Castelvecchio'], ['🍕', 'Pizzeria Romeo', 'Pizzeria Romeo'], ['🚉', 'Railway Station', 'Stazione'], ['🍷', 'Wine Bar', 'Enoteca'], ['🛍️', 'Shopping Street', 'Via Mazzini'], ['🎭', 'Opera House', 'Teatro']];
+  var VR_GOAL = ['🌹', 'Juliet’s Balcony', 'Balcone di Giulietta'], VR_FAKE = [['🌹', 'Juliet’s Bakery', 'Panetteria Giulietta'], ['🌹', 'Romeo’s Balcony', 'Balcone di Romeo'], ['🌷', 'Juliet’s Garden Shop', 'Fiori di Giulietta'], ['🌹', 'Julia’s Balcony Bar', 'Bar Balcone']];
   function qjAll() {
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2 || REMOTE) { quipAll(); return; }
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
-    var fans = {}; act.forEach(function (p) { fans[p.pid] = 1; });
-    G.qj = { id: 'qj' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', round: 0, rounds: QJ_ROUNDS, doors: Math.max(2, Math.ceil(act.length / 2)), order: act.map(function (p) { return p.pid; }), fans: fans, pick: {}, at: null, ends: 0, win: [], rank: null };
+    var steps = {}; act.forEach(function (p) { steps[p.pid] = 0; });
+    G.qj = { id: 'vr' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', round: 0, rounds: VR_N, order: act.map(function (p) { return p.pid; }), steps: steps, signs: null, right: -1, t0: 0, ans: {}, gain: {}, win: [], rank: null };
     G.phase = 'qj'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); qjShow();
     var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
     var lines = [
-      ['him', 'We’re inside the arena, Europe! But oh no… everyone has picked up an annoying superfan! 🕺'],
-      ['her', 'They jump, they dance, they scream in your ear… and they follow you everywhere! 😩'],
-      ['him', 'To get to our seats we walk through five halls. Every hall has a few doors: pick one on your phone.'],
-      ['her', 'Careful! Everyone who takes the same door gets ALL the fans at that door. Two players with one fan each? Now you both have two! 😱'],
-      ['him', 'Take a door nobody else picks, and you keep just your own fans.'],
-      ['her', 'After five halls, whoever has the fewest annoying fans wins! 🏆']
+      ['him', 'Europe, we’re lost… lost in Verona! 🌹 And Juliet is waiting on her balcony.'],
+      ['her', 'At every crossroads there are three street signs: left, straight on, and right.'],
+      ['him', 'Only one points to Juliet’s Balcony! Find it on the big screen, and tap that way on your phone. Fast! ⚡'],
+      ['her', 'The fastest right answer takes three steps, the second two, any other right answer one. The wrong way? You’re lost! 😵'],
+      ['him', 'Eight crossroads. Watch out: further on, the signs are in Italian… and some of them are sneaky! 😏'],
+      ['her', 'Whoever is closest to the balcony at the end wins! Andiamo! 🛵']
     ];
     var t = 2200;
     lines.forEach(function (l) { (function (l, t0) { at(t0, function () { qjSay(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
-    at(t + 400, function () { qjRound(); });
+    at(t + 400, function () { qjSay(''); qjRound(); });
   }
   function qjSay(who, txt) {
     var ov = $('qjov'); if (!ov) return;
@@ -3492,104 +3495,99 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!who) return;
     var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who);
   }
+  // A crossroads: first "ready… 3, 2, 1", then the signs appear and the phones get their arrows.
   function qjRound() {
     var g = G.qj; if (!g) return;
-    g.round++; g.st = 'pick'; g.pick = {}; g.at = null; g.ends = Date.now() + QJ_PICK_MS; qjSay(''); push(); qjShow(); Music.ding(); whooshes([0]);
-    bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off || g.order.indexOf(b.pid) < 0) return; setTimeout(function () { qjMsg({ pid: b.pid, id: g.id, round: g.round, door: Math.floor(Math.random() * g.doors) }); }, 2500 + Math.random() * 8000); });
-    clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, QJ_PICK_MS);
-    clearInterval(qjTick); qjTick = setInterval(function () { if (!G.qj || G.qj.st !== 'pick') { clearInterval(qjTick); return; } qjShow(); }, 1000);
+    g.round++; g.st = 'ready'; g.ans = {}; g.gain = {}; g.signs = null; g.right = -1;
+    var it = g.round >= 4, places = shuffle(VR_PLACES.slice()), right = Math.floor(Math.random() * 3), fake = g.round >= 6 ? pick(VR_FAKE) : null;
+    g.signs = [0, 1, 2].map(function (d) { var pl = d === right ? VR_GOAL : fake && d === (right + 1 + Math.floor(Math.random() * 2)) % 3 ? fake : places.pop(); return { icon: pl[0], name: it ? pl[2] : pl[1] }; });
+    g.right = right; g.cd = Date.now() + 2600; push(); qjShow(); Music.blip();
+    var at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'ready') f(); }, ms); };
+    at(900, function () { Music.blip(); }); at(1800, function () { Music.blip(); });
+    at(2600, function () {
+      g.st = 'go'; g.t0 = Date.now(); push(); qjShow(); Music.ding();
+      bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off || g.order.indexOf(b.pid) < 0) return; var ok = Math.random() < 0.72, d = ok ? g.right : (g.right + 1 + Math.floor(Math.random() * 2)) % 3; setTimeout(function () { qjMsg({ pid: b.pid, id: g.id, round: g.round, dir: d }); }, 900 + Math.random() * 3200); });
+      clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, VR_GO_MS);
+    });
   }
   function qjMsg(m) {
-    var g = G.qj; if (!g || G.phase !== 'qj' || g.st !== 'pick' || !m || m.id !== g.id || m.round !== g.round || !players[m.pid] || g.pick[m.pid] != null || g.order.indexOf(m.pid) < 0) return;
-    var d = Math.floor(Number(m.door)); if (!(d >= 0 && d < g.doors)) return;
-    g.pick[m.pid] = d; Music.plop(Object.keys(g.pick).length); push(); qjShow();
-    if (g.order.filter(function (k) { return players[k] && !players[k].off; }).every(function (k) { return g.pick[k] != null; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 1200); }
+    var g = G.qj; if (!g || G.phase !== 'qj' || g.st !== 'go' || !m || m.id !== g.id || m.round !== g.round || !players[m.pid] || g.ans[m.pid] || g.order.indexOf(m.pid) < 0) return;
+    var d = Math.floor(Number(m.dir)); if (!(d >= 0 && d < 3)) return;
+    g.ans[m.pid] = { d: d, ms: Date.now() - g.t0 }; Music.plop(Object.keys(g.ans).length); push(); qjShow();
+    if (g.order.filter(function (k) { return players[k] && !players[k].off; }).every(function (k) { return g.ans[k]; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 500); }
   }
-  // Everyone walks to their door (no choice: a random one), then the fans at each door join up.
   function qjResolve() {
-    var g = G.qj; if (!g || g.st !== 'pick') return;
-    clearInterval(qjTick);
-    g.order.forEach(function (k) { if (g.pick[k] == null) g.pick[k] = Math.floor(Math.random() * g.doors); });
-    g.at = {}; g.order.forEach(function (k) { g.at[k] = g.pick[k]; });
-    g.st = 'walk'; push(); qjShow(); whooshes([0, 200]);
-    var at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); };
-    at(2200, function () {
-      var sum = {}; g.order.forEach(function (k) { sum[g.at[k]] = (sum[g.at[k]] || 0) + g.fans[k]; });
-      var crowd = 0; g.order.forEach(function (k) { if (sum[g.at[k]] > g.fans[k]) crowd++; g.fans[k] = sum[g.at[k]]; });
-      g.st = 'merge'; push(); qjShow(); if (crowd) { Music.buzz(); [0, 180, 360].forEach(function (d, i) { setTimeout(function () { Music.plop(i * 3); }, d); }); } else Music.ding();
-      var shared = []; for (var d = 0; d < g.doors; d++) { var ks = g.order.filter(function (k) { return g.at[k] === d; }); if (ks.length > 1) shared.push(ks); }
-      var nm = function (k) { return players[k] ? players[k].name : '?'; };
-      qjSay(shared.length ? 'him' : 'her', shared.length ? pick(['Oh no! ', 'Ouch! ', 'Crowded! ']) + shared.map(function (ks) { return ks.map(nm).join(' and ').replace(/ and (?=.* and )/g, ', ') + ' now share ' + g.fans[ks[0]] + ' fans'; }).join('; ') + '! 😱' : 'Everyone found a door of their own. Clever! 😎');
-    });
-    at(7200, function () { if (g.round >= g.rounds) qjEnd(); else qjRound(); });
+    var g = G.qj; if (!g || g.st !== 'go') return;
+    var ok = g.order.filter(function (k) { return g.ans[k] && g.ans[k].d === g.right; }).sort(function (a, b) { return g.ans[a].ms - g.ans[b].ms; });
+    ok.forEach(function (k, i) { var n = i === 0 ? 3 : i === 1 ? 2 : 1; g.gain[k] = n; g.steps[k] += n; });
+    g.st = 'res'; push(); qjShow(); if (ok.length) Music.ding(); else Music.buzz();
+    var nm = function (k) { return players[k] ? players[k].name : '?'; }, lost = g.order.filter(function (k) { return g.ans[k] && g.ans[k].d !== g.right; });
+    qjSay(g.round % 2 ? 'him' : 'her', ok.length ? '⚡ ' + nm(ok[0]) + ' was fastest (' + (g.ans[ok[0]].ms / 1000).toFixed(1) + 's)!' + (lost.length ? ' ' + lost.slice(0, 3).map(nm).join(', ') + (lost.length > 1 ? ' got lost' : ' got lost') + '… 😵' : '') : 'Nobody found the way… everyone is lost in Verona! 😵');
+    setTimeout(function () { if (G.qj !== g) return; qjSay(''); if (g.round >= g.rounds) qjEnd(); else qjRound(); }, 4400);
   }
   function qjEnd() {
     var g = G.qj; if (!g) return;
-    var act = g.order.filter(function (k) { return players[k] && !players[k].off; }).sort(function (a, b) { return g.fans[a] - g.fans[b]; });
-    var rank = {}, r = 0; act.forEach(function (k, i) { if (i > 0 && g.fans[k] !== g.fans[act[i - 1]]) r = i; rank[k] = r; });
-    act.forEach(function (k) { var pts = rank[k] < Math.max(1, act.length - 1) ? QJ_PTS[rank[k]] || 0 : 0; if (pts) { var p = players[k]; p.score += pts; p.pts = pts; p.got = true; } });
+    var act = g.order.filter(function (k) { return players[k] && !players[k].off; }).sort(function (a, b) { return g.steps[b] - g.steps[a]; });
+    var rank = {}, r = 0; act.forEach(function (k, i) { if (i > 0 && g.steps[k] !== g.steps[act[i - 1]]) r = i; rank[k] = r; });
+    act.forEach(function (k) { var pts = rank[k] < Math.max(1, act.length - 1) ? VR_PTS[rank[k]] || 0 : 0; if (pts) { var p = players[k]; p.score += pts; p.pts = pts; p.got = true; } });
     g.rank = rank; g.win = act.filter(function (k) { return rank[k] === 0; });
     g.st = 'done'; push(); qjShow(); Music.douze();
-    var nm = function (k) { return players[k] ? players[k].name : '?'; }, most = act[act.length - 1];
+    var nm = function (k) { return players[k] ? players[k].name : '?'; };
     var at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); };
-    at(800, function () { qjSay('him', 'We made it to our seats! ' + g.win.map(nm).join(' and ') + (g.win.length > 1 ? ' have' : ' has') + ' the fewest fans: just ' + g.fans[g.win[0]] + '! 🏆'); });
-    at(5800, function () { qjSay('her', 'And poor ' + nm(most) + ' is stuck with ' + g.fans[most] + ' screaming superfans… enjoy the show! 😂'); });
-    at(11000, function () {
+    at(800, function () { qjSay('him', g.win.map(nm).join(' and ') + (g.win.length > 1 ? ' reach' : ' reaches') + ' Juliet’s balcony first! 🌹 Bravissimo!'); });
+    at(5200, function () { qjSay('her', 'And the rest of you… still wandering the streets of Verona! 🗺️😂'); });
+    at(9800, function () {
       var ov = $('qjov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
       setTimeout(function () { if (G.qj !== g) return; G.qj = null; G.phase = 'loading'; push(); startRound2(); }, 1000);
     });
   }
   function qjSnap() {
     var g = G.qj, locked = {};
-    Object.keys(g.pick).forEach(function (k) { locked[k] = 1; });
-    return { id: g.id, st: g.st, round: g.round, rounds: g.rounds, doors: g.doors, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, fans: g.fans, locked: locked, at: g.at, win: g.win, rank: g.rank };
+    Object.keys(g.ans).forEach(function (k) { locked[k] = 1; });
+    return { id: g.id, st: g.st, round: g.round, rounds: g.rounds, steps: g.steps, locked: locked, right: g.st === 'res' || g.st === 'done' ? g.right : -1, mine: g.st === 'res' ? g.ans : null, gain: g.st === 'res' ? g.gain : null, win: g.win, cd: g.st === 'ready' ? Math.max(0, g.cd - Date.now()) : 0 };
   }
-  // The big screen: a hall of the arena with its doors; every player with their crowd of dancing superfans.
+  // The big screen: a moonlit street in Verona, the crossroads with its three signs, and at the bottom the way
+  // from the city gate to Juliet's balcony, with everyone on it.
   function qjShow() {
     var g = G.qj; if (!g) return;
     var ov = $('qjov');
     if (!ov) {
-      ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov sfov enter';
-      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="sfdoors"></div><div class="grsign qjsign">🕺 Dodge the Superfans</div><div class="sfhall"></div><div class="qjline"></div><div class="qjmsg"></div>' +
+      ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov vrov enter';
+      ov.innerHTML = '<div class="grwall"></div><div class="vrmoon"></div><div class="vrtown"></div><div class="grfloor"></div><div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div>' +
+        '<div class="vrcross"><div class="vrpost"></div><div class="vrs l"><i>⬅️</i><span class="vi"></span><b></b></div><div class="vrs c"><i>⬆️</i><span class="vi"></span><b></b></div><div class="vrs r"><i>➡️</i><span class="vi"></span><b></b></div><div class="vrcd"></div></div>' +
+        '<div class="qjmsg vrmsg"></div><div class="vrroad"><div class="vrgate">🏛️<small>Gate</small></div><div class="vrbal">🌹<small>Balcony</small></div><div class="vrrun"></div></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
     }
     ov.setAttribute('data-st', g.st);
-    var L = 20, R = 80, dw = (R - L) / g.doors;   // (the doors share the back wall between the presenters)
-    var dk = g.doors + ':' + g.round, drs = ov.querySelector('.sfdoors');
-    if (drs.getAttribute('data-k') !== dk) {
-      drs.setAttribute('data-k', dk);
-      var html = ''; for (var d = 0; d < g.doors; d++) html += '<div class="sfdoor" style="left:' + (L + dw * (d + 0.5)) + 'vw;--d:' + (d * 0.08) + 's"><i class="l"></i><i class="r"></i><b>' + (d + 1) + '</b></div>';
-      drs.innerHTML = html; drs.classList.remove('in'); void drs.offsetWidth; drs.classList.add('in');
+    ov.querySelector('.vrno').textContent = g.round ? 'Crossroads ' + Math.min(g.round, g.rounds) + ' of ' + g.rounds : '';
+    var sk = g.id + ':' + g.round, sg = ov.querySelectorAll('.vrs');
+    if (ov.getAttribute('data-sk') !== sk && g.signs) {
+      ov.setAttribute('data-sk', sk);
+      [].forEach.call(sg, function (el, d) { el.querySelector('.vi').textContent = g.signs[d].icon; el.querySelector('b').textContent = g.signs[d].name; });
     }
-    drs.classList.toggle('open', g.st === 'walk' || g.st === 'merge');
-    ov.querySelector('.sfhall').textContent = g.round ? 'Hall ' + Math.min(g.round, g.rounds) + ' of ' + g.rounds : '';
-    var n = g.order.length, line = ov.querySelector('.qjline'), atDoor = g.at && (g.st === 'walk' || g.st === 'merge');
-    ov.style.setProperty('--qsz', Math.max(4.2, Math.min(7, 44 / Math.max(1, n))).toFixed(2) + 'vh');
-    var slot = {}; if (atDoor) for (var dd = 0; dd < g.doors; dd++) { var ks = g.order.filter(function (k) { return g.at[k] === dd; }); ks.forEach(function (k, i) { slot[k] = L + dw * (dd + 0.5) + (i - (ks.length - 1) / 2) * Math.min(dw / Math.max(1, ks.length), 6.5); }); }
-    g.order.forEach(function (k, i) {
-      var p = players[k]; if (!p) return;
-      var el = line.querySelector('.qjp[data-pid="' + k.replace(/"/g, '') + '"]');
-      if (!el) { el = document.createElement('div'); el.className = 'qjp sfp'; el.setAttribute('data-pid', k); el.style.setProperty('--c', 'hsl(' + (k.split('').reduce(function (a, ch) { return a + ch.charCodeAt(0); }, 0) * 47 % 360) + ',65%,55%)'); el.innerHTML = '<div class="sfcrowd"></div><div class="qjbody"></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><span class="sfn"></span><span class="qjok">✔</span>'; line.appendChild(el); }
-      var x = atDoor ? slot[k] : L + (R - L) * (i + 0.5) / n;
-      el.style.left = x + 'vw'; el.classList.toggle('atdoor', !!atDoor);
-      var f = g.fans[k] || 1, cr = el.querySelector('.sfcrowd'), have = cr.children.length, want = Math.min(14, f);
-      // the superfans, the same figures as the Grand Final crowd and as tall as the player: the first four in front
-      // of them, the rest packed behind (only the newcomers jump in; up to 14 shown, the number says the rest)
-      for (var j = have; j < want; j++) {
-        var w = document.createElement('div'), fx, fy, front = j < 4;
-        if (front) { fx = [-0.78, 0.78, -1.3, 1.3][j]; fy = 0; }   /* (a gap in the middle: the player peeks through) */ else { var kk = j - 4, row = Math.floor(kk / 5); fx = (kk % 5 - 2) * 0.58 + (row ? 0.29 : 0); fy = 0.32 + row * 0.24; }
-        w.className = 'sff ' + (front ? 'front' : 'back') + (have ? ' new' : ''); w.style.setProperty('--fx', fx.toFixed(2)); w.style.setProperty('--fy', fy.toFixed(2)); w.style.setProperty('--j', String(j - have));
-        w.innerHTML = fanSvg(true); cr.appendChild(w);
-      }
-      if (want > have && have) { el.classList.remove('grew'); void el.offsetWidth; el.classList.add('grew'); }
-      el.querySelector('.sfn').textContent = '🕺 ' + f;
-      el.classList.toggle('picked', g.st === 'pick' && g.pick[k] != null);
+    var showSigns = g.st === 'go' || g.st === 'res';
+    ov.querySelector('.vrcross').classList.toggle('on', showSigns);
+    [].forEach.call(sg, function (el, d) { el.classList.toggle('right', g.st === 'res' && d === g.right); el.classList.toggle('wrong', g.st === 'res' && d !== g.right); });
+    var cdn = g.st === 'ready' ? Math.max(1, Math.ceil((g.cd - Date.now()) / 900)) : 0, cde = ov.querySelector('.vrcd');
+    var cdt = g.st === 'ready' ? (cdn > 3 ? '3' : String(cdn)) : '';
+    if (cde.textContent !== cdt) { cde.textContent = cdt; cde.classList.remove('pop'); void cde.offsetWidth; if (cdt) cde.classList.add('pop'); }
+    if (g.st === 'ready') setTimeout(function () { if (G.qj === g && g.st === 'ready') qjShow(); }, 300);
+    var act = g.order.filter(function (k) { return players[k]; }), msg = g.st === 'ready' ? 'Get ready… 👀' : g.st === 'go' ? 'Which way to the balcony? Tap it on your phone! ⚡' : g.st === 'res' ? '' : g.st === 'done' ? '🌹 Who reached Juliet’s balcony?' : '';
+    var me = ov.querySelector('.qjmsg'); if (me.textContent !== msg) me.textContent = msg;
+    // the road: everyone's place on it (in rows when they would overlap)
+    var run = ov.querySelector('.vrrun'), maxS = g.rounds * 3, used = {};
+    act.forEach(function (k, i) {
+      var p = players[k], el = run.querySelector('.vrp[data-pid="' + k.replace(/"/g, '') + '"]');
+      if (!el) { el = document.createElement('div'); el.className = 'vrp'; el.setAttribute('data-pid', k); el.innerHTML = charSvg(p.char) + '<b>' + esc(p.name) + '</b><span class="vrg"></span>'; run.appendChild(el); }
+      var s = g.steps[k] || 0, lane = used[s] = (used[s] || 0) + 1;
+      el.style.left = (s / maxS * 100) + '%'; el.style.setProperty('--lane', String(lane - 1)); el.style.setProperty('--off', String([0, -5.5, 5.5, -11, 11, -2.7, 2.7, -8.2, 8.2, 0, -5.5, 5.5][(lane - 1) % 12] + (lane > 9 ? 1.4 : 0)));   // (on the same step: above and below the line)
+      var gn = g.st === 'res' && g.gain ? g.gain[k] : 0, ge = el.querySelector('.vrg'), gt = g.st === 'res' ? (gn ? '+' + gn : g.ans[k] ? '😵' : '💤') : '';
+      if (ge.textContent !== gt) { ge.textContent = gt; ge.className = 'vrg' + (gt ? ' on' : '') + (gn === 3 ? ' fast' : ''); }
+      el.classList.toggle('in', g.st === 'go' && !!g.ans[k]);
       el.classList.toggle('won', g.st === 'done' && g.win.indexOf(k) >= 0);
     });
-    var msg = g.st === 'pick' ? 'Hall ' + g.round + ': pick a door on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'walk' ? 'Everyone walks through their door… 🚪' : g.st === 'merge' ? 'The fans at each door join up! 🕺💃' : g.st === 'done' ? '🏆 Fewest annoying fans wins!' : '';
-    var me = ov.querySelector('.qjmsg'); if (me.textContent !== msg) me.textContent = msg;
   }
   // ---------- Quip! ----------
   // A song plays, and with it comes a question about that song. Everyone writes their funniest answer

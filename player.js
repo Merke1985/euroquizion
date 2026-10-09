@@ -136,7 +136,7 @@
     if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (!(s.phase === 'note' && s.note && s.note.st === 'guess')) $('noteui').classList.add('hidden');
-    if (!(s.phase === 'qj' && s.qj && s.qj.st === 'pick')) $('qjui').classList.add('hidden');
+    if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'ready' || s.qj.st === 'go'))) $('qjui').classList.add('hidden');
     bagUpdate(s);
     remoteVideo(s);
     rowUpdate();
@@ -465,42 +465,34 @@
     $('waitsub').textContent = g != null ? 'She held it for ' + ntTime(n.len, true) + '. You guessed ' + ntTime(g) + ': ' + Math.abs(g - n.len).toFixed(1) + ' seconds off.' : 'She held it for ' + ntTime(n.len, true) + '.';
   }
 
-  // ---------- Dodge the Superfans ----------
-  // Every hall: a button for each door. Everyone at the same door ends up with all the fans at that door.
+  // ---------- Lost in Verona ----------
+  // Three arrows: read the street signs on the big screen and tap the way to Juliet's balcony, fast.
   var qjSent = '', qjMine = -1;
   function qjView(s) {
-    var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, mine = qjSent === key || (q.locked || {})[pid], f = (q.fans || {})[pid] || 1;
+    var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, mine = qjSent === key || (q.locked || {})[pid], st = (q.steps || {})[pid] || 0;
     show('v-wait');
-    var have = 'You have ' + f + ' annoying fan' + (f === 1 ? '' : 's') + ' 🕺';
-    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🕺 Dodge the Superfans'; $('waitsub').textContent = have + '. Watch the big screen!'; return; }
-    if (q.st === 'pick' && !mine && q.fans && q.fans[pid] != null) {
-      $('waittitle').textContent = '🚪 Hall ' + q.round + ' of ' + q.rounds; $('waitsub').textContent = have + '. Which door do you take?';
-      if (box.getAttribute('data-k') !== key) {
-        box.setAttribute('data-k', key);
-        var h = ''; for (var d = 0; d < q.doors; d++) h += '<button type="button" class="qjdoor" data-door="' + d + '"><span>🚪</span><b>Door ' + (d + 1) + '</b></button>';
-        box.innerHTML = h;
-        [].forEach.call(box.querySelectorAll('.qjdoor'), function (b) { b.onclick = function () {
-          var st = state; if (!net || !st || !st.qj || st.qj.st !== 'pick') return;
-          var k2 = st.qj.id + ':' + st.qj.round; if (qjSent === k2) return;
-          qjSent = k2; qjMine = +b.getAttribute('data-door');
-          var msg = { pid: pid, id: st.qj.id, round: st.qj.round, door: qjMine };
-          net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'pick' && !(state.qj.locked || {})[pid]) net.send('qj', msg); }, 1500);
-          qjView(state);
-        }; });
-      }
-      box.classList.remove('hidden');
-      return;
+    var where = st + ' step' + (st === 1 ? '' : 's') + ' towards the balcony 🌹';
+    if (box.getAttribute('data-b') !== '1') {
+      box.setAttribute('data-b', '1');
+      box.innerHTML = '<div class="vrarrows"><button type="button" class="vrbtn" data-dir="0">⬅️</button><button type="button" class="vrbtn" data-dir="1">⬆️</button><button type="button" class="vrbtn" data-dir="2">➡️</button></div>';
+      [].forEach.call(box.querySelectorAll('.vrbtn'), function (b) { b.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        var st2 = state; if (!net || !st2 || !st2.qj || st2.qj.st !== 'go') return;
+        var k2 = st2.qj.id + ':' + st2.qj.round; if (qjSent === k2) return;
+        qjSent = k2; qjMine = +b.getAttribute('data-dir');
+        var msg = { pid: pid, id: st2.qj.id, round: st2.qj.round, dir: qjMine };
+        net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'go' && !(state.qj.locked || {})[pid]) net.send('qj', msg); }, 1200);
+        qjView(state);
+      }); });
     }
+    if (q.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch the big screen: read the street signs there, tap the way here!'; return; }
+    if (q.st === 'ready') { box.classList.remove('hidden'); box.classList.add('wait'); $('waittitle').textContent = '👀 Crossroads ' + q.round + ' of ' + q.rounds; $('waitsub').textContent = 'Eyes on the big screen… get ready!'; return; }
+    if (q.st === 'go' && !mine) { box.classList.remove('hidden'); box.classList.remove('wait'); $('waittitle').textContent = '⚡ Which way?'; $('waitsub').textContent = 'Find Juliet’s Balcony on the big screen!'; return; }
     box.classList.add('hidden');
-    if (q.st === 'pick') { $('waittitle').textContent = '🔒 Door ' + (qjMine + 1); $('waitsub').textContent = have + '. Waiting for the others…'; return; }
-    if (q.st === 'walk' || q.st === 'merge') {
-      var d0 = q.at ? q.at[pid] : qjMine, with0 = q.at ? Object.keys(q.at).filter(function (k) { return k !== pid && q.at[k] === d0; }).length : 0;
-      $('waittitle').textContent = q.st === 'walk' ? '🚪 Through door ' + (d0 + 1) + '…' : with0 ? '😱 ' + f + ' annoying fans!' : '😎 A door of your own!';
-      $('waitsub').textContent = q.st === 'walk' ? 'Watch the big screen!' : with0 ? 'You shared door ' + (d0 + 1) + ' with ' + with0 + (with0 > 1 ? ' others' : ' other') + '.' : 'You keep your ' + f + ' fan' + (f === 1 ? '' : 's') + '.';
-      return;
-    }
+    if (q.st === 'go') { $('waittitle').textContent = ['⬅️', '⬆️', '➡️'][qjMine] || '🔒'; $('waitsub').textContent = 'Locked in! Waiting for the others…'; return; }
+    if (q.st === 'res') { var gn = (q.gain || {})[pid] || 0, a = (q.mine || {})[pid]; $('waittitle').textContent = gn ? (gn === 3 ? '⚡ Fastest! +3' : '✅ +' + gn) : a ? '😵 Wrong way!' : '💤 Too late!'; $('waitsub').textContent = where; return; }
     var won = q.win && q.win.indexOf(pid) >= 0;
-    $('waittitle').textContent = won ? '🏆 Fewest fans!' : '🕺 ' + f + ' annoying fans'; $('waitsub').textContent = won ? 'Only ' + f + ' annoying fan' + (f === 1 ? '' : 's') + ': you win!' : 'Enjoy the show with your new friends! 😂';
+    $('waittitle').textContent = won ? '🌹 You reached the balcony!' : '🗺️ Still lost in Verona…'; $('waitsub').textContent = where;
   }
 
   // ---------- Eurofan Shop ----------

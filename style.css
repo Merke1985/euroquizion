@@ -2224,3 +2224,48 @@ aside.recapgone{visibility:hidden}
 .sfov[data-st=done] .sfp.won{z-index:6;animation:sfwin .5s ease-in-out infinite alternate}
 @keyframes sfwin{to{translate:0 -2vh}}
 .sfp.won .sfn{background:#ffd23f;color:#1a1147}
+/* ---------- Lost in Verona: a moonlit crossroads, three street signs, the road to the balcony ---------- */
+.vrov .grwall{background:radial-gradient(circle,rgba(255,255,255,.6) 0 1px,transparent 1.6px) 0 0/110px 80px,linear-gradient(#0d1033 0%,#2a1b52 60%,#5a2f4a 100%)}
+.vrmoon{position:absolute;right:16vw;top:9vh;width:11vh;height:11vh;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fffbe6,#f3e2a8 70%);box-shadow:0 0 50px rgba(255,240,190,.6)}
+.vrtown{position:absolute;left:0;right:0;bottom:36%;height:30vh;background:linear-gradient(transparent,rgba(0,0,0,.2)),
+  linear-gradient(#7a3b2a,#5a2a20) 4vw 8vh/10vw 22vh no-repeat,linear-gradient(#8a4a30,#6a3420) 15vw 3vh/8vw 27vh no-repeat,linear-gradient(#a0553a,#7a3b2a) 24vw 12vh/12vw 18vh no-repeat,
+  linear-gradient(#6a3424,#4a2218) 63vw 6vh/9vw 24vh no-repeat,linear-gradient(#8a4a30,#6a3420) 73vw 0/6vw 30vh no-repeat,linear-gradient(#a0553a,#7a3b2a) 80vw 10vh/14vw 20vh no-repeat;filter:brightness(.55) saturate(.8)}
+.vrov .grfloor{height:36%;background:repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4vw),repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 3vh),linear-gradient(#6a5a52,#3e332e)}
+.vrsign{border-color:#ff9fc0;color:#fff2f6;text-shadow:0 0 12px #ff4d8a;box-shadow:0 0 18px rgba(255,77,138,.5)}
+.vrcross{position:absolute;left:50%;top:15vh;width:56vw;height:44vh;transform:translateX(-50%);z-index:3}
+.vrpost{position:absolute;left:50%;bottom:0;width:1.6vh;height:38vh;margin-left:-.8vh;background:linear-gradient(90deg,#3a3a3a,#6a6a6a,#3a3a3a);border-radius:4px}
+.vrs{position:absolute;width:17vw;padding:1.4vh 1vw;border-radius:10px;background:linear-gradient(#f6f1e3,#e2d8bd);color:#3a1d14;border:4px solid #7a4a2a;box-shadow:0 10px 24px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;gap:.4vh;text-align:center;opacity:0;transform:scale(.4);transition:opacity .25s,transform .3s cubic-bezier(.3,1.5,.5,1),filter .3s}
+.vrs i{font-style:normal;font-size:4vh;line-height:1}
+.vrs .vi{font-size:5.2vh;line-height:1}
+.vrs b{font-size:clamp(.9rem,1.6vw,1.45rem);font-weight:900;line-height:1.1}
+.vrs.l{left:0;top:6vh;rotate:-4deg}.vrs.c{left:50%;top:0;margin-left:-8.5vw}.vrs.r{right:0;top:6vh;rotate:4deg}
+.vrcross.on .vrs{opacity:1;transform:none}
+.vrs.right{box-shadow:0 0 0 5px #3dff9a,0 0 40px #3dff9a;transform:scale(1.08)!important}
+.vrs.wrong{filter:grayscale(1) brightness(.5)}
+.vrcd{position:absolute;left:50%;top:10vh;transform:translateX(-50%);font-size:16vh;font-weight:900;color:#fff;text-shadow:0 0 30px #ff4d8a}
+.vrcd.pop{animation:rcpop .5s cubic-bezier(.3,1.6,.5,1)}
+.vrmsg{top:auto;bottom:24vh}
+.vrroad{position:absolute;left:16vw;right:16vw;bottom:5vh;height:13vh;z-index:4;border-radius:12px;background:linear-gradient(#5a4a42,#3a2e2a);box-shadow:inset 0 3px 10px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.4)}
+.vrroad::before{content:'';position:absolute;left:4vw;right:4vw;top:50%;border-top:3px dashed rgba(255,255,255,.3)}
+.vrgate,.vrbal{position:absolute;top:50%;transform:translateY(-50%);font-size:5vh;display:flex;flex-direction:column;align-items:center;line-height:1}
+.vrgate small,.vrbal small{font-size:1.2vh;font-weight:900;text-transform:uppercase;opacity:.8}
+.vrgate{left:-3.6vw}.vrbal{right:-4vw;filter:drop-shadow(0 0 12px #ff4d8a)}
+.vrrun{position:absolute;left:3vw;right:4vw;top:0;bottom:0}
+.vrp{position:absolute;top:calc(50% - 2.6vh - var(--lane) * 1.6vh);margin-left:-2.6vh;width:5.2vh;display:flex;flex-direction:column;align-items:center;transition:left 1s cubic-bezier(.3,1.2,.5,1);z-index:calc(10 - var(--lane))}
+.vrp .char{width:5.2vh;height:5.2vh;border:2px solid #fff;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,.5)}
+.vrp b{font-size:clamp(.5rem,.75vw,.7rem);font-weight:900;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.9);max-width:8vw;overflow:hidden;text-overflow:ellipsis}
+.vrp.in .char{box-shadow:0 0 0 3px var(--ok)}
+.vrp.won .char{box-shadow:0 0 0 4px #ffd23f,0 0 24px #ffd23f}
+.vrp .vrg{position:absolute;top:-3vh;font-weight:900;font-size:clamp(.8rem,1.3vw,1.1rem);color:#3dff9a;text-shadow:0 1px 4px rgba(0,0,0,.9);opacity:0}
+.vrp .vrg.on{opacity:1;animation:rcpop .45s cubic-bezier(.3,1.6,.5,1)}
+.vrp .vrg.fast{color:#ffd23f}
+.vrov .grhosts .ehost{height:44vh}
+.vrov .grbub{top:20vh}
+/* the phone: three big arrows */
+.vrarrows{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin-top:6px}
+.vrbtn{aspect-ratio:1;border-radius:20px;border:0;font-size:3.4rem;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 3px rgba(255,255,255,.18);cursor:pointer;touch-action:manipulation}
+.vrbtn:active{transform:scale(.94);background:rgba(255,255,255,.25)}
+.qjui.wait .vrbtn{opacity:.35;pointer-events:none}
+.vrroad{height:19vh;bottom:3vh}
+.vrp{top:calc(50% - 2.6vh + var(--off,0) * 1vh)}
+.vrp b{font-size:clamp(.5rem,.7vw,.68rem);background:rgba(0,0,0,.45);padding:0 .3em;border-radius:4px}
