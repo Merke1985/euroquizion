@@ -1790,3 +1790,9 @@ aside.recapgone{visibility:hidden}
 /* her mouth: closed (a little smile) until she starts singing */
 .noteov:not([data-st="sing"]):not([data-st="cut"]):not([data-st="done"]) .dvmouth{transform:scale(1.1,.18)}
 .noteov:not([data-st="sing"]):not([data-st="cut"]):not([data-st="done"]) .dvtongue{opacity:0}
+/* the stage and the diva swipe in together, as one, from the right */
+.noteov .ntstage,.noteov .ntdiva{transition:transform 1.1s cubic-bezier(.2,.9,.25,1.05),opacity .3s;transition-delay:0s}
+.noteov:not(.diva-on) .ntstage{transform:translateX(calc(-50% + 100vw))}
+.noteov:not(.diva-on) .ntdiva{transform:translateX(calc(-50% + 100vw));opacity:1}
+.noteov.diva-on .ntstage,.noteov.diva-on .ntdiva{transform:translateX(-50%)}
+.noteov.diva-on .ntdiva{transition-delay:0s}
