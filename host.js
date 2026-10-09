@@ -2581,10 +2581,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueSong() {
     if (REMOTE) return;
     try {
-      if (!poeAudio) { poeAudio = new Audio('sounds/poe.mp3'); poeAudio.loop = true; }
+      if (!poeAudio) poeAudio = new Audio('sounds/poe.mp3');
+      clearInterval(poeFade); poeAudio.loop = true;
       poeAudio.volume = Math.max(0, Math.min(1, 0.6 * (Music.vol ? Music.vol.music : 1)));
       if (poeAudio.paused) { poeAudio.currentTime = 0; var pr = poeAudio.play(); if (pr && pr.catch) pr.catch(function () {}); }
     } catch (e) {}
+  }
+  // The last clue question: no more loops, the tune plays its current round to the end (it ends near the answer);
+  // if anything is still playing when the accusation starts, it fades out instead of stopping dead.
+  var poeFade = null;
+  function clueSongLast() { if (poeAudio) poeAudio.loop = false; }
+  function clueSongFade() {
+    if (!poeAudio || poeAudio.paused) return;
+    var a = poeAudio, v0 = a.volume, n = 0; clearInterval(poeFade);
+    poeFade = setInterval(function () { n++; a.volume = Math.max(0, v0 * (1 - n / 15)); if (n >= 15) { clearInterval(poeFade); try { a.pause(); } catch (e) {} a.volume = v0; } }, 100);
   }
   function clueSongStop() { if (poeAudio) try { poeAudio.pause(); } catch (e) {} if (egghAudio) try { egghAudio.pause(); } catch (e) {} }
   var egghAudio = null;
@@ -2650,7 +2660,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueNext() {
     var g = G.clue; if (!g) return false;
     if (g.st === 'ask' && g.n < CLUE_N) {
-      G.mode = 'mc'; G.phase = 'loading'; clueSong(); push(); loadSong();   // (Edgar's tune: only during the four clue questions)
+      G.mode = 'mc'; G.phase = 'loading'; clueSong(); if (g.n === CLUE_N - 1) clueSongLast(); push(); loadSong();   // (Edgar's tune: only during the four clue questions)
       if (G.q) G.q.text = '🔍 Clue ' + (g.n + 1) + ' of ' + CLUE_N + ' · ' + G.q.text;
       return true;
     }
@@ -2682,7 +2692,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueAccuse() {
     var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSongStop();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSongFade();
     clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who took Edgar, where is he hidden, and how did they carry him off?'); }, 1400);
     setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Make your choice on your phone. Use your clues, detectives!'); }, 5200);
     // bots: a guess among what their clues leave open
@@ -2709,7 +2719,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = function (ms, f) { setTimeout(function () { if (G.clue && G.clue.st === 'reveal') f(); }, ms); };
     // The reveal, row by row (top row first, the culprit last): a question, then the wrong cards drop out one by one
     // until only the right one is left, which lights up. Its own music plays underneath.
-    clueSongStop(); clueReveal.music();
+    clueSongFade(); clueReveal.music();
     g.dimmed = {};
     var lines = {
       where: ['Where was Edgar hidden?', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'],
