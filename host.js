@@ -3578,6 +3578,22 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       setTimeout(function () { if (G.qj !== g) return; G.qj = null; G.phase = 'loading'; push(); startRound2(); }, 1000);
     });
   }
+  // Juliet's house, far away above the clouds: a tall romantic Italian house with an arched window, ivy, and a stone
+  // balcony full of flowers (the balustrade is drawn in front of her).
+  var JM_TOWER = '<svg viewBox="0 0 100 160" aria-hidden="true"><defs><linearGradient id="jmtw" x1="0" x2="1"><stop offset="0" stop-color="#cdb38e"/><stop offset=".45" stop-color="#f1dfbd"/><stop offset="1" stop-color="#b99d76"/></linearGradient><radialGradient id="jmwin" cx=".5" cy=".6" r=".7"><stop offset="0" stop-color="#fff2c4"/><stop offset=".6" stop-color="#ffbf62"/><stop offset="1" stop-color="#d9782e"/></radialGradient></defs>' +
+    '<path d="M14 26 L50 4 L86 26 Z" fill="#b4532f"/><path d="M14 26 L50 4 L86 26" stroke="#7a3418" stroke-width="2" fill="none"/><rect x="18" y="25" width="64" height="4" fill="#efe2c8"/>' +
+    '<rect x="20" y="29" width="60" height="131" fill="url(#jmtw)"/><g stroke="rgba(90,60,30,.18)" stroke-width=".8">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(function (i) { return '<path d="M20 ' + (34 + i * 7.6) + ' h60"/>'; }).join('') + '</g>' +
+    '<path d="M36 74 V48 Q50 30 64 48 V74 Z" fill="#5a3a26"/><path d="M38.5 74 V49 Q50 34 61.5 49 V74 Z" fill="url(#jmwin)"/><path d="M50 36 V74 M38.5 58 H61.5" stroke="#6a4428" stroke-width="1.4"/>' +
+    '<rect x="27" y="49" width="7" height="25" fill="#2f6a42"/><rect x="66" y="49" width="7" height="25" fill="#2f6a42"/>' +
+    '<path d="M28 98 h10 v14 h-10 z M62 98 h10 v14 h-10 z" fill="#ffcf7a" stroke="#5a3a26" stroke-width="1.5"/><path d="M29 120 h9 v12 h-9 z M62 120 h9 v12 h-9 z" fill="#3a3550" stroke="#5a3a26" stroke-width="1.5"/>' +
+    '<g fill="#3f7a3a">' + [[22, 30], [24, 38], [21, 46], [25, 55], [22, 64], [26, 72], [23, 82], [78, 34], [76, 44], [79, 53], [77, 62], [75, 90], [78, 98]].map(function (q) { return '<ellipse cx="' + q[0] + '" cy="' + q[1] + '" rx="3.6" ry="2.6"/>'; }).join('') + '</g>' +
+    '<path d="M22 30 Q26 52 22 84 M78 34 Q74 62 78 100" stroke="#2d5a2a" stroke-width="1.2" fill="none"/>' +
+    '<path d="M24 78 h52 v4 h-52 z" fill="#efe2c8"/><path d="M28 82 h44 l-6 6 h-32 z" fill="#d8c8a8"/></svg>';
+  var JM_TFRONT = '<svg viewBox="0 0 100 160" aria-hidden="true"><path d="M23 64 h54 v3 h-54 z" fill="#f4ead4"/>' + [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return '<path d="M' + (26.5 + i * 5.9) + ' 67 q-1.6 2.5 0 5 q1.6 2.5 0 5.5 h2.4 q1.6 -3 0 -5.5 q-1.6 -2.5 0 -5 z" fill="#ece0c6"/>'; }).join('') +
+    '<path d="M23 77.5 h54 v1.5 h-54 z" fill="#d8c8a8"/>' +
+    '<rect x="21" y="59.5" width="11" height="5" rx="1" fill="#a24f2a"/><rect x="68" y="59.5" width="11" height="5" rx="1" fill="#a24f2a"/>' +
+    [[22.5, 58], [25.5, 56.6], [28.5, 58.2], [31, 57], [69, 57], [72, 58.4], [75, 56.6], [78, 58]].map(function (q, i) { return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.9" fill="' + ['#ff4d7a', '#ffd23f', '#ff7aa8', '#e0245e'][i % 4] + '"/><circle cx="' + (q[0] + .9) + '" cy="' + (q[1] + 1.8) + '" r="1.5" fill="#3f7a3a"/>'; }).join('') +
+    [[30, 79, 7], [44, 79, 10], [58, 79, 6], [70, 79, 9]].map(function (q) { return '<path d="M' + q[0] + ' ' + q[1] + ' q-2 ' + (q[2] / 2) + ' 0 ' + q[2] + '" stroke="#3f7a3a" stroke-width="1.1" fill="none"/><circle cx="' + q[0] + '" cy="' + (q[1] + q[2]) + '" r="1.2" fill="#ff7aa8"/>'; }).join('') + '</svg>';
   function qjSnap() {
     var g = G.qj;
     return { id: g.id, st: g.st, round: g.round, alive: g.alive, prog: g.prog, fail: g.fail, left: g.st === 'input' ? Math.max(0, g.ends - Date.now()) : 0, win: g.win, outAt: g.outAt };
@@ -3703,8 +3719,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('qjov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
-      ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower"><i class="tw"></i><i class="tr"></i></div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
-        '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div>' +
+      ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
+        '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmtfront">' + JM_TFRONT + '</div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
