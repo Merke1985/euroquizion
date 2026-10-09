@@ -2343,3 +2343,47 @@ aside.recapgone{visibility:hidden}
 .jmov .grhosts .ehost{height:42vh;bottom:2vh;z-index:4}
 .jmov .grbub{top:30vh;max-width:20vw;z-index:6}
 .jmov .grbub.her{left:auto;right:2vw;top:30vh}
+/* ---------- Lost in Verona in 3D: the city blocks around the crossroads ---------- */
+.jmov .jmcity{display:none}
+.jm3d{position:absolute;inset:0;perspective:260vh;perspective-origin:50% 30%;overflow:hidden;--C:92vh;--B:58vh;--H:30vh;background:#2a1d3a}
+.jmplane{position:absolute;left:50%;top:60%;width:0;height:0;transform-style:preserve-3d;transform:rotateX(32deg) translate3d(calc(var(--x,0) * var(--C) * -1),calc(var(--y,0) * var(--C) * -1),0);transition:transform .6s cubic-bezier(.45,.05,.3,1)}
+.jmplane.jump{transition:none}
+.jmblocks{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.jmground{position:absolute;left:calc(var(--C) * -8);top:calc(var(--C) * -9);width:calc(var(--C) * 16);height:calc(var(--C) * 16);background-color:#5e524c;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 2px,transparent 2px 2.4vh),repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 2px,transparent 2px 3.6vh)}
+.jmov .jm3d::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 22% 28% at 50% 56%,rgba(255,196,120,.42),transparent 70%),radial-gradient(ellipse at 50% 60%,transparent 40%,rgba(12,6,26,.55) 100%)}
+.jmb3{position:absolute;width:var(--B);height:var(--B);left:calc(var(--C) * var(--i) - var(--B) / 2 + var(--C) / 2);top:calc(var(--C) * var(--j) - var(--B) / 2 + var(--C) / 2);transform-style:preserve-3d;--wc:#e9d0a2}
+.jmb3[style*="--t:1"]{--wc:#e8b99c}.jmb3[style*="--t:2"]{--wc:#efdcb4}.jmb3[style*="--t:3"]{--wc:#d9a888}
+.jmb3 i{position:absolute;display:block}
+.jmb3 .roof{inset:0;transform:translateZ(var(--H));background:repeating-linear-gradient(0deg,#b85a36 0 1.4vh,#9c4426 1.4vh 1.7vh);box-shadow:inset 0 0 0 .9vh #7a3418,inset 0 0 5vh rgba(0,0,0,.4)}
+.jmb3[style*="--t:1"] .roof{background:repeating-linear-gradient(90deg,#c46a3c 0 1.4vh,#a24f2a 1.4vh 1.7vh)}
+.jmb3 .roof::after{content:'';position:absolute;left:62%;top:22%;width:12%;height:16%;background:#8a3a20;box-shadow:0 0 0 .3vh #5a2410}
+.jmfac{background-color:var(--wc);--glass:rgba(255,205,120,.92)}
+.jmfac::before{content:'';position:absolute;inset:8% 4% 22% 4%;background:repeating-linear-gradient(90deg,transparent 0 1.6vh,#2f5a3a 1.6vh 2.2vh,var(--glass) 2.2vh 5vh,#2f5a3a 5vh 5.6vh,transparent 5.6vh 8.4vh);-webkit-mask:repeating-linear-gradient(0deg,transparent 0 2.4vh,#000 2.4vh 7.4vh);mask:repeating-linear-gradient(0deg,transparent 0 2.4vh,#000 2.4vh 7.4vh)}
+.jmfac::after{content:'';position:absolute;left:0;right:0;bottom:0;height:16%;background:repeating-linear-gradient(90deg,#5a3a26 0 1vh,rgba(255,200,120,.8) 1vh 4.6vh,#5a3a26 4.6vh 5.6vh,transparent 5.6vh 12vh)}
+.jmb3 .s,.jmb3 .n{left:0;width:var(--B);height:var(--H);transform-origin:0 0}
+.jmb3 .s{top:100%;transform:rotateX(-90deg) translateY(calc(var(--H) * -1))}
+.jmb3 .n{top:0;transform:rotateX(-90deg) translateY(calc(var(--H) * -1));filter:brightness(.65)}
+.jmb3 .w,.jmb3 .e{top:0;width:var(--H);height:var(--B);transform-origin:0 0}
+.jmb3 .w{left:0;transform:rotateY(90deg) translateX(calc(var(--H) * -1));filter:brightness(.88)}
+.jmb3 .e{left:var(--B);transform:rotateY(90deg) translateX(calc(var(--H) * -1));filter:brightness(.78)}
+.jmb3 .w::before,.jmb3 .e::before{inset:4% 8% 4% 22%;background:repeating-linear-gradient(0deg,transparent 0 1.6vh,#2f5a3a 1.6vh 2.2vh,var(--glass) 2.2vh 5vh,#2f5a3a 5vh 5.6vh,transparent 5.6vh 8.4vh);-webkit-mask:repeating-linear-gradient(90deg,transparent 0 2.4vh,#000 2.4vh 7.4vh);mask:repeating-linear-gradient(90deg,transparent 0 2.4vh,#000 2.4vh 7.4vh)}
+.jmb3 .w::after,.jmb3 .e::after{left:0;top:0;bottom:0;right:auto;width:16%;height:auto;background:repeating-linear-gradient(0deg,#5a3a26 0 1vh,rgba(255,200,120,.8) 1vh 4.6vh,#5a3a26 4.6vh 5.6vh,transparent 5.6vh 12vh)}
+.jmov .jmholes,.jmov .jmgroup{top:56vh}
+.jmhole{width:15vh;height:7vh;margin:-3.5vh 0 0 -7.5vh;scale:var(--hs,1)}
+.jmov .jmmist{height:30vh}
+.jmov .jmbalc{top:-2vh}
+.jm3d{--x:0;--y:0}
+.jm3d.jump .jmplane{transition:none}
+.jmgp{transform-style:flat}
+.jmb3.t1{--wc:#e8b99c}.jmb3.t2{--wc:#efdcb4}.jmb3.t3{--wc:#d9a888}
+.jmb3.t1 .roof{background:repeating-linear-gradient(90deg,#c46a3c 0 1.4vh,#a24f2a 1.4vh 1.7vh)}
+.jm3d{perspective:none}
+.jmcam{position:absolute;inset:0;perspective:260vh;perspective-origin:50% 30%;overflow:hidden}
+.jmb3 i{will-change:transform}
+.jmb3 .roof{inset:-2px;transform:translateZ(calc(var(--H) + 3px))}
+/* Lost in Verona in real 3D */
+.jm3h{position:absolute;inset:0;background:#1b1236}
+.jm3h canvas{display:block;width:100%!important;height:100%!important}
+.jmov.v3 .jmgroup{left:var(--jx,50vw);top:var(--jy,56vh)}
+.jmov .jmholes{display:none}
+.jmov .jmmist{height:26vh;background:radial-gradient(ellipse 30% 60% at 20% 30%,rgba(255,255,255,.45),transparent 70%),radial-gradient(ellipse 30% 60% at 80% 25%,rgba(255,255,255,.4),transparent 70%),radial-gradient(ellipse 40% 70% at 50% 75%,rgba(235,230,250,.7),transparent 70%),linear-gradient(rgba(27,18,54,.95),rgba(210,200,235,.45) 60%,transparent)}

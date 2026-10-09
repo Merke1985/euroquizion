@@ -3502,7 +3502,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Juliet calls out the route so far, one arrow at a time; then everyone taps it.
   function qjRound() {
     var g = G.qj; if (!g) return;
-    g.round++; g.st = 'show'; g.prog = {}; g.fail = {}; g.wrong = {}; g.show = -1; g.pos = 0; g.falls = {}; push(); qjShow();
+    g.round++; g.st = 'show'; g.prog = {}; g.fail = {}; g.wrong = {}; g.show = -1; g.pos = 0; g.falls = {}; var ovh = $('qjov'); if (ovh) ovh._holes = {}; push(); qjShow();
     var STEP = Math.max(560, 900 - g.round * 25), at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
     for (var i = 0; i < g.round; i++) (function (i) {
       at(1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4][g.route[i]]); });
@@ -3584,30 +3584,122 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // The big screen: a crossroads in Verona seen from above, the group in the middle, Juliet's balcony at the top in the
   // mist. When the group walks, the city slides the other way; who goes wrong runs into a side street and falls in a hole.
-  var JM_TILE = null;
-  function jmTile() {   // one city block around a crossroads (the roads cross in the middle of the tile)
-    if (JM_TILE) return JM_TILE;
-    var roof = function (x, y, c1, c2) { return '<rect x="' + x + '" y="' + y + '" width="34" height="34" rx="2" fill="' + c1 + '"/><path d="M' + x + ' ' + (y + 17) + ' h34" stroke="' + c2 + '" stroke-width="1.6"/>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<path d="M' + (x + 2 + i * 6) + ' ' + (y + 2) + ' v30" stroke="' + c2 + '" stroke-width=".7" opacity=".55"/>'; }).join('') + '<rect x="' + (x + 24) + '" y="' + (y + 5) + '" width="5" height="5" fill="#5a2a20" opacity=".7"/>'; };
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#8a7a6e"/>' +
-      '<g stroke="#7a6a5e" stroke-width=".5" opacity=".7">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(function (i) { return '<path d="M0 ' + (i * 5) + ' h100 M' + (i * 5) + ' 0 v100"/>'; }).join('') + '</g>' +
-      '<rect x="0" y="0" width="36" height="36" fill="#d8c8a8"/><rect x="64" y="0" width="36" height="36" fill="#d8c8a8"/><rect x="0" y="64" width="36" height="36" fill="#d8c8a8"/><rect x="64" y="64" width="36" height="36" fill="#d8c8a8"/>' +
-      roof(0, 0, '#c4623e', '#9a4528') + roof(66, 0, '#b8562f', '#8e3e20') + roof(0, 66, '#d0703f', '#a24f2a') + roof(66, 66, '#c05a35', '#94401f') +
-      '<circle cx="30" cy="30" r="4" fill="#3f7a3a"/><circle cx="70" cy="70" r="4" fill="#3f7a3a"/></svg>';
-    JM_TILE = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
-    return JM_TILE;
+  // The city in 3D (like the Grand Final): city blocks with lit windows and tiled roofs around every crossroads.
+  // The group stays in the middle; the whole city slides the other way when they walk.
+  // ---------- Lost in Verona: the city in real 3D (three.js) ----------
+  // Blocks of Italian houses with lit windows and pyramid roofs around every crossroads, cobbled streets, a cold moon
+  // and warm street lamps. The group stays at the crossroads in the middle of the screen; the whole city moves the other
+  // way when they walk. Blocks are added around the group as it goes (and the far ones are dropped).
+  var V3 = null, V3_C = 10, V3_B = 6.5;
+  function v3Load(done) {
+    if (window.THREE) { done(); return; }
+    var sc = document.createElement('script'); sc.src = 'vendor/three.min.js?v=1'; sc.onload = function () { done(); }; sc.onerror = function () { done(); }; document.head.appendChild(sc);
+  }
+  function v3Tex(draw, w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; return t; }
+  function v3Facade(col, seed) {   // a facade: plaster, rows of windows (most lit, warm), green shutters, a lit shop front at street level
+    return v3Tex(function (x, w, h) {
+      var r = function (k) { var v = Math.sin(seed * 91.7 + k * 12.9898) * 43758.5453; return v - Math.floor(v); };
+      x.fillStyle = col; x.fillRect(0, 0, w, h);
+      for (var n = 0; n < 900; n++) { x.fillStyle = 'rgba(' + (r(n) < .5 ? '255,255,255' : '80,50,30') + ',' + (.03 + r(n + 3) * .05) + ')'; x.fillRect(r(n + 1) * w, r(n + 2) * h, 3, 3); }
+      x.fillStyle = 'rgba(60,35,20,.35)'; x.fillRect(0, h * .78, w, 4);
+      var cols = 4, rows = 3;
+      for (var cx = 0; cx < cols; cx++) for (var ry = 0; ry < rows; ry++) {
+        var X = (cx + .28) * w / cols, Y = (ry + .2) * h * .78 / rows, W = w / cols * .44, H = h * .78 / rows * .58, lit = r(cx * 7 + ry * 3) < .62;
+        x.fillStyle = '#3a2a22'; x.fillRect(X - 3, Y - 3, W + 6, H + 6);
+        var g = x.createLinearGradient(0, Y, 0, Y + H); g.addColorStop(0, lit ? '#ffe2a0' : '#2a3048'); g.addColorStop(1, lit ? '#f2a64a' : '#1a1e30'); x.fillStyle = g; x.fillRect(X, Y, W, H);
+        x.fillStyle = 'rgba(40,20,10,.6)'; x.fillRect(X + W / 2 - 1, Y, 2, H); x.fillRect(X, Y + H * .45, W, 2);
+        x.fillStyle = '#2f6a42'; x.fillRect(X - W * .42, Y, W * .36, H); x.fillRect(X + W * 1.06, Y, W * .36, H);
+        x.fillStyle = 'rgba(0,0,0,.25)'; for (var s = 0; s < 6; s++) { x.fillRect(X - W * .42, Y + s * H / 6, W * .36, 1.5); x.fillRect(X + W * 1.06, Y + s * H / 6, W * .36, 1.5); }
+        x.fillStyle = '#e9e0cc'; x.fillRect(X - 5, Y + H + 3, W + 10, 5);
+      }
+      for (var d = 0; d < 3; d++) { var DX = (d + .2) * w / 3, DW = w / 3 * .6; var g2 = x.createLinearGradient(0, h * .82, 0, h); g2.addColorStop(0, '#fff0c0'); g2.addColorStop(1, '#e8962f'); x.fillStyle = '#3a2418'; x.fillRect(DX - 4, h * .81, DW + 8, h * .19); x.fillStyle = g2; x.fillRect(DX, h * .83, DW, h * .17); x.fillStyle = ['#a8283a', '#2a6a4a', '#2a4a8a'][(d + seed) % 3]; x.fillRect(DX - 6, h * .8, DW + 12, h * .035); }
+    }, 256, 256);
+  }
+  function v3Init(host) {
+    if (!window.THREE) return null;
+    var T = THREE, w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
+    var rn = new T.WebGLRenderer({ antialias: true, alpha: false }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.shadowMap.type = T.PCFSoftShadowMap;
+    rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.ACESFilmicToneMapping; rn.toneMappingExposure = .95;
+    host.appendChild(rn.domElement);
+    var sc = new T.Scene(); sc.background = new T.Color('#1b1236'); sc.fog = new T.Fog('#2a1a40', 34, 78);
+    var cam = new T.PerspectiveCamera(52, w / h, 0.5, 200); cam.position.set(0, 17.5, 6.2); cam.lookAt(0, 0, -.7);
+    sc.add(new T.HemisphereLight('#8a7ac8', '#4a2a20', 0.55));
+    var moon = new T.DirectionalLight('#b8c4ff', 0.75); moon.position.set(-14, 26, -18); moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024);
+    var sh = moon.shadow.camera; sh.left = -30; sh.right = 30; sh.top = 30; sh.bottom = -30; sh.near = 1; sh.far = 90; moon.shadow.bias = -0.0008; sc.add(moon);
+    var lamp = new T.PointLight('#ffb866', 2.4, 26, 1.6); lamp.position.set(0, 6.5, 0); sc.add(lamp);   // the crossroads lamp, always over the group
+    var city = new T.Group(); sc.add(city);
+    var cob = v3Tex(function (x, W, H) { x.fillStyle = '#6a5c54'; x.fillRect(0, 0, W, H); for (var yy = 0; yy < 16; yy++) for (var xx = 0; xx < 16; xx++) { var v = 80 + ((xx * 37 + yy * 61) % 40); x.fillStyle = 'rgb(' + (v + 18) + ',' + (v + 6) + ',' + v + ')'; x.beginPath(); x.ellipse(xx * 16 + 8 + (yy % 2) * 8, yy * 16 + 8, 7, 6.5, 0, 0, Math.PI * 2); x.fill(); } }, 256, 256);
+    cob.repeat.set(150, 150);
+    var ground = new T.Mesh(new T.PlaneGeometry(400, 400), new T.MeshStandardMaterial({ map: cob, roughness: .95 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; city.add(ground);
+    var facCols = ['#e8cc9a', '#e7b39a', '#efdcb4', '#d9a888', '#e3c08a', '#f0d2c0'], facs = facCols.map(function (c, i) { return new T.MeshStandardMaterial({ map: v3Facade(c, i), roughness: .9 }); });
+    var roofTex = v3Tex(function (x, W, H) { x.fillStyle = '#b4532f'; x.fillRect(0, 0, W, H); for (var yy = 0; yy < 16; yy++) { x.fillStyle = yy % 2 ? '#9c4426' : '#c2633a'; x.fillRect(0, yy * 16, W, 9); for (var xx = 0; xx < 12; xx++) { x.fillStyle = 'rgba(60,20,10,.35)'; x.fillRect(xx * 22 + (yy % 2) * 11, yy * 16, 2, 16); } } }, 256, 256);
+    var roofMat = new T.MeshStandardMaterial({ map: roofTex, roughness: .8, flatShading: true }), capMat = new T.MeshStandardMaterial({ color: '#7a3a22', roughness: .9 });
+    var blocks = {};
+    function rnd(a, b, k) { var v = Math.sin(a * 127.1 + b * 311.7 + k * 74.7) * 43758.5453; return v - Math.floor(v); }
+    function addBlock(i, j) {   // the block whose corner is crossroads (i, j) and (i+1, j+1)
+      var key = i + ',' + j; if (blocks[key]) return;
+      var g = new T.Group(), hgt = 4.2 + rnd(i, j, 1) * 2.6, m = facs[Math.floor(rnd(i, j, 2) * facs.length)];
+      var tx = m.map.clone(); tx.encoding = THREE.sRGBEncoding; tx.needsUpdate = true; tx.repeat.set(Math.round(V3_B / 3.4), Math.max(1, Math.round(hgt / 4.6)));
+      var mat = new T.MeshStandardMaterial({ map: tx, roughness: .9 });
+      var body = new T.Mesh(new T.BoxGeometry(V3_B, hgt, V3_B), [mat, mat, capMat, capMat, mat, mat]); body.position.y = hgt / 2; body.castShadow = body.receiveShadow = true; g.add(body);
+      var cor = new T.Mesh(new T.BoxGeometry(V3_B + .35, .35, V3_B + .35), new T.MeshStandardMaterial({ color: '#efe2c8', roughness: .8 })); cor.position.y = hgt + .1; cor.castShadow = true; g.add(cor);
+      var roof = new T.Mesh(new T.ConeGeometry(V3_B * .74, 2.1 + rnd(i, j, 3) * 1.2, 4, 1), roofMat); roof.rotation.y = Math.PI / 4; roof.position.y = hgt + .25 + (2.1 + rnd(i, j, 3) * 1.2) / 2; roof.castShadow = true; g.add(roof);
+      if (rnd(i, j, 4) < .7) { var ch = new T.Mesh(new T.BoxGeometry(.6, 1.3, .6), capMat); ch.position.set((rnd(i, j, 5) - .5) * 3, hgt + 1.4, (rnd(i, j, 6) - .5) * 3); ch.castShadow = true; g.add(ch); }
+      g.position.set((i + .5) * V3_C, 0, (j + .5) * V3_C); city.add(g); blocks[key] = g;
+    }
+    function around(cx, cy) {   // the blocks around crossroads (cx, cy); far ones go
+      for (var i = cx - 4; i < cx + 4; i++) for (var j = cy - 6; j < cy + 3; j++) addBlock(i, j);
+      Object.keys(blocks).forEach(function (k) { var p = k.split(',').map(Number); if (Math.abs(p[0] - cx) > 6 || Math.abs(p[1] - cy) > 8) { city.remove(blocks[k]); delete blocks[k]; } });
+    }
+    around(0, 0);
+    var holes = [], holeMat = new T.MeshBasicMaterial({ color: '#000' }), rimMat = new T.MeshStandardMaterial({ color: '#2a1a12', roughness: 1 });
+    var st = { x: 0, y: 0, fx: 0, fy: 0, tx: 0, ty: 0, t0: 0, dur: 600, alive: true };
+    function frame() {
+      if (!st.alive) return;
+      if (!host.isConnected) { st.alive = false; rn.dispose(); return; }
+      var k = st.t0 ? Math.min(1, (performance.now() - st.t0) / st.dur) : 1, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      st.x = st.fx + (st.tx - st.fx) * e; st.y = st.fy + (st.ty - st.fy) * e;
+      city.position.set(-st.x * V3_C, 0, -st.y * V3_C);
+      lamp.intensity = 2.3 + Math.sin(performance.now() / 300) * .08;
+      var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && h2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
+      rn.render(sc, cam); requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    var api = {
+      go: function (x, y, jump) { st.fx = jump ? x : st.x; st.fy = jump ? y : st.y; st.tx = x; st.ty = y; st.t0 = jump ? 0 : performance.now(); if (jump) { st.x = x; st.y = y; } around(Math.round(x), Math.round(y)); },
+      hole: function (x, y, d) {   // a hole in the side street from crossroads (x, y), direction d
+        var g = new T.Group(), r = new T.Mesh(new T.CircleGeometry(1.35, 28), rimMat), b = new T.Mesh(new T.CircleGeometry(1.15, 28), holeMat);
+        r.rotation.x = b.rotation.x = -Math.PI / 2; r.position.y = .02; b.position.y = .03; g.add(r); g.add(b);
+        g.position.set((x + JM_DIRS[d][0] * .55) * V3_C, 0, (y + JM_DIRS[d][1] * .55) * V3_C); g.scale.set(.01, .01, .01); city.add(g); holes.push(g);
+        var t0 = performance.now(); (function grow() { var k = Math.min(1, (performance.now() - t0) / 400); var s = .01 + .99 * (1 - Math.pow(1 - k, 3)); g.scale.set(s, s, s); if (k < 1) requestAnimationFrame(grow); })();
+      },
+      clearHoles: function () { holes.forEach(function (g) { city.remove(g); }); holes = []; },
+      screen: function (wx, wz) {   // where a point on the ground (relative to the group) shows on screen, in px
+        cam.updateMatrixWorld(); var v = new T.Vector3(wx * V3_C, 0, wz * V3_C); v.project(cam); return [(v.x + 1) / 2 * host.clientWidth, (1 - v.y) / 2 * host.clientHeight];
+      }
+    };
+    return api;
+  }
+  function jmBlocks(cx, cy) {   // the blocks around where the group is (their look depends on where they are, so they stay the same)
+    var h = '';
+    for (var i = -2; i <= 2; i++) for (var j = -3; j <= 1; j++) { var ax = cx + i, ay = cy + j, t = ((ax * 7 + ay * 3) % 4 + 4) % 4; h += '<div class="jmb3 t' + t + '" style="--i:' + i + ';--j:' + j + '"><i class="n jmfac"></i><i class="w jmfac"></i><i class="e jmfac"></i><i class="s jmfac"></i><i class="roof"></i></div>'; }
+    return h;
+  }
+  function jmCity() {
+    return '<div class="jm3d"><div class="jmcam"><div class="jmplane jmgp"><div class="jmground"></div></div></div><div class="jmcam"><div class="jmplane"><div class="jmblocks">' + jmBlocks(0, 0) + '</div></div></div></div>';   /* (the ground in a layer of its own, underneath) */
   }
   function qjShow() {
     var g = G.qj; if (!g) return;
     var ov = $('qjov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
-      ov.innerHTML = '<div class="jmcity"></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
+      ov.innerHTML = '<div class="jm3h"></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
-      ov.querySelector('.jmcity').style.backgroundImage = jmTile();
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
+      V3 = null; v3Load(function () { var hh = ov.querySelector('.jm3h'); if (!hh || !hh.isConnected) return; V3 = v3Init(hh); if (V3) { ov.classList.add('v3'); var c0 = V3.screen(0, 0); ov.style.setProperty('--jx', c0[0] + 'px'); ov.style.setProperty('--jy', c0[1] + 'px'); } qjShow(); });
     }
     ov.setAttribute('data-st', g.st);
     ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + g.round + ' step' + (g.round === 1 ? '' : 's') : '';
@@ -3617,12 +3709,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show');
     // the city: where the group is on the route (it slides the other way)
     var x = 0, y = 0; for (var i = 0; i < (g.pos || 0); i++) { x += JM_DIRS[g.route[i]][0]; y += JM_DIRS[g.route[i]][1]; }
-    var city = ov.querySelector('.jmcity'), ck = x + ',' + y, back = (g.pos || 0) === 0 && city.getAttribute('data-p') && city.getAttribute('data-p') !== '0,0';
-    if (city.getAttribute('data-p') !== ck) {
-      city.setAttribute('data-p', ck);
-      if (back) { city.classList.add('jump'); void city.offsetWidth; }   // (a new round: back to the start in one go)
-      city.style.setProperty('--x', String(x)); city.style.setProperty('--y', String(y));
-      if (back) setTimeout(function () { city.classList.remove('jump'); }, 60);
+    var ck = x + ',' + y, was = (ov.getAttribute('data-p') || '0,0').split(',').map(Number);
+    if (V3 && ov.getAttribute('data-p') !== ck) {
+      ov.setAttribute('data-p', ck);
+      var far = Math.abs(x - was[0]) + Math.abs(y - was[1]) !== 1;
+      if (far) V3.clearHoles();
+      V3.go(x, y, far);   // (a new round: back to the start in one go)
       ov.querySelector('.jmholes').innerHTML = '';
     }
     // the group: everyone still in, together in the middle; whoever goes wrong runs into a side street and falls
@@ -3634,9 +3726,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       el.style.setProperty('--gx', (Math.cos(ang) * rad).toFixed(2) + 'vh'); el.style.setProperty('--gy', (Math.sin(ang) * rad * 0.8).toFixed(2) + 'vh');
       var f = g.falls && g.falls[k];
       if (f && !el.classList.contains('falling')) {
-        el.style.setProperty('--fx', (JM_DIRS[f.d][0] * 17) + 'vh'); el.style.setProperty('--fy', (JM_DIRS[f.d][1] * 17) + 'vh');
+        var c0 = V3 ? V3.screen(0, 0) : [0, 0], c1 = V3 ? V3.screen(JM_DIRS[f.d][0] * .55, JM_DIRS[f.d][1] * .55) : [JM_DIRS[f.d][0] * 300, JM_DIRS[f.d][1] * 200];
+        el.style.setProperty('--fx', (c1[0] - c0[0]) + 'px'); el.style.setProperty('--fy', (c1[1] - c0[1]) + 'px');
         el.classList.add('falling');
-        var h = document.createElement('div'); h.className = 'jmhole'; h.style.setProperty('--fx', (JM_DIRS[f.d][0] * 17) + 'vh'); h.style.setProperty('--fy', (JM_DIRS[f.d][1] * 17) + 'vh'); ov.querySelector('.jmholes').appendChild(h);
+        if (!ov._holes) ov._holes = {}; var hk = f.i + ':' + f.d;
+        if (V3 && !ov._holes[hk]) { ov._holes[hk] = 1; V3.hole(x, y, f.d); }
       }
       if (!f && el.classList.contains('falling')) el.classList.remove('falling');
       el.classList.toggle('out', j < 0 && !f);
