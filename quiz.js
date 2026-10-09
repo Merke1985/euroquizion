@@ -787,16 +787,17 @@ function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITE
 // One of each is the secret answer; the others turn up as clues.
 var CLUE_WHO = [
   { id: 'lynda', icon: '👠', name: 'Lynda' }, { id: 'felix', icon: '🎩', name: 'Felix' }, { id: 'stella', icon: '💃', name: 'Stella' },
-  { id: 'monster', icon: '👹', name: 'The Monster' }, { id: 'manager', icon: '🎧', name: 'The Stage Manager' }, { id: 'scrut', icon: '📋', name: 'The Scrutineer' }];
+  { id: 'monster', icon: '👹', name: 'The Monster' }, { id: 'manager', icon: '🎧', name: 'The Stage Manager' }];
 var CLUE_WHERE = [
-  { id: 'green', icon: '🛋️', name: 'Green Room', in: 'in the Green Room' }, { id: 'press', icon: '📰', name: 'Press Centre', in: 'in the Press Centre' },
+  { id: 'green', icon: '🛋️', name: 'Green Room', in: 'in the Green Room' },
   { id: 'club', icon: '🪩', name: 'Euroclub', in: 'in the Euroclub' }, { id: 'back', icon: '🎭', name: 'Backstage', in: 'backstage' },
   { id: 'shop', icon: '🛍️', name: 'Woodruff’s Boutique', in: 'in Woodruff’s Boutique' }, { id: 'arena', icon: '🏟️', name: 'The Arena', in: 'on the Arena stage' }];
 var CLUE_WHAT = [
   { id: 'quill', icon: '🪶', name: 'Feather Quill' }, { id: 'pen', icon: '✒️', name: 'Fountain Pen' }, { id: 'piano', icon: '🎹', name: 'Grand Piano' },
-  { id: 'candle', icon: '🕯️', name: 'Candlestick' }, { id: 'ball', icon: '🔮', name: 'Crystal Ball' }, { id: 'mic', icon: '🎤', name: 'Broken Mic' }];
+  { id: 'candle', icon: '🕯️', name: 'Candlestick' }, { id: 'ball', icon: '🔮', name: 'Crystal Ball' }];
 var CLUE_SETS = { who: CLUE_WHO, where: CLUE_WHERE, what: CLUE_WHAT };
-var CLUE_N = 4, CLUE_ACC_MS = 45000, CLUE_PART = 4, CLUE_BONUS = 6;   // four clue questions; 4 points per right part of the accusation, 6 more for all three
+var CLUE_N = 4, CLUE_ACC_MS = 45000, CLUE_PART = 4, CLUE_BONUS = 6, CLUE_GIVE = 3, CLUE_FAST = 4;   // four clue questions; a right answer brings 3 clues, the fastest 4;
+// 4 points per right part of the guess, 6 more for all three. (Five cards a row and these clues: someone solves it in most games.)
 function clueCard(key) { var p = String(key).split(':'), set = CLUE_SETS[p[0]] || []; for (var i = 0; i < set.length; i++) if (set[i].id === p[1]) return { kind: p[0], c: set[i] }; return null; }
 function clueText(key) {   // what a clue says: this one is not it
   var x = clueCard(key); if (!x) return '';

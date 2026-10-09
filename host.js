@@ -989,7 +989,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       right = [];
     }
-    if (G.clue && G.clue.st === 'ask' && G.q && !G.best && !G.draw && !G.q.battle) { clueGive(right); right = []; }   // Who Stole the Trophy?: no points, a secret clue for a right answer
+    if (G.clue && G.clue.st === 'ask' && G.q && !G.best && !G.draw && !G.q.battle) { clueGive(right); right = []; }   // Who the Hell Is Edgar?: no points, secret clues for a right answer
     right.forEach(function (p, rank) { p.pts = G.draw ? partyX() : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs, G.q.blur) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); p.score += p.pts; p.got = true; });   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
@@ -2568,8 +2568,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // ---------- Who the Hell Is Edgar? ----------
   // A Cluedo-style party game. A ghost called Edgar has been writing everyone's songs: he is possessing one suspect,
   // haunting one room, and writing with one thing. The presenters set
-  // the scene, then come four trivia questions; a right answer gets a secret clue on your phone (the fastest right
-  // answer gets two): a card that is NOT the answer. Then everyone accuses on their phone, and the answer comes out,
+  // the scene, then come four trivia questions; a right answer gets three secret clues on your phone (the fastest right
+  // answer gets four), each one a card that is NOT the answer, from the row where the player still has the most options. Then everyone accuses on their phone, and the answer comes out,
   // part by part. 4 points for each right part, 6 more for all three.
   var clueTimer = null, clueTick = null;
   function clueAll() {
@@ -2587,7 +2587,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(1500, function () { Music.dread(true); clueSay('him', 'Something spooky is going on, Europe… tonight’s songs were all written by a ghost called Edgar! 👻'); });
     var t = 1500;
     [['her', 'But who the hell is Edgar? He’s possessing one of us! Who, where he’s haunting, and what he’s writing with…', 4400],
-     ['him', 'Answer the next four questions right, and you get a secret clue on your phone. The fastest right answer gets two!', 3800],
+     ['him', 'Answer the next four questions right, and you get three secret clues on your phone. The fastest right answer gets four!', 3800],
      ['her', 'After that, you unmask him. Good luck, ghost hunters! 🕯️', 5200]].forEach(function (l) { t += l[2]; (function (l) { at(t, function () { clueSay(l[0], l[1]); }); })(l); });
     at(t + 4200, function () { clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
   }
@@ -2622,15 +2622,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueGive(right) {   // the answer is out: a clue for everyone who got it right (in answer order: the first gets two)
     var g = G.clue; g.n++; g.fresh = {};
     right.forEach(function (p, i) {
-      for (var k = 0; k < (i === 0 ? 2 : 1); k++) {
+      for (var k = 0; k < (i === 0 ? CLUE_FAST : CLUE_GIVE); k++) {
+        // a smart clue: from the row where this player still has the most options left, so the clues add up to an answer
         var pool = cluePool(p.pid); if (!pool.length) break;
-        var c = pick(pool); (g.known[p.pid] = g.known[p.pid] || []).push(c); (g.fresh[p.pid] = g.fresh[p.pid] || []).push(c);
+        var left = {}; pool.forEach(function (c) { var r = c.split(':')[0]; left[r] = (left[r] || 0) + 1; });
+        var most = Math.max.apply(null, Object.keys(left).map(function (r) { return left[r]; }));
+        var rows = Object.keys(left).filter(function (r) { return left[r] === most; }), row = pick(rows);
+        var c = pick(pool.filter(function (x) { return x.split(':')[0] === row; })); (g.known[p.pid] = g.known[p.pid] || []).push(c); (g.fresh[p.pid] = g.fresh[p.pid] || []).push(c);
       }
       p.got = true; p.pts = 0;
     });
     g.freshKey = g.id + ':' + g.n;
     var names = right.map(function (p) { return p.name; });
-    if (G.q) G.q.explain = (G.q.explain ? G.q.explain + ' ' : '') + (right.length ? '👻 A secret clue for ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0]) + (right.length > 1 ? ' (' + names[0] + ' was fastest: two clues)' : ' (two clues for being fastest)') + '. Check your phone!' : '👻 Nobody got it right: no clues this time.');
+    if (G.q) G.q.explain = (G.q.explain ? G.q.explain + ' ' : '') + (right.length ? '👻 Secret clues for ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0]) + (right.length > 1 ? ' (' + names[0] + ' was fastest: four clues, the rest three)' : ' (four clues for being fastest)') + '. Check your phone!' : '👻 Nobody got it right: no clues this time.');
   }
   function clueAccuse() {
     var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
