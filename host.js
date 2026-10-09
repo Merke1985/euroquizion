@@ -120,7 +120,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], fanLeft: p.fanLeft || 0, sit: p.sitNow || '', flag: !!p.flagNow }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
@@ -1569,7 +1569,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Ice Skates in the bag: they glide 2 spaces ahead (every pair counts), and the skates are used up
     var perks = [];   // (announced once everyone is ready: first the broken heels, then the ice skates)
     (G.heels || []).forEach(function (h) { if (lanes[h.to] && players[h.by]) perks.push({ kind: 'heel', by: h.by, to: h.to }); }); G.heels = [];
-    ps.forEach(function (p) { var n = (p.inv || []).filter(function (id) { return id === 'skates'; }).length; if (!n) return; p.inv = p.inv.filter(function (id) { return id !== 'skates'; }); perks.push({ kind: 'skates', pid: p.pid, n: 2 * n }); });
+    ps.forEach(function (p) { var n = (p.inv || []).filter(function (id) { return id === 'skates'; }).length; if (n) perks.push({ kind: 'skates', pid: p.pid, n: 2 * n }); });
+    list().forEach(function (p) { p.inv = []; p.uses = {}; });   // in the Grand Final nobody has any items left
     // they are put on the runway one by one, half a second apart, the lowest score first
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0, perks: perks };
@@ -1669,8 +1670,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (i >= list0.length) { c.perk = null; done(); return; }
       var x = list0[i], l;
       if (x.kind === 'heel') {
-        var t = players[x.to], u = t && t.inv ? t.inv.indexOf('umbrella') : -1;
-        x.blocked = u >= 0; if (!x.blocked && (l = c.lanes[x.to])) l.heel = x.by;   // (an umbrella bought after the heel was broken still protects)
+        var t = players[x.to];
+        x.blocked = false; if ((l = c.lanes[x.to])) l.heel = x.by;   // (an umbrella does not help against a broken heel)
         Music.blip(); setTimeout(function () { if (G.phase === 'chase') Music.crumble(); }, 250);
       } else if ((l = c.lanes[x.pid])) { l.pos = Math.min(CHASE_END, l.pos + x.n); l.skates = (l.skates || 0) + x.n; itemGetSnd(); }
       c.st = 'perk'; c.perk = x; push();
@@ -2488,14 +2489,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 16000 + Math.random() * 8000); });   // (about 20 seconds to make up their mind)
     clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, SHOP_MS);
   }
-  function shielded(p) { return !!(p && p.inv && p.inv.indexOf('umbrella') >= 0); }   // the Eurovision Umbrella: nobody can use an item on you
+  function shielded(p) { return !!(p && p.inv && p.inv.indexOf('umbrella') >= 0); }   // the Eurovision Umbrella: nobody can aim an item at you (a Broken Heel still can)
+  function usesLeft(p, id) { return (p && p.uses && p.uses[id]) || 0; }
+  function useOne(p, id) { p.uses = p.uses || {}; p.uses[id] = Math.max(0, (p.uses[id] || 1) - 1); useSync(p, id); }   // (the last use: the item is gone)
+  function umbBlock(p) { if (!shielded(p)) return false; useOne(p, 'umbrella'); return true; }
   function shopLater(it) { return it.kind === 'bribe' || it.kind === 'heel' || it.kind === 'smoke'; }   // (the heel and the envelope: secrets)   // secret and delivery items: any time, even during a party game
   function qKeyNow() { return G.round + '|' + (G.q ? G.q.text : ''); }
   // Someone gets an item (bought, free or picked by Lynda): a cash-register "ka-ching"
   var itemGetEl = null;
   function itemGetSnd() { if (REMOTE) return; try { if (!itemGetEl) itemGetEl = new Audio('sounds/item_get.mp3'); itemGetEl.currentTime = 0; itemGetEl.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var pr = itemGetEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
-  function shopGive(p, ids) { ids.forEach(function (id) { var it = shopItem(id); if (it && it.uses) p.fanLeft = (p.fanLeft || 0) + it.uses; }); return ids; }   // (the Eurovision Fan: one item in the bag, with 3 uses)
-  function fanSync(p) { var want = Math.ceil(Math.max(0, p.fanLeft || 0) / 3), inv = p.inv || []; while (inv.filter(function (x) { return x === 'fan'; }).length > want) inv.splice(inv.lastIndexOf('fan'), 1); }   // (an item with 3 uses: three in the bag)
+  function shopGive(p, ids) { ids.forEach(function (id) { var it = shopItem(id); if (it && it.uses) { p.uses = p.uses || {}; p.uses[id] = (p.uses[id] || 0) + it.uses; } }); return ids; }   // (the Eurovision Fan: one item in the bag, with 3 uses)
+  function useSync(p, id) { var it = shopItem(id), per = (it && it.uses) || 1, want = Math.ceil(usesLeft(p, id) / per), inv = p.inv || []; while (inv.filter(function (x) { return x === id; }).length > want) inv.splice(inv.lastIndexOf(id), 1); }   // (an item with 3 uses: three in the bag)
   function shopPrice(it) { return shopPriceOf(it, G.block || 3); }   // (more questions per block of trivia: dearer)
   function shopAvail() { return SHOP_ITEMS.filter(function (it) { return (!it.final || G.finalMode === 'chase') && !soldOut(it.id); }); }
   // Some items are one of a kind (stock: 1): once someone has it, it is gone from the boutique for the rest of the game.
@@ -2514,7 +2518,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield' && it.kind !== 'skates' && it.kind !== 'fan'; });
       if (!ids.length) return;
       b.useP = 0.1; done = true;
-      var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && !shielded(x); });
+      var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && (it.kind === 'heel' || !shielded(x)); });
       var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'thief';
       if (!self && !others.length) return;
       var t = self ? b : pick(others), key = 'bot' + Date.now() + Math.random();
@@ -2548,7 +2552,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief' || it0.kind === 'fan')) t = p;   // (no target: it is the user's own smoke)
       if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief' || it0.kind === 'fan')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates') return;   // (the umbrella works by itself)
-      if (t !== p && shielded(t)) return;   // under an umbrella: out of reach
+      if (t !== p && it.kind !== 'heel' && shielded(t)) return;   // under an umbrella: out of reach
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
@@ -2558,7 +2562,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var key = qKeyNow(); if (!G.fanQ || G.fanQ.key !== key) G.fanQ = { key: key, map: {} }; if (G.fanQ.map[p.pid]) return;   // (once per question)
         var wrong = shuffle(q.options.map(function (o, i) { return i; }).filter(function (i) { return i !== q.correct; }));
         G.fanQ.map[p.pid] = wrong.slice(0, Math.min(wrong.length - 1, Math.round(wrong.length / 2)));   // (half, rounded: three wrong answers lose two; one always stays)
-        p.fanLeft = Math.max(0, (p.fanLeft || 1) - 1); fanSync(p); Music.blip(); push();
+        useOne(p, 'fan'); Music.blip(); push();
         shopFlash('🪭 ' + p.name + ' waves the Eurovision Fan!'); return;
       }
       if (it.kind === 'heel') { inv.splice(k, 1); (G.heels = G.heels || []).push({ by: p.pid, to: t.pid }); push(); return; }   // secret: revealed when the Grand Final starts
@@ -2696,14 +2700,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
     shopLast = { icon: it.icon, deltas: [], sound: it.kind };
     var ui = (it.kind === 'lose' || it.kind === 'blow' || it.kind === 'steal' || it.kind === 'sit' || it.kind === 'flag' || it.kind === 'heel') && t.inv ? t.inv.indexOf('umbrella') : -1;
-    if (ui >= 0) { t.inv.splice(ui, 1); shopLast = { icon: '☂️', deltas: [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '☂️ blocked' }], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it!'; }   // the umbrella takes it (once)
-    if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!'; }
+    ui = -1;   // (the umbrella keeps aimed items away before they are used: nothing to block here)
+    if (ui >= 0) { useOne(t, 'umbrella'); var ul = usesLeft(t, 'umbrella'); shopLast = { icon: '☂️', deltas: [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '☂️ blocked' }], sound: 'block' }; return '☂️ ' + by.name + ' tried the ' + it.name + ' on ' + t.name + ', but ' + t.name + '’s Eurovision Umbrella blocked it! (' + (ul ? ul + ' use' + (ul > 1 ? 's' : '') + ' left' : 'now it’s worn out') + ')'; }   // the umbrella takes it (one of its 3 uses)
+    if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; var safe = [];   /* (the smoke gets everyone, umbrella or not) */ safe.forEach(function (x) { G.smoke.push(x.pid); shopLast.deltas.push({ pid: x.pid, tag: '☂️ blocked' }); }); return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!' + (safe.length ? ' ' + safe.map(function (x) { return x.name; }).join(' and ') + (safe.length > 1 ? ' stay' : ' stays') + ' dry under an umbrella.' : ''); }
     if (it.kind === 'thief') {   // a random item from a random player's bag (which one stays a secret)
       var loose = function (x) { return (x.inv || []).map(function (id, i) { return id === 'bribe' ? -1 : i; }).filter(function (i) { return i >= 0; }); };   // (an envelope for the EBU cannot be stolen)
-      var bags = list().filter(function (x) { return x !== by && !x.off && loose(x).length;   /* (random, not aimed: an umbrella does not help) */ });
+      var bags = list().filter(function (x) { return x !== by && !x.off && loose(x).length; });
       if (!bags.length) { shopLast.sound = 'empty'; shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub, but every bag was empty!'; }
-      var v = pick(bags), gi = pick(loose(v)), loot = v.inv.splice(gi, 1)[0];
-      if (loot === 'fan') { var nf = v.inv.filter(function (x) { return x === 'fan'; }).length, mv = Math.max(1, (v.fanLeft || 0) - nf * 3); v.fanLeft = Math.max(0, (v.fanLeft || 0) - mv); by.fanLeft = (by.fanLeft || 0) + mv; }   // (a fan goes with the uses it has left) by.inv = (by.inv || []).concat(loot);
+      var v = pick(bags);
+      if (false) { shopLast.sound = 'block'; shopLast.icon = '☂️'; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: v.pid, tag: '☂️ blocked' }]; return '☂️ ' + by.name + ' sneaked into the Euroclub after ' + v.name + '’s bag, but ' + v.name + '’s umbrella kept it shut!'; }
+      var gi = pick(loose(v)), loot = v.inv.splice(gi, 1)[0], lit = shopItem(loot);
+      if (lit && lit.uses) {   // an item with uses goes with the uses it has left
+        var nf = v.inv.filter(function (x) { return x === loot; }).length, mv = Math.max(1, usesLeft(v, loot) - nf * lit.uses);
+        v.uses[loot] = Math.max(0, usesLeft(v, loot) - mv); by.uses = by.uses || {}; by.uses[loot] = (by.uses[loot] || 0) + mv;
+      }
+      by.inv = (by.inv || []).concat(loot);
       shopLast.deltas = [{ pid: by.pid, tag: '+1 item' }, { pid: v.pid, tag: '−1 item' }];
       return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub and left with an item from ' + v.name + '!';
     }
@@ -4562,7 +4573,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.total = G.per * G.parts; G.guessMs = (+$('s-time').value + AFTER) * 1000;
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.fanLeft = 0; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
