@@ -6,6 +6,8 @@
   var REMOTE = new URLSearchParams(location.search).get('screen') === '0';   // a game without a shared screen
   var players = {};         // pid -> {pid,name,score,got,pts,last}
   var G = { phase: 'lobby', round: 0, total: 10, guessMs: 25000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'correct', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0, go: {} };
+  // The whoosh sounds only in the Grand Final: in the rest of the game they were a bit much.
+  (function () { var w = Music.woosh; Music.woosh = function () { if (G.phase === 'chase') w.apply(Music, arguments); }; })();
   var yt = null, ytReady = false, clipStart = 0, stage = 'idle', poll = null, watchdog = null, endTimer = null, fails = 0;
 
   // ---------- room ----------
@@ -911,11 +913,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     box.classList.toggle('hidden', !on || !G.chaseOv); if (!on || !G.chaseOv) { $('v-end').classList.remove('ovmany'); return; }
     var R = 0; G.chaseOv.forEach(function (o) { var p = players[o.pid]; if (p && p.rh) R = Math.max(R, p.rh.length); });
     var rows = G.chaseOv.filter(function (o) { return players[o.pid]; }).slice().sort(function (a, b) { return (b.win - a.win) || (b.fp - a.fp) || (players[b.pid].score - players[a.pid].score); });
-    var head = '<span></span>'; for (var k = 0; k < R; k++) head += '<span>' + (R > 1 ? 'Round ' + (k + 1) : 'Quiz') + '</span>'; head += '<span class="fc">Grand Final</span>';
-    box.style.setProperty('--cols', 'minmax(0,1fr) ' + (R ? 'repeat(' + R + ',5.2em) ' : '') + '6.4em');
+    var R1 = R > 1 ? R : 0;   // (one round: its column would just repeat the points)
+    var head = '<span></span>'; for (var k = 0; k < R1; k++) head += '<span>Round ' + (k + 1) + '</span>'; head += '<span class="pc">Points</span><span class="fc">Grand Final</span>';
+    box.style.setProperty('--cols', 'minmax(0,1fr) ' + (R1 ? 'repeat(' + R1 + ',5.2em) ' : '') + '5.6em 6.4em');
+    // the most points before the Grand Final: a silver crown (the trophy is for the Grand Final)
+    var topPts = Math.max.apply(null, rows.map(function (o) { return players[o.pid].score; }));
     var rowHtml = function (o, i) {
-      var p = players[o.pid], cells = ''; for (var k = 0; k < R; k++) cells += '<span>' + ((p.rh || [])[k] || 0) + '</span>';
-      return '<div class="ovrow' + (o.win ? ' win' : ' dead') + '" style="--i:' + i + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (o.win ? ' 🏆' : '') + '</span>' + cells + '<span class="fc">' + o.fp + '</span></div>';
+      var p = players[o.pid], cells = ''; for (var k = 0; k < R1; k++) cells += '<span>' + ((p.rh || [])[k] || 0) + '</span>';
+      var silver = topPts > 0 && p.score === topPts ? ' <span class="silvercrown" title="Most points">👑</span>' : '';
+      return '<div class="ovrow' + (o.win ? ' win' : ' dead') + (silver ? ' silver' : '') + '" style="--i:' + i + '"><span class="who">' + charSvg(p.char) + esc(p.name) + silver + (o.win ? ' 🏆' : '') + '</span>' + cells + '<span class="pc">' + p.score + '</span><span class="fc">' + o.fp + '</span></div>';
     };
     // a big group is split over two columns, so everyone fits without scrolling
     var two = rows.length > 6, half = two ? Math.ceil(rows.length / 2) : rows.length, cols = two ? [rows.slice(0, half), rows.slice(half)] : [rows];
@@ -1713,16 +1719,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function chaseSdMove() {
     var c = G.chase, act = chaseActive(), best = Math.max.apply(null, act.map(function (k) { return c.lanes[k].res || 0; }));
-    var losers = act.filter(function (k) { return (c.lanes[k].res || 0) < best; });
-    losers.forEach(function (k) { c.lanes[k].fell = c.n; });
+    var losers = act.filter(function (k) { return (c.lanes[k].res || 0) < best; }), stay = act.filter(function (k) { return losers.indexOf(k) < 0; });
     c.sdLost = losers; c.st = 'sdres'; push();
-    if (losers.length) setTimeout(function () { if (G.phase === 'chase') { Music.woosh(); Music.scream(); } }, 400);
+    // whoever is still standing walks over and pushes the loser(s) off the stage, one by one
+    var STEP = 1700;
+    losers.forEach(function (k, i) {
+      var by = stay[i % stay.length];
+      setTimeout(function () { if (G.chase !== c) return; c.shove = { by: by, who: k }; push(); Music.step(); }, 300 + i * STEP);   // over to them…
+      setTimeout(function () { if (G.chase !== c) return; c.lanes[k].fell = c.n; c.lanes[k].shoved = 1; push(); Music.thud ? Music.thud() : Music.blip(); Music.woosh(); setTimeout(function () { if (G.phase === 'chase') Music.scream(); }, 250); }, 300 + i * STEP + 900);   // …a shove
+      setTimeout(function () { if (G.chase !== c) return; if (c.shove && c.shove.who === k) { c.shove = null; push(); } }, 300 + i * STEP + 1500);   // and back to their place
+    });
     clearTimeout(chaseTimer); chaseTimer = setTimeout(function () {
       if (G.chase !== c) return;
+      c.shove = null;
       var left = chaseActive();
       if (left.length === 1) { chaseWin(left); return; }
       chaseAsk();
-    }, losers.length ? 3200 : 2600);
+    }, losers.length ? 1800 + losers.length * STEP : 2600);
   }
   function chaseDie(c) { c.monsterDead = true; chaseMusic(false); Music.dread(false); Music.short(); setTimeout(function () { Music.defeat(); }, 350); push(); }
   function chaseWreck(c) { c.wrecked = true; c.mon = CHASE_END; chaseSfx('brk', 1, Music.crumble); push(); }   // the whole runway breaks away
@@ -1783,7 +1796,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     if (beginGame() === false) return;
-    G.mgTest = true; G.quizRun = 99; G.skipOpening = true; G.shopFirst = true; G.partyOn = G.partyOn || {}; G.partyOn.shop = true;   // the test starts straight with a party game (no opening, no first boutique visit); after each one, the winner goes shopping
+    G.mgTest = true; G.quizRun = 99; G.skipOpening = true; G.shopFirst = true; G.partyOn = G.partyOn || {}; G.partyOn.shop = true; testBribes();   // the test starts straight with a party game (no opening, no first boutique visit); after each one, the winner goes shopping
     if (G.phase === 'intro') introEnd();
   });
   // Test the boutique: straight into the shop (everyone picks one), then a winner's trip (two items), then the party games.
@@ -1793,7 +1806,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     G.partyOn = G.partyOn || {}; G.partyOn.shop = true;
     if (beginGame() === false) return;
-    G.mgTest = true; G.skipOpening = true;
+    G.mgTest = true; G.skipOpening = true; testBribes();
     if (G.phase === 'intro') introEnd();
     G.shopFirst = true; G.quizRun = 99; clearTimeout(funTimer); stopTimers();
     var first = list().filter(function (p) { return !p.off; }), lucky = [pick(first).pid];
@@ -1804,15 +1817,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       shopVisit(lucky, 1, function () { backFromShop(1, startRound); }, true);
     });
   });
+  // Testing: every human player gets an envelope for the EBU in their bag (to try it out)
+  function testBribes() { list().forEach(function (p) { if (p.bot) return; p.inv = p.inv || []; if (p.inv.indexOf('bribe') < 0) p.inv.push('bribe'); }); push(); }
+  // Testing the Grand Final with human players: they have already sent their envelope, so first the presenters show
+  // the scores and the courier comes in, then the chase.
+  function testStandings(then) {
+    var hum = list().filter(function (p) { return !p.bot && !p.off; });
+    if (!hum.length) { then(); return; }
+    list().forEach(function (p) { p.score = 12 * (2 + Math.floor(Math.random() * 12)); });
+    G.bribes = hum.map(function (p) { return p.pid; }); G.phase = 'loading'; push();
+    partyStandings(then);
+  }
   $('chasetest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     if (!list().length) { botAdd(); botAdd(); botAdd(); }
-    chaseStart(true);
+    testStandings(function () { chaseStart(true); });
   });
   $('chasetest2').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 3 && bots.length < 8) { botAdd(); nb++; }
-    chaseStart(true, true); if (G.chase) G.chase.face = true;   // the bots answer everything right until they are on the stage together
+    testStandings(function () { chaseStart(true, true); if (G.chase) G.chase.face = true; });   // the bots answer everything right until they are on the stage together
   });
   // The monster wheel: one slice per monster, its picture in the slice; the arrow in the middle spins and stops on the chosen one.
   function chaseWheel(c) {
@@ -1875,9 +1899,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var fi = c.sd ? c.finals.indexOf(k) : -1, fn = c.sd ? c.finals.length : 1, ftop = fn > 1 ? 24 + fi * (56 / (fn - 1)) : 56;
         if (won) { el.style.left = '110%'; el.style.top = '56%'; }
         else if (c.st === 'wdie' && c.wpend && c.wpend.indexOf(k) >= 0) { el.style.left = '103%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
-        else if (fi >= 0) { el.style.left = (c.st === 'fdie' ? 103 : 106) + '%'; el.style.top = (l.fell ? ftop + 60 : ftop) + '%'; }
+        else if (fi >= 0) {
+          var sh = c.shove && c.shove.by === k ? c.shove : null, ti = sh ? c.finals.indexOf(sh.who) : -1, ttop = ti >= 0 ? (fn > 1 ? 24 + ti * (56 / (fn - 1)) : 56) : ftop;
+          el.style.left = (sh ? 101.5 : c.st === 'fdie' ? 103 : 106) + '%'; el.style.top = (l.fell ? ftop + 60 : sh ? ttop : ftop) + '%';   // (the pusher: right next to the one being pushed)
+          el.classList.toggle('shove', !!sh);
+        }
         else { el.style.left = '103%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
-        el.classList.toggle('fall', !!l.fell);
+        el.classList.toggle('fall', !!l.fell); el.classList.toggle('shoved', !!l.shoved);
         el.classList.add('jump');
       } else if (l.blocked === c.n && c.st === 'move' && el.getAttribute('data-bump') !== c.qkey) {
         // the bump: run up to the edge of the stage, hit it, and slide back to the space they came from
@@ -1946,7 +1974,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nm = function (ks) { return esc(ks.map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')); };
     if (c.st === 'mwin') {}
     else if (c.st === 'fmsg') { big.innerHTML = 'Sudden death!<small>' + nm(c.finals) + ' reached the stage together. Keep answering: whoever gets fewer right than the others falls off the stage. The last one standing wins!</small>'; big.classList.remove('hidden'); }
-    else if (c.st === 'sdres') { big.innerHTML = (c.sdLost && c.sdLost.length ? nm(c.sdLost) + ' fell off the stage!' : 'Still level! Next question…'); big.classList.remove('hidden'); }
+    else if (c.st === 'sdres') { big.innerHTML = (c.sdLost && c.sdLost.length ? (function () { var st = chaseActive().filter(function (k) { return c.sdLost.indexOf(k) < 0; }); return st.length === 1 ? nm(st) + ' pushes ' + nm(c.sdLost) + ' off the stage!' : nm(c.sdLost) + ' ' + (c.sdLost.length > 1 ? 'are' : 'is') + ' pushed off the stage!'; })() : 'Still level! Next question…'); big.classList.remove('hidden'); }
     else if (c.st === 'ready' && c.msgAt && Date.now() < c.msgAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.msgAt - Date.now() + 20); }   // the monster shows itself first
     else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk falling off the stage.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Ready?') + '</div>' + (c.st === 'ready' ? '<div class="chrbar"><i id="chrbar"></i></div>' : '') + '<div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
     else if (c.st === 'pre') { big.innerHTML = '👑 A Eurovision icon is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }

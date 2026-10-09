@@ -2005,3 +2005,15 @@ aside.recapgone{visibility:hidden}
 .shopov.boutique .shopper.done{opacity:1;background:rgba(61,255,154,.14);border-color:transparent}
 .boutique.enter .bqcase{animation:inRight .8s .55s cubic-bezier(.2,.9,.3,1.08) both}
 .boutique.leaving .bqcase{animation:outRight .7s .25s cubic-bezier(.6,0,.8,.4) forwards}
+/* Grand Final sudden death: the one still standing walks over and shoves the loser off the stage */
+.chtok.shove{z-index:6;transition:left .7s cubic-bezier(.3,1.2,.5,1),top .7s cubic-bezier(.3,1.2,.5,1)}
+.chtok.shove .ch-face{animation:chshove .9s .55s ease-in-out 1 both}
+@keyframes chshove{0%{transform:none}40%{transform:translateX(-18%) rotate(-10deg)}70%{transform:translateX(40%) rotate(14deg) scale(1.08)}100%{transform:none}}
+.chtok.fall.shoved{transition:left .5s ease-out,top 1.2s cubic-bezier(.5,0,.9,.5),opacity .6s .7s!important;left:114%!important}
+.chtok.fall.shoved .ch-face{animation:chshoved 1.2s ease-in forwards}
+@keyframes chshoved{0%{transform:none}15%{transform:translateX(30%) rotate(30deg)}100%{transform:translateX(60%) rotate(540deg) scale(.6)}}
+/* after the Grand Final: the points from before it, with a silver crown for the most */
+.chaseov .pc{color:#dfe6f2}
+.chaseov .silvercrown{display:inline-block;filter:grayscale(1) brightness(1.55) contrast(1.1) drop-shadow(0 0 6px rgba(220,230,255,.8));animation:silvershine 2.4s ease-in-out infinite alternate}
+@keyframes silvershine{from{transform:rotate(-8deg)}to{transform:rotate(8deg) scale(1.1)}}
+.chaseov .ovrow.silver.dead{filter:grayscale(.5) brightness(.85)}
