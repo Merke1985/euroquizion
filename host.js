@@ -1257,7 +1257,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
     if (kind === 'clue') { if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); } setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
-    if (kind === 'queue') { qjAll(); return; }
+    if (kind === 'queue') {   // Stella needs some air first, and takes everyone outside, to Verona
+      if (REMOTE) { qjAll(); return; }
+      autoStop(); stopTimers(); try { yt.pauseVideo(); } catch (e) {} G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
+      hostHold = true; clearTimeout(hostT.away);
+      var l1 = 'Phew… I need a smoke. 🚬', l2 = '…I mean, some fresh air, of course! 😇 If you can all follow me outside, that would be lovely!';
+      setTimeout(function () { hostSay('her', l1, 2600); }, 400);
+      setTimeout(function () { hostSay('her', l2, 4800); }, 400 + Array.from(l1).length * TALK_MS + 1500);
+      setTimeout(function () {
+        hostHold = false; var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550]);
+        setTimeout(function () { v.classList.remove('leaving'); $('cover').classList.remove('funcard'); if (G.mode === 'queue') qjAll(); }, 1300);
+      }, 400 + (Array.from(l1).length + Array.from(l2).length) * TALK_MS + 4600);
+      return;
+    }
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
