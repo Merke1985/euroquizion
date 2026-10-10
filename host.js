@@ -377,7 +377,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + (G.atype === 'party' && shielded(p) ? ' <span class="rshield" title="Protected by an umbrella: no items can be aimed at them">☂️</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + (G.atype === 'party' ? fxTags(p) : '') + (G.atype === 'party' && shielded(p) ? ' <span class="rshield" title="Protected by an umbrella: no items can be aimed at them">☂️</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -2337,6 +2337,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ms = Math.max(ms || 3500, typing + 1600);
     clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { b.classList.remove('on'); }, ms);
     clearTimeout(hostT.away); hostT.away = setTimeout(hostsAway, ms + 600);   // …and leave the screen to the game again
+  }
+  /* items working against a player, on the scoreboard: icon and how many more questions (this one included) */
+  function fxTags(p) {
+    var t = '', f = (p.flagNow ? 1 : 0) + (p.flagged || 0), h = (p.halfNow ? 1 : 0) + (p.halfQ || 0), m = (p.sitNow ? 1 : 0) + (p.sitout ? 1 : 0);
+    if (f) t += ' <span class="rfx" title="Giant flag">🚩×' + f + '</span>';
+    if (h) t += ' <span class="rfx" title="Limited view: half points">🎫×' + h + '</span>';
+    if (m) t += ' <span class="rfx" title="Broken mic">🎤×' + m + '</span>';
+    return t;
   }
   function hostsAway() {
     var h = hostsEl(); if (!h || h.classList.contains('away') || G.phase === 'opening' || hostHold || h.querySelector('.hbub.on')) return;

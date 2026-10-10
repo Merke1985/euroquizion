@@ -2734,3 +2734,6 @@ body.hasdock main{padding-bottom:84px}
 .ppillar{left:50%;width:150px;margin-left:-75px;top:-20px;bottom:-60px}
 .ppillar .cap,.ppillar .base{width:178px;height:26px}
 .ppillar .shaft{width:150px;background:repeating-linear-gradient(90deg,#8e8e98 0 12px,#d4d4dc 12px 24px,#acacb6 24px 32px)}
+
+/* the scoreboard: items working against a player, with the questions left */
+.rfx{display:inline-block;margin-left:4px;padding:0 6px;border-radius:10px;background:rgba(255,77,106,.25);box-shadow:inset 0 0 0 1px rgba(255,77,106,.6);font-size:.78em;font-weight:900;white-space:nowrap;vertical-align:middle}
