@@ -3579,6 +3579,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function hornSnd() { if (REMOTE) return; try { if (!hornEl) hornEl = new Audio('sounds/horn.mp3?v=2'); hornEl.currentTime = 0; hornEl.volume = Math.max(0, Math.min(1, 0.85 * (Music.vol ? Music.vol.fx : 1))); var pr = hornEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   var crashEl = null;
   function crashSnd() { if (REMOTE) return; try { if (!crashEl) crashEl = new Audio('sounds/crash.mp3?v=1'); crashEl.currentTime = 0; crashEl.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var pr = crashEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
+  /* footsteps for the running in Lost in Verona: a short burst from a random spot in a long recording, faded in and out */
+  var runEl = null, runFade = null, runStop = null;
+  function runSnd(ms) {
+    if (REMOTE) { Music.step(); return; }
+    try {
+      if (!runEl) { runEl = new Audio('sounds/running.mp3?v=1'); runEl.preload = 'auto'; }
+      var a = runEl, top = 0.8 * (Music.vol ? Music.vol.fx : 1), d = a.duration || 36;
+      clearInterval(runFade); clearTimeout(runStop);
+      a.currentTime = 1 + Math.random() * Math.max(0, d - 2 - ms / 1000 - 1); a.volume = 0;
+      var pr = a.play(); if (pr && pr.catch) pr.catch(function () {});
+      var t0 = Date.now(), fade = Math.min(150, ms / 4);
+      runFade = setInterval(function () {
+        var k = Date.now() - t0, v = k < fade ? k / fade : k > ms - fade ? Math.max(0, (ms - k) / fade) : 1;
+        a.volume = Math.max(0, Math.min(1, v * top));
+        if (k >= ms) { clearInterval(runFade); a.pause(); }
+      }, 30);
+    } catch (e) {}
+  }
   function jmCar(jumpers, hit) {
     var ov = $('qjov'), grp = ov && ov.querySelector('.jmgroup'); if (!grp) return;
     var old = grp.querySelector('.jmcar'); if (old) old.remove();
@@ -3717,13 +3735,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (fall.length) {   // who went wrong here runs off that way, out of the picture: one direction at a time
         [0, 1, 2, 3, 4].forEach(function (d) {
           var grp = fall.filter(function (k) { return g.wrong[k] === d; }); if (!grp.length) return;
-          at(t, function () { grp.forEach(function (k) { g.falls[k] = { i: i, d: d }; }); push(); qjShow(); Music.step(); setTimeout(function () { if (G.qj === g) Music.buzz(); }, 300); }); t += 1500;
+          at(t, function () { grp.forEach(function (k) { g.falls[k] = { i: i, d: d }; }); push(); qjShow(); runSnd(1500); setTimeout(function () { if (G.qj === g) Music.buzz(); }, 300); }); t += 1500;
           at(t, function () { jmLostSay(grp); }); t += 2600; at(t - 300, function () { jmJul(''); });
         });
         left = left.filter(function (k) { return fall.indexOf(k) < 0; });
       }
       if (!left.length) return;
-      at(t, function () { g.pos = i + 1; push(); qjShow(); Music.step(); setTimeout(function () { Music.step(); }, 180); }); t += 650;
+      at(t, function () { g.pos = i + 1; push(); qjShow(); runSnd(620); }); t += 650;
     })(i);
     at(t + 500, qjJudge);
   }
@@ -3741,7 +3759,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     } else if (g.round >= JM_MAX || (ok.length === 1 && g.alive.length > 1)) {   /* round 10 done, and still not lost: Juliet points them home, and they walk out of the picture */
       g.win = ok; g.alive = ok; Music.ding();
       jmJul(ok.length === 1 && g.round < JM_MAX ? 'Only ' + nm(ok[0]) + ' left? Well… look, the studio is right behind you! 🎬 Off you go… ciao! 🌹' : 'Look, the studio is right behind you! 🎬 Off you go… ciao! 🌹');
-      setTimeout(function () { if (G.qj !== g) return; var ov = $('qjov'); if (ov) ok.forEach(function (k) { var el = ov.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) el.classList.add('home'); }); whooshes([0, 300]); Music.step(); }, 3600);
+      setTimeout(function () { if (G.qj !== g) return; var ov = $('qjov'); if (ov) ok.forEach(function (k) { var el = ov.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) el.classList.add('home'); }); whooshes([0, 300]); runSnd(3200); }, 3600);
       setTimeout(function () { if (G.qj !== g) return; jmJul(''); qjEnd(); }, 7600);
       return;
     }
