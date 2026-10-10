@@ -106,7 +106,7 @@
     /* the fan flag: one country per player; none picked (or taken): a random free one */
     var wf = FAN_FLAGS.indexOf(m.cc) >= 0 && !list().some(function (x) { return x.cc === m.cc && x.pid !== m.pid; }) ? m.cc : null;
     if (wf && wf !== p.cc && (G.phase === 'lobby' || !p.cc)) { p.cc = wf; changed = true; }
-    if (!p.cc) { var fl = FAN_FLAGS.filter(function (c) { return !list().some(function (x) { return x.cc === c; }); }); p.cc = fl.length ? pick(fl) : pick(FAN_FLAGS); changed = true; }
+    if (!p.cc) { var auto = FAN_FLAGS.filter(function (c) { return c !== 'il'; }), fl = auto.filter(function (c) { return !list().some(function (x) { return x.cc === c; }); }); p.cc = fl.length ? pick(fl) : pick(auto);   /* (never handed out at random: only by choice)*/ changed = true; }
     if (free && want !== p.char && (G.phase === 'lobby' || !p.char)) { p.char = want; changed = true; }
     p.name = nm; p.last = Date.now(); p.off = false;
     if (changed) push(); else if (m.back) sayHello();   // back from the background: here is how things stand
