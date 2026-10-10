@@ -3556,11 +3556,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     /* it comes along the cross street, from the left or the right, and races on out of the other side */
     var c0 = V3 ? V3.screen(0, 0) : [innerWidth / 2, innerHeight * .56], dir = Math.random() < .5 ? 1 : -1, off = innerHeight * .4;
     var car = document.createElement('div'); car.className = 'jmcar' + (dir < 0 ? ' rtl' : ''); car.innerHTML = JM_CARSVG;
-    /* its headlight beam runs ahead of it, over the buildings: you see the light coming before the car itself */
-    var beam = document.createElement('div'); beam.className = 'jmbeam' + (dir < 0 ? ' rtl' : ''); ov.appendChild(beam);
-    setTimeout(function () { beam.remove(); }, 2900);
+    /* its headlights light up the walls along the street (a light in the 3D city that follows the car), so you see where it is */
+    if (V3 && V3.carLight) {
+      var s1 = V3.screen(1, 0), unit = (s1[0] - c0[0]) || 1;
+      (function follow() {
+        if (!car.isConnected) { V3.carLight(null); return; }
+        var r = car.getBoundingClientRect(); V3.carLight((r.left + r.width / 2 - c0[0]) / unit, dir); requestAnimationFrame(follow);
+      })();
+    }
     var fromL = -(c0[0] + off), toR = innerWidth - c0[0] + off;
-    car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px'); beam.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); beam.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
+    car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
     grp.insertBefore(car, grp.firstChild);
     whooshes([0, 700, 1300]); Music.woosh && Music.woosh();
     setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1150);
@@ -3801,6 +3806,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hemi = new T.HemisphereLight('#8a7ac8', '#4a2a20', 0.55); hemi.layers.enable(1); sc.add(hemi);
     var moon = new T.DirectionalLight('#b8c4ff', 0.75); moon.position.set(-14, 26, -18); moon.layers.enable(1); moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024);
     var sh = moon.shadow.camera; sh.left = -30; sh.right = 30; sh.top = 30; sh.bottom = -30; sh.near = 1; sh.far = 90; moon.shadow.bias = -0.0008; sc.add(moon);
+    var carL = new T.PointLight('#fff0c2', 0, 13, 2); carL.layers.enable(1); sc.add(carL);   /* the car's headlights, lighting up the walls along the cross street */
     var lamp = new T.PointLight('#ffb866', 2.4, 26, 1.6); lamp.position.set(0, 6.5, 0); lamp.layers.enable(1); sc.add(lamp);   // the crossroads lamp, always over the group
     var rn2 = null, cam2 = null;
     if (over) { rn2 = new T.WebGLRenderer({ antialias: true, alpha: true }); rn2.setPixelRatio(rn.getPixelRatio()); rn2.setSize(w, h); rn2.setClearColor(0x000000, 0); rn2.shadowMap.enabled = true; rn2.shadowMap.type = T.PCFSoftShadowMap; rn2.outputEncoding = T.sRGBEncoding; rn2.toneMapping = T.ACESFilmicToneMapping; rn2.toneMappingExposure = rn.toneMappingExposure; over.appendChild(rn2.domElement); cam2 = cam.clone(); cam2.layers.set(1); }
@@ -3862,6 +3868,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     requestAnimationFrame(frame);
     var api = {
+      carLight: function (cx, dir) { if (cx == null) { carL.intensity = 0; return; } carL.position.set(cx * V3_C + dir * 4, 1.5, 0); carL.intensity = 16; },
       go: function (x, y, jump, dur) { st.dur = dur || 600; st.fx = jump ? x : st.x; st.fy = jump ? y : st.y; st.tx = x; st.ty = y; st.t0 = jump ? 0 : performance.now(); if (jump) { st.x = x; st.y = y; } around(Math.round(x), Math.round(y), Math.round(st.x), Math.round(st.y)); },
       hole: function (x, y, d) {   // a hole in the side street from crossroads (x, y), direction d
         var g = new T.Group(), r = new T.Mesh(new T.CircleGeometry(1.35, 28), rimMat), b = new T.Mesh(new T.CircleGeometry(1.15, 28), holeMat);
