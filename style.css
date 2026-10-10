@@ -2809,3 +2809,5 @@ body.hasdock main{padding-bottom:84px}
 #v-guess:not(.hidden){display:flex;flex-direction:column;min-height:calc(100vh - 170px);min-height:calc(100dvh - 170px)}
 #v-guess .ccnote{margin-top:auto;order:99}
 .host aside .board .who{gap:calc(.45em + 14px)}
+/* under the Giant Flag: the answer you picked still lights up (its ends peek out on both sides) */
+#opts.flagged .opt.picked{background:var(--pick,#ff2e88)!important;box-shadow:inset 0 0 0 3px var(--yellow),0 0 18px rgba(255,214,10,.55)!important}
