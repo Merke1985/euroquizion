@@ -2770,3 +2770,4 @@ body.hasdock main{padding-bottom:84px}
 .board .wbag{height:1.75em;cursor:help}
 /* (the bag moved under the name: one column less, so the score sits further right) */
 .host aside .board li{grid-template-columns:minmax(0,1fr) auto 2.4em}
+.host aside .board li{grid-template-columns:minmax(0,1fr) auto auto}
