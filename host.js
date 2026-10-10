@@ -2782,7 +2782,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var bs = (G.bribes || []).filter(function (k) { return players[k]; }); G.bribes = [];
     if (!bs.length) return null;
     var top = Math.max.apply(null, list().map(function (p) { return p.score; })), got = {}, pot = 0;
-    bs.forEach(function (k) { var v = Math.max(1, Math.round(top * (0.1 + Math.random() * 0.1))); got[k] = (got[k] || 0) + v; pot += v; });   // every envelope: a random 10 to 20% of the leader's score
+    bs.forEach(function (k) { var v = Math.max(1, Math.round(top * (0.3 + Math.random() * 0.05))); got[k] = (got[k] || 0) + v; pot += v; });   // every envelope: a random 30 to 35% of the leader's score
     var names = Object.keys(got).map(function (k) { return players[k].name; });
     return { got: got, pot: pot, names: names, txt: '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'Extra points for all of them.' : pot + ' points for them.') };
   }
