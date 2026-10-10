@@ -2969,8 +2969,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* every item that lands on someone: the same message on their own phone, big (the wristband has its own) */
   function shopApply(u) {
     var txt = shopApply0(u), t = players[u.target], by = players[u.by], it = shopItem(u.item);
-    if (txt && t && by && t !== by && it && it.kind !== 'thief' && it.kind !== 'smoke' && it.kind !== 'heel') t.hitMsg = { k: Math.random().toString(36).slice(2, 8), icon: (shopLast && shopLast.icon) || it.icon, txt: txt.replace(/^\S+\s/, '') };
+    if (txt && t && by && t !== by && it && it.kind !== 'thief' && it.kind !== 'smoke' && it.kind !== 'heel') t.hitMsg = { k: Math.random().toString(36).slice(2, 8), icon: (shopLast && shopLast.icon) || it.icon, txt: youify(txt.replace(/^\S+\s/, ''), t.name) };
     return txt;
+  }
+  /* the same line, but for the one it hit: 'you' instead of their own name */
+  function youify(txt, nm) {
+    if (!nm) return txt;
+    var q = nm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var sp = function (a, b) { txt = txt.replace(new RegExp('(^|[^\\p{L}\\p{N}])' + a.replace(nm, q) + '(?![\\p{L}\\p{N}])', 'gu'), function (m, pre) { return pre + b; }); };
+    sp(nm + '’s', 'your'); sp(nm + ' can’t', 'you can’t'); sp(nm + ' gets', 'you get'); sp(nm + ' pays', 'you pay'); sp(nm + ' has', 'you have'); sp(nm + ' is', 'you are'); sp(nm, 'you');
+    return txt.replace(/(^|[.!?]\s+)(you|your)\b/g, function (m, a, w) { return a + w.charAt(0).toUpperCase() + w.slice(1); });
   }
   function shopApply0(u) {
     var by = players[u.by], t = players[u.target], it = shopItem(u.item); if (!by || !t || !it) return '';
