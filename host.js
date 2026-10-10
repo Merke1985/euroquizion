@@ -2008,6 +2008,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     if (beginGame() === false) return;
     G.itemTest = true; G.skipOpening = true; G.shopFirst = true; G.total = ENDLESS;
+    list().forEach(function (p) { if (!p.off) p.score = 60 + 12 * Math.floor(Math.random() * 4); });   // (points on the board, so you can see them go)
     me.inv = []; SHOP_ITEMS.forEach(function (it) { if (it.id !== 'umbrella') me.inv = me.inv.concat(shopGive(me, [it.id])); });   // (every item in your bag to try out, except the umbrella: the bots must be able to reach you)
     if (G.phase === 'intro') introEnd();
     var n = 0, lastQ = '';
@@ -2952,14 +2953,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (it.kind === 'half') { var hn = it.amount || 3; if (G.phase === 'guess') { t.halfNow = true; t.halfQ = (t.halfQ || 0) + hn - 1; } else t.halfQ = (t.halfQ || 0) + hn; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '½ points · ' + hn + ' questions' }]; return it.icon + ' ' + by.name + ' gave ' + t.name + ' Limited View Liveshow Tickets: a pillar in the way! ' + t.name + ' gets half points ' + (G.phase === 'guess' ? 'for this question and the next ' + (hn - 1) : 'for the next ' + hn + ' questions') + '!'; }
     if (it.kind === 'flag') { if (G.phase === 'guess') { t.flagNow = true; t.flagged = (t.flagged || 0) + (it.amount || 3) - 1; } else t.flagged = (t.flagged || 0) + (it.amount || 3);   // (straight away: this question counts as the first of three)
  shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see ' + (G.phase === 'guess' ? 'this question or the next ' + ((it.amount || 3) - 1) : 'the next ' + (it.amount || 3) + ' questions') + '!'; }
-    if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw Marc’s Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + ': −' + n; }
+    if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw Marc’s Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + (n ? ': −' + n : ', but there were no points to lose! 😅'); }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
       var rest = list().filter(function (x) { return !x.off && x !== t; }); if (!rest.length) return '';
       var low = Math.min.apply(null, rest.map(function (x) { return x.score; })), to = pick(rest.filter(function (x) { return x.score === low; }));
       var nb = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= nb; to.score += nb; shopLast.deltas = (to === by ? [] : [{ pid: by.pid, tag: it.icon }]).concat([{ pid: t.pid, n: -nb }, { pid: to.pid, n: nb }]);
+      if (!nb) return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ', but there were no points to blow away! 💨';
       return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': ' + nb + ' points blown over to ' + (to === by ? by.name + ' (that’s them!)' : to.name);
     }
-    if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= n2; by.score += n2; shopLast.deltas = [{ pid: t.pid, n: -n2 }, { pid: by.pid, n: n2 }]; return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + n2 + ' points stolen'; }
+    if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= n2; by.score += n2; shopLast.deltas = [{ pid: t.pid, n: -n2 }, { pid: by.pid, n: n2 }]; return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + (n2 ? n2 + ' points stolen' : 'but there were no points to steal! 😅'); }
     if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, t.got && t.pts ? { pid: t.pid, n: -t.pts } : { pid: t.pid, tag: '🔇 muted' }]; if (t.got) { t.score -= t.pts || 0; t.got = false; t.pts = 0; } return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
     return '';
   }
