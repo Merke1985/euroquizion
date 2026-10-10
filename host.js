@@ -2712,7 +2712,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var stock = !win && !buy ? shopAvail().filter(function (it) { return it.tier === 1; }) : shopAvail();   // (the free welcome item comes from the bargain shelf)
     var offer = {}, deck = [], deal = function (mine) { if (!deck.length) deck = shuffle(stock.map(function (it) { return it.id; })); var i = 0; while (i < deck.length && mine.indexOf(deck[i]) >= 0) i++; if (i === deck.length) { deck = deck.concat(shuffle(stock.map(function (it) { return it.id; }))); while (mine.indexOf(deck[i]) >= 0) i++; } return deck.splice(i, 1)[0]; };
     var mayHave = function (p, it) { return it.id !== 'bribe' || !(p.bribed || (p.inv || []).indexOf('bribe') >= 0); };   // one envelope for the EBU per player, ever
-    if (buy) act.forEach(function (p) { offer[p.pid] = [3, 2, 1].map(function (t) { var row = stock.filter(function (it) { return it.tier === t && mayHave(p, it); }); return row.length ? pick(row).id : null; }).filter(Boolean); });   // the winner's trip: one from each shelf
+    if (buy) {   // the winner's trip: one from each shelf; no two shoppers get the same luxury item (none left: an extra popular one instead)
+      var luxGiven = {};
+      shuffle(act.slice()).forEach(function (p) {
+        var row = function (t, not) { return stock.filter(function (it) { return it.tier === t && mayHave(p, it) && (not || []).indexOf(it.id) < 0; }); };
+        var lux = row(3).filter(function (it) { return !luxGiven[it.id]; }), mid = row(2), low = row(1), mine = [];
+        if (lux.length) { var l3 = pick(lux).id; luxGiven[l3] = 1; mine.push(l3); }
+        if (mid.length) mine.push(pick(mid).id);
+        if (!lux.length) { var mid2 = row(2, mine); if (mid2.length) mine.push(pick(mid2).id); }   /* (no luxury left for them: a second popular item) */
+        if (low.length) mine.push(pick(low).id);
+        offer[p.pid] = mine;
+      });
+    }
     else act.forEach(function (p) { var mine = []; while (mine.length < Math.min(SHOP_OFFER, stock.length)) mine.push(deal(mine)); offer[p.pid] = mine; });
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
