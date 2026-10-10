@@ -3913,6 +3913,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (REMOTE || (!lostF.length && !all) || !g.win.length) { startRound2(); return; }
         var u1 = all ? 'Shame we had to call Ubers for all of you… 🚕' : 'Shame we had to call Ubers for some of you… 🚕';
         var u2 = all ? 'At least ' + wn + (g.win.length > 1 ? ' got' : ' got') + ' closest to the studio, and can use the shop! 🛍️' : 'At least ' + wn + ' made it back to the studio, and can use the shop! 🛍️';
+        if (!shopOn()) u2 = u2.replace(', and can use the shop! 🛍️', '! 🏆');
         hostSay('him', u1, 3400);
         setTimeout(function () { hostSay('her', u2, 4600); }, 3600);
         setTimeout(startRound2, 3600 + Math.max(4600, Array.from(u2).length * TALK_MS + 2000));
