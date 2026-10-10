@@ -2872,3 +2872,56 @@ body.hasdock main{padding-bottom:84px}
 @keyframes chskleg{from{rotate:-38deg}to{rotate:30deg}}
 @keyframes chsktrail{0%{opacity:0;transform:scaleX(.2);transform-origin:right}30%{opacity:1}100%{opacity:0;transform:scaleX(1);transform-origin:right}}
 .chmon[data-mon="fiddler"] .chbob>.fiddler{transform:translateX(9%)}
+
+/* ---------- the start page: the hosts, a tagline, how to play ---------- */
+.welcome{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;margin:0 auto 16px;max-width:460px}
+.welcome .whosts{display:flex;justify-content:center;gap:4px;height:150px}
+.welcome .whosts .ehost{height:100%;width:auto;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5));animation:ehbob 3.2s ease-in-out infinite alternate}
+.welcome .whosts .ehost.her{animation-delay:-1.6s}
+.welcome .wtag{margin:0;color:var(--mute);font-size:.95rem;line-height:1.35}
+.howov{position:fixed;inset:0;z-index:400;background:rgba(8,4,24,.82);display:flex;align-items:center;justify-content:center;padding:16px}
+.howov.hidden{display:none}
+.howcard{background:#1b1140;border-radius:20px;padding:20px 18px;max-width:460px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.howcard h2{margin:0 0 10px}
+.howcard ol{margin:0 0 16px;padding-left:1.2em;display:flex;flex-direction:column;gap:10px;line-height:1.35}
+.howcard li b{display:block}
+/* ---------- the host lobby ---------- */
+.qrwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.qrwrap .qr{width:210px;height:210px}
+.qrlab{margin:0;font-weight:900;color:var(--yellow);font-size:1.05rem}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 10px}
+.preset{display:flex;flex-direction:column;gap:4px;text-align:left;padding:12px;border-radius:14px;border:2px solid var(--line);background:rgba(255,255,255,.05);color:inherit;cursor:pointer;transition:transform .15s,border-color .15s,background .15s}
+.preset b{font-size:1.05rem}.preset small{color:var(--mute);font-size:.8rem;line-height:1.25}
+.preset:hover{transform:translateY(-2px)}
+.preset.on{border-color:var(--yellow);background:rgba(255,210,63,.12);box-shadow:0 0 18px rgba(255,210,63,.25)}
+.gamelen{margin:0 0 12px;font-size:1rem}
+.gamelen b{color:var(--yellow)}
+/* players in the lobby: a little body with their flag in hand; ready = a happy hop */
+.lobbyplayers .chip.lobfig{position:relative;padding-bottom:0}
+.lobbyplayers .chip.lobfig .char{position:relative;z-index:2}
+.lobbyplayers .chip.lobfig .chflag{display:none}
+.lobbyplayers .chip .lbod{position:absolute;left:50%;top:52px;width:44px;height:62px;margin-left:-22px;z-index:1}
+.lobbyplayers .chip.lobfig .pname{margin-top:46px}
+.lbod .ct{position:absolute;left:8%;right:8%;top:0;height:58%;border-radius:45% 45% 25% 25%;background:linear-gradient(var(--o1,#5a3a9a),var(--o2,#3a2470));z-index:1}
+.lbod .ca{position:absolute;top:8%;width:18%;height:48%;border-radius:99px;background:var(--o2,#4a2f85);transform-origin:50% 0}
+.lbod .ca:nth-of-type(3){left:-4%;rotate:20deg}.lbod .ca:nth-of-type(4){right:-4%;rotate:-34deg}
+.lbod .cl{position:absolute;top:52%;width:20%;height:46%;border-radius:99px;background:var(--ol,#2a1a4a)}
+.lbod .cl:nth-of-type(1){left:24%}.lbod .cl:nth-of-type(2){right:24%}
+.lbod .hflag{left:90%;top:-30%;width:70%;height:96%}
+.lobbyplayers .pcc{display:block;font-size:.72rem;color:var(--mute);font-weight:700;margin-top:1px}
+.lobbyplayers .chip.rdy.lobfig{animation:lbhop 1.6s ease-in-out infinite}
+.lobbyplayers .chip.rdy .hflag img{animation-duration:.5s}
+@keyframes lbhop{0%,60%,100%{transform:none}70%{transform:translateY(-8px)}80%{transform:none}88%{transform:translateY(-4px)}}
+.lobbyplayers .chip.rm{outline:2px dashed #ff4d6a;outline-offset:4px;border-radius:12px}
+.lobbyplayers .rmbtn{position:absolute;left:50%;top:20px;transform:translateX(-50%);z-index:5;background:#ff4d6a;color:#fff;border:0;border-radius:999px;padding:4px 10px;font-weight:900;font-size:.8rem;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.lobbyplayers .players{user-select:none;-webkit-user-select:none;padding-top:24px}
+/* the hosts in the corner, welcoming players */
+.lobhosts{position:fixed;left:16px;bottom:0;width:330px;height:260px;z-index:60;pointer-events:none;transform:translateY(110%);transition:transform .6s cubic-bezier(.3,1.3,.5,1)}
+.lobhosts.on{transform:none}
+.lobhosts .ehost{position:absolute;bottom:-14px;height:240px;width:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.7));animation:ehbob 3.2s ease-in-out infinite alternate}
+.lobhosts .ehost.him{left:0}.lobhosts .ehost.her{left:110px;animation-delay:-1.6s}
+.lobhosts .hbub{position:absolute;left:200px;bottom:150px;width:260px;background:#fff;color:#1a1147;font-weight:900;font-size:1.05rem;line-height:1.25;padding:.6em .9em;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transform:scale(.6);transform-origin:0 100%;transition:opacity .2s,transform .3s cubic-bezier(.3,1.5,.5,1)}
+.lobhosts .hbub.on{opacity:1;transform:none}
+.lobhosts .hbub.him{border-bottom-left-radius:4px}
+.lobhosts .hbub .unsaid{visibility:hidden}
+.joinrow{flex-wrap:nowrap;gap:18px}.joinrow>div:first-child{min-width:0}

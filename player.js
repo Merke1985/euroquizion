@@ -20,6 +20,9 @@
   if (rejoin && !(Date.now() - rejoin.t < 12 * 3600000)) rejoin = null;
   if (rejoin && !k && !$('code').value) $('code').value = rejoin.room;
   var wasPid = '';
+  $('howbtn').addEventListener('click', function () { $('howov').classList.remove('hidden'); });
+  $('howclose').addEventListener('click', function () { $('howov').classList.add('hidden'); });
+  $('howov').addEventListener('click', function (e) { if (e.target === $('howov')) $('howov').classList.add('hidden'); });
   countries = COUNTRY_NAMES;   /* (built into quiz.js: no need to download the whole song list) */
 
   // ---------- The Grand Final: tick the songs that fit ----------
@@ -82,7 +85,7 @@
     if (cs && (cs.st === 'ready' || cs.st === 'go')) { if (chReadyKey === cs.rkey || !net) return; chReadyKey = cs.rkey; var rk = cs.rkey; net.send('chase', { pid: pid, key: rk, ready: 1 }); [800, 2200].forEach(function (ms) { setTimeout(function () { if (net && state && state.chase && state.chase.st === 'ready') net.send('chase', { pid: pid, key: rk, ready: 1 }); }, ms); }); chaseView(cs); }
   });
 
-  function show(id) { ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-chase', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && (((state.phase === 'guess' || (state.phase === 'reveal' && state.q && state.q.subject === 'trivia')) && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
+  function show(id) { var wl = document.getElementById('welcome'); if (wl) wl.classList.toggle('hidden', id !== 'v-join'); ['v-join', 'v-pick', 'v-brief', 'v-wait', 'v-guess', 'v-draw', 'v-quip', 'v-sing', 'v-chase', 'v-reveal'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want(!!(state && state.remote && (((state.phase === 'guess' || (state.phase === 'reveal' && state.q && state.q.subject === 'trivia')) && state.q && state.q.noclip) || (state.gallery && state.phase === 'dall') || (state.draw && state.phase === 'loading')))); }   // no music on the start page; only under clip-less questions in online games
 
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
@@ -98,8 +101,8 @@
     $('demo').classList.toggle('hidden', !net.demo);
     net.on('state', onState);
     // The host cleared the room: back to the join screen, and quiet until this phone joins again.
-    net.on('kick', function () {
-      if (kicked) return;
+    net.on('kick', function (km) {
+      if (kicked || (km && km.pid && km.pid !== pid)) return;   /* (the host removed one other player: not me) */
       kicked = true; clearInterval(hiTimer); state = null;
       document.querySelector('main').classList.remove('ingame'); $('pstage').classList.add('hidden'); rowUpdate(); $('chatbar').classList.add('hidden');
       show('v-join'); $('joinerr').textContent = 'The host removed all players. Join again to play.';

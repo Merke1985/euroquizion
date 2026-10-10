@@ -140,7 +140,35 @@
     try { [].forEach.call(document.querySelectorAll('[data-pid="' + a.replace(/"/g, '') + '"]'), function (el) { if (el.closest('#chlanes, .jmgroup')) el.remove(); }); } catch (e) {}   /* (the runway and Verona redraw them under the new id) */
     chaseBuilt = '';
   }
-  var helloAt = 0;
+  var helloAt = 0, lenN = -1, rmPid = '', rmT = null;
+  /* the lobby: Felix and Stella pop up in the corner and welcome every player who joins, with their country */
+  var greeted = {}, greetQ = [], greetBusy = false, greetTurn = 0, greetAway = null;
+  var GREET = [function (n, c) { return 'Welcome, ' + n + ', representing ' + c + '! 🎉'; }, function (n, c) { return 'Give it up for ' + n + ' from ' + c + '! 👏'; }, function (n, c) { return n + ' is here for ' + c + '! Douze points? 😉'; }, function (n, c) { return 'Hello ' + n + '! ' + c + ' is counting on you! ✨'; }, function (n, c) { return 'And now… ' + n + ', for ' + c + '! 🎤'; }];
+  function lobbyGreet() {
+    if (greetBusy || REMOTE || G.phase !== 'lobby') return;
+    var k = greetQ.shift(); if (!k) return; var p = players[k]; if (!p) { lobbyGreet(); return; }
+    var lh = $('lobhosts'); if (!lh) { lh = document.createElement('div'); lh.id = 'lobhosts'; lh.className = 'lobhosts'; lh.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; document.body.appendChild(lh); }
+    greetBusy = true; clearTimeout(greetAway);
+    var who = greetTurn++ % 2 ? 'her' : 'him', line = pick(GREET)(p.name, countries[p.cc] || 'Europe');
+    [].forEach.call(lh.querySelectorAll('.hbub'), function (b) { b.classList.remove('on'); });
+    lh.classList.add('on'); var b = lh.querySelector('.hbub.' + who); b._said = ''; b.classList.add('on'); var t = typeSay(b, line, who);
+    setTimeout(function () { b.classList.remove('on'); greetBusy = false; if (greetQ.length) lobbyGreet(); else greetAway = setTimeout(function () { lh.classList.remove('on'); }, 1200); }, Math.max(2600, t + 1500));
+  }
+  /* lobby: press and hold a player to remove just that one */
+  (function () {
+    var box = $('players'), hold = null;
+    box.addEventListener('pointerdown', function (e) {
+      var ch = e.target.closest('.chip[data-pid]'); if (!ch || G.phase !== 'lobby' || e.target.closest('.rmbtn')) return;
+      clearTimeout(hold); hold = setTimeout(function () { rmPid = ch.getAttribute('data-pid'); clearTimeout(rmT); rmT = setTimeout(function () { rmPid = ''; render(); }, 4000); render(); }, 650);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { box.addEventListener(ev, function () { clearTimeout(hold); }); });
+    box.addEventListener('click', function (e) {
+      if (!e.target.closest('.rmbtn')) return;
+      var k = rmPid; rmPid = ''; clearTimeout(rmT); if (!k || !players[k] || G.phase !== 'lobby') { render(); return; }
+      net.send('kick', { pid: k }); delete players[k]; bots = bots.filter(function (b) { return b.pid !== k; }); if (G.go) delete G.go[k];
+      push();
+    });
+  })();
   function sayHello() { if (recovering || Date.now() - helloAt < 700) return; helloAt = Date.now(); net.send('state', snapshot()); }
   net.on('guess', function (m) {
     var p = m && players[m.pid];
@@ -447,11 +475,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
     if (fresh && G.phase === 'lobby') Music.blip();
+    if (G.phase === 'lobby' && nowT > joinQuiet) ps.forEach(function (p) { if (!greeted[p.pid] && p.cc) { greeted[p.pid] = 1; greetQ.push(p.pid); if (greetQ.length > 3) greetQ.shift(); } }); else ps.forEach(function (p) { greeted[p.pid] = 1; });
+    lobbyGreet();
     $('players').innerHTML = ps.map(function (p) {
       var age = nowT - joinSeen[p.pid], pop = age < 700;
-      return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + ((G.phase === 'lobby' || G.phase === 'intro') && G.go && G.go[p.pid] ? ' rdy' : '') + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' + charSvg(p.char) + '<span class="pname">' + esc(p.name) + '</span></span>';
+      var lob = G.phase === 'lobby';
+      return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + ((G.phase === 'lobby' || G.phase === 'intro') && G.go && G.go[p.pid] ? ' rdy' : '') + (lob ? ' lobfig' : '') + (rmPid === p.pid ? ' rm' : '') + '" data-pid="' + esc(p.pid) + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' +
+        (lob ? '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca"></i><i class="ct"></i>' + handFlag(p) + '</span>' : '') + charSvg(p.char) + '<span class="pname">' + esc(p.name) + '</span>' + (lob && p.cc && countries[p.cc] ? '<span class="pcc">' + esc(countries[p.cc]) + '</span>' : '') + (rmPid === p.pid ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + '</span>';
     }).join('') || '<span class="mute">Waiting for players…</span>';
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
+    if (G.phase === 'lobby' && ps.length !== lenN) { lenN = ps.length; try { gameLen(); } catch (e) {} }
     $('clearplayers').classList.toggle('hidden', !ps.length);
     $('pcount').textContent = ps.length ? '(' + (G.phase === 'lobby' || G.phase === 'intro' ? nr + ' of ' + ps.length + ' ready' : ps.length) + ')' : '';
     // Players who change places glide to their new spot instead of jumping there.
@@ -5682,6 +5715,37 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   fetch('chorus.json?v=46').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
+  /* Presets: Party Night (the Grand Tour), Quick Quiz (ten questions), or Custom (every setting) */
+  var PRESET = 'party'; try { PRESET = localStorage.getItem('esc-preset') || 'party'; } catch (e) {}
+  function setVal(id, v) { var el = $(id); if (!el || el.value === String(v)) return; if (el.querySelector && !el.querySelector('option[value="' + v + '"]') && el.tagName === 'SELECT' && ![].some.call(el.options, function (o) { return o.value === String(v) || o.text === String(v); })) return; el.value = String(v); el.dispatchEvent(new Event('change')); }
+  function presetApply(k, save) {
+    PRESET = k; if (save) try { localStorage.setItem('esc-preset', k); } catch (e) {}
+    [].forEach.call(document.querySelectorAll('#presets .preset'), function (b) { b.classList.toggle('on', b.getAttribute('data-preset') === k); });
+    if (k === 'party') { setVal('s-atype', 'party'); setVal('s-partypick', 'order'); setVal('s-final', 'chase'); setVal('s-qmode', 'standard'); setVal('s-rounds', '3'); }
+    if (k === 'quick') { setVal('s-atype', 'mc'); setVal('s-parts', '1'); setVal('s-qmode', 'standard'); setVal('s-final', 'standard'); setVal('s-rounds', '10'); }
+    $('setform').classList.toggle('hidden', k !== 'custom');
+    gameLen();
+  }
+  $('presets').addEventListener('click', function (e) { var b = e.target.closest('.preset'); if (b) presetApply(b.getAttribute('data-preset'), true); });
+  /* How long the game will take, roughly (from the timings of a real game) */
+  function gameLen() {
+    var el = $('gamelen'); if (!el) return;
+    var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
+    var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
+    var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7 };
+    if ($('s-atype').value === 'party') {
+      var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
+      if (n < 2) on = [];
+      min += (on.length + 1) * per * perQ / 60;
+      on.forEach(function (g) { min += GAME[g] + 1.6; });   /* (+ the announcement and the boutique after it) */
+    } else min += (+$('s-parts').value || 1) * per * perQ / 60;
+    var fin = $('s-final').value; min += fin === 'chase' ? 8 : fin === 'double' ? 5 * perQ / 60 : 0;
+    var m = Math.round(min / 5) * 5, txt = m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : Math.max(5, m) + ' min';
+    el.innerHTML = '⏱️ About <b>' + txt + '</b> ' + (real >= 2 ? 'with ' + real + ' players' : 'for 4 players');
+  }
+  $('setform').addEventListener('change', function () { setTimeout(gameLen, 0); });
+  presetApply(PRESET, false);
   // ---------- volume: a button in the top right corner, with a slider for music and one for sound effects ----------
   (function () {
     var b = document.createElement('button'); b.type = 'button'; b.id = 'volbtn'; b.className = 'volbtn'; b.setAttribute('aria-label', 'Volume'); b.textContent = '🔊';

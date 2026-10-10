@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=665">
+<link rel="stylesheet" href="style.css?v=666">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -24,7 +24,7 @@
       <p class="url" id="joinurl"></p>
       <div class="joinrow">
         <div><p class="mute" style="margin:0">and enter this code</p><div class="codebig" id="codebig">····</div></div>
-        <div class="qr" id="qr"></div>
+        <div class="qrwrap"><div class="qr" id="qr"></div><p class="qrlab">📱 Scan me to join!</p></div>
       </div>
       <div class="lobbyplayers">
         <h3>Players <span class="mute" id="pcount"></span></h3>
@@ -45,7 +45,9 @@
     <div class="card">
       <p class="note hidden" id="note"></p>
       <h3>Game settings</h3>
-      <div class="settings">
+      <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><b>🎉 Party Night</b><small>Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>10 questions, no party games</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
+      <p class="gamelen" id="gamelen"></p>
+      <div class="settings" id="setform">
         <div><label for="s-atype">Game type</label><select id="s-atype">
           <option value="mc" selected>Quiz</option><option value="party">Party</option></select></div>
         <div id="finalbox"><label for="s-final">Final</label><select id="s-final"><option value="chase" selected>Grand Final</option><option value="double">Big Five</option><option value="standard">Standard</option></select></div>
@@ -347,15 +349,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=665"></script>
-<script src="vendor/qrcode.js?v=665"></script>
-<script src="config.js?v=665"></script>
-<script src="net.js?v=665"></script>
-<script src="music.js?v=665"></script>
-<script src="chars.js?v=665"></script>
-<script src="match.js?v=665"></script>
-<script src="shapes.js?v=665"></script>
-<script src="quiz.js?v=665"></script>
-<script src="host.js?v=665"></script>
+<script src="vendor/supabase.js?v=666"></script>
+<script src="vendor/qrcode.js?v=666"></script>
+<script src="config.js?v=666"></script>
+<script src="net.js?v=666"></script>
+<script src="music.js?v=666"></script>
+<script src="chars.js?v=666"></script>
+<script src="match.js?v=666"></script>
+<script src="shapes.js?v=666"></script>
+<script src="quiz.js?v=666"></script>
+<script src="host.js?v=666"></script>
 </body>
 </html>
