@@ -3694,7 +3694,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function qjRound() {
     var g = G.qj; if (!g) return;
     g.round++; g.seq = jmSeq(g); g.st = 'show'; g.prog = {}; g.fail = {}; g.wrong = {}; g.show = -1; g.pos = 0; g.falls = {}; var ovh = $('qjov'); if (ovh) ovh._holes = {}; push(); qjShow();
-    var CD = 3000, cdEl = function (big, small) { var ov = $('qjov'), e = ov && ov.querySelector('.jmcount'); if (!e) return; if (!big) { e.classList.remove('on'); return; } e.innerHTML = '<b>' + big + '</b>' + (small ? '<small>' + small + '</small>' : ''); e.classList.remove('pop', 'num'); void e.offsetWidth; e.classList.add('on', 'pop'); e.classList.toggle('num', !small); };
+    var CD = 3000, cdEl = function (big, small) { var ov = $('qjov'), e = ov && ov.querySelector('.jmcount'); if (!e) return; if (!big) { e.classList.remove('on'); return; } e.innerHTML = '<b>' + big + '</b>' + (small ? '<small>' + small + '</small>' : ''); e.classList.remove('jmpop', 'num'); void e.offsetWidth; e.classList.add('on', 'jmpop'); e.classList.toggle('num', !small); };
     var STEP = Math.max(560, 1430 - (g.round - 1) * 25),   /* (round 1: each symbol up for 1 second, 70% of a step; a little faster every round) */ at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
     /* first, big in the middle: "Round 1 · Get ready!", then 3, 2, 1 */
     at(0, function () { cdEl('Round ' + g.round, 'Get ready!'); Music.ding(); });

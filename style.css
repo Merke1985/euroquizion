@@ -2611,7 +2611,7 @@ aside.recapgone{visibility:hidden}
 .jmcount.on{opacity:1}
 .jmcount b{display:block;font-size:min(16vh,14vw);font-weight:900;line-height:1;color:#ffd23f;-webkit-text-stroke:3px #7a1b4a}
 .jmcount small{display:block;margin-top:1.5vh;font-size:min(5vh,5vw);font-weight:900}
-.jmcount.pop b{animation:jmcdpop .6s cubic-bezier(.3,1.6,.5,1)}
+.jmcount.jmpop b{animation:jmcdpop .6s cubic-bezier(.3,1.6,.5,1)}
 @keyframes jmcdpop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
 /* the round countdown in the style of the Grand Final's big messages: a dark box with a golden edge */
 .jmcount{display:block;width:auto;height:auto;background:#170a26;border:2px solid rgba(255,210,63,.55);box-shadow:0 20px 60px rgba(0,0,0,.8);padding:20px 40px;border-radius:22px;font-weight:900;font-size:clamp(1.6rem,4vw,3.4rem);text-shadow:0 4px 18px #000;color:#fff;min-width:0;white-space:nowrap}
