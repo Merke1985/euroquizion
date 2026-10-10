@@ -144,6 +144,7 @@
   var kicked = false;
   function onState(s) {
     if (kicked) return;
+    if (s && s.players) charCC(s.players);
     onState2(s);
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');

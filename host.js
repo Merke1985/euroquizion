@@ -217,7 +217,7 @@
     if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3], result: resultText(G.song) };
     return s;
   }
-  function push() { if (!recovering) net.send('state', snapshot()); save(); render(); }
+  function push() { charCC(list()); if (!recovering) net.send('state', snapshot()); save(); render(); }
 
   // ---------- save & restore ----------
   function save() {

@@ -22,12 +22,17 @@ var CHAR_BY_ID = {};
 CHARS.forEach(function (c) { CHAR_BY_ID[c.id] = c; });
 // An avatar is a round frame with the photo inside. A photo can be zoomed in on the face: 'face' is
 // where the face sits in the (square-cropped) picture in percent, 'zoom' how much to enlarge it.
+/* each avatar holds a little flag: the fan-flag country of the player who has it (avatars are one per player) */
+var CHAR_CC = {};
+function charCC(ps) { var m = {}; (ps || []).forEach(function (p) { if (p && p.char && p.cc) m[p.char] = p.cc; }); CHAR_CC = m; }
 function charSvg(id) {
   var c = CHAR_BY_ID[id];
   if (!c) return '';
   var z = c.zoom || 1, f = c.face || [50, 50];
   var tf = z > 1 ? ';transform:translate(' + ((50 - f[0]) * z).toFixed(1) + '%,' + ((50 - f[1]) * z).toFixed(1) + '%) scale(' + z + ')' : '';
-  return '<span class="char"><img src="' + commons(c.file) + '" alt="' + c.name + '" style="object-position:' + (c.pos || '50% 20%') + tf + '"></span>';
+  var cc = CHAR_CC[id];
+  return '<span class="char' + (cc ? ' hasfl' : '') + '"><span class="chin"><img src="' + commons(c.file) + '" alt="' + c.name + '" style="object-position:' + (c.pos || '50% 20%') + tf + '"></span>' +
+    (cc ? '<i class="chflag"><b></b><img src="https://flagcdn.com/w40/' + cc + '.png" alt=""></i>' : '') + '</span>';
 }
 
 // Other photos in the game (not player characters), with their credits.

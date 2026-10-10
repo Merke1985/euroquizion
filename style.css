@@ -36,7 +36,7 @@ label{display:block;font-weight:700;font-size:.85rem;margin:0 0 6px;color:var(--
 .or{display:flex;align-items:center;gap:12px;margin:20px 0 16px;color:var(--mute);font-size:.85rem;text-transform:uppercase;letter-spacing:.08em}
 .or:before,.or:after{content:'';flex:1;height:1px;background:var(--line)}
 .char{aspect-ratio:1/1;border-radius:50%;background:#2a2060;display:block;overflow:hidden;flex:none}
-.char>img{width:100%;height:100%;object-fit:cover;display:block}
+.char>img,.chin>img{width:100%;height:100%;object-fit:cover;display:block}
 .credits{max-width:760px;margin:0 auto;padding:24px 16px 48px}
 .credits li{margin:0 0 14px;display:flex;gap:14px;align-items:center}
 .credits .char{width:64px;height:64px;flex:none}
@@ -2786,3 +2786,10 @@ body.hasdock main{padding-bottom:84px}
 .host aside .board .ccbonus img{width:16px;height:11px;object-fit:cover;border-radius:2px}
 @keyframes ccbpop{from{transform:scale(0) rotate(-12deg)}to{transform:none}}
 .pflag .cloth::after{font-size:clamp(46px,18vw,90px)}
+/* the little flag each avatar holds (their fan-flag country) */
+.char{position:relative;overflow:visible}
+.chin{display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden}
+.chflag{position:absolute;right:-14%;bottom:-4%;width:46%;height:56%;pointer-events:none;z-index:1}
+.chflag b{position:absolute;left:0;top:0;bottom:0;width:9%;min-width:1px;border-radius:2px;background:linear-gradient(90deg,#bbb,#fff,#999)}
+.chflag img{position:absolute;left:8%;top:0;width:92%;height:56%;object-fit:cover;border-radius:1px 3px 3px 1px;box-shadow:0 1px 3px rgba(0,0,0,.45);transform-origin:0 50%;animation:chflagwave 1.4s ease-in-out infinite alternate}
+@keyframes chflagwave{from{transform:skewY(-5deg)}to{transform:skewY(4deg) scaleX(.94)}}
