@@ -1752,7 +1752,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     };
   }
   // The Diva sleeps through the first two questions, then comes: one space a turn for three questions, then two a turn.
-  function divaStep(n) { return n <= 2 ? 0 : n <= 5 ? 1 : 2; }
+  function divaStep(n) { return n <= 2 ? 0 : n <= 4 ? 1 : 2; }   /* (two tiles a turn from question 5) */
   function chaseNear() { var c = G.chase; return chaseAlive().filter(function (k) { return c.lanes[k].pos >= CHASE_GOAL - 3; }); }
   // who answers now: everyone still running, or (in a sudden death on the stage) the finalists still standing
   function chaseActive() { var c = G.chase; return c.sd ? c.finals.filter(function (k) { return c.lanes[k] && !c.lanes[k].fell; }) : chaseAlive(); }
