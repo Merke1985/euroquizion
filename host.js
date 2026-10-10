@@ -2806,8 +2806,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var l1 = gf ? 'Europe, before the Grand Final… let’s look at the scores! 📊' : 'Europe, it’s time for the final scores! 📊';
     at(1600, function () { say('him', l1); });
     at(lineMs(l1) - 1200, function () { [].slice.call(ov.querySelectorAll('li')).reverse().forEach(function (li, i) { setTimeout(function () { li.classList.add('on'); Music.plop(i % 8); }, i * 380); }); });   // last place first
-    at(n * 380 + 900, function () { ov.querySelector('li').classList.add('top'); say('her', lead()); });
-    var l2 = lead(); t += lineMs(l2);
+    /* the leader gets the crown now, or, when an envelope for the EBU is on its way, only after the courier has been */
+    if (!e) { at(n * 380 + 900, function () { ov.querySelector('li').classList.add('top'); say('her', lead()); }); var l2 = lead(); t += lineMs(l2); }
+    else t += n * 380 + 1600;
     if (e) {
       var nm = e.names.length > 1 ? e.names.slice(0, -1).join(', ') + ' and ' + e.names[e.names.length - 1] : e.names[0], paid = Object.keys(e.got).reduce(function (a, k) { return a + e.got[k]; }, 0);
       at(0, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); Music.thump && Music.thump(); [0, 260, 520].forEach(function (d) { setTimeout(function () { Music.step(); }, d); }); });   // knock, knock, knock
@@ -2820,9 +2821,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       at(1400, function () { ov.classList.add('envbig'); whooshes([0]); var h = 'Let’s open it… 🥁'; say('her', h); });
       at(2600, function () { ov.classList.add('envopen'); Music.ping(); ov.querySelector('.fsletter span').textContent = 'With thanks for the… very generous gifts. 💸 ' + Object.keys(e.got).map(function (k) { return (players[k] ? players[k].name : '') + ' +' + e.got[k]; }).join(' · '); });
       var sc = 'Scandalous! ' + nm + ' bribed the EBU! 🤑 ' + (e.names.length > 1 ? 'Extra points for all of them!' : paid + ' points for ' + nm + '!');
-      at(1800, function () { ov.classList.add('siren'); say('her', sc); Music.buzz && Music.buzz(); });
-      var rr = 'Well… the EBU has spoken. Rules are rules! 🤷'; t += lineMs(sc) - 1200;
-      at(0, function () { say('him', rr); ov.classList.remove('siren'); });
+      at(1800, function () { say('her', sc); Music.buzz && Music.buzz(); });
+      var rr = 'Oh… this could change everything! 😮'; t += lineMs(sc) - 1200;
+      at(0, function () { say('him', rr); });
       at(lineMs(rr) - 1400, function () {   // the envelope goes, and the points count in on the board
         ov.classList.remove('envbig'); ov.classList.remove('envopen'); ov.classList.add('envgone'); ov.classList.remove('shock'); Music.dread(false);
         Object.keys(e.got).forEach(function (k, i) {
