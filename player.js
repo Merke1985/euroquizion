@@ -285,9 +285,10 @@
         $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc'); $('flagmsg').classList.toggle('hidden', !(m && m.flag && q.type === 'mc'));   /* the flag hides every answer: only the outlines are left, so you pick blind */
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
-        if (builtKey !== key) {   // build the question once per song, so typing is never wiped
-          builtKey = key;
-          $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb';
+        var bkey = key + (mc && m && m.flag && q.subject !== 'best' ? '|flag' : '');   /* (a Giant Flag landing mid-question: the answers are rebuilt, scrambled) */
+        if (builtKey !== bkey) {   // build the question once per song, so typing is never wiped
+          var rebuilt = builtKey.split('|')[0] === key; builtKey = bkey;
+          if (!rebuilt) { $('guess').value = ''; $('fb').textContent = ''; $('fb').className = 'fb'; }
           $('guess').placeholder = q.hint || ''; $('guess').inputMode = (q.subject === 'place' || q.subject === 'points' || q.subject === 'year') ? 'numeric' : 'text';
           var bq = q.subject === 'best' && s.best;   // best drawing: a small picture on every button, and your own cannot be picked
           var flagged = !!(m && m.flag) && mc && !bq;   // a Giant Flag: the answers in another order, lettered anew
@@ -299,6 +300,7 @@
           $('opts').classList.toggle('bestgrid', !!bq);
           $('opts').classList.toggle('smoked', !!(q.smoke && q.smoke.indexOf(pid) < 0));   // someone else's Smoke Machine: guess blind
           if (bq) bestPaint();
+          if (rebuilt && myPick.key === key) { var pb = $('opts').querySelector('button[data-i="' + myPick.i + '"]'); if (pb) pb.classList.add('picked'); }   /* (rebuilt: what you had picked stays picked) */
 
           if (!mc) $('guess').focus();
         }
@@ -1039,7 +1041,7 @@
     $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All other avatars are taken.';
     if (want && taken[want]) want = null;
   }
-  var flagKey = '';
+  var flagKey = '', myPick = { key: '', i: -1 };
   $('ccs').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-cc]');
     if (!b || b.disabled) return;
@@ -1207,7 +1209,7 @@
       return;
     }
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
-    b.classList.add('picked');
+    b.classList.add('picked'); myPick = { key: state ? state.phase + ':' + state.round : '', i: +b.getAttribute('data-i') };
     var final = !!(state && (state.draw || state.best));   // Draw!: the first guess counts, and so does a vote
     if (final) [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.disabled = true; });
     $('fb').className = 'fb close'; $('fb').textContent = state && state.best ? 'Vote in!' : final ? 'Answer in. No changing this one!' : 'Answer in. You can still change it until everyone has answered.';
