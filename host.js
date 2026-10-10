@@ -5411,7 +5411,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function roundsAddUp() { list().forEach(function (p) { p.rcrown = false; if (p.qbank) { p.score += p.qbank; p.qbank = 0; } }); }   // after the last round: all rounds together
   function goOn() {
-    if (lastSong() && G.shopQ && G.shopQ.length) { shopDeliver(goOn); return; }   // Eurofan Shop items still on their way land before the final scores
+    if (lastSong() && G.shopQ && G.shopQ.length) G.shopQ = [];   // items still on their way after the last question: there is no next question for them, so no siren before the final scores
     if (lastSong()) roundsAddUp();
     if (lastSong() && G.atype === 'party' && !G.standingsShown && !REMOTE) { G.standingsShown = true; partyStandings(goOn); return; }   // Party: the final scores first, where the envelopes pay out
     if (lastSong() && G.bribes && G.bribes.length) { ebuPay(goOn); return; }   // the envelopes for the EBU pay out before the final
