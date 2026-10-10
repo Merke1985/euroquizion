@@ -3574,7 +3574,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<circle cx="40" cy="72" r="13" fill="url(#jmct)"/><circle cx="40" cy="72" r="6" fill="#d8d8d8"/><circle cx="112" cy="72" r="13" fill="url(#jmct)"/><circle cx="112" cy="72" r="6" fill="#d8d8d8"/>' +
     '<ellipse cx="136" cy="50" rx="5" ry="7" fill="url(#jmcl)"/><ellipse cx="14" cy="52" rx="3" ry="5" fill="#ff4040"/></svg>';
   var hornEl = null;
-  function hornSnd() { if (REMOTE) return; try { if (!hornEl) hornEl = new Audio('sounds/horn.mp3'); hornEl.currentTime = 0; hornEl.volume = Math.max(0, Math.min(1, 0.85 * (Music.vol ? Music.vol.fx : 1))); var pr = hornEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
+  function hornSnd() { if (REMOTE) return; try { if (!hornEl) hornEl = new Audio('sounds/horn.mp3?v=2'); hornEl.currentTime = 0; hornEl.volume = Math.max(0, Math.min(1, 0.85 * (Music.vol ? Music.vol.fx : 1))); var pr = hornEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function jmCar(jumpers, hit) {
     var ov = $('qjov'), grp = ov && ov.querySelector('.jmgroup'); if (!grp) return;
     var old = grp.querySelector('.jmcar'); if (old) old.remove();
