@@ -629,11 +629,6 @@
           if (net) { net.send('shop', bm); setTimeout(function () { net.send('shop', bm); }, 1200); }
           ptoast('✉️ Your envelope is on its way to the EBU… Shh! 🤫'); bagOpen = false; bagUpdate(state); return;
         }
-        if ((shopItem(id) || {}).kind === 'thief') {   // no one to pick: the victim is random
-          var tm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
-          if (net) { net.send('shop', tm); setTimeout(function () { net.send('shop', tm); }, 1200); }
-          ptoast('🎟️ Wristband on, into the Euroclub… watch the big screen!'); bagOpen = false; bagUpdate(state); return;
-        }
         if ((shopItem(id) || {}).kind === 'fan') {   // no one to pick: it works on your own phone, right now
           var fm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', fm); setTimeout(function () { net.send('shop', fm); }, 1200); }

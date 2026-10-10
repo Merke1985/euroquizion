@@ -1167,8 +1167,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.tour && !games.length) { G.tour = false; G.total = G.round + 9; }   // no minigame can be played with this group: a plain quiz of ten
       // Grand tour: after the last minigame come three more questions, for double points and with the scores hidden.
       if (G.tour && G.tourLast && !G.tourFinal && !G.tourDone) { G.tourDone = true; G.total = G.round + (G.block || 3) - 1; G.quizRun = 0; G.mgTest = false; }   // the tour is over: one last block of trivia, then the end (the Grand Final)
-      if (!G.tourFinal && (G.quizRun || 0) >= (G.block || 3) && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; shopIntro(); return; }   // the first break: everyone visits the boutique
-      if (!G.tourFinal && !G.tourDone && (G.quizRun || 0) >= (G.block || 3) && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyTime(games); return; }
+      if (!G.tourFinal && !G.itemTest && (G.quizRun || 0) >= (G.block || 3) && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; shopIntro(); return; }   // the first break: everyone visits the boutique
+      if (!G.tourFinal && !G.tourDone && !G.itemTest && (G.quizRun || 0) >= (G.block || 3) && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyTime(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
       if (G.afterParty) { G.afterParty = false; var nb = G.block || 3; FUN.quiz.sub = 'Trivia time: ' + (nb === 1 ? 'one question' : (['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][nb] || nb) + ' questions') + ' coming up.'; funIntro('quiz', startRound2, 4200); return; }
       if (G.eraSpin && !(G.quizRun || 0) && G.eraBlock !== G.round) { G.eraBlock = G.round; partIntro(); return; }   // Random or Voted rounds: each block of trivia gets its decade
@@ -1997,6 +1997,32 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'loading'; push();
     partyStandings(function () { G.bribes = []; list().forEach(function (p) { p.score = 0; p.pts = 0; }); G.phase = 'lobby'; G.standingsShown = false; push(); render(); });
   });
+  /* testing the items: endless trivia (no party games); the bots aim every item at you, one by one,
+     each as soon as the effect of the previous one has worn off */
+  var ITEM_TEST = ['power', 'hack', 'wind', 'mic', 'ticket', 'flag', 'pass', 'smoke'], itemTestT = null;
+  $('itemtest').addEventListener('click', function () {
+    if (REMOTE || G.phase !== 'lobby') return;
+    var me = list().filter(function (p) { return !p.bot && !p.off; })[0];
+    if (!me) { note('Join with your phone first: the bots need someone to aim at.'); return; }
+    var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 3 && bots.length < 8) { botAdd(); nb++; }
+    $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
+    if (beginGame() === false) return;
+    G.itemTest = true; G.skipOpening = true; G.shopFirst = true; G.total = ENDLESS;
+    me.inv = ['fan'];   // (something in your bag for the Euroclub Wristband to take)
+    if (G.phase === 'intro') introEnd();
+    var n = 0, lastQ = '';
+    clearInterval(itemTestT); itemTestT = setInterval(function () {
+      if (!G.itemTest || G.phase === 'lobby' || G.phase === 'end') { clearInterval(itemTestT); return; }
+      var t = players[me.pid]; if (!t || t.off) return;
+      if (t.flagNow || t.flagged > 0 || t.halfNow || t.halfQ > 0 || t.sitNow || t.sitout) return;   // the last one is still working
+      if (G.phase !== 'guess' || !G.q || G.frozenLeft != null || Date.now() - (G.guessAt || 0) < 2500) return;
+      var qk = G.round + ':' + (G.q.text || ''); if (qk === lastQ) return;
+      var id = ITEM_TEST[n % ITEM_TEST.length], bs = list().filter(function (p) { return p.bot && !p.off; }), b = bs[n % bs.length]; if (!b) return;
+      lastQ = qk; n++;
+      b.inv = (b.inv || []).concat(id); if (id === 'pass' && !(t.inv || []).length) t.inv = ['fan'];
+      shopMsg({ pid: b.pid, use: id, target: t.pid, key: 'it' + n });
+    }, 700);
+  });
   $('chasetest2').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 3 && bots.length < 8) { botAdd(); nb++; }
@@ -2703,7 +2729,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!ids.length) return;
       b.useP = 0.1; done = true;
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && (it.kind === 'heel' || !shielded(x)); });
-      var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'thief';
+      var self = it.kind === 'smoke' || it.kind === 'bribe';
+      if (it.kind === 'thief') others = alive.filter(function (x) { return x !== b && (x.inv || []).some(function (y) { return y !== 'bribe'; }); });
       if (!self && !others.length) return;
       var t = self ? b : pick(others), key = 'bot' + Date.now() + Math.random();
       if (SHOP_OPEN_ONLY.indexOf(it.kind) >= 0) {   // the Broken Mic and the other instant items: a few seconds into the question
@@ -2733,10 +2760,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.atype !== 'party' || ['lobby', 'end', 'brief', 'intro', 'chase'].indexOf(G.phase) >= 0) return;
       if (m.key && p.useKey === m.key) return; p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
-      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief' || it0.kind === 'fan')) t = p;   // (no target: it is the user's own smoke)
-      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'thief' || it0.kind === 'fan')))) return;
+      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan')) t = p;   // (no target: it is the user's own smoke)
+      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates') return;   // (the umbrella works by itself)
-      if (t !== p && it.kind !== 'heel' && shielded(t)) return;   // under an umbrella: out of reach
+      if (t !== p && it.kind !== 'heel' && it.kind !== 'thief' && shielded(t)) return;   // under an umbrella: out of reach (but the wristband goes after the bag itself)
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
@@ -2897,8 +2924,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (it.kind === 'smoke') { (G.smoke = G.smoke || []).push(by.pid); shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; var safe = [];   /* (the smoke gets everyone, umbrella or not) */ safe.forEach(function (x) { G.smoke.push(x.pid); shopLast.deltas.push({ pid: x.pid, tag: '☂️ blocked' }); }); return it.icon + ' ' + by.name + ' fired up the Smoke Machine: the next answers are hidden in smoke!' + (safe.length ? ' ' + safe.map(function (x) { return x.name; }).join(' and ') + (safe.length > 1 ? ' stay' : ' stays') + ' dry under an umbrella.' : ''); }
     if (it.kind === 'thief') {   // a random item from a random player's bag (which one stays a secret)
       var loose = function (x) { return (x.inv || []).map(function (id, i) { return id === 'bribe' ? -1 : i; }).filter(function (i) { return i >= 0; }); };   // (an envelope for the EBU cannot be stolen)
-      var bags = list().filter(function (x) { return x !== by && !x.off && loose(x).length; });
-      if (!bags.length) { shopLast.sound = 'empty'; shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub, but every bag was empty!'; }
+      var bags = t && t !== by ? (loose(t).length ? [t] : []) : list().filter(function (x) { return x !== by && !x.off && loose(x).length; });   /* the bag of the player they picked */
+      if (!bags.length) { shopLast.sound = 'empty'; shopLast.deltas = [{ pid: by.pid, tag: it.icon }]; return it.icon + ' ' + by.name + ' used their wristband to get into the Euroclub, but ' + (t && t !== by ? t.name + '’s bag was empty!' : 'every bag was empty!'); }
       var v = pick(bags);
       if (false) { shopLast.sound = 'block'; shopLast.icon = '☂️'; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: v.pid, tag: '☂️ blocked' }]; return '☂️ ' + by.name + ' sneaked into the Euroclub after ' + v.name + '’s bag, but ' + v.name + '’s umbrella kept it shut!'; }
       var gi = pick(loose(v)), loot = v.inv.splice(gi, 1)[0], lit = shopItem(loot);
