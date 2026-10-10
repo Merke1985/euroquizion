@@ -1860,17 +1860,30 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var i = c.order.indexOf(k); c.nsfDone = c.nsfDone || {}; c.nsfDone[k] = 1;
     c.st = 'nsf'; c.nsf = { pid: k, i: i }; push(); Music.buzz(); Music.dread(true, true);
     var tiles = function (f) { return [].filter.call($('chtiles').children, function (t) { return +t.getAttribute('data-l') === i && f(+t.getAttribute('data-r')); }); };
-    var m0 = c.mon, at = function (ms, f) { setTimeout(function () { if (G.chase === c && c.nsf && c.nsf.pid === k) f(); }, ms); };
-    at(1600, function () { tiles(function (r) { return r > m0 && r <= m0 + 3; }).forEach(function (t) { t.classList.add('nsfglow'); }); Music.blip(); });
-    at(3400, function () { tiles(function (r) { return r > m0 && r <= m0 + 3; }).forEach(function (t) { t.classList.remove('nsfglow'); t.classList.add('nsfsmash'); }); chaseSfx('brk', 1, Music.crumble); });
-    at(4300, function () {   // the lane runs back three spaces, the leader with it
-      tiles(function (r) { return r > m0 + 3; }).forEach(function (t) { t.style.transition = 'transform 1.3s cubic-bezier(.5,0,.4,1)'; t.style.transform = 'translateX(calc(-300% - 9px))'; });
-      var l = c.lanes[k]; l.pos = Math.max(c.mon + 1, l.pos - 3); push(); Music.woosh();
-    });
-    at(5800, function () {   // (the tiles go back in their places unseen; the lane's pattern shifts with them; three new spaces slide in at the stage end)
-      tiles(function () { return true; }).forEach(function (t) { var r = +t.getAttribute('data-r'); t.style.transition = 'none'; t.style.transform = ''; t.classList.remove('nsfsmash', 'nsfglow'); t.classList.toggle('even'); if (r > CHASE_END - 3) { t.classList.remove('nsfnew'); void t.offsetWidth; t.classList.add('nsfnew'); } });
-    });
-    at(7000, function () { c.nsf = null; c.st = 'diva'; push(); Music.dread(true); then(); });
+    var ok = function () { return G.chase === c && c.nsf && c.nsf.pid === k; }, t = 1600;
+    var at = function (ms, f) { setTimeout(function () { if (ok()) f(); }, ms); };
+    // twice: two spaces glow, are smashed, and the lane runs back two spaces with the leader (and their gold space) on it
+    var bite = function () {
+      var m0 = c.mon, gap = parseFloat(getComputedStyle($('chtiles')).columnGap) || 3;
+      at(t, function () { tiles(function (r) { return r > m0 && r <= m0 + 2; }).forEach(function (x) { x.classList.add('nsfglow'); }); Music.blip(); });
+      at(t + 1500, function () { tiles(function (r) { return r > m0 && r <= m0 + 2; }).forEach(function (x) { x.classList.remove('nsfglow'); x.classList.add('nsfsmash'); }); chaseSfx('brk', 1, Music.crumble); });
+      at(t + 2300, function () {
+        c.nsf.pull = true;   // (the board keeps this lane's marks where they are while it moves)
+        var mv = 'transform 1.3s cubic-bezier(.5,0,.4,1)';
+        tiles(function (r) { return r > m0 + 2; }).forEach(function (x) { x.style.transition = mv; x.style.transform = 'translateX(calc(-200% - ' + (2 * gap) + 'px))'; });
+        var tok = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]');
+        if (tok) { tok.style.transition = 'left 1.3s cubic-bezier(.5,0,.4,1),top 1.4s ease-in-out,opacity .6s'; tok.style.left = chaseX(c.lanes[k].pos - 2 - 0.5) + '%'; }
+        Music.woosh();
+      });
+      at(t + 3700, function () {   // in place: the tiles go back unseen (two spaces: the pattern stays the same), two new ones slide in at the stage end
+        tiles(function () { return true; }).forEach(function (x) { var r = +x.getAttribute('data-r'); x.style.transition = 'none'; x.style.transform = ''; x.classList.remove('nsfsmash', 'nsfglow', 'occ'); if (r > CHASE_END - 2) { x.classList.remove('nsfnew'); void x.offsetWidth; x.classList.add('nsfnew'); } });
+        var l = c.lanes[k]; l.pos = Math.max(c.mon + 1, l.pos - 2); c.nsf.pull = false; push();
+        var tok = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]'); if (tok) setTimeout(function () { tok.style.transition = ''; }, 50);
+      });
+      t += 3700;
+    };
+    bite(); t += 1000; bite();
+    at(t + 1400, function () { c.nsf = null; c.st = 'diva'; push(); Music.dread(true); then(); });   // (her next spaces blink as usual; she slides back to her place)
   }
   function chaseDie(c) { c.monsterDead = true; chaseMusic(false); Music.dread(false); Music.short(); setTimeout(function () { Music.defeat(); }, 350); push(); }
   function chaseWreck(c) { c.wrecked = true; c.mon = CHASE_END; chaseSfx('brk', 1, Music.crumble); push(); }   // the whole runway breaks away
@@ -2066,7 +2079,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         setTimeout(function () { el.classList.add('bonk'); }, 650);
         setTimeout(function () { el.style.left = chaseX(at - 0.5) + '%'; }, 900);
         setTimeout(function () { el.classList.remove('bonk'); }, 1700);
-      } else if (el.getAttribute('data-bump') !== c.qkey || c.st !== 'move') { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
+      } else if (c.nsf && c.nsf.pull && c.nsf.pid === k) { /* moving with the conveyor belt */ } else if (el.getAttribute('data-bump') !== c.qkey || c.st !== 'move') { el.style.left = chaseX(at - 0.5) + '%'; el.style.top = ((i + 0.62) / n * 100) + '%'; }
       if (!l.out && l.blocked === c.n && c.st === 'move') deny[i + ':' + at] = 1;   // not perfect, so not onto the stage: the space flashes red
       if (!l.out) { occ[i + ':' + at] = 1; if (next && l.pos < CHASE_GOAL && at <= c.mon + next && c.st !== 'win' && c.st !== 'move' && c.st !== 'pause') doomed[k] = 1; }
       el.classList.toggle('out', l.out); el.classList.toggle('vanish', (l.out && !(c.st === 'diva' && l.at === c.n)) || (!!c.wrecked && l.pos < CHASE_GOAL));   // caught: shown with a skull for a moment, then gone
@@ -2082,6 +2095,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     // smashed, threatened and occupied spaces (an occupied space that is threatened: deadly)
     [].forEach.call($('chtiles').children, function (t) {
+      if (c.nsf && c.nsf.pull && +t.getAttribute('data-l') === c.nsf.i) return;   /* (NOT SO FAST: this lane is moving; its marks move with it) */
       var r = +t.getAttribute('data-r'), on = !!occ[t.getAttribute('data-l') + ':' + r], warn = r > c.mon && r <= c.mon + next && c.st !== 'win';
       if (r <= c.mon && !t.getAttribute('data-x')) {   // smashed: it cracks, shakes and falls away, then it is gone
         t.setAttribute('data-x', '1'); t.classList.remove('warn', 'doom', 'occ'); t.classList.add('crumble');
@@ -2111,7 +2125,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (c.st !== 'win') { view.classList.remove('zoom'); clearTimeout(view._zt); view._zt = null; }
     [].forEach.call(document.querySelectorAll('#chase .chpyro'), function (p) { p.classList.toggle('boom', c.st === 'win' || chaseNear().length > 0); });
     $('chmon').style.left = (c.grab ? 112 : chaseX(c.mon)) + '%';
-    $('chmon').style.top = c.nsf ? ((c.nsf.i + 1) / n * 100) + '%' : '';   /* NOT SO FAST: she lines up with the leader's lane */
+    $('chmon').style.top = c.nsf ? ((c.nsf.i + 1) / n * 100) + '%' : ''; $('chmon').classList.toggle('nsf', !!c.nsf);   /* NOT SO FAST: she lines up with the leader's lane */
     $('chtro').classList.toggle('taken', !!c.grab);
     $('chmon').classList.toggle('grab', !!c.grab);
     if (c.monster) { $('chmon').querySelector('.chmonname').textContent = c.monster.name; $('chmon').setAttribute('data-mon', c.monster.id); }
@@ -2809,6 +2823,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t = 0, at = function (ms, f) { t += ms; setTimeout(function () { if (ov.isConnected) f(); }, t); };
     var lineMs = function (txt) { return Math.max(3400, Array.from(txt).length * TALK_MS + 2200); };
     var lead = function () { var top = Math.max.apply(null, list().map(function (p) { return p.score; })), ls = ps.filter(function (p) { return p.score === top; }).map(function (p) { return p.name; }); return ls.length > 1 ? ls.slice(0, -1).join(', ') + ' and ' + ls[ls.length - 1] + ' share the lead with ' + top + ' points! 👑' : ls[0] + ' is in the lead with ' + top + ' points! 👑'; };
+    var crown = function () {   /* the crown for the leader, or for everyone sharing the lead */
+      var top = Math.max.apply(null, list().map(function (p) { return p.score; }));
+      [].forEach.call(ov.querySelectorAll('li'), function (li) { li.classList.toggle('top', (players[li.getAttribute('data-pid')] || {}).score === top); });
+    };
     var reorder = function () {
       var ol = ov.querySelector('ol'), lis = [].slice.call(ol.children), was = {}; lis.forEach(function (li) { was[li.getAttribute('data-pid')] = li.getBoundingClientRect().top; });
       lis.sort(function (a, b) { return (players[b.getAttribute('data-pid')] || {}).score - (players[a.getAttribute('data-pid')] || {}).score; }).forEach(function (li, i) { ol.appendChild(li); li.querySelector('.rk').textContent = i + 1; });
@@ -2819,7 +2837,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(1600, function () { say('him', l1); });
     at(lineMs(l1) - 1200, function () { [].slice.call(ov.querySelectorAll('li')).reverse().forEach(function (li, i) { setTimeout(function () { li.classList.add('on'); Music.plop(i % 8); }, i * 380); }); });   // last place first
     /* the leader gets the crown now, or, when an envelope for the EBU is on its way, only after the courier has been */
-    if (!e) { at(n * 380 + 900, function () { ov.querySelector('li').classList.add('top'); say('her', lead()); }); var l2 = lead(); t += lineMs(l2); }
+    if (!e) { at(n * 380 + 900, function () { crown(); say('her', lead()); }); var l2 = lead(); t += lineMs(l2); }
     else t += n * 380 + 1600;
     if (e) {
       var nm = e.names.length > 1 ? e.names.slice(0, -1).join(', ') + ' and ' + e.names[e.names.length - 1] : e.names[0], paid = Object.keys(e.got).reduce(function (a, k) { return a + e.got[k]; }, 0);
@@ -2847,7 +2865,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           }, 600 + i * 500);
         });
       });
-      at(1900 + Object.keys(e.got).length * 500, function () { [].forEach.call(ov.querySelectorAll('li.top'), function (x) { x.classList.remove('top'); }); reorder(); setTimeout(function () { var f = ov.querySelector('li'); if (f) f.classList.add('top'); }, 900); });
+      at(1900 + Object.keys(e.got).length * 500, function () { [].forEach.call(ov.querySelectorAll('li.top'), function (x) { x.classList.remove('top'); }); reorder(); setTimeout(crown, 900); });
       var l3 = ''; at(1400, function () { l3 = lead(); say('her', l3); });
       t += 3800;
     }

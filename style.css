@@ -2696,3 +2696,13 @@ aside.recapgone{visibility:hidden}
 .bombov .benvs.dealing .bno{visibility:hidden}
 .bombov .benvs:not(.dealing) .benv:not(.open):not(.picked){animation:benvfloat 2.2s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.37s)}
 @keyframes benvfloat{from{translate:0 0;rotate:-1.5deg}to{translate:0 -7px;rotate:1.5deg}}
+
+/* NOT SO FAST: a little smaller while she stands in a lane (so she still fits next to the top lane) */
+.chmon{transition:left 1.4s ease-in-out,top 1s ease-in-out,scale 1s ease-in-out,opacity .6s}
+.chmon.nsf{scale:.72}
+
+/* the final scores: the presenters a little closer to the board, with big speech balloons */
+.fsov .grhosts .him{left:8vw}.fsov .grhosts .her{right:8vw}
+.fsov .grbub{top:9vh;max-width:30vw;font-size:clamp(1.15rem,2.1vw,1.9rem);padding:.7em 1.1em;border-radius:22px}
+.fsov .grbub.him{left:3vw}.fsov .grbub.her{right:3vw}
+.fsov.cin .fscour{left:21vw}
