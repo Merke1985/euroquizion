@@ -2777,6 +2777,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && (it.kind === 'heel' || !shielded(x)); });
       var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'tab';
       if (it.kind === 'thief') others = alive.filter(function (x) { return x !== b && (x.inv || []).some(function (y) { return y !== 'bribe'; }); });
+      if (it.kind === 'blow') { var lo = Math.min.apply(null, alive.map(function (x) { return x.score; })); others = others.filter(function (x) { return x.score > lo; }); }   /* (not on whoever has the fewest)*/
       if (!self && !others.length) return;
       var t = self ? b : pick(others), key = 'bot' + Date.now() + Math.random();
       if (SHOP_OPEN_ONLY.indexOf(it.kind) >= 0) {   // the Broken Mic and the other instant items: a few seconds into the question
@@ -2816,7 +2817,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
       if (it.kind === 'sit' && (!open || t.sitNow)) return;   // the Broken Mic only works on an open question
-      if (SHOP_OPEN_ONLY.indexOf(it.kind) >= 0 && !open) return;   // these too: only while a question is open, and then they land straight away
+      if (SHOP_OPEN_ONLY.indexOf(it.kind) >= 0 && !open) return;
+      if (it.kind === 'blow' && t !== p && !list().some(function (x) { return !x.off && x.score < t.score; })) return;   /* the Wind Machine: not on whoever has the fewest points (the item stays in the bag)*/   // these too: only while a question is open, and then they land straight away
       if (it.kind === 'fan') {   // the Eurovision Fan: on your own phone, half of the wrong answers of this question blow away (quietly: no siren)
         var q = G.q; if (!open || !q || q.type !== 'mc' || !(q.correct >= 0) || !q.options || q.options.length !== 4) return;   // (only on a question with four answers)
         var key = qKeyNow(); if (!G.fanQ || G.fanQ.key !== key) G.fanQ = { key: key, map: {} }; if (G.fanQ.map[p.pid]) return;   // (once per question)

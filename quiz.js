@@ -768,7 +768,7 @@ function makeChase(allSongs, countries, used) {
 // ---------- Eurofan Shop: the merchandise (more to come) ----------
 // kind: 'lose' (the target loses points), 'blow' (they go to whoever has the fewest), 'steal' (the buyer takes them), 'sit' (no points for the open question)
 var SHOP_ITEMS = [
-  { id: 'wind', tier: 1, icon: '💨', name: 'Wind Machine', desc: 'During a question: blow 12 points from another player to whoever has the fewest', kind: 'blow', amount: 12 },
+  { id: 'wind', tier: 1, icon: '💨', name: 'Wind Machine', desc: 'During a question: blow 12 points from another player to whoever has the fewest (not on the one who has the fewest)', kind: 'blow', amount: 12 },
   { id: 'hack', tier: 3, icon: '📲', name: 'Televote Hacking Device', desc: 'During a question: steal 12 points from another player', kind: 'steal', amount: 12 },
   { id: 'power', tier: 1, icon: '🔋', name: 'Marc’s Powerbank', desc: 'During a question: throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
