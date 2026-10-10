@@ -2933,3 +2933,15 @@ body.hasdock main{padding-bottom:84px}
 .chtok .ch-face{z-index:2}
 .chtok .chbod .hflag{z-index:3}
 .jmt .hflag{z-index:6}
+/* the flag really in the hand: the right arm hangs down, a hand at its end grips the pole */
+.lbod .ca:nth-of-type(4){rotate:-6deg;z-index:3}
+.lbod .ca::after,.chtok .chbod .ca::after{content:'';position:absolute;left:50%;bottom:-2px;width:120%;aspect-ratio:1;transform:translateX(-50%);border-radius:50%;background:#e8b48c}
+.lbod .ca .hflag{left:1px;top:-8px;width:30px;height:42px;z-index:1}
+.lbod .ca:nth-of-type(4)::after{z-index:2}
+.chtok .chbod .ca:nth-of-type(4){rotate:-6deg;z-index:3}
+.chtok .chbod .ca .hflag{left:calc(var(--tok,56px) * .01);top:calc(var(--tok,56px) * -.32);width:calc(var(--tok,56px) * .45);height:calc(var(--tok,56px) * .86)}
+.chtok .chbod .ca:nth-of-type(4)::after{z-index:2}
+/* Verona: the right arm hangs straight down, the pole sits in that hand */
+.jmt .jmbody i:last-child{rotate:-4deg}
+.jmt .jmbody i::after{content:'';position:absolute;left:50%;bottom:-.3vh;width:1.3vh;height:1.3vh;transform:translateX(-50%);border-radius:50%;background:#e8b48c}
+.jmt .hflag{left:calc(50% + 1.85vh);top:4.4vh;width:3.4vh;height:4.6vh}
