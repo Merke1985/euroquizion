@@ -3537,17 +3537,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return r;
   }
   /* this round's sequence: the route so far; from round 5 on there is always one car (4: jump!) in it, somewhere new each time */
-  var JM_CARSVG = '<svg viewBox="0 0 120 90" aria-hidden="true"><defs><radialGradient id="jmhl"><stop offset="0" stop-color="#fffbe6"/><stop offset=".45" stop-color="#fff2a8"/><stop offset="1" stop-color="#ffd84a" stop-opacity="0"/></radialGradient></defs>' +
-    '<path d="M22 40 Q26 14 44 12 H76 Q94 14 98 40 Z" fill="#b8182c"/><path d="M31 38 Q34 20 46 18 H74 Q86 20 89 38 Z" fill="#1b2340" opacity=".9"/><path d="M36 36 Q38 24 47 22 H58 L50 36 Z" fill="#fff" opacity=".18"/>' +
-    '<rect x="8" y="38" width="104" height="34" rx="12" fill="#d42038"/><rect x="8" y="58" width="104" height="14" rx="7" fill="#9c1226"/><rect x="40" y="52" width="40" height="12" rx="4" fill="#2a1a20"/><path d="M42 55 h36 M42 58 h36 M42 61 h36" stroke="#6a5560" stroke-width="1"/>' +
-    '<rect x="14" y="68" width="16" height="16" rx="4" fill="#1a1a1a"/><rect x="90" y="68" width="16" height="16" rx="4" fill="#1a1a1a"/>' +
-    '<circle cx="24" cy="50" r="9" fill="#fffbe6" stroke="#c9c9c9" stroke-width="2"/><circle cx="96" cy="50" r="9" fill="#fffbe6" stroke="#c9c9c9" stroke-width="2"/><circle cx="24" cy="50" r="22" fill="url(#jmhl)"/><circle cx="96" cy="50" r="22" fill="url(#jmhl)"/></svg>';
+  var JM_CARSVG = '<svg viewBox="0 0 160 72" aria-hidden="true"><defs><radialGradient id="jmhl"><stop offset="0" stop-color="#fffbe6"/><stop offset=".45" stop-color="#fff2a8"/><stop offset="1" stop-color="#ffd84a" stop-opacity="0"/></radialGradient></defs>' +
+    '<path d="M38 30 Q48 8 70 8 H104 Q120 8 130 30 Z" fill="#b8182c"/><path d="M50 29 Q56 14 72 14 H86 V29 Z M92 14 H103 Q114 14 121 29 H92 Z" fill="#1b2340" opacity=".9"/>' +
+    '<path d="M8 30 H146 Q156 31 156 42 V52 Q156 58 150 58 H10 Q4 58 4 50 V38 Q4 30 8 30 Z" fill="#d42038"/><path d="M4 48 H156 V52 Q156 58 150 58 H10 Q4 58 4 52 Z" fill="#9c1226"/><path d="M88 32 V54" stroke="#9c1226" stroke-width="1.5"/>' +
+    '<circle cx="38" cy="58" r="12" fill="#1a1a1a"/><circle cx="38" cy="58" r="5" fill="#9a9a9a"/><circle cx="122" cy="58" r="12" fill="#1a1a1a"/><circle cx="122" cy="58" r="5" fill="#9a9a9a"/>' +
+    '<ellipse cx="152" cy="38" rx="5" ry="6" fill="#fffbe6"/><circle cx="154" cy="38" r="16" fill="url(#jmhl)"/><rect x="2" y="35" width="5" height="7" rx="2" fill="#ff3b3b"/></svg>';
   function jmCar(jumpers, hit) {
     var ov = $('qjov'), grp = ov && ov.querySelector('.jmgroup'); if (!grp) return;
     var old = grp.querySelector('.jmcar'); if (old) old.remove();
-    var c0 = V3 ? V3.screen(0, 0) : [innerWidth / 2, innerHeight * .56], cf = V3 ? V3.screen(0, -3.2) : [innerWidth / 2, innerHeight * .26];
-    var car = document.createElement('div'); car.className = 'jmcar'; car.innerHTML = '<i class="beam"></i>' + JM_CARSVG;
-    car.style.setProperty('--sx', (cf[0] - c0[0]) + 'px'); car.style.setProperty('--sy', (Math.max(cf[1], innerHeight * .24) - c0[1]) + 'px'); car.style.setProperty('--ey', (innerHeight - c0[1] + innerHeight * .4) + 'px');
+    /* it comes along the cross street, from the left or the right, and races on out of the other side */
+    var c0 = V3 ? V3.screen(0, 0) : [innerWidth / 2, innerHeight * .56], dir = Math.random() < .5 ? 1 : -1, off = innerHeight * .4;
+    var car = document.createElement('div'); car.className = 'jmcar' + (dir < 0 ? ' rtl' : ''); car.innerHTML = '<i class="beam"></i>' + JM_CARSVG;
+    var fromL = -(c0[0] + off), toR = innerWidth - c0[0] + off;
+    car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
     grp.insertBefore(car, grp.firstChild);
     whooshes([0, 700, 1300]); Music.woosh && Music.woosh();
     setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1300);
@@ -3624,9 +3626,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     })(i);
     at(1200 + g.round * STEP + 300, function () {
       g.show = -1; g.st = 'input'; var ms = 4500 + g.round * 1300; g.ends = Date.now() + ms; push(); qjShow(); Music.ding();
+      g.botMiss = {}; bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; if (Math.random() < 0.1) g.botMiss[b.pid] = Math.floor(Math.random() * g.round) + 1; });   /* bots: 9 times out of 10 they get the whole route right */
       bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; var n = 0, step = function () {
         if (G.qj !== g || g.st !== 'input' || g.fail[b.pid] || (g.prog[b.pid] || 0) >= g.round) return;
-        var ok = G.mgTest || Math.random() < 0.985 - 0.03 * g.round, d = ok ? g.seq[g.prog[b.pid] || 0] : (g.seq[g.prog[b.pid] || 0] + 1 + Math.floor(Math.random() * 3)) % 4;
+        var ok = (g.botMiss || {})[b.pid] !== (g.prog[b.pid] || 0) + 1, d = ok ? g.seq[g.prog[b.pid] || 0] : (g.seq[g.prog[b.pid] || 0] + 1 + Math.floor(Math.random() * 3)) % 4;
         qjMsg({ pid: b.pid, id: g.id, round: g.round, i: g.prog[b.pid] || 0, dir: d }); n++; setTimeout(step, 380 + Math.random() * 520);
       }; setTimeout(step, 900 + Math.random() * 900); });
       clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, ms);
@@ -3682,10 +3685,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var top = Math.max.apply(null, lost.map(function (k) { return g.prog[k] || 0; }));
       g.win = lost.filter(function (k) { return (g.prog[k] || 0) === top; }); end = true;
       line = 'Everyone got lost! 😵 But ' + g.win.map(nm).join(' and ') + ' got furthest: ' + top + ' step' + (top === 1 ? '' : 's') + '!';
-    } else if (ok.length === 1 && g.alive.length > 1) { g.win = ok; end = true; line = nm(ok[0]) + ' is the last one standing! 🌹'; }
-    else if (g.round >= JM_MAX) {   /* round 10 done, and still not lost: Juliet points them home, and they walk out of the picture */
+    } else if (g.round >= JM_MAX || (ok.length === 1 && g.alive.length > 1)) {   /* round 10 done, and still not lost: Juliet points them home, and they walk out of the picture */
       g.win = ok; g.alive = ok; Music.ding();
-      jmJul('Look, the studio is right behind you! 🎬 Off you go… ciao! 🌹');
+      jmJul(ok.length === 1 && g.round < JM_MAX ? 'Only ' + nm(ok[0]) + ' left? Well… look, the studio is right behind you! 🎬 Off you go… ciao! 🌹' : 'Look, the studio is right behind you! 🎬 Off you go… ciao! 🌹');
       setTimeout(function () { if (G.qj !== g) return; var ov = $('qjov'); if (ov) ok.forEach(function (k) { var el = ov.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) el.classList.add('home'); }); whooshes([0, 300]); Music.step(); }, 3600);
       setTimeout(function () { if (G.qj !== g) return; jmJul(''); qjEnd(); }, 7600);
       return;
@@ -3715,8 +3717,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.rank = rank; g.st = 'done'; push(); qjShow(); Music.douze();
     var nm = function (k) { return players[k] ? players[k].name : '?'; };
     var at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); };
-    at(800, function () { qjSay('her', g.win.map(nm).join(' and ') + (g.win.length > 1 ? ' find' : ' finds') + ' the way to Juliet! 🌹 Bravissimo!'); });
-    at(5200, function () { qjSay('him', 'And the rest of you… still lost in Verona! 🗺️😂'); });
+    var lostF = act.filter(function (k) { return g.win.indexOf(k) < 0; }).map(nm), lj = function (a) { return a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a[0]; };
+    at(800, function () { qjSay('her', lostF.length ? lj(lostF) + (lostF.length > 1 ? ' are' : ' is') + ' lost in Verona forever! 😵' : 'Nobody is lost in Verona! 🌹'); });
     at(9800, function () {
       jmSong(false);
       var ov = $('qjov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
@@ -3819,11 +3821,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (rnd(i, j, 4) < .7) { var ch = new T.Mesh(new T.BoxGeometry(.6, 1.3, .6), capMat); ch.position.set((rnd(i, j, 5) - .5) * 3, hgt + 1.4, (rnd(i, j, 6) - .5) * 3); ch.castShadow = true; g.add(ch); }
       g.position.set((i + .5) * V3_C, 0, (j + .5) * V3_C); city.add(g); blocks[key] = g;
     }
-    function around(cx, cy) {   // the blocks around crossroads (cx, cy); far ones go
+    function around(cx, cy, kx, ky) {   // the blocks around crossroads (cx, cy) (and around (kx, ky) too, where we come from); far ones go
+      if (kx == null) { kx = cx; ky = cy; }
       for (var i = cx - 4; i < cx + 4; i++) for (var j = cy - 6; j < cy + 3; j++) addBlock(i, j);
-      Object.keys(blocks).forEach(function (k) { var p = k.split(',').map(Number); if (Math.abs(p[0] - cx) > 6 || Math.abs(p[1] - cy) > 8) { city.remove(blocks[k]); delete blocks[k]; } });
+      for (i = kx - 4; i < kx + 4; i++) for (j = ky - 6; j < ky + 3; j++) addBlock(i, j);
+      var far = function (p, x, y) { return Math.abs(p[0] - x) > 6 || Math.abs(p[1] - y) > 8; };
+      Object.keys(blocks).forEach(function (k) { var p = k.split(',').map(Number); if (far(p, cx, cy) && far(p, kx, ky)) { city.remove(blocks[k]); delete blocks[k]; } });
     }
     around(0, 0);
+    /* ground fog: soft layers of cloud low over the streets in the distance, so the buildings stick out above it
+       but the road and the ground disappear in it (they stay put while the city slides underneath) */
+    var fogTex = v3Tex(function (x, W, H) {
+      x.clearRect(0, 0, W, H);
+      for (var n = 0; n < 140; n++) { var px = rnd(n, 1, 7) * W, py = H * (.05 + .95 * Math.pow(rnd(n, 2, 7), .7)), r = W * (.05 + rnd(n, 3, 7) * .09), gr = x.createRadialGradient(px, py, 0, px, py, r); gr.addColorStop(0, 'rgba(236,228,250,.55)'); gr.addColorStop(1, 'rgba(236,228,250,0)'); x.fillStyle = gr; x.fillRect(px - r, py - r, r * 2, r * 2); }
+      var fade = x.createLinearGradient(0, 0, 0, H); fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(.3, 'rgba(0,0,0,.25)'); fade.addColorStop(.6, 'rgba(0,0,0,1)'); fade.addColorStop(1, 'rgba(0,0,0,1)'); x.globalCompositeOperation = 'destination-in'; x.fillStyle = fade; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over';
+    }, 512, 256);
+    fogTex.wrapS = fogTex.wrapT = THREE.ClampToEdgeWrapping;
+    [[.35, 1], [.9, .8], [1.5, .55]].forEach(function (f, i) {
+      var m = new T.Mesh(new T.PlaneGeometry(130, 50), new T.MeshBasicMaterial({ map: fogTex, transparent: true, opacity: f[1], depthWrite: false, fog: false }));
+      m.rotation.x = -Math.PI / 2; m.position.set(i * 9 - 9, f[0], -28 - i * 1.5); if (i === 1) m.scale.x = -1; m.renderOrder = 2 + i; sc.add(m);
+    });
     var holes = [], holeMat = new T.MeshBasicMaterial({ color: '#000' }), rimMat = new T.MeshStandardMaterial({ color: '#2a1a12', roughness: 1 });
     var st = { x: 0, y: 0, fx: 0, fy: 0, tx: 0, ty: 0, t0: 0, dur: 600, alive: true };
     function frame() {
@@ -3845,7 +3862,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     requestAnimationFrame(frame);
     var api = {
-      go: function (x, y, jump) { st.fx = jump ? x : st.x; st.fy = jump ? y : st.y; st.tx = x; st.ty = y; st.t0 = jump ? 0 : performance.now(); if (jump) { st.x = x; st.y = y; } around(Math.round(x), Math.round(y)); },
+      go: function (x, y, jump, dur) { st.dur = dur || 600; st.fx = jump ? x : st.x; st.fy = jump ? y : st.y; st.tx = x; st.ty = y; st.t0 = jump ? 0 : performance.now(); if (jump) { st.x = x; st.y = y; } around(Math.round(x), Math.round(y), Math.round(st.x), Math.round(st.y)); },
       hole: function (x, y, d) {   // a hole in the side street from crossroads (x, y), direction d
         var g = new T.Group(), r = new T.Mesh(new T.CircleGeometry(1.35, 28), rimMat), b = new T.Mesh(new T.CircleGeometry(1.15, 28), holeMat);
         r.rotation.x = b.rotation.x = -Math.PI / 2; r.position.y = .02; b.position.y = .03; g.add(r); g.add(b);
@@ -3896,7 +3913,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.setAttribute('data-p', ck);
       var far = Math.abs(x - was[0]) + Math.abs(y - was[1]) !== 1;
       if (far) V3.clearHoles();
-      V3.go(x, y, far);   // (a new round: back to the start in one go)
+      V3.go(x, y, false, far ? 1600 : 0);   /* (a new round: glide back to the start, no jump) */   // (a new round: back to the start in one go)
       ov.querySelector('.jmholes').innerHTML = '';
     }
     // the group: everyone still in, together in the middle; whoever goes wrong runs into a side street and falls

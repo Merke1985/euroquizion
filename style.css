@@ -2552,3 +2552,13 @@ aside.recapgone{visibility:hidden}
 .jmt.home .char{animation:jmrun .18s ease-in-out infinite alternate}
 .jmt.home .jmlegs i:first-child{animation:jmleg .22s ease-in-out infinite alternate}
 .jmt.home .jmlegs i:last-child{animation:jmleg .22s ease-in-out infinite alternate-reverse}
+
+/* the car now comes from the side, along the cross street */
+.jmcar{width:22vh;height:10vh;margin:-2vh 0 0 -11vh;transform-origin:50% 50%;animation:jmcar2 2.6s cubic-bezier(.3,.1,.6,.9) forwards}
+.jmcar.rtl svg,.jmcar.rtl .beam{scale:-1 1}
+.jmcar .beam{left:88%;right:auto;top:-10%;width:30vh;height:120%;background:radial-gradient(ellipse 60% 40% at 0% 55%,rgba(255,246,190,.6),rgba(255,240,170,.2) 50%,transparent 80%);transform-origin:-45% 50%}
+.jmcar.rtl .beam{left:auto;right:88%;transform-origin:145% 50%}
+@keyframes jmcar2{0%{transform:translateX(var(--sx))}62%{transform:translateX(0)}100%{transform:translateX(var(--ex))}}
+
+/* the clouds lie on the ground now (in the 3D city): no cloud band over the buildings; only a little at the foot of the tower */
+.jmov.v3 .jmsky.front .c1,.jmov.v3 .jmsky.front .c2,.jmov.v3 .jmsky.front .c3{display:none}
