@@ -4503,11 +4503,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (free.length < 4) { G.used = {}; free = G.pool.filter(function (s) { return !BAD_VIDEOS[s[4]]; }); }
     var cands = shuffle(free.slice()).slice(0, 12), round = G.round;
     // the hand-picked songs come first (from the whole song list, whatever the era settings); random songs only fill up the four
-    var jury = shuffle((songs || []).filter(function (s) { return juryClip(s[4]) && !G.used[s[4]] && !BAD_VIDEOS[s[4]]; }));
-    if (jury.length) cands = jury.concat(cands.filter(function (s) { return !juryClip(s[4]); }));
-    if (REMOTE || !ytReady || !window.YT || !YT.Player) { cb(cands.slice(0, 4)); return; }   // no player on this page: nothing to test with
+    var jury = shuffle((songs || []).filter(function (s) { return juryClip(s[4]) && !BAD_VIDEOS[s[4]]; })), need = 4;
+    if (jury.length) { cands = jury; need = Math.min(4, jury.length); }   /* only the hand-picked songs in the vote (up to four of them) */
+    if (REMOTE || !ytReady || !window.YT || !YT.Player) { cb(cands.slice(0, need)); return; }   // no player on this page: nothing to test with
     G.phase = 'loading'; cover(true, '', 'Picking songs…', false); masks(true); push();
-    probeSongs(cands, 4, function (four) { if (G.round === round && G.phase === 'loading' && four.length) cb(four); else if (G.round === round && G.phase === 'loading') cb(cands.slice(0, 4)); });
+    probeSongs(cands, need, function (four) { if (G.round === round && G.phase === 'loading' && four.length) cb(four); else if (G.round === round && G.phase === 'loading') cb(cands.slice(0, need)); });
   }
   function singStart() { fourSongs(singStart2); }
   function singStart2(four) {
@@ -5369,7 +5369,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try { var sk = localStorage.getItem('esc-skip'); if (sk && $('s-skip').querySelector('option[value="' + sk + '"]')) { $('s-skip').value = sk; G.skip = sk; } } catch (e) {}
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=44').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=45').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   // ---------- volume: a button in the top right corner, with a slider for music and one for sound effects ----------
   (function () {
