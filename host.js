@@ -2770,7 +2770,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function itemGetSnd() { if (REMOTE) return; try { if (!itemGetEl) itemGetEl = new Audio('sounds/item_get.mp3'); itemGetEl.currentTime = 0; itemGetEl.volume = Math.max(0, Math.min(1, 0.8 * (Music.vol ? Music.vol.fx : 1))); var pr = itemGetEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function shopGive(p, ids) { ids.forEach(function (id) { var it = shopItem(id); if (it && it.uses) { p.uses = p.uses || {}; p.uses[id] = (p.uses[id] || 0) + it.uses; } }); return ids; }   // (the Eurovision Fan: one item in the bag, with 3 uses)
   function useSync(p, id) { var it = shopItem(id), per = (it && it.uses) || 1, want = Math.ceil(usesLeft(p, id) / per), inv = p.inv || []; while (inv.filter(function (x) { return x === id; }).length > want) inv.splice(inv.lastIndexOf(id), 1); }   // (an item with 3 uses: three in the bag)
-  function shopPrice(it) { return shopPriceOf(it, G.block || 3); }   // (more questions per block of trivia: dearer)
+  /* Prices follow the scores: the bargain shelf costs the average score of all players divided by 6 (at least 2),
+     the middle shelf twice that, luxury three times. Fixed for one visit, so buying does not change them. */
+  function shopBase() {
+    if (G.shop && G.shop.base) return G.shop.base;
+    var ps = list().filter(function (p) { return !p.off; }), avg = ps.length ? ps.reduce(function (a, p) { return a + Math.max(0, shownScore(p)); }, 0) / ps.length : 0;
+    var b = Math.max(2, Math.round(avg / 6)); if (G.shop) G.shop.base = b; return b;
+  }
+  function shopPrice(it) { return shopBase() * ((it && it.tier) || 2); }
   function shopAvail() { return SHOP_ITEMS.filter(function (it) { return (!it.final || G.finalMode === 'chase') && !soldOut(it.id); }); }
   // Some items are one of a kind (stock: 1): once someone has it, it is gone from the boutique for the rest of the game.
   function soldOut(id) { var it = shopItem(id); return !!(it && it.stock && ((G.sold || {})[id] || 0) >= it.stock); }

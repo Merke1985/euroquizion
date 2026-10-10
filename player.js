@@ -656,11 +656,6 @@
           if (net) { net.send('shop', fm); setTimeout(function () { net.send('shop', fm); }, 1200); }
           ptoast('🪭 Whoosh! Half of the wrong answers blow away…'); bagOpen = false; bagUpdate(state); return;
         }
-        if ((shopItem(id) || {}).kind === 'skip') {   // no one to pick: skip this question, for everyone
-          var km = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
-          if (net) { net.send('shop', km); setTimeout(function () { net.send('shop', km); }, 1200); }
-          ptoast('💿 Skip! On to a different question…'); bagOpen = false; bagUpdate(state); return;
-        }
         if ((shopItem(id) || {}).kind === 'tab') {   // no one to pick: it is everyone else's bill
           var cm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', cm); setTimeout(function () { net.send('shop', cm); }, 1200); }
@@ -673,6 +668,14 @@
         }
         bagItem = id; bagUpdate(state);
       }; });
+    } else if ((shopItem(bagItem) || {}).kind === 'skip') {   /* the CD player: are you sure? Skip or cancel */
+      var cdi = shopItem(bagItem);
+      p.innerHTML = '<h3>' + cdi.icon + ' ' + esc(cdi.name) + '</h3><p class="mute" style="margin:0 0 12px">Skip this question? Nobody scores it, and a different one comes up straight away.</p><button type="button" class="btn big" id="cdskip" style="width:100%">⏭️ Skip</button><button type="button" class="btn alt" id="bagclose">Cancel</button>';
+      $('cdskip').onclick = function () {
+        var km = { pid: pid, use: bagItem, target: pid, key: Math.random().toString(36).slice(2, 9) };
+        if (net) { net.send('shop', km); setTimeout(function () { net.send('shop', km); }, 1200); }
+        ptoast('💿 Skip! On to a different question…'); bagOpen = false; bagItem = null; bagUpdate(state);
+      };
     } else {
       var others = s.players.filter(function (x) { return x.pid !== pid && !x.off && !((shopItem(bagItem) || {}).kind === 'sit' && x.sit); });
       p.innerHTML = '<h3>' + esc(shopName(bagItem)) + ': on who?</h3>' + others.map(function (x) { var sh = (x.inv || []).indexOf('umbrella') >= 0 && (shopItem(bagItem) || {}).kind !== 'heel'; var lw = !sh && (shopItem(bagItem) || {}).kind === 'blow' && !s.players.some(function (y) { return !y.off && y.score < x.score; }); return '<button type="button" class="shopbtn who' + (sh || lw ? ' poor' : '') + '" data-pid="' + esc(x.pid) + '"' + (sh || lw ? ' disabled' : '') + '>' + charSvg(x.char) + '<span><b>' + esc(x.name) + (sh ? ' ☂️' : '') + '</b><small>' + (sh ? 'Protected by an umbrella' : lw ? 'Has the fewest points already' : s.hide ? '' : x.score + ' points') + '</small></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose">Back</button>';
