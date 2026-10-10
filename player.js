@@ -15,6 +15,11 @@
   // Inside the host's own page (a game without a shared screen) the hosting buttons make no sense.
   if (qs.get('embed')) { document.body.classList.add('embed'); $('hostlinks').classList.add('hidden'); }
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
+  /* rejoining: the last game this phone was in (for 12 hours). The code is filled in, and the host gives you your own place back */
+  var rejoin = null; try { rejoin = JSON.parse(store.get('esc-rejoin') || 'null'); } catch (e) {}
+  if (rejoin && !(Date.now() - rejoin.t < 12 * 3600000)) rejoin = null;
+  if (rejoin && !k && !$('code').value) $('code').value = rejoin.room;
+  var wasPid = '';
   countries = COUNTRY_NAMES;   /* (built into quiz.js: no need to download the whole song list) */
 
   // ---------- The Grand Final: tick the songs that fit ----------
@@ -85,6 +90,8 @@
     room = $('code').value.trim().toUpperCase(); name = $('name').value.trim(); name = name.charAt(0).toUpperCase() + name.slice(1);
     if (room.length !== 4 || !name) return;
     store.set('esc-name', name);
+    wasPid = rejoin && rejoin.room === room && rejoin.pid !== pid ? rejoin.pid : '';   /* (the same game as before, in a new tab: ask for the old place) */
+    store.set('esc-rejoin', JSON.stringify({ room: room, pid: pid, t: Date.now() }));
     $('joinerr').textContent = '';
     state = null; kicked = false;
     net = escConnect(room);
@@ -107,7 +114,7 @@
     hi = function () {
       if (kicked) return;
       var m = me();
-      net.send('hi', { pid: pid, name: name, char: want, cc: wantCC, score: m ? m.score : null,
+      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
     net.on('_open', hi);

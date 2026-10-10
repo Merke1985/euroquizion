@@ -87,6 +87,7 @@
     // Every character belongs to one player per room; first come, first served.
     var want = CHAR_BY_ID[m.char] ? m.char : null;
     var free = want && !list().some(function (x) { return x.char === want && x.pid !== m.pid; });
+    if (!p) { var old = rejoinOf(m, nm); if (old) { rekey(old.pid, m.pid); p = players[m.pid]; p.off = false; p.last = Date.now(); push(); } }   /* rejoining: the same player, back in their own place */
     if (!p && list().length >= MAX_PLAYERS) { sayHello(); return; }   /* (12 players at most: the game is full) */
     if (!p) {
       if (!free) {
@@ -113,6 +114,32 @@
     if (changed) push(); else if (m.back) sayHello();   // back from the background: here is how things stand
     remoteCheck();
   });
+  /* Rejoin: a phone that lost its tab (closed, crashed, a new phone) comes back as a new id. It gets its old place back
+     (score, items, avatar, flag, everything) when it is the same name and either the same phone asking for its old id,
+     or, during a game, a player of that name who has dropped out. */
+  function rejoinOf(m, nm) {
+    var same = function (x) { return x && !x.bot && String(x.name).toLowerCase() === String(nm).toLowerCase(); };
+    if (m.was && m.was !== m.pid && same(players[m.was])) return players[m.was];
+    if (G.phase !== 'lobby') return list().filter(function (x) { return same(x) && x.off; })[0] || null;
+    return null;
+  }
+  /* every mention of the old id in the game (lanes, votes, bags, turns…) becomes the new one */
+  function rekey(a, b) {
+    var seen = [];
+    var fix = function (o) {
+      if (!o || typeof o !== 'object' || seen.indexOf(o) >= 0) return o;
+      var pr = Object.getPrototypeOf(o); if (pr !== Object.prototype && pr !== Array.prototype && pr !== null) return o;   // (only plain data)
+      seen.push(o);
+      if (Array.isArray(o)) { for (var i = 0; i < o.length; i++) { if (o[i] === a) o[i] = b; else fix(o[i]); } return o; }
+      Object.keys(o).forEach(function (k) { var v = o[k]; if (v === a) o[k] = v = b; else fix(v); if (k === a) { o[b] = o[a]; delete o[a]; } });
+      return o;
+    };
+    var p = players[a]; delete players[a]; p.pid = b; players[b] = p;
+    fix(G); fix(p);
+    bots.forEach(function (x) { if (x.pid === a) x.pid = b; });
+    try { [].forEach.call(document.querySelectorAll('[data-pid="' + a.replace(/"/g, '') + '"]'), function (el) { if (el.closest('#chlanes, .jmgroup')) el.remove(); }); } catch (e) {}   /* (the runway and Verona redraw them under the new id) */
+    chaseBuilt = '';
+  }
   var helloAt = 0;
   function sayHello() { if (recovering || Date.now() - helloAt < 700) return; helloAt = Date.now(); net.send('state', snapshot()); }
   net.on('guess', function (m) {
