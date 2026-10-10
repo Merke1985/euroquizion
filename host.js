@@ -3619,7 +3619,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function qjRound() {
     var g = G.qj; if (!g) return;
     g.round++; g.seq = jmSeq(g); g.st = 'show'; g.prog = {}; g.fail = {}; g.wrong = {}; g.show = -1; g.pos = 0; g.falls = {}; var ovh = $('qjov'); if (ovh) ovh._holes = {}; push(); qjShow();
-    var STEP = Math.max(560, 900 - g.round * 25), at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
+    var STEP = Math.max(560, 1430 - (g.round - 1) * 25),   /* (round 1: each symbol up for 1 second, 70% of a step; a little faster every round) */ at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
     for (var i = 0; i < g.round; i++) (function (i) {
       at(1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4, 12][g.seq[i]]); });
       at(1200 + i * STEP + STEP * 0.7, function () { g.show = -2; qjShow(); });
