@@ -607,10 +607,11 @@
     $('bagbtn').classList.toggle('hidden', !ok); $('bagn').textContent = inv.length || '';
     /* debuffs on you (from other players' items): little badges next to the bag button */
     var fxb = $('fxbar'); if (!fxb) { fxb = document.createElement('div'); fxb.id = 'fxbar'; fxb.className = 'fxbar'; document.body.appendChild(fxb); }
-    var fx = (m && m.fx) || [], fxOn = s.cfg && s.cfg.atype === 'party' && fx.length && ['lobby', 'end', 'brief', 'intro', 'chase'].indexOf(s.phase) < 0;
+    var fx = (m && m.fx) || [], fxOn = s.cfg && s.cfg.atype === 'party' && fx.length && ['guess', 'reveal', 'loading', 'picks', 'paused', 'qshow'].indexOf(s.phase) >= 0;   /* (only around the trivia questions: never over a party game's buttons) */
     fxb.classList.toggle('hidden', !fxOn); fxb.classList.toggle('nobag', !ok);
     var fxh = fxOn ? fx.map(function (f) { return '<span class="fxchip" title="' + esc(f.t) + '">' + f.i + '<b>' + (f.n > 1 ? '×' + f.n : '') + '</b></span>'; }).join('') : '';
     if (fxb.innerHTML !== fxh) fxb.innerHTML = fxh;
+    document.body.classList.toggle('hasdock', !!(ok || fxOn));   /* (room at the bottom, so nothing hides behind the bag and the badges) */
     if (!ok) { bagOpen = false; bagItem = null; }
     $('bagpanel').classList.toggle('hidden', !bagOpen);
     if (!bagOpen) return;

@@ -2713,3 +2713,10 @@ aside.recapgone{visibility:hidden}
 .fxchip{display:flex;align-items:center;gap:2px;height:46px;padding:0 10px;border-radius:23px;background:rgba(255,77,106,.9);box-shadow:0 0 0 2px #fff,0 6px 16px rgba(0,0,0,.45);font-size:1.4rem;animation:fxpulse 1.6s ease-in-out infinite alternate}
 .fxchip b{font-size:.85rem;color:#fff}
 @keyframes fxpulse{to{box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,77,106,.9)}}
+
+/* the badges stack up above the bag button, in the corner (not across the screen) */
+.fxbar{right:20px;bottom:84px;flex-direction:column-reverse;align-items:center}
+.fxbar.nobag{right:20px;bottom:20px}
+.fxchip{flex-direction:column;justify-content:center;width:46px;height:46px;padding:0;border-radius:50%;font-size:1.25rem;line-height:1}
+.fxchip b{font-size:.62rem;margin-top:-2px}
+body.hasdock main{padding-bottom:84px}
