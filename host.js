@@ -2391,7 +2391,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       Music.dread(false);
       var e = g.env[i], who = bombWho(); e.open = true;
       if (!e.bomb) { g.st = 'safe'; Music.ding(); push(); g.turn++; bombTimer = setTimeout(bombTurn, 2600); return; }
-      g.st = 'boom'; chaseSfx('brk', 1, Music.crumble); setTimeout(function () { Music.scream(); }, 300); push();
+      g.st = 'boom'; boomSnd(); setTimeout(function () { Music.scream(); }, 300); push();
       bombTimer = setTimeout(function () {
         g.alive.splice(g.alive.indexOf(who), 1); g.out.push(who); g.turn = g.turn % Math.max(1, g.alive.length);
         if (g.alive.length <= 1) { bombWin(); return; }
@@ -2399,6 +2399,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, 3200);
     }, 2400);
   }
+  var boomEl = null;
+  function boomSnd() { if (REMOTE) { Music.crumble(); return; } try { if (!boomEl) boomEl = new Audio('sounds/explosion.mp3?v=1'); boomEl.currentTime = 0; boomEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = boomEl.play(); if (pr && pr.catch) pr.catch(function () { Music.crumble(); }); } catch (e) { Music.crumble(); } }   /* the envelope bomb going off */
   function bombWin() {
     var g = G.bomb, w = players[g.alive[0]], second = players[g.out[g.out.length - 1]];
     var big = 6 * partyX(), small = 3 * partyX();
