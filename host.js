@@ -83,7 +83,7 @@
     if (!m || !m.pid) return;
     if (m.bye) { var gone = players[m.pid]; if (gone && !gone.off) { gone.off = true; gone.last = 0; push(); allIn(); drawAllCheck(); quipAllCheck(); } return; }   // that phone closed the page
     var p = players[m.pid], isNew = !p;
-    var nm = String(m.name || '').slice(0, 16) || 'Player';
+    var nm = String(m.name || '').trim().slice(0, 16) || 'Player'; nm = nm.charAt(0).toUpperCase() + nm.slice(1);   /* (a name always starts with a capital) */
     // Every character belongs to one player per room; first come, first served.
     var want = CHAR_BY_ID[m.char] ? m.char : null;
     var free = want && !list().some(function (x) { return x.char === want && x.pid !== m.pid; });

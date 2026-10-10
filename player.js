@@ -82,7 +82,7 @@
   if (document.body.classList.contains('embed')) { setInterval(function () { if (!state || picking) tellHeight(); }, 500); }
   $('joinform').addEventListener('submit', function (e) {
     e.preventDefault();
-    room = $('code').value.trim().toUpperCase(); name = $('name').value.trim();
+    room = $('code').value.trim().toUpperCase(); name = $('name').value.trim(); name = name.charAt(0).toUpperCase() + name.slice(1);
     if (room.length !== 4 || !name) return;
     store.set('esc-name', name);
     $('joinerr').textContent = '';
@@ -1073,7 +1073,7 @@
   $('changename').addEventListener('click', function () { pickOpen('name'); });
   $('pickdone').addEventListener('click', function () {
     var n = $('editname').value.trim().slice(0, 16);
-    if (n) { name = n; store.set('esc-name', name); $('name').value = name; }
+    if (n) { n = n.charAt(0).toUpperCase() + n.slice(1); name = n; store.set('esc-name', name); $('name').value = name; }
     picking = false; hi(); if (state) onState(state);
   });
 
