@@ -2024,7 +2024,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   });
   /* testing the items: endless trivia (no party games); the bots aim every item at you, one by one,
      each as soon as the effect of the previous one has worn off */
-  var ITEM_TEST = ['power', 'hack', 'wind', 'mic', 'ticket', 'flag', 'pass', 'smoke'], itemTestT = null;
+  var ITEM_TEST = ['flag', 'ticket', 'power', 'hack', 'wind', 'mic', 'pass', 'smoke'], itemTestT = null;
   $('itemtest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var me = list().filter(function (p) { return !p.bot && !p.off; })[0];
