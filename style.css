@@ -2559,3 +2559,6 @@ aside.recapgone{visibility:hidden}
 .jmcar .beam{left:88%;right:auto;top:-10%;width:30vh;height:120%;background:radial-gradient(ellipse 60% 40% at 0% 55%,rgba(255,246,190,.6),rgba(255,240,170,.2) 50%,transparent 80%);transform-origin:-45% 50%}
 .jmcar.rtl .beam{left:auto;right:88%;transform-origin:145% 50%}
 @keyframes jmcar2{0%{transform:translateX(var(--sx))}62%{transform:translateX(0)}100%{transform:translateX(var(--ex))}}
+/* no extra cloud at the foot of the tower; the cloud band itself a little thicker instead */
+.jmsky.front .c4{display:none}
+.jmsky.front{top:10.5vh;height:17vh}
