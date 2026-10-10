@@ -8,6 +8,7 @@
   try { sessionStorage.setItem('esc-pid', pid); } catch (e) {}
   var net = null, name = '', room = '', state = null, endsAt = 0, countries = {}, joinTimer = null, hiTimer = null, lastPhaseKey = '', builtKey = '', pickUntil = 0, want = null, picking = false, hi = function () {}, hiHooked = false;
   try { want = sessionStorage.getItem('esc-char'); } catch (e) {}
+  var wantCC = null; try { wantCC = sessionStorage.getItem('esc-cc'); } catch (e) {}
 
   $('name').value = store.get('esc-name') || '';
   var qs = new URLSearchParams(location.search), k = qs.get('k');
@@ -106,7 +107,7 @@
     hi = function () {
       if (kicked) return;
       var m = me();
-      net.send('hi', { pid: pid, name: name, char: want, score: m ? m.score : null,
+      net.send('hi', { pid: pid, name: name, char: want, cc: wantCC, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
     net.on('_open', hi);
@@ -115,7 +116,7 @@
     if (!hiHooked) {
       hiHooked = true;
       // back from another app or a locked screen: say hello at once, and ask for the current state
-      document.addEventListener('visibilitychange', function () { if (!document.hidden && net && hi && !kicked) { net.send('hi', { pid: pid, name: name, char: want, score: (me() || {}).score, back: 1 }); } });
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && net && hi && !kicked) { net.send('hi', { pid: pid, name: name, char: want, cc: wantCC, score: (me() || {}).score, back: 1 }); } });
       // leaving: tell the host, so nobody waits for this phone
       window.addEventListener('pagehide', function () { if (net) net.send('hi', { pid: pid, bye: 1 }); });
     }
@@ -180,6 +181,7 @@
       show('v-wait'); $('waittitle').textContent = full ? 'This game is full' : 'Joining…'; $('waitsub').textContent = full ? 'All avatars are in use.' : '';
       return;
     }
+    if (m.cc && wantCC !== m.cc && Date.now() > pickUntil) { wantCC = m.cc; try { sessionStorage.setItem('esc-cc', wantCC); } catch (e) {} }
     if (m.char && want !== m.char && Date.now() > pickUntil) { want = m.char; try { sessionStorage.setItem('esc-char', want); } catch (e) {} }
     if (picking) {
       if (s.phase !== 'lobby') picking = false;
@@ -274,7 +276,9 @@
         var vg = $('v-guess'), fl = vg.querySelector('.pflag'), pl = vg.querySelector('.ppillar');
         if (!fl) { fl = document.createElement('div'); fl.className = 'pflag'; fl.innerHTML = '<i class="pole"></i><i class="cloth"><b></b></i>'; vg.appendChild(fl); }
         if (!pl) { pl = document.createElement('div'); pl.className = 'ppillar'; pl.innerHTML = '<i class="cap"></i><i class="shaft"></i><i class="base"></i><span>½ points</span>'; vg.appendChild(pl); }
-        fl.classList.toggle('on', !!(m && m.flag)); pl.classList.toggle('on', !!(m && m.half));
+        var fc = m && m.flag && m.flagc ? m.flagc : ''; if (fl.getAttribute('data-cc') !== fc) { fl.setAttribute('data-cc', fc); fl.querySelector('.cloth').style.backgroundImage = fc ? 'url(https://flagcdn.com/w640/' + fc + '.png)' : ''; fl.classList.toggle('cc', !!fc); }
+        fl.classList.toggle('on', !!(m && m.flag));
+        if (m && m.flag) requestAnimationFrame(flagFit); pl.classList.toggle('on', !!(m && m.half));
         $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc');   /* the flag hides every answer: only the outlines are left, so you pick blind */
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
@@ -335,7 +339,7 @@
         $('verdict').className = 'fb verdict ' + (mine ? 'ok' : 'no');
         $('verdict').textContent = mine ? (mine.win ? 'Best singer!' : mine.votes + (mine.votes === 1 ? ' vote' : ' votes') + ' for you') : 'You didn’t sing this one';
         $('ropts').innerHTML = (s.sing.result || []).map(function (r) { return '<div class="opt' + (r.win ? ' right' : '') + '">' + esc(r.name) + ' · ' + r.votes + (r.votes === 1 ? ' vote' : ' votes') + '</div>'; }).join('');
-        $('rpts').textContent = ptsText(mine ? mine.pts : 0);
+        $('rpts').textContent = ptsText(mine ? mine.pts : 0) + (mine && mine.ccb ? ' · Flag bonus ×2!' : '');
         $('rpts').className = 'rpts ' + (mine ? 'ok' : 'no');
       }
       if (rev && s.best) {
@@ -989,6 +993,15 @@
     // Without a shared screen this tap also wakes up the phone's own video player, so sound can start later.
     if (state && state.remote && yt && ytReady) { try { yt.mute(); yt.loadVideoById(INTRO.ids[0]); vStage = 'primed'; } catch (e) {} }
   });
+  /* the giant flag covers the whole question: from the question text down to the last answer */
+  function flagFit() {
+    var vg = $('v-guess'), fl = vg && vg.querySelector('.pflag'); if (!fl || !fl.classList.contains('on')) return;
+    var top = $('qtext').getBoundingClientRect().top, ob = $('opts'), gf = $('guessform');
+    var low = !ob.classList.contains('hidden') ? ob : !gf.classList.contains('hidden') ? gf : $('qtext');
+    var r0 = vg.getBoundingClientRect(), bot = low.getBoundingClientRect().bottom;
+    fl.style.top = Math.round(top - r0.top - 10) + 'px'; fl.style.height = Math.max(120, Math.round(bot - top + 20)) + 'px';
+  }
+  window.addEventListener('resize', flagFit); setInterval(flagFit, 1000);
   function renderPicker(s, m) {
     var taken = {};
     s.players.forEach(function (p) { if (p.pid !== pid && p.char) taken[p.char] = p.name; });
@@ -1001,10 +1014,27 @@
           ((Date.now() < pickUntil ? want : (m && m.char)) === c.id ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
       }).join('');
     }
+    /* the fan flag: one country per player (the flag you wave with the Giant Eurovision Flag) */
+    var tcc = {}; s.players.forEach(function (p) { if (p.pid !== pid && p.cc) tcc[p.cc] = p.name; });
+    var mine = Date.now() < pickUntil && wantCC ? wantCC : (m && m.cc);
+    var fk = JSON.stringify(tcc) + '|' + mine;
+    if (fk !== flagKey) {
+      flagKey = fk;
+      var list2 = FAN_FLAGS.slice().sort(function (a, b) { return String(countries[a] || a).localeCompare(String(countries[b] || b)); });
+      $('ccs').innerHTML = list2.map(function (c) { return '<button type="button" data-cc="' + c + '"' + (tcc[c] ? ' disabled title="Taken by ' + esc(tcc[c]) + '"' : '') + (mine === c ? ' class="mine"' : '') + '><img src="https://flagcdn.com/w80/' + c + '.png" alt=""><span>' + esc(countries[c] || c.toUpperCase()) + '</span></button>'; }).join('');
+    }
     var left = CHARS.filter(function (c) { return !taken[c.id]; }).length;
     $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All other avatars are taken.';
     if (want && taken[want]) want = null;
   }
+  var flagKey = '';
+  $('ccs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-cc]');
+    if (!b || b.disabled) return;
+    wantCC = b.getAttribute('data-cc'); pickUntil = Date.now() + 3000;
+    try { sessionStorage.setItem('esc-cc', wantCC); } catch (err) {}
+    hi(); if (state) onState(state);
+  });
   $('chars').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-char]');
     if (!b || b.disabled) return;
@@ -1017,7 +1047,7 @@
     picking = true; $('editname').value = name;
     $('picktitle').textContent = mode === 'name' ? 'Your name' : 'Your avatar';
     $('pickname').classList.toggle('hidden', mode !== 'name');
-    $('pickavnote').classList.toggle('hidden', mode === 'name'); $('chars').classList.toggle('hidden', mode === 'name');
+    $('pickavnote').classList.toggle('hidden', mode === 'name'); $('chars').classList.toggle('hidden', mode === 'name'); $('ccwrap').classList.toggle('hidden', mode === 'name');
     if (state) onState(state);
     if (mode === 'name') { try { $('editname').focus(); $('editname').select(); } catch (e) {} }
   }

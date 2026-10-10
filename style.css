@@ -2771,3 +2771,18 @@ body.hasdock main{padding-bottom:84px}
 /* (the bag moved under the name: one column less, so the score sits further right) */
 .host aside .board li{grid-template-columns:minmax(0,1fr) auto 2.4em}
 .host aside .board li{grid-template-columns:minmax(0,1fr) auto auto}
+
+/* the fan flag picker, and the waved flag in that country's colours */
+.ccgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ccgrid button{background:rgba(255,255,255,.06);border:0;border-radius:10px;padding:6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.66rem;font-weight:700;line-height:1.1;color:inherit;text-align:center}
+.ccgrid img{width:44px;height:30px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.ccgrid button.mine{box-shadow:0 0 0 3px var(--yellow)}
+.ccgrid button:disabled{opacity:.3;cursor:default}
+.pflag.cc .cloth{background-color:#fff;background-size:100% 100%;background-position:center}
+.pflag.cc .cloth::after{content:none}
+.shflagimg{width:1.6em;height:auto;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.4);vertical-align:middle}
+/* flag bonus: a question about your fan-flag country, double points */
+.host aside .board .ccbonus{position:absolute;right:4px;top:-9px;display:flex;align-items:center;gap:4px;padding:1px 6px 1px 3px;border-radius:999px;background:var(--yellow);color:#1a0f4d;font-size:.62rem;font-weight:900;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.45);z-index:3;animation:ccbpop .55s cubic-bezier(.2,1.6,.4,1) both}
+.host aside .board .ccbonus img{width:16px;height:11px;object-fit:cover;border-radius:2px}
+@keyframes ccbpop{from{transform:scale(0) rotate(-12deg)}to{transform:none}}
+.pflag .cloth::after{font-size:clamp(46px,18vw,90px)}

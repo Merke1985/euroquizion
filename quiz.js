@@ -209,6 +209,8 @@ function makeHost(song, countries) {
   return { subject: 'host', type: 'mc', map: c[0], dot: [c[1], c[2]], noclip: true, text: 'Which host city is the dot on this map?', hint: '', answer: city, options: opts, correct: opts.indexOf(city),
     explain: 'The ' + song[0] + ' contest was held in ' + city + (song[0] === 1990 || city === 'Luxembourg' ? '' : ', ' + (countries[c[0]] || '')) + '.' };
 }
+/* the fan flags players can pick (one per player): every country that sent a song, minus the ones that no longer exist */
+var FAN_FLAGS = ['ad','al','am','at','au','az','ba','be','bg','by','ch','cy','cz','de','dk','ee','es','fi','fr','gb','ge','gr','hr','hu','ie','il','is','it','lt','lu','lv','ma','mc','md','me','mk','mt','nl','no','pl','pt','ro','rs','ru','se','si','sk','sm','tr','ua'];
 function flagHtml(code) { return '<img class="flagimg" src="https://flagcdn.com/w640/' + code + '.png" alt="" onerror="this.outerHTML=\'' + flag(code) + '\'">'; }
 var PEEL_MS = 60000;
 function peelPoints(ms, blur) {

@@ -103,6 +103,10 @@
       }
     }
     var changed = isNew || p.name !== nm || p.off;
+    /* the fan flag: one country per player; none picked (or taken): a random free one */
+    var wf = FAN_FLAGS.indexOf(m.cc) >= 0 && !list().some(function (x) { return x.cc === m.cc && x.pid !== m.pid; }) ? m.cc : null;
+    if (wf && wf !== p.cc && (G.phase === 'lobby' || !p.cc)) { p.cc = wf; changed = true; }
+    if (!p.cc) { var fl = FAN_FLAGS.filter(function (c) { return !list().some(function (x) { return x.cc === c; }); }); p.cc = fl.length ? pick(fl) : pick(FAN_FLAGS); changed = true; }
     if (free && want !== p.char && (G.phase === 'lobby' || !p.char)) { p.char = want; changed = true; }
     p.name = nm; p.last = Date.now(); p.off = false;
     if (changed) push(); else if (m.back) sayHello();   // back from the background: here is how things stand
@@ -131,7 +135,7 @@
     res = checkOpen(G.q, G.song, m.text, countries);
     if (res === 'ok') {
       var before = list().filter(function (x) { return x.got; }).length;
-      p.pts = pointsFor(G.scoring, G.guessMs - (G.endsAt - Date.now()), G.guessMs, before); if (p.halfNow) p.pts = Math.ceil(p.pts / 2); p.score += p.pts; p.got = true; cardPay(p);
+      p.pts = pointsFor(G.scoring, G.guessMs - (G.endsAt - Date.now()), G.guessMs, before); if (p.halfNow) p.pts = Math.ceil(p.pts / 2); if (ccHit(p)) { p.pts *= 2; p.ccb = p.cc; } p.score += p.pts; p.got = true; cardPay(p);
     }
     net.send('result', { pid: p.pid, res: res });
     if (res === 'ok' || mc) {
@@ -171,7 +175,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, cc: p.cc || '', ccb: G.phase === 'reveal' && p.got ? p.ccb || '' : '', flagc: p.flagc || '', robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.frozenLeft != null) s.itemBusy = true;   /* an item is going off: nobody can use one right now */
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
@@ -384,7 +388,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + '<span class="wtx"><span class="wn">' + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span>' + boardSub(p) + '</span></span><span class="binv"></span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + '<span class="wtx"><span class="wn">' + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span>' + boardSub(p) + '</span></span><span class="binv"></span><span class="tot">' + (hide ? '?' : p.score) + '</span>' + (!hide && showGot && p.got && p.ccb && G.phase === 'reveal' ? '<span class="ccbonus" title="Their fan-flag country: double points!"><img src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="">Flag bonus ×2</span>' : '') + '<span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
@@ -816,6 +820,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // An ad seems to be playing: show the player (title bar stays masked) so it can be skipped by hand.
   var adShown = false;
+  /* the question is about the player's fan-flag country (its song, or its name in the question or the answer): double points */
+  function ccHit(p) {
+    var cc = p.cc, q = G.q; if (!cc || !q) return false;
+    if (q.flag === cc || q.map === cc) return true;
+    if (!triviaQ() && G.song && G.song[1] === cc) return true;
+    var names = [countries[cc]].concat((typeof COUNTRY_ALIASES !== 'undefined' && COUNTRY_ALIASES[cc]) || []).filter(Boolean);
+    var txt = [q.text, q.answer, q.options && q.correct >= 0 ? q.options[q.correct] : '', q.explain].join(' | ');
+    return names.some(function (n) { return new RegExp('(^|[^\\p{L}])' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}])', 'iu').test(txt); });
+  }
   function triviaQ() { return !!(G.q && (G.q.subject === 'trivia' || (G.clue && G.clue.st === 'ask'))); }   // no video at the answer either (Did you know?, and the questions in Edgar's game)
   function noClipQ() { return !!G.draw || !!(G.q && G.q.noclip); }
   function adNote(on) {
@@ -1072,7 +1085,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       right = [];
     }
     if (G.clue && G.clue.st === 'ask' && G.q && !G.best && !G.draw && !G.q.battle) { clueGive(right); right = []; }   // Where the Hell Is Edgar?: no points, secret clues for a right answer
-    right.forEach(function (p, rank) { p.pts = G.draw ? drawPts(p) : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs, G.q.blur) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); if (p.halfNow) p.pts = Math.ceil(p.pts / 2); p.score += p.pts; p.got = true; cardPay(p); });   // (Limited View tickets: half points; a credit card: 2 to its owner)   // (the Grand tour's finale counts double)
+    right.forEach(function (p, rank) { p.pts = G.draw ? drawPts(p) : G.q && G.q.battle ? BATTLE_PTS : (G.q && G.q.peel ? peelPoints(p.pickMs, G.q.blur) : G.scoring === 'random' && G.qWorth ? G.qWorth : pointsFor(G.scoring === 'speed' ? 'order' : G.scoring, isPair() ? Math.max(0, p.pickMs - PAIR_CLIP * 1000) : p.pickMs, G.guessMs, rank)) * (G.tourFinal && !G.draw ? 2 : 1); if (p.halfNow) p.pts = Math.ceil(p.pts / 2); if (!G.draw && !(G.q && G.q.battle) && ccHit(p)) { p.pts *= 2; p.ccb = p.cc; } p.score += p.pts; p.got = true; cardPay(p); });   /* (their fan-flag country in the question: double points)*/   // (Limited View tickets: half points; a credit card: 2 to its owner)   // (the Grand tour's finale counts double)
     // Draw!: a point for everyone who guesses it, and a point for the artist for each of them.
     var artist = G.draw && players[G.draw.pid];
     // The artist: 12 points shared out over everyone who answered, for each of them who got it (all right: 12).
@@ -1132,7 +1145,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
     list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; p.halfNow = false; p.cardNow = ''; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
-    list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; p.ranks = null; });
+    list().forEach(function (p) { p.got = false; p.done = false; p.pick = null; p.pts = 0; p.ranks = null; p.ccb = ''; });
     G.q = null; G.revealAt = 0; singClear(); G.draw = null; G.best = null; clearTimeout(drawTimer); clearTimeout(picksTimer);
     yt2.pause(); if (!REMOTE) { stageEl().classList.remove('second'); pairTag(''); }
     G.quips = null; G.quipLoad = false; clearTimeout(quipTimer);
@@ -3008,7 +3021,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (it.kind === 'heel') { t.heel = 1; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '👠 stuck in the Grand Final' }]; return it.icon + ' ' + by.name + ' broke ' + t.name + '’s heel! ' + t.name + ' can’t move on the first question of the Grand Final!'; }
     if (it.kind === 'card') { var cn = it.amount || 5; t.cardBy = by.pid; if (G.phase === 'guess') { t.cardNow = by.pid; t.cardQ = cn - 1; } else t.cardQ = cn; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '💳 pays ' + by.name }]; return it.icon + ' ' + by.name + ' slipped the Eurovision Credit Card to ' + t.name + '! For ' + cn + ' questions, every right answer of ' + t.name + ' pays ' + by.name + ' 2 points! 💸'; }
     if (it.kind === 'half') { var hn = it.amount || 3; if (G.phase === 'guess') { t.halfNow = true; t.halfQ = (t.halfQ || 0) + hn - 1; } else t.halfQ = (t.halfQ || 0) + hn; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '½ points · ' + hn + ' questions' }]; return it.icon + ' ' + by.name + ' gave ' + t.name + ' Limited View Liveshow Tickets: a pillar in the way! ' + t.name + ' gets half points ' + (G.phase === 'guess' ? 'for this question and the next ' + (hn - 1) : 'for the next ' + hn + ' questions') + '!'; }
-    if (it.kind === 'flag') { if (G.phase === 'guess') { t.flagNow = true; t.flagged = (t.flagged || 0) + (it.amount || 3) - 1; } else t.flagged = (t.flagged || 0) + (it.amount || 3);   // (straight away: this question counts as the first of three)
+    if (it.kind === 'flag') { t.flagc = by.cc || ''; if (by.cc) shopLast.icon = '<img class="shflagimg" src="https://flagcdn.com/w160/' + by.cc + '.png" alt="">'; if (G.phase === 'guess') { t.flagNow = true; t.flagged = (t.flagged || 0) + (it.amount || 3) - 1; } else t.flagged = (t.flagged || 0) + (it.amount || 3);   // (straight away: this question counts as the first of three)
  shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, tag: '🙈 ' + (it.amount || 3) + ' questions' }]; return it.icon + ' ' + by.name + ' waves a giant flag in front of ' + t.name + ': ' + t.name + ' can’t see ' + (G.phase === 'guess' ? 'this question or the next ' + ((it.amount || 3) - 1) : 'the next ' + (it.amount || 3) + ' questions') + '!'; }
     if (it.kind === 'lose') { var n = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= n; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, { pid: t.pid, n: -n }]; return it.icon + ' ' + by.name + (it.id === 'power' ? ' threw Marc’s Powerbank at ' + t.name : ' used the ' + it.name + ' on ' + t.name) + (n ? ': −' + n : ', but there were no points to lose! 😅'); }
     if (it.kind === 'blow') {   // blown over to whoever has the fewest points (not the one it was blown from; a tie: one of them)
