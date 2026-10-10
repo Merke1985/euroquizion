@@ -3603,7 +3603,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var old = grp.querySelector('.jmcar'); if (old) old.remove();
     /* it comes along the cross street, from the left or the right, and races on out of the other side */
     var c0 = V3 ? V3.screen(0, 0) : [innerWidth / 2, innerHeight * .56], dir = Math.random() < .5 ? 1 : -1, off = innerHeight * .4;
-    var car = document.createElement('div'); car.className = 'jmcar' + (dir < 0 ? ' rtl' : ''); car.innerHTML = JM_CARSVG;
+    var car = document.createElement('div'); car.className = 'jmcar' + (dir < 0 ? ' rtl' : ''); car.innerHTML = '<i class="hl"></i>' + JM_CARSVG;
     /* its headlights light up the walls along the street (a light in the 3D city that follows the car), so you see where it is */
     if (V3 && V3.carLight) {
       var s1 = V3.screen(1, 0), unit = (s1[0] - c0[0]) || 1;
@@ -4325,7 +4325,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function briefInfo() {
     var sing = G.atype === 'sing' || G.atype === 'draw' || G.atype === 'quip';
     var rows = [['Songs', G.tour ? 'Until every minigame is played' : G.total >= ENDLESS ? 'Until someone reaches the top' : G.parts > 1 ? G.parts + ' rounds of ' + G.per : G.total], ['Video length', optText('s-time')], ['Era', optText('s-era')], ['Entries', optText('s-cat')], ['Game type', optText('s-atype')]];
-    if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', G.scoring === 'ladder' ? 'Ladder' : optText('s-scoring')], ['Round selection', optText('s-qmode')], ['Final', optText('s-final')]);
+    if (!sing) rows.push(['Category', optText('s-subject')], ['Scoring', G.scoring === 'ladder' ? 'Ladder' : optText('s-scoring')], ['Trivia selection', optText('s-qmode')], ['Final', optText('s-final')]);
     rows.push(['Show score', optText('s-show')]);
     return { rows: rows, scoring: G.atype === 'party' ? PARTY_HELP + ' ' + SCORING_HELP[G.scoring] : G.atype === 'draw' ? DRAW_HELP : G.atype === 'quip' ? QUIP_HELP : sing ? 'Jury Show: the votes decide. The singer with the most votes gets 12 points, the next 10, then 8, 7, 6 and so on.' : SCORING_HELP[G.scoring] };
   }

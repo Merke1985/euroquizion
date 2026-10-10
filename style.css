@@ -2663,3 +2663,9 @@ aside.recapgone{visibility:hidden}
 .jmacts .jmsend.ready{background:linear-gradient(135deg,#3ddc84,#1fa860);box-shadow:0 4px 0 #137a43}
 .jmacts .jmsend.ready:active{box-shadow:0 1px 0 #137a43;transform:translateY(3px)}
 .jmacts .jmsend:disabled{box-shadow:none}
+
+/* the car's own little headlight beam, a soft cone of light in front of it */
+.jmcar .hl{position:absolute;left:94%;top:28%;width:16vh;height:8vh;margin-top:-1.5vh;pointer-events:none;mix-blend-mode:screen;z-index:-1;
+  background:radial-gradient(ellipse 100% 55% at 0% 50%,rgba(255,248,205,.9),rgba(255,238,160,.35) 45%,transparent 75%);clip-path:polygon(0 38%,100% 0,100% 100%,0 62%);filter:blur(1.5px);animation:jmhl .18s ease-in-out infinite alternate}
+.jmcar.rtl .hl{left:auto;right:94%;scale:-1 1}
+@keyframes jmhl{to{opacity:.8}}
