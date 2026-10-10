@@ -2794,3 +2794,11 @@ body.hasdock main{padding-bottom:84px}
 .chflag img{position:absolute;left:8%;top:0;width:92%;height:56%;object-fit:cover;border-radius:1px 3px 3px 1px;box-shadow:0 1px 3px rgba(0,0,0,.45);transform-origin:0 50%;animation:chflagwave 1.4s ease-in-out infinite alternate}
 @keyframes chflagwave{from{transform:skewY(-5deg)}to{transform:skewY(4deg) scaleX(.94)}}
 .grp .chflag{display:none}
+/* the scoreboard: about 10% wider, bigger avatars */
+.host .game{grid-template-columns:minmax(0,1fr) 341px}
+@media (max-width:820px){.host .game{grid-template-columns:1fr}}
+.host aside .board .char{width:2.75em;height:2.75em}
+.host aside .board .who{overflow:visible;padding-top:3px}
+.host aside .board .wtx{min-width:0;overflow:hidden}
+.host aside .board .wn{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.host aside .board{font-size:1.07em}
