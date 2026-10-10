@@ -52,7 +52,7 @@
   })();
   var $ = function (id) { return document.getElementById(id); };
   var AFTER = 5;            // seconds to answer after the clip has ended
-  function clipSecs() { return Math.max(5, Math.round(G.guessMs / 1000) - AFTER); }   // clip length (the Video length setting)
+  function clipSecs() { var jc = G.sing && G.song && juryClip(G.song[4]); if (jc) return Math.max(5, Math.round(jc[1] - jc[0])); return Math.max(5, Math.round(G.guessMs / 1000) - AFTER); }   /* (a Jury Show song from the list: exactly its hand-picked part) */   // clip length (the Video length setting)
   var room = '', net, songs = [], countries = {}, chorus = {};
   var REMOTE = new URLSearchParams(location.search).get('screen') === '0';   // a game without a shared screen
   var players = {};         // pid -> {pid,name,score,got,pts,last}
@@ -792,8 +792,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.sing) {
         // Sing! wants the chorus: an exact start from chorus.json if the song has one, otherwise the
         // stretch where a three-minute Eurovision song usually reaches its first chorus.
-        var known = chorus[G.song[4]];
-        if (typeof known === 'number' && known < d - 5) cs = Math.max(0, Math.floor(known));
+        var known = chorus[G.song[4]], jc = juryClip(G.song[4]);
+        if (jc && jc[0] < d - 5) cs = Math.max(0, Math.floor(jc[0]));
+        else if (typeof known === 'number' && known < d - 5) cs = Math.max(0, Math.floor(known));
         else if (d >= 110) cs = Math.floor(45 + frac * 30);
       }
       if (stage === 'probe' || cs !== clipStart) { clipStart = cs; stage = 'seek'; seekAt = 0; }
@@ -4486,10 +4487,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     all = setTimeout(finish, 12000);
     launch();
   }
+  /* the Jury Show's own list: songs with a hand-picked part to sing (chorus.json: video id -> [from, to] in seconds) */
+  function juryClip(id) { var c = chorus[id]; return c && typeof c === 'object' && c.length === 2 ? c : null; }
   function fourSongs(cb) {
     var free = G.pool.filter(function (s) { return !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
     if (free.length < 4) { G.used = {}; free = G.pool.filter(function (s) { return !BAD_VIDEOS[s[4]]; }); }
     var cands = shuffle(free.slice()).slice(0, 12), round = G.round;
+    // the hand-picked songs come first (from the whole song list, whatever the era settings); random songs only fill up the four
+    var jury = shuffle((songs || []).filter(function (s) { return juryClip(s[4]) && !G.used[s[4]] && !BAD_VIDEOS[s[4]]; }));
+    if (jury.length) cands = jury.concat(cands.filter(function (s) { return !juryClip(s[4]); }));
     if (REMOTE || !ytReady || !window.YT || !YT.Player) { cb(cands.slice(0, 4)); return; }   // no player on this page: nothing to test with
     G.phase = 'loading'; cover(true, '', 'Picking songs…', false); masks(true); push();
     probeSongs(cands, 4, function (four) { if (G.round === round && G.phase === 'loading' && four.length) cb(four); else if (G.round === round && G.phase === 'loading') cb(cands.slice(0, 4)); });
@@ -5354,7 +5360,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try { var sk = localStorage.getItem('esc-skip'); if (sk && $('s-skip').querySelector('option[value="' + sk + '"]')) { $('s-skip').value = sk; G.skip = sk; } } catch (e) {}
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=43').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=44').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   // ---------- volume: a button in the top right corner, with a slider for music and one for sound effects ----------
   (function () {
