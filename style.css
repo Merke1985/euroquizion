@@ -2600,3 +2600,23 @@ aside.recapgone{visibility:hidden}
 .jmt .jmlegs i{background:var(--ol,#2a1a4a)}
 /* the time bar sits at the foot of Juliet's tower */
 .jmtbar{top:26vh;bottom:auto;width:32vh;height:2vh}
+
+/* the players' own speech balloon, above the group ("Now what…?") */
+.jmgbub{position:absolute;left:var(--jx,50vw);top:calc(var(--jy,56vh) - 27vh);transform:translateX(-50%) scale(.6);opacity:0;z-index:8;padding:.6em 1.1em;border-radius:20px;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(18px,2.8vh,34px);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.45);transition:opacity .3s,transform .3s cubic-bezier(.3,1.5,.5,1);pointer-events:none}
+.jmgbub::after{content:'';position:absolute;left:50%;bottom:-12px;margin-left:-12px;border:12px solid transparent;border-bottom:0;border-top-color:#fff}
+.jmgbub.on{opacity:1;transform:translateX(-50%) scale(1)}
+
+/* every round starts with a big "Round 1 · Get ready!" and a 3, 2, 1 in the middle of the screen */
+.jmcount{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;text-align:center;color:#fff;pointer-events:none;opacity:0;transition:opacity .25s;text-shadow:0 6px 24px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.6)}
+.jmcount.on{opacity:1}
+.jmcount b{display:block;font-size:min(16vh,14vw);font-weight:900;line-height:1;color:#ffd23f;-webkit-text-stroke:3px #7a1b4a}
+.jmcount small{display:block;margin-top:1.5vh;font-size:min(5vh,5vw);font-weight:900}
+.jmcount.pop b{animation:jmcdpop .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes jmcdpop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+/* the round countdown in the style of the Grand Final's big messages: a dark box with a golden edge */
+.jmcount{display:block;width:auto;height:auto;background:#170a26;border:2px solid rgba(255,210,63,.55);box-shadow:0 20px 60px rgba(0,0,0,.8);padding:20px 40px;border-radius:22px;font-weight:900;font-size:clamp(1.6rem,4vw,3.4rem);text-shadow:0 4px 18px #000;color:#fff;min-width:0;white-space:nowrap}
+.jmcount b{display:block;font-size:1em;line-height:1.1;color:#fff;-webkit-text-stroke:0}
+.jmcount small{display:block;font-size:.4em;color:#d9c8f0;margin-top:8px;font-weight:700}
+.jmcount.num b{font-size:2em;color:#ffd23f}
+/* the car drives through where the players stand now (they moved north) */
+.jmcar{margin-top:-12vh}

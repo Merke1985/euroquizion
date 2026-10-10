@@ -3615,7 +3615,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
     grp.insertBefore(car, grp.firstChild);
     whooshes([0, 700, 1300]); Music.woosh && Music.woosh();
-    setTimeout(function () { if (car.isConnected) hornSnd(); }, 1100);   /* honk! half a second before it reaches the group (at 62% of 2.6 s) */
+    setTimeout(function () { if (car.isConnected) hornSnd(); }, 600);   /* honk! a second before it reaches the group (at 62% of 2.6 s) */
     setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1150);
     if (hit.length) setTimeout(function () { crashSnd(); }, 1600);   /* crash! someone didn't jump */
     setTimeout(function () { car.remove(); grp.querySelectorAll('.jmt.jump').forEach(function (el) { el.classList.remove('jump'); }); }, 2900);
@@ -3643,8 +3643,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(5900, function () { qjSay('her', l0); });
     var t = 5900 + Array.from(l0).length * TALK_MS + 1800;
     at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Stella and Felix run off north, into the clouds
-    t += 3600;
-    at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // a few seconds later: Juliet steps out
+    /* the players are on their own: five seconds of nothing, then "Now what…?", two seconds later the song, five seconds later Juliet */
+    t += 2400 + 5000;
+    at(t, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) { b._said = ''; b.classList.add('on'); typeSay(b, 'Now what…? 🤷', 'him'); } });
+    t += 2000;
+    at(t, function () { jmSong(true); });
+    at(t + 2500, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) b.classList.remove('on'); });
+    t += 5000;
+    at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // then Juliet steps out
     var jl = [
       'Hi guys, I’m Juliet! 🌹 I know this city pretty well.',
       'If you want to find your way back to the studio, just follow my instructions!',
@@ -3653,7 +3659,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ];
     t += 1200;
     jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200); });
-    at(t, function () { jmJul(''); jmSong(true); qjRound(); });
+    at(t, function () { jmJul(''); if (!(G.qj && G.qj.song)) jmSong(true); qjRound(); });   /* (the song is already playing) */
   }
   // Juliet's own speech balloon, next to her balcony
   function jmLostSay(ks) {   /* Juliet, as soon as they're out of sight: who is lost now */
@@ -3688,12 +3694,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function qjRound() {
     var g = G.qj; if (!g) return;
     g.round++; g.seq = jmSeq(g); g.st = 'show'; g.prog = {}; g.fail = {}; g.wrong = {}; g.show = -1; g.pos = 0; g.falls = {}; var ovh = $('qjov'); if (ovh) ovh._holes = {}; push(); qjShow();
+    var CD = 3000, cdEl = function (big, small) { var ov = $('qjov'), e = ov && ov.querySelector('.jmcount'); if (!e) return; if (!big) { e.classList.remove('on'); return; } e.innerHTML = '<b>' + big + '</b>' + (small ? '<small>' + small + '</small>' : ''); e.classList.remove('on', 'pop', 'num'); void e.offsetWidth; e.classList.add('on', 'pop'); e.classList.toggle('num', !small); };
     var STEP = Math.max(560, 1430 - (g.round - 1) * 25),   /* (round 1: each symbol up for 1 second, 70% of a step; a little faster every round) */ at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
+    /* first, big in the middle: "Round 1 · Get ready!", then 3, 2, 1 */
+    at(0, function () { cdEl('Round ' + g.round, 'Get ready!'); Music.ding(); });
+    [3, 2, 1].forEach(function (n, k) { at(1300 + k * 800, function () { cdEl(String(n)); Music.blip(); }); });
+    at(1300 + 3 * 800, function () { cdEl(''); });
     for (var i = 0; i < g.round; i++) (function (i) {
-      at(1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4, 12][g.seq[i]]); });
-      at(1200 + i * STEP + STEP * 0.7, function () { g.show = -2; qjShow(); });
+      at(CD + 1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4, 12][g.seq[i]]); });
+      at(CD + 1200 + i * STEP + STEP * 0.7, function () { g.show = -2; qjShow(); });
     })(i);
-    at(1200 + g.round * STEP + 300, function () {
+    at(CD + 1200 + g.round * STEP + 300, function () {
       g.show = -1; g.st = 'input'; var ms = 4500 + g.round * 1300; g.ends = Date.now() + ms; push(); qjShow(); Music.ding();
       g.botMiss = {}; bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; if (Math.random() < 0.1) g.botMiss[b.pid] = Math.floor(Math.random() * g.round) + 1; });   /* bots: 9 times out of 10 they get the whole route right */
       bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; var n = 0, step = function () {
@@ -3954,7 +3965,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
       ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div><div class="jmtower jmtop">' + JM_TOWER + '</div><div class="jmtfront jmtop2">' + JM_TFRONT + '</div>' +
-        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmtbar"><i></i></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div>' +
+        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmtbar"><i></i></div><div class="jmgbub"></div><div class="jmcount"></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
