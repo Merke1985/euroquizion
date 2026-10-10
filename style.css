@@ -2546,3 +2546,9 @@ aside.recapgone{visibility:hidden}
 .jmov .jmtower,.jmov .jmtfront,.jmov.v3 .jmbalc{scale:1!important}
 /* (the cloud bank at the tower's foot only over the end of the road, not over the roofs beside it) */
 .jmsky.front .c4{left:0;right:0;bottom:-6vh;height:10vh;background:radial-gradient(ellipse 7vh 60% at 50% 45%,#e7dff5 0 50%,transparent 80%),radial-gradient(ellipse 6vh 50% at calc(50% - 4vh) 55%,#e1d8f2 0 45%,transparent 80%),radial-gradient(ellipse 6vh 50% at calc(50% + 4vh) 55%,#e1d8f2 0 45%,transparent 80%)}
+
+/* the end of Lost in Verona: the ones still in walk down the street, out of the bottom of the picture */
+.jmt.home{translate:var(--gx,0) 70vh!important;transition:translate 3.2s ease-in!important}
+.jmt.home .char{animation:jmrun .18s ease-in-out infinite alternate}
+.jmt.home .jmlegs i:first-child{animation:jmleg .22s ease-in-out infinite alternate}
+.jmt.home .jmlegs i:last-child{animation:jmleg .22s ease-in-out infinite alternate-reverse}
