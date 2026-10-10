@@ -24,9 +24,16 @@ CHARS.forEach(function (c) { CHAR_BY_ID[c.id] = c; });
 // where the face sits in the (square-cropped) picture in percent, 'zoom' how much to enlarge it.
 /* each avatar holds a little flag: the fan-flag country of the player who has it (avatars are one per player) */
 var CHAR_CC = {};
+/* players' own photos: avatar id 'u:<player id>' -> a small jpeg (data URL), sent around once */
+var CHAR_IMG = {};
+function picOk(d) { return typeof d === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(d) && d.length < 60000; }
 function charCC(ps) { var m = {}; (ps || []).forEach(function (p) { if (p && p.char && p.cc) m[p.char] = p.cc; }); CHAR_CC = m; }
 function charSvg(id) {
   var c = CHAR_BY_ID[id];
+  if (!c && typeof id === 'string' && id.indexOf('u:') === 0) {   /* a player's own photo */
+    var src = CHAR_IMG[id], ucc = CHAR_CC[id];
+    return '<span class="char' + (ucc ? ' hasfl' : '') + '"><i class="chin">' + (src ? '<img src="' + src + '" alt="" style="object-position:50% 50%">' : '<b class="chnopic">🙂</b>') + '</i>' + (ucc ? '<i class="chflag"><b></b><img src="https://flagcdn.com/w40/' + ucc + '.png" alt=""></i>' : '') + '</span>';
+  }
   if (!c) return '';
   var z = c.zoom || 1, f = c.face || [50, 50];
   var tf = z > 1 ? ';transform:translate(' + ((50 - f[0]) * z).toFixed(1) + '%,' + ((50 - f[1]) * z).toFixed(1) + '%) scale(' + z + ')' : '';

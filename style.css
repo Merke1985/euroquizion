@@ -2945,3 +2945,6 @@ body.hasdock main{padding-bottom:84px}
 .jmt .jmbody i:last-child{rotate:-4deg}
 .jmt .jmbody i::after{content:'';position:absolute;left:50%;bottom:-.3vh;width:1.3vh;height:1.3vh;transform:translateX(-50%);border-radius:50%;background:#e8b48c}
 .jmt .hflag{left:calc(50% + 1.85vh);top:4.4vh;width:3.4vh;height:4.6vh}
+.mypicrow{display:flex;gap:8px;justify-content:center;margin:4px 0 12px;flex-wrap:wrap}
+.mypicrow label{cursor:pointer}
+.chnopic{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:1.6em;background:#2a2060}

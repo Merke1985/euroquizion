@@ -79,13 +79,21 @@
   // The handlers are also kept here, so the test bots (further down) can act exactly like a phone would.
   var H = {}, netOn = net.on; net.on = function (e, f) { H[e] = f; netOn(e, f); };
   $('demo').classList.toggle('hidden', !net.demo);
+  /* own photos as avatars: a phone sends its picture once; the host keeps it and passes all of them to anyone who joins */
+  net.on('pic', function (m) {
+    if (!m || !m.pid || !picOk(m.img) || m.from === 'host') return;
+    var id = 'u:' + m.pid; if (CHAR_IMG[id] === m.img) return;
+    CHAR_IMG[id] = m.img; var p = players[m.pid];
+    if (p && (G.phase === 'lobby' || !p.char)) { p.char = id; push(); } else render();
+  });
+  function picsResend() { Object.keys(CHAR_IMG).forEach(function (id) { var k = id.slice(2); if (players[k]) net.send('pic', { pid: k, img: CHAR_IMG[id], from: 'host' }); }); }
   net.on('hi', function (m) {
     if (!m || !m.pid) return;
     if (m.bye) { var gone = players[m.pid]; if (gone && !gone.off) { gone.off = true; gone.last = 0; push(); allIn(); drawAllCheck(); quipAllCheck(); } return; }   // that phone closed the page
     var p = players[m.pid], isNew = !p;
     var nm = String(m.name || '').trim().slice(0, 16) || 'Player'; nm = nm.charAt(0).toUpperCase() + nm.slice(1);   /* (a name always starts with a capital) */
     // Every character belongs to one player per room; first come, first served.
-    var want = CHAR_BY_ID[m.char] ? m.char : null;
+    var want = CHAR_BY_ID[m.char] || (m.char === 'u:' + m.pid && CHAR_IMG[m.char]) ? m.char : null;   /* (a built-in avatar, or this player's own photo) */
     var free = want && !list().some(function (x) { return x.char === want && x.pid !== m.pid; });
     if (!p) { var old = rejoinOf(m, nm); if (old) { rekey(old.pid, m.pid); p = players[m.pid]; p.off = false; p.last = Date.now(); push(); } }   /* rejoining: the same player, back in their own place */
     if (!p && list().length >= MAX_PLAYERS) { sayHello(); return; }   /* (12 players at most: the game is full) */
@@ -96,7 +104,7 @@
         if (!left.length) { sayHello(); return; }   // every avatar is in use: the game is full
         want = pick(left).id; free = true;
       }
-      p = players[m.pid] = { pid: m.pid, name: nm, char: want, score: 0, got: false, pts: 0 };
+      p = players[m.pid] = { pid: m.pid, name: nm, char: want, score: 0, got: false, pts: 0 }; setTimeout(picsResend, 600);   /* (a newcomer gets everyone's photos) */
       if (SHOP_START_ALL && G.atype === 'party' && G.starterGiven) p.inv = SHOP_ITEMS.map(function (it) { return it.id; });   // joining a Party game later: the items too
       // Rehosting without a saved game on this device: rebuild it from what the phones remember.
       if (recovering) {
@@ -135,6 +143,7 @@
       return o;
     };
     var p = players[a]; delete players[a]; p.pid = b; players[b] = p;
+    if (p.char === 'u:' + a) { CHAR_IMG['u:' + b] = CHAR_IMG['u:' + a]; p.char = 'u:' + b; }
     fix(G); fix(p);
     bots.forEach(function (x) { if (x.pid === a) x.pid = b; });
     try { [].forEach.call(document.querySelectorAll('[data-pid="' + a.replace(/"/g, '') + '"]'), function (el) { if (el.closest('#chlanes, .jmgroup')) el.remove(); }); } catch (e) {}   /* (the runway and Verona redraw them under the new id) */

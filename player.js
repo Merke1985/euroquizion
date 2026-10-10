@@ -20,6 +20,29 @@
   if (rejoin && !(Date.now() - rejoin.t < 12 * 3600000)) rejoin = null;
   if (rejoin && !k && !$('code').value) $('code').value = rejoin.room;
   var wasPid = '';
+  /* your own photo as avatar: taken with the camera or picked from the phone, cut to a square and made small */
+  var myPic = null; try { myPic = localStorage.getItem('esc-mypic'); if (!picOk(myPic)) myPic = null; } catch (e) {}
+  if (myPic) CHAR_IMG['u:' + pid] = myPic;
+  function picSend() { if (!net || !myPic) return; var msg = { pid: pid, img: myPic }; net.send('pic', msg); setTimeout(function () { if (net) net.send('pic', msg); }, 1500); }
+  function picTake(file) {
+    if (!file) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var S = 160, cv = document.createElement('canvas'); cv.width = cv.height = S;
+        var s = Math.min(im.width, im.height), sx = (im.width - s) / 2, sy = Math.max(0, (im.height - s) / 2 - s * 0.08);   /* (a square from the middle, a little towards the top: the face) */
+        cv.getContext('2d').drawImage(im, sx, sy, s, s, 0, 0, S, S);
+        var d = cv.toDataURL('image/jpeg', 0.72); if (!picOk(d)) { d = cv.toDataURL('image/jpeg', 0.5); if (!picOk(d)) return; }
+        myPic = d; try { localStorage.setItem('esc-mypic', d); } catch (e) {}
+        CHAR_IMG['u:' + pid] = d; want = 'u:' + pid; pickUntil = Date.now() + 3000; try { sessionStorage.setItem('esc-char', want); } catch (e) {}
+        picSend(); setTimeout(hi, 300); pickKey = ''; if (state) onState(state);
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  }
+  ['picCam', 'picUp'].forEach(function (id) { $(id).addEventListener('change', function (e) { picTake(e.target.files && e.target.files[0]); e.target.value = ''; }); });
   $('howbtn').addEventListener('click', function () { $('howov').classList.remove('hidden'); });
   $('howclose').addEventListener('click', function () { $('howov').classList.add('hidden'); });
   $('howov').addEventListener('click', function (e) { if (e.target === $('howov')) $('howov').classList.add('hidden'); });
@@ -99,6 +122,9 @@
     state = null; kicked = false;
     net = escConnect(room);
     $('demo').classList.toggle('hidden', !net.demo);
+    if (want && want.indexOf('u:') === 0) want = myPic ? 'u:' + pid : null;
+    if (myPic) CHAR_IMG['u:' + pid] = myPic;
+    net.on('pic', function (pm) { if (pm && pm.pid && picOk(pm.img) && CHAR_IMG['u:' + pm.pid] !== pm.img) { CHAR_IMG['u:' + pm.pid] = pm.img; pickKey = ''; if (state) onState(state); } });
     net.on('state', onState);
     // The host cleared the room: back to the join screen, and quiet until this phone joins again.
     net.on('kick', function (km) {
@@ -120,7 +146,7 @@
       net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
-    net.on('_open', hi);
+    net.on('_open', function () { hi(); if (want === 'u:' + pid) picSend(); });
     net.on('sync', hi);
     clearInterval(hiTimer); hiTimer = setInterval(hi, 30000);   // a sign of life for the host; every phone in the room receives it too, so not too often
     if (!hiHooked) {
@@ -1033,10 +1059,11 @@
     var taken = {};
     s.players.forEach(function (p) { if (p.pid !== pid && p.char) taken[p.char] = p.name; });
     // Only redraw when something changed, so the photos do not reload on every update.
-    var k = JSON.stringify(taken) + '|' + (m ? m.char : '') + '|' + (Date.now() < pickUntil ? want : '');
+    var k = JSON.stringify(taken) + '|' + (m ? m.char : '') + '|' + (Date.now() < pickUntil ? want : '') + '|' + (myPic ? myPic.length : 0);
     if (k !== pickKey) {
       pickKey = k;
-      $('chars').innerHTML = CHARS.map(function (c) {
+      var myId = 'u:' + pid, sel = Date.now() < pickUntil ? want : (m && m.char);
+      $('chars').innerHTML = (myPic ? '<button type="button" data-char="' + myId + '"' + (sel === myId ? ' class="mine"' : '') + '>' + charSvg(myId) + '<span>Your photo</span></button>' : '') + CHARS.map(function (c) {
         return '<button type="button" data-char="' + c.id + '"' + (taken[c.id] ? ' disabled title="Taken by ' + esc(taken[c.id]) + '"' : '') +
           ((Date.now() < pickUntil ? want : (m && m.char)) === c.id ? ' class="mine"' : '') + '>' + charSvg(c.id) + '<span>' + esc(c.name) + '</span></button>';
       }).join('');
@@ -1074,7 +1101,7 @@
     picking = true; $('editname').value = name;
     $('picktitle').textContent = mode === 'name' ? 'Your name' : mode === 'flag' ? 'Your fan flag' : 'Your avatar';
     $('pickname').classList.toggle('hidden', mode !== 'name');
-    $('pickavnote').classList.toggle('hidden', mode !== 'avatar'); $('chars').classList.toggle('hidden', mode !== 'avatar'); $('ccwrap').classList.toggle('hidden', mode !== 'flag');
+    $('pickavnote').classList.toggle('hidden', mode !== 'avatar'); $('chars').classList.toggle('hidden', mode !== 'avatar'); $('mypicrow').classList.toggle('hidden', mode !== 'avatar'); $('ccwrap').classList.toggle('hidden', mode !== 'flag');
     if (state) onState(state);
     if (mode === 'name') { try { $('editname').focus(); $('editname').select(); } catch (e) {} }
   }
