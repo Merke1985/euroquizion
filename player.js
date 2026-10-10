@@ -536,7 +536,7 @@
     if (q.st === 'input') { $('waittitle').textContent = failed ? '😵 Wrong way!' : '✅ Route done!'; $('waitsub').textContent = failed ? 'Lost in Verona…' : 'Waiting for the others…'; return; }
     if (q.st === 'res') { $('waittitle').textContent = failed || ((q.prog || {})[pid] || 0) < q.round ? '😵 Lost!' : '✅ Still in!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var won = q.win && q.win.indexOf(pid) >= 0;
-    $('waittitle').textContent = won ? '🌹 You found Juliet!' : '🗺️ Lost in Verona…'; $('waitsub').textContent = won ? 'Bravissimo!' : 'Better luck next time!';
+    $('waittitle').textContent = won ? '🎬 You found the way back to the studio!' : '🗺️ Lost in Verona forever…'; $('waitsub').textContent = won ? 'Bravissimo!' : 'Better luck next time!';
   }
 
   // ---------- Eurofan Shop ----------

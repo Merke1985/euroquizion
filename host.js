@@ -3995,7 +3995,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       el.classList.toggle('won', g.st === 'done' && g.win.indexOf(k) >= 0);
     });
     var tapped = inGroup.filter(function (k) { return (g.prog[k] || 0) >= g.round || g.fail[k]; }).length;
-    var msg = g.st === 'show' ? '🤫 Listen to Juliet…' : g.st === 'input' ? 'Tap the route on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's · ' + tapped + '/' + inGroup.length : g.st === 'run' ? 'Andiamo! 🏃' : g.st === 'done' ? '🌹 To the balcony!' : '';
+    var msg = g.st === 'show' ? '🤫 Listen to Juliet…' : g.st === 'input' ? 'Tap the route on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's · ' + tapped + '/' + inGroup.length : g.st === 'run' ? 'Andiamo! 🏃' : g.st === 'done' ? '🎬 Back to the studio!' : '';
     var me = ov.querySelector('.qjmsg'); if (me.textContent !== msg) me.textContent = msg;
   }
   // ---------- Quip! ----------
