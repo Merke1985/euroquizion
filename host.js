@@ -2008,7 +2008,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
     if (beginGame() === false) return;
     G.itemTest = true; G.skipOpening = true; G.shopFirst = true; G.total = ENDLESS;
-    me.inv = ['fan'];   // (something in your bag for the Euroclub Wristband to take)
+    me.inv = []; SHOP_ITEMS.forEach(function (it) { if (it.id !== 'umbrella') me.inv = me.inv.concat(shopGive(me, [it.id])); });   // (every item in your bag to try out, except the umbrella: the bots must be able to reach you)
     if (G.phase === 'intro') introEnd();
     var n = 0, lastQ = '';
     clearInterval(itemTestT); itemTestT = setInterval(function () {
@@ -2019,7 +2019,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var qk = G.round + ':' + (G.q.text || ''); if (qk === lastQ) return;
       var id = ITEM_TEST[n % ITEM_TEST.length], bs = list().filter(function (p) { return p.bot && !p.off; }), b = bs[n % bs.length]; if (!b) return;
       lastQ = qk; n++;
-      b.inv = (b.inv || []).concat(id); if (id === 'pass' && !(t.inv || []).length) t.inv = ['fan'];
+      b.inv = (b.inv || []).concat(id); if (id === 'pass' && !(t.inv || []).length) t.inv = shopGive(t, ['fan']);
       shopMsg({ pid: b.pid, use: id, target: t.pid, key: 'it' + n });
     }, 700);
   });
