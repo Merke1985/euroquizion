@@ -2925,3 +2925,11 @@ body.hasdock main{padding-bottom:84px}
 .lobhosts .hbub.him{border-bottom-left-radius:4px}
 .lobhosts .hbub .unsaid{visibility:hidden}
 .joinrow{flex-wrap:nowrap;gap:18px}.joinrow>div:first-child{min-width:0}
+/* the flag in hand stays in front of the face (lobby, Grand Final, Verona) */
+.lobbyplayers .chip .lbod{z-index:auto}
+.lobbyplayers .chip .lbod .hflag{z-index:3}
+.chtok .chbod{z-index:auto}
+.chtok .chbod .cl,.chtok .chbod .ca{z-index:0}
+.chtok .ch-face{z-index:2}
+.chtok .chbod .hflag{z-index:3}
+.jmt .hflag{z-index:6}
