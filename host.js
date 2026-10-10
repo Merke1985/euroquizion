@@ -2151,7 +2151,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" data-sk="' + (c.lanes[k].skates || '') + '" style="top:' + ((i + 0.62) / n * 100) + '%;left:' + chaseX(c.lanes[k].pos - 0.5) + '%"><div class="chbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca"></i><i class="ct"></i>' + handFlag(p) + '</div><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span>' + (c.lanes[k].skates ? '<span class="ch-sk">⛸️ +' + c.lanes[k].skates + '</span>' : '') + '</div>'; }).join('');
       var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
       $('chase').classList.toggle('many', n >= 9);
-      $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
+      $('chtrack').style.setProperty('--tok', Math.max(24, Math.min(54, Math.round(Math.min(rh / n * 0.42, rw / CHASE_END * 0.9)))) + 'px');   /* (smaller: with a body under it, the whole figure fits in its lane) */
     }
     var next = c.wreckWarn && !c.wrecked ? CHASE_END : c.monsterDead ? 0 : c.st === 'diva' || c.st === 'nsf' || c.st === 'intro' || c.st === 'rise' || c.st === 'near' || c.st === 'wheel' || c.st === 'pre' || c.st === 'ready' || c.st === 'perk' || c.st === 'go' ? divaStep(c.n + 1) : divaStep(c.n), occ = {}, doomed = {}, deny = {};
     c.order.forEach(function (k, i) {
@@ -2231,7 +2231,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var note = $('chnote'), near = chaseNear();
     note.classList.add('hidden'); void near; void doomed;   /* no line about the monster's next move any more */
     var big = $('chbig'); big.classList.toggle('winbox', c.st === 'win'); big.classList.toggle('introbox', (c.st === 'intro' && !!c.introTop) || c.st === 'wheel');
-    $('chmon').classList.toggle('lurk', c.st === 'intro' || c.st === 'perk' || c.st === 'wheel' || c.st === 'pre');   // (hidden until the wheel has chosen)
+    $('chmon').classList.toggle('lurk', c.st === 'intro' || c.st === 'perk' || c.st === 'heelpick' || c.st === 'wheel' || c.st === 'pre');   // (hidden until the wheel has chosen)
     chaseWheel(c); $('chmon').classList.toggle('rise', c.st === 'rise' || c.st === 'ready' || c.st === 'go');
     var cc = $('chcard'), sp = c.st === 'intro' && c.showing ? players[c.showing] : null;
     cc.classList.toggle('hidden', !sp);
@@ -2254,6 +2254,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (c.st === 'pre') { big.innerHTML = '👑 A Eurovision icon is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
     else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)
+    else if (c.st === 'intro' && c.heelDone) { big.classList.add('hidden'); }   /* (after an item was used: no welcome again) */
     else if (c.st === 'intro') { big.innerHTML = 'You have reached the Grand Final!<small>First, let’s see how many jury votes you received: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'rise') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : (c.sd ? 'last one standing on the stage: the trophy is theirs!' : 'jumped onto the stage: the trophy is theirs!')) + '</small>'; big.classList.remove('hidden'); }
