@@ -1002,7 +1002,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.phase !== 'picks') return;
       if (i >= order.length) { picksTimer = setTimeout(reveal, 1100); return; }
       var p = order[i++]; G.shown.push(p.pid); G.plopped = p.pid; Music.plop(i); render();
-      picksTimer = setTimeout(step, 400);
+      picksTimer = setTimeout(step, 200);   /* (0.2 s apart) */
     };
     picksTimer = setTimeout(step, 500);
   }
