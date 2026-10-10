@@ -2737,3 +2737,6 @@ body.hasdock main{padding-bottom:84px}
 
 /* the scoreboard: items working against a player, with the questions left */
 .rfx{display:inline-block;margin-left:4px;padding:0 6px;border-radius:10px;background:rgba(255,77,106,.25);box-shadow:inset 0 0 0 1px rgba(255,77,106,.6);font-size:.78em;font-weight:900;white-space:nowrap;vertical-align:middle}
+/* the pillar runs the full height of the phone, top to bottom */
+.ppillar{position:fixed;top:0;bottom:0;z-index:30}
+.ppillar .cap,.ppillar .base{display:none}
