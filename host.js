@@ -2027,7 +2027,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function testPerks() {   // testing the Grand Final: one bot has ice skates, another one got a broken heel from a third
     var bs = list().filter(function (p) { return p.bot && !p.off; }); if (bs.length < 2) return;
-    bs[0].inv = (bs[0].inv || []).concat('skates'); (bs[2] || bs[1]).inv = ((bs[2] || bs[1]).inv || []).concat('heel');
+    var me = list().filter(function (p) { return !p.bot && !p.off; })[0];   /* (a human player joined: they get the broken heel, to try picking a victim on their phone) */
+    bs[0].inv = (bs[0].inv || []).concat('skates'); var hh = me || bs[2] || bs[1]; hh.inv = (hh.inv || []).concat('heel');
   }
   $('chasetest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
