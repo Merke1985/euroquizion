@@ -793,7 +793,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         // Sing! wants the chorus: an exact start from chorus.json if the song has one, otherwise the
         // stretch where a three-minute Eurovision song usually reaches its first chorus.
         var known = chorus[G.song[4]], jc = juryClip(G.song[4]);
-        if (jc && jc[0] < d - 5) cs = Math.max(0, Math.floor(jc[0]));
+        if (jc && jc[0] < d - 5) cs = Math.max(0, jc[0]);   /* (to the half second) */
         else if (typeof known === 'number' && known < d - 5) cs = Math.max(0, Math.floor(known));
         else if (d >= 110) cs = Math.floor(45 + frac * 30);
       }
@@ -5369,7 +5369,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try { var sk = localStorage.getItem('esc-skip'); if (sk && $('s-skip').querySelector('option[value="' + sk + '"]')) { $('s-skip').value = sk; G.skip = sk; } } catch (e) {}
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=45').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  fetch('chorus.json?v=46').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   // ---------- volume: a button in the top right corner, with a slider for music and one for sound effects ----------
   (function () {
