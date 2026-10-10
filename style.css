@@ -2740,3 +2740,17 @@ body.hasdock main{padding-bottom:84px}
 /* the pillar runs the full height of the phone, top to bottom */
 .ppillar{position:fixed;top:0;bottom:0;z-index:30}
 .ppillar .cap,.ppillar .base{display:none}
+
+/* scoreboard: the name, and below it the bag, the umbrella and what is working against them */
+.board .wtx{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.board .wn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board .wsub{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:3px;font-size:.78em;font-weight:800}
+.board .wsub .rfx{margin-left:0}
+.board .wbag{display:inline-flex;align-items:center;gap:2px;padding:0 7px 0 2px;border-radius:999px;background:rgba(255,63,164,.16);border:1px solid rgba(255,63,164,.45)}
+.board .wbag .bagico{width:1.5em;height:1.5em;flex:none}
+#board .binv{display:none}
+
+/* the giant flag on your phone: the answers are blank, only their outlines are left (you can still tap one) */
+#opts.flagged .opt{color:transparent!important;text-shadow:none!important}
+#opts.flagged .opt *{visibility:hidden}
+#opts.flagged .opt{background:rgba(255,255,255,.04)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)!important}

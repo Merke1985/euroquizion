@@ -263,6 +263,7 @@
         if (!fl) { fl = document.createElement('div'); fl.className = 'pflag'; fl.innerHTML = '<i class="pole"></i><i class="cloth"><b></b></i>'; vg.appendChild(fl); }
         if (!pl) { pl = document.createElement('div'); pl.className = 'ppillar'; pl.innerHTML = '<i class="cap"></i><i class="shaft"></i><i class="base"></i><span>½ points</span>'; vg.appendChild(pl); }
         fl.classList.toggle('on', !!(m && m.flag)); pl.classList.toggle('on', !!(m && m.half));
+        $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc');   /* the flag hides every answer: only the outlines are left, so you pick blind */
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
         if (builtKey !== key) {   // build the question once per song, so typing is never wiped

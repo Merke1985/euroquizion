@@ -373,11 +373,17 @@
     [].forEach.call(box.querySelectorAll('.climber'), function (n) { if (!seen[n.getAttribute('data-pid')]) n.remove(); });
   }
 var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bagg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff3fa4"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><path d="M8 8.5V6a4 4 0 0 1 8 0v2.5" fill="none" stroke="#ffd34d" stroke-width="2" stroke-linecap="round"/><path d="M3.5 8h17l-1.3 14H4.8z" fill="url(#bagg)"/><path d="M12 19.5c-3-1.9-4.6-3.5-4.6-5.3a2.3 2.3 0 0 1 4.6-.7 2.3 2.3 0 0 1 4.6.7c0 1.8-1.6 3.4-4.6 5.3z" fill="#fff"/></svg>';   // the items on the scoreboard: a Eurovision shopping bag with a heart
+  /* under a player's name on the scoreboard: their bag (how many items), the umbrella, and the items working against them */
+  function boardSub(p) {
+    if (G.atype !== 'party') return '';
+    var h = (p.inv && p.inv.length ? '<span class="wbag" title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b></span>' : '') + (shielded(p) ? '<span class="rshield" title="Protected by an umbrella: no items can be aimed at them">☂️</span>' : '') + fxTags(p);
+    return h ? '<span class="wsub">' + h + '</span>' : '';
+  }
   function boardHtml(showGot) {
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + (G.atype === 'party' ? fxTags(p) : '') + (G.atype === 'party' && shielded(p) ? ' <span class="rshield" title="Protected by an umbrella: no items can be aimed at them">☂️</span>' : '') + '</span><span class="binv"' + (G.atype === 'party' && p.inv && p.inv.length ? ' title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b>' : '>') + '</span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + '<span class="wtx"><span class="wn">' + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span>' + boardSub(p) + '</span></span><span class="binv"></span><span class="tot">' + (hide ? '?' : p.score) + '</span><span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
