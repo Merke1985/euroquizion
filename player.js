@@ -1046,13 +1046,14 @@
   // Two separate edit screens: one for the name, one for the avatar.
   function pickOpen(mode) {
     picking = true; $('editname').value = name;
-    $('picktitle').textContent = mode === 'name' ? 'Your name' : 'Your avatar';
+    $('picktitle').textContent = mode === 'name' ? 'Your name' : mode === 'flag' ? 'Your fan flag' : 'Your avatar';
     $('pickname').classList.toggle('hidden', mode !== 'name');
-    $('pickavnote').classList.toggle('hidden', mode === 'name'); $('chars').classList.toggle('hidden', mode === 'name'); $('ccwrap').classList.toggle('hidden', mode === 'name');
+    $('pickavnote').classList.toggle('hidden', mode !== 'avatar'); $('chars').classList.toggle('hidden', mode !== 'avatar'); $('ccwrap').classList.toggle('hidden', mode !== 'flag');
     if (state) onState(state);
     if (mode === 'name') { try { $('editname').focus(); $('editname').select(); } catch (e) {} }
   }
   $('changechar').addEventListener('click', function () { pickOpen('avatar'); });
+  $('changecc').addEventListener('click', function () { pickOpen('flag'); });
   $('changename').addEventListener('click', function () { pickOpen('name'); });
   $('pickdone').addEventListener('click', function () {
     var n = $('editname').value.trim().slice(0, 16);
