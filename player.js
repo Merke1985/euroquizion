@@ -15,7 +15,7 @@
   // Inside the host's own page (a game without a shared screen) the hosting buttons make no sense.
   if (qs.get('embed')) { document.body.classList.add('embed'); $('hostlinks').classList.add('hidden'); }
   if (k) $('code').value = k.toUpperCase().slice(0, 4);
-  fetch('songs.json?v=43').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries; }).catch(function () {});
+  countries = COUNTRY_NAMES;   /* (built into quiz.js: no need to download the whole song list) */
 
   // ---------- The Grand Final: tick the songs that fit ----------
   var chReadyKey = '', chKey = '', chMask = 0, chLocked = false, chBarKey = '';
@@ -112,7 +112,7 @@
     };
     net.on('_open', hi);
     net.on('sync', hi);
-    clearInterval(hiTimer); hiTimer = setInterval(hi, 10000);   // a sign of life for the host; every phone in the room receives it too, so not too often
+    clearInterval(hiTimer); hiTimer = setInterval(hi, 30000);   // a sign of life for the host; every phone in the room receives it too, so not too often
     if (!hiHooked) {
       hiHooked = true;
       // back from another app or a locked screen: say hello at once, and ask for the current state

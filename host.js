@@ -216,6 +216,8 @@
       s.draw = { id: G.draw.id, pid: G.draw.pid, name: dp ? dp.name : '?', options: null, song: G.draw.chosen != null ? songLabel(G.draw.options[G.draw.chosen]) : '' };
     }
     if ((G.phase === 'reveal' || G.phase === 'end') && G.song) s.reveal = { year: G.song[0], code: G.song[1], artist: G.song[2], title: G.song[3], result: resultText(G.song) };
+    /* smaller messages: leave out what is empty for a player (false, '', null, [] and {}); the phones treat a missing field the same */
+    s.players = s.players.map(function (o) { var r = {}; for (var k in o) { var v = o[k]; if (v === false || v === '' || v == null || (Array.isArray(v) && !v.length) || (typeof v === 'object' && !Array.isArray(v) && v && !Object.keys(v).length)) continue; r[k] = v; } return r; });
     return s;
   }
   function push() { charCC(list()); if (!recovering) net.send('state', snapshot()); save(); render(); }
@@ -285,12 +287,12 @@
   var beatAt = 0;
   setInterval(function () {
     var now = Date.now(), ch = false;
-    list().forEach(function (p) { var off = now - p.last > 25000; if (off !== !!p.off) { p.off = off; ch = true; } });
+    list().forEach(function (p) { var off = now - p.last > 75000; if (off !== !!p.off) { p.off = off; ch = true; } });
     if (ch) { push(); return; }
     // The state goes out whenever something changes; this repeat only repairs a message that got lost.
     // Every device in the room receives it, so: not without players, and less often while nothing is at stake.
     var calm = G.phase === 'lobby' || G.phase === 'reveal' || G.phase === 'end' || G.phase === 'paused';
-    if (!recovering && list().length && now - beatAt >= (calm ? 10000 : 5000) - 500) { beatAt = now; net.send('state', snapshot()); }
+    if (!recovering && list().length && now - beatAt >= (calm ? 25000 : 12000) - 500) { beatAt = now; net.send('state', snapshot()); }
   }, 2500);
 
   // ---------- rendering ----------
