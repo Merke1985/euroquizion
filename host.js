@@ -2935,7 +2935,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* every item that lands on someone: the same message on their own phone, big (the wristband has its own) */
   function shopApply(u) {
     var txt = shopApply0(u), t = players[u.target], by = players[u.by], it = shopItem(u.item);
-    if (txt && t && by && t !== by && it && it.kind !== 'thief' && it.kind !== 'smoke') t.hitMsg = { k: Math.random().toString(36).slice(2, 8), icon: (shopLast && shopLast.icon) || it.icon, txt: txt.replace(/^\S+\s/, '') };
+    if (txt && t && by && t !== by && it && it.kind !== 'thief' && it.kind !== 'smoke' && it.kind !== 'heel') t.hitMsg = { k: Math.random().toString(36).slice(2, 8), icon: (shopLast && shopLast.icon) || it.icon, txt: txt.replace(/^\S+\s/, '') };
     return txt;
   }
   function shopApply0(u) {
