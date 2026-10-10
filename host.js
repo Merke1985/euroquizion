@@ -1974,6 +1974,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     testPerks();
     testStandings(function () { chaseStart(true); var b0 = list().filter(function (p) { return p.bot && !p.off; })[0]; if (G.chase && b0) G.chase.plan = b0.pid; });   // (testing: one bot gets everything right, the others one out of three)
   });
+  /* testing the final scores: random scores, and a couple of envelopes for the EBU (a human player's, or else a bot's), then back to the lobby */
+  $('fstest').addEventListener('click', function () {
+    if (REMOTE || G.phase !== 'lobby') return;
+    var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 3 && bots.length < 8) { botAdd(); nb++; }
+    var all = list().filter(function (p) { return !p.off; }), hum = all.filter(function (p) { return !p.bot; });
+    all.forEach(function (p) { p.score = 12 * (2 + Math.floor(Math.random() * 12)); });
+    G.bribes = (hum.length ? hum : all.slice(-1)).map(function (p) { return p.pid; });
+    G.phase = 'loading'; push();
+    partyStandings(function () { G.bribes = []; list().forEach(function (p) { p.score = 0; p.pts = 0; }); G.phase = 'lobby'; G.standingsShown = false; push(); render(); });
+  });
   $('chasetest2').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 3 && bots.length < 8) { botAdd(); nb++; }
