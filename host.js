@@ -2125,7 +2125,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (c.st !== 'win') { view.classList.remove('zoom'); clearTimeout(view._zt); view._zt = null; }
     [].forEach.call(document.querySelectorAll('#chase .chpyro'), function (p) { p.classList.toggle('boom', c.st === 'win' || chaseNear().length > 0); });
     $('chmon').style.left = (c.grab ? 112 : chaseX(c.mon)) + '%';
-    $('chmon').style.top = c.nsf ? ((c.nsf.i + 1) / n * 100) + '%' : ''; $('chmon').classList.toggle('nsf', !!c.nsf);   /* NOT SO FAST: she lines up with the leader's lane */
+    $('chmon').style.top = c.nsf ? (62 + (n > 1 ? c.nsf.i / (n - 1) : 1) * 26) + '%' : '';   /* NOT SO FAST: a little up or down, towards the leader's lane (always fully in view) */   /* NOT SO FAST: she lines up with the leader's lane */
     $('chtro').classList.toggle('taken', !!c.grab);
     $('chmon').classList.toggle('grab', !!c.grab);
     if (c.monster) { $('chmon').querySelector('.chmonname').textContent = c.monster.name; $('chmon').setAttribute('data-mon', c.monster.id); }

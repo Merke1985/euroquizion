@@ -2699,7 +2699,6 @@ aside.recapgone{visibility:hidden}
 
 /* NOT SO FAST: a little smaller while she stands in a lane (so she still fits next to the top lane) */
 .chmon{transition:left 1.4s ease-in-out,top 1s ease-in-out,scale 1s ease-in-out,opacity .6s}
-.chmon.nsf{scale:.72}
 
 /* the final scores: the presenters a little closer to the board, with big speech balloons */
 .fsov .grhosts .him{left:8vw}.fsov .grhosts .her{right:8vw}
