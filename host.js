@@ -1,4 +1,55 @@
 (function () {
+  /* iPhone and iPad: a sound file only plays in an audio element the user has touched, and every sound effect
+     here makes a fresh one later on, so none of them were heard. There they play through Web Audio instead
+     (unlocked once by the first tap), behind the same little interface the code below uses. */
+  var Audio = (function () {
+    var ua = navigator.userAgent || '', IOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!IOS || !(window.AudioContext || window.webkitAudioContext)) return window.Audio;
+    var ctx = null, bufs = {}, waits = {};
+    function C() { if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; ctx = new AC(); } if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} } return ctx; }
+    function unlock() {
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}   /* (also with the mute switch on, like the video) */
+      try { var c = C(), b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) {}
+    }
+    ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, unlock, { capture: true, passive: true }); });
+    function get(url, cb) {
+      if (bufs[url]) { cb(bufs[url]); return; }
+      if (waits[url]) { waits[url].push(cb); return; }
+      waits[url] = [cb];
+      var fail = function () { var w = waits[url]; delete waits[url]; w.forEach(function (f) { f(null); }); };
+      fetch(url).then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (ab) {
+        C().decodeAudioData(ab, function (b) { bufs[url] = b; var w = waits[url]; delete waits[url]; w.forEach(function (f) { f(b); }); }, fail);
+      }).catch(fail);
+    }
+    function WA(src) { this._src = ''; this._vol = 1; this._muted = false; this._loop = false; this.preload = 'auto'; this.paused = true; this.ended = false; this._off = 0; this._t0 = 0; this._node = null; this._gain = null; this._buf = null; this._want = false; this._ls = {}; this._tu = null; this.onended = null; this.onerror = null; if (src) this.src = src; }
+    WA.prototype = {
+      get src() { return this._src; },
+      set src(u) { this._kill(); this._src = u ? new URL(u, location.href).href : ''; this._buf = null; this._off = 0; this.ended = false; if (!u) return; var me = this, want = this._src; get(want, function (b) { if (me._src !== want) return; if (!b) { me._fire('error'); return; } me._buf = b; if (me._want && !me._node) me._start(); }); },
+      get volume() { return this._vol; }, set volume(v) { this._vol = Math.max(0, Math.min(1, +v || 0)); this._g(); },
+      get muted() { return this._muted; }, set muted(v) { this._muted = !!v; this._g(); },
+      get loop() { return this._loop; }, set loop(v) { this._loop = !!v; if (this._node) this._node.loop = this._loop; },
+      get duration() { return this._buf ? this._buf.duration : NaN; },
+      get currentTime() { if (!this._node || !ctx) return this._off; var t = ctx.currentTime - this._t0, d = this.duration; return this._loop && d ? t % d : Math.min(t, d || t); },
+      set currentTime(v) { this._off = Math.max(0, +v || 0); if (this._node) this._start(); },
+      _g: function () { if (this._gain) this._gain.gain.value = this._muted ? 0 : this._vol; },
+      _kill: function () { var n = this._node; this._node = null; clearInterval(this._tu); if (n) { try { n.onended = null; n.stop(0); } catch (e) {} } },
+      _start: function () {
+        var c = C(), me = this, d = this._buf.duration, off = this._off >= d ? 0 : this._off;
+        this._kill();
+        var s = c.createBufferSource(), g = c.createGain(); s.buffer = this._buf; s.loop = this._loop; s.connect(g); g.connect(c.destination);
+        this._node = s; this._gain = g; this._g(); s.start(0, off); this._t0 = c.currentTime - off; this.ended = false;
+        s.onended = function () { if (me._node !== s) return; me._node = null; clearInterval(me._tu); me._off = 0; me.paused = true; me._want = false; me.ended = true; me._fire('ended'); };
+        if ((this._ls.timeupdate || []).length) this._tu = setInterval(function () { me._fire('timeupdate'); }, 250);
+      },
+      play: function () { this._want = true; this.paused = false; this.ended = false; C(); if (this._buf) this._start(); return Promise.resolve(); },
+      pause: function () { if (this._node) this._off = this.currentTime; this._kill(); this.paused = true; this._want = false; },
+      load: function () {},
+      addEventListener: function (t, f) { (this._ls[t] = this._ls[t] || []).push(f); if (t === 'timeupdate' && this._node && !this._tu) { var me = this; this._tu = setInterval(function () { me._fire('timeupdate'); }, 250); } },
+      removeEventListener: function (t, f) { var l = this._ls[t]; if (l) { var i = l.indexOf(f); if (i >= 0) l.splice(i, 1); } },
+      _fire: function (t) { var me = this, ev = { type: t, target: me }; try { if (typeof me['on' + t] === 'function') me['on' + t](ev); } catch (e) {} (me._ls[t] || []).slice().forEach(function (f) { try { f.call(me, ev); } catch (e) {} }); }
+    };
+    return WA;
+  })();
   var $ = function (id) { return document.getElementById(id); };
   var AFTER = 5;            // seconds to answer after the clip has ended
   function clipSecs() { return Math.max(5, Math.round(G.guessMs / 1000) - AFTER); }   // clip length (the Video length setting)
@@ -2179,6 +2230,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The presenters don't say the same thing every time: a random line from a set, never the one they used last.
   var VARY_LAST = {};
   var LINES = {
+    julok: ['Well done, you followed my instructions! 🌹', 'Look at you, all still here! I’m almost impressed. 😏', 'Nobody got lost? Fine, I’ll make it harder. 😈', 'Bravissimi! Even a tourist could do that one… 😌', 'All of you made it. Don’t get cocky! 💅', 'Perfetto! Shall we try a slightly longer walk? 😇', 'Wow, you can follow directions! Romeo never could. 🙄', 'Still together? How romantic. Next one! 🌹', 'Not bad! But Verona has many more little streets… 😏', 'You listened to me! That’s a first. 💁'],
     back: ['Welcome back, Europe!', 'And we’re back, Europe! 📺', 'Hello again, Europe! Did you miss us?', 'Welcome back to EuroQuizion!', 'We’re back, and the glitter hasn’t settled yet! ✨', 'Good to see you again, Europe! 💖'],
     party: ['It’s time for a party game! Let’s see what it’s going to be…', 'Party time! 🎉 Which game will it be this time?', 'Enough thinking for a moment: it’s time to play! 🎡', 'Grab your phones and your sequins: party game time! 🎉', 'The jury needs a coffee break, so… party game! ☕🎉', 'Let’s shake things up with a party game! 💃', 'Wind machines on, it’s party game time! 💨'],
     trivia: ['It’s time again for trivia! 🧠', 'Brains on, Europe: trivia time! 🧠', 'Back to the questions! 🎧', 'Let’s see what you really know about Eurovision! 🧠', 'Phones ready: here come the questions! 📱', 'Trivia time! Douze points for the know-it-alls! 🧠', 'Time to sort the fans from the superfans! 🤓', 'Ears open, Europe: the music is back! 🎶'],
@@ -3495,8 +3547,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
     // outside: Stella feels better, and the presenters run off home; then Juliet comes out on her balcony
     var l0 = 'Ahh… I feel much better! 😌 See you back at the studio… bye for now! 👋';
-    at(2400, function () { qjSay('her', l0); });
-    var t = 2400 + Array.from(l0).length * TALK_MS + 1800;
+    /* first two seconds of black, then Stella, still puffing out her smoke: "…" */
+    at(2000, function () { var o = $('qjov'); if (o) o.classList.add('lit'); });
+    at(2700, function () { var o = $('qjov'); if (o) o.classList.add('puff'); qjSay('her', '…'); });
+    at(4900, function () { qjSay('her', l0); });
+    var t = 4900 + Array.from(l0).length * TALK_MS + 1800;
     at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Stella and Felix run off north, into the clouds
     t += 3600;
     at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // a few seconds later: Juliet steps out
@@ -3559,8 +3614,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.qj; if (!g || G.phase !== 'qj' || g.st !== 'input' || !m || m.id !== g.id || m.round !== g.round || g.alive.indexOf(m.pid) < 0 || g.fail[m.pid]) return;
     var p = g.prog[m.pid] || 0; if (m.i !== p || p >= g.round) return;
     var d = Math.floor(Number(m.dir)); if (!(d >= 0 && d < 4)) return;
-    if (d === g.route[p]) { g.prog[m.pid] = p + 1; Music.plop([2, 6, 9, 4][d]); }
-    else { g.fail[m.pid] = 1; g.wrong[m.pid] = d; Music.blip(); }
+    if (d === g.route[p]) g.prog[m.pid] = p + 1;
+    else { g.fail[m.pid] = 1; g.wrong[m.pid] = d; }
+    if (g.fail[m.pid] || g.prog[m.pid] >= g.round) Music.plop(6);   /* one sound when someone is done (right or wrong: no spoilers), none for each tap */
     push(); qjShow();
     if (g.alive.every(function (k) { return g.fail[k] || (g.prog[k] || 0) >= g.round || !players[k] || players[k].off; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 700); }
   }
@@ -3600,8 +3656,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else line = lost.length ? '😵 ' + lost.map(nm).join(', ') + (lost.length > 1 ? ' are' : ' is') + ' lost in Verona!' : 'Everyone found the way! 👏 One more step…';
     g.alive = ok.length ? ok : g.alive;
     if (lost.length) Music.buzz(); else Music.ding();
-    qjSay(g.round % 2 ? 'him' : 'her', line);
-    setTimeout(function () { if (G.qj !== g) return; qjSay(''); if (end) qjEnd(); else qjRound(); }, 4200);
+    if (!lost.length && !end) jmJul(vary('julok'));   /* nobody went wrong: Juliet has something to say about that */
+    else qjSay(g.round % 2 ? 'him' : 'her', line);
+    setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); if (end) qjEnd(); else qjRound(); }, 4200);
   }
   function qjEnd() {
     var g = G.qj; if (!g) return;
@@ -3772,9 +3829,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('qjov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
-      ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
+      ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div>' +
-        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmnews"></div>' +
+        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div><div class="jmblack"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
@@ -4208,7 +4265,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Recordings are played through one audio element that is "unlocked" by the first touch or click on
   // this page: phones and tablets refuse to start sound in an element the user never touched, and a
   // fresh element per recording was cut off there after a moment.
-  var recEl = new Audio(), recUnlocked = false;
+  var recEl = new window.Audio(), recUnlocked = false;   /* (recordings: a real audio element, unlocked by the first tap) */
   recEl.preload = 'auto';
   function recUnlock() {
     if (recUnlocked) return; recUnlocked = true;
