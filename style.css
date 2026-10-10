@@ -2593,3 +2593,8 @@ aside.recapgone{visibility:hidden}
 /* The Envelope, Please: the one-time pass button under the envelopes */
 .bombui .bpassbtn{grid-column:1/-1;width:100%;margin-top:6px;background:linear-gradient(135deg,#5b3bd6,#9a3fd0)}
 .bombui .bpassbtn small{font-size:.75em;opacity:.8;font-weight:600}
+
+/* everyone in their own outfit */
+.jmt .jmbody{background:linear-gradient(var(--o1,#5a3a9a),var(--o2,#3a2470))}
+.jmt .jmbody i{background:var(--o2,#4a2f85)}
+.jmt .jmlegs i{background:var(--ol,#2a1a4a)}

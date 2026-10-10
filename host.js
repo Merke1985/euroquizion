@@ -3631,6 +3631,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(t, function () { jmJul(''); jmSong(true); qjRound(); });
   }
   // Juliet's own speech balloon, next to her balcony
+  function jmLostSay(ks) {   /* Juliet, as soon as they're out of sight: who is lost now */
+    var ns = ks.map(function (k) { return players[k] ? players[k].name : '?'; }), lj = ns.length > 1 ? ns.slice(0, -1).join(', ') + ' and ' + ns[ns.length - 1] : ns[0];
+    jmJul(lj + (ns.length > 1 ? ' are' : ' is') + ' lost in Verona! 😵');
+  }
   function jmJul(txt) {
     var ov = $('qjov'), b = ov && ov.querySelector('.jmjbub'); if (!b) return;
     if (!txt) { b.classList.remove('on'); return; }
@@ -3698,7 +3702,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var stay = left.filter(function (k) { return fall.indexOf(k) < 0; });
         at(t, function () { jmCar(stay, fall); });
         at(t + 1650, function () { fall.forEach(function (k) { g.falls[k] = { i: i, d: 5 }; }); if (fall.length) { push(); qjShow(); } });
-        t += 3000; left = stay; if (!left.length) return;
+        t += 3000; if (fall.length) { at(t, function () { jmLostSay(fall); }); t += 2600; at(t - 300, function () { jmJul(''); }); }
+        left = stay; if (!left.length) return;
         at(t, function () { g.pos = i + 1; push(); qjShow(); }); t += 250;
         return;
       }
@@ -3706,6 +3711,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         [0, 1, 2, 3, 4].forEach(function (d) {
           var grp = fall.filter(function (k) { return g.wrong[k] === d; }); if (!grp.length) return;
           at(t, function () { grp.forEach(function (k) { g.falls[k] = { i: i, d: d }; }); push(); qjShow(); Music.step(); setTimeout(function () { if (G.qj === g) Music.buzz(); }, 300); }); t += 1500;
+          at(t, function () { jmLostSay(grp); }); t += 2600; at(t - 300, function () { jmJul(''); });
         });
         left = left.filter(function (k) { return fall.indexOf(k) < 0; });
       }
@@ -3737,7 +3743,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (lost.length) Music.buzz(); else Music.ding();
     var cars = !end && g.round === JM_CAR - 1;   /* four rounds done: from now on, cars! */
     if (!lost.length && !end && !cars) jmJul(vary('julok'));   /* nobody went wrong: Juliet has something to say about that */
-    else if (lost.length || end) qjSay(g.round % 2 ? 'him' : 'her', line);
+    else if (end) qjSay(g.round % 2 ? 'him' : 'her', line);
     if (cars) {
       var c1 = 'Well done! 🌹 Oh… watch out for cars! 🚗 Simply jump out of the way!', c2 = 'When I call out a car, tap the JUMP button in the middle of your phone. There’s one in every route from now on! 🦘';
       setTimeout(function () { if (G.qj !== g) return; jmJul(c1); }, lost.length ? 3600 : 400);
@@ -3960,9 +3966,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var grp = ov.querySelector('.jmgroup'), act = g.order.filter(function (k) { return players[k]; }), inGroup = act.filter(function (k) { return g.alive.indexOf(k) >= 0 || (g.st === 'done' && g.win.indexOf(k) >= 0); });
     act.forEach(function (k) {
       var p = players[k], el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]');
-      if (!el) { el = document.createElement('div'); el.className = 'jmt'; el.setAttribute('data-pid', k); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
-      var j = inGroup.indexOf(k), n = inGroup.length, ang = n > 1 ? j / n * Math.PI * 2 : 0, rad = n > 1 ? Math.min(9.5, 3.2 + n * 0.9) : 0;
-      el.style.setProperty('--gx', (Math.cos(ang) * rad).toFixed(2) + 'vh'); el.style.setProperty('--gy', (Math.sin(ang) * rad * 0.8).toFixed(2) + 'vh'); el.style.zIndex = String(100 + Math.round(Math.sin(ang) * rad * 8));   // (lower on screen = closer: in front)
+      if (!el) { el = document.createElement('div'); el.className = 'jmt'; el.setAttribute('data-pid', k);
+        /* everyone in their own outfit: top and trousers */
+        var oh = 0; for (var oi = 0; oi < k.length; oi++) oh = (oh * 37 + k.charCodeAt(oi)) >>> 0;
+        var OUT = [['#e0436b', '#a02447'], ['#2f8fd8', '#1c5f99'], ['#f2b632', '#c48510'], ['#3cbf7a', '#22804f'], ['#9b59d0', '#6a3596'], ['#ff8a3d', '#c75c18'], ['#f5f0e6', '#c9bfae'], ['#2b2b3a', '#14141f'], ['#1fb5b0', '#137a77'], ['#ff6fb5', '#c43d82']], LEG = ['#2a1a4a', '#1d2b4f', '#3b2a1f', '#222', '#4a4a58', '#20403a'];
+        var o = OUT[oh % OUT.length]; el.style.setProperty('--o1', o[0]); el.style.setProperty('--o2', o[1]); el.style.setProperty('--ol', LEG[(oh >>> 5) % LEG.length]); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
+      /* a loose little crowd in the middle of the crossroads, within the street: rows of three, each a bit off (always the same bit, per player) */
+      var j = inGroup.indexOf(k), n = inGroup.length, cols = Math.min(3, Math.max(1, n)), rows = Math.ceil(n / cols), col = j % cols, row = Math.floor(j / cols);
+      var hsh = 0; for (var hi = 0; hi < k.length; hi++) hsh = (hsh * 31 + k.charCodeAt(hi)) >>> 0;
+      var jx = ((hsh % 100) / 100 - .5) * 2.4, jy = (((hsh >>> 8) % 100) / 100 - .5) * 1.8, rw = row === rows - 1 ? n - row * cols : cols;
+      var gx = j < 0 ? 0 : (col - (rw - 1) / 2) * 5.8 + jx, gy = j < 0 ? 0 : (row - (rows - 1) / 2) * 4.6 + jy;
+      el.style.setProperty('--gx', gx.toFixed(2) + 'vh'); el.style.setProperty('--gy', gy.toFixed(2) + 'vh'); el.style.zIndex = String(100 + Math.round(gy * 8));   // (lower on screen = closer: in front)
       var f = g.falls && g.falls[k];
       if (f && f.d >= 4 && !el.classList.contains('falling')) {   /* 5: hit by the car, off into the sky; 4: jumped when there was no car, and is left behind */
         el.style.setProperty('--fx', '0px'); el.style.setProperty('--fy', '0px'); el.classList.add('falling', f.d === 5 ? 'hit' : 'hop');
