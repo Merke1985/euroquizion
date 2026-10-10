@@ -2538,12 +2538,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var back = function () { startRound2(); };   // (then on as usual: the trivia card, or the Grand Final)
     if (!wins.length && G.mgTest) { var any = list().filter(function (p) { return !p.off; }); if (any.length) wins = [pick(any).pid]; }   // (testing: always a trip to the boutique, even without a winner)
     if (!wins.length) { back(); return; }
-    // Lost in Translation ends in a tie: everyone votes for the funniest fake translation of those tied, and that one wins the trip
-    if (wins.length > 1 && G.lastParty === 'bluff' && G.bluffFakes && wins.every(function (k) { return G.bluffFakes[k]; })) {
-      var bf = G.bluffFakes; G.bluffFakes = null;
-      funnyVote(wins, bf, function (w) { mgGo([w], back); }, function () { underdog(wins, back); }); return;
-    }
-    if (wins.length > 1) { underdog(wins, back); return; }
+    G.bluffFakes = null;   // a tie: every winner goes shopping
     mgGo(wins, back);
   }
   // A tie: Lynda has a soft spot for the underdog, so the one of them with the lowest score goes shopping.
