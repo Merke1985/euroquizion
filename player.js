@@ -37,7 +37,7 @@
     if (c.sd && c.st !== 'ask') { show('v-wait'); $('waittitle').textContent = '🏆 Sudden death!'; $('waitsub').textContent = c.st === 'show' || c.st === 'pause' || c.st === 'sdres' ? (l.res != null ? l.res + ' out of 3 right' : '') : 'Get ready: whoever gets fewer right than the others falls off the stage.'; return; }
     if (c.st === 'heelpick' && c.hp) {   /* the Broken Heel: whoever has it picks who gets it */
       if (c.hp.by !== pid) { show('v-wait'); $('waittitle').textContent = '⏳ A player is using an item…'; $('waitsub').textContent = 'Please wait!'; return; }
-      show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = '👠 Who gets your broken heel?'; $('chhelp').textContent = heelSent === c.hp.key ? 'Done! Watch the big screen…' : 'They can’t move on the first question. Pick a player:';
+      show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = '👠 Who gets your broken heel?'; $('chhelp').textContent = heelSent === c.hp.key ? 'Done! Watch the big screen…' : 'They can’t move on the first question. Pick a player (anyone on ice skates is safe):';
       $('chpbar').parentNode.classList.add('hidden'); $('chready').classList.add('hidden');
       var hk = c.hp.key + '|' + heelSent; if ($('chopts').getAttribute('data-k') !== hk) {
         $('chopts').setAttribute('data-k', hk);

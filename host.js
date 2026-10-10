@@ -1713,8 +1713,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // a wheel with the monsters, an arrow spins in the middle and picks the one that chases (the pick was made at the start)
       c.showing = null;
       var toPre = function () { c.st = 'pre'; push(); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'pre') chaseSpin(c); }, 3000); };
+      if (!c.skated && c.perks && c.perks.some(function (x) { return x.kind === 'skates'; })) { c.skated = true; chasePerks(c, function () { c.st = 'intro'; chaseIntroNext(); }, 'skates'); return; }   // first the ice skates: they glide ahead
       if (c.heelers && c.heelers.length && !c.heelDone) { c.heelDone = true; chaseHeelPick(c, function () { chaseIntroNext(); }); return; }   // the broken heels: their owners pick who gets them
-      if (c.perks && c.perks.length && !c.perked) { c.perked = true; chasePerks(c, toPre); return; }   // first the secrets: broken heels, ice skates
+      if (c.perks && c.perks.some(function (x) { return x.kind === 'heel'; }) && !c.perked) { c.perked = true; chasePerks(c, toPre, 'heel'); return; }   // then the broken heels are revealed
       toPre();
       return;
     }
@@ -1792,7 +1793,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var q = c.heelers.slice(), next = function () {
       if (G.chase !== c) return;
       var by = q.shift(); if (!by) { c.hp = null; c.st = 'intro'; push(); done(); return; }
-      var opts = c.order.filter(function (k) { return k !== by && players[k] && !c.lanes[k].out; }); if (!players[by] || !opts.length) { next(); return; }
+      var opts = c.order.filter(function (k) { return k !== by && players[k] && !c.lanes[k].out && !c.lanes[k].skates; });   /* (on ice skates: a broken heel can't touch you) */ if (!players[by] || !opts.length) { next(); return; }
       var key = c.key + '-h' + q.length + Math.random().toString(36).slice(2, 5);
       c.st = 'heelpick'; c.hp = { by: by, key: key, opts: opts.map(function (k) { return { pid: k, name: players[k].name, pos: c.lanes[k].pos }; }) }; push(); Music.ding();
       var go = function (to) { if (G.chase !== c || !c.hp || c.hp.key !== key) return; clearTimeout(chaseTimer); c.perks = c.perks || []; c.perks.unshift({ kind: 'heel', by: by, to: to }); c.hp = null; push(); chaseTimer = setTimeout(next, 400); };
@@ -1802,15 +1803,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     };
     next();
   }
-  function chasePerks(c, done) {
-    var list0 = c.perks.filter(function (x) { return x.kind === 'heel'; }).concat(c.perks.filter(function (x) { return x.kind === 'skates'; }));
+  function chasePerks(c, done, kind) {
+    var list0 = c.perks.filter(function (x) { return !kind || x.kind === kind; });   /* (the skates first, then the broken heels) */
     var step = function (i) {
       if (G.chase !== c) return;
       if (i >= list0.length) { c.perk = null; done(); return; }
       var x = list0[i], l;
       if (x.kind === 'heel') {
         var t = players[x.to];
-        x.blocked = false; if ((l = c.lanes[x.to])) l.heel = x.by;   // (an umbrella does not help against a broken heel)
+        x.blocked = !!(c.lanes[x.to] && c.lanes[x.to].skates); if (!x.blocked && (l = c.lanes[x.to])) l.heel = x.by;   // (an umbrella does not help against a broken heel, ice skates do)
         boneCrack();
       } else if ((l = c.lanes[x.pid])) { l.pos = Math.min(CHASE_END, l.pos + x.n); l.skates = (l.skates || 0) + x.n; iceSnd(); }
       c.st = 'perk'; c.perk = x; push();
@@ -2157,6 +2158,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     c.order.forEach(function (k, i) {
       var l = c.lanes[k], el = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]'); if (!el) return;
       var at = Math.min(CHASE_END, l.pos), won = !!(c.win && c.win.indexOf(k) >= 0);
+      el.classList.toggle('skating', c.st === 'perk' && !!c.perk && c.perk.kind === 'skates' && c.perk.pid === k); el.classList.toggle('hassk', !!l.skates);   /* ice skates: they glide forward on them */
       if (l.pos >= CHASE_GOAL) {   // on the stage: the winner walks to the trophy; in a sudden death all finalists stand around it
         var fi = c.sd ? c.finals.indexOf(k) : -1, fn = c.sd ? c.finals.length : 1, ftop = fn > 1 ? 24 + fi * (56 / (fn - 1)) : 56;
         if (won) { el.style.left = '110%'; el.style.top = '56%'; }
@@ -2246,7 +2248,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (c.st === 'ready' || c.st === 'go') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk falling off the stage.</small><div class="chreadyq">' + (c.st === 'go' ? 'Here we go!' : 'Ready?') + '</div>' + (c.st === 'ready' ? '<div class="chrbar"><i id="chrbar"></i></div>' : '') + '<div class="chready">' + chaseAlive().map(function (k) { var p = players[k] || {}; return '<span class="' + (c.ready[k] ? 'on' : '') + '"><i>' + charSvg(p.char) + '</i>' + esc(p.name || '?') + '</span>'; }).join('') + '</div>'; big.classList.remove('hidden'); }
     else if (c.st === 'perk' && c.perk) {
       var pk = c.perk, pn = function (k) { return esc(players[k] ? players[k].name : '?'); };
-      big.innerHTML = pk.kind === 'heel' ? (pk.blocked ? '☂️ Blocked!<small>' + pn(pk.by) + ' tried to break ' + pn(pk.to) + '’s heel, but ' + pn(pk.to) + '’s umbrella blocked it!</small>' : '👠 Broken heel!<small>' + pn(pk.to) + ' received a broken heel from ' + pn(pk.by) + ': ' + pn(pk.to) + ' can’t move on the first question.</small>')
+      big.innerHTML = pk.kind === 'heel' ? (pk.blocked ? '⛸️ Safe!<small>' + pn(pk.by) + ' tried to break ' + pn(pk.to) + '’s heel, but ' + pn(pk.to) + ' is on ice skates!</small>' : '👠 Broken heel!<small>' + pn(pk.to) + ' received a broken heel from ' + pn(pk.by) + ': ' + pn(pk.to) + ' can’t move on the first question.</small>')
         : '⛸️ Ice skates!<small>' + pn(pk.pid) + ' has ice skates and glides ' + pk.n + ' spaces forward!</small>';
       big.classList.remove('hidden');
     }
@@ -2254,7 +2256,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (c.st === 'pre') { big.innerHTML = '👑 A Eurovision icon is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
     else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)
-    else if (c.st === 'intro' && c.heelDone) { big.classList.add('hidden'); }   /* (after an item was used: no welcome again) */
+    else if (c.st === 'intro' && (c.heelDone || c.skated)) { big.classList.add('hidden'); }   /* (after an item was used: no welcome again) */
     else if (c.st === 'intro') { big.innerHTML = 'You have reached the Grand Final!<small>First, let’s see how many jury votes you received: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'rise') { big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer correctly to beat ' + c.monster.her + ' to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : (c.sd ? 'last one standing on the stage: the trophy is theirs!' : 'jumped onto the stage: the trophy is theirs!')) + '</small>'; big.classList.remove('hidden'); }

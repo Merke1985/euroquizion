@@ -2859,3 +2859,16 @@ body.hasdock main{padding-bottom:84px}
 .chmon[data-mon="fiddler"] .dvclaw{animation:fdbow .5s ease-in-out infinite alternate;transform-origin:266px 129px}
 @keyframes fdbow{from{transform:translate(-14px,3px)}to{transform:translate(12px,-2px)}}
 .whs b{white-space:normal;text-align:center;line-height:1.05;max-width:120%}
+/* ice skates in the Grand Final: blades under the feet, a long glide forward with a lean and an icy trail */
+.chtok.hassk .chbod .cl::after{content:'';position:absolute;left:-60%;right:-60%;bottom:-12%;height:14%;border-radius:2px;background:linear-gradient(90deg,#e8f6ff,#9fd8ff);box-shadow:0 0 6px #bfe8ff}
+.chtok.skating{transition:left 2.4s cubic-bezier(.25,.6,.3,1),top 1.4s ease-in-out!important}
+.chtok.skating .chbod{animation:chskate 2.4s ease-out 1}
+.chtok.skating .chbod .cl:nth-of-type(1){animation:chskleg .6s ease-in-out 4 alternate}
+.chtok.skating .chbod .cl:nth-of-type(2){animation:chskleg .6s ease-in-out 4 alternate-reverse}
+.chtok.skating .ch-face{animation:chsklean 2.4s ease-out 1}
+.chtok.skating::after{content:'';position:absolute;right:60%;top:calc(var(--tok,56px) * 1.55);width:calc(var(--tok,56px) * 3);height:4px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(200,240,255,.9));box-shadow:0 0 10px #bfe8ff;animation:chsktrail 2.4s ease-out 1 forwards}
+@keyframes chskate{0%{transform:rotate(0)}20%,80%{transform:rotate(14deg)}100%{transform:rotate(0)}}
+@keyframes chsklean{0%{transform:none}20%,80%{transform:translateX(4px) rotate(10deg)}100%{transform:none}}
+@keyframes chskleg{from{rotate:-38deg}to{rotate:30deg}}
+@keyframes chsktrail{0%{opacity:0;transform:scaleX(.2);transform-origin:right}30%{opacity:1}100%{opacity:0;transform:scaleX(1);transform-origin:right}}
+.chmon[data-mon="fiddler"] .chbob>.fiddler{transform:translateX(9%)}
