@@ -3644,7 +3644,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function jmSong(on) {
     if (REMOTE) return;
     try {
-      if (on) { if (G.qj) G.qj.song = true; Music.want(false); yt.loadVideoById({ videoId: 'tKUfOk01x4M', startSeconds: 0 }); yt.unMute(); yt.setVolume(55); }
+      if (on) { if (G.qj) G.qj.song = true; Music.want(false); yt.loadVideoById({ videoId: 'BbDHAjg0Ku0', startSeconds: 0 }); yt.unMute(); yt.setVolume(55); }
       else yt.pauseVideo();
     } catch (e) {}
   }
