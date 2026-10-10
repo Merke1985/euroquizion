@@ -3555,7 +3555,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // then two, then three… Everyone taps the whole route from memory on their phone; every right step takes your token one
   // tile further and lights up the maze. One wrong step and you're lost (out). The last one left wins; if everyone left
   // goes wrong in the same round, whoever got furthest that round wins.
-  var JM_COLS = 7, JM_ROWS = 6, JM_MAX = 10, JM_PTS = [12, 8, 4], JM_DIRS = [[-1, 0], [0, -1], [1, 0], [0, 1], [0, 0]], JM_ARROW = ['⬅️', '⬆️', '➡️', '⬇️', '🚗'], JM_CAR = 5, qjTimer = null, qjTick = null;
+  var JM_COLS = 7, JM_ROWS = 6, JM_MAX = 10, JM_PTS = [12, 8, 4], JM_DIRS = [[-1, 0], [0, -1], [1, 0], [0, 1], [0, 0]], JM_ARROW = ['⬅️', '⬆️', '➡️', '⬇️', '🚗'], JM_CAR = 4, qjTimer = null, qjTick = null;
   var JULIET = '<svg class="juliet" viewBox="0 0 200 300" aria-hidden="true"><path d="M58 58 Q60 14 100 12 Q140 14 142 58 L150 150 Q100 162 50 150 Z" fill="#3a1a14"/><rect x="88" y="94" width="24" height="22" rx="8" fill="#f2c9a8"/><ellipse cx="100" cy="68" rx="32" ry="36" fill="#f2c9a8"/><path d="M68 56 Q72 26 100 26 Q128 26 132 56 Q118 40 100 42 Q82 40 68 56 Z" fill="#3a1a14"/><circle cx="88" cy="70" r="4" fill="#2a1410"/><circle cx="112" cy="70" r="4" fill="#2a1410"/><path d="M84 62 q4 -3 8 0 M108 62 q4 -3 8 0" stroke="#2a1410" stroke-width="2" fill="none"/><path d="M90 86 Q100 94 110 86" stroke="#b0303a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="80" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><ellipse cx="120" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><circle cx="100" cy="30" r="5" fill="#ffd23f"/><circle cx="90" cy="33" r="3" fill="#fff"/><circle cx="110" cy="33" r="3" fill="#fff"/><path d="M66 118 Q100 104 134 118 L150 240 Q100 252 50 240 Z" fill="#c2185b"/><path d="M80 116 Q100 126 120 116 L118 132 Q100 140 82 132 Z" fill="#ffd6e6"/><path d="M66 122 Q40 150 46 176" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="46" cy="180" r="8" fill="#f2c9a8"/><path class="jarm" d="M134 122 Q166 104 172 70" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle class="jhand" cx="172" cy="64" r="8" fill="#f2c9a8"/><circle cx="168" cy="52" r="7" fill="#e0245e"/><path d="M168 59 l0 14" stroke="#2f7a3a" stroke-width="3"/></svg>';   // (an original character: Juliet with a rose)
   function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards
     var r = [], prev = -1;
@@ -3621,10 +3621,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (hit.length) setTimeout(function () { crashSnd(); }, 1600);   /* crash! someone didn't jump */
     setTimeout(function () { car.remove(); grp.querySelectorAll('.jmt.jump').forEach(function (el) { el.classList.remove('jump'); }); }, 2900);
   }
+  /* this round's route: a brand-new one every round, one step longer each time; from round 4 one car in it, from round 8 two */
   function jmSeq(g) {
-    if (g.round < JM_CAR) return g.route.slice(0, g.round);
-    var r = g.route.slice(0, g.round - 1), spots = []; for (var i = 0; i <= r.length; i++) if (i !== g.carAt) spots.push(i);
-    g.carAt = pick(spots); r.splice(g.carAt, 0, 4); return r;
+    var n = g.round, cars = n >= 8 ? 2 : n >= JM_CAR ? 1 : 0, r = [], prev = -1;
+    for (var i = 0; i < n - cars; i++) { var w = []; [0, 1, 2, 3].forEach(function (d) { if (prev >= 0 && d === (prev + 2) % 4) return; for (var k = 0; k < (d === 1 ? 3 : d === 3 ? 1 : 2); k++) w.push(d); }); prev = pick(w); r.push(prev); }
+    for (var c = 0; c < cars; c++) {   // the cars somewhere in it, never two in a row
+      var spots = []; for (var j = 0; j <= r.length; j++) if (r[j - 1] !== 4 && r[j] !== 4) spots.push(j);
+      r.splice(pick(spots), 0, 4);
+    }
+    return r;
   }
   function jmCell(g, n) { var x = Math.floor(JM_COLS / 2), y = JM_ROWS - 1; for (var i = 0; i < n; i++) { x += JM_DIRS[g.route[i]][0]; y += JM_DIRS[g.route[i]][1]; } return [x, y]; }
   function qjAll() {
@@ -3788,7 +3793,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else line = lost.length ? '😵 ' + lost.map(nm).join(', ') + (lost.length > 1 ? ' are' : ' is') + ' lost in Verona!' : 'Everyone found the way! 👏 One more step…';
     g.alive = ok.length ? ok : g.alive;
     if (lost.length) Music.buzz(); else Music.ding();
-    var cars = !end && g.round === JM_CAR - 1;   /* four rounds done: from now on, cars! */
+    var cars = !end && g.round === JM_CAR - 1, rush = !end && g.round === 7;
+    if (rush) {   /* rush hour: two cars from round 8 on */
+      setTimeout(function () { if (G.qj !== g) return; jmJul('Rush hour in Verona! 🚗🚗 From now on there are two cars in every route!'); }, 400);
+      setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); qjRound(); }, 5600);
+      return;
+    }   /* four rounds done: from now on, cars! */
     if (!lost.length && !end && !cars) jmJul(vary('julok'));   /* nobody went wrong: Juliet has something to say about that */
     else if (end) qjSay(g.round % 2 ? 'him' : 'her', line);
     if (cars) {
