@@ -3694,7 +3694,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function qjRound() {
     var g = G.qj; if (!g) return;
     g.round++; g.seq = jmSeq(g); g.st = 'show'; g.prog = {}; g.fail = {}; g.wrong = {}; g.show = -1; g.pos = 0; g.falls = {}; var ovh = $('qjov'); if (ovh) ovh._holes = {}; push(); qjShow();
-    var CD = 3000, cdEl = function (big, small) { var ov = $('qjov'), e = ov && ov.querySelector('.jmcount'); if (!e) return; if (!big) { e.classList.remove('on'); return; } e.innerHTML = '<b>' + big + '</b>' + (small ? '<small>' + small + '</small>' : ''); e.classList.remove('on', 'pop', 'num'); void e.offsetWidth; e.classList.add('on', 'pop'); e.classList.toggle('num', !small); };
+    var CD = 3000, cdEl = function (big, small) { var ov = $('qjov'), e = ov && ov.querySelector('.jmcount'); if (!e) return; if (!big) { e.classList.remove('on'); return; } e.innerHTML = '<b>' + big + '</b>' + (small ? '<small>' + small + '</small>' : ''); e.classList.remove('pop', 'num'); void e.offsetWidth; e.classList.add('on', 'pop'); e.classList.toggle('num', !small); };
     var STEP = Math.max(560, 1430 - (g.round - 1) * 25),   /* (round 1: each symbol up for 1 second, 70% of a step; a little faster every round) */ at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
     /* first, big in the middle: "Round 1 · Get ready!", then 3, 2, 1 */
     at(0, function () { cdEl('Round ' + g.round, 'Get ready!'); Music.ding(); });
@@ -3993,7 +3993,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ck = x + ',' + y, was = (ov.getAttribute('data-p') || '0,0').split(',').map(Number);
     if (V3 && ov.getAttribute('data-p') !== ck) {
       ov.setAttribute('data-p', ck);
-      var far = Math.abs(x - was[0]) + Math.abs(y - was[1]) !== 1;
+      var far = Math.abs(x - was[0]) + Math.abs(y - was[1]) !== 1 || g.st !== 'run';   /* (only walking the route glides; a new round snaps back to the start, also after a route of one step) */
       if (far) V3.clearHoles();
       V3.go(x, y, far);   /* (a new round: back to the start in one go; every block looks the same, so you don't see it) */   // (a new round: back to the start in one go)
       ov.querySelector('.jmholes').innerHTML = '';
