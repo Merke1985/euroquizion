@@ -1679,6 +1679,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // they are put on the runway one by one, half a second apart, the lowest score first
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0, perks: perks };
+    heelers.sort(function (a, b) { return (players[b] && players[b].bot ? 1 : 0) - (players[a] && players[a].bot ? 1 : 0); });   /* (bots choose first) */
     G.chase.heelers = heelers; G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
     G.chase.enterAt = Date.now() + CHASE_ENTER - 600; G.chase.builtAt = Date.now() + CHASE_ENTER + CHASE_BUILD; chaseEnter();
     // the monster starts hidden (no fade-out from the last chase), dressed as this chase's monster
@@ -1783,7 +1784,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       c.st = 'heelpick'; c.hp = { by: by, key: key, name: players[by].name, opts: opts.map(function (k) { return { pid: k, name: players[k].name, pos: c.lanes[k].pos }; }) }; push(); Music.ding();
       var go = function (to) { if (G.chase !== c || !c.hp || c.hp.key !== key) return; clearTimeout(chaseTimer); c.perks = c.perks || []; c.perks.unshift({ kind: 'heel', by: by, to: to }); c.hp = null; push(); chaseTimer = setTimeout(next, 400); };
       c.hpGo = go;
-      if (players[by].bot) setTimeout(function () { go(pick(opts)); }, 2500 + Math.random() * 1500);
+      if (players[by].bot) setTimeout(function () { go(pick(opts)); }, 10000);   /* (a bot takes its time to decide) */
       clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { go(pick(opts)); }, 20000);   // (too slow: a random one)
     };
     next();
@@ -2029,7 +2030,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function testPerks() {   // testing the Grand Final: one bot has ice skates, another one got a broken heel from a third
     var bs = list().filter(function (p) { return p.bot && !p.off; }); if (bs.length < 2) return;
     var me = list().filter(function (p) { return !p.bot && !p.off; })[0];   /* (a human player joined: they get the broken heel, to try picking a victim on their phone) */
-    bs[0].inv = (bs[0].inv || []).concat('skates'); var hh = me || bs[2] || bs[1]; hh.inv = (hh.inv || []).concat('heel');
+    bs[0].inv = (bs[0].inv || []).concat('skates'); var hb = bs[2] || bs[1]; hb.inv = (hb.inv || []).concat('heel'); if (me) me.inv = (me.inv || []).concat('heel');   /* (a bot picks first, then you) */
   }
   $('chasetest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
