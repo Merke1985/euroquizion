@@ -2730,3 +2730,7 @@ body.hasdock main{padding-bottom:84px}
 @keyframes pmicboom{50%{transform:scale(1.25)}}
 .pflag{top:36px;height:96px}
 .pflag .cloth::after{font-size:46px}
+/* the pillar really is in the way: wide, right in the middle of the question and the answers (taps still go through) */
+.ppillar{left:50%;width:150px;margin-left:-75px;top:-20px;bottom:-60px}
+.ppillar .cap,.ppillar .base{width:178px;height:26px}
+.ppillar .shaft{width:150px;background:repeating-linear-gradient(90deg,#8e8e98 0 12px,#d4d4dc 12px 24px,#acacb6 24px 32px)}
