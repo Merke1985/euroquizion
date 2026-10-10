@@ -2024,7 +2024,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   });
   /* testing the items: endless trivia (no party games); the bots aim every item at you, one by one,
      each as soon as the effect of the previous one has worn off */
-  var ITEM_TEST = ['flag', 'ticket', 'power', 'hack', 'wind', 'mic', 'pass', 'smoke'], itemTestT = null;
+  var ITEM_TEST = ['flag', 'ticket', 'champagne', 'power', 'hack', 'wind', 'mic', 'pass', 'smoke'], itemTestT = null;
   $('itemtest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var me = list().filter(function (p) { return !p.bot && !p.off; })[0];
@@ -2753,7 +2753,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function shopRandom(n, from) { var ids = from || shopAvail().map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
   // Bots and their items: every trivia question a bot with items has a chance to use one,
   // 10% at first and 10% more for every question it waits. The Broken Mic waits for the question to open.
-  var SHOP_OPEN_ONLY = ['sit', 'blow', 'lose', 'steal', 'thief', 'flag', 'half', 'card'];   // instant items: only while a question is open
+  var SHOP_OPEN_ONLY = ['sit', 'blow', 'lose', 'steal', 'thief', 'flag', 'half', 'card', 'tab'];   // instant items: only while a question is open
   function botItems() {
     var alive = list().filter(function (x) { return !x.off; }), done = false;
     shuffle(list().slice()).forEach(function (b) {   // (at most one bot per question, so they never all go at once)
@@ -2764,7 +2764,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!ids.length) return;
       b.useP = 0.1; done = true;
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && (it.kind === 'heel' || !shielded(x)); });
-      var self = it.kind === 'smoke' || it.kind === 'bribe';
+      var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'tab';
       if (it.kind === 'thief') others = alive.filter(function (x) { return x !== b && (x.inv || []).some(function (y) { return y !== 'bribe'; }); });
       if (!self && !others.length) return;
       var t = self ? b : pick(others), key = 'bot' + Date.now() + Math.random();
@@ -2797,8 +2797,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.frozenLeft != null) return;   // another item is going off right now: wait until it is over
       p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
-      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan')) t = p;   // (no target: it is the user's own smoke)
-      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan')))) return;
+      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab')) t = p;   // (no target: it is the user's own smoke)
+      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates' || it.kind === 'heel') return;   // (the umbrella works by itself; the heel and the skates wait for the Grand Final)
       if (t !== p && it.kind !== 'heel' && it.kind !== 'thief' && shielded(t)) return;   // under an umbrella: out of reach (but the wristband goes after the bag itself)
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
@@ -2995,6 +2995,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var nb = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= nb; to.score += nb; shopLast.deltas = (to === by ? [] : [{ pid: by.pid, tag: it.icon }]).concat([{ pid: t.pid, n: -nb }, { pid: to.pid, n: nb }]);
       if (!nb) return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ', but there were no points to blow away! 💨';
       return it.icon + ' ' + by.name + ' used the ' + it.name + ' on ' + t.name + ': ' + nb + ' points blown over to ' + (to === by ? by.name + ' (that’s them!)' : to.name);
+    }
+    if (it.kind === 'tab') {   /* the champagne: everyone else pays (only what they have on the board) */
+      var paid = 0; shopLast.deltas = [{ pid: by.pid, tag: it.icon }];
+      list().forEach(function (x) { if (x === by || x.off) return; var nx = Math.min(it.amount || 12, Math.max(0, shownScore(x))); x.score -= nx; paid += nx; if (nx) shopLast.deltas.push({ pid: x.pid, n: -nx }); x.hitMsg = { k: Math.random().toString(36).slice(2, 8), icon: it.icon, txt: by.name + ' popped the Overpriced Euroclub Champagne… and you pay ' + nx + ' points for it! 🥂' }; });
+      return it.icon + ' ' + by.name + ' popped the Overpriced Euroclub Champagne: everyone else pays ' + (it.amount || 12) + ' points for the bottle! 🥂';
     }
     if (it.kind === 'steal') { var n2 = Math.min(it.amount, Math.max(0, shownScore(t))); t.score -= n2; by.score += n2; shopLast.deltas = [{ pid: t.pid, n: -n2 }, { pid: by.pid, n: n2 }]; return it.icon + ' ' + by.name + ' hacked ' + t.name + '’s televote: ' + (n2 ? n2 + ' points stolen' : 'but there were no points to steal! 😅'); }
     if (it.kind === 'sit') { t.sitNow = by.name; t.pick = null; shopLast.deltas = [{ pid: by.pid, tag: it.icon }, t.got && t.pts ? { pid: t.pid, n: -t.pts } : { pid: t.pid, tag: '🔇 muted' }]; if (t.got) { t.score -= t.pts || 0; t.got = false; t.pts = 0; } return it.icon + ' ' + by.name + ' broke ' + t.name + '’s mic: no points for this question!'; }
