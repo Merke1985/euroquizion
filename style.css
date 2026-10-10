@@ -2808,3 +2808,4 @@ body.hasdock main{padding-bottom:84px}
 .ccnote img{width:30px;height:20px;object-fit:cover;border-radius:2px;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 #v-guess:not(.hidden){display:flex;flex-direction:column;min-height:calc(100vh - 170px);min-height:calc(100dvh - 170px)}
 #v-guess .ccnote{margin-top:auto;order:99}
+.host aside .board .who{gap:calc(.45em + 14px)}
