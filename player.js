@@ -489,27 +489,39 @@
 
   // ---------- Lost in Verona (Juliet's maze) ----------
   // Four arrows: tap the route Juliet called out, step by step, from memory.
-  var jmKey = '', jmN = 0, jmLog = [], jmBarKey = '', JM_ARW = ['⬅️', '⬆️', '➡️', '⬇️', '🦘'];
+  var jmKey = '', jmN = 0, jmLog = [], jmBarKey = '', jmSent = '', jmAuto = null, JM_ARW = ['⬅️', '⬆️', '➡️', '⬇️', '🦘'];
+  /* the route goes in step by step (shown in the ten boxes above the arrows); Reset clears it, Send hands it in */
+  function jmSend(qq, auto) {
+    if (!net || !qq || qq.st !== 'input' || jmSent === jmKey) return;
+    if (!auto && jmLog.length < qq.round) return;
+    jmSent = jmKey; var msg = { pid: pid, id: qq.id, round: qq.round, route: jmLog.slice(0, qq.round) };
+    net.send('qj', msg); setTimeout(function () { var q2 = state && state.qj; if (q2 && q2.st === 'input' && q2.id === msg.id && q2.round === msg.round && !(q2.fail || {})[pid] && ((q2.prog || {})[pid] || 0) < q2.round) net.send('qj', msg); }, 1100);
+  }
   function qjView(s) {
     var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, alive = (q.alive || []).indexOf(pid) >= 0, failed = (q.fail || {})[pid];
     show('v-wait');
-    if (jmKey !== key) { jmKey = key; jmN = 0; jmLog = []; }
-    if (box.getAttribute('data-b') !== 'jm') {
-      box.setAttribute('data-b', 'jm');
-      box.innerHTML = '<div class="jmbar"><i></i></div><div class="jmtell"><b></b><span></span></div><div class="jmlog"></div><div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button><button type="button" class="vrbtn jmb jmjmp" data-dir="4">🦘<small>JUMP</small></button></div>';
+    if (jmKey !== key) { jmKey = key; jmN = 0; jmLog = []; clearTimeout(jmAuto); }
+    if (box.getAttribute('data-b') !== 'jm2') {
+      box.setAttribute('data-b', 'jm2');
+      box.innerHTML = '<div class="jmbar"><i></i></div><div class="jmtell"><b></b><span></span></div><div class="jmlog"></div>' +
+        '<div class="jmacts"><button type="button" class="btn alt jmreset">↩️ Reset</button><button type="button" class="btn jmsend">✅ Send</button></div>' +
+        '<div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button><button type="button" class="vrbtn jmb jmjmp" data-dir="4">🦘<small>JUMP</small></button></div>';
       [].forEach.call(box.querySelectorAll('.jmb'), function (b) { b.addEventListener('pointerdown', function (e) {
         e.preventDefault();
-        var st = state, qq = st && st.qj; if (!net || !qq || qq.st !== 'input' || (qq.fail || {})[pid] || (qq.alive || []).indexOf(pid) < 0) return;
-        var k2 = qq.id + ':' + qq.round; if (jmKey !== k2) { jmKey = k2; jmN = 0; jmLog = []; }
-        if (jmN >= qq.round) return;
-        var msg = { pid: pid, id: qq.id, round: qq.round, i: jmN, dir: +b.getAttribute('data-dir') };
-        jmN++; jmLog.push(msg.dir); net.send('qj', msg); setTimeout(function () { if (state && state.qj && state.qj.st === 'input' && ((state.qj.prog || {})[pid] || 0) <= msg.i && !(state.qj.fail || {})[pid]) net.send('qj', msg); }, 1100);
+        var qq = state && state.qj; if (!qq || qq.st !== 'input' || (qq.alive || []).indexOf(pid) < 0 || jmSent === jmKey) return;
+        if (jmLog.length >= qq.round) return;
+        jmLog.push(+b.getAttribute('data-dir')); jmN = jmLog.length;
         b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit');
         qjView(state);
       }); });
+      box.querySelector('.jmreset').addEventListener('click', function () { if (jmSent === jmKey) return; jmLog = []; jmN = 0; qjView(state); });
+      box.querySelector('.jmsend').addEventListener('click', function () { jmSend(state && state.qj, false); qjView(state); });
     }
-    var log = ''; for (var i = 0; i < q.round; i++) log += i < jmLog.length ? '<i class="on">' + JM_ARW[jmLog[i]] + '</i>' : '<i></i>';
+    var log = ''; for (var i = 0; i < 10; i++) log += i >= q.round ? '<i class="off"></i>' : i < jmLog.length ? '<i class="on">' + JM_ARW[jmLog[i]] + '</i>' : '<i></i>';
     box.querySelector('.jmlog').innerHTML = q.st === 'input' ? log : '';
+    var sent = jmSent === key, full = jmLog.length >= q.round;
+    box.querySelector('.jmsend').disabled = sent || !full; box.querySelector('.jmreset').disabled = sent || !jmLog.length;
+    box.querySelector('.jmsend').classList.toggle('ready', full && !sent);
     var bar = box.querySelector('.jmbar i');
     box.classList.toggle('jumps', !!q.jump);   /* from round 5 on: the jump button in the middle */
     if (q.st === 'intro') { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch Juliet on the big screen and remember her route!'; return; }
@@ -521,19 +533,20 @@
       tell.querySelector('b').textContent = '👀 Watch the big screen!'; tell.querySelector('span').textContent = 'Remember Juliet’s route: ' + q.round + ' step' + (q.round === 1 ? '' : 's') + '. Then tap it here.';
       return;
     }
-    if (q.st === 'input' && !failed && jmN < q.round) {
+    if (q.st === 'input' && !failed && !sent) {
       box.classList.remove('hidden', 'wait', 'fin'); box.classList.add('play');
       if (jmBarKey !== key) {   /* the timer bar: starts where the time left is, runs down to zero */
         jmBarKey = key; var tot = 4500 + q.round * 1300, lft = Math.max(0, q.left || 0);
         bar.style.transition = 'none'; bar.style.width = Math.min(100, lft / tot * 100) + '%'; void bar.offsetWidth;
         bar.style.transition = 'width ' + lft + 'ms linear'; bar.style.width = '0%';
+        clearTimeout(jmAuto); jmAuto = setTimeout(function () { jmSend(state && state.qj, true); }, Math.max(0, lft - 700));   /* time's nearly up: whatever you have goes in */
       }
-      tell.querySelector('b').textContent = '👆 Tap Juliet’s route!'; tell.querySelector('span').textContent = 'Step ' + (jmN + 1) + ' of ' + q.round + ': which way next?';
+      tell.querySelector('b').textContent = full ? '✅ Happy with it? Send!' : '👆 Tap Juliet’s route!'; tell.querySelector('span').textContent = full ? 'Or Reset if you made a mistake.' : 'Step ' + (jmLog.length + 1) + ' of ' + q.round + ': which way next?';
       return;
     }
     if (q.st === 'input') {   /* done tapping (or a wrong step): the pad stays in view, greyed out, with what you tapped */
       box.classList.remove('hidden', 'wait'); box.classList.add('play', 'fin');
-      tell.querySelector('b').textContent = failed ? '😵 Wrong way!' : '✅ Route done!'; tell.querySelector('span').textContent = failed ? 'Lost in Verona… watch the big screen.' : 'Waiting for the others…';
+      tell.querySelector('b').textContent = '📨 Route sent!'; tell.querySelector('span').textContent = 'Waiting for the others… watch the big screen.';
       return;
     }
     box.classList.remove('play', 'fin');

@@ -3720,10 +3720,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function qjMsg(m) {
     var g = G.qj; if (!g || G.phase !== 'qj' || g.st !== 'input' || !m || m.id !== g.id || m.round !== g.round || g.alive.indexOf(m.pid) < 0 || g.fail[m.pid]) return;
-    var p = g.prog[m.pid] || 0; if (m.i !== p || p >= g.round) return;
-    var d = Math.floor(Number(m.dir)); if (!(d >= 0 && d < 5)) return;
-    if (d === g.seq[p]) g.prog[m.pid] = p + 1;
-    else { g.fail[m.pid] = 1; g.wrong[m.pid] = d; }
+    if (Array.isArray(m.route)) {   /* the whole route at once (phones send it with the Send button): right up to the first wrong step */
+      if ((g.prog[m.pid] || 0) > 0) return;
+      var r = m.route.slice(0, g.round).map(function (x) { return Math.floor(Number(x)); }), k = 0;
+      while (k < g.round && r[k] === g.seq[k]) k++;
+      g.prog[m.pid] = k;
+      if (k < g.round) { g.fail[m.pid] = 1; var wd = r[k]; g.wrong[m.pid] = wd >= 0 && wd < 5 ? wd : pick([0, 1, 2, 3].filter(function (x) { return x !== g.seq[k]; })); if (g.seq[k] !== 4 && g.wrong[m.pid] === g.seq[k]) g.wrong[m.pid] = (g.seq[k] + 1) % 4; }
+    } else {
+      var p = g.prog[m.pid] || 0; if (m.i !== p || p >= g.round) return;
+      var d = Math.floor(Number(m.dir)); if (!(d >= 0 && d < 5)) return;
+      if (d === g.seq[p]) g.prog[m.pid] = p + 1;
+      else { g.fail[m.pid] = 1; g.wrong[m.pid] = d; }
+    }
     if (g.fail[m.pid] || g.prog[m.pid] >= g.round) Music.plop(6);   /* one sound when someone is done (right or wrong: no spoilers), none for each tap */
     push(); qjShow();
     if (g.alive.every(function (k) { return g.fail[k] || (g.prog[k] || 0) >= g.round || !players[k] || players[k].off; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 700); }

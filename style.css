@@ -2630,3 +2630,14 @@ aside.recapgone{visibility:hidden}
 
 /* done tapping: the arrows stay, greyed out a little, and can't be pressed */
 .qjui.fin .vrbtn{opacity:.45;filter:grayscale(.7);pointer-events:none}
+
+/* the phone: ten boxes for the route, Reset and Send */
+.qjui.play .jmlog{flex:none;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;max-width:380px;margin:0 auto}
+.qjui.play .jmlog i{width:auto;height:auto;aspect-ratio:1;font-size:1.6rem}
+.jmlog i.off{opacity:.18}
+.jmacts{display:none;gap:10px;width:100%;max-width:380px;margin:0 auto}
+.qjui.play .jmacts{display:flex}
+.jmacts .btn{flex:1;padding:12px 8px;font-size:1.05rem}
+.jmacts .btn:disabled{opacity:.35}
+.jmacts .jmsend.ready{background:linear-gradient(135deg,#3ddc84,#1fa860);animation:jmready 1s ease-in-out infinite alternate}
+@keyframes jmready{to{transform:scale(1.04)}}
