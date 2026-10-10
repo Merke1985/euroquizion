@@ -2804,3 +2804,7 @@ body.hasdock main{padding-bottom:84px}
 .host aside .board{font-size:1.07em}
 .flagmsg{margin:22px 0 0;text-align:center;font-weight:800;color:var(--yellow);position:relative;z-index:7}
 .pflag .pole{left:-4px}
+.ccnote{display:flex;align-items:center;gap:10px;margin:26px 64px 0 0;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:.82rem;line-height:1.3;color:var(--mute)}
+.ccnote img{width:30px;height:20px;object-fit:cover;border-radius:2px;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+#v-guess:not(.hidden){display:flex;flex-direction:column;min-height:calc(100vh - 170px);min-height:calc(100dvh - 170px)}
+#v-guess .ccnote{margin-top:auto;order:99}

@@ -280,6 +280,8 @@
         var fc = m && m.flag && m.flagc ? m.flagc : ''; if (fl.getAttribute('data-cc') !== fc) { fl.setAttribute('data-cc', fc); fl.querySelector('.cloth').style.backgroundImage = fc ? 'url(https://flagcdn.com/w640/' + fc + '.png)' : ''; fl.classList.toggle('cc', !!fc); }
         fl.classList.toggle('on', !!(m && m.flag));
         if (m && m.flag) requestAnimationFrame(flagFit); pl.classList.toggle('on', !!(m && m.half));
+        var cn = $('ccnote'), ck = m && m.cc ? m.cc : ''; if (cn.getAttribute('data-cc') !== ck) { cn.setAttribute('data-cc', ck); cn.innerHTML = ck ? '<img src="https://flagcdn.com/w40/' + ck + '.png" alt=""><span>You get bonus points for answering questions about songs from the country you represent' + (countries[ck] ? ' (' + esc(countries[ck]) + ')' : '') + '!</span>' : ''; }
+        cn.classList.toggle('hidden', !ck);
         $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc'); $('flagmsg').classList.toggle('hidden', !(m && m.flag && q.type === 'mc'));   /* the flag hides every answer: only the outlines are left, so you pick blind */
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
