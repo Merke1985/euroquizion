@@ -3657,6 +3657,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       'Hi guys, I’m Juliet! 🌹 I know this city pretty well.',
       'If you want to find your way back to the studio, just follow my instructions!',
       'I will give you instructions, step by step, which you will follow on your phone. 📱',
+      'The first round I’ll make easy: my arrow stays up while you tap it in. 😉',
       'One wrong turn and you’re lost in Verona! 😵 The last one left wins. Ready?'
     ];
     t += 1200;
@@ -3994,8 +3995,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + g.round + ' step' + (g.round === 1 ? '' : 's') : '';
     // Juliet calls out an arrow
-    var say = ov.querySelector('.jmsay'), sv = g.st === 'show' && g.show >= 0 ? JM_ARROW[g.seq[g.show]] : '';
-    if (say.getAttribute('data-v') !== (sv ? g.show + sv : '')) { say.setAttribute('data-v', sv ? g.show + sv : ''); say.innerHTML = sv ? '<b>' + sv + '</b><small>' + (g.show + 1) + '</small>' : ''; say.classList.toggle('on', !!sv); }
+    var easy = g.round === 1 && g.st === 'input', si = easy ? 0 : g.show;   /* (round 1: the arrow stays up while everyone taps it in) */
+    var say = ov.querySelector('.jmsay'), sv = (g.st === 'show' && g.show >= 0) || easy ? JM_ARROW[g.seq[si]] : '';
+    if (say.getAttribute('data-v') !== (sv ? si + sv : '')) { say.setAttribute('data-v', sv ? si + sv : ''); say.innerHTML = sv ? '<b>' + sv + '</b><small>' + (si + 1) + '</small>' : ''; say.classList.toggle('on', !!sv); }
     ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show');
     // the city: where the group is on the route (it slides the other way)
     var x = 0, y = 0; for (var i = 0; i < (g.pos || 0); i++) { x += JM_DIRS[g.seq[i]][0]; y += JM_DIRS[g.seq[i]][1]; }
