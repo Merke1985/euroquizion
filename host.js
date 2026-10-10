@@ -2055,7 +2055,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!list().length) { botAdd(); botAdd(); botAdd(); }
     if (list().filter(function (p) { return p.bot; }).length < 3) botAdd();
     testPerks();
-    testStandings(function () { chaseStart(true); var b0 = list().filter(function (p) { return p.bot && !p.off; })[0]; if (G.chase && b0) G.chase.plan = b0.pid; });   // (testing: one bot gets everything right, the others one out of three)
+    testStandings(function () { chaseStart(true); if (G.chase) { G.chase.monster = CHASE_MONSTERS.filter(function (m) { return m.id === 'fiddler'; })[0] || G.chase.monster; $('chmon').setAttribute('data-mon', G.chase.monster.id); }   /* (testing: the newest monster, every time) */ var b0 = list().filter(function (p) { return p.bot && !p.off; })[0]; if (G.chase && b0) G.chase.plan = b0.pid; });   // (testing: one bot gets everything right, the others one out of three)
   });
   /* testing the final scores: random scores, and a couple of envelopes for the EBU (a human player's, or else a bot's), then back to the lobby */
   $('fstest').addEventListener('click', function () {
