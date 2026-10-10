@@ -2658,3 +2658,8 @@ aside.recapgone{visibility:hidden}
 .qjui.play .jmpad{max-width:min(330px,42vh);gap:7px}
 .qjui.play .jmpad .vrbtn{font-size:clamp(1.8rem,7vh,2.8rem);border-radius:16px}
 .qjui.play .jmpad [data-dir="4"]{font-size:clamp(1.4rem,5.5vh,2.2rem)}
+/* Send: green all the way, with its own green edge underneath (not the pink one of the normal buttons) */
+.jmacts .jmsend{box-shadow:0 4px 0 #a3104f}
+.jmacts .jmsend.ready{background:linear-gradient(135deg,#3ddc84,#1fa860);box-shadow:0 4px 0 #137a43}
+.jmacts .jmsend.ready:active{box-shadow:0 1px 0 #137a43;transform:translateY(3px)}
+.jmacts .jmsend:disabled{box-shadow:none}
