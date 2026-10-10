@@ -2537,7 +2537,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var wins = best > 0 ? Object.keys(gain).filter(function (k) { return gain[k] === best && players[k] && !players[k].off; }) : [];
     var back = function () { startRound2(); };   // (then on as usual: the trivia card, or the Grand Final)
     if (!wins.length && G.mgTest) { var any = list().filter(function (p) { return !p.off; }); if (any.length) wins = [pick(any).pid]; }   // (testing: always a trip to the boutique, even without a winner)
-    if (!wins.length) { back(); return; }
+    if (!wins.length) { var act = list().filter(function (p) { return !p.off; }).map(function (p) { return p.pid; }); if (act.length) { noWinner(act, back); return; } back(); return; }   /* nobody won: Lynda invites the lowest scorer */
     G.bluffFakes = null;   // a tie: every winner goes shopping
     mgGo(wins, back);
   }
@@ -2557,9 +2557,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { hostSay('her', 'Lynda sent us a message: she has a soft spot for the underdog, so ' + nm + ', the lowest scorer of the tied players, goes to the boutique! 💌', 5600); }, 3600);
     setTimeout(function () { mgGo([w], back, underdogLine(nm)); }, 3600 + 5800);
   }
+  function noWinner(all, back) {
+    var w = underdogOf(all), nm = players[w] ? players[w].name : '', ln = nm + ', darling, come in! Nobody won, but I have a soft spot for the underdog! 💖';
+    if (REMOTE) { mgGo([w], back, ln); return; }
+    stopTimers(); G.phase = 'loading'; G.q = null; G.best = null; push();
+    hostSay('him', 'Nobody won this one… 😬', 3000);
+    setTimeout(function () { hostSay('her', 'But Lynda sent us a message: she has a soft spot for the underdog, so ' + nm + ', with the lowest score, may go to the boutique! 💌', 5600); }, 3200);
+    setTimeout(function () { mgGo([w], back, ln); }, 3200 + 5800);
+  }
   function mgGo(wins, back, line) {
     var names = wins.map(function (k) { return players[k].name; });
-    FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and may buy an item in the boutique!' };
+    FUN.shopwin = { icon: '🛍️', title: 'Woodruff’s Boutique', sub: line && /Nobody won/.test(line) ? 'Nobody won this party game, but ' + names[0] + ' may buy an item in the boutique!' : (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' win' : names[0] + ' wins') + ' this party game, and may buy an item in the boutique!' };
     Music.douze(); shopVisit(wins, 1, function () { backFromShop(wins.length, back); }, true, line, true);   // only the winner shops: one item from each shelf, to buy with points   // straight to the boutique: the winner chooses one
   }
   // The tie-break vote: which fake translation was the funniest?
