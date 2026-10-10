@@ -23,6 +23,7 @@
     net.send('chase', { pid: pid, key: k, mask: m, lock: !!lock });
     if (lock) [700, 2000].forEach(function (ms) { setTimeout(function () { if (net && chKey === k && state && state.chase && state.chase.st === 'ask') net.send('chase', { pid: pid, key: k, mask: m, lock: true }); }, ms); });
   }
+  var heelSent = '';
   function chaseView(c) {
     var l = c.lanes[pid];
     var dz = !!(l && l.danger && c.st !== 'win'), dzt = '⚠️ Danger! ' + (c.mname || 'The monster') + ' will smash your space next turn. Get answers right to escape!';
@@ -33,6 +34,17 @@
     if (l.out) { show('v-wait'); $('waittitle').textContent = '💀 Caught by ' + (c.mname || 'the monster').replace(/^The /, 'the ') + '!'; $('waitsub').textContent = 'You made it to space ' + l.pos + '. Watch the others run…'; return; }
     if (c.sd && (!c.act || c.act.indexOf(pid) < 0)) { show('v-wait'); $('waittitle').textContent = l.fell ? '💥 You fell off the stage!' : '🏆 Sudden death on the stage'; $('waitsub').textContent = 'Watch the big screen: the last one standing wins.'; return; }
     if (c.sd && c.st !== 'ask') { show('v-wait'); $('waittitle').textContent = '🏆 Sudden death!'; $('waitsub').textContent = c.st === 'show' || c.st === 'pause' || c.st === 'sdres' ? (l.res != null ? l.res + ' out of 3 right' : '') : 'Get ready: whoever gets fewer right than the others falls off the stage.'; return; }
+    if (c.st === 'heelpick' && c.hp) {   /* the Broken Heel: whoever has it picks who gets it */
+      if (c.hp.by !== pid) { show('v-wait'); $('waittitle').textContent = '👠 A broken heel…'; $('waitsub').textContent = (c.hp.name || 'Someone') + ' is choosing who gets it. Fingers crossed!'; return; }
+      show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = '👠 Who gets your broken heel?'; $('chhelp').textContent = heelSent === c.hp.key ? 'Done! Watch the big screen…' : 'They can’t move on the first question. Pick a player:';
+      $('chpbar').parentNode.classList.add('hidden'); $('chready').classList.add('hidden');
+      var hk = c.hp.key + '|' + heelSent; if ($('chopts').getAttribute('data-k') !== hk) {
+        $('chopts').setAttribute('data-k', hk);
+        $('chopts').innerHTML = heelSent === c.hp.key ? '' : (c.hp.opts || []).map(function (o) { return '<button type="button" class="opt heelopt" data-p="' + esc(o.pid) + '">' + esc(o.name) + ' <small>(space ' + o.pos + ')</small></button>'; }).join('');
+        [].forEach.call($('chopts').querySelectorAll('.heelopt'), function (b) { b.onclick = function () { if (!net || heelSent === c.hp.key) return; heelSent = c.hp.key; var msg = { pid: pid, key: c.hp.key, heelTo: b.getAttribute('data-p') }; net.send('chase', msg); setTimeout(function () { if (state && state.chase && state.chase.st === 'heelpick' && state.chase.hp && state.chase.hp.key === msg.key) net.send('chase', msg); }, 1500); chaseView(state.chase); }; });
+      }
+      return;
+    }
     if (c.st === 'ready' || c.st === 'go') {
       var rd = !!(c.ready && c.ready[pid]) || chReadyKey === c.rkey;
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = rd ? 'You’re ready!' : 'Are you ready?';
@@ -615,12 +627,12 @@
     if (!ok) { bagOpen = false; bagItem = null; }
     $('bagpanel').classList.toggle('hidden', !bagOpen);
     if (!bagOpen) return;
-    var p = $('bagpanel'), bagKey = inv.join(',') + '|' + (bagItem || '') + '|' + (s.phase === 'guess') + '|' + !!s.mg + '|' + JSON.stringify((m && m.uses) || {}) + '|' + (s.q && s.q.options ? s.q.options.length : 0) + '|' + s.players.map(function (x) { return x.pid + (x.off ? 0 : 1) + (x.sit ? 's' : '') + (s.hide ? '' : x.score); }).join(',');
+    var p = $('bagpanel'), bagKey = inv.join(',') + '|' + (bagItem || '') + '|' + (s.phase === 'guess') + '|' + !!s.itemBusy + '|' + !!s.mg + '|' + JSON.stringify((m && m.uses) || {}) + '|' + (s.q && s.q.options ? s.q.options.length : 0) + '|' + s.players.map(function (x) { return x.pid + (x.off ? 0 : 1) + (x.sit ? 's' : '') + (s.hide ? '' : x.score); }).join(',');
     if (p.getAttribute('data-k') === bagKey && p.innerHTML) return;   // nothing changed: no redraw (no flicker)
     p.setAttribute('data-k', bagKey);
     if (!bagItem) {
-      var seen = {}; p.innerHTML = '<h3>Your items</h3><p class="bagrule">' + (s.mg ? '🎉 A party game is on: only 📦 delivery and 🤫 secret items can be used now.' : '⚡ Instant items work only while a question is open. 📦 Deliveries can go any time and land before the next question.') + '</p>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).sort(function (a, b) { var r = function (id) { var k = (shopItem(id) || {}).kind; return k === 'bribe' ? 0 : k === 'smoke' ? 1 : k === 'heel' ? 2 : k === 'shield' || k === 'skates' ? 4 : 3; }; return r(a) - r(b); }).map(function (id) {   /* (the envelope for the EBU on top, then the deliveries, then the instant items) */
-        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, later = it.kind === 'bribe' || it.kind === 'heel' || it.kind === 'smoke', mgw = !!s.mg && !later && it.kind !== 'shield' && it.kind !== 'skates', wait = mgw || (['sit', 'fan', 'blow', 'lose', 'steal', 'thief', 'flag', 'half', 'card'].indexOf(it.kind) >= 0 && s.phase !== 'guess') || (it.kind === 'fan' && !(s.q && s.q.type === 'mc' && s.q.options && s.q.options.length === 4)) || it.kind === 'shield' || it.kind === 'skates';   // the mic only breaks while a question is open; the smoke goes up before one
+      var seen = {}; p.innerHTML = '<h3>Your items</h3><p class="bagrule">' + (s.itemBusy ? '🚨 An item is going off right now: wait until it’s over.' : s.mg ? '🎉 A party game is on: only 📦 delivery and 🤫 secret items can be used now.' : '⚡ Instant items work only while a question is open. 📦 Deliveries can go any time and land before the next question.') + '</p>' + inv.filter(function (id) { if (seen[id]) { seen[id]++; return false; } seen[id] = 1; return true; }).sort(function (a, b) { var r = function (id) { var k = (shopItem(id) || {}).kind; return k === 'bribe' ? 0 : k === 'smoke' ? 1 : k === 'heel' ? 2 : k === 'shield' || k === 'skates' ? 4 : 3; }; return r(a) - r(b); }).map(function (id) {   /* (the envelope for the EBU on top, then the deliveries, then the instant items) */
+        var it = shopItem(id) || { icon: '?', name: id, desc: '' }, later = (it.kind === 'bribe' || it.kind === 'smoke') && !s.itemBusy, mgw = !!s.mg && !later && it.kind !== 'shield' && it.kind !== 'skates', wait = mgw || (['sit', 'fan', 'blow', 'lose', 'steal', 'thief', 'flag', 'half', 'card'].indexOf(it.kind) >= 0 && s.phase !== 'guess') || (it.kind === 'fan' && !(s.q && s.q.type === 'mc' && s.q.options && s.q.options.length === 4)) || it.kind === 'shield' || it.kind === 'skates' || it.kind === 'heel' || !!s.itemBusy;   // the mic only breaks while a question is open; the smoke goes up before one
         return '<button type="button" class="shopbtn" data-id="' + id + '"' + (wait ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (it.uses ? (function () { var u = ((m && m.uses) || {})[id] || seen[id] * it.uses; return ' · ' + u + ' use' + (u === 1 ? '' : 's') + ' left'; })() : seen[id] > 1 ? ' ×' + seen[id] : '') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(it.kind === 'shield' ? 'Protects you by itself: nobody can aim an item at you (smoke, the wristband and a broken heel still get you)' : it.kind === 'skates' ? 'Work by themselves: keep them in your bag, and you glide 2 spaces ahead at the start of the Grand Final' : mgw ? 'Not during a party game: wait for the next question' : wait ? (it.kind === 'fan' && s.phase === 'guess' ? 'Only on a question with four answers' : 'Only while a question is open') : it.desc) + '</small></span></button>';
       }).join('') + '<button type="button" class="btn alt" id="bagclose">Close</button>';
       [].forEach.call(p.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {

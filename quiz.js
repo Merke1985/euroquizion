@@ -777,7 +777,7 @@ var SHOP_ITEMS = [
   { id: 'bribe', tier: 3, stock: 1, icon: '✉️', name: 'Envelope Addressed to the EBU', desc: 'A little something for the EBU. It will help you later in the game… Send it ASAP, before you lose it!', kind: 'bribe' },
   { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: pick a player, sneak into the Euroclub after them and leave with a random item from their bag (even their umbrella)', kind: 'thief' },
   { id: 'mic', tier: 1, icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
-  { id: 'heel', tier: 3, stock: 1, icon: '👠', name: 'Broken Heel', desc: 'Secretly break another player’s heel any time before the Grand Final: they can’t move on its first question (an umbrella blocks it)', kind: 'heel', final: true },
+  { id: 'heel', tier: 3, stock: 1, icon: '👠', name: 'Broken Heel', desc: 'Keep it in your bag (it can be stolen!): at the start of the Grand Final, once everyone is on the runway, you pick who gets a broken heel. They can’t move on the first question', kind: 'heel', final: true },
   { id: 'ticket', tier: 2, icon: '🎫', name: 'Limited View Liveshow Tickets', desc: 'During a question: give them to another player: a pillar in the way, so they only get half points for 3 questions (starting with this one)', kind: 'half', amount: 3 },
   { id: 'fan', tier: 1, icon: '🪭', name: 'Eurovision Fan', desc: 'Wave it during a question: half of the wrong answers blow away on your phone. 3 uses', kind: 'fan', uses: 3 },
   { id: 'skates', tier: 3, stock: 1, icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
@@ -795,7 +795,7 @@ function itemMode(it) {
   var k = it && it.kind;
   if (k === 'shield' || k === 'skates') return { id: 'self', icon: '🛡️', label: 'Works by itself: keep it in your bag' };
   if (k === 'bribe') return { id: 'secret', icon: '🤫', label: 'Secret: send it any time, it pays out before the Grand Final' };
-  if (k === 'heel') return { id: 'secret', icon: '🤫', label: 'Secret: use it any time, it is revealed when the Grand Final starts' };
+  if (k === 'heel') return { id: 'self', icon: '👠', label: 'Keep it: at the Grand Final you pick who gets it' };
   if (k === 'smoke') return { id: 'delivery', icon: '📦', label: 'Delivery: use it any time, it lands before the next trivia question' };
   return { id: 'instant', icon: '⚡', label: 'Instant: only while a question is open' };
 }

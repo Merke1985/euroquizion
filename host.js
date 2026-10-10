@@ -173,6 +173,7 @@
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
       players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
     if (G.sing) s.sing = singSnapshot();
+    if (G.frozenLeft != null) s.itemBusy = true;   /* an item is going off: nobody can use one right now */
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
     if (G.note && G.phase === 'note') s.note = noteSnap();
@@ -1648,11 +1649,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var perks = [];   // (announced once everyone is ready: first the broken heels, then the ice skates)
     (G.heels || []).forEach(function (h) { if (lanes[h.to] && players[h.by]) perks.push({ kind: 'heel', by: h.by, to: h.to }); }); G.heels = [];
     ps.forEach(function (p) { var n = (p.inv || []).filter(function (id) { return id === 'skates'; }).length; if (n) perks.push({ kind: 'skates', pid: p.pid, n: 2 * n }); });
+    var heelers = []; ps.forEach(function (p) { (p.inv || []).forEach(function (id) { if (id === 'heel') heelers.push(p.pid); }); });   // (a broken heel in the bag: its owner picks a victim once everyone is on the runway)
     list().forEach(function (p) { p.inv = []; p.uses = {}; });   // in the Grand Final nobody has any items left
     // they are put on the runway one by one, half a second apart, the lowest score first
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
     G.chase = { monster: pick(CHASE_MONSTERS), key: Math.random().toString(36).slice(2, 7), st: 'intro', n: 0, lanes: lanes, order: ps.map(function (p) { return p.pid; }), mon: 0, q: null, qkey: '', endsAt: 0, used: {}, test: !!test, win: null, done: false, scores: scores, placeOrder: placeOrder, placed: 0, perks: perks };
-    G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
+    G.chase.heelers = heelers; G.phase = 'chase'; G.barMs = 0; chaseBuilt = '';
     G.chase.enterAt = Date.now() + CHASE_ENTER - 600; G.chase.builtAt = Date.now() + CHASE_ENTER + CHASE_BUILD; chaseEnter();
     // the monster starts hidden (no fade-out from the last chase), dressed as this chase's monster
     var mon = $('chmon'); mon.classList.remove('rise', 'defeat', 'hungry', 'sleep'); mon.classList.add('lurk'); mon.setAttribute('data-mon', G.chase.monster.id);
@@ -1672,6 +1674,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // a wheel with the monsters, an arrow spins in the middle and picks the one that chases (the pick was made at the start)
       c.showing = null;
       var toPre = function () { c.st = 'pre'; push(); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'pre') chaseSpin(c); }, 3000); };
+      if (c.heelers && c.heelers.length && !c.heelDone) { c.heelDone = true; chaseHeelPick(c, function () { chaseIntroNext(); }); return; }   // the broken heels: their owners pick who gets them
       if (c.perks && c.perks.length && !c.perked) { c.perked = true; chasePerks(c, toPre); return; }   // first the secrets: broken heels, ice skates
       toPre();
       return;
@@ -1745,6 +1748,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function iceSnd() { if (REMOTE) return; try { if (!iceEl) iceEl = new Audio('sounds/ice.mp3'); iceEl.currentTime = 0; iceEl.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var pr = iceEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   var boneEl = null;
   function boneCrack() { if (REMOTE) return; try { if (!boneEl) boneEl = new Audio('sounds/bone_crack.mp3'); boneEl.currentTime = 0; boneEl.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var pr = boneEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
+  /* the Broken Heel at the start of the Grand Final: one by one, each owner picks a player on their phone (bots pick at random) */
+  function chaseHeelPick(c, done) {
+    var q = c.heelers.slice(), next = function () {
+      if (G.chase !== c) return;
+      var by = q.shift(); if (!by) { c.hp = null; c.st = 'intro'; push(); done(); return; }
+      var opts = c.order.filter(function (k) { return k !== by && players[k] && !c.lanes[k].out; }); if (!players[by] || !opts.length) { next(); return; }
+      var key = c.key + '-h' + q.length + Math.random().toString(36).slice(2, 5);
+      c.st = 'heelpick'; c.hp = { by: by, key: key, name: players[by].name, opts: opts.map(function (k) { return { pid: k, name: players[k].name, pos: c.lanes[k].pos }; }) }; push(); Music.ding();
+      var go = function (to) { if (G.chase !== c || !c.hp || c.hp.key !== key) return; clearTimeout(chaseTimer); c.perks = c.perks || []; c.perks.unshift({ kind: 'heel', by: by, to: to }); c.hp = null; push(); chaseTimer = setTimeout(next, 400); };
+      c.hpGo = go;
+      if (players[by].bot) setTimeout(function () { go(pick(opts)); }, 2500 + Math.random() * 1500);
+      clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { go(pick(opts)); }, 20000);   // (too slow: a random one)
+    };
+    next();
+  }
   function chasePerks(c, done) {
     var list0 = c.perks.filter(function (x) { return x.kind === 'heel'; }).concat(c.perks.filter(function (x) { return x.kind === 'skates'; }));
     var step = function (i) {
@@ -1763,6 +1781,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function chaseMsg(m) {
     var c = G.chase; if (!c || G.phase !== 'chase') return;
+    if (m.heelTo) { if (c.st === 'heelpick' && c.hp && m.key === c.hp.key && m.pid === c.hp.by && c.lanes[m.heelTo] && m.heelTo !== m.pid && c.hpGo) c.hpGo(m.heelTo); return; }
     if (m.ready) {
       if (c.st !== 'ready' || m.key !== c.key + '-r' || !c.lanes[m.pid] || c.ready[m.pid]) return;
       c.ready[m.pid] = 1; Music.plop(Object.keys(c.ready).length); push();
@@ -1984,7 +2003,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function testPerks() {   // testing the Grand Final: one bot has ice skates, another one got a broken heel from a third
     var bs = list().filter(function (p) { return p.bot && !p.off; }); if (bs.length < 2) return;
-    bs[0].inv = (bs[0].inv || []).concat('skates'); G.heels = [{ by: (bs[2] || bs[0]).pid, to: bs[1].pid }];
+    bs[0].inv = (bs[0].inv || []).concat('skates'); (bs[2] || bs[1]).inv = ((bs[2] || bs[1]).inv || []).concat('heel');
   }
   $('chasetest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
@@ -2063,7 +2082,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)'; }, 1500);   // a moment to take in the wheel first
   }
   function chaseSnap() {
-    var c = G.chase, s = { rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
+    var c = G.chase, s = { hp: c.st === 'heelpick' ? c.hp : null, rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
     var nx = c.monsterDead ? 0 : (c.st === 'ask' || c.st === 'show' || c.st === 'pause' || c.st === 'move') ? divaStep(c.n) : divaStep(c.n + 1);
     c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { danger: !l.out && !!nx && l.pos <= c.mon + nx && l.pos < CHASE_GOAL, fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });
@@ -2186,6 +2205,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         : '⛸️ Ice skates!<small>' + pn(pk.pid) + ' has ice skates and glides ' + pk.n + ' spaces forward!</small>';
       big.classList.remove('hidden');
     }
+    else if (c.st === 'heelpick' && c.hp) { big.innerHTML = '👠 ' + esc(c.hp.name) + ' has a broken heel…<small>Now that everyone is on the runway, ' + esc(c.hp.name) + ' picks who gets it, on their phone!</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'pre') { big.innerHTML = '👑 A Eurovision icon is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
     else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)
@@ -2740,7 +2760,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (done || !b.bot || b.off || !b.inv || !b.inv.length) return;
       var ch = b.useP || 0.1;
       if (Math.random() >= ch) { b.useP = Math.min(1, ch + 0.1); return; }
-      var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield' && it.kind !== 'skates' && it.kind !== 'fan'; });
+      var ids = b.inv.filter(function (id) { var it = shopItem(id); return it && it.kind !== 'shield' && it.kind !== 'skates' && it.kind !== 'fan' && it.kind !== 'heel'; });
       if (!ids.length) return;
       b.useP = 0.1; done = true;
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && (it.kind === 'heel' || !shielded(x)); });
@@ -2773,11 +2793,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (m.use) {   // using an item: it lands before the next question
       if (G.atype !== 'party' || ['lobby', 'end', 'brief', 'intro', 'chase'].indexOf(G.phase) >= 0) return;
-      if (m.key && p.useKey === m.key) return; p.useKey = m.key;   // (the phone sends twice, to be sure)
+      if (m.key && p.useKey === m.key) return;
+      if (G.frozenLeft != null) return;   // another item is going off right now: wait until it is over
+      p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
       var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan')) t = p;   // (no target: it is the user's own smoke)
       if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan')))) return;
-      var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates') return;   // (the umbrella works by itself)
+      var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates' || it.kind === 'heel') return;   // (the umbrella works by itself; the heel and the skates wait for the Grand Final)
       if (t !== p && it.kind !== 'heel' && it.kind !== 'thief' && shielded(t)) return;   // under an umbrella: out of reach (but the wristband goes after the bag itself)
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
       var open = G.phase === 'guess' && !!G.q && G.q.subject !== 'pick' && G.q.subject !== 'best' && !G.draw && !G.sing && !G.q.battle;
