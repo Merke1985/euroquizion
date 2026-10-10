@@ -2623,3 +2623,7 @@ aside.recapgone{visibility:hidden}
 
 .jmgbub .e{font-style:normal;font-size:1.4em;margin-right:.35em;vertical-align:-.15em;display:inline-block;animation:jmhuh 1s ease-in-out infinite alternate}
 @keyframes jmhuh{from{rotate:-12deg}to{rotate:12deg}}
+
+/* the countdown box keeps one size: "Round 1 · Get ready!" and the 3, 2, 1 in the same frame */
+.jmcount{box-sizing:border-box;width:clamp(280px,30vw,480px);height:clamp(150px,24vh,240px);padding:0 20px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.jmcount.num b{font-size:2.2em;line-height:1}

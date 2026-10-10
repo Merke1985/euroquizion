@@ -3634,6 +3634,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.qj = { id: 'jm' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', round: 0, route: jmRoute(), wrong: {}, falls: {}, pos: 0, order: act.map(function (p) { return p.pid; }), alive: act.map(function (p) { return p.pid; }), prog: {}, fail: {}, outAt: {}, best: {}, lit: 0, show: -1, ends: 0, win: [], rank: null };
     G.phase = 'qj'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); qjShow();
+    if (!REMOTE) Music.want(true);   /* the studio music plays on in Verona until the song starts */
     var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
     // outside: Stella feels better, and the presenters run off home; then Juliet comes out on her balcony
     var l0 = 'Ahh… I feel much better! 😌 See you back at the studio… bye for now! 👋';
@@ -3698,8 +3699,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var CD = 3000, cdEl = function (big, small) { var ov = $('qjov'), e = ov && ov.querySelector('.jmcount'); if (!e) return; if (!big) { e.classList.remove('on'); return; } e.innerHTML = '<b>' + big + '</b>' + (small ? '<small>' + small + '</small>' : ''); e.classList.remove('jmpop', 'num'); void e.offsetWidth; e.classList.add('on', 'jmpop'); e.classList.toggle('num', !small); };
     var STEP = Math.max(560, 1430 - (g.round - 1) * 25),   /* (round 1: each symbol up for 1 second, 70% of a step; a little faster every round) */ at = function (ms, f) { setTimeout(function () { if (G.qj === g && g.st === 'show') f(); }, ms); };
     /* first, big in the middle: "Round 1 · Get ready!", then 3, 2, 1 */
-    at(0, function () { cdEl('Round ' + g.round, 'Get ready!'); Music.ding(); });
-    [3, 2, 1].forEach(function (n, k) { at(1300 + k * 800, function () { cdEl(String(n)); Music.blip(); }); });
+    at(0, function () { cdEl('Round ' + g.round, 'Get ready!'); });
+    [3, 2, 1].forEach(function (n, k) { at(1300 + k * 800, function () { cdEl(String(n)); }); });
     at(1300 + 3 * 800, function () { cdEl(''); });
     for (var i = 0; i < g.round; i++) (function (i) {
       at(CD + 1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4, 12][g.seq[i]]); });
