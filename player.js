@@ -605,6 +605,12 @@
   function bagUpdate(s) {
     var m = me(), inv = (m && m.inv) || [], ok = s.cfg && s.cfg.atype === 'party' && inv.length && ['lobby', 'end', 'brief', 'intro', 'chase', 'shop'].indexOf(s.phase) < 0;
     $('bagbtn').classList.toggle('hidden', !ok); $('bagn').textContent = inv.length || '';
+    /* debuffs on you (from other players' items): little badges next to the bag button */
+    var fxb = $('fxbar'); if (!fxb) { fxb = document.createElement('div'); fxb.id = 'fxbar'; fxb.className = 'fxbar'; document.body.appendChild(fxb); }
+    var fx = (m && m.fx) || [], fxOn = s.cfg && s.cfg.atype === 'party' && fx.length && ['lobby', 'end', 'brief', 'intro', 'chase'].indexOf(s.phase) < 0;
+    fxb.classList.toggle('hidden', !fxOn); fxb.classList.toggle('nobag', !ok);
+    var fxh = fxOn ? fx.map(function (f) { return '<span class="fxchip" title="' + esc(f.t) + '">' + f.i + '<b>' + (f.n > 1 ? '×' + f.n : '') + '</b></span>'; }).join('') : '';
+    if (fxb.innerHTML !== fxh) fxb.innerHTML = fxh;
     if (!ok) { bagOpen = false; bagItem = null; }
     $('bagpanel').classList.toggle('hidden', !bagOpen);
     if (!bagOpen) return;

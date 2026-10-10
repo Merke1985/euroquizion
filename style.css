@@ -2705,3 +2705,11 @@ aside.recapgone{visibility:hidden}
 .fsov .grbub{top:9vh;max-width:30vw;font-size:clamp(1.15rem,2.1vw,1.9rem);padding:.7em 1.1em;border-radius:22px}
 .fsov .grbub.him{left:3vw}.fsov .grbub.her{right:3vw}
 .fsov.cin .fscour{left:21vw}
+
+/* the phone: debuffs next to the bag button */
+.fxbar{position:fixed;right:84px;bottom:20px;z-index:40;display:flex;gap:6px;pointer-events:none}
+.fxbar.nobag{right:14px}
+.fxbar.hidden{display:none}
+.fxchip{display:flex;align-items:center;gap:2px;height:46px;padding:0 10px;border-radius:23px;background:rgba(255,77,106,.9);box-shadow:0 0 0 2px #fff,0 6px 16px rgba(0,0,0,.45);font-size:1.4rem;animation:fxpulse 1.6s ease-in-out infinite alternate}
+.fxchip b{font-size:.85rem;color:#fff}
+@keyframes fxpulse{to{box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,77,106,.9)}}
