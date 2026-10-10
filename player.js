@@ -1001,6 +1001,7 @@
     var low = !ob.classList.contains('hidden') ? ob : !gf.classList.contains('hidden') ? gf : $('qtext');
     var r0 = vg.getBoundingClientRect(), bot = low.getBoundingClientRect().bottom;
     fl.style.top = Math.round(top - r0.top - 10) + 'px'; fl.style.height = Math.max(120, Math.round(bot - top + 20)) + 'px';
+    var fb = fl.getBoundingClientRect().bottom, pole = fl.querySelector('.pole'); if (pole) pole.style.bottom = -Math.max(30, Math.round(window.innerHeight - fb)) + 'px';   /* the pole goes all the way down to the bottom of the screen, as if someone below is holding it */
   }
   window.addEventListener('resize', flagFit); setInterval(flagFit, 1000);
   function renderPicker(s, m) {
