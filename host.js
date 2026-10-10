@@ -3975,7 +3975,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var j = inGroup.indexOf(k), n = inGroup.length, cols = Math.min(3, Math.max(1, n)), rows = Math.ceil(n / cols), col = j % cols, row = Math.floor(j / cols);
       var hsh = 0; for (var hi = 0; hi < k.length; hi++) hsh = (hsh * 31 + k.charCodeAt(hi)) >>> 0;
       var jx = ((hsh % 100) / 100 - .5) * 2.4, jy = (((hsh >>> 8) % 100) / 100 - .5) * 1.8, rw = row === rows - 1 ? n - row * cols : cols;
-      var gx = j < 0 ? 0 : (col - (rw - 1) / 2) * 5.8 + jx, gy = j < 0 ? 0 : (row - (rows - 1) / 2) * 4.6 + jy;
+      var gx = j < 0 ? 0 : (col - (rw - 1) / 2) * 5.8 + jx, gy = j < 0 ? 0 : (row - (rows - 1) / 2) * 4.2 + jy - 8;   /* (a little further north: clear of the buildings in front) */
       el.style.setProperty('--gx', gx.toFixed(2) + 'vh'); el.style.setProperty('--gy', gy.toFixed(2) + 'vh'); el.style.zIndex = String(100 + Math.round(gy * 8));   // (lower on screen = closer: in front)
       var f = g.falls && g.falls[k];
       if (f && f.d >= 4 && !el.classList.contains('falling')) {   /* 5: hit by the car, off into the sky; 4: jumped when there was no car, and is left behind */

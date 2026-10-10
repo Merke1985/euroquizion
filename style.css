@@ -2598,3 +2598,5 @@ aside.recapgone{visibility:hidden}
 .jmt .jmbody{background:linear-gradient(var(--o1,#5a3a9a),var(--o2,#3a2470))}
 .jmt .jmbody i{background:var(--o2,#4a2f85)}
 .jmt .jmlegs i{background:var(--ol,#2a1a4a)}
+/* the time bar sits at the foot of Juliet's tower */
+.jmtbar{top:26vh;bottom:auto;width:32vh;height:2vh}
