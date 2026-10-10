@@ -621,7 +621,7 @@
         if ((shopItem(id) || {}).kind === 'bribe') {   // no one to pick, and nothing to see yet
           var bm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', bm); setTimeout(function () { net.send('shop', bm); }, 1200); }
-          ptoast('✉️ Your envelope is on its way to the EBU… it pays out right before the Grand Final. Shh!'); bagOpen = false; bagUpdate(state); return;
+          ptoast('✉️ Your envelope is on its way to the EBU… Shh! 🤫'); bagOpen = false; bagUpdate(state); return;
         }
         if ((shopItem(id) || {}).kind === 'thief') {   // no one to pick: the victim is random
           var tm = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };

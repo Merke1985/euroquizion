@@ -774,7 +774,7 @@ var SHOP_ITEMS = [
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
   { id: 'umbrella', tier: 3, icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: nobody can aim an item at you. The Smoke Machine, the Euroclub Wristband and a Broken Heel still get you', kind: 'shield' },
   { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'During a question: wave it in front of another player: for 3 questions (starting with this one) they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
-  { id: 'bribe', tier: 3, stock: 1, icon: '✉️', name: 'Envelope Addressed to the EBU', desc: 'A little bribe for the EBU. Send it, and right before the Grand Final it pays out: 10 to 20% of the leader’s score. One per player, and nobody can steal it', kind: 'bribe' },
+  { id: 'bribe', tier: 3, stock: 1, icon: '✉️', name: 'Envelope Addressed to the EBU', desc: 'A little something for the EBU. Send it ASAP, before you lose it!', kind: 'bribe' },
   { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: get into the Euroclub and leave with a random item from a random player', kind: 'thief' },
   { id: 'mic', tier: 1, icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
   { id: 'heel', tier: 3, stock: 1, icon: '👠', name: 'Broken Heel', desc: 'Secretly break another player’s heel any time before the Grand Final: they can’t move on its first question (an umbrella blocks it)', kind: 'heel', final: true },
