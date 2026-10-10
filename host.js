@@ -2443,6 +2443,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (G.scoring === 'speed') say('Be quick: the first right answer gets 12 points, the next 10, then 8, and so on.');
     else if (G.scoring === 'random') say('Every question is worth a surprise number of points: keep an eye on the screen!');
     else say('A right answer is worth 12 points, douze points!');
+    if (!lad) say('And look at the little flag your avatar is holding: that’s the country you represent tonight! Get a question about your country right, and you get double points! 🎌');
     if (party && shopOn()) say('Win a party game and you get to go shopping in Woodruff’s Boutique! 🛍️');
     if (multi && !lad) { say('Every round starts from zero, and the winner of a round wears a crown in the next one. 👑'); say('After the last round, all your rounds add up!'); }
     // 4. The final game
