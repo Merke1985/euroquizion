@@ -3829,18 +3829,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       Object.keys(blocks).forEach(function (k) { var p = k.split(',').map(Number); if (far(p, cx, cy) && far(p, kx, ky)) { city.remove(blocks[k]); delete blocks[k]; } });
     }
     around(0, 0);
-    /* ground fog: soft layers of cloud low over the streets in the distance, so the buildings stick out above it
-       but the road and the ground disappear in it (they stay put while the city slides underneath) */
-    var fogTex = v3Tex(function (x, W, H) {
-      x.clearRect(0, 0, W, H);
-      for (var n = 0; n < 140; n++) { var px = rnd(n, 1, 7) * W, py = H * (.05 + .95 * Math.pow(rnd(n, 2, 7), .7)), r = W * (.05 + rnd(n, 3, 7) * .09), gr = x.createRadialGradient(px, py, 0, px, py, r); gr.addColorStop(0, 'rgba(236,228,250,.55)'); gr.addColorStop(1, 'rgba(236,228,250,0)'); x.fillStyle = gr; x.fillRect(px - r, py - r, r * 2, r * 2); }
-      var fade = x.createLinearGradient(0, 0, 0, H); fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(.3, 'rgba(0,0,0,.25)'); fade.addColorStop(.6, 'rgba(0,0,0,1)'); fade.addColorStop(1, 'rgba(0,0,0,1)'); x.globalCompositeOperation = 'destination-in'; x.fillStyle = fade; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over';
-    }, 512, 256);
-    fogTex.wrapS = fogTex.wrapT = THREE.ClampToEdgeWrapping;
-    [[.35, 1], [.9, .8], [1.5, .55]].forEach(function (f, i) {
-      var m = new T.Mesh(new T.PlaneGeometry(130, 50), new T.MeshBasicMaterial({ map: fogTex, transparent: true, opacity: f[1], depthWrite: false, fog: false }));
-      m.rotation.x = -Math.PI / 2; m.position.set(i * 9 - 9, f[0], -28 - i * 1.5); if (i === 1) m.scale.x = -1; m.renderOrder = 2 + i; sc.add(m);
-    });
     var holes = [], holeMat = new T.MeshBasicMaterial({ color: '#000' }), rimMat = new T.MeshStandardMaterial({ color: '#2a1a12', roughness: 1 });
     var st = { x: 0, y: 0, fx: 0, fy: 0, tx: 0, ty: 0, t0: 0, dur: 600, alive: true };
     function frame() {
