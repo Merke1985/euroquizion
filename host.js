@@ -4280,8 +4280,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off; });
     var taken = {}; act.forEach(function (p) { taken[p.char] = 1; });
     var stars = shuffle(CHARS.filter(function (c) { return !taken[c.id]; })).slice(0, 12);
-    var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }));
-    var person = function (charId, name, i, flag) {   // someone on a sofa: body, head, and now and then a flag to wave
+    var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0 && !act.some(function (p) { return p.cc === c; }); }));   /* (the crowd: the countries nobody plays for)
+*/    var person = function (charId, name, i, flag) {   // someone on a sofa: body, head, and now and then a flag to wave
       var col = ['#e8457c', '#f2b134', '#3fb6c9', '#9b6bf2', '#55c27a', '#f07a3a'][i % 6];
       return '<div class="grp' + (Math.random() < 0.45 ? ' hop' : '') + '" style="--d:' + (-Math.random() * 3).toFixed(2) + 's">' +
         (flag ? '<span class="grflag"><img src="https://flagcdn.com/w80/' + flag + '.png" alt=""></span>' : '') +
@@ -4291,7 +4291,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var row = function (ppl, per, cls, k0, names) { var h = ''; for (var i = 0; i < ppl.length; i += per) h += sofa(ppl.slice(i, i + per), k0 + i / per, names ? names.slice(i, i + per) : null); return '<div class="grrow ' + cls + '">' + h + '</div>'; };
     var back = stars.slice(0, 6).map(function (c, i) { return person(c.id, '', i, i % 2 ? codes[i] : ''); });
     var mid = stars.slice(6, 12).map(function (c, i) { return person(c.id, '', i + 3, i % 2 ? '' : codes[i + 6]); });
-    var front = act.map(function (p, i) { return person(p.char, p.name, i + 1, ''); });
+    var front = act.map(function (p, i) { return person(p.char, p.name, i + 1, p.cc || ''); });   /* the players wave their own fan flag */
     var ov = document.createElement('div'); ov.id = 'grov'; ov.className = 'grov enter';
     ov.innerHTML = '<div class="grwall"></div><div class="grflags">' + codes.slice(12, 30).map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div>' +
       '<div class="grsign">🛋️ Green Room</div><div class="grfloor"></div>' +
