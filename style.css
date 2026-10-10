@@ -2562,3 +2562,19 @@ aside.recapgone{visibility:hidden}
 /* no extra cloud at the foot of the tower; the cloud band itself a little thicker instead */
 .jmsky.front .c4{display:none}
 .jmsky.front{top:10.5vh;height:17vh}
+
+/* Juliet's symbols bigger; no game name in the corner; a time bar while the route is tapped */
+.jmov.v3 .jmsay{width:14vh;height:14vh}
+.jmov.v3 .jmsay b{font-size:8.5vh}
+.jmov.v3 .jmsay small{font-size:2vh}
+.jmov .qjsign{display:none}
+.jmtbar{position:absolute;left:50%;bottom:11vh;width:min(60vw,70vh);height:2.4vh;transform:translateX(-50%);border-radius:2vh;background:rgba(20,10,40,.55);box-shadow:0 0 0 3px rgba(255,255,255,.8),0 6px 18px rgba(0,0,0,.5);overflow:hidden;z-index:8;opacity:0;transition:opacity .3s;pointer-events:none}
+.jmtbar.on{opacity:1}
+.jmtbar i{display:block;height:100%;width:100%;border-radius:2vh;background:linear-gradient(90deg,#ff4d6a,#ffd23f 40%,#3ddc84)}
+
+/* the little city car, and its beam of light (above the buildings, so it shows before the car comes round the corner) */
+.jmcar{width:17vh;height:10vh;margin:-4vh 0 0 -8.5vh}
+.jmcar .beam{display:none}
+.jmbeam{position:absolute;left:var(--jx,50vw);top:var(--jy,56vh);width:44vh;height:16vh;margin:-7vh 0 0 6vh;z-index:3;pointer-events:none;mix-blend-mode:screen;transform-origin:-6vh 50%;scale:var(--ps,1);
+  background:radial-gradient(ellipse 70% 45% at 0% 50%,rgba(255,248,200,.85),rgba(255,236,160,.35) 45%,transparent 75%);filter:blur(3px);animation:jmcar2 2.6s cubic-bezier(.3,.1,.6,.9) forwards}
+.jmbeam.rtl{margin-left:-50vh;transform-origin:calc(100% + 6vh) 50%;background:radial-gradient(ellipse 70% 45% at 100% 50%,rgba(255,248,200,.85),rgba(255,236,160,.35) 45%,transparent 75%)}

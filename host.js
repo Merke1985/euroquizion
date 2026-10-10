@@ -3537,19 +3537,30 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return r;
   }
   /* this round's sequence: the route so far; from round 5 on there is always one car (4: jump!) in it, somewhere new each time */
-  var JM_CARSVG = '<svg viewBox="0 0 160 72" aria-hidden="true"><defs><radialGradient id="jmhl"><stop offset="0" stop-color="#fffbe6"/><stop offset=".45" stop-color="#fff2a8"/><stop offset="1" stop-color="#ffd84a" stop-opacity="0"/></radialGradient></defs>' +
-    '<path d="M38 30 Q48 8 70 8 H104 Q120 8 130 30 Z" fill="#b8182c"/><path d="M50 29 Q56 14 72 14 H86 V29 Z M92 14 H103 Q114 14 121 29 H92 Z" fill="#1b2340" opacity=".9"/>' +
-    '<path d="M8 30 H146 Q156 31 156 42 V52 Q156 58 150 58 H10 Q4 58 4 50 V38 Q4 30 8 30 Z" fill="#d42038"/><path d="M4 48 H156 V52 Q156 58 150 58 H10 Q4 58 4 52 Z" fill="#9c1226"/><path d="M88 32 V54" stroke="#9c1226" stroke-width="1.5"/>' +
-    '<circle cx="38" cy="58" r="12" fill="#1a1a1a"/><circle cx="38" cy="58" r="5" fill="#9a9a9a"/><circle cx="122" cy="58" r="12" fill="#1a1a1a"/><circle cx="122" cy="58" r="5" fill="#9a9a9a"/>' +
-    '<ellipse cx="152" cy="38" rx="5" ry="6" fill="#fffbe6"/><circle cx="154" cy="38" r="16" fill="url(#jmhl)"/><rect x="2" y="35" width="5" height="7" rx="2" fill="#ff3b3b"/></svg>';
+  /* a little round Italian city car, seen from the side (facing right), with some shading for depth */
+  var JM_CARSVG = '<svg viewBox="0 0 150 90" aria-hidden="true"><defs>' +
+    '<linearGradient id="jmcb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9f0e6"/><stop offset=".45" stop-color="#6fcfc0"/><stop offset="1" stop-color="#2f8f84"/></linearGradient>' +
+    '<linearGradient id="jmcw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe6ff"/><stop offset="1" stop-color="#3a5a86"/></linearGradient>' +
+    '<radialGradient id="jmct" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#555"/><stop offset=".6" stop-color="#151515"/><stop offset="1" stop-color="#000"/></radialGradient>' +
+    '<radialGradient id="jmcl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#fff6c8"/><stop offset="1" stop-color="#ffe17a"/></radialGradient></defs>' +
+    '<ellipse cx="75" cy="84" rx="62" ry="5" fill="rgba(0,0,0,.35)"/>' +
+    '<path d="M14 62 Q10 44 30 40 Q40 14 70 12 Q100 12 112 36 Q138 40 140 58 Q141 70 130 72 H22 Q14 72 14 62 Z" fill="url(#jmcb)"/>' +
+    '<path d="M40 38 Q48 19 70 18 Q95 18 105 37 Z" fill="url(#jmcw)"/><path d="M71 18 V38" stroke="#2f8f84" stroke-width="3"/><path d="M46 34 Q52 23 63 21 L56 34 Z" fill="#fff" opacity=".35"/>' +
+    '<path d="M18 52 H138" stroke="#e8fffb" stroke-width="2" opacity=".6"/><path d="M78 44 h10" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round"/>' +
+    '<rect x="8" y="64" width="20" height="5" rx="2.5" fill="#d9d9d9"/><rect x="124" y="64" width="20" height="5" rx="2.5" fill="#d9d9d9"/>' +
+    '<circle cx="40" cy="72" r="13" fill="url(#jmct)"/><circle cx="40" cy="72" r="6" fill="#d8d8d8"/><circle cx="112" cy="72" r="13" fill="url(#jmct)"/><circle cx="112" cy="72" r="6" fill="#d8d8d8"/>' +
+    '<ellipse cx="136" cy="50" rx="5" ry="7" fill="url(#jmcl)"/><ellipse cx="14" cy="52" rx="3" ry="5" fill="#ff4040"/></svg>';
   function jmCar(jumpers, hit) {
     var ov = $('qjov'), grp = ov && ov.querySelector('.jmgroup'); if (!grp) return;
     var old = grp.querySelector('.jmcar'); if (old) old.remove();
     /* it comes along the cross street, from the left or the right, and races on out of the other side */
     var c0 = V3 ? V3.screen(0, 0) : [innerWidth / 2, innerHeight * .56], dir = Math.random() < .5 ? 1 : -1, off = innerHeight * .4;
-    var car = document.createElement('div'); car.className = 'jmcar' + (dir < 0 ? ' rtl' : ''); car.innerHTML = '<i class="beam"></i>' + JM_CARSVG;
+    var car = document.createElement('div'); car.className = 'jmcar' + (dir < 0 ? ' rtl' : ''); car.innerHTML = JM_CARSVG;
+    /* its headlight beam runs ahead of it, over the buildings: you see the light coming before the car itself */
+    var beam = document.createElement('div'); beam.className = 'jmbeam' + (dir < 0 ? ' rtl' : ''); ov.appendChild(beam);
+    setTimeout(function () { beam.remove(); }, 2900);
     var fromL = -(c0[0] + off), toR = innerWidth - c0[0] + off;
-    car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
+    car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px'); beam.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); beam.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
     grp.insertBefore(car, grp.firstChild);
     whooshes([0, 700, 1300]); Music.woosh && Music.woosh();
     setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1300);
@@ -3809,7 +3820,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var roofTex = v3Tex(function (x, W, H) { x.fillStyle = '#b4532f'; x.fillRect(0, 0, W, H); for (var yy = 0; yy < 16; yy++) { x.fillStyle = yy % 2 ? '#9c4426' : '#c2633a'; x.fillRect(0, yy * 16, W, 9); for (var xx = 0; xx < 12; xx++) { x.fillStyle = 'rgba(60,20,10,.35)'; x.fillRect(xx * 22 + (yy % 2) * 11, yy * 16, 2, 16); } } }, 256, 256);
     var roofMat = new T.MeshStandardMaterial({ map: roofTex, roughness: .8, flatShading: true }), capMat = new T.MeshStandardMaterial({ color: '#7a3a22', roughness: .9 });
     var blocks = {};
-    function rnd(a, b, k) { var v = Math.sin(a * 127.1 + b * 311.7 + k * 74.7) * 43758.5453; return v - Math.floor(v); }
+    function rnd(a, b, k) { a = 0; b = 0; var v = Math.sin(a * 127.1 + b * 311.7 + k * 74.7) * 43758.5453; return v - Math.floor(v); }
     function addBlock(i, j) {   // the block whose corner is crossroads (i, j) and (i+1, j+1)
       var key = i + ',' + j; if (blocks[key]) return;
       var g = new T.Group(), hgt = 4.2 + rnd(i, j, 1) * 2.6, m = facs[Math.floor(rnd(i, j, 2) * facs.length)];
@@ -3881,13 +3892,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
       ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div><div class="jmtower jmtop">' + JM_TOWER + '</div><div class="jmtfront jmtop2">' + JM_TFRONT + '</div>' +
-        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div><div class="jmblack"></div>' +
+        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmtbar"><i></i></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div><div class="jmblack"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
       V3 = null; v3Load(function () { var hh = ov.querySelector('.jm3h'); if (!hh || !hh.isConnected) return; V3 = v3Init(hh, ov.querySelector('.jm3o')); if (V3) { ov.classList.add('v3'); var hm = V3.screen(-.075, -.4), hf = V3.screen(.075, -.4), ht = V3.screen3(0, 3.6, -.4); ov.style.setProperty('--ps', (Math.max(60, hm[1] - ht[1]) / (innerHeight * .15)).toFixed(3)); ov.style.setProperty('--h1x', hm[0] + 'px'); ov.style.setProperty('--h2x', hf[0] + 'px'); ov.style.setProperty('--hy', hm[1] + 'px'); ov.style.setProperty('--hh', Math.max(120, hm[1] - ht[1]) + 'px'); var c0 = V3.screen(0, 0), bq = [innerWidth / 2, innerHeight * .2]; ov.style.setProperty('--jx', c0[0] + 'px'); ov.style.setProperty('--jy', c0[1] + 'px'); ov.style.setProperty('--bx', bq[0] + 'px'); ov.style.setProperty('--by', bq[1] + 'px'); } qjShow(); });
     }
     ov.setAttribute('data-st', g.st);
+    /* the time bar while everyone taps the route: full at the start, empty when time is up */
+    var tb = ov.querySelector('.jmtbar'), tbi = tb && tb.firstChild, tk = g.id + ':' + g.round;
+    if (tb) {
+      tb.classList.toggle('on', g.st === 'input');
+      if (g.st === 'input' && tb.getAttribute('data-k') !== tk) {
+        tb.setAttribute('data-k', tk); var tot = 4500 + g.round * 1300, lft = Math.max(0, g.ends - Date.now());
+        tbi.style.transition = 'none'; tbi.style.width = Math.min(100, lft / tot * 100) + '%'; void tbi.offsetWidth;
+        tbi.style.transition = 'width ' + lft + 'ms linear'; tbi.style.width = '0%';
+      }
+    }
     ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + g.round + ' step' + (g.round === 1 ? '' : 's') : '';
     // Juliet calls out an arrow
     var say = ov.querySelector('.jmsay'), sv = g.st === 'show' && g.show >= 0 ? JM_ARROW[g.seq[g.show]] : '';
@@ -3901,7 +3922,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.setAttribute('data-p', ck);
       var far = Math.abs(x - was[0]) + Math.abs(y - was[1]) !== 1;
       if (far) V3.clearHoles();
-      V3.go(x, y, false, far ? 1600 : 0);   /* (a new round: glide back to the start, no jump) */   // (a new round: back to the start in one go)
+      V3.go(x, y, far);   /* (a new round: back to the start in one go; every block looks the same, so you don't see it) */   // (a new round: back to the start in one go)
       ov.querySelector('.jmholes').innerHTML = '';
     }
     // the group: everyone still in, together in the middle; whoever goes wrong runs into a side street and falls
