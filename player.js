@@ -516,13 +516,13 @@
     if (!alive && !(q.st === 'done')) { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '😵 Lost in Verona!'; $('waitsub').textContent = 'You took a wrong step. Watch the others try…'; return; }
     var tell = box.querySelector('.jmtell');
     if (q.st === 'show') {
-      box.classList.remove('hidden'); box.classList.add('play', 'wait'); jmBarKey = '';
+      box.classList.remove('hidden', 'fin'); box.classList.add('play', 'wait'); jmBarKey = '';
       bar.style.transition = 'none'; bar.style.width = '100%';
       tell.querySelector('b').textContent = '👀 Watch the big screen!'; tell.querySelector('span').textContent = 'Remember Juliet’s route: ' + q.round + ' step' + (q.round === 1 ? '' : 's') + '. Then tap it here.';
       return;
     }
     if (q.st === 'input' && !failed && jmN < q.round) {
-      box.classList.remove('hidden', 'wait'); box.classList.add('play');
+      box.classList.remove('hidden', 'wait', 'fin'); box.classList.add('play');
       if (jmBarKey !== key) {   /* the timer bar: starts where the time left is, runs down to zero */
         jmBarKey = key; var tot = 4500 + q.round * 1300, lft = Math.max(0, q.left || 0);
         bar.style.transition = 'none'; bar.style.width = Math.min(100, lft / tot * 100) + '%'; void bar.offsetWidth;
@@ -531,7 +531,12 @@
       tell.querySelector('b').textContent = '👆 Tap Juliet’s route!'; tell.querySelector('span').textContent = 'Step ' + (jmN + 1) + ' of ' + q.round + ': which way next?';
       return;
     }
-    box.classList.remove('play');
+    if (q.st === 'input') {   /* done tapping (or a wrong step): the pad stays in view, greyed out, with what you tapped */
+      box.classList.remove('hidden', 'wait'); box.classList.add('play', 'fin');
+      tell.querySelector('b').textContent = failed ? '😵 Wrong way!' : '✅ Route done!'; tell.querySelector('span').textContent = failed ? 'Lost in Verona… watch the big screen.' : 'Waiting for the others…';
+      return;
+    }
+    box.classList.remove('play', 'fin');
     box.classList.add('hidden');
     if (q.st === 'input') { $('waittitle').textContent = failed ? '😵 Wrong way!' : '✅ Route done!'; $('waitsub').textContent = failed ? 'Lost in Verona…' : 'Waiting for the others…'; return; }
     if (q.st === 'res') { $('waittitle').textContent = failed || ((q.prog || {})[pid] || 0) < q.round ? '😵 Lost!' : '✅ Still in!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
