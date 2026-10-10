@@ -2387,8 +2387,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function bombHide(i) {   // the bomb goes in envelope i; the players then take turns again
     var g = G.bomb; if (!g) return;
     g.env.forEach(function (e, k) { e.bomb = k === i; }); g.hider = ''; g.hkey = '';
-    g.st = 'deal'; g.pick = -1; push(); Music.woosh();
-    clearTimeout(bombTimer); bombTimer = setTimeout(bombTurn, 2200);
+    g.st = 'deal'; g.dealN = (g.dealN || 0) + 1; g.pick = -1; push(); Music.woosh();
+    clearTimeout(bombTimer); bombTimer = setTimeout(bombTurn, 6200);   /* (the bomb goes into an envelope, then they are shuffled) */
   }
   function bombWho() { var g = G.bomb; return g.alive[g.turn % g.alive.length]; }
   function bombTurn() {   // the next player walks on stage and picks
@@ -2443,6 +2443,31 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       env: g.env.map(function (e) { return e.open ? { open: 1, bomb: e.bomb ? 1 : 0, code: e.code, by: e.by } : { open: 0 }; }) };   // (what is inside stays on the host until it opens)
   }
   // The big screen: the stage, the two presenters, the player whose turn it is, and the envelopes.
+  /* the deal, on the big screen: the envelopes fly in with their flaps open, a bomb drops into one of them,
+     the flaps close, and they are shuffled around (ending with the bomb where it really is) */
+  function bombDealAnim(ov, g) {
+    var box = ov.querySelector('.benvs'), n = g.env.length, B = 0; g.env.forEach(function (e, i) { if (e.bomb) B = i; });
+    box.innerHTML = g.env.map(function (e, i) { return '<div class="benv flap" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span></div>'; }).join('');
+    var els = [].slice.call(box.children), pitch = els.length > 1 ? els[1].offsetLeft - els[0].offsetLeft : 0;
+    // a run of swaps; played backwards from a scrambled start, it ends exactly in place
+    var swaps = [], k = n < 2 ? 0 : Math.min(9, 3 + n);
+    for (var s = 0; s < k; s++) { var a = Math.floor(Math.random() * n), b = (a + 1 + Math.floor(Math.random() * (n - 1))) % n; swaps.push([a, b]); }
+    var slot = []; for (var i = 0; i < n; i++) slot.push(i);   // slot[element] = where it stands
+    swaps.forEach(function (sw) { var ea = slot.indexOf(sw[0]), eb = slot.indexOf(sw[1]); slot[ea] = sw[1]; slot[eb] = sw[0]; });
+    var place = function (dur) { els.forEach(function (el, i) { el.style.transition = dur ? 'transform ' + dur + 'ms cubic-bezier(.5,0,.4,1)' : 'none'; el.style.transform = 'translateX(' + ((slot[i] - i) * pitch) + 'px)'; }); };
+    ov._anim = true; place(0); box.classList.add('dealing');
+    var bomb = document.createElement('div'); bomb.className = 'bdrop'; bomb.textContent = '💣'; box.appendChild(bomb);
+    var at = function (ms, f) { setTimeout(function () { if (ov.isConnected) f(); }, ms); };
+    at(900, function () { bomb.style.left = (els[B].offsetLeft + slot[B] * pitch - B * pitch + els[B].offsetWidth / 2) + 'px'; bomb.classList.add('fall'); Music.blip(); });   // the bomb drops in…
+    at(1900, function () { bomb.remove(); els[B].classList.add('thud'); Music.plop(1); });
+    at(2300, function () { els.forEach(function (el) { el.classList.remove('flap', 'thud'); }); Music.woosh(); });   // …the flaps close…
+    var t = 2800, step = Math.max(240, Math.min(420, 2600 / Math.max(1, k)));
+    swaps.slice().reverse().forEach(function (sw) {   // …and they are shuffled
+      at(t, function () { var ea = slot.indexOf(sw[0]), eb = slot.indexOf(sw[1]); slot[ea] = sw[1]; slot[eb] = sw[0]; place(step - 30); els[ea].classList.add('hop'); els[eb].classList.add('hop'); setTimeout(function () { els[ea].classList.remove('hop'); els[eb].classList.remove('hop'); }, step); Music.plop(2 + (sw[0] % 5)); });
+      t += step;
+    });
+    at(t + 250, function () { ov._anim = false; box.classList.remove('dealing'); els.forEach(function (el) { el.style.transition = 'none'; el.style.transform = ''; }); bombShow(); });
+  }
   function bombShow() {
     var g = G.bomb; if (!g) return;
     var ov = $('bombov'); if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov enter'; whooshes([0, 350, 700]); (function (o) { setTimeout(function () { o.classList.remove('enter'); }, 2600); })(ov); ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="bplayer"></div><div class="benvs"></div><div class="bstrip"></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
@@ -2454,7 +2479,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!cur) { bp.innerHTML = ''; bp.removeAttribute('data-k'); }
     var bme = bp.querySelector('.bme'); if (bme) { bme.classList.toggle('boom', g.st === 'boom'); bme.classList.toggle('win', g.st === 'win'); }
     ov.querySelector('.benvs').style.setProperty('--n', g.env.length);   // (all envelopes in one row, however many)
-    ov.querySelector('.benvs').innerHTML = g.env.map(function (e, i) {
+    if (g.st === 'deal' && g.dealN && g.env.length && ov._dealt !== g.id + ':' + g.dealN) { ov._dealt = g.id + ':' + g.dealN; bombDealAnim(ov, g); }
+    if (!ov._anim) ov.querySelector('.benvs').innerHTML = g.env.map(function (e, i) {
       var cls = 'benv' + (e.open ? ' open' + (e.bomb ? ' bomb' : ' flag') : '') + (g.pick === i && !e.open ? ' picked' : '');
       return '<div class="' + cls + '" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span>' + (e.open ? (e.bomb ? '<span class="bin">💣</span>' : '<span class="bin"><img class="bflag" src="https://flagcdn.com/w160/' + e.code + '.png" alt=""></span><small>' + esc(countries[e.code] || '') + '</small>') : '') + '</div>';
     }).join('');
@@ -3341,10 +3367,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', '…and get 2 points for every player who falls for your fake! Good luck, liars! 🤥']] },
     bomb: { sign: '💌 The Envelope, Please', theme: 'bomb',
       art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
-      lines: [['him', 'The envelope, please! 💌 Golden envelopes are coming on stage.'],
-        ['her', 'Most of them hide a flag… but one of them hides a bomb! 💣'],
-        ['him', 'Take turns to open one on your phone. Find the bomb, and you’re out.'],
-        ['her', 'Then there’s a fresh set, until only one of you is left. The last one standing wins!']] }
+      lines: [['him', 'Psst… the live show starts soon, and we still need to rehearse the big envelope moment! 💌'],
+        ['her', 'Will you help us train? One by one you come on stage and open an envelope, on your phone.'],
+        ['him', 'Most envelopes hold a flag… but someone sneaked a bomb into one of them! 💣'],
+        ['her', 'Open the bomb and you’re out. Then a fresh set, until only one of you is left. The last one standing wins!']] }
   };
   function hostScene(kind, then) {
     var sc = SCENES[kind], f = FUN[kind]; if (!sc || REMOTE) { funIntro(kind, then, 8000); return; }

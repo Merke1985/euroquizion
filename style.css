@@ -2678,3 +2678,21 @@ aside.recapgone{visibility:hidden}
 .chtiles i.nsfsmash{animation:chcrumble 1s ease-in forwards!important}
 .chtiles i.nsfnew{animation:chnsfnew .7s cubic-bezier(.3,1.4,.5,1) both}
 @keyframes chnsfnew{from{transform:translateX(120%) scale(.6);opacity:0}to{transform:none;opacity:1}}
+
+/* The Envelope, Please: the deal - flaps open, the bomb drops in, flaps close, a shuffle */
+.bombov .benvs{position:absolute}
+.bombov .benv{transition:transform .3s}
+.bombov .benvs.dealing .benv{animation:benvin .6s cubic-bezier(.3,1.4,.5,1) backwards;animation-delay:calc(var(--i) * 70ms)}
+@keyframes benvin{from{translate:0 40vh;rotate:-20deg;opacity:0}to{translate:0 0;rotate:0deg;opacity:1}}
+.bombov .benv.flap::before{transform-origin:50% 0;transform:scaleY(-1);background:linear-gradient(200deg,#fff3b0,#e0b030);transition:transform .35s}
+.bombov .benv::before{transition:transform .35s}
+.bombov .benv.thud{animation:benvthud .4s ease-out}
+@keyframes benvthud{30%{scale:1.15 .85}60%{scale:.95 1.08}}
+.bombov .benv.hop{z-index:3;translate:0 -18px;transition:translate .15s}
+.bombov .bdrop{position:absolute;left:50%;top:-60vh;font-size:clamp(2rem,4vw,3.4rem);transform:translateX(-50%);z-index:5;pointer-events:none;filter:drop-shadow(0 0 12px #ff6a00)}
+.bombov .bdrop.fall{animation:bdrop 1s cubic-bezier(.5,0,.8,.4) forwards}
+@keyframes bdrop{0%{top:-60vh;rotate:0deg}85%{top:-1vh;rotate:540deg}100%{top:0;rotate:560deg;opacity:0;scale:.4}}
+/* numbers only once the shuffle is over (they belong to the places, not to the envelopes); unopened envelopes float a little */
+.bombov .benvs.dealing .bno{visibility:hidden}
+.bombov .benvs:not(.dealing) .benv:not(.open):not(.picked){animation:benvfloat 2.2s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.37s)}
+@keyframes benvfloat{from{translate:0 0;rotate:-1.5deg}to{translate:0 -7px;rotate:1.5deg}}
