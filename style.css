@@ -2671,3 +2671,10 @@ aside.recapgone{visibility:hidden}
 @keyframes jmhl{to{opacity:.8}}
 /* the runway is two spaces longer at the start (22 instead of 20): it reaches further to the left, the tiles keep their size */
 .chrun{left:16.4%}
+
+/* NOT SO FAST: the monster slides over to the leader's lane; three spaces glow, are smashed; new spaces slide in at the stage end */
+.chmon{transition:left 1.4s ease-in-out,top 1s ease-in-out,opacity .6s}
+.chtiles i.nsfglow{background:repeating-linear-gradient(45deg,#ff1744 0 8px,#3a0010 8px 16px)!important;box-shadow:inset 0 0 0 3px #ff1744,0 0 26px #ff1744!important;animation:chwarn .3s ease-in-out infinite alternate!important}
+.chtiles i.nsfsmash{animation:chcrumble 1s ease-in forwards!important}
+.chtiles i.nsfnew{animation:chnsfnew .7s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes chnsfnew{from{transform:translateX(120%) scale(.6);opacity:0}to{transform:none;opacity:1}}
