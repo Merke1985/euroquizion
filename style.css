@@ -2826,3 +2826,22 @@ body.hasdock main{padding-bottom:84px}
 .chin{font-style:normal;border:0!important;box-shadow:none!important;background:none!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important;display:block!important;position:static!important;transform:none!important;animation:none!important;opacity:1!important}
 .voters span.char{padding:0!important;background:#2a2060!important;box-shadow:none!important;display:block!important;gap:0!important}
 .metaflag{width:1.3em;height:.87em;object-fit:cover;border-radius:2px;vertical-align:-.1em}
+
+/* the fan flag in a player's hand (Lost in Verona, the Grand Final) */
+.hflag{position:absolute;pointer-events:none;z-index:3}
+.hflag b{position:absolute;left:0;bottom:0;width:12%;height:100%;border-radius:2px;background:linear-gradient(90deg,#bbb,#fff,#999)}
+.hflag img{position:absolute;left:11%;top:0;width:89%;height:52%;object-fit:cover;border-radius:1px 3px 3px 1px;box-shadow:0 1px 3px rgba(0,0,0,.45);transform-origin:0 50%;animation:chflagwave 1.3s ease-in-out infinite alternate}
+.jmt .hflag{left:calc(50% + 1.6vh);top:3.2vh;width:3.4vh;height:4.6vh}
+.jmt .chflag,.chtok .chflag{display:none}
+/* the Grand Final: a little body under each face, that walks when it moves */
+.chtok .chbod{position:absolute;left:50%;top:calc(var(--tok,56px) * .78);width:calc(var(--tok,56px) * .62);height:calc(var(--tok,56px) * .9);margin-left:calc(var(--tok,56px) * -.31);z-index:-1}
+.chtok .chbod .ct{position:absolute;left:8%;right:8%;top:0;height:58%;border-radius:45% 45% 25% 25%;background:linear-gradient(var(--o1,#5a3a9a),var(--o2,#3a2470));z-index:1}
+.chtok .chbod .ca{position:absolute;top:8%;width:18%;height:48%;border-radius:99px;background:var(--o2,#4a2f85);transform-origin:50% 0;z-index:0}
+.chtok .chbod .ca:nth-of-type(3){left:-4%;rotate:20deg}.chtok .chbod .ca:nth-of-type(4){right:-4%;rotate:-28deg}
+.chtok .chbod .cl{position:absolute;top:52%;width:20%;height:46%;border-radius:99px;background:var(--ol,#2a1a4a);transform-origin:50% 0}
+.chtok .chbod .cl:nth-of-type(1){left:24%}.chtok .chbod .cl:nth-of-type(2){right:24%}
+.chtok .chbod .hflag{left:88%;top:-10%;width:72%;height:96%}
+.chtok .ch-name{margin-top:calc(var(--tok,56px) * .92)}
+.chtok.walk .chbod .cl:nth-of-type(1){animation:jmleg .22s ease-in-out infinite alternate}
+.chtok.walk .chbod .cl:nth-of-type(2){animation:jmleg .22s ease-in-out infinite alternate-reverse}
+.chtok.walk .chbod .ca:nth-of-type(3){animation:jmarm .22s ease-in-out infinite alternate-reverse}

@@ -842,6 +842,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return names.some(function (n) { return new RegExp('(^|[^\\p{L}])' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}])', 'iu').test(txt); });
   }
   /* the right answer, at the reveal: a badge when someone gets the flag bonus (their own country: double points) */
+  /* a little body for a player (outfit by player, always the same), and their fan flag in one hand */
+  function bodyOutfit(k) {
+    var oh = 0; for (var oi = 0; oi < k.length; oi++) oh = (oh * 37 + k.charCodeAt(oi)) >>> 0;
+    var OUT = [['#e0436b', '#a02447'], ['#2f8fd8', '#1c5f99'], ['#f2b632', '#c48510'], ['#3cbf7a', '#22804f'], ['#9b59d0', '#6a3596'], ['#ff8a3d', '#c75c18'], ['#f5f0e6', '#c9bfae'], ['#2b2b3a', '#14141f'], ['#1fb5b0', '#137a77'], ['#ff6fb5', '#c43d82']], LEG = ['#2a1a4a', '#1d2b4f', '#3b2a1f', '#222', '#4a4a58', '#20403a'];
+    var o = OUT[oh % OUT.length]; return '--o1:' + o[0] + ';--o2:' + o[1] + ';--ol:' + LEG[(oh >>> 5) % LEG.length];
+  }
+  function handFlag(p) { return p && p.cc ? '<span class="hflag"><b></b><img src="https://flagcdn.com/w80/' + p.cc + '.png" alt=""></span>' : ''; }
   function ccBadge() {
     var ws = list().filter(function (p) { return p.got && p.ccb; }); if (!ws.length) return '';
     return '<span class="ccbadge">' + ws.map(function (p) { return '<img src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="">'; }).join('') + '<em class="ccbt">Flag bonus ×2!</em></span>';
@@ -2038,6 +2045,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var me = list().filter(function (p) { return !p.bot && !p.off; })[0];   /* (a human player joined: they get the broken heel, to try picking a victim on their phone) */
     bs[0].inv = (bs[0].inv || []).concat('skates'); var hb = bs[2] || bs[1]; hb.inv = (hb.inv || []).concat('heel'); if (me) me.inv = (me.inv || []).concat('heel');   /* (a bot picks first, then you) */
   }
+  /* the Grand Final: a token that slides along the runway walks (legs and arm swinging) while it does */
+  (function () { var ln = $('chlanes'); if (!ln) return;
+    ln.addEventListener('transitionrun', function (e) { if (e.propertyName === 'left' && e.target.classList.contains('chtok')) e.target.classList.add('walk'); });
+    ['transitionend', 'transitioncancel'].forEach(function (ev) { ln.addEventListener(ev, function (e) { if (e.propertyName === 'left' && e.target.classList.contains('chtok')) e.target.classList.remove('walk'); }); });
+  })();
   $('chasetest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     if (!list().length) { botAdd(); botAdd(); botAdd(); }
@@ -2136,7 +2148,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       $('chtiles').style.gridTemplateColumns = 'repeat(' + CHASE_END + ',1fr)'; $('chtiles').style.gridTemplateRows = 'repeat(' + n + ',1fr)';
       var tiles = ''; for (var ln = 0; ln < n; ln++) for (var r = 1; r <= CHASE_END; r++) tiles += '<i data-r="' + r + '" data-l="' + ln + '" class="' + ((r + ln) % 2 ? '' : 'even') + '"></i>';
       $('chtiles').innerHTML = tiles;
-      $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" data-sk="' + (c.lanes[k].skates || '') + '" style="top:' + ((i + 0.62) / n * 100) + '%;left:' + chaseX(c.lanes[k].pos - 0.5) + '%"><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span>' + (c.lanes[k].skates ? '<span class="ch-sk">⛸️ +' + c.lanes[k].skates + '</span>' : '') + '</div>'; }).join('');
+      $('chlanes').innerHTML = c.order.map(function (k, i) { var p = players[k] || { name: '?' }; return '<div class="chtok" data-pid="' + esc(k) + '" data-sk="' + (c.lanes[k].skates || '') + '" style="top:' + ((i + 0.62) / n * 100) + '%;left:' + chaseX(c.lanes[k].pos - 0.5) + '%"><div class="chbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca"></i><i class="ct"></i>' + handFlag(p) + '</div><div class="ch-face">' + charSvg(p.char) + '</div><span class="ch-name">' + esc(p.name) + '</span><span class="ch-res"></span>' + (c.lanes[k].skates ? '<span class="ch-sk">⛸️ +' + c.lanes[k].skates + '</span>' : '') + '</div>'; }).join('');
       var rh = $('chrun').clientHeight || 480, rw = $('chrun').clientWidth || 1000;
       $('chase').classList.toggle('many', n >= 9);
       $('chtrack').style.setProperty('--tok', Math.max(30, Math.min(78, Math.round(Math.min(rh / n * 0.62, rw / CHASE_END * 1.25)))) + 'px');
@@ -4279,7 +4291,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         /* everyone in their own outfit: top and trousers */
         var oh = 0; for (var oi = 0; oi < k.length; oi++) oh = (oh * 37 + k.charCodeAt(oi)) >>> 0;
         var OUT = [['#e0436b', '#a02447'], ['#2f8fd8', '#1c5f99'], ['#f2b632', '#c48510'], ['#3cbf7a', '#22804f'], ['#9b59d0', '#6a3596'], ['#ff8a3d', '#c75c18'], ['#f5f0e6', '#c9bfae'], ['#2b2b3a', '#14141f'], ['#1fb5b0', '#137a77'], ['#ff6fb5', '#c43d82']], LEG = ['#2a1a4a', '#1d2b4f', '#3b2a1f', '#222', '#4a4a58', '#20403a'];
-        var o = OUT[oh % OUT.length]; el.style.setProperty('--o1', o[0]); el.style.setProperty('--o2', o[1]); el.style.setProperty('--ol', LEG[(oh >>> 5) % LEG.length]); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
+        var o = OUT[oh % OUT.length]; el.style.setProperty('--o1', o[0]); el.style.setProperty('--o2', o[1]); el.style.setProperty('--ol', LEG[(oh >>> 5) % LEG.length]); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
       /* a loose little crowd in the middle of the crossroads, within the street: rows of three, each a bit off (always the same bit, per player) */
       var j = inGroup.indexOf(k), n = inGroup.length, cols = Math.min(3, Math.max(1, n)), rows = Math.ceil(n / cols), col = j % cols, row = Math.floor(j / cols);
       var hsh = 0; for (var hi = 0; hi < k.length; hi++) hsh = (hsh * 31 + k.charCodeAt(hi)) >>> 0;
