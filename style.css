@@ -1074,8 +1074,8 @@ body.remote .endgame{bottom:calc(14px + env(safe-area-inset-bottom))}
 .chready{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:14px;font-size:.38em}
 .chready span{display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.45;transition:opacity .3s,transform .3s}
 .chready span.on{opacity:1;transform:scale(1.08)}
-.chready i{width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #6b5a80;display:block;background:#2a1640}
-.chready span.on i{border-color:#16a34a;box-shadow:0 0 14px #16a34a}
+.chready span>i{width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #6b5a80;display:block;background:#2a1640}
+.chready span.on>i{border-color:#16a34a;box-shadow:0 0 14px #16a34a}
 .chready i svg,.chready i img{width:100%;height:100%;display:block}
 .chtok.fall{opacity:0!important;transition:top 1.2s cubic-bezier(.5,0,.9,.5),opacity .6s .7s!important}
 .chtok.fall .ch-face{animation:chtumble 1.2s ease-in forwards}
@@ -2815,3 +2815,14 @@ body.hasdock main{padding-bottom:84px}
 .bagpanel{z-index:300}
 .host aside .board.tight li{padding-top:.25em;padding-bottom:.25em;margin-bottom:.25em}
 .host aside .board.tight{gap:.25em}
+/* flag bonus at the reveal: a badge on the right answer, a little flag next to the points */
+.opt .ccbadge{margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:3px 10px 3px 6px;border-radius:999px;background:var(--yellow);color:#1a0f4d;font-size:.78em;font-weight:900;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35);animation:ccbadgepop .7s .65s cubic-bezier(.2,1.7,.4,1) both}
+.opt .ccbadge img{width:22px;height:15px;object-fit:cover;border-radius:2px}
+.opt .ccbadge b{color:inherit!important;background:none!important;min-width:0!important;padding:0!important}
+@keyframes ccbadgepop{from{transform:scale(0) rotate(-10deg);opacity:0}to{transform:none;opacity:1}}
+.voters .ccbmini{width:18px;height:12px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-left:3px}
+.opt .ccbadge{position:absolute;left:44px;top:-13px;margin:0;z-index:3;font-size:.72em}
+.opt .ccbadge .ccbt{font-style:normal;line-height:1.2}
+.chin{font-style:normal;border:0!important;box-shadow:none!important;background:none!important;margin:0!important;padding:0!important;width:100%!important;height:100%!important;display:block!important;position:static!important;transform:none!important;animation:none!important;opacity:1!important}
+.voters span.char{padding:0!important;background:#2a2060!important;box-shadow:none!important;display:block!important;gap:0!important}
+.metaflag{width:1.3em;height:.87em;object-fit:cover;border-radius:2px;vertical-align:-.1em}

@@ -524,7 +524,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }
       if (G.phase === 'reveal' && G.song) {
         $('rtitle').textContent = G.song[3];
-        $('rmeta').textContent = G.song[2] + ' · ' + flag(G.song[1]) + ' ' + (countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
+        $('rmeta').innerHTML = esc(G.song[2]) + ' · <img class="metaflag" src="https://flagcdn.com/w40/' + G.song[1] + '.png" alt=""> ' + esc(countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
         $('rres').textContent = resultText(G.song);
         $('ranswer').textContent = '';   // the green bar already says it
         $('next').textContent = lastSong() ? 'Final scores' : 'Next';
@@ -597,10 +597,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
       var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
       if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
-      return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + '</span></div><div class="voters">' +
+      return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + '</span>' + (rev && i === q.correct && !G.best ? ccBadge() : '') + '</div><div class="voters">' +
         who.map(function (p) {
           var cq = rev && G.clue && G.clue.st === 'ask' && i === q.correct, fast = cq && G.clue.fast === p.pid;   // Edgar: no points, clues; the fastest gets an extra one
-          return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + (fast ? ' fastest' : '') + '">' + charSvg(p.char) + esc(p.name) + (cq ? (fast ? ' <b>🔍 +extra clue</b>' : '') : rev && p.got && i === q.correct && !G.best ? ' <b>+' + p.pts + '</b>' : '') + '</span>';
+          return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + (fast ? ' fastest' : '') + '">' + charSvg(p.char) + esc(p.name) + (cq ? (fast ? ' <b>🔍 +extra clue</b>' : '') : rev && p.got && i === q.correct && !G.best ? ' <b>+' + p.pts + '</b>' + (p.ccb ? ' <img class="ccbmini" src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="" title="Flag bonus: double points">' : '') : '') + '</span>';
         }).join('') + '</div></div>';
     }).join('') : '';
     G.plopped = null;   // the pop-in only plays once
@@ -840,6 +840,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var names = [countries[cc]].concat((typeof COUNTRY_ALIASES !== 'undefined' && COUNTRY_ALIASES[cc]) || []).filter(Boolean);
     var txt = [q.text, q.answer, q.options && q.correct >= 0 ? q.options[q.correct] : '', q.explain].join(' | ');
     return names.some(function (n) { return new RegExp('(^|[^\\p{L}])' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}])', 'iu').test(txt); });
+  }
+  /* the right answer, at the reveal: a badge when someone gets the flag bonus (their own country: double points) */
+  function ccBadge() {
+    var ws = list().filter(function (p) { return p.got && p.ccb; }); if (!ws.length) return '';
+    return '<span class="ccbadge">' + ws.map(function (p) { return '<img src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="">'; }).join('') + '<em class="ccbt">Flag bonus ×2!</em></span>';
   }
   function triviaQ() { return !!(G.q && (G.q.subject === 'trivia' || (G.clue && G.clue.st === 'ask'))); }   // no video at the answer either (Did you know?, and the questions in Edgar's game)
   function noClipQ() { return !!G.draw || !!(G.q && G.q.noclip); }
@@ -1105,6 +1110,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (artist && right.length) { artist.pts = Math.max(1, Math.round(12 * right.length / Math.max(answered, right.length))); artist.score += artist.pts; artist.got = true; }
     if (G.q && G.q.battle) battlePay();
     if (!REMOTE && G.q) Music.ding();   // the right answer lights up
+    if (!REMOTE && list().some(function (p) { return p.got && p.ccb; })) setTimeout(function () { try { itemGetSnd(); } catch (e) {} setTimeout(function () { Music.ding(); }, 220); }, 650);   /* the flag bonus: a cheer of its own */
     cover(false); masks(false); peelStop();
     // After a drawing the video only starts now, and YouTube shows its title and buttons over the first seconds:
     // the top and bottom stay covered for that long (then they clear, so an ad can still be skipped by hand).
@@ -1781,7 +1787,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var by = q.shift(); if (!by) { c.hp = null; c.st = 'intro'; push(); done(); return; }
       var opts = c.order.filter(function (k) { return k !== by && players[k] && !c.lanes[k].out; }); if (!players[by] || !opts.length) { next(); return; }
       var key = c.key + '-h' + q.length + Math.random().toString(36).slice(2, 5);
-      c.st = 'heelpick'; c.hp = { by: by, key: key, name: players[by].name, opts: opts.map(function (k) { return { pid: k, name: players[k].name, pos: c.lanes[k].pos }; }) }; push(); Music.ding();
+      c.st = 'heelpick'; c.hp = { by: by, key: key, opts: opts.map(function (k) { return { pid: k, name: players[k].name, pos: c.lanes[k].pos }; }) }; push(); Music.ding();
       var go = function (to) { if (G.chase !== c || !c.hp || c.hp.key !== key) return; clearTimeout(chaseTimer); c.perks = c.perks || []; c.perks.unshift({ kind: 'heel', by: by, to: to }); c.hp = null; push(); chaseTimer = setTimeout(next, 400); };
       c.hpGo = go;
       if (players[by].bot) setTimeout(function () { go(pick(opts)); }, 10000);   /* (a bot takes its time to decide) */
@@ -2232,7 +2238,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         : '⛸️ Ice skates!<small>' + pn(pk.pid) + ' has ice skates and glides ' + pk.n + ' spaces forward!</small>';
       big.classList.remove('hidden');
     }
-    else if (c.st === 'heelpick' && c.hp) { big.innerHTML = '👠 ' + esc(c.hp.name) + ' has a broken heel…<small>Now that everyone is on the runway, ' + esc(c.hp.name) + ' picks who gets it, on their phone!</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'heelpick' && c.hp) { big.innerHTML = '⏳ A player is using an item…<small>Please wait!</small>';   /* (kept vague: the broken heel is revealed after) */ big.classList.remove('hidden'); }
     else if (c.st === 'pre') { big.innerHTML = '👑 A Eurovision icon is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'wheel') { big.innerHTML = 'Who will chase you?'; big.classList.remove('hidden'); }
     else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)

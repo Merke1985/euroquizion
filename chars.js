@@ -31,7 +31,7 @@ function charSvg(id) {
   var z = c.zoom || 1, f = c.face || [50, 50];
   var tf = z > 1 ? ';transform:translate(' + ((50 - f[0]) * z).toFixed(1) + '%,' + ((50 - f[1]) * z).toFixed(1) + '%) scale(' + z + ')' : '';
   var cc = CHAR_CC[id];
-  return '<span class="char' + (cc ? ' hasfl' : '') + '"><span class="chin"><img src="' + commons(c.file) + '" alt="' + c.name + '" style="object-position:' + (c.pos || '50% 20%') + tf + '"></span>' +
+  return '<span class="char' + (cc ? ' hasfl' : '') + '"><i class="chin"><img src="' + commons(c.file) + '" alt="' + c.name + '" style="object-position:' + (c.pos || '50% 20%') + tf + '"></i>' +
     (cc ? '<i class="chflag"><b></b><img src="https://flagcdn.com/w40/' + cc + '.png" alt=""></i>' : '') + '</span>';
 }
 

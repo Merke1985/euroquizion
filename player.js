@@ -36,7 +36,7 @@
     if (c.sd && (!c.act || c.act.indexOf(pid) < 0)) { show('v-wait'); $('waittitle').textContent = l.fell ? '💥 You fell off the stage!' : '🏆 Sudden death on the stage'; $('waitsub').textContent = 'Watch the big screen: the last one standing wins.'; return; }
     if (c.sd && c.st !== 'ask') { show('v-wait'); $('waittitle').textContent = '🏆 Sudden death!'; $('waitsub').textContent = c.st === 'show' || c.st === 'pause' || c.st === 'sdres' ? (l.res != null ? l.res + ' out of 3 right' : '') : 'Get ready: whoever gets fewer right than the others falls off the stage.'; return; }
     if (c.st === 'heelpick' && c.hp) {   /* the Broken Heel: whoever has it picks who gets it */
-      if (c.hp.by !== pid) { show('v-wait'); $('waittitle').textContent = '👠 A broken heel…'; $('waitsub').textContent = (c.hp.name || 'Someone') + ' is choosing who gets it. Fingers crossed!'; return; }
+      if (c.hp.by !== pid) { show('v-wait'); $('waittitle').textContent = '⏳ A player is using an item…'; $('waitsub').textContent = 'Please wait!'; return; }
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = '👠 Who gets your broken heel?'; $('chhelp').textContent = heelSent === c.hp.key ? 'Done! Watch the big screen…' : 'They can’t move on the first question. Pick a player:';
       $('chpbar').parentNode.classList.add('hidden'); $('chready').classList.add('hidden');
       var hk = c.hp.key + '|' + heelSent; if ($('chopts').getAttribute('data-k') !== hk) {
@@ -360,7 +360,7 @@
       }
       $('ranswer').textContent = '';   // the green bar already says it
       $('rtitle').textContent = r.title || '';
-      $('rmeta').textContent = r.title ? r.artist + ' · ' + flag(r.code) + ' ' + (countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
+      $('rmeta').innerHTML = r.title ? esc(r.artist) + ' · <img class="metaflag" src="https://flagcdn.com/w40/' + esc(r.code) + '.png" alt=""> ' + esc(countries[r.code] || r.code.toUpperCase()) + ' ' + r.year : '';
       $('rres').textContent = (s.phase === 'reveal' && r.result) || '';
       $('myscorebox').classList.toggle('hidden', !!s.hide || end);
       $('myscore').textContent = m ? m.score : 0;
