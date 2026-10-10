@@ -1605,7 +1605,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   chaseTimer = null, chaseBuilt = '';
   // The monster of the chase, and her song, which loops in the background (from YouTube, like every other song in
   // the game). More monsters can be added here; one is picked at random for each chase.
-  var CHASE_MONSTERS = [{ id: 'diva', name: 'The Diva', her: 'her', song: 'Vul5zgC5Yvg' }, { id: 'goblin', name: 'The Neon Goblin', her: 'him', song: 'rNrgQm5z07U' }, { id: 'phoenix', name: 'The Phoenix Queen', her: 'her', song: 'QRUIava4WRM', cry: 'Rise like a phoenix!' }], chaseLoop = null;
+  var CHASE_MONSTERS = [{ id: 'diva', name: 'The Diva', her: 'her', song: 'Vul5zgC5Yvg' }, { id: 'goblin', name: 'The Neon Goblin', her: 'him', song: 'rNrgQm5z07U' }, { id: 'phoenix', name: 'The Phoenix Queen', her: 'her', song: 'QRUIava4WRM', cry: 'Rise like a phoenix!' }, { id: 'fiddler', name: 'The Phantom Fiddler', her: 'him', song: 'WXwgZL4zx9o', cry: 'Dance to my tune… forever!' }], chaseLoop = null;
   function mName() { return G.chase && G.chase.monster ? G.chase.monster.name : 'The Diva'; }
   function chaseMusic(on) {
     clearInterval(chaseLoop); chaseLoop = null;
@@ -2115,7 +2115,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     w.classList.remove('landed');
     w.setAttribute('data-k', c.key);
-    var n = CHASE_MONSTERS.length, cols = { diva: '#7a1140', goblin: '#1f6b12', phoenix: '#a8540a' }, stops = [];
+    var n = CHASE_MONSTERS.length, cols = { diva: '#7a1140', goblin: '#1f6b12', phoenix: '#a8540a', fiddler: '#4a1f7a' }, stops = [];
     CHASE_MONSTERS.forEach(function (m, i) { stops.push((cols[m.id] || '#333') + ' ' + (i * 360 / n) + 'deg ' + ((i + 1) * 360 / n) + 'deg'); });
     var art = function (id) { var s = $('chmon').querySelector('svg.' + id); return s ? s.outerHTML.replace(/id="([a-z]+)"/g, 'id="w$1"').replace(/url\(#([a-z]+)\)/g, 'url(#w$1)') : ''; };
     w.innerHTML = '<div class="whl" style="background:conic-gradient(' + stops.join(',') + ')">' + CHASE_MONSTERS.map(function (m, i) {
@@ -2476,7 +2476,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (G.scoring === 'speed') say('Be quick: the first right answer gets 12 points, the next 10, then 8, and so on.');
     else if (G.scoring === 'random') say('Every question is worth a surprise number of points: keep an eye on the screen!');
     else say('A right answer is worth 12 points, douze points!');
-    if (!lad) say('And look at the little flag your avatar is holding: that’s the country you represent tonight! Get a question about your country right, and you get double points! ✨');
+    if (!lad) { say('And look at the little flag your avatar is holding: that’s the country you represent tonight!'); say('Get a question about your country right, and you get double points! ✨'); }
     if (party && shopOn()) say('Win a party game and you get to go shopping in Woodruff’s Boutique! 🛍️');
     if (multi && !lad) { say('Every round starts from zero, and the winner of a round wears a crown in the next one. 👑'); say('After the last round, all your rounds add up!'); }
     // 4. The final game
