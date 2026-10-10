@@ -467,14 +467,14 @@
 
   // ---------- Lost in Verona (Juliet's maze) ----------
   // Four arrows: tap the route Juliet called out, step by step, from memory.
-  var jmKey = '', jmN = 0, jmLog = [], jmBarKey = '', JM_ARW = ['⬅️', '⬆️', '➡️', '⬇️'];
+  var jmKey = '', jmN = 0, jmLog = [], jmBarKey = '', JM_ARW = ['⬅️', '⬆️', '➡️', '⬇️', '🦘'];
   function qjView(s) {
     var q = s.qj, box = $('qjui'), key = q.id + ':' + q.round, alive = (q.alive || []).indexOf(pid) >= 0, failed = (q.fail || {})[pid];
     show('v-wait');
     if (jmKey !== key) { jmKey = key; jmN = 0; jmLog = []; }
     if (box.getAttribute('data-b') !== 'jm') {
       box.setAttribute('data-b', 'jm');
-      box.innerHTML = '<div class="jmbar"><i></i></div><div class="jmtell"><b></b><span></span></div><div class="jmlog"></div><div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button></div>';
+      box.innerHTML = '<div class="jmbar"><i></i></div><div class="jmtell"><b></b><span></span></div><div class="jmlog"></div><div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button><button type="button" class="vrbtn jmb jmjmp" data-dir="4">🦘<small>JUMP</small></button></div>';
       [].forEach.call(box.querySelectorAll('.jmb'), function (b) { b.addEventListener('pointerdown', function (e) {
         e.preventDefault();
         var st = state, qq = st && st.qj; if (!net || !qq || qq.st !== 'input' || (qq.fail || {})[pid] || (qq.alive || []).indexOf(pid) < 0) return;
@@ -489,6 +489,7 @@
     var log = ''; for (var i = 0; i < q.round; i++) log += i < jmLog.length ? '<i class="on">' + JM_ARW[jmLog[i]] + '</i>' : '<i></i>';
     box.querySelector('.jmlog').innerHTML = q.st === 'input' ? log : '';
     var bar = box.querySelector('.jmbar i');
+    box.classList.toggle('jumps', !!q.jump);   /* from round 5 on: the jump button in the middle */
     if (q.st === 'intro') { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch Juliet on the big screen and remember her route!'; return; }
     if (!alive && !(q.st === 'done')) { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '😵 Lost in Verona!'; $('waitsub').textContent = 'You took a wrong step. Watch the others try…'; return; }
     var tell = box.querySelector('.jmtell');
