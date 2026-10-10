@@ -280,7 +280,7 @@
         var fc = m && m.flag && m.flagc ? m.flagc : ''; if (fl.getAttribute('data-cc') !== fc) { fl.setAttribute('data-cc', fc); fl.querySelector('.cloth').style.backgroundImage = fc ? 'url(https://flagcdn.com/w640/' + fc + '.png)' : ''; fl.classList.toggle('cc', !!fc); }
         fl.classList.toggle('on', !!(m && m.flag));
         if (m && m.flag) requestAnimationFrame(flagFit); pl.classList.toggle('on', !!(m && m.half));
-        $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc');   /* the flag hides every answer: only the outlines are left, so you pick blind */
+        $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc'); $('flagmsg').classList.toggle('hidden', !(m && m.flag && q.type === 'mc'));   /* the flag hides every answer: only the outlines are left, so you pick blind */
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
         if (builtKey !== key) {   // build the question once per song, so typing is never wiped
@@ -1000,7 +1000,9 @@
     var top = $('qtext').getBoundingClientRect().top, ob = $('opts'), gf = $('guessform');
     var low = !ob.classList.contains('hidden') ? ob : !gf.classList.contains('hidden') ? gf : $('qtext');
     var r0 = vg.getBoundingClientRect(), bot = low.getBoundingClientRect().bottom;
-    fl.style.top = Math.round(top - r0.top - 10) + 'px'; fl.style.height = Math.max(120, Math.round(bot - top + 20)) + 'px';
+    fl.style.top = Math.round(top - r0.top - 10) + 'px'; fl.style.height = Math.max(120, Math.round(bot - top + 16)) + 'px';
+    /* a bit narrower than the answers: their left and right ends peek out, so you can still tap them (blind) */
+    var ro = (low === ob ? ob : $('qtext')).getBoundingClientRect(); fl.style.left = Math.round(ro.left - r0.left + 16) + 'px'; fl.style.right = Math.round(r0.right - ro.right + 16) + 'px';
     var fb = fl.getBoundingClientRect().bottom, pole = fl.querySelector('.pole'); if (pole) pole.style.bottom = -Math.max(30, Math.round(window.innerHeight - fb)) + 'px';   /* the pole goes all the way down to the bottom of the screen, as if someone below is holding it */
   }
   window.addEventListener('resize', flagFit); setInterval(flagFit, 1000);
