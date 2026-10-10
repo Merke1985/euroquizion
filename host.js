@@ -3746,12 +3746,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (end) qjSay(g.round % 2 ? 'him' : 'her', line);
     if (cars) {
       var c1 = 'Well done! 🌹 Oh… watch out for cars! 🚗 Simply jump out of the way!', c2 = 'When I call out a car, tap the JUMP button in the middle of your phone. There’s one in every route from now on! 🦘';
-      setTimeout(function () { if (G.qj !== g) return; jmJul(c1); }, lost.length ? 3600 : 400);
-      setTimeout(function () { if (G.qj !== g) return; jmJul(c2); }, (lost.length ? 3600 : 400) + Math.max(4200, Array.from(c1).length * TALK_MS + 2200));
-      setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); qjRound(); }, (lost.length ? 3600 : 400) + Math.max(4200, Array.from(c1).length * TALK_MS + 2200) + Math.max(4600, Array.from(c2).length * TALK_MS + 2400));
+      setTimeout(function () { if (G.qj !== g) return; jmJul(c1); }, 400);
+      setTimeout(function () { if (G.qj !== g) return; jmJul(c2); }, 400 + Math.max(4200, Array.from(c1).length * TALK_MS + 2200));
+      setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); qjRound(); }, 400 + Math.max(4200, Array.from(c1).length * TALK_MS + 2200) + Math.max(4600, Array.from(c2).length * TALK_MS + 2400));
       return;
     }
-    setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); if (end) qjEnd(); else qjRound(); }, 4200);
+    setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); if (end) qjEnd(); else qjRound(); }, lost.length && !end ? 1500 : 4200);
   }
   function qjEnd() {
     var g = G.qj; if (!g) return;
