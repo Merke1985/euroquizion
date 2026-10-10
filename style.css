@@ -2763,3 +2763,8 @@ body.hasdock main{padding-bottom:84px}
 .probbed .pri{font-size:4rem;line-height:1.1;margin-bottom:8px}
 .probbed b{display:block;font-size:2rem;font-weight:900;color:#ffd23f;margin-bottom:6px}
 .probbed span{display:block;font-size:1.1rem;font-weight:700;line-height:1.35}
+
+/* the scoreboard tags: as tall as the bag, and a hand cursor for the explanation on hover */
+.board .wsub .rfx{display:inline-flex;align-items:center;gap:2px;height:1.75em;padding:0 8px;font-size:1em;border-radius:999px;cursor:help}
+.board .wsub .rshield{cursor:help}
+.board .wbag{height:1.75em;cursor:help}

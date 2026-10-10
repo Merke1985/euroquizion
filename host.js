@@ -2348,9 +2348,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* items working against a player, on the scoreboard: icon and how many more questions (this one included) */
   function fxTags(p) {
     var t = '', f = (p.flagNow ? 1 : 0) + (p.flagged || 0), h = (p.halfNow ? 1 : 0) + (p.halfQ || 0), m = (p.sitNow ? 1 : 0) + (p.sitout ? 1 : 0);
-    if (f) t += ' <span class="rfx" title="Giant flag">🚩×' + f + '</span>';
-    if (h) t += ' <span class="rfx" title="Limited view: half points">🎫×' + h + '</span>';
-    if (m) t += ' <span class="rfx" title="Broken mic">🎤×' + m + '</span>';
+    if (f) t += ' <span class="rfx" title="Giant Eurovision Flag: the question is hidden on their phone and the answers are blank · ' + f + ' more question' + (f === 1 ? '' : 's') + '">🚩×' + f + '</span>';
+    if (h) t += ' <span class="rfx" title="Limited View Liveshow Tickets: a pillar in the way, only half points · ' + h + ' more question' + (h === 1 ? '' : 's') + '">🎫×' + h + '</span>';
+    if (m) t += ' <span class="rfx" title="Broken Mic: no points for ' + (p.sitNow ? 'this' : 'the next') + ' question">🎤×' + m + '</span>';
     return t;
   }
   function hostsAway() {
