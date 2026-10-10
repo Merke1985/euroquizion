@@ -783,6 +783,7 @@ var SHOP_ITEMS = [
   { id: 'champagne', tier: 2, icon: '🍾', name: 'Overpriced Euroclub Champagne', desc: 'During a question: pop the bubbly in the Euroclub, and everyone except you pays 12 points for the bottle', kind: 'tab', amount: 12 },
   { id: 'ticket', tier: 2, icon: '🎫', name: 'Limited View Liveshow Tickets', desc: 'During a question: give them to another player: a pillar in the way, so they only get half points for 3 questions (starting with this one)', kind: 'half', amount: 3 },
   { id: 'fan', tier: 1, icon: '🪭', name: 'Eurovision Fan', desc: 'Wave it during a question: half of the wrong answers blow away on your phone. 3 uses', kind: 'fan', uses: 3 },
+  { id: 'cd', tier: 2, icon: '💿', name: 'Eurovision Song Contest CD Player', desc: 'During any question (even with a broken mic): press skip! The question is swapped for a different one straight away, and nobody scores it. 2 uses', kind: 'skip', uses: 2 },
   { id: 'skates', tier: 3, stock: 1, icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
 ];
 var SHOP_PICKS = 2;   // free items per visit

@@ -2778,7 +2778,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function shopRandom(n, from) { var ids = from || shopAvail().map(function (it) { return it.id; }), out = []; for (var i = 0; i < (n || SHOP_PICKS); i++) out.push(pick(ids)); return out; }
   // Bots and their items: every trivia question a bot with items has a chance to use one,
   // 10% at first and 10% more for every question it waits. The Broken Mic waits for the question to open.
-  var SHOP_OPEN_ONLY = ['sit', 'blow', 'lose', 'steal', 'thief', 'flag', 'half', 'card', 'tab'];   // instant items: only while a question is open
+  var SHOP_OPEN_ONLY = ['skip', 'sit', 'blow', 'lose', 'steal', 'thief', 'flag', 'half', 'card', 'tab'];   // instant items: only while a question is open
   function botItems() {
     var alive = list().filter(function (x) { return !x.off; }), done = false;
     shuffle(list().slice()).forEach(function (b) {   // (at most one bot per question, so they never all go at once)
@@ -2789,7 +2789,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!ids.length) return;
       b.useP = 0.1; done = true;
       var id = pick(ids), it = shopItem(id), others = alive.filter(function (x) { return x !== b && (it.kind === 'heel' || !shielded(x)); });
-      var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'tab';
+      var self = it.kind === 'smoke' || it.kind === 'bribe' || it.kind === 'tab' || it.kind === 'skip';
       if (it.kind === 'thief') others = alive.filter(function (x) { return x !== b && (x.inv || []).some(function (y) { return y !== 'bribe'; }); });
       if (it.kind === 'blow') { var lo = Math.min.apply(null, alive.map(function (x) { return x.score; })); others = others.filter(function (x) { return x.score > lo; }); }   /* (not on whoever has the fewest)*/
       if (!self && !others.length) return;
@@ -2824,8 +2824,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.frozenLeft != null) return;   // another item is going off right now: wait until it is over
       p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
-      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab')) t = p;   // (no target: it is the user's own smoke)
-      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab')))) return;
+      var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab' || it0.kind === 'skip')) t = p;   // (no target: it is the user's own smoke)
+      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab' || it0.kind === 'skip')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates' || it.kind === 'heel') return;   // (the umbrella works by itself; the heel and the skates wait for the Grand Final)
       if (t !== p && it.kind !== 'heel' && it.kind !== 'thief' && shielded(t)) return;   // under an umbrella: out of reach (but the wristband goes after the bag itself)
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
@@ -2840,6 +2840,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         G.fanQ.map[p.pid] = wrong.slice(0, Math.min(wrong.length - 1, Math.round(wrong.length / 2)));   // (half, rounded: three wrong answers lose two; one always stays)
         useOne(p, 'fan'); Music.blip(); push();
         shopFlash('🪭 ' + p.name + ' waves the Eurovision Fan!'); return;
+      }
+      if (it.kind === 'skip') {   // the CD player: skip! A different question straight away, nobody scores this one
+        if (!open || G.clue || G.frozenLeft != null || REMOTE) return;
+        useOne(p, 'cd'); cdSkip(p); return;
       }
       if (it.kind === 'heel') { inv.splice(k, 1); (G.heels = G.heels || []).push({ by: p.pid, to: t.pid }); push(); return; }   // secret: revealed when the Grand Final starts
       if (it.kind === 'bribe') { inv.splice(k, 1); p.bribed = 1; (G.bribes = G.bribes || []).push(p.pid); push(); return; }   // secret: it pays out right before the final
@@ -3052,6 +3056,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.frozenLeft != null || isPair() || (G.q && G.q.noclip) || ['guess', 'picks'].indexOf(G.phase) < 0) return;
       try { var st = yt.getPlayerState(); if (st === 2 || st === 5 || st === -1) yt.playVideo(); } catch (e) {}
     }, ms); });
+  }
+  /* The Eurovision Song Contest CD Player: skip. The question stops, points already given for it are taken back,
+     and after the announcement a different question is loaded (the same question number: nobody scores the skipped one). */
+  function cdSkip(p) {
+    stopTimers(); clearTimeout(endTimer); clearTimeout(picksTimer); clearTimeout(freezeT); G.frozenLeft = null; G.revealPending = false; G.revealAt = 0; peelStop();
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} try { yt2.pause(); } catch (e) {} stageEl().classList.remove('second'); pairTag(''); }
+    list().forEach(function (x) { if (x.got && x.pts) x.score -= x.pts; x.got = false; x.done = false; x.pick = null; x.pts = 0; x.ranks = null; x.ccb = ''; x.sitNow = ''; });
+    G.phase = 'loading'; G.q = null; cover(true, '💿', 'Skip!', false);
+    shopLast = { icon: '💿', deltas: [{ pid: p.pid, tag: '⏭️ skip' }], sound: 'blow' };
+    shopHit('💿 ' + p.name + ' pressed skip on the Eurovision Song Contest CD Player! On to a different question, and nobody scores this one.', 4200);
+    push();
+    setTimeout(function () { if (G.phase === 'loading' && !G.q) loadSong(); }, 4300);
   }
   function shopFreeze(ms, apply) {
     if (G.phase !== 'guess') { apply(); push(); return; }
