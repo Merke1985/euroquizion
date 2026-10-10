@@ -137,7 +137,7 @@
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (!(s.phase === 'note' && s.note && s.note.st === 'guess')) $('noteui').classList.add('hidden');
     if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'show' || s.qj.st === 'input'))) $('qjui').classList.add('hidden');
-    bagUpdate(s);
+    bagUpdate(s); robCheck(s);
     remoteVideo(s);
     rowUpdate();
     // During a game the screen keeps one fixed skeleton, so nothing jumps between question, waiting and answer.
@@ -657,6 +657,20 @@
   }
   $('bagbtn').addEventListener('click', function () { bagOpen = !bagOpen; bagItem = null; if (state) bagUpdate(state); });
   var ptoastT = null;
+  /* the Euroclub Wristband: a big message on the phone of whoever was robbed (and of the thief: what they got) */
+  var robSeen = '', lootSeen = '';
+  function robCheck(s) {
+    var m = me(); if (!m) return;
+    var big = function (icon, title, sub) {
+      var e = $('probbed'); if (!e) { e = document.createElement('div'); e.id = 'probbed'; e.className = 'probbed'; document.body.appendChild(e); }
+      e.innerHTML = '<div class="pr"><div class="pri">' + icon + '</div><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></div>';
+      e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); clearTimeout(e._t); e._t = setTimeout(function () { e.classList.remove('on'); }, 4500);
+    };
+    var nm = function (id) { var it = (typeof shopItem === 'function') && shopItem(id); return it ? it : { icon: '❓', name: id }; };
+    if (m.robbed && m.robbed.k !== robSeen) { var first = !robSeen; robSeen = m.robbed.k; if (!first || Date.now() - (window.__pStart || 0) > 8000) { var a = nm(m.robbed.it); big('🎟️' + a.icon, 'Robbed!', m.robbed.by + ' sneaked into the Euroclub and stole your ' + a.name + '!'); } }
+    if (m.loot && m.loot.k !== lootSeen) { var f2 = !lootSeen; lootSeen = m.loot.k; if (!f2 || Date.now() - (window.__pStart || 0) > 8000) { var b2 = nm(m.loot.it); big('🎟️' + b2.icon, 'Got it!', 'You left the Euroclub with ' + m.loot.from + '’s ' + b2.name + '!'); } }
+  }
+  window.__pStart = Date.now();
   function ptoast(t) { var e = $('ptoast'); e.textContent = t; e.classList.remove('hidden'); clearTimeout(ptoastT); ptoastT = setTimeout(function () { e.classList.add('hidden'); }, 3500); }
 
   // ---------- Sing! ----------

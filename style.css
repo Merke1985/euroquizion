@@ -2754,3 +2754,12 @@ body.hasdock main{padding-bottom:84px}
 #opts.flagged .opt{color:transparent!important;text-shadow:none!important}
 #opts.flagged .opt *{visibility:hidden}
 #opts.flagged .opt{background:rgba(255,255,255,.04)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)!important}
+
+/* the phone: robbed by a wristband (or the thief's loot), big in the middle */
+.probbed{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(10,4,30,.7);opacity:0;pointer-events:none;transition:opacity .3s}
+.probbed.on{opacity:1}
+.probbed .pr{width:min(86vw,360px);padding:24px 20px;border-radius:24px;background:linear-gradient(160deg,#3a1460,#170a3a);box-shadow:0 0 0 3px #ff3fa4,0 20px 60px rgba(0,0,0,.6);text-align:center;transform:scale(.7);transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+.probbed.on .pr{transform:none}
+.probbed .pri{font-size:4rem;line-height:1.1;margin-bottom:8px}
+.probbed b{display:block;font-size:2rem;font-weight:900;color:#ffd23f;margin-bottom:6px}
+.probbed span{display:block;font-size:1.1rem;font-weight:700;line-height:1.35}
