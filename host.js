@@ -3300,12 +3300,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var names = function (ps) { var n = ps.map(function (p) { return p.name; }); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0]; };
       if (solved.length) {
         var sw = solved.map(function (p) { return p.pid; });
-        if (shop && sw.length > 1) {   // a tie: Lynda has a soft spot for the underdog
-          var ud = underdogOf(sw);
-          g.prize = { who: [ud], solved: true, under: true };
-          clueSay('him', names(solved) + ' were true detectives and found all the clues! 🎉');
-          at(4000, function () { clueSay('her', 'But only one can go shopping… Lynda has a soft spot for the underdog, so ' + (players[ud] ? players[ud].name : '') + ', with the lowest score, is off to Woodruff’s Boutique! 💌'); });
-        } else {
+        {   // (a tie: everyone who solved it goes shopping)
           g.prize = { who: sw, solved: true };
           clueSay('him', names(solved) + (solved.length > 1 ? ' were true detectives and found' : ' was a true detective and found') + ' all the clues' + (shop ? ', and ' + (solved.length > 1 ? 'are' : 'is') + ' rewarded with a visit to Woodruff’s Boutique! 🛍️' : '! Welcome back, Edgar! 🎉'));
         }
