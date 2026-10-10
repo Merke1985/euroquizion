@@ -1015,7 +1015,7 @@
     fl.style.top = Math.round(top - r0.top - 10) + 'px'; fl.style.height = Math.max(120, Math.round(bot - top + 16)) + 'px';
     /* a bit narrower than the answers: their left and right ends peek out, so you can still tap them (blind) */
     var ro = (low === ob ? ob : $('qtext')).getBoundingClientRect(); fl.style.left = Math.round(ro.left - r0.left + 16) + 'px'; fl.style.right = Math.round(r0.right - ro.right + 16) + 'px';
-    var fmg = $('flagmsg'), fr0 = fl.getBoundingClientRect(); if (fmg) { fmg.style.top = Math.round(fr0.top - r0.top + fr0.height / 2) + 'px'; fmg.style.left = Math.round(fr0.left - r0.left + 30) + 'px'; fmg.style.right = Math.round(r0.right - fr0.right + 18) + 'px'; }   /* the message on the flag itself */
+    var fmg = $('flagmsg'), fr0 = fl.getBoundingClientRect(); if (fmg) { fmg.style.top = Math.round(fr0.top - r0.top + fr0.height - 14) + 'px'; fmg.style.left = Math.round(fr0.left - r0.left + 30) + 'px'; fmg.style.right = Math.round(r0.right - fr0.right + 18) + 'px'; }   /* the message on the flag itself */
     var fb = fl.getBoundingClientRect().bottom, pole = fl.querySelector('.pole'); if (pole) pole.style.bottom = -Math.max(30, Math.round(window.innerHeight - fb)) + 'px';   /* the pole goes all the way down to the bottom of the screen, as if someone below is holding it */
   }
   window.addEventListener('resize', flagFit); setInterval(flagFit, 1000);

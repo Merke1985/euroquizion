@@ -384,6 +384,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var h = (p.inv && p.inv.length ? '<span class="wbag" title="Items in their bag">' + BAG_SVG + '<b>' + p.inv.length + '</b></span>' : '') + (shielded(p) ? '<span class="rshield" title="Protected by an umbrella: no items can be aimed at them">☂️</span>' : '') + fxTags(p);
     return h ? '<span class="wsub">' + h + '</span>' : '';
   }
+  /* more than 10 players: the score list shrinks step by step until it fits on the screen, without a scroll bar */
+  var boardFitN = -1, boardFitH = 0;
+  function boardFit() {
+    var bd = $('board'), side = bd.closest('aside'), n = bd.children.length; if (!side) return;
+    if (n <= 10) { if (bd.style.zoom) bd.style.zoom = ''; bd.classList.remove('tight'); boardFitN = n; return; }
+    boardFitN = n; boardFitH = innerHeight; bd.classList.add('tight');
+    var z = 1; bd.style.zoom = '1';   /* (zoom: everything in the list shrinks together, avatars and all) */
+    while (z > 0.5 && side.getBoundingClientRect().bottom + scrollY > innerHeight - 8) { z -= 0.04; bd.style.zoom = z.toFixed(2); }
+  }
+  window.addEventListener('resize', function () { boardFitN = -1; try { boardFit(); } catch (e) {} });
   function boardHtml(showGot) {
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
@@ -417,6 +427,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Players who change places glide to their new spot instead of jumping there.
     var was = {}; [].forEach.call($('board').querySelectorAll('li[data-pid]'), function (li) { var r = li.getBoundingClientRect(); if (r.height) was[li.getAttribute('data-pid')] = r.top; });
     $('board').innerHTML = boardHtml(G.phase === 'guess' || G.phase === 'reveal' || G.phase === 'dall' || G.phase === 'qall');
+    boardFit();
     [].forEach.call($('board').querySelectorAll('li[data-pid]'), function (li) {
       var w = was[li.getAttribute('data-pid')], r = li.getBoundingClientRect(); if (w == null || !r.height) return;
       var dy = w - r.top; if (Math.abs(dy) < 2) return;
