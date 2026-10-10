@@ -2669,3 +2669,5 @@ aside.recapgone{visibility:hidden}
   background:radial-gradient(ellipse 100% 55% at 0% 50%,rgba(255,248,205,.9),rgba(255,238,160,.35) 45%,transparent 75%);clip-path:polygon(0 38%,100% 0,100% 100%,0 62%);filter:blur(1.5px);animation:jmhl .18s ease-in-out infinite alternate}
 .jmcar.rtl .hl{left:auto;right:94%;scale:-1 1}
 @keyframes jmhl{to{opacity:.8}}
+/* the runway is two spaces longer at the start (22 instead of 20): it reaches further to the left, the tiles keep their size */
+.chrun{left:16.4%}
