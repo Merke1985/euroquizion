@@ -3539,14 +3539,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* this round's sequence: the route so far; from round 5 on there is always one car (4: jump!) in it, somewhere new each time */
   /* a little round Italian city car, seen from the side (facing right), with some shading for depth */
   var JM_CARSVG = '<svg viewBox="0 0 150 90" aria-hidden="true"><defs>' +
-    '<linearGradient id="jmcb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9f0e6"/><stop offset=".45" stop-color="#6fcfc0"/><stop offset="1" stop-color="#2f8f84"/></linearGradient>' +
+    '<linearGradient id="jmcb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8a8a"/><stop offset=".45" stop-color="#d81e2c"/><stop offset="1" stop-color="#8a0d18"/></linearGradient>' +
     '<linearGradient id="jmcw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe6ff"/><stop offset="1" stop-color="#3a5a86"/></linearGradient>' +
     '<radialGradient id="jmct" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#555"/><stop offset=".6" stop-color="#151515"/><stop offset="1" stop-color="#000"/></radialGradient>' +
     '<radialGradient id="jmcl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#fff6c8"/><stop offset="1" stop-color="#ffe17a"/></radialGradient></defs>' +
     '<ellipse cx="75" cy="84" rx="62" ry="5" fill="rgba(0,0,0,.35)"/>' +
     '<path d="M14 62 Q10 44 30 40 Q40 14 70 12 Q100 12 112 36 Q138 40 140 58 Q141 70 130 72 H22 Q14 72 14 62 Z" fill="url(#jmcb)"/>' +
-    '<path d="M40 38 Q48 19 70 18 Q95 18 105 37 Z" fill="url(#jmcw)"/><path d="M71 18 V38" stroke="#2f8f84" stroke-width="3"/><path d="M46 34 Q52 23 63 21 L56 34 Z" fill="#fff" opacity=".35"/>' +
-    '<path d="M18 52 H138" stroke="#e8fffb" stroke-width="2" opacity=".6"/><path d="M78 44 h10" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round"/>' +
+    '<path d="M40 38 Q48 19 70 18 Q95 18 105 37 Z" fill="url(#jmcw)"/><path d="M71 18 V38" stroke="#a3121f" stroke-width="3"/><path d="M46 34 Q52 23 63 21 L56 34 Z" fill="#fff" opacity=".35"/>' +
+    '<path d="M18 52 H138" stroke="#ffd6d6" stroke-width="2" opacity=".5"/><path d="M78 44 h10" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round"/>' +
     '<rect x="8" y="64" width="20" height="5" rx="2.5" fill="#d9d9d9"/><rect x="124" y="64" width="20" height="5" rx="2.5" fill="#d9d9d9"/>' +
     '<circle cx="40" cy="72" r="13" fill="url(#jmct)"/><circle cx="40" cy="72" r="6" fill="#d8d8d8"/><circle cx="112" cy="72" r="13" fill="url(#jmct)"/><circle cx="112" cy="72" r="6" fill="#d8d8d8"/>' +
     '<ellipse cx="136" cy="50" rx="5" ry="7" fill="url(#jmcl)"/><ellipse cx="14" cy="52" rx="3" ry="5" fill="#ff4040"/></svg>';
@@ -3563,7 +3563,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px'); beam.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); beam.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
     grp.insertBefore(car, grp.firstChild);
     whooshes([0, 700, 1300]); Music.woosh && Music.woosh();
-    setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1300);
+    setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1150);
     if (hit.length) setTimeout(function () { Music.buzz(); setTimeout(function () { Music.zap && Music.zap(); }, 120); }, 1650);
     setTimeout(function () { car.remove(); grp.querySelectorAll('.jmt.jump').forEach(function (el) { el.classList.remove('jump'); }); }, 2900);
   }
@@ -3814,7 +3814,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     tower.position.set(0, 0, -70);   /* (not shown: the tower is the backdrop above the mist) */
     function capMat0() { return new T.MeshStandardMaterial({ color: '#7a3a22', roughness: .9 }); }
     var cob = v3Tex(function (x, W, H) { x.fillStyle = '#6a5c54'; x.fillRect(0, 0, W, H); for (var yy = 0; yy < 16; yy++) for (var xx = 0; xx < 16; xx++) { var v = 80 + ((xx * 37 + yy * 61) % 40); x.fillStyle = 'rgb(' + (v + 18) + ',' + (v + 6) + ',' + v + ')'; x.beginPath(); x.ellipse(xx * 16 + 8 + (yy % 2) * 8, yy * 16 + 8, 7, 6.5, 0, 0, Math.PI * 2); x.fill(); } }, 256, 256);
-    cob.repeat.set(150, 150);
+    cob.repeat.set(160, 160);   /* (one cobble tile = a quarter of a block: the street looks the same at every crossroads, so the snap back is invisible) */
     var ground = new T.Mesh(new T.PlaneGeometry(400, 400), new T.MeshStandardMaterial({ map: cob, roughness: .95 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; city.add(ground);
     var facCols = ['#e8cc9a', '#e7b39a', '#efdcb4', '#d9a888', '#e3c08a', '#f0d2c0'], facs = facCols.map(function (c, i) { return new T.MeshStandardMaterial({ map: v3Facade(c, i), roughness: .9 }); });
     var roofTex = v3Tex(function (x, W, H) { x.fillStyle = '#b4532f'; x.fillRect(0, 0, W, H); for (var yy = 0; yy < 16; yy++) { x.fillStyle = yy % 2 ? '#9c4426' : '#c2633a'; x.fillRect(0, yy * 16, W, 9); for (var xx = 0; xx < 12; xx++) { x.fillStyle = 'rgba(60,20,10,.35)'; x.fillRect(xx * 22 + (yy % 2) * 11, yy * 16, 2, 16); } } }, 256, 256);

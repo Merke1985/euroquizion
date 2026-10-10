@@ -2578,3 +2578,6 @@ aside.recapgone{visibility:hidden}
 .jmbeam{position:absolute;left:var(--jx,50vw);top:var(--jy,56vh);width:44vh;height:16vh;margin:-7vh 0 0 6vh;z-index:3;pointer-events:none;mix-blend-mode:screen;transform-origin:-6vh 50%;scale:var(--ps,1);
   background:radial-gradient(ellipse 70% 45% at 0% 50%,rgba(255,248,200,.85),rgba(255,236,160,.35) 45%,transparent 75%);filter:blur(3px);animation:jmcar2 2.6s cubic-bezier(.3,.1,.6,.9) forwards}
 .jmbeam.rtl{margin-left:-50vh;transform-origin:calc(100% + 6vh) 50%;background:radial-gradient(ellipse 70% 45% at 100% 50%,rgba(255,248,200,.85),rgba(255,236,160,.35) 45%,transparent 75%)}
+/* the jump: up high and hanging in the air long enough for the whole car to pass underneath */
+.jmt.jump .char,.jmt.jump .jmbody,.jmt.jump .jmlegs{animation:jmjump2 1.15s cubic-bezier(.25,.8,.35,1) both}
+@keyframes jmjump2{0%{transform:none}10%{transform:translateY(.8vh) scaleY(.85)}28%{transform:translateY(-13vh) rotate(-6deg)}72%{transform:translateY(-14vh) rotate(6deg)}92%{transform:translateY(-1vh)}100%{transform:none}}
