@@ -658,7 +658,7 @@
   $('bagbtn').addEventListener('click', function () { bagOpen = !bagOpen; bagItem = null; if (state) bagUpdate(state); });
   var ptoastT = null;
   /* the Euroclub Wristband: a big message on the phone of whoever was robbed (and of the thief: what they got) */
-  var robSeen = '', lootSeen = '';
+  var robSeen = '', lootSeen = '', hitSeen = '';
   function robCheck(s) {
     var m = me(); if (!m) return;
     var big = function (icon, title, sub) {
@@ -668,6 +668,7 @@
     };
     var nm = function (id) { var it = (typeof shopItem === 'function') && shopItem(id); return it ? it : { icon: '❓', name: id }; };
     if (m.robbed && m.robbed.k !== robSeen) { var first = !robSeen; robSeen = m.robbed.k; if (!first || Date.now() - (window.__pStart || 0) > 8000) { var a = nm(m.robbed.it); big('🎟️' + a.icon, 'Robbed!', m.robbed.by + ' sneaked into the Euroclub and stole your ' + a.name + '!'); } }
+    if (m.hit && m.hit.k !== hitSeen) { var f3 = !hitSeen; hitSeen = m.hit.k; if (!f3 || Date.now() - (window.__pStart || 0) > 8000) big(m.hit.icon, 'Item alert!', m.hit.txt); }   /* an item someone used on you */
     if (m.loot && m.loot.k !== lootSeen) { var f2 = !lootSeen; lootSeen = m.loot.k; if (!f2 || Date.now() - (window.__pStart || 0) > 8000) { var b2 = nm(m.loot.it); big('🎟️' + b2.icon, 'Got it!', 'You left the Euroclub with ' + m.loot.from + '’s ' + b2.name + '!'); } }
   }
   window.__pStart = Date.now();
