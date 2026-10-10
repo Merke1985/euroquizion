@@ -518,7 +518,7 @@
       box.querySelector('.jmsend').addEventListener('click', function () { jmSend(state && state.qj, false); qjView(state); });
     }
     var log = ''; for (var i = 0; i < 10; i++) log += i >= q.round ? '<i class="off"></i>' : i < jmLog.length ? '<i class="on">' + JM_ARW[jmLog[i]] + '</i>' : '<i></i>';
-    box.querySelector('.jmlog').innerHTML = q.st === 'input' ? log : '';
+    box.querySelector('.jmlog').innerHTML = log;   /* (the ten boxes show as soon as the pad does) */
     var sent = jmSent === key, full = jmLog.length >= q.round;
     box.querySelector('.jmsend').disabled = sent || !full; box.querySelector('.jmreset').disabled = sent || !jmLog.length;
     box.querySelector('.jmsend').classList.toggle('ready', full && !sent);

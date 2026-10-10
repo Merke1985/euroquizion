@@ -2648,3 +2648,13 @@ aside.recapgone{visibility:hidden}
 .qjui.play .jmtell{display:flex;flex-direction:column;justify-content:center;height:5.6rem;flex:none;overflow:hidden}
 .qjui.play .jmtell b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(1.3rem,6.5vw,1.9rem)}
 .qjui.play .jmtell span{min-height:2.6em}
+
+/* the phone: everything fits on one screen; the route boxes in one row of ten, smaller buttons */
+.qjui.play{gap:10px}
+.qjui.play .jmlog{grid-template-columns:repeat(10,1fr);gap:4px;max-width:400px}
+.qjui.play .jmlog i{font-size:1.05rem;border-radius:7px}
+.jmacts{max-width:320px}
+.jmacts .btn{padding:7px 8px;font-size:.92rem;border-radius:12px}
+.qjui.play .jmpad{max-width:min(330px,42vh);gap:7px}
+.qjui.play .jmpad .vrbtn{font-size:clamp(1.8rem,7vh,2.8rem);border-radius:16px}
+.qjui.play .jmpad [data-dir="4"]{font-size:clamp(1.4rem,5.5vh,2.2rem)}
