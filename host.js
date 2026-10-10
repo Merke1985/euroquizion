@@ -2334,7 +2334,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
     var order = shuffle(act.map(function (p) { return p.pid; }));
-    G.bomb = { id: 'bomb' + G.round + '-' + Math.random().toString(36).slice(2, 6), alive: order.slice(), out: [], turn: 0, round: 0, env: [], st: 'deal', pick: -1, at: Date.now() };
+    G.bomb = { id: 'bomb' + G.round + '-' + Math.random().toString(36).slice(2, 6), alive: order.slice(), out: [], passed: {}, turn: 0, round: 0, env: [], st: 'deal', pick: -1, at: Date.now() };
     G.phase = 'bomb'; G.barMs = 0; push();
     bombDeal();
   }
@@ -2342,7 +2342,22 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.bomb; if (!g) return;
     g.round++;
     var codes = shuffle(Object.keys(countries || {})).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }), n = g.alive.length, bomb = Math.floor(Math.random() * n);
-    g.env = []; for (var i = 0; i < n; i++) g.env.push({ bomb: i === bomb, code: codes[i % (codes.length || 1)] || 'se', open: false, by: '' });
+    g.env = []; for (var i = 0; i < n; i++) g.env.push({ bomb: false, code: codes[i % (codes.length || 1)] || 'se', open: false, by: '' });
+    g.pick = -1; clearTimeout(bombTimer);
+    /* whoever just blew up gets their revenge: they choose where the bomb goes in the new set (secretly, on their phone) */
+    var hid = g.out[g.out.length - 1], hp = hid && players[hid];
+    if (hp && !hp.off) {
+      g.st = 'hide'; g.hider = hid; g.hkey = g.id + '-h' + g.round; push(); Music.woosh();
+      var hk = g.hkey;
+      if (hp.bot) setTimeout(function () { bombMsg({ pid: hid, key: hk, hide: Math.floor(Math.random() * n) }); }, 2500 + Math.random() * 2000);
+      bombTimer = setTimeout(function () { if (G.bomb === g && g.st === 'hide' && g.hkey === hk) bombHide(bomb); }, BOMB_PICK_MS);   // (too slow: it goes somewhere at random)
+      return;
+    }
+    bombHide(bomb);
+  }
+  function bombHide(i) {   // the bomb goes in envelope i; the players then take turns again
+    var g = G.bomb; if (!g) return;
+    g.env.forEach(function (e, k) { e.bomb = k === i; }); g.hider = ''; g.hkey = '';
     g.st = 'deal'; g.pick = -1; push(); Music.woosh();
     clearTimeout(bombTimer); bombTimer = setTimeout(bombTurn, 2200);
   }
@@ -2352,12 +2367,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'pick'; g.pick = -1; g.at = Date.now(); g.ends = Date.now() + BOMB_PICK_MS; push(); Music.blip();
     var who = bombWho(), id = g.id + '-' + g.round + '-' + g.turn;
     g.key = id;
-    if (players[who] && players[who].bot) setTimeout(function () { bombMsg({ pid: who, key: id, pick: bombRandom() }); }, 1800 + Math.random() * 1800);
+    if (players[who] && players[who].bot) setTimeout(function () { var left = g.env.filter(function (e) { return !e.open; }).length; bombMsg(!g.passed[who] && left <= 3 && Math.random() < .35 ? { pid: who, key: id, pass: true } : { pid: who, key: id, pick: bombRandom() }); }, 1800 + Math.random() * 1800);   /* (bots sometimes pass when it gets tense) */
     clearTimeout(bombTimer); bombTimer = setTimeout(function () { if (G.bomb === g && g.st === 'pick' && g.key === id) bombOpen(bombRandom()); }, BOMB_PICK_MS);   // too slow: one is picked for you
   }
   function bombRandom() { var g = G.bomb, left = []; g.env.forEach(function (e, i) { if (!e.open) left.push(i); }); return pick(left); }
   function bombMsg(m) {
-    var g = G.bomb; if (!g || G.phase !== 'bomb' || g.st !== 'pick' || !m || m.key !== g.key || m.pid !== bombWho()) return;
+    var g = G.bomb; if (!g || G.phase !== 'bomb' || !m) return;
+    if (g.st === 'hide') { if (m.pid === g.hider && m.key === g.hkey && typeof m.hide === 'number' && g.env[m.hide]) { clearTimeout(bombTimer); Music.blip(); bombHide(m.hide); } return; }
+    if (g.st !== 'pick' || m.key !== g.key || m.pid !== bombWho()) return;
+    if (m.pass) {   /* once per game: pass, and the next player has to open one instead */
+      if (g.passed[m.pid] || g.alive.length < 2) return;
+      clearTimeout(bombTimer); g.passed[m.pid] = 1; g.passBy = m.pid; g.turn++; g.st = 'pass'; push(); Music.woosh();
+      bombTimer = setTimeout(bombTurn, 2600); return;
+    }
     if (typeof m.pick !== 'number' || !g.env[m.pick] || g.env[m.pick].open) return;
     bombOpen(m.pick);
   }
@@ -2386,7 +2408,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function bombSnap() {
     var g = G.bomb;
-    return { id: g.id, st: g.st, round: g.round, turn: bombWho(), key: g.key, pick: g.pick, alive: g.alive, out: g.out, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, prize: g.prize || null,
+    return { id: g.id, st: g.st, round: g.round, turn: bombWho(), key: g.key, passed: g.passed, passBy: g.passBy || '', hider: g.hider || '', hkey: g.hkey || '', pick: g.pick, alive: g.alive, out: g.out, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, prize: g.prize || null,
       env: g.env.map(function (e) { return e.open ? { open: 1, bomb: e.bomb ? 1 : 0, code: e.code, by: e.by } : { open: 0 }; }) };   // (what is inside stays on the host until it opens)
   }
   // The big screen: the stage, the two presenters, the player whose turn it is, and the envelopes.
@@ -2407,7 +2429,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }).join('');
     ov.querySelector('.bstrip').innerHTML = g.alive.concat(g.out).map(function (k) { var p = players[k]; if (!p) return ''; var o = g.out.indexOf(k) >= 0; return '<span class="bps' + (o ? ' out' : '') + (k === bombWho() && g.st !== 'win' ? ' now' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + (o ? ' 💥' : '') + '</i></span>'; }).join('');
     var e = g.pick >= 0 ? g.env[g.pick] : null, nm = cur ? cur.name : '';
-    ov.querySelector('.bmsg').innerHTML = g.st === 'deal' ? (g.round > 1 ? 'New envelopes! One of them hides a bomb…' : 'One of these envelopes hides a bomb…')
+    ov.querySelector('.bmsg').innerHTML = g.st === 'hide' ? '😈 ' + esc(players[g.hider] ? players[g.hider].name : '') + ' gets revenge: hiding the bomb in one of the new envelopes…' : g.st === 'deal' ? (g.round > 1 ? 'New envelopes! One of them hides a bomb…' : 'One of these envelopes hides a bomb…')
+      : g.st === 'pass' ? '🙅 ' + esc(players[g.passBy] ? players[g.passBy].name : '') + ' passes! Your turn, ' + esc(nm) + '…'
       : g.st === 'pick' ? esc(nm) + ', pick an envelope on your phone!'
       : g.st === 'open' ? 'Envelope ' + (g.pick + 1) + '… the envelope, please!'
       : g.st === 'safe' ? 'Phew! ' + esc(countries[e.code] || '') + ': ' + esc(nm) + ' is safe!'
