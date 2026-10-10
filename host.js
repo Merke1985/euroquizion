@@ -3575,6 +3575,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="136" cy="50" rx="5" ry="7" fill="url(#jmcl)"/><ellipse cx="14" cy="52" rx="3" ry="5" fill="#ff4040"/></svg>';
   var hornEl = null;
   function hornSnd() { if (REMOTE) return; try { if (!hornEl) hornEl = new Audio('sounds/horn.mp3?v=2'); hornEl.currentTime = 0; hornEl.volume = Math.max(0, Math.min(1, 0.85 * (Music.vol ? Music.vol.fx : 1))); var pr = hornEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
+  var crashEl = null;
+  function crashSnd() { if (REMOTE) return; try { if (!crashEl) crashEl = new Audio('sounds/crash.mp3?v=1'); crashEl.currentTime = 0; crashEl.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var pr = crashEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function jmCar(jumpers, hit) {
     var ov = $('qjov'), grp = ov && ov.querySelector('.jmgroup'); if (!grp) return;
     var old = grp.querySelector('.jmcar'); if (old) old.remove();
@@ -3595,7 +3597,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     whooshes([0, 700, 1300]); Music.woosh && Music.woosh();
     setTimeout(function () { if (car.isConnected) hornSnd(); }, 1100);   /* honk! half a second before it reaches the group (at 62% of 2.6 s) */
     setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1150);
-    if (hit.length) setTimeout(function () { Music.buzz(); setTimeout(function () { Music.zap && Music.zap(); }, 120); }, 1650);
+    if (hit.length) setTimeout(function () { crashSnd(); }, 1600);   /* crash! someone didn't jump */
     setTimeout(function () { car.remove(); grp.querySelectorAll('.jmt.jump').forEach(function (el) { el.classList.remove('jump'); }); }, 2900);
   }
   function jmSeq(g) {
