@@ -171,7 +171,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, fx: pFx(p) }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
@@ -2311,14 +2311,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ms = Math.max(ms || 3500, typing + 1600);
     clearTimeout(hostT[who]); hostT[who] = setTimeout(function () { b.classList.remove('on'); }, ms);
     clearTimeout(hostT.away); hostT.away = setTimeout(hostsAway, ms + 600);   // …and leave the screen to the game again
-  }
-  /* the debuffs on a player, for their phone: what, and for how many more questions (this one included) */
-  function pFx(p) {
-    var fx = [], f = (p.flagNow ? 1 : 0) + (p.flagged || 0), h = (p.halfNow ? 1 : 0) + (p.halfQ || 0);
-    if (f) fx.push({ i: '🚩', n: f, t: 'Giant flag: question hidden, answers jumbled' });
-    if (h) fx.push({ i: '🎫', n: h, t: 'Limited view: half points' });
-    if (p.sitNow || p.sitout) fx.push({ i: '🎤', n: 1, t: 'Broken mic: no points for ' + (p.sitNow ? 'this' : 'the next') + ' question' });
-    return fx;
   }
   function hostsAway() {
     var h = hostsEl(); if (!h || h.classList.contains('away') || G.phase === 'opening' || hostHold || h.querySelector('.hbub.on')) return;

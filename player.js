@@ -250,7 +250,7 @@
     else if (s.phase === 'loading') { show('v-wait'); $('waittitle').textContent = 'Ears open…'; $('waitsub').textContent = ''; }
     else if (s.phase === 'guess') {
       var q = s.q || { type: 'open', text: 'Which song is this?', hint: 'Type the title…' };
-      if (m && m.sit) { show('v-wait'); $('waittitle').textContent = '🎤 Broken mic!'; $('waitsub').textContent = m.sit + ' broke your mic: you sit out this question.'; }
+      if (m && m.sit) { show('v-wait'); $('waittitle').innerHTML = '<span class="pmic"><i>🎤</i><b>💥</b></span>Broken mic!'; $('waitsub').textContent = m.sit + ' broke your mic: you sit out this question.'; }
       else if (m && m.got) { show('v-wait'); $('waittitle').textContent = 'Correct'; $('waitsub').textContent = ptsText(m.pts) + '. Waiting for the others…'; }
       else if (m && m.done) { show('v-wait'); $('waittitle').textContent = 'Incorrect'; $('waitsub').textContent = 'Your answer is locked in. Waiting for the others…'; }
       else {
@@ -258,6 +258,11 @@
         $('pdraw').classList.toggle('hidden', !s.draw);
         if (s.draw && builtKey !== key) drawClear($('pdraw'));
         $('qtext').textContent = m && m.flag && q.type === 'mc' ? '🚩 A giant flag is blocking your view!' : q.text;
+        /* items on you, shown on the screen itself: a giant flag over the question, a pillar in front of it (half points) */
+        var vg = $('v-guess'), fl = vg.querySelector('.pflag'), pl = vg.querySelector('.ppillar');
+        if (!fl) { fl = document.createElement('div'); fl.className = 'pflag'; fl.innerHTML = '<i class="pole"></i><i class="cloth"><b></b></i>'; vg.appendChild(fl); }
+        if (!pl) { pl = document.createElement('div'); pl.className = 'ppillar'; pl.innerHTML = '<i class="cap"></i><i class="shaft"></i><i class="base"></i><span>½ points</span>'; vg.appendChild(pl); }
+        fl.classList.toggle('on', !!(m && m.flag)); pl.classList.toggle('on', !!(m && m.half));
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
         if (builtKey !== key) {   // build the question once per song, so typing is never wiped
@@ -605,13 +610,7 @@
   function bagUpdate(s) {
     var m = me(), inv = (m && m.inv) || [], ok = s.cfg && s.cfg.atype === 'party' && inv.length && ['lobby', 'end', 'brief', 'intro', 'chase', 'shop'].indexOf(s.phase) < 0;
     $('bagbtn').classList.toggle('hidden', !ok); $('bagn').textContent = inv.length || '';
-    /* debuffs on you (from other players' items): little badges next to the bag button */
-    var fxb = $('fxbar'); if (!fxb) { fxb = document.createElement('div'); fxb.id = 'fxbar'; fxb.className = 'fxbar'; document.body.appendChild(fxb); }
-    var fx = (m && m.fx) || [], fxOn = s.cfg && s.cfg.atype === 'party' && fx.length && ['guess', 'reveal', 'loading', 'picks', 'paused', 'qshow'].indexOf(s.phase) >= 0;   /* (only around the trivia questions: never over a party game's buttons) */
-    fxb.classList.toggle('hidden', !fxOn); fxb.classList.toggle('nobag', !ok);
-    var fxh = fxOn ? fx.map(function (f) { return '<span class="fxchip" title="' + esc(f.t) + '">' + f.i + '<b>' + (f.n > 1 ? '×' + f.n : '') + '</b></span>'; }).join('') : '';
-    if (fxb.innerHTML !== fxh) fxb.innerHTML = fxh;
-    document.body.classList.toggle('hasdock', !!(ok || fxOn));   /* (room at the bottom, so nothing hides behind the bag and the badges) */
+    document.body.classList.toggle('hasdock', !!ok);   /* (room at the bottom, so nothing hides behind the bag button) */
     if (!ok) { bagOpen = false; bagItem = null; }
     $('bagpanel').classList.toggle('hidden', !bagOpen);
     if (!bagOpen) return;

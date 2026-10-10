@@ -2706,17 +2706,27 @@ aside.recapgone{visibility:hidden}
 .fsov .grbub.him{left:3vw}.fsov .grbub.her{right:3vw}
 .fsov.cin .fscour{left:21vw}
 
-/* the phone: debuffs next to the bag button */
-.fxbar{position:fixed;right:84px;bottom:20px;z-index:40;display:flex;gap:6px;pointer-events:none}
-.fxbar.nobag{right:14px}
-.fxbar.hidden{display:none}
-.fxchip{display:flex;align-items:center;gap:2px;height:46px;padding:0 10px;border-radius:23px;background:rgba(255,77,106,.9);box-shadow:0 0 0 2px #fff,0 6px 16px rgba(0,0,0,.45);font-size:1.4rem;animation:fxpulse 1.6s ease-in-out infinite alternate}
-.fxchip b{font-size:.85rem;color:#fff}
-@keyframes fxpulse{to{box-shadow:0 0 0 2px #fff,0 0 18px rgba(255,77,106,.9)}}
-
-/* the badges stack up above the bag button, in the corner (not across the screen) */
-.fxbar{right:20px;bottom:84px;flex-direction:column-reverse;align-items:center}
-.fxbar.nobag{right:20px;bottom:20px}
-.fxchip{flex-direction:column;justify-content:center;width:46px;height:46px;padding:0;border-radius:50%;font-size:1.25rem;line-height:1}
-.fxchip b{font-size:.62rem;margin-top:-2px}
 body.hasdock main{padding-bottom:84px}
+
+/* items on you, on your own screen: the giant flag over the question, the pillar (half points), the broken mic */
+#v-guess{position:relative}
+.pflag{display:none;position:absolute;left:-6px;right:-6px;top:28px;height:150px;z-index:6;pointer-events:none}
+.pflag.on{display:block}
+.pflag .pole{position:absolute;left:6px;top:-18px;bottom:-30px;width:7px;border-radius:4px;background:linear-gradient(90deg,#c9c9c9,#fff,#9a9a9a)}
+.pflag .cloth{position:absolute;left:13px;right:0;top:0;bottom:0;border-radius:4px 10px 10px 4px;background:linear-gradient(180deg,#ff2f88 0 33%,#ffd23f 33% 66%,#2de2e6 66%);box-shadow:0 10px 26px rgba(0,0,0,.5);transform-origin:0 50%;animation:pflagwave 1.1s ease-in-out infinite alternate}
+.pflag .cloth b{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 22px,rgba(0,0,0,.12) 22px 44px);animation:pflagripple 1.1s linear infinite}
+.pflag .cloth::after{content:'❤';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:64px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+@keyframes pflagwave{from{transform:skewY(-2deg) scaleX(.98)}to{transform:skewY(2deg) scaleX(1)}}
+@keyframes pflagripple{to{background-position:44px 0}}
+.ppillar{display:none;position:absolute;left:58%;top:-10px;bottom:-40px;width:64px;z-index:6;pointer-events:none;flex-direction:column;align-items:center}
+.ppillar.on{display:flex}
+.ppillar .cap,.ppillar .base{width:84px;height:22px;border-radius:4px;background:linear-gradient(90deg,#7d7d86,#d8d8e0 45%,#8a8a94)}
+.ppillar .shaft{flex:1;width:64px;background:repeating-linear-gradient(90deg,#9a9aa4 0 8px,#d0d0d8 8px 16px,#b4b4bd 16px 22px);box-shadow:0 0 30px rgba(0,0,0,.6)}
+.ppillar span{position:absolute;top:44%;padding:4px 8px;border-radius:8px;background:#ff4d6a;color:#fff;font-weight:900;font-size:.85rem;white-space:nowrap;transform:rotate(-8deg);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.pmic{position:relative;display:block;width:120px;height:120px;margin:0 auto 10px}
+.pmic i{position:absolute;inset:0;font-style:normal;font-size:96px;line-height:120px;filter:grayscale(.6);animation:pmicshake .15s linear infinite alternate}
+.pmic b{position:absolute;right:-6px;top:-6px;font-size:54px;animation:pmicboom 1.2s ease-in-out infinite}
+@keyframes pmicshake{from{transform:rotate(-8deg)}to{transform:rotate(6deg) translateX(2px)}}
+@keyframes pmicboom{50%{transform:scale(1.25)}}
+.pflag{top:36px;height:96px}
+.pflag .cloth::after{font-size:46px}
