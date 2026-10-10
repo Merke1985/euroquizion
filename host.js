@@ -845,6 +845,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong();
   }
   function rate(r) { try { yt.setPlaybackRate(r); } catch (e) {} }
+  var pair2At = 0, pair2On = false, frozePair = '', pairRemain = 0;
+  function pairEnd() { pair2On = false; yt2.pause(); pairTag(''); if (G.phase === 'guess') cover(true, '?', '', false); }   // the second song's clip is over
   function playClip() {
     clearInterval(poll);
     stage = 'clip'; quietAt = -1;
@@ -862,7 +864,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (isPair() && G.phase === 'guess' && pairStep === 0) {
           // on to the second song, in the spare player
           pairStep = 1; if (!yt2.shared) stageEl().classList.add('second'); pairTag('Song 2'); yt2.play();
-          pairTimer = setTimeout(function () { yt2.pause(); pairTag(''); if (G.phase === 'guess') cover(true, '?', '', false); }, PAIR_CLIP * 1000);
+          pair2At = Date.now(); pair2On = true; pairTimer = setTimeout(pairEnd, PAIR_CLIP * 1000);
           return;
         }
         if (G.phase === 'guess') cover(true, '?', '', false);   // the question itself stays below the video
@@ -2880,6 +2882,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       G.frozenLeft = Math.max(0, G.endsAt - Date.now()); clearTimeout(endTimer);
       frozeWasPlaying = false; try { var ps = yt.getPlayerState(); frozeWasPlaying = ps === 1 || ps === 3; } catch (e) {}   // (was the video running? then it must run again afterwards)
       if (!REMOTE && !isPair()) { try { yt.pauseVideo(); } catch (e) {} }
+      // two songs: pause whichever is playing now (the first one, or the second with the time it has left)
+      frozePair = '';
+      if (!REMOTE && isPair()) {
+        try {
+          if (pairStep === 0 && stage === 'clip') { yt.pauseVideo(); frozePair = '1'; }
+          else if (pairStep === 1 && pair2On) { clearTimeout(pairTimer); pairRemain = Math.max(300, PAIR_CLIP * 1000 - (Date.now() - pair2At)); yt2.pause(); frozePair = '2'; }
+        } catch (e) {}
+      }
     }
     apply(); push();
     clearTimeout(freezeT); freezeT = setTimeout(function () {
@@ -2888,6 +2898,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.phase !== 'guess') return;
       G.endsAt = Date.now() + left;
       if (!REMOTE && !isPair() && !(G.q && G.q.noclip)) { try { yt.playVideo(); } catch (e) {} ytNudge(); }
+      if (!REMOTE && frozePair === '1') { try { yt.playVideo(); } catch (e) {} }
+      if (!REMOTE && frozePair === '2') { try { yt2.resume(); } catch (e) {} pair2At = Date.now() - (PAIR_CLIP * 1000 - pairRemain); clearTimeout(pairTimer); pairTimer = setTimeout(pairEnd, pairRemain); }
+      frozePair = '';
       push();
       if (G.revealPending) { G.revealPending = false; reveal(); return; }
       endTimer = setTimeout(reveal, left); allIn();
