@@ -3646,7 +3646,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Stella and Felix run off north, into the clouds
     /* the players are on their own: five seconds of nothing, then "Now what…?", two seconds later the song, five seconds later Juliet */
     t += 2400 + 5000;
-    at(t, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) { b._said = ''; b.classList.add('on'); typeSay(b, 'Now what…? 🤷', 'him'); } });
+    at(t, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) { b.innerHTML = '<i class="e">🤔</i><span class="t"></span>'; b.classList.add('on'); typeSay(b.querySelector('.t'), 'Now what…?', 'him'); Music.plop(5); setTimeout(function () { Music.plop(2); }, 200); } });   /* a puzzled "huh?" */
     t += 2000;
     at(t, function () { jmSong(true); });
     at(t + 2500, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) b.classList.remove('on'); });

@@ -2620,3 +2620,6 @@ aside.recapgone{visibility:hidden}
 .jmcount.num b{font-size:2em;color:#ffd23f}
 /* the car drives through where the players stand now (they moved north) */
 .jmcar{margin-top:-12vh}
+
+.jmgbub .e{font-style:normal;font-size:1.4em;margin-right:.35em;vertical-align:-.15em;display:inline-block;animation:jmhuh 1s ease-in-out infinite alternate}
+@keyframes jmhuh{from{rotate:-12deg}to{rotate:12deg}}
