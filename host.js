@@ -87,6 +87,7 @@
     // Every character belongs to one player per room; first come, first served.
     var want = CHAR_BY_ID[m.char] ? m.char : null;
     var free = want && !list().some(function (x) { return x.char === want && x.pid !== m.pid; });
+    if (!p && list().length >= MAX_PLAYERS) { sayHello(); return; }   /* (12 players at most: the game is full) */
     if (!p) {
       if (!free) {
         // No avatar chosen (or it is taken): hand out a random one that is still free.
@@ -5209,7 +5210,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return lines;
   }
   function botAdd() {
-    if (REMOTE || bots.length >= (window.BOT_MAX || 12) || G.phase !== 'lobby') return;
+    if (REMOTE || bots.length >= (window.BOT_MAX || 12) || list().length >= MAX_PLAYERS || G.phase !== 'lobby') return;
     var used = {}; list().forEach(function (p) { used[p.char] = 1; });
     // a bot is named after its avatar (a random free one)
     var open = CHARS.filter(function (c) { return !used[c.id]; }), free = open.length ? pick(open) : null, n = bots.length + 1;
@@ -5237,7 +5238,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   });
   function botButtons() {
     $('botadd').classList.toggle('hidden', REMOTE);
-    $('botadd').disabled = bots.length >= (window.BOT_MAX || 12); $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of ' + (window.BOT_MAX || 12) + ')' : 'Add a test bot';
+    $('botadd').disabled = bots.length >= (window.BOT_MAX || 12) || list().length >= MAX_PLAYERS; $('botadd').textContent = bots.length ? 'Add another test bot (' + bots.length + ' of ' + (window.BOT_MAX || 12) + ')' : 'Add a test bot';
     $('botclear').classList.toggle('hidden', !bots.length);
   }
   $('botadd').addEventListener('click', botAdd); $('botclear').addEventListener('click', botClear); botButtons();

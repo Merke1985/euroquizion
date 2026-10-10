@@ -786,6 +786,7 @@ var SHOP_ITEMS = [
   { id: 'cd', tier: 2, icon: '💿', name: 'Eurovision Song Contest CD Player', desc: 'During any question (even with a broken mic): press skip! The question is swapped for a different one straight away, and nobody scores it. 2 uses', kind: 'skip', uses: 2 },
   { id: 'skates', tier: 3, stock: 1, icon: '⛸️', name: 'Ice Skates', desc: 'Keep them in your bag: at the start of the Grand Final you glide 2 spaces ahead', kind: 'skates', amount: 2, final: true }   // (works by itself, like the umbrella)   // (only in the boutique when the Grand Final is on)
 ];
+var MAX_PLAYERS = 12;   // the most players (bots included) in one game
 var SHOP_PICKS = 2;   // free items per visit
 // The boutique's three shelves: tier 3 on top (the most expensive), 2 in the middle, 1 at the bottom (bargains).
 // An item's price (in points) comes from its shelf: so many points for every question in a block of trivia

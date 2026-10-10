@@ -178,8 +178,8 @@
     $('myname').textContent = name;
     // The host hands out a random free avatar on joining; "Select avatar" lets you change it in the lobby.
     if (!m) {
-      var full = s.players.length >= CHARS.length;
-      show('v-wait'); $('waittitle').textContent = full ? 'This game is full' : 'Joining…'; $('waitsub').textContent = full ? 'All avatars are in use.' : '';
+      var full = s.players.length >= Math.min(CHARS.length, MAX_PLAYERS);
+      show('v-wait'); $('waittitle').textContent = full ? 'This game is full' : 'Joining…'; $('waitsub').textContent = full ? 'There can be at most ' + MAX_PLAYERS + ' players in one game.' : '';
       return;
     }
     if (m.cc && wantCC !== m.cc && Date.now() > pickUntil) { wantCC = m.cc; try { sessionStorage.setItem('esc-cc', wantCC); } catch (e) {} }
