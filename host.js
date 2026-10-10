@@ -3876,10 +3876,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var end = false, line;   // (who fell, and who is still in)
     if (!ok.length) {   // everyone left went wrong: whoever got furthest this round wins
       var top = Math.max.apply(null, lost.map(function (k) { return g.prog[k] || 0; }));
-      g.win = lost.filter(function (k) { return (g.prog[k] || 0) === top; }); end = true;
+      g.win = lost.filter(function (k) { return (g.prog[k] || 0) === top; }); end = true; g.madeIt = false;
       line = 'Everyone got lost! 😵 But ' + g.win.map(nm).join(' and ') + ' got furthest: ' + top + ' step' + (top === 1 ? '' : 's') + '!';
     } else if (g.round >= JM_MAX || (ok.length === 1 && g.alive.length > 1)) {   /* round 10 done, and still not lost: Juliet points them home, and they walk out of the picture */
-      g.win = ok; g.alive = ok; Music.ding();
+      g.win = ok; g.alive = ok; g.madeIt = true; Music.ding();
       jmJul(ok.length === 1 && g.round < JM_MAX ? 'Only ' + nm(ok[0]) + ' left? Well… look, the studio is right behind you! 🎬 Off you go… ciao! 🌹' : 'Look, the studio is right behind you! 🎬 Off you go… ciao! 🌹');
       setTimeout(function () { if (G.qj !== g) return; var ov = $('qjov'); if (ov) ok.forEach(function (k) { var el = ov.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) el.classList.add('home'); }); whooshes([0, 300]); runSnd(3200); }, 3600);
       setTimeout(function () { if (G.qj !== g) return; jmJul(''); qjEnd(); }, 7600);
@@ -3906,7 +3906,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(9800, function () {
       jmSong(false);
       var ov = $('qjov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
-      setTimeout(function () { if (G.qj !== g) return; G.qj = null; G.phase = 'loading'; push(); startRound2(); }, 1000);
+      setTimeout(function () {
+        if (G.qj !== g) return; G.qj = null; G.phase = 'loading'; push();
+        // back in the studio: the presenters on who had to be fetched by taxi, and who goes shopping
+        var wn = lj(g.win.map(nm)), all = !g.madeIt;
+        if (REMOTE || (!lostF.length && !all) || !g.win.length) { startRound2(); return; }
+        var u1 = all ? 'Shame we had to call Ubers for all of you… 🚕' : 'Shame we had to call Ubers for some of you… 🚕';
+        var u2 = all ? 'At least ' + wn + (g.win.length > 1 ? ' got' : ' got') + ' closest to the studio, and can use the shop! 🛍️' : 'At least ' + wn + ' made it back to the studio, and can use the shop! 🛍️';
+        hostSay('him', u1, 3400);
+        setTimeout(function () { hostSay('her', u2, 4600); }, 3600);
+        setTimeout(startRound2, 3600 + Math.max(4600, Array.from(u2).length * TALK_MS + 2000));
+      }, 1000);
     });
   }
   // Juliet's house, far away above the clouds: a tall romantic Italian house with an arched window, ivy, and a stone
