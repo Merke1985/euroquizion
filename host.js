@@ -1718,7 +1718,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; });
     // test bots: a random answer after a few seconds, each song judged right a bit more often than not
     chaseActive().forEach(function (k) { if (!players[k] || !players[k].bot) return; var qk = c.qkey;
-      setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0; c.q.items.forEach(function (it, i) { var right = Math.random() < (c.face ? (c.sd ? 0.55 : 1) : (window.CHASE_SMART || 0.62));   /* face-off test: perfect until the stage, then a coin toss */ if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 1500 + Math.random() * 5000); });
+      setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0, one = Math.floor(Math.random() * c.q.items.length); c.q.items.forEach(function (it, i) { var right = c.plan ? (k === c.plan || i === one) /* test: one bot all right, the others exactly one */ : Math.random() < (c.face ? (c.sd ? 0.55 : 1) : (window.CHASE_SMART || 0.62));   /* face-off test: perfect until the stage, then a coin toss */ if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 1500 + Math.random() * 5000); });
     push();
     clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, CHASE_ASK + 300);
   }
@@ -1972,7 +1972,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!list().length) { botAdd(); botAdd(); botAdd(); }
     if (list().filter(function (p) { return p.bot; }).length < 3) botAdd();
     testPerks();
-    testStandings(function () { chaseStart(true); });
+    testStandings(function () { chaseStart(true); var b0 = list().filter(function (p) { return p.bot && !p.off; })[0]; if (G.chase && b0) G.chase.plan = b0.pid; });   // (testing: one bot gets everything right, the others one out of three)
   });
   $('chasetest2').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
