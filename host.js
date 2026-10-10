@@ -3793,21 +3793,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else line = lost.length ? '😵 ' + lost.map(nm).join(', ') + (lost.length > 1 ? ' are' : ' is') + ' lost in Verona!' : 'Everyone found the way! 👏 One more step…';
     g.alive = ok.length ? ok : g.alive;
     if (lost.length) Music.buzz(); else Music.ding();
-    var cars = !end && g.round === JM_CAR - 1, rush = !end && g.round === 7;
-    if (rush) {   /* rush hour: two cars from round 8 on */
-      setTimeout(function () { if (G.qj !== g) return; jmJul('Rush hour in Verona! 🚗🚗 From now on there are two cars in every route!'); }, 400);
-      setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); qjRound(); }, 5600);
-      return;
-    }   /* four rounds done: from now on, cars! */
-    if (!lost.length && !end && !cars) jmJul(vary('julok'));   /* nobody went wrong: Juliet has something to say about that */
-    else if (end) qjSay(g.round % 2 ? 'him' : 'her', line);
-    if (cars) {
-      var c1 = 'Well done! 🌹 Oh… watch out for cars! 🚗 Simply jump out of the way!', c2 = 'When I show you a car, tap the car 🚗 in the middle of your phone to jump over it. There’s one in every route from now on!';
-      setTimeout(function () { if (G.qj !== g) return; jmJul(c1); g.carOn = true; push(); }, 400);   /* (the car button appears on the phones now) */
-      setTimeout(function () { if (G.qj !== g) return; jmJul(c2); }, 400 + Math.max(4200, Array.from(c1).length * TALK_MS + 2200));
-      setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); qjRound(); }, 400 + Math.max(4200, Array.from(c1).length * TALK_MS + 2200) + Math.max(4600, Array.from(c2).length * TALK_MS + 2400));
-      return;
-    }
+    var cars = !end && g.round === JM_CAR - 1;
     setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); if (end) qjEnd(); else qjRound(); }, lost.length && !end ? 1500 : 4200);
   }
   function qjEnd() {
