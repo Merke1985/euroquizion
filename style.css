@@ -2641,3 +2641,10 @@ aside.recapgone{visibility:hidden}
 .jmacts .btn:disabled{opacity:.35}
 .jmacts .jmsend.ready{background:linear-gradient(135deg,#3ddc84,#1fa860);animation:jmready 1s ease-in-out infinite alternate}
 @keyframes jmready{to{transform:scale(1.04)}}
+
+/* the phone layout holds still: the bar always at the top, the instruction in a block of fixed height */
+.qjui.play{justify-content:flex-start}
+.qjui.play .jmbar{display:block;flex:none}
+.qjui.play .jmtell{display:flex;flex-direction:column;justify-content:center;height:5.6rem;flex:none;overflow:hidden}
+.qjui.play .jmtell b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(1.3rem,6.5vw,1.9rem)}
+.qjui.play .jmtell span{min-height:2.6em}

@@ -3646,7 +3646,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t = 5900 + Array.from(l0).length * TALK_MS + 1800;
     at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Stella and Felix run off north, into the clouds
     /* the players are on their own: five seconds of nothing, then "Now what…?", two seconds later the song, five seconds later Juliet */
-    t += 2400 + 5000;
+    t += 2400 + 4000;
     at(t, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) { b.innerHTML = '<i class="e">🤔</i><span class="t"></span>'; b.classList.add('on'); typeSay(b.querySelector('.t'), 'Now what…?', 'him'); Music.plop(5); setTimeout(function () { Music.plop(2); }, 200); } });   /* a puzzled "huh?" */
     t += 2000;
     at(t, function () { jmSong(true); });
@@ -3656,11 +3656,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var jl = [
       'Hi guys, I’m Juliet! 🌹 I know this city pretty well.',
       'If you want to find your way back to the studio, just follow my instructions!',
-      'I’ll call out the way: one step, then two, then three… one more every time. Tap the whole route on your phone!',
+      'I will give you instructions, step by step, which you will follow on your phone. 📱',
       'One wrong turn and you’re lost in Verona! 😵 The last one left wins. Ready?'
     ];
     t += 1200;
-    jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200); });
+    jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); if (/on your phone/.test(l)) { g.pad = true; push(); } }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200); });   /* (the arrows appear on the phones as she mentions them) */
     at(t, function () { jmJul(''); if (!(G.qj && G.qj.song)) jmSong(true); qjRound(); });   /* (the song is already playing) */
   }
   // Juliet's own speech balloon, next to her balcony
@@ -3791,8 +3791,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!lost.length && !end && !cars) jmJul(vary('julok'));   /* nobody went wrong: Juliet has something to say about that */
     else if (end) qjSay(g.round % 2 ? 'him' : 'her', line);
     if (cars) {
-      var c1 = 'Well done! 🌹 Oh… watch out for cars! 🚗 Simply jump out of the way!', c2 = 'When I call out a car, tap the JUMP button in the middle of your phone. There’s one in every route from now on! 🦘';
-      setTimeout(function () { if (G.qj !== g) return; jmJul(c1); }, 400);
+      var c1 = 'Well done! 🌹 Oh… watch out for cars! 🚗 Simply jump out of the way!', c2 = 'When I show you a car, tap the car 🚗 in the middle of your phone to jump over it. There’s one in every route from now on!';
+      setTimeout(function () { if (G.qj !== g) return; jmJul(c1); g.carOn = true; push(); }, 400);   /* (the car button appears on the phones now) */
       setTimeout(function () { if (G.qj !== g) return; jmJul(c2); }, 400 + Math.max(4200, Array.from(c1).length * TALK_MS + 2200));
       setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); qjRound(); }, 400 + Math.max(4200, Array.from(c1).length * TALK_MS + 2200) + Math.max(4600, Array.from(c2).length * TALK_MS + 2400));
       return;
@@ -3835,7 +3835,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [[30, 79, 7], [44, 79, 10], [58, 79, 6], [70, 79, 9]].map(function (q) { return '<path d="M' + q[0] + ' ' + q[1] + ' q-2 ' + (q[2] / 2) + ' 0 ' + q[2] + '" stroke="#3f7a3a" stroke-width="1.1" fill="none"/><circle cx="' + q[0] + '" cy="' + (q[1] + q[2]) + '" r="1.2" fill="#ff7aa8"/>'; }).join('') + '</svg>';
   function qjSnap() {
     var g = G.qj;
-    return { id: g.id, st: g.st, round: g.round, alive: g.alive, prog: g.prog, fail: g.fail, left: g.st === 'input' ? Math.max(0, g.ends - Date.now()) : 0, win: g.win, outAt: g.outAt, jump: g.round >= JM_CAR };
+    return { id: g.id, st: g.st, round: g.round, alive: g.alive, prog: g.prog, fail: g.fail, left: g.st === 'input' ? Math.max(0, g.ends - Date.now()) : 0, win: g.win, outAt: g.outAt, jump: !!g.carOn || g.round >= JM_CAR, pad: !!g.pad };
   }
   // The big screen: a crossroads in Verona seen from above, the group in the middle, Juliet's balcony at the top in the
   // mist. When the group walks, the city slides the other way; who goes wrong runs into a side street and falls in a hole.

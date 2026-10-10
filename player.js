@@ -489,7 +489,7 @@
 
   // ---------- Lost in Verona (Juliet's maze) ----------
   // Four arrows: tap the route Juliet called out, step by step, from memory.
-  var jmKey = '', jmN = 0, jmLog = [], jmBarKey = '', jmSent = '', jmAuto = null, JM_ARW = ['⬅️', '⬆️', '➡️', '⬇️', '🦘'];
+  var jmKey = '', jmN = 0, jmLog = [], jmBarKey = '', jmSent = '', jmAuto = null, JM_ARW = ['⬅️', '⬆️', '➡️', '⬇️', '🚗'];
   /* the route goes in step by step (shown in the ten boxes above the arrows); Reset clears it, Send hands it in */
   function jmSend(qq, auto) {
     if (!net || !qq || qq.st !== 'input' || jmSent === jmKey) return;
@@ -505,7 +505,7 @@
       box.setAttribute('data-b', 'jm2');
       box.innerHTML = '<div class="jmbar"><i></i></div><div class="jmtell"><b></b><span></span></div><div class="jmlog"></div>' +
         '<div class="jmacts"><button type="button" class="btn alt jmreset">↩️ Reset</button><button type="button" class="btn jmsend">✅ Send</button></div>' +
-        '<div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button><button type="button" class="vrbtn jmb jmjmp" data-dir="4">🦘<small>JUMP</small></button></div>';
+        '<div class="jmpad"><button type="button" class="vrbtn jmb" data-dir="1">⬆️</button><button type="button" class="vrbtn jmb" data-dir="0">⬅️</button><button type="button" class="vrbtn jmb" data-dir="2">➡️</button><button type="button" class="vrbtn jmb" data-dir="3">⬇️</button><button type="button" class="vrbtn jmb jmjmp" data-dir="4">🚗<small>CAR</small></button></div>';
       [].forEach.call(box.querySelectorAll('.jmb'), function (b) { b.addEventListener('pointerdown', function (e) {
         e.preventDefault();
         var qq = state && state.qj; if (!qq || qq.st !== 'input' || (qq.alive || []).indexOf(pid) < 0 || jmSent === jmKey) return;
@@ -524,6 +524,11 @@
     box.querySelector('.jmsend').classList.toggle('ready', full && !sent);
     var bar = box.querySelector('.jmbar i');
     box.classList.toggle('jumps', !!q.jump);   /* from round 5 on: the jump button in the middle */
+    if (q.st === 'intro' && q.pad) {   /* Juliet mentions the phone: the pad shows up already, greyed out */
+      box.classList.remove('hidden', 'fin'); box.classList.add('play', 'wait'); bar.style.transition = 'none'; bar.style.width = '100%';
+      var tl = box.querySelector('.jmtell'); tl.querySelector('b').textContent = '👀 Listen to Juliet!'; tl.querySelector('span').textContent = 'Her steps go in here, then Send.';
+      return;
+    }
     if (q.st === 'intro') { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '🌹 Lost in Verona'; $('waitsub').textContent = 'Watch Juliet on the big screen and remember her route!'; return; }
     if (!alive && !(q.st === 'done')) { box.classList.add('hidden'); box.classList.remove('play'); $('waittitle').textContent = '😵 Lost in Verona!'; $('waitsub').textContent = 'You took a wrong step. Watch the others try…'; return; }
     var tell = box.querySelector('.jmtell');
