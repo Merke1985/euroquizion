@@ -772,7 +772,7 @@ var SHOP_ITEMS = [
   { id: 'hack', tier: 3, icon: '📲', name: 'Televote Hacking Device', desc: 'During a question: steal 12 points from another player', kind: 'steal', amount: 12 },
   { id: 'power', tier: 1, icon: '🔋', name: 'Marc’s Powerbank', desc: 'During a question: throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
-  { id: 'umbrella', tier: 3, stock: 1, icon: '☂️', name: 'Eurovision Umbrella', desc: 'Keep it in your bag: nobody can aim an item at you, and the smoke and the champagne can’t touch you either. But watch out: a Euroclub Wristband can steal it!', kind: 'shield' },
+  { id: 'umbrella', tier: 3, stock: 1, icon: '☂️', name: 'Eurovision Umbrella', desc: 'No negative effects can touch you. But everyone will know you have it… and it can be stolen!', kind: 'shield' },
   { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'During a question: wave it in front of another player: for 3 questions (starting with this one) they can’t read the question on their phone, and their answers are jumbled', kind: 'flag', amount: 3 },
   { id: 'bribe', tier: 3, stock: 1, icon: '✉️', name: 'Envelope Addressed to the EBU', desc: 'A little something for the EBU. It will help you later in the game… Send it ASAP, before you lose it!', kind: 'bribe' },
   { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: pick a player, sneak into the Euroclub after them and leave with a random item from their bag (even their umbrella)', kind: 'thief' },
