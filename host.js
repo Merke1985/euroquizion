@@ -3584,10 +3584,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // outside: Stella feels better, and the presenters run off home; then Juliet comes out on her balcony
     var l0 = 'Ahh… I feel much better! 😌 See you back at the studio… bye for now! 👋';
     /* first two seconds of black, then Stella, still puffing out her smoke: "…" */
-    at(2000, function () { var o = $('qjov'); if (o) o.classList.add('lit'); });
-    at(2700, function () { var o = $('qjov'); if (o) o.classList.add('puff'); qjSay('her', '…'); });
-    at(4900, function () { qjSay('her', l0); });
-    var t = 4900 + Array.from(l0).length * TALK_MS + 1800;
+    /* Stella first finishes her smoke: puffs of smoke for about five seconds, then she feels better */
+    at(600, function () { var o = $('qjov'); if (o) o.classList.add('puff'); qjSay('her', '…'); });
+    at(5600, function () { var o = $('qjov'); if (o) o.classList.remove('puff'); });
+    at(5900, function () { qjSay('her', l0); });
+    var t = 5900 + Array.from(l0).length * TALK_MS + 1800;
     at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Stella and Felix run off north, into the clouds
     t += 3600;
     at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // a few seconds later: Juliet steps out
@@ -3892,7 +3893,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
       ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
         '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div><div class="jmtower jmtop">' + JM_TOWER + '</div><div class="jmtfront jmtop2">' + JM_TFRONT + '</div>' +
-        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmtbar"><i></i></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div><div class="jmblack"></div>' +
+        '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmtbar"><i></i></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);

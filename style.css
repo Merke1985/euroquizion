@@ -2581,3 +2581,11 @@ aside.recapgone{visibility:hidden}
 /* the jump: up high and hanging in the air long enough for the whole car to pass underneath */
 .jmt.jump .char,.jmt.jump .jmbody,.jmt.jump .jmlegs{animation:jmjump2 1.15s cubic-bezier(.25,.8,.35,1) both}
 @keyframes jmjump2{0%{transform:none}10%{transform:translateY(.8vh) scaleY(.85)}28%{transform:translateY(-13vh) rotate(-6deg)}72%{transform:translateY(-14vh) rotate(6deg)}92%{transform:translateY(-1vh)}100%{transform:none}}
+
+/* arriving in Verona: the presenters just stand there (no gliding into place); Stella keeps puffing smoke while .puff is on */
+.jmov:not(.v3) .grhosts{visibility:hidden}
+.jmov.v3:not(.hostsgone) .grhosts .ehost{transition:none}
+.jmov.puff .jmpuff i{animation:jmpuff 2.2s ease-out infinite}
+.jmov.puff .jmpuff i:nth-child(2){animation-delay:.55s}
+.jmov.puff .jmpuff i:nth-child(3){animation-delay:1.1s}
+.jmov.puff .jmpuff i:nth-child(4){animation-delay:1.65s}
