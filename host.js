@@ -3573,6 +3573,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<rect x="8" y="64" width="20" height="5" rx="2.5" fill="#d9d9d9"/><rect x="124" y="64" width="20" height="5" rx="2.5" fill="#d9d9d9"/>' +
     '<circle cx="40" cy="72" r="13" fill="url(#jmct)"/><circle cx="40" cy="72" r="6" fill="#d8d8d8"/><circle cx="112" cy="72" r="13" fill="url(#jmct)"/><circle cx="112" cy="72" r="6" fill="#d8d8d8"/>' +
     '<ellipse cx="136" cy="50" rx="5" ry="7" fill="url(#jmcl)"/><ellipse cx="14" cy="52" rx="3" ry="5" fill="#ff4040"/></svg>';
+  var hornEl = null;
+  function hornSnd() { if (REMOTE) return; try { if (!hornEl) hornEl = new Audio('sounds/horn.mp3'); hornEl.currentTime = 0; hornEl.volume = Math.max(0, Math.min(1, 0.85 * (Music.vol ? Music.vol.fx : 1))); var pr = hornEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function jmCar(jumpers, hit) {
     var ov = $('qjov'), grp = ov && ov.querySelector('.jmgroup'); if (!grp) return;
     var old = grp.querySelector('.jmcar'); if (old) old.remove();
@@ -3591,6 +3593,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     car.style.setProperty('--sx', (dir > 0 ? fromL : toR) + 'px'); car.style.setProperty('--ex', (dir > 0 ? toR : fromL) + 'px');
     grp.insertBefore(car, grp.firstChild);
     whooshes([0, 700, 1300]); Music.woosh && Music.woosh();
+    setTimeout(function () { if (car.isConnected) hornSnd(); }, 1100);   /* honk! half a second before it reaches the group (at 62% of 2.6 s) */
     setTimeout(function () { if (!car.isConnected) return; jumpers.forEach(function (k) { var el = grp.querySelector('.jmt[data-pid="' + k.replace(/"/g, '') + '"]'); if (el) { el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); } }); }, 1150);
     if (hit.length) setTimeout(function () { Music.buzz(); setTimeout(function () { Music.zap && Music.zap(); }, 120); }, 1650);
     setTimeout(function () { car.remove(); grp.querySelectorAll('.jmt.jump').forEach(function (el) { el.classList.remove('jump'); }); }, 2900);
