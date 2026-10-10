@@ -2798,7 +2798,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         else { items = items.slice(0, 1); var pr = items.length && g.free.indexOf(p.pid) < 0 ? shopPrice(shopItem(items[0])) : 0; if (!items.length || pr > p.score) return; p.score -= pr; g.paid[p.pid] = pr; }
       } else if (!items.length) return;
       g.picks[p.pid] = items; shopTake(items); p.inv = (p.inv || []).concat(shopGive(p, items));
-      if (items.indexOf('umbrella') >= 0 && !REMOTE) setTimeout(function () { shopLast = { icon: '☂️', deltas: [{ pid: p.pid, tag: '☂️ protected' }], sound: 'shield' }; shopHit('☂️ ' + p.name + ' bought the Eurovision Umbrella and is protected from all harm… but it can be stolen! 😈', 5600); }, 900);   /* (big on the screen: everyone should know)*/
+      if (items.indexOf('umbrella') >= 0 && !REMOTE) setTimeout(function () { shopLast = { icon: '☂️', deltas: [{ pid: p.pid, tag: '☂️ protected' }], sound: 'block' }; shopHit('☂️ ' + p.name + ' bought the Eurovision Umbrella and is protected from all harm… but it can be stolen! 😈', 5600); }, 900);   /* (big on the screen: everyone should know)*/
       if (items.length) itemGetSnd(); else Music.plop(Object.keys(g.picks).length); push();
       if (g.who.filter(function (k) { return players[k] && !players[k].off; }).every(function (k) { return g.picks[k]; })) { clearTimeout(shopTimer); shopTimer = setTimeout(shopDone, 1500); }
       return;
