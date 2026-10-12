@@ -220,6 +220,7 @@
     }
     if (m.cc && wantCC !== m.cc && Date.now() > pickUntil) { wantCC = m.cc; try { sessionStorage.setItem('esc-cc', wantCC); } catch (e) {} }
     if (m.char && want !== m.char && Date.now() > pickUntil) { want = m.char; try { sessionStorage.setItem('esc-char', want); } catch (e) {} }
+    if (s.phase === 'lobby' && !m.char && !picking && joinFlow === 0) { joinFlow = 1; pickOpen('avatar'); }   /* just joined: choose your avatar first, then your country */
     if (picking) {
       if (s.phase !== 'lobby') picking = false;
       else { renderPicker(s, m); show('v-pick'); return; }
@@ -336,6 +337,7 @@
           $('opts').classList.toggle('bestgrid', !!bq);
           $('opts').classList.toggle('smoked', !!(q.smoke && q.smoke.indexOf(pid) < 0));   // someone else's Smoke Machine: guess blind
           if (bq) bestPaint();
+          if (q.peel) setTimeout(peelPaint, 0);
           if (rebuilt && myPick.key === key) { var pb = $('opts').querySelector('button[data-i="' + myPick.i + '"]'); if (pb) pb.classList.add('picked'); }   /* (rebuilt: what you had picked stays picked) */
 
           if (!mc) $('guess').focus();
@@ -644,9 +646,9 @@
     var drawKey = sh.id + '|' + shopSel.join(',') + '|' + (mineOffer || []).join(',') + '|' + free + '|' + myPts + '|' + (sh.sold || []).join(',');
     if (box.getAttribute('data-k') === drawKey && box.innerHTML) return;   // nothing changed: leave the buttons alone (no flicker on every update)
     box.setAttribute('data-k', drawKey);
-    box.innerHTML = '<p id="shoptime" class="shoptime" data-free="' + (free ? 1 : 0) + '"></p>' + sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
+    box.innerHTML = '<p id="shoptime" class="shoptime" data-free="' + (free ? 1 : 0) + '"></p><p class="shoppts">💰 You have <b>' + myPts + '</b> points</p>' + sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
       var n = shopSel.filter(function (x) { return x === it.id; }).length, pr = it.price || 0, gone = (sh.sold || []).indexOf(it.id) >= 0, poor = gone || (!free && pr > myPts);
-      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (!free ? ' <em class="price">' + pr + ' pts</em>' : '') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(gone ? 'Sold out! Someone was quicker' : poor ? 'Not enough points for this one' : it.desc) + '</small></span></button>';
+      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + (gone ? ' sold' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (gone ? ' <em class="price sold">Sold out</em>' : free ? ' <em class="price free"><s>' + pr + ' pts</s> free</em>' : ' <em class="price">' + pr + ' pts</em>') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(gone ? 'Sold out! Someone was quicker' : poor ? 'Not enough points for this one' : it.desc) + '</small></span></button>';
     }).join('') + (free ? '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take ' + (sh.n > 1 ? 'them' : 'it') + '!') + '</button>'
       : '<button type="button" class="btn big" id="shopbuy"' + (!shopSel.length ? ' disabled' : '') + '>' + (!shopSel.length ? 'Pick one to buy' : 'Buy for ' + ((sh.items.filter(function (it) { return it.id === shopSel[0]; })[0] || {}).price || 0) + ' points') + '</button><button type="button" class="btn alt" id="shopskip">No thanks</button>');
     [].forEach.call(box.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
@@ -1081,7 +1083,7 @@
     $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All other avatars are taken.';
     if (want && taken[want]) want = null;
   }
-  var flagKey = '', myPick = { key: '', i: -1 };
+  var flagKey = '', myPick = { key: '', i: -1 }, joinFlow = 0, pickMode = '';
   $('ccs').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-cc]');
     if (!b || b.disabled) return;
@@ -1098,8 +1100,9 @@
   });
   // Two separate edit screens: one for the name, one for the avatar.
   function pickOpen(mode) {
-    picking = true; $('editname').value = name;
-    $('picktitle').textContent = mode === 'name' ? 'Your name' : mode === 'flag' ? 'Your fan flag' : 'Your avatar';
+    picking = true; pickMode = mode; $('editname').value = name;
+    $('picktitle').textContent = mode === 'name' ? 'Your name' : mode === 'flag' ? (joinFlow ? 'Step 2 of 2: which country do you represent?' : 'Your fan flag') : (joinFlow ? 'Step 1 of 2: choose your avatar' : 'Your avatar');
+    $('pickerr').textContent = '';
     $('pickname').classList.toggle('hidden', mode !== 'name');
     $('pickavnote').classList.toggle('hidden', mode !== 'avatar'); $('chars').classList.toggle('hidden', mode !== 'avatar'); $('mypicrow').classList.toggle('hidden', mode !== 'avatar'); $('ccwrap').classList.toggle('hidden', mode !== 'flag');
     if (state) onState(state);
@@ -1109,6 +1112,11 @@
   $('changecc').addEventListener('click', function () { pickOpen('flag'); });
   $('changename').addEventListener('click', function () { pickOpen('name'); });
   $('pickdone').addEventListener('click', function () {
+    var cur = me();
+    if (pickMode === 'avatar' && joinFlow && !want && !(cur && cur.char)) { $('pickerr').textContent = 'Choose an avatar first (or use your own photo!)'; return; }
+    if (pickMode === 'flag' && joinFlow && !wantCC && !(cur && cur.cc)) { $('pickerr').textContent = 'Choose the country you represent first'; return; }
+    if (pickMode === 'avatar' && joinFlow === 1) { joinFlow = 2; hi(); pickOpen('flag'); return; }   /* step 2: the country */
+    if (joinFlow) joinFlow = 3;
     var n = $('editname').value.trim().slice(0, 16);
     if (n) { n = n.charAt(0).toUpperCase() + n.slice(1); name = n; store.set('esc-name', name); $('name').value = name; }
     picking = false; hi(); if (state) onState(state);
@@ -1248,6 +1256,7 @@
       if (rankSel.length >= need) net.send('guess', { pid: pid, ranks: rankSel.slice() });
       return;
     }
+    if (state && state.q && state.q.peel && !state.best && !state.draw) { peelPick(b); return; }
     [].forEach.call($('opts').querySelectorAll('button'), function (x) { x.classList.remove('picked'); });
     b.classList.add('picked'); myPick = { key: state ? state.phase + ':' + state.round : '', i: +b.getAttribute('data-i') };
     var final = !!(state && (state.draw || state.best));   // Draw!: the first guess counts, and so does a vote
@@ -1255,6 +1264,26 @@
     $('fb').className = 'fb close'; $('fb').textContent = state && state.best ? 'Vote in!' : final ? 'Answer in. No changing this one!' : 'Answer in. You can still change it until everyone has answered.';
     net.send('guess', { pid: pid, choice: +b.getAttribute('data-i') });
   });
+  /* Behind the curtain / Out of focus: your answer locks after 3 seconds; tap the same one again before then to take it back */
+  var peelLock = { key: '', i: -1, until: 0, t: null };
+  function peelPaint() {
+    var k = state ? state.phase + ':' + state.round : '', on = peelLock.key === k, left = on && peelLock.until ? peelLock.until - Date.now() : 0, locked = on && peelLock.i >= 0 && left <= 0;
+    [].forEach.call($('opts').querySelectorAll('button[data-i]'), function (x) { var mine = on && +x.getAttribute('data-i') === peelLock.i; x.classList.toggle('picked', mine); x.classList.toggle('locked', locked && mine); if (locked) x.disabled = true; });
+    if (!on || peelLock.i < 0) return;
+    $('fb').className = 'fb close'; $('fb').textContent = locked ? '🔒 Locked in!' : '⏳ Locking in ' + Math.ceil(left / 1000) + '… tap it again to take it back';
+  }
+  function peelPick(b) {
+    var k = state.phase + ':' + state.round, i = +b.getAttribute('data-i'), now = Date.now();
+    if (peelLock.key === k && peelLock.i >= 0 && now >= peelLock.until) return;   // (locked)
+    clearInterval(peelLock.t);
+    if (peelLock.key === k && peelLock.i === i) {   // the same answer again: taken back
+      peelLock = { key: k, i: -1, until: 0, t: null }; myPick = { key: '', i: -1 };
+      net.send('guess', { pid: pid, choice: i, cancel: 1 }); peelPaint(); $('fb').className = 'fb'; $('fb').textContent = 'Taken back. Pick again!'; return;
+    }
+    peelLock = { key: k, i: i, until: now + 3000, t: null }; myPick = { key: k, i: i };
+    net.send('guess', { pid: pid, choice: i });
+    peelPaint(); peelLock.t = setInterval(function () { peelPaint(); if (Date.now() >= peelLock.until) clearInterval(peelLock.t); }, 250);
+  }
   $('guessform').addEventListener('submit', function (e) {
     e.preventDefault();
     var t = $('guess').value.trim();

@@ -24,6 +24,8 @@ CHARS.forEach(function (c) { CHAR_BY_ID[c.id] = c; });
 // where the face sits in the (square-cropped) picture in percent, 'zoom' how much to enlarge it.
 /* each avatar holds a little flag: the fan-flag country of the player who has it (avatars are one per player) */
 var CHAR_CC = {};
+/* every player has one of 12 fixed colours (their body, and later their tiles, pole, phone…), easy to tell apart */
+var PCOLS = [['#e53950', '#a3192f'], ['#2f80ed', '#1b4f99'], ['#f2c12e', '#b88a0c'], ['#27ae60', '#16723d'], ['#9b51e0', '#6a2aa6'], ['#f2994a', '#b8601a'], ['#ff6fb5', '#c43d82'], ['#1fc8c8', '#118585'], ['#8d6e63', '#5b4037'], ['#ffffff', '#b9b9c8'], ['#2b2b3a', '#121220'], ['#a3e635', '#5f8f12']];
 /* players' own photos: avatar id 'u:<player id>' -> a small jpeg (data URL), sent around once */
 var CHAR_IMG = {};
 function picOk(d) { return typeof d === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(d) && d.length < 60000; }

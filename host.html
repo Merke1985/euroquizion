@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=671">
+<link rel="stylesheet" href="style.css?v=672">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -30,7 +30,15 @@
         <h3>Players <span class="mute" id="pcount"></span></h3>
         <div class="players" id="players" style="margin-top:12px"></div>
         <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. When all rings are green, anyone can start the game from their phone.</p>
-        <p id="botrow" style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt small" id="botadd" type="button">Add a test bot</button><button class="btn alt small hidden" id="botclear" type="button">Remove bots</button><button class="btn alt small" id="mgtest" type="button">Test the party games</button><button class="btn alt small" id="shoptest" type="button">Test the boutique</button><button class="btn alt small" id="chasetest" type="button">Test the Grand Final</button><button class="btn alt small" id="chasetest2" type="button">Test the face-off</button><button class="btn alt small" id="fstest" type="button">Test the final scores</button><button class="btn alt small" id="itemtest" type="button">Test the items on me</button><button class="btn alt small hidden" id="clearplayers" type="button">Remove all players</button></p>
+        <p class="testrow"><button class="testbtn" id="testbtn" type="button" title="Testing">🔧</button></p>
+        <div class="testov hidden" id="testov"><div class="testcard"><div class="testhead"><h2>🔧 Testing</h2><button class="btn alt small" id="testclose" type="button">Close</button></div>
+          <h3>Players</h3>
+          <p id="botrow" class="testgrid"><button class="btn alt small" id="botadd" type="button">Add a test bot</button><button class="btn alt small hidden" id="botclear" type="button">Remove bots</button><button class="btn alt small hidden" id="clearplayers" type="button">Remove all players</button></p>
+          <h3>Test a part of the game</h3>
+          <p class="testgrid"><button class="btn alt small" id="mgtest" type="button">All party games</button><button class="btn alt small" id="shoptest" type="button">The boutique</button><button class="btn alt small" id="itemtest" type="button">The items on me</button><button class="btn alt small" id="chasetest" type="button">The Grand Final</button><button class="btn alt small" id="chasetest2" type="button">The face-off</button><button class="btn alt small" id="fstest" type="button">The final scores</button></p>
+          <h3>Test one party game</h3>
+          <p class="testgrid" id="onegame"></p>
+        </div></div>
       </div>
       <div class="rehost hidden">
         <button class="btn alt small" id="rehostbtn">Rehost existing game</button>
@@ -45,11 +53,11 @@
     <div class="card">
       <p class="note hidden" id="note"></p>
       <h3>Game settings</h3>
-      <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><b>🎉 Party Night</b><small>Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>10 questions, no party games</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
+      <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><b>🎉 Party Night</b><small>Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>4 rounds of 5 questions, a new era each round, then the Big Five</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
       <p class="gamelen" id="gamelen"></p>
       <div class="settings" id="setform">
         <div><label for="s-atype">Game type</label><select id="s-atype">
-          <option value="mc" selected>Quiz</option><option value="party">Party</option></select></div>
+          <option value="party" selected>Party</option><option value="mc">Quiz</option></select></div>
         <div id="finalbox"><label for="s-final">Final</label><select id="s-final"><option value="chase" selected>Grand Final</option><option value="double">Big Five</option><option value="standard">Standard</option></select></div>
         <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
         <div id="qmodebox"><label for="s-qmode">Trivia selection</label><select id="s-qmode"><option value="standard" selected>Standard</option><option value="random">Random rounds</option><option value="vote">Voted rounds</option><option value="ladder">Ladder</option></select></div>
@@ -349,15 +357,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=671"></script>
-<script src="vendor/qrcode.js?v=671"></script>
-<script src="config.js?v=671"></script>
-<script src="net.js?v=671"></script>
-<script src="music.js?v=671"></script>
-<script src="chars.js?v=671"></script>
-<script src="match.js?v=671"></script>
-<script src="shapes.js?v=671"></script>
-<script src="quiz.js?v=671"></script>
-<script src="host.js?v=671"></script>
+<script src="vendor/supabase.js?v=672"></script>
+<script src="vendor/qrcode.js?v=672"></script>
+<script src="config.js?v=672"></script>
+<script src="net.js?v=672"></script>
+<script src="music.js?v=672"></script>
+<script src="chars.js?v=672"></script>
+<script src="match.js?v=672"></script>
+<script src="shapes.js?v=672"></script>
+<script src="quiz.js?v=672"></script>
+<script src="host.js?v=672"></script>
 </body>
 </html>

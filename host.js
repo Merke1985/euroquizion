@@ -56,6 +56,8 @@
   var room = '', net, songs = [], countries = {}, chorus = {};
   var REMOTE = new URLSearchParams(location.search).get('screen') === '0';   // a game without a shared screen
   var players = {};         // pid -> {pid,name,score,got,pts,last}
+  /* the settings as the page ships them: every new game starts from these (Party Night), whatever was used last time */
+  var SET_DEFAULTS = [].map.call(document.querySelectorAll('#setform select, #setform input'), function (el) { return [el, el.type === 'checkbox' ? el.checked : el.value]; });
   var G = { phase: 'lobby', round: 0, total: 10, guessMs: 25000, endsAt: 0, song: null, used: {}, pool: [], showVideo: true, era: '1956-2100', cat: 'all', atype: 'mc', subject: 'random', q: null, sing: null, barMs: 30000, scoring: 'correct', showScore: 'always', revealAt: 0, draw: null, drawTurn: 0, go: {} };
   // The whoosh sounds only in the Grand Final: in the rest of the game they were a bit much.
   (function () { var w = Music.woosh; Music.woosh = function () { if (G.phase === 'chase') w.apply(Music, arguments); }; })();
@@ -98,13 +100,14 @@
     if (!p) { var old = rejoinOf(m, nm); if (old) { rekey(old.pid, m.pid); p = players[m.pid]; p.off = false; p.last = Date.now(); push(); } }   /* rejoining: the same player, back in their own place */
     if (!p && list().length >= MAX_PLAYERS) { sayHello(); return; }   /* (12 players at most: the game is full) */
     if (!p) {
-      if (!free) {
+      if (!free && G.phase === 'lobby' && String(m.pid).indexOf('bot') !== 0) { want = null; }   /* a player in the lobby chooses their own avatar (and country) on the phone */
+      else if (!free) {
         // No avatar chosen (or it is taken): hand out a random one that is still free.
         var left = CHARS.filter(function (c) { return !list().some(function (x) { return x.char === c.id; }); });
         if (!left.length) { sayHello(); return; }   // every avatar is in use: the game is full
         want = pick(left).id; free = true;
       }
-      p = players[m.pid] = { pid: m.pid, name: nm, char: want, score: 0, got: false, pts: 0 }; setTimeout(picsResend, 600);   /* (a newcomer gets everyone's photos) */
+      p = players[m.pid] = { pid: m.pid, name: nm, char: want, score: 0, got: false, pts: 0, col: colFree() }; setTimeout(picsResend, 600);   /* (a newcomer gets everyone's photos) */
       if (SHOP_START_ALL && G.atype === 'party' && G.starterGiven) p.inv = SHOP_ITEMS.map(function (it) { return it.id; });   // joining a Party game later: the items too
       // Rehosting without a saved game on this device: rebuild it from what the phones remember.
       if (recovering) {
@@ -116,7 +119,7 @@
     /* the fan flag: one country per player; none picked (or taken): a random free one */
     var wf = FAN_FLAGS.indexOf(m.cc) >= 0 && !list().some(function (x) { return x.cc === m.cc && x.pid !== m.pid; }) ? m.cc : null;
     if (wf && wf !== p.cc && (G.phase === 'lobby' || !p.cc)) { p.cc = wf; changed = true; }
-    if (!p.cc) { var auto = FAN_FLAGS.filter(function (c) { return c !== 'il'; }), fl = auto.filter(function (c) { return !list().some(function (x) { return x.cc === c; }); }); p.cc = fl.length ? pick(fl) : pick(auto);   /* (never handed out at random: only by choice)*/ changed = true; }
+    if (!p.cc && (G.phase !== 'lobby' || p.bot || String(p.pid).indexOf('bot') === 0)) { var auto = FAN_FLAGS.filter(function (c) { return c !== 'il'; }), fl = auto.filter(function (c) { return !list().some(function (x) { return x.cc === c; }); }); p.cc = fl.length ? pick(fl) : pick(auto);   /* (never handed out at random: only by choice)*/ changed = true; }
     if (free && want !== p.char && (G.phase === 'lobby' || !p.char)) { p.char = want; changed = true; }
     p.name = nm; p.last = Date.now(); p.off = false;
     if (changed) push(); else if (m.back) sayHello();   // back from the background: here is how things stand
@@ -194,6 +197,12 @@
       if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;
       if (G.best && (G.best.pids[m.choice] === m.pid || p.pick != null)) return;
       if (G.best && G.best.only && m.pid !== G.best.only) return;   // one player picks the party round
+      if (G.q.peel) {   /* Behind the curtain / Out of focus: an answer locks 3 seconds after it is picked (tap it again before that to take it back) */
+        var nowL = Date.now();
+        if (p.pick != null && p.lockAt && nowL >= p.lockAt) return;
+        if (m.cancel) { if (p.pick != null) { p.pick = null; p.lockAt = 0; push(); } return; }
+        p.lockAt = nowL + 3000;
+      }
       p.pick = m.choice; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now());
       push(); allIn(); return;
     }
@@ -240,7 +249,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, cc: p.cc || '', ccb: G.phase === 'reveal' && p.got ? p.ccb || '' : '', flagc: p.flagc || '', robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, cc: p.cc || '', col: p.col, ccb: G.phase === 'reveal' && p.got ? p.ccb || '' : '', flagc: p.flagc || '', robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.frozenLeft != null) s.itemBusy = true;   /* an item is going off: nobody can use one right now */
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
@@ -260,7 +269,7 @@
     if (G.phase === 'reveal' && lastSong()) s.last = true;
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'qall' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
-    if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip, smoke: G.phase === 'guess' && G.smoke && G.smoke.length ? G.smoke : null, fan: G.phase === 'guess' && G.fanQ && G.fanQ.key === qKeyNow() ? G.fanQ.map : null };
+    if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip, peel: !!G.q.peel, smoke: G.phase === 'guess' && G.smoke && G.smoke.length ? G.smoke : null, fan: G.phase === 'guess' && G.fanQ && G.fanQ.key === qKeyNow() ? G.fanQ.map : null };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
     if (G.phase === 'pspin' && G.pspin) s.fun = { icon: '🎉', title: 'Party round!', sub: G.pspin.done ? 'It is ' + G.pspin.games[G.pspin.roll].title : 'Spinning…' };
     if (G.phase === 'fun' && G.fun) s.fun = { icon: G.fun.icon, title: G.fun.title, sub: G.fun.sub };
@@ -490,7 +499,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var age = nowT - joinSeen[p.pid], pop = age < 700;
       var lob = G.phase === 'lobby';
       return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + ((G.phase === 'lobby' || G.phase === 'intro') && G.go && G.go[p.pid] ? ' rdy' : '') + (lob ? ' lobfig' : '') + (rmPid === p.pid ? ' rm' : '') + '" data-pid="' + esc(p.pid) + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' +
-        (lob ? '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' : '') + charSvg(p.char) + '<span class="pname">' + esc(p.name) + '</span>' + (lob && p.cc && countries[p.cc] ? '<span class="pcc">' + esc(countries[p.cc]) + '</span>' : '') + (rmPid === p.pid ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + '</span>';
+        (lob ? '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' : '') + (p.char ? charSvg(p.char) : '<span class="char"><i class="chin"><b class="chnopic">❔</b></i></span>') + '<span class="pname">' + esc(p.name) + '</span>' + (lob && p.cc && countries[p.cc] ? '<span class="pcc">' + esc(countries[p.cc]) + '</span>' : '') + (rmPid === p.pid ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + '</span>';
     }).join('') || '<span class="mute">Waiting for players…</span>';
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
     if (G.phase === 'lobby' && ps.length !== lenN) { lenN = ps.length; try { gameLen(); } catch (e) {} }
@@ -917,7 +926,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function bodyOutfit(k) {
     var oh = 0; for (var oi = 0; oi < k.length; oi++) oh = (oh * 37 + k.charCodeAt(oi)) >>> 0;
     var OUT = [['#e0436b', '#a02447'], ['#2f8fd8', '#1c5f99'], ['#f2b632', '#c48510'], ['#3cbf7a', '#22804f'], ['#9b59d0', '#6a3596'], ['#ff8a3d', '#c75c18'], ['#f5f0e6', '#c9bfae'], ['#2b2b3a', '#14141f'], ['#1fb5b0', '#137a77'], ['#ff6fb5', '#c43d82']], LEG = ['#2a1a4a', '#1d2b4f', '#3b2a1f', '#222', '#4a4a58', '#20403a'];
-    var o = OUT[oh % OUT.length]; return '--o1:' + o[0] + ';--o2:' + o[1] + ';--ol:' + LEG[(oh >>> 5) % LEG.length];
+    var pl = players[k], o = pl && pl.col != null && PCOLS[pl.col] ? PCOLS[pl.col] : OUT[oh % OUT.length];   /* (the player's own colour) */
+    return '--o1:' + o[0] + ';--o2:' + o[1] + ';--ol:' + LEG[(oh >>> 5) % LEG.length];
   }
   function handFlag(p) { return p && p.cc ? '<span class="hflag"><b></b><img src="https://flagcdn.com/w80/' + p.cc + '.png" alt=""></span>' : ''; }
   function ccBadge() {
@@ -2075,6 +2085,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   $('chstop').addEventListener('click', function () { var c = G.chase; if (!c) return; if (c.st !== 'win') { var al = chaseAlive(), best = al.length ? Math.max.apply(null, al.map(function (k) { return c.lanes[k].pos; })) : 0; c.win = al.filter(function (k) { return c.lanes[k].pos === best; }); } chaseDone(); });
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
+  /* the test section: a small 🔧 in the lobby opens it; one button per party game */
+  (function () {
+    var NAMES = { sing: '🎤 Jury Show', draw: '🖼️ Postcard', quip: '🛋️ Green Room', bluff: '🗣️ Lost in Translation', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Envelope, Please', note: '🎶 Hold That Note', queue: '🌹 Lost in Verona' };
+    $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
+    $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
+    $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
+    $('testov').addEventListener('click', function (e) { if (e.target === $('testov')) $('testov').classList.add('hidden'); });
+    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #itemtest, #chasetest, #chasetest2, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
+    $('onegame').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-one]'); if (!b || REMOTE || G.phase !== 'lobby') return;
+      var k = b.getAttribute('data-one'), nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
+      $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
+      if (beginGame() === false) return;
+      G.partyOn = {}; PARTY_KINDS.forEach(function (x) { G.partyOn[x] = x === k; }); G.partyOn.shop = true;   /* (only this game) */
+      G.mgTest = true; G.quizRun = 99; G.skipOpening = true; G.shopFirst = true; testBribes();
+      if (G.phase === 'intro') introEnd();
+    });
+  })();
   $('mgtest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
@@ -3250,7 +3278,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="bqrack"><i class="rail"></i><span>👕</span><span>🧣</span><span>👗</span><span>🧥</span><span>🧣</span><span>👕</span></div>' +
         '<div class="bqfloor"><span>🛍️</span><span>🎁</span><span>🛍️</span><span>🎈</span><span>🎁</span></div>' +
         (function () {   // the merchandise on the shelves at the back, with its name (what you can get is on your phone)
-          var shelf = function (items) { return items.map(function (it) { return '<span class="bqi" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + shopPrice(it) + ' pts</i><i class="bqstock' + (it.stock ? ' one' : '') + '">' + (it.stock ? 'Only ' + it.stock + ' in stock' : '∞ in stock') + '</i></span>'; }).join(''); }, av = shopAvail();
+          var shelf = function (items) { return items.map(function (it) { var so = soldOut(it.id); return '<span class="bqi' + (so ? ' sold' : '') + '" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + shopPrice(it) + ' pts</i><i class="bqstock' + (it.stock ? ' one' : '') + '">' + (so ? 'Sold out' : it.stock ? 'Only ' + it.stock + ' in stock' : '∞ in stock') + '</i></span>'; }).join(''); }, av = SHOP_ITEMS.filter(function (it) { return !it.final || G.finalMode === 'chase'; });   /* (sold out: still on the shelf, crossed out) */
           return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">⚡ Instant items: during a question · 📦 Deliveries: any time, they land before the next question</div></div>';
         })() +
         '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div><div class="bqtimer"></div>';
@@ -4365,7 +4393,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         /* everyone in their own outfit: top and trousers */
         var oh = 0; for (var oi = 0; oi < k.length; oi++) oh = (oh * 37 + k.charCodeAt(oi)) >>> 0;
         var OUT = [['#e0436b', '#a02447'], ['#2f8fd8', '#1c5f99'], ['#f2b632', '#c48510'], ['#3cbf7a', '#22804f'], ['#9b59d0', '#6a3596'], ['#ff8a3d', '#c75c18'], ['#f5f0e6', '#c9bfae'], ['#2b2b3a', '#14141f'], ['#1fb5b0', '#137a77'], ['#ff6fb5', '#c43d82']], LEG = ['#2a1a4a', '#1d2b4f', '#3b2a1f', '#222', '#4a4a58', '#20403a'];
-        var o = OUT[oh % OUT.length]; el.style.setProperty('--o1', o[0]); el.style.setProperty('--o2', o[1]); el.style.setProperty('--ol', LEG[(oh >>> 5) % LEG.length]); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
+        var o = p.col != null && PCOLS[p.col] ? PCOLS[p.col] : OUT[oh % OUT.length]; el.style.setProperty('--o1', o[0]); el.style.setProperty('--o2', o[1]); el.style.setProperty('--ol', LEG[(oh >>> 5) % LEG.length]); el.innerHTML = '<div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b>'; grp.appendChild(el); }
       /* a loose little crowd in the middle of the crossroads, within the street: rows of three, each a bit off (always the same bit, per player) */
       var j = inGroup.indexOf(k), n = inGroup.length, cols = Math.min(3, Math.max(1, n)), rows = Math.ceil(n / cols), col = j % cols, row = Math.floor(j / cols);
       var hsh = 0; for (var hi = 0; hi < k.length; hi++) hsh = (hsh * 31 + k.charCodeAt(hi)) >>> 0;
@@ -5512,8 +5540,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   });
   // Take the settings as they stand and start: the fanfare first, then song 1.
   function ytReadyOrRemote() { return REMOTE || ytReady; }
+  function colFree() { var used = list().map(function (x) { return x.col; }); for (var i = 0; i < PCOLS.length; i++) if (used.indexOf(i) < 0) return i; return Math.floor(Math.random() * PCOLS.length); }
+  function looksFill() {
+    list().forEach(function (p) {
+      if (!p.char) { var left = CHARS.filter(function (c) { return !list().some(function (x) { return x.char === c.id; }); }); if (left.length) p.char = pick(left).id; }
+      if (!p.cc) { var auto = FAN_FLAGS.filter(function (c) { return c !== 'il'; }), fl = auto.filter(function (c) { return !list().some(function (x) { return x.cc === c; }); }); p.cc = fl.length ? pick(fl) : pick(auto); }
+    });
+  }
   function beginGame() {
     if (G.phase !== 'lobby') return false;
+    looksFill();
     G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.finalMode = $('s-final').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : $('s-atype').value === 'mc' && $('s-qmode').value === 'ladder' ? 'ladder' : $('s-scoring').value || 'correct'; G.showScore = 'always';   /* the scores are always in view (only the Big Five hides them) */
     if (!ytReadyOrRemote() || !buildPool()) return false;
     // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
@@ -5567,7 +5603,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.draw && !lastSong()) { toEnd = false; }
     if (triviaQ()) toEnd = false;   // (no song plays at this answer: Did you know?, and Edgar's questions)
     // Until the end: follow the player. If nothing is playing (or it cannot be read), fall back to a fixed wait.
-    autoEnd = Date.now() + (G.clue && G.clue.st === 'ask' ? 6 : toEnd ? REMOTE ? (G.remain > 0 ? Math.max(5, G.remain + 1 - (G.q && G.q.noclip ? 0 : Math.min(clipSecs(), (Date.now() - (G.guessAt || Date.now())) / 1000))) : 30) : 20 : G.draw && !lastSong() ? Math.min(10, +$('autolen').value || 10) : +$('autolen').value) * 1000;
+    var noVid = triviaQ() || (!!G.best && !G.best.quip);   /* no video plays with this answer: on to the next one after 5 seconds, whatever the setting */
+    autoEnd = Date.now() + (noVid ? 5 : G.clue && G.clue.st === 'ask' ? 6 : toEnd ? REMOTE ? (G.remain > 0 ? Math.max(5, G.remain + 1 - (G.q && G.q.noclip ? 0 : Math.min(clipSecs(), (Date.now() - (G.guessAt || Date.now())) / 1000))) : 30) : 20 : G.draw && !lastSong() ? Math.min(10, +$('autolen').value || 10) : +$('autolen').value) * 1000;
     var t0 = Date.now(), last = t0, held = false;
     var draw = function () {
       if (G.phase !== 'reveal') { autoStop(); return; }
@@ -5725,13 +5762,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   fetch('chorus.json?v=46').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
   keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   /* Presets: Party Night (the Grand Tour), Quick Quiz (ten questions), or Custom (every setting) */
-  var PRESET = 'party'; try { PRESET = localStorage.getItem('esc-preset') || 'party'; } catch (e) {}
+  var PRESET = 'party';   /* (every time the host page opens: Party Night with the default settings) */
   function setVal(id, v) { var el = $(id); if (!el || el.value === String(v)) return; if (el.querySelector && !el.querySelector('option[value="' + v + '"]') && el.tagName === 'SELECT' && ![].some.call(el.options, function (o) { return o.value === String(v) || o.text === String(v); })) return; el.value = String(v); el.dispatchEvent(new Event('change')); }
+  function setDefaults() {
+    SET_DEFAULTS.forEach(function (d) { var el = d[0]; if (el.type === 'checkbox') { if (el.checked !== d[1]) { el.checked = d[1]; el.dispatchEvent(new Event('change', { bubbles: true })); } } else if (el.value !== d[1]) { el.value = d[1]; el.dispatchEvent(new Event('change', { bubbles: true })); } });
+  }
+  var presetWarn = null;
   function presetApply(k, save) {
-    PRESET = k; if (save) try { localStorage.setItem('esc-preset', k); } catch (e) {}
+    if (save && PRESET === 'custom' && k !== 'custom' && !presetWarn) {   /* leaving Custom: first a warning, the second click resets */
+      $('gamelen').innerHTML = '⚠️ Your custom settings will be lost. Click <b>' + (k === 'party' ? 'Party Night' : 'Quick Quiz') + '</b> again to continue.';
+      presetWarn = setTimeout(function () { presetWarn = null; gameLen(); }, 5000); return;
+    }
+    clearTimeout(presetWarn); presetWarn = null;
+    if (k !== 'custom') setDefaults();   /* (Custom starts from what the last card set) */
+    PRESET = k;
     [].forEach.call(document.querySelectorAll('#presets .preset'), function (b) { b.classList.toggle('on', b.getAttribute('data-preset') === k); });
     if (k === 'party') { setVal('s-atype', 'party'); setVal('s-partypick', 'order'); setVal('s-final', 'chase'); setVal('s-qmode', 'standard'); setVal('s-rounds', '3'); }
-    if (k === 'quick') { setVal('s-atype', 'mc'); setVal('s-parts', '1'); setVal('s-qmode', 'standard'); setVal('s-final', 'standard'); setVal('s-rounds', '10'); }
+    if (k === 'quick') { setVal('s-atype', 'mc'); setVal('s-parts', '4'); setVal('s-rounds', '5'); setVal('s-qmode', 'random'); setVal('s-final', 'double'); }   /* 4 rounds of 5, an era spun for each, then the Big Five over all eras */
     $('setform').classList.toggle('hidden', k !== 'custom');
     gameLen();
   }
@@ -5747,14 +5794,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
       min += (on.length + 1) * per * perQ / 60;
-      on.forEach(function (g) { min += GAME[g] + 1.6; });   /* (+ the announcement and the boutique after it) */
-    } else min += (+$('s-parts').value || 1) * per * perQ / 60;
-    var fin = $('s-final').value; min += fin === 'chase' ? 8 : fin === 'double' ? 5 * perQ / 60 : 0;
+      on.forEach(function (g) { min += GAME[g] * 0.65 + 1; });   /* (+ the announcement and the boutique after it; calibrated on a real game: 4 players, 3 questions a block, all games ≈ 1 hour) */
+    } else min += (+$('s-parts').value || 1) * per * perQ * 0.8 / 60;   /* (a plain quiz moves faster: no party-game breaks to settle in) */
+    var fin = $('s-final').value; min += fin === 'chase' ? 6 : fin === 'double' ? 5 * perQ * 0.8 / 60 : 0;
     var m = Math.round(min / 5) * 5, txt = m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : Math.max(5, m) + ' min';
     el.innerHTML = '⏱️ About <b>' + txt + '</b> ' + (real >= 2 ? 'with ' + real + ' players' : 'for 4 players');
   }
   $('setform').addEventListener('change', function () { setTimeout(gameLen, 0); });
-  presetApply(PRESET, false);
+  presetApply('party', false);
   // ---------- volume: a button in the top right corner, with a slider for music and one for sound effects ----------
   (function () {
     var b = document.createElement('button'); b.type = 'button'; b.id = 'volbtn'; b.className = 'volbtn'; b.setAttribute('aria-label', 'Volume'); b.textContent = '🔊';
