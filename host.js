@@ -4726,8 +4726,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var best = Math.max.apply(null, g.order.map(function (k) { return g.cnt[k] || 0; }));
     // the count: everyone's tiles counted at the same time, one by one, until the winner is the only one still counting
     // (the count takes about 10 seconds, so the winner is revealed at 2:55 in the song)
-    g.cstep = Math.max(180, Math.min(420, Math.round(RU_COUNT / Math.max(1, best)))); g.st = 'count'; g.countAt = Date.now() + 300; push(); Music.ding();
-    var dur = 300 + best * g.cstep + 300;
+    g.cstep = Math.max(180, Math.min(420, Math.round(RU_COUNT / Math.max(1, best)))); g.st = 'count'; g.countAt = Date.now() + 3600; push();   // (3 seconds of quiet after the song, then the count)
+    setTimeout(function () { if (G.rule === g) Music.ding(); }, 3000);
+    var dur = 3600 + best * g.cstep + 300;
     clearTimeout(ruTimer); ruTimer = setTimeout(function () {
       if (G.rule !== g) return;
       g.win = best > 0 ? g.order.filter(function (k) { return g.cnt[k] === best; }) : [];   // (a tie: they all win)
@@ -4968,7 +4969,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ck = ov.querySelector('.ruclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - now) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - now) / 1000)) : 0;
     var txt = g.st === 'play' ? Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2) : g.st === 'ready' ? String(sec) : ''; if (ck.textContent !== txt) ck.textContent = txt;
     var cnt = g.cnt && Object.keys(g.cnt).length ? g.cnt : ruCount(g), lb = ov.querySelector('.rulist');
-    if (g.st === 'count' || g.st === 'end') {
+    if ((g.st === 'count' && now >= g.countAt - 600) || g.st === 'end') {
       var best = Math.max.apply(null, g.order.map(function (k) { return cnt[k] || 0; })), k0 = Math.max(0, Math.floor((now - (g.countAt || now)) / (g.cstep || RU_CSTEP)) + 1);
       if (lb.getAttribute('data-id') !== g.id) {
         lb.setAttribute('data-id', g.id);
@@ -5009,7 +5010,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var panel = function (x0, y0, w, h) { return '<rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="10" fill="#f3e2c0" stroke="#c8962a" stroke-width="5"/>' + tulip(x0 + w * .3, y0 + h * .45, h / 110) + tulip(x0 + w * .5, y0 + h * .38, h / 95) + tulip(x0 + w * .7, y0 + h * .45, h / 110); };
     var column = function (x0, y0, h) { return '<rect x="' + x0 + '" y="' + y0 + '" width="34" height="' + h + '" fill="url(#orcol)"/><rect x="' + (x0 - 6) + '" y="' + y0 + '" width="46" height="14" rx="4" fill="url(#orgold)"/><rect x="' + (x0 - 6) + '" y="' + (y0 + h - 14) + '" width="46" height="14" rx="4" fill="url(#orgold)"/>'; };
     var mill = function (cx, cy) { return '<g transform="translate(' + cx + ' ' + cy + ')"><path d="M-12 30 L-8 -6 L8 -6 L12 30 Z" fill="#6b4a2a"/><path d="M-10 -6 L0 -16 L10 -6 Z" fill="#8a3a20"/><g class="ormill"><path d="M0 -8 L-4 -40 L4 -40 Z M0 -8 L32 -12 L32 -4 Z M0 -8 L4 24 L-4 24 Z M0 -8 L-32 -4 L-32 -12 Z" fill="#f3e2c0" stroke="#6b4a2a" stroke-width="1.5"/></g></g>'; };
-    return '<svg class="orsvg" viewBox="0 0 1000 560" aria-hidden="true"><defs>' +
+    return '<svg class="orsvg" viewBox="-20 0 1050 560" aria-hidden="true"><defs>' +
       '<linearGradient id="orgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a10"/><stop offset=".45" stop-color="#ffe27a"/><stop offset="1" stop-color="#a87010"/></linearGradient>' +
       '<linearGradient id="orcol" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9c49a"/><stop offset=".5" stop-color="#fff6e0"/><stop offset="1" stop-color="#cdb486"/></linearGradient>' +
       '<linearGradient id="orwood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c26a34"/><stop offset="1" stop-color="#7a3518"/></linearGradient>' +
@@ -5092,49 +5093,83 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'brief'; g.ends = 0; g.brk = {}; push(); Music.woosh();
     clearTimeout(orTimer); orTimer = setTimeout(orFix, 4500);
   }
-  // The phase runs: the music plays normally, until (at random moments) one station after the other breaks down.
-  // Only then can its players repair it; the song sounds broken until it is fixed.
+  var OR_FXK = ['robot'];   // (sound effects broken: a robot voice)
+  // A phase: the music plays, and parts break down. Phase 1: one at a time, each part once. Phase 2: two at a time, each
+  // part twice. Phase 3: all three at once, twice. The phase ends when all those breakdowns have been repaired (or their
+  // repair time ran out). Each breakdown is a fresh task for the players at that part.
   function orFix() {
     var g = G.organ; if (!g || G.phase !== 'organ') return;
-    g.st = 'fix'; g.t0 = Date.now(); g.brk = {}; push(); Music.blip();
-    var used = OR_ST.filter(function (s2) { return g.order.some(function (k) { return g.sta[k] === s2; }); }), t = 2500 + Math.random() * 3000;
-    shuffle(used).forEach(function (s2) { g.brk[s2] = g.t0 + Math.round(t); t += 7000 + Math.random() * 7000; });
-    g.fxk = pick(OR_FXK);
-    var last = Math.max.apply(null, used.map(function (s2) { return g.brk[s2]; }));
-    g.ends = last + OR_TASK[g.ph - 1];
-    var id = g.id, ph = g.ph;
-    g.order.forEach(function (k) {   // the bots repair at their own pace once their station breaks (some don't quite finish)
-      var p = players[k]; if (!p || !p.bot) return;
-      var of = g.prog[k].of, start = g.brk[g.sta[k]] - g.t0 + 800, total = OR_TASK[ph - 1] * (0.35 + Math.random() * 0.6);
-      for (var s3 = 1; s3 <= of; s3++) (function (s3) { setTimeout(function () { orMsg({ pid: k, id: id, ph: ph, d: s3 }); }, start + total * s3 / of); })(s3);
-    });
+    g.st = 'fix'; g.t0 = Date.now(); g.brk = {}; g.shut = {}; g.bn = g.bn || {}; g.botGo = {}; g.phPts = {}; g.allOk = true; push(); Music.blip();
+    g.order.forEach(function (k) { g.phPts[k] = 0; });
+    var used = shuffle(OR_ST.filter(function (s2) { return g.order.some(function (k) { return g.sta[k] === s2; }); })), u = used, n = u.length;
+    g.groups = g.ph === 1 ? u.map(function (x) { return [x]; })
+      : g.ph === 2 ? (n >= 3 ? [[u[0], u[1]], [u[2], u[0]], [u[1], u[2]]] : n === 2 ? [[u[0], u[1]], [u[0], u[1]]] : [[u[0]], [u[0]]])
+      : [u.slice(), u.slice()];
+    g.gi = -1; g.gBusy = false; g.fxk = pick(OR_FXK);
+    orGroup(2500 + Math.random() * 3000);
     var was = '';
     clearInterval(orTick); orTick = setInterval(function () {
       var g2 = G.organ; if (!g2 || g2.st !== 'fix') { clearInterval(orTick); return; }
       var now = OR_ST.filter(function (s2) { return orOpen(g2, s2); }).join(',');
-      if (now !== was) { was = now; push(); if (!REMOTE) Music.buzz(); }   // (a station just broke down: the phones get their task)
-      orShow(); if (Date.now() >= g2.ends) orDone();
+      if (now !== was) { if (now.length > was.length && !REMOTE) Music.buzz(); was = now; push(); orBots(g2); }   // (a part just broke down: the phones get their task)
+      var cur = g2.groups[g2.gi] || [];
+      if (!g2.gBusy && Date.now() >= g2.ends) cur.forEach(function (s2) { if (!g2.shut[s2]) orShut(s2, false); });   // (out of time: what was done counts)
+      if (!g2.gBusy && cur.every(function (s2) { return g2.shut[s2]; })) {
+        if (g2.gi < g2.groups.length - 1) orGroup(2500 + Math.random() * 2500);
+        else { orDone(); return; }
+      }
+      orShow();
     }, 250);
   }
-  var OR_FXK = ['robot'];   // (sound effects broken: a robot voice)
-  function orOpen(g, s2) { return !!(g.brk && g.brk[s2] && Date.now() >= g.brk[s2]); }
+  function orGroup(delay) {   // the next part(s) break down after a little while: a fresh task, and its own repair time
+    var g = G.organ; if (!g) return;
+    g.gi++; g.gBusy = true; var at = Date.now() + Math.round(delay), grp = g.groups[g.gi] || [];
+    setTimeout(function () {
+      if (G.organ !== g || g.st !== 'fix') return;
+      grp.forEach(function (s2) {
+        g.bn[s2] = (g.bn[s2] || 0) + 1; g.brk[s2] = Date.now(); g.shut[s2] = false;
+        g.order.forEach(function (k) { if (g.sta[k] === s2) { g.prog[k] = { d: 0, of: OR_NEED[s2][g.ph - 1], at: 0 }; g.botGo[k] = 0; } });
+      });
+      g.ends = Date.now() + OR_TASK[g.ph - 1]; g.gBusy = false; push();
+    }, Math.max(0, at - Date.now()));
+  }
+  function orOpen(g, s2) { return !!(g.brk && g.brk[s2] && !g.shut[s2] && Date.now() >= g.brk[s2]); }
+  function orDoneSt(g, s2) { return g.order.filter(function (k) { return g.sta[k] === s2; }).every(function (k) { var pr = g.prog[k]; return !pr || pr.d >= pr.of || (players[k] && players[k].off); }); }
+  function orShut(s2, ok) {   // a breakdown is over (repaired, or out of time): points for the players at that part
+    var g = G.organ; if (!g || g.shut[s2]) return;
+    g.shut[s2] = true; if (!ok) g.allOk = false;
+    var total = OR_TASK[g.ph - 1];
+    g.order.forEach(function (k) {
+      if (g.sta[k] !== s2) return;
+      var pr = g.prog[k], frac = pr.d / pr.of, pts = Math.round(60 * frac) + (pr.at ? Math.round(40 * Math.max(0, total - (pr.at - g.brk[s2])) / total) : 0);
+      g.pts[k] += pts; g.phPts[k] += pts;
+    });
+    if (ok && !REMOTE) Music.ding();
+    push();
+  }
+  function orBots(g) {   // the bots at a part that just broke down start repairing (at their own pace; some don't quite finish)
+    var id = g.id, ph = g.ph;
+    g.order.forEach(function (k) {
+      var p = players[k], s2 = g.sta[k]; if (!p || !p.bot || g.botGo[k] || !orOpen(g, s2)) return;
+      g.botGo[k] = 1;
+      var of = g.prog[k].of, total = OR_TASK[ph - 1] * (0.35 + Math.random() * 0.6), bn = g.bn[s2];
+      for (var s3 = 1; s3 <= of; s3++) (function (s3) { setTimeout(function () { if (G.organ === g && g.bn[s2] === bn) orMsg({ pid: k, id: id, ph: ph, bn: bn, d: s3 }); }, 800 + total * s3 / of); })(s3);
+    });
+  }
   function orMsg(m) {
-    var g = G.organ; if (!g || G.phase !== 'organ' || g.st !== 'fix' || !m || m.id !== g.id || m.ph !== g.ph || !g.prog[m.pid] || !orOpen(g, g.sta[m.pid])) return;
+    var g = G.organ; if (!g || G.phase !== 'organ' || g.st !== 'fix' || !m || m.id !== g.id || m.ph !== g.ph || !g.prog[m.pid]) return;
+    var s2 = g.sta[m.pid]; if (!orOpen(g, s2) || (m.bn != null && m.bn !== g.bn[s2])) return;
     var pr = g.prog[m.pid], d = Math.max(0, Math.min(pr.of, Math.round(Number(m.d) || 0)));
     if (d <= pr.d) return;
     pr.d = d; if (!REMOTE) Music.plop(d);
-    if (d >= pr.of && !pr.at) { pr.at = Date.now(); push(); if (!REMOTE) Music.ding(); } else orShow();
-    if (g.order.every(function (k) { return g.prog[k].d >= g.prog[k].of || (players[k] && players[k].off); })) { g.fixed = true; orDone(); }
+    if (d >= pr.of && !pr.at) { pr.at = Date.now(); push(); } else orShow();
+    if (orDoneSt(g, s2)) orShut(s2, true);   // the whole part is repaired
   }
-  function orDone() {   // the phase is over: points, then the organ plays (properly, for a moment)
+  function orDone() {   // the phase is over (team bonus if every breakdown was repaired); the organ plays on, properly
     var g = G.organ; if (!g || g.st !== 'fix') return;
     clearInterval(orTick);
-    var total = OR_TASK[g.ph - 1];
-    g.last = {};
-    g.order.forEach(function (k) {
-      var pr = g.prog[k], frac = pr.d / pr.of, from = (g.brk && g.brk[g.sta[k]]) || g.t0, pts = Math.round(60 * frac) + (pr.at ? Math.round(40 * Math.max(0, total - (pr.at - from)) / total) : 0) + (g.fixed ? 15 : 0);
-      g.pts[k] += pts; g.last[k] = pts;
-    });
+    g.fixed = g.allOk; g.last = {};
+    g.order.forEach(function (k) { var pts = g.phPts[k] + (g.fixed ? 15 : 0); if (g.fixed) g.pts[k] += 15; g.last[k] = pts; });
     g.st = 'fixed'; push(); if (g.fixed) Music.douze(); else Music.buzz();
     clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd(); }, 5500);
   }
@@ -5143,8 +5178,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var best = Math.max.apply(null, g.order.map(function (k) { return g.pts[k]; }));
     g.win = best > 0 ? g.order.filter(function (k) { return g.pts[k] === best; }) : [];
     var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
-    g.st = 'end'; g.prize = big; push(); Music.douze(); orSong(false, true);
-    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.phase === 'organ') { G.organ = null; startRound(); } }, 8500);
+    g.st = 'end'; g.prize = big; push(); Music.douze();
+    setTimeout(function () { if (G.organ === g) orSong(false, true); }, 10000);   // (the song plays on for 10 more seconds, then fades out)
+    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.phase === 'organ') { G.organ = null; startRound(); } }, 15500);
   }
   // Sieneke's song, from a sound file (sounds/sjalalie.mp3; the YouTube video if that file isn't there). While a
   // station is broken you hear it: SPEED broken = slowed down, PITCH broken = warbling out of tune, SOUND EFFECTS
@@ -5238,7 +5274,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.organ, pr = {};
     g.order.forEach(function (k) { var p = g.prog[k]; if (p) pr[k] = [p.d, p.of]; });
     var open = {}; OR_ST.forEach(function (s2) { if (orOpen(g, s2)) open[s2] = 1; });
-    return { id: g.id, st: g.st, ph: g.ph, order: g.order, sta: g.sta, prog: pr, open: open, pts: g.pts, last: g.st === 'fixed' || g.st === 'end' ? g.last : null, fixed: g.fixed, left: g.st === 'fix' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
+    return { id: g.id, st: g.st, ph: g.ph, order: g.order, sta: g.sta, prog: pr, open: open, bn: g.bn || {}, pts: g.pts, last: g.st === 'fixed' || g.st === 'end' ? g.last : null, fixed: g.fixed, left: g.st === 'fix' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
   }
   // The big screen: the organ in the middle, steaming and rattling; the three stations around it with who works there.
   function orShow() {
@@ -5267,9 +5303,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
       box.classList.toggle('done', !!done); box.classList.toggle('brk', !!brk[s]); box.classList.toggle('empty', !who.length || !g.ph || g.st === 'end');
     });
-    var msg = g.st === 'intro' ? '' : g.st === 'brief' ? OR_LINES[g.ph - 1] + ' Check your phone for your station!' : g.st === 'fix' ? 'Repair your part on your phone! Together you can save the organ! 🔧' : g.st === 'fixed' ? (g.fixed ? '🎶 The organ is fixed! Sja-la-lie, sja-la-la! 🎶' : '💨 Time’s up… the organ is still a mess!') : g.st === 'end' ? (g.win.length ? '🏆 Best repairer: ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + '!' + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var msg = g.st === 'intro' ? '' : g.st === 'brief' ? OR_LINES[g.ph - 1] + ' Check your phone for your station!' : g.st === 'fix' ? 'Repair your part on your phone! Together you can save the organ! 🔧' : g.st === 'fixed' ? '🎶 Keep going! 🔧' : g.st === 'end' ? (g.win.length ? '🏆 Best repairer: ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + '!' + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.ormsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
-    var bd = ov.querySelector('.orboard'), bh = g.st === 'fixed' || g.st === 'end' ? g.order.slice().sort(function (a, b) { return g.pts[b] - g.pts[a]; }).map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="tcrow' + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (g.last && g.last[k] != null && g.st === 'fixed' ? '+' + g.last[k] : '') + '</em><i>' + g.pts[k] + '</i></div>'; }).join('') : '';
+    var bd = ov.querySelector('.orboard'), bh = g.st === 'end' ? g.order.slice().sort(function (a, b) { return g.pts[b] - g.pts[a]; }).map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="tcrow' + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (g.last && g.last[k] != null && g.st === 'fixed' ? '+' + g.last[k] : '') + '</em><i>' + g.pts[k] + '</i></div>'; }).join('') : '';
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
   }
   net.on('organ', orMsg);

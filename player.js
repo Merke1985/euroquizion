@@ -694,7 +694,7 @@
   var orKey = '', orD = 0, orSentD = 0, orPz = null, OR_COLS = ['#e53950', '#2f80ed', '#f2c12e', '#27ae60', '#9b51e0'];
   var OR_HELP = { speed: 'The gears are jammed! Turn the brass crank: drag the handle round and round.', pitch: 'The pipes slipped out of place! Slide each pipe until its top sits in the dashed band.', fx: 'The wires got mixed up! Tap a wrong plug to unplug it, then drag it to the socket of its own colour.' };
   var OR_TITLE = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring' };
-  function orReport(o) { var g = state && state.organ; if (!net || !g || g.st !== 'fix') return; net.send('organ', { pid: pid, id: g.id, ph: g.ph, d: orD }); orSentD = orD; }
+  function orReport(o) { var g = state && state.organ; if (!net || !g || g.st !== 'fix') return; net.send('organ', { pid: pid, id: g.id, ph: g.ph, bn: (g.bn || {})[g.sta[pid]] || 0, d: orD }); orSentD = orD; }
   function orStep(d) { if (d <= orD) return; orD = d; try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} Music.plop(d); orReport(); var c = $('orui').querySelector('.orcount'); if (c) c.textContent = orD + ' / ' + orPz.of; if (orD >= orPz.of) setTimeout(function () { if (state) orView(state); }, 400); }
   function orView(s) {
     var g = s.organ, box = $('orui'), sta = g.sta[pid], mine = g.order.indexOf(pid) >= 0;
@@ -705,8 +705,8 @@
       box.classList.add('hidden'); var w = (g.win || []).indexOf(pid) >= 0;
       $('waittitle').textContent = w ? '🏆 Best repairer!' : '🎡 The organ is saved!'; $('waitsub').textContent = 'Your repair points: ' + ((g.pts || {})[pid] || 0); return;
     }
-    if (g.st === 'fixed') { box.classList.add('hidden'); $('waittitle').textContent = g.fixed ? '🎶 The organ is fixed!' : '💨 Time’s up!'; $('waitsub').textContent = (g.last && g.last[pid] != null ? '+' + g.last[pid] + ' repair points this phase. ' : '') + (g.ph < 3 ? 'Next phase coming up…' : ''); return; }
-    var key = g.id + '|' + g.ph;
+    if (g.st === 'fixed') { box.classList.add('hidden'); $('waittitle').textContent = '🎶 Keep going!'; $('waitsub').textContent = g.ph < 3 ? 'Next phase coming up… 🔧' : ''; return; }
+    var key = g.id + '|' + g.ph + '|' + ((g.bn || {})[sta] || 0);   /* (each breakdown: a fresh task) */
     if (orKey !== key) { orKey = key; orD = 0; orSentD = 0; orPz = orMake(sta, g.ph); box.removeAttribute('data-k'); }
     if (g.st === 'brief' || (g.st === 'fix' && !(g.open || {})[sta])) { box.classList.add('hidden'); $('waittitle').textContent = '👀 Keep an eye on: ' + OR_TITLE[sta]; $('waitsub').textContent = 'All good for now… If it breaks down, fix it here as fast as you can! (' + OR_HELP[sta] + ')'; return; }
     var pr = (g.prog || {})[pid]; if (pr && pr[0] < orD && orD > 0) orReport();   /* (the host missed a step: send it again) */
