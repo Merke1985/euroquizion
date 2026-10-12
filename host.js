@@ -483,7 +483,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ps = list();
     if (G.phase !== 'chase') $('chase').classList.add('hidden');
     if (G.phase !== 'shop' && $('shopov')) $('shopov').remove();
-    if (G.phase !== 'bomb' && $('bombov')) $('bombov').remove();
+    if (G.phase !== 'bomb' && $('bombov')) { $('bombov').remove(); clearInterval(udTickT); if (udSongT) udSong(false); }
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'scene') && $('hsov')) $('hsov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
@@ -1430,7 +1430,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
-    bomb: { icon: '💌', title: 'The Envelope, Please', sub: 'Golden envelopes on stage: most hide a flag, one hides a bomb. Take turns to open one. Blow up and you are out; the last one standing wins!' },
+    bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
     partytime: { icon: '🎉', title: 'Party round!', sub: '' },
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
@@ -2169,7 +2169,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Envelope, Please', note: '🎶 Hold That Note', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -2462,11 +2462,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
   }
 
-  // ---------- The Envelope, Please ----------
+  // ---------- The presenters (on stage in The Unlucky Draw) ----------
   // Golden envelopes on stage, one per player still in: all hide a flag but one, which hides a bomb.
   // The players take turns (on their phone) to open one; whoever finds the bomb is out, and a new set
   // of envelopes comes out. The last one standing wins.
-  // The two presenters of "The Envelope, Please" (original characters): a man in a sharp suit and a woman in a gown.
+  // The two presenters of the envelope show (original characters): a man in a sharp suit and a woman in a gown.
   var HOST_HIM = '<svg class="ehost him" viewBox="0 0 200 420" aria-hidden="true"><defs>' +
     '<linearGradient id="ehsuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#28306e"/><stop offset="1" stop-color="#121640"/></linearGradient>' +
     '<radialGradient id="ehskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f3c9a4"/><stop offset="1" stop-color="#d89b72"/></radialGradient></defs>' +
@@ -2512,7 +2512,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<circle cx="74" cy="100" r="3" fill="#ffd23f"/><circle cx="126" cy="100" r="3" fill="#ffd23f"/>' +
     '</svg>';
 
-  var BOMB_PICK_MS = 20000, bombTimer = null;
+  var bombTimer = null;
   // ---------- things slide in, with a whoosh ----------
   function whooshes(times) { if (REMOTE) return; times.forEach(function (t) { setTimeout(function () { Music.woosh(); }, t); }); }
   function viewEnter(id) {
@@ -2672,142 +2672,182 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { hostSay('her', 'Welcome to EuroQuizion! Grab your phones: here comes the first song!', 4200); }, 2600);
   }
 
+  // ---------- The Unlucky Draw ----------
+  // Every player still in holds an envelope marked with a symbol. Most hold a flag, some hold a bomb.
+  // 30 seconds: HOLD or SWAP on your phone (changeable until zero). Two swappers trade, three or more are
+  // shuffled so nobody keeps their own. Two public Insiders know where the bombs are; in the Ghost Finale
+  // (the last two) only the ghosts know. Then all envelopes open at once: BOOM.
+  var UD_DECIDE = 30000, udTickT = null, udSongT = null, udMapAt = 0, udLastSec = -1;
+  function udBombs(n, first) { if (n <= 3) return 1; if (first && n >= 12) return 4; if (first && n === 11) return 3; return 2; }
   function bombAll() {
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2) { quipAll(); return; }
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
-    var order = shuffle(act.map(function (p) { return p.pid; }));
-    G.bomb = { id: 'bomb' + G.round + '-' + Math.random().toString(36).slice(2, 6), alive: order.slice(), out: [], passed: {}, turn: 0, round: 0, env: [], st: 'deal', pick: -1, at: Date.now() };
-    G.phase = 'bomb'; G.barMs = 0; push();
-    bombDeal();
+    G.bomb = { id: 'ud' + G.round + '-' + Math.random().toString(36).slice(2, 6), alive: shuffle(act.map(function (p) { return p.pid; })), out: [], round: 0, env: [], st: 'deal', ins: [], ch: {}, sw: [], moves: [], boomed: [], lineup: [], nb: 0 };
+    G.phase = 'bomb'; G.barMs = 0;
+    udSong(true); udRound();
   }
-  function bombDeal() {   // a fresh set: one envelope per player still in, one of them with the bomb
-    var g = G.bomb; if (!g) return;
-    g.round++;
-    var codes = shuffle(Object.keys(countries || {})).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }), n = g.alive.length, bomb = Math.floor(Math.random() * n);
-    g.env = []; for (var i = 0; i < n; i++) g.env.push({ bomb: false, code: codes[i % (codes.length || 1)] || 'se', open: false, by: '' });
-    g.pick = -1; clearTimeout(bombTimer);
-    /* whoever just blew up gets their revenge: they choose where the bomb goes in the new set (secretly, on their phone) */
-    var hid = g.out[g.out.length - 1], hp = hid && players[hid];
-    if (hp && !hp.off) {
-      g.st = 'hide'; g.hider = hid; g.hkey = g.id + '-h' + g.round; push(); Music.woosh();
-      var hk = g.hkey;
-      if (hp.bot) setTimeout(function () { bombMsg({ pid: hid, key: hk, hide: Math.floor(Math.random() * n) }); }, 2500 + Math.random() * 2000);
-      bombTimer = setTimeout(function () { if (G.bomb === g && g.st === 'hide' && g.hkey === hk) bombHide(bomb); }, BOMB_PICK_MS);   // (too slow: it goes somewhere at random)
-      return;
-    }
-    bombHide(bomb);
-  }
-  function bombHide(i) {   // the bomb goes in envelope i; the players then take turns again
-    var g = G.bomb; if (!g) return;
-    g.env.forEach(function (e, k) { e.bomb = k === i; }); g.hider = ''; g.hkey = '';
-    g.st = 'deal'; g.dealN = (g.dealN || 0) + 1; g.pick = -1; push(); Music.woosh();
-    clearTimeout(bombTimer); bombTimer = setTimeout(bombTurn, 6200);   /* (the bomb goes into an envelope, then they are shuffled) */
-  }
-  function bombWho() { var g = G.bomb; return g.alive[g.turn % g.alive.length]; }
-  function bombTurn() {   // the next player walks on stage and picks
+  function udRound() {
     var g = G.bomb; if (!g || G.phase !== 'bomb') return;
-    g.st = 'pick'; g.pick = -1; g.at = Date.now(); g.ends = Date.now() + BOMB_PICK_MS; push(); Music.blip();
-    var who = bombWho(), id = g.id + '-' + g.round + '-' + g.turn;
-    g.key = id;
-    if (players[who] && players[who].bot) setTimeout(function () { var left = g.env.filter(function (e) { return !e.open; }).length; bombMsg(!g.passed[who] && left <= 3 && Math.random() < .35 ? { pid: who, key: id, pass: true } : { pid: who, key: id, pick: bombRandom() }); }, 1800 + Math.random() * 1800);   /* (bots sometimes pass when it gets tense) */
-    clearTimeout(bombTimer); bombTimer = setTimeout(function () { if (G.bomb === g && g.st === 'pick' && g.key === id) bombOpen(bombRandom()); }, BOMB_PICK_MS);   // too slow: one is picked for you
-  }
-  function bombRandom() { var g = G.bomb, left = []; g.env.forEach(function (e, i) { if (!e.open) left.push(i); }); return pick(left); }
-  function bombMsg(m) {
-    var g = G.bomb; if (!g || G.phase !== 'bomb' || !m) return;
-    if (g.st === 'hide') { if (m.pid === g.hider && m.key === g.hkey && typeof m.hide === 'number' && g.env[m.hide]) { clearTimeout(bombTimer); Music.blip(); bombHide(m.hide); } return; }
-    if (g.st !== 'pick' || m.key !== g.key || m.pid !== bombWho()) return;
-    if (m.pass) {   /* once per game: pass, and the next player has to open one instead */
-      if (g.passed[m.pid] || g.alive.length < 2) return;
-      clearTimeout(bombTimer); g.passed[m.pid] = 1; g.passBy = m.pid; g.turn++; g.st = 'pass'; push(); Music.woosh();
-      bombTimer = setTimeout(bombTurn, 2600); return;
-    }
-    if (typeof m.pick !== 'number' || !g.env[m.pick] || g.env[m.pick].open) return;
-    bombOpen(m.pick);
-  }
-  function bombOpen(i) {   // the envelope is picked: a moment of suspense, then it opens
-    var g = G.bomb; if (!g) return;
-    clearTimeout(bombTimer); g.st = 'open'; g.pick = i; g.env[i].by = bombWho(); push();
-    Music.dread(true);
+    g.round++;
+    var n = g.alive.length, B = udBombs(n, g.round === 1), syms = shuffle(UD_SYMS.map(function (x, i) { return i; })).slice(0, n);
+    var holders = shuffle(g.alive.slice()), bombs = shuffle(syms.map(function (x, i) { return i; })).slice(0, B);
+    var codes = shuffle((typeof FAN_FLAGS !== 'undefined' && FAN_FLAGS.length ? FAN_FLAGS : Object.keys(countries || {})).filter(function (c) { return c.length === 2 && ['yu', 'cs', 'il'].indexOf(c) < 0; }));
+    g.env = syms.map(function (s, i) { return { s: s, h: holders[i], b: bombs.indexOf(i) >= 0, cc: codes[i % (codes.length || 1)] || 'se' }; });
+    g.lineup = g.alive.slice();   // (the columns on the big screen: one per player, fixed for the round)
+    g.fin = n === 2; g.nb = B; g.ins = !g.fin && n >= 3 ? shuffle(g.alive.slice()).slice(0, 2) : [];
+    g.ch = {}; g.sw = []; g.moves = []; g.boomed = []; g.key = g.id + '-' + g.round; g.st = 'deal'; g.ends = 0;
+    push(); Music.woosh();
+    clearTimeout(bombTimer);
     bombTimer = setTimeout(function () {
-      Music.dread(false);
-      var e = g.env[i], who = bombWho(); e.open = true;
-      if (!e.bomb) { g.st = 'safe'; Music.ding(); push(); g.turn++; bombTimer = setTimeout(bombTurn, 2600); return; }
-      g.st = 'boom'; boomSnd(); setTimeout(function () { Music.scream(); }, 300); push();
+      if (G.bomb !== g) return;
+      if (g.ins.length || (g.fin && g.out.length)) { g.st = g.fin ? 'ghosts' : 'ins'; push(); Music.ding(); udSendMap(); bombTimer = setTimeout(udDecide, 5200); }
+      else udDecide();
+    }, 4200);
+  }
+  function udWho() { var g = G.bomb; return g.fin ? g.out.slice() : g.ins.slice(); }   // who may see where the bombs are
+  function udSendMap() {
+    var g = G.bomb; if (!g || !net) return; var to = udWho(); if (!to.length) return;
+    udMapAt = Date.now();
+    net.send('bomb', { to: to, key: g.key, map: g.env.filter(function (e) { return e.b; }).map(function (e) { return e.s; }) });
+  }
+  function udDecide() {
+    var g = G.bomb; if (!g || G.phase !== 'bomb') return;
+    g.st = 'decide'; g.ends = Date.now() + UD_DECIDE; udLastSec = -1; push(); Music.blip(); udSendMap();
+    var key = g.key;
+    g.alive.forEach(function (k) {   // the bots make up their mind (and sometimes change it)
+      var p = players[k]; if (!p || !p.bot) return;
+      var e = g.env.filter(function (x) { return x.h === k; })[0], knows = g.ins.indexOf(k) >= 0;
+      var want = knows ? (e && e.b ? Math.random() < .85 : Math.random() < .12) : Math.random() < .35;
+      setTimeout(function () { bombMsg({ pid: k, key: key, c: want ? 'swap' : 'hold' }); }, 2000 + Math.random() * 14000);
+      if (Math.random() < .3) setTimeout(function () { bombMsg({ pid: k, key: key, c: Math.random() < .5 ? 'swap' : 'hold' }); }, 17000 + Math.random() * 11000);
+    });
+    clearInterval(udTickT);
+    udTickT = setInterval(function () {
+      if (G.bomb !== g || g.st !== 'decide') { clearInterval(udTickT); return; }
+      var left = g.ends - Date.now(), sec = Math.ceil(left / 1000);
+      var t = $('bombov') && $('bombov').querySelector('.utimer'); if (t) { t.textContent = Math.max(0, sec); t.classList.toggle('hot', sec <= 5); }
+      if (sec !== udLastSec) { udLastSec = sec; if (sec <= 5 && sec >= 1 && !REMOTE) Music.clock(sec); }
+      if (Date.now() - udMapAt > 4000) udSendMap();   // (a missed message: sent again)
+      if (left <= 0) { clearInterval(udTickT); udLock(); }
+    }, 200);
+  }
+  function bombMsg(m) {
+    var g = G.bomb; if (!g || G.phase !== 'bomb' || !m || m.to) return;
+    if (m.want === 'map') { if (udWho().indexOf(m.pid) >= 0) udSendMap(); return; }
+    if (g.st !== 'decide' || m.key !== g.key || g.alive.indexOf(m.pid) < 0 || (m.c !== 'swap' && m.c !== 'hold')) return;
+    g.ch[m.pid] = m.c;
+  }
+  function udLock() {
+    var g = G.bomb; if (!g || g.st !== 'decide') return;
+    clearInterval(udTickT); g.st = 'lock'; g.ends = 0;
+    g.sw = g.alive.filter(function (k) { return g.ch[k] === 'swap'; });
+    push(); Music.blip();
+    bombTimer = setTimeout(function () {
+      if (G.bomb !== g) return;
+      var S = g.sw, moves = [];
+      if (S.length >= 2) {
+        var to = S.slice();
+        if (S.length === 2) to = [S[1], S[0]];
+        else { do { to = shuffle(S.slice()); } while (to.some(function (k, i) { return k === S[i]; })); }   /* a shuffle where nobody keeps their own */
+        var held = S.map(function (k) { return g.env.filter(function (e) { return e.h === k; })[0]; });
+        held.forEach(function (e, i) { if (e) { moves.push({ s: e.s, from: S[i], to: to[i] }); e.h = to[i]; } });
+      }
+      g.moves = moves; g.st = 'swap'; push(); if (moves.length) whooshes([0, 400, 800]);
       bombTimer = setTimeout(function () {
-        g.alive.splice(g.alive.indexOf(who), 1); g.out.push(who); g.turn = g.turn % Math.max(1, g.alive.length);
-        if (g.alive.length <= 1) { bombWin(); return; }
-        bombDeal();
-      }, 3200);
-    }, 2400);
+        if (G.bomb !== g) return;
+        g.st = 'tense'; push(); if (!REMOTE) Music.dread(true, true);
+        bombTimer = setTimeout(udBoom, 3400);
+      }, moves.length ? 3600 : 2600);
+    }, 2600);
+  }
+  function udBoom() {
+    var g = G.bomb; if (!g || G.phase !== 'bomb') return;
+    if (!REMOTE) Music.dread(false);
+    g.boomed = g.env.filter(function (e) { return e.b; }).map(function (e) { return e.h; });
+    g.st = 'boom'; push();
+    if (!REMOTE) { try { yt.setVolume(18); } catch (e) {} setTimeout(function () { try { if (G.bomb === g) yt.setVolume(55); } catch (e) {} }, 3200); }
+    boomSnd(); setTimeout(function () { Music.scream(); }, 350);
+    bombTimer = setTimeout(function () {
+      if (G.bomb !== g) return;
+      g.boomed.forEach(function (k) { var i = g.alive.indexOf(k); if (i >= 0) g.alive.splice(i, 1); g.out.push(k); });
+      if (g.alive.length <= 1 || g.round >= 5) { bombWin(); return; }
+      udRound();
+    }, 5200);
   }
   var boomEl = null;
   function boomSnd() { if (REMOTE) { Music.crumble(); return; } try { if (!boomEl) boomEl = new Audio('sounds/explosion.mp3?v=1'); boomEl.currentTime = 0; boomEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = boomEl.play(); if (pr && pr.catch) pr.catch(function () { Music.crumble(); }); } catch (e) { Music.crumble(); } }   /* the envelope bomb going off */
   function bombWin() {
     var g = G.bomb, w = players[g.alive[0]], second = players[g.out[g.out.length - 1]];
     var big = 6 * partyX(), small = 3 * partyX();
-    if (w) { w.score += big; w.pts = big; } if (second) { second.score += small; second.pts = small; }
+    g.alive.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; } });   // (normally one winner; more only if five rounds ran out)
+    if (g.alive.length === 1 && second) { second.score += small; second.pts = small; }
     g.st = 'win'; g.prize = [big, small]; push(); Music.douze();
-    clearTimeout(bombTimer); bombTimer = setTimeout(function () { if (G.phase === 'bomb') { G.bomb = null; startRound(); } }, 6500);
+    clearTimeout(bombTimer); bombTimer = setTimeout(function () { if (G.phase === 'bomb') { udSong(false); G.bomb = null; startRound(); } }, 7000);
+  }
+  // "Tick-Tock" plays during the game (looped)
+  function udSong(on) {
+    clearInterval(udSongT); udSongT = null;
+    if (REMOTE) return;
+    try {
+      if (!on) { yt.pauseVideo(); return; }
+      Music.want(false); stage = 'udraw'; yt.loadVideoById({ videoId: 'slHboKF9PIQ', startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
+      udSongT = setInterval(function () {
+        if (G.phase !== 'bomb' || !G.bomb) { udSong(false); return; }
+        try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
+      }, 1500);
+    } catch (e) {}
   }
   function bombSnap() {
-    var g = G.bomb;
-    return { id: g.id, st: g.st, round: g.round, turn: bombWho(), key: g.key, passed: g.passed, passBy: g.passBy || '', hider: g.hider || '', hkey: g.hkey || '', pick: g.pick, alive: g.alive, out: g.out, left: g.st === 'pick' ? Math.max(0, g.ends - Date.now()) : 0, prize: g.prize || null,
-      env: g.env.map(function (e) { return e.open ? { open: 1, bomb: e.bomb ? 1 : 0, code: e.code, by: e.by } : { open: 0 }; }) };   // (what is inside stays on the host until it opens)
+    var g = G.bomb, open = g.st === 'boom' || g.st === 'win';
+    return { id: g.id, st: g.st, round: g.round, key: g.key, fin: g.fin ? 1 : 0, nb: g.nb, alive: g.alive, out: g.out, ins: g.ins, lineup: g.lineup,
+      left: g.st === 'decide' ? Math.max(0, g.ends - Date.now()) : 0, sw: g.st === 'decide' ? [] : g.sw, moves: g.moves, boomed: g.boomed, prize: g.prize || null,
+      env: g.env.map(function (e) { var o = { s: e.s, h: e.h }; if (open) { o.b = e.b ? 1 : 0; o.cc = e.cc; } return o; }) };   // (what is inside stays on the host until they open)
   }
-  // The big screen: the stage, the two presenters, the player whose turn it is, and the envelopes.
-  /* the deal, on the big screen: the envelopes fly in with their flaps open, a bomb drops into one of them,
-     the flaps close, and they are shuffled around (ending with the bomb where it really is) */
-  function bombDealAnim(ov, g) {
-    var box = ov.querySelector('.benvs'), n = g.env.length, B = 0; g.env.forEach(function (e, i) { if (e.bomb) B = i; });
-    box.innerHTML = g.env.map(function (e, i) { return '<div class="benv flap" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span></div>'; }).join('');
-    var els = [].slice.call(box.children), pitch = els.length > 1 ? els[1].offsetLeft - els[0].offsetLeft : 0;
-    // a run of swaps; played backwards from a scrambled start, it ends exactly in place
-    var swaps = [], k = n < 2 ? 0 : Math.min(9, 3 + n);
-    for (var s = 0; s < k; s++) { var a = Math.floor(Math.random() * n), b = (a + 1 + Math.floor(Math.random() * (n - 1))) % n; swaps.push([a, b]); }
-    var slot = []; for (var i = 0; i < n; i++) slot.push(i);   // slot[element] = where it stands
-    swaps.forEach(function (sw) { var ea = slot.indexOf(sw[0]), eb = slot.indexOf(sw[1]); slot[ea] = sw[1]; slot[eb] = sw[0]; });
-    var place = function (dur) { els.forEach(function (el, i) { el.style.transition = dur ? 'transform ' + dur + 'ms cubic-bezier(.5,0,.4,1)' : 'none'; el.style.transform = 'translateX(' + ((slot[i] - i) * pitch) + 'px)'; }); };
-    ov._anim = true; place(0); box.classList.add('dealing');
-    var bomb = document.createElement('div'); bomb.className = 'bdrop'; bomb.textContent = '💣'; box.appendChild(bomb);
-    var at = function (ms, f) { setTimeout(function () { if (ov.isConnected) f(); }, ms); };
-    at(900, function () { bomb.style.left = (els[B].offsetLeft + slot[B] * pitch - B * pitch + els[B].offsetWidth / 2) + 'px'; bomb.classList.add('fall'); Music.blip(); });   // the bomb drops in…
-    at(1900, function () { bomb.remove(); els[B].classList.add('thud'); Music.plop(1); });
-    at(2300, function () { els.forEach(function (el) { el.classList.remove('flap', 'thud'); }); Music.woosh(); });   // …the flaps close…
-    var t = 2800, step = Math.max(240, Math.min(420, 2600 / Math.max(1, k)));
-    swaps.slice().reverse().forEach(function (sw) {   // …and they are shuffled
-      at(t, function () { var ea = slot.indexOf(sw[0]), eb = slot.indexOf(sw[1]); slot[ea] = sw[1]; slot[eb] = sw[0]; place(step - 30); els[ea].classList.add('hop'); els[eb].classList.add('hop'); setTimeout(function () { els[ea].classList.remove('hop'); els[eb].classList.remove('hop'); }, step); Music.plop(2 + (sw[0] % 5)); });
-      t += step;
-    });
-    at(t + 250, function () { ov._anim = false; box.classList.remove('dealing'); els.forEach(function (el) { el.style.transition = 'none'; el.style.transform = ''; }); bombShow(); });
-  }
+  // The big screen: the presenters, one column per player with their envelope above them, the ghosts above.
+  function udNames(a) { var n = a.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).filter(Boolean); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0] || ''; }
   function bombShow() {
     var g = G.bomb; if (!g) return;
-    var ov = $('bombov'); if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov enter'; whooshes([0, 350, 700]); (function (o) { setTimeout(function () { o.classList.remove('enter'); }, 2600); })(ov); ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="bplayer"></div><div class="benvs"></div><div class="bstrip"></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
-    var who = players[bombWho()], cur = g.st === 'win' ? players[g.alive[0]] : who;
-    ov.setAttribute('data-st', g.st);
-    ov.querySelector('.bhead').innerHTML = '💌 The Envelope, Please <small>' + (g.alive.length) + ' still in · round ' + g.round + '</small>';
-    var bp = ov.querySelector('.bplayer');   // the player on stage walks in once per turn (not on every update)
-    if (cur && bp.getAttribute('data-k') !== cur.pid + '|' + g.round + '|' + g.turn) { bp.setAttribute('data-k', cur.pid + '|' + g.round + '|' + g.turn); bp.innerHTML = '<div class="bme">' + charSvg(cur.char) + '<b>' + esc(cur.name) + '</b></div>'; }
-    if (!cur) { bp.innerHTML = ''; bp.removeAttribute('data-k'); }
-    var bme = bp.querySelector('.bme'); if (bme) { bme.classList.toggle('boom', g.st === 'boom'); bme.classList.toggle('win', g.st === 'win'); }
-    ov.querySelector('.benvs').style.setProperty('--n', g.env.length);   // (all envelopes in one row, however many)
-    if (g.st === 'deal' && g.dealN && g.env.length && ov._dealt !== g.id + ':' + g.dealN) { ov._dealt = g.id + ':' + g.dealN; bombDealAnim(ov, g); }
-    if (!ov._anim) ov.querySelector('.benvs').innerHTML = g.env.map(function (e, i) {
-      var cls = 'benv' + (e.open ? ' open' + (e.bomb ? ' bomb' : ' flag') : '') + (g.pick === i && !e.open ? ' picked' : '');
-      return '<div class="' + cls + '" style="--i:' + i + '"><span class="bno">' + (i + 1) + '</span>' + (e.open ? (e.bomb ? '<span class="bin">💣</span>' : '<span class="bin"><img class="bflag" src="https://flagcdn.com/w160/' + e.code + '.png" alt=""></span><small>' + esc(countries[e.code] || '') + '</small>') : '') + '</div>';
-    }).join('');
-    ov.querySelector('.bstrip').innerHTML = g.alive.concat(g.out).map(function (k) { var p = players[k]; if (!p) return ''; var o = g.out.indexOf(k) >= 0; return '<span class="bps' + (o ? ' out' : '') + (k === bombWho() && g.st !== 'win' ? ' now' : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + (o ? ' 💥' : '') + '</i></span>'; }).join('');
-    var e = g.pick >= 0 ? g.env[g.pick] : null, nm = cur ? cur.name : '';
-    ov.querySelector('.bmsg').innerHTML = g.st === 'hide' ? '😈 ' + esc(players[g.hider] ? players[g.hider].name : '') + ' gets revenge: hiding the bomb in one of the new envelopes…' : g.st === 'deal' ? (g.round > 1 ? 'New envelopes! One of them hides a bomb…' : 'One of these envelopes hides a bomb…')
-      : g.st === 'pass' ? '🙅 ' + esc(players[g.passBy] ? players[g.passBy].name : '') + ' passes! Your turn, ' + esc(nm) + '…'
-      : g.st === 'pick' ? esc(nm) + ', pick an envelope on your phone!'
-      : g.st === 'open' ? 'Envelope ' + (g.pick + 1) + '… the envelope, please!'
-      : g.st === 'safe' ? 'Phew! ' + esc(countries[e.code] || '') + ': ' + esc(nm) + ' is safe!'
-      : g.st === 'boom' ? '💥 BOOM! ' + esc(nm) + ' is out!'
-      : g.st === 'win' ? '🏆 ' + esc(nm) + ' is the last one standing!' + (shopOn() ? '' : ' +' + g.prize[0] + (g.out.length && players[g.out[g.out.length - 1]] ? ' · ' + esc(players[g.out[g.out.length - 1]].name) + ' +' + g.prize[1] : '')) : '';
+    var ov = $('bombov');
+    if (!ov) { ov = document.createElement('div'); ov.id = 'bombov'; ov.className = 'bombov udov enter'; whooshes([0, 350, 700]); (function (o) { setTimeout(function () { o.classList.remove('enter'); }, 2600); })(ov); ov.innerHTML = '<div class="bbeams"><i></i><i></i><i></i><i></i></div><div class="bfloor"></div><div class="bhosts">' + HOST_HIM + HOST_HER + '</div><div class="bhead"></div><div class="ughosts"></div><div class="utimer"></div><div class="ustage"><div class="ucols"></div><div class="uenvs"></div></div><div class="bmsg"></div>'; document.body.appendChild(ov); }
+    ov.setAttribute('data-st', g.st); ov.classList.toggle('fin', !!g.fin);
+    ov.querySelector('.bhead').innerHTML = '💣 The Unlucky Draw <small>' + (g.fin ? '👻 Ghost Finale' : 'Round ' + g.round) + ' · ' + g.lineup.length + ' players · ' + g.nb + (g.nb === 1 ? ' bomb' : ' bombs') + '</small>';
+    var n = g.lineup.length, col = function (k) { var i = g.lineup.indexOf(k); return (i + 0.5) / Math.max(1, n) * 100; };
+    var st = ov.querySelector('.ustage'); st.style.setProperty('--n', n);
+    if (st.getAttribute('data-k') !== g.key) {   // a new round: new columns and envelopes
+      st.setAttribute('data-k', g.key);
+      ov.querySelector('.ucols').innerHTML = g.lineup.map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="ucol" data-p="' + k + '" style="left:' + col(k) + '%;--i:' + i + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="uins">🕵️ Insider</em></div>'; }).join('');
+      ov.querySelector('.uenvs').innerHTML = g.env.map(function (e, i) { var sy = UD_SYMS[e.s]; return '<div class="uenv" data-s="' + e.s + '" style="left:' + col(e.h) + '%;--c:' + sy[1] + ';--i:' + i + '"><span class="usym">' + sy[0] + '</span><span class="uin"></span></div>'; }).join('');
+    }
+    [].forEach.call(ov.querySelectorAll('.ucol'), function (c) {
+      var k = c.getAttribute('data-p');
+      c.classList.toggle('u-ins', g.ins.indexOf(k) >= 0 && g.st !== 'deal');
+      c.classList.toggle('u-sw', g.sw.indexOf(k) >= 0 && (g.st === 'lock' || g.st === 'swap'));
+      c.classList.toggle('u-dead', g.boomed.indexOf(k) >= 0 && (g.st === 'boom' || g.st === 'win'));
+      c.classList.toggle('u-win', g.st === 'win' && g.alive.indexOf(k) >= 0);
+    });
+    g.env.forEach(function (e) {
+      var el = ov.querySelector('.uenv[data-s="' + e.s + '"]'); if (!el) return;
+      var x = String(e.h); if (el.getAttribute('data-h') !== x) { var first = !el.getAttribute('data-h'); el.setAttribute('data-h', x); el.style.left = col(e.h) + '%'; if (!first) { el.classList.remove('u-fly'); void el.offsetWidth; el.classList.add('u-fly'); } }
+      el.classList.toggle('u-sw', g.sw.indexOf(e.h) >= 0 && g.st === 'lock');
+      var open = g.st === 'boom' || g.st === 'win';
+      el.classList.toggle('u-open', open); el.classList.toggle('u-bomb', open && e.b); el.classList.toggle('u-flag', open && !e.b);
+      el.querySelector('.uin').innerHTML = open ? (e.b ? '💥' : '<img src="https://flagcdn.com/w160/' + e.cc + '.png" alt="">') : '';
+    });
+    ov.querySelector('.ughosts').innerHTML = g.out.length ? '<span class="ugt">👻 Ghosts</span>' + g.out.map(function (k) { var p = players[k]; return p ? '<span class="ugh">' + charSvg(p.char) + '<i>' + esc(p.name) + '</i></span>' : ''; }).join('') : '';
+    var tm = ov.querySelector('.utimer'); tm.classList.toggle('on', g.st === 'decide'); if (g.st === 'decide') { var sec = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)); tm.textContent = sec; tm.classList.toggle('hot', sec <= 5); }
+    var sw = g.sw.length, msg = '';
+    if (g.st === 'deal') msg = (g.fin ? '👻 The Ghost Finale! Two envelopes, one bomb…' : g.round === 1 ? 'Everyone gets an envelope… ' + g.nb + ' of them hide a bomb! 💣' : 'Fresh envelopes! ' + g.nb + (g.nb === 1 ? ' of them hides a bomb…' : ' of them hide a bomb…'));
+    else if (g.st === 'ins') msg = '🕵️ Our Insiders ' + udNames(g.ins) + ' know where the bombs are! Will they tell the truth? 🤫';
+    else if (g.st === 'ghosts') msg = '👻 The ghosts know where the bomb is… the finalists don’t! Ghosts, start whispering!';
+    else if (g.st === 'decide') msg = 'HOLD or SWAP? Choose on your phone! Talk, bluff, plead… 🗣️';
+    else if (g.st === 'lock') msg = sw === 0 ? '🔒 Locked! Nobody wants to swap…' : sw === 1 ? '🔒 Locked! Only ' + udNames(g.sw) + ' wants to swap… nothing moves!' : '🔒 Locked! ' + udNames(g.sw) + ' want to swap!';
+    else if (g.st === 'swap') msg = g.moves.length ? '🔀 Swapping envelopes…' : 'The envelopes stay where they are.';
+    else if (g.st === 'tense') msg = '😬 Open your envelopes… on three…';
+    else if (g.st === 'boom') msg = '💥 BOOM! ' + udNames(g.boomed) + (g.boomed.length > 1 ? ' are' : ' is') + ' out!';
+    else if (g.st === 'win') { var w = g.alive; msg = '🏆 ' + udNames(w) + (w.length > 1 ? ' survive!' : ' survives the Unlucky Draw!') + (shopOn() || !g.prize ? '' : ' +' + g.prize[0]); }
+    ov.querySelector('.bmsg').innerHTML = msg;
   }
   net.on('bomb', bombMsg);
   net.on('clue', clueMsg);
@@ -3750,12 +3790,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'Then all the translations appear, with the real one hidden among them.'],
         ['her', 'Find the real one for 12 points…'],
         ['him', '…and get 2 points for every player who falls for your fake! Three rounds, most points wins. Good luck, liars! 🤥']] },
-    bomb: { sign: '💌 The Envelope, Please', theme: 'bomb',
+    bomb: { sign: '💣 The Unlucky Draw', theme: 'bomb',
       art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
-      lines: [['him', 'Psst… the live show starts soon, and we still need to rehearse the big envelope moment! 💌'],
-        ['her', 'Will you help us train? One by one you come on stage and open an envelope, on your phone.'],
-        ['him', 'Most envelopes hold a flag… but someone sneaked a bomb into one of them! 💣'],
-        ['her', 'Open the bomb and you’re out. Then a fresh set, until only one of you is left. The last one standing wins!']] }
+      lines: [['him', 'Welcome to The Unlucky Draw! Everyone gets an envelope with a symbol on it. 💌'],
+        ['her', 'Most envelopes hide a flag… but some hide a bomb! 💣'],
+        ['him', 'You get 30 seconds to choose on your phone: HOLD your envelope, or SWAP it. You can change your mind until the time runs out.'],
+        ['her', 'Two Insiders know exactly where the bombs are. Trust them… or don’t! 🕵️'],
+        ['him', 'Then all envelopes open at once. BOOM, and you’re out!'],
+        ['her', 'In the Ghost Finale, only the eliminated ghosts know where the last bomb is. Survive to win! 👻']] }
   };
   function hostScene(kind, then) {
     var sc = SCENES[kind], f = FUN[kind]; if (!sc || REMOTE) { funIntro(kind, then, 8000); return; }

@@ -139,6 +139,7 @@
       if (d && d.batch && d.best) { bestTake(d); return; }
       if (!d || !d.batch || !state || !state.draw || d.pid !== state.draw.pid) return; if (d.first) drawClear($('pdraw')); d.batch.forEach(function (m) { drawPaint($('pdraw'), m); }); });
     net.on('result', onResult);
+    net.on('bomb', udOnMap);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
       if (kicked) return;
@@ -183,7 +184,7 @@
     if (s && s.players) charCC(s.players);
     onState2(s);
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
-    if (s.phase !== 'bomb' || !s.bomb || s.bomb.st !== 'pick' || s.bomb.turn !== pid) $('bombui').classList.add('hidden');
+    if (s.phase !== 'bomb' || !s.bomb) $('bombui').classList.add('hidden');
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (!(s.phase === 'note' && s.note && s.note.st === 'guess')) $('noteui').classList.add('hidden');
     if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'show' || s.qj.st === 'input'))) $('qjui').classList.add('hidden');
@@ -195,7 +196,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -408,51 +409,67 @@
   }
 
 
-  // ---------- The Envelope, Please ----------
-  var bombSent = '';
-  function bombName(s, k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }
+  // ---------- The Unlucky Draw ----------
+  // Your envelope, HOLD or SWAP (changeable until zero), and, for Insiders (or ghosts in the finale), where the bombs are.
+  var udMap = null, udPick = {}, udKey = '', udTimerT = null, udEnd = 0, udAsk = 0, udResend = 0;
+  function udName(s, k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }
+  function udNames(s, a) { var n = a.map(function (k) { return udName(s, k); }).filter(Boolean); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0] || ''; }
+  function udEnvHtml(sym, big) { var y = UD_SYMS[sym] || ['?', '#fff']; return '<span class="udenv' + (big ? ' big' : '') + '" style="--c:' + y[1] + '"><b>' + y[0] + '</b></span>'; }
+  function udOnMap(m) { if (!m || !m.to || m.to.indexOf(pid) < 0) return; if (udMap && udMap.key === m.key) return; udMap = m; if (state && state.phase === 'bomb' && state.bomb) bombView(state); }
+  function udSend(b) { if (!net) return; net.send('bomb', { pid: pid, key: b.key, c: udPick[b.key] || 'hold' }); udResend = Date.now(); }
   function bombView(s) {
-    var b = s.bomb, mine = b.turn === pid, out = b.out.indexOf(pid) >= 0, box = $('bombui');
-    show('v-wait');
-    if (b.st === 'hide' && b.hider === pid) {   /* you just blew up: you choose where the next bomb goes */
-      $('waittitle').textContent = '😈 Revenge!'; $('waitsub').textContent = bombSent === b.hkey ? 'The bomb is hidden. Now watch them sweat…' : 'Choose which envelope gets the next bomb. Nobody else knows!';
-      box.classList.remove('hidden');
-      var hk = b.hkey + '|' + bombSent;
-      if (box.getAttribute('data-k') === hk && box.innerHTML) return; box.setAttribute('data-k', hk);
-      box.innerHTML = b.env.map(function (e, i) { return '<button type="button" class="benvbtn" data-i="' + i + '"' + (bombSent === b.hkey ? ' disabled' : '') + '>💣<b>' + (i + 1) + '</b></button>'; }).join('');
-      [].forEach.call(box.querySelectorAll('.benvbtn:not([disabled])'), function (btn) { btn.onclick = function () {
-        if (!net || bombSent === b.hkey) return; bombSent = b.hkey; var msg = { pid: pid, key: b.hkey, hide: +btn.getAttribute('data-i') };
-        net.send('bomb', msg); setTimeout(function () { if (state && state.bomb && state.bomb.st === 'hide' && state.bomb.hkey === msg.key) net.send('bomb', msg); }, 1500);
+    var b = s.bomb, box = $('bombui'), alive = b.alive.indexOf(pid) >= 0, ghost = b.out.indexOf(pid) >= 0, ins = b.ins.indexOf(pid) >= 0;
+    var mine = b.env.filter(function (e) { return e.h === pid; })[0], knows = (b.fin ? ghost : ins);
+    show('v-wait'); $('waitlabel').textContent = '';
+    if (knows && (!udMap || udMap.key !== b.key) && Date.now() - udAsk > 2000 && net && ['ins', 'ghosts', 'decide', 'lock', 'swap', 'tense'].indexOf(b.st) >= 0) { udAsk = Date.now(); net.send('bomb', { pid: pid, want: 'map', key: b.key }); }
+    var map = knows && udMap && udMap.key === b.key ? udMap.map : null;
+    var choice = udPick[b.key] || 'hold';
+    if (b.st === 'decide') {
+      udEnd = Date.now() + (b.left || 0);
+      if (alive && Date.now() - udResend > 3000) udSend(b);   /* (sent again now and then: a lost message would otherwise count as HOLD) */
+    }
+    var head = '', sub = '', body = '';
+    var mapHtml = map ? '<div class="udmap"><div class="udmapt">' + (b.fin ? '👻 Only the ghosts know:' : '🕵️ Top secret: where the bombs are') + '</div>' + b.env.map(function (e) { var bm = map.indexOf(e.s) >= 0; return '<span class="udm' + (bm ? ' bomb' : '') + '">' + udEnvHtml(e.s) + '<i>' + esc(e.h === pid ? 'You' : udName(s, e.h)) + '</i><em>' + (bm ? '💣' : '🏳️') + '</em></span>'; }).join('') + '</div>' : (knows ? '<div class="udmap"><div class="udmapt">Receiving the secret map…</div></div>' : '');
+    if (b.st === 'win') { var w = b.alive.indexOf(pid) >= 0; head = w ? '🏆 You survived!' : '🏆 ' + udNames(s, b.alive) + (b.alive.length > 1 ? ' survive!' : ' wins!'); sub = w ? 'The last one standing in The Unlucky Draw!' : 'Watch the big screen!'; }
+    else if (b.st === 'boom') {
+      var hit = b.boomed.indexOf(pid) >= 0;
+      head = hit ? '💥 BOOM! You are out' : alive ? '🏳️ Phew, a flag!' : '💥 BOOM!';
+      sub = hit ? 'You’re a ghost now 👻 If there’s a Ghost Finale, you’ll know where the bomb is!' : alive ? 'You survive this round.' : udNames(s, b.boomed) + (b.boomed.length > 1 ? ' are' : ' is') + ' out!';
+      if (mine) body = '<div class="udme">' + udEnvHtml(mine.s, true) + '<span class="udopen">' + (hit ? '💥' : '🏳️') + '</span></div>';
+    }
+    else if (ghost) {
+      head = '👻 You are a ghost'; sub = b.fin ? (b.st === 'deal' ? 'The Ghost Finale is starting… you’ll see where the bomb is!' : 'You know where the bomb is. Whisper it to the finalists… or lie! 😈') : 'Watch the others sweat on the big screen.';
+      body = mapHtml;
+    }
+    else if (!alive) { head = '💣 The Unlucky Draw'; sub = 'Watch the big screen!'; }
+    else {
+      var sym = mine ? mine.s : -1;
+      if (b.st === 'deal') { head = b.fin ? '👻 Ghost Finale!' : '💌 Round ' + b.round; sub = 'This is your envelope. ' + b.nb + (b.nb === 1 ? ' bomb is' : ' bombs are') + ' hidden in this round…'; }
+      else if (b.st === 'ins' || b.st === 'ghosts') { head = ins ? '🕵️ You are an Insider!' : b.fin ? '👻 The ghosts know…' : '🕵️ Insiders: ' + udNames(s, b.ins); sub = ins ? 'You know where the bombs are. Tell the truth… or not! 😏' : b.fin ? 'The ghosts know where the bomb is. Do you trust them?' : 'They know where the bombs are. Do you trust them?'; }
+      else if (b.st === 'decide') { head = 'HOLD or SWAP?'; sub = ins ? 'You know where the bombs are. Bluff away!' : 'You can change your mind until zero.'; }
+      else if (b.st === 'lock') { head = '🔒 Locked: ' + (choice === 'swap' ? '🔀 SWAP' : '✋ HOLD'); sub = 'Watch the big screen…'; }
+      else if (b.st === 'swap') { var mv = b.moves.filter(function (m) { return m.to === pid; })[0]; head = mv ? '🔀 You got a new envelope!' : '✋ You keep your envelope'; sub = 'Watch the big screen…'; }
+      else if (b.st === 'tense') { head = '😬 Opening…'; sub = 'Fingers crossed!'; }
+      body = '<div class="udme">' + (sym >= 0 ? udEnvHtml(sym, true) : '') + '<small>Your envelope</small></div>';
+      if (b.st === 'decide') body += '<div class="udcount">' + Math.max(0, Math.ceil((udEnd - Date.now()) / 1000)) + '</div><div class="udbtns"><button type="button" class="udb hold' + (choice === 'hold' ? ' on' : '') + '" data-c="hold">✋ HOLD</button><button type="button" class="udb swap' + (choice === 'swap' ? ' on' : '') + '" data-c="swap">🔀 SWAP</button></div><p class="udnow">Your choice: <b>' + (choice === 'swap' ? 'SWAP' : 'HOLD') + '</b></p>';
+      if (ins) body += mapHtml;
+    }
+    $('waittitle').textContent = head; $('waitsub').textContent = sub;
+    var key = b.key + '|' + b.st + '|' + choice + '|' + (map ? 1 : 0) + '|' + (mine ? mine.s : '') + '|' + b.alive.length;
+    box.classList.toggle('hidden', !body);
+    if (box.getAttribute('data-k') !== key) {
+      box.setAttribute('data-k', key); box.innerHTML = body;
+      [].forEach.call(box.querySelectorAll('.udb'), function (btn) { btn.onclick = function () {
+        var st = state && state.bomb; if (!st || st.st !== 'decide' || st.key !== b.key) return;
+        udPick[b.key] = btn.getAttribute('data-c'); udSend(st); try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
         bombView(state);
       }; });
-      return;
     }
-    if (b.st === 'pick' && mine) {
-      var canPass = !(b.passed || {})[pid] && b.alive.length > 1;
-      $('waittitle').textContent = '💌 Your turn!'; $('waitsub').textContent = 'Pick an envelope. One of them hides a bomb…' + (canPass ? ' Or pass, once per game!' : '');
-      box.classList.remove('hidden');
-      var bk = b.key + '|' + bombSent + '|' + canPass + '|' + b.env.map(function (e) { return e.open ? 1 : 0; }).join('');
-      if (box.getAttribute('data-k') === bk && box.innerHTML) return; box.setAttribute('data-k', bk);   // nothing changed: no redraw
-      box.innerHTML = b.env.map(function (e, i) { return '<button type="button" class="benvbtn' + (e.open ? ' open' : '') + '" data-i="' + i + '"' + (e.open || bombSent === b.key ? ' disabled' : '') + '>' + (e.open ? (e.bomb ? '💣' : flag(e.code)) : '✉️') + '<b>' + (i + 1) + '</b></button>'; }).join('');
-      if (canPass) {   /* the one-time pass: the next player has to open one instead */
-        box.insertAdjacentHTML('beforeend', '<button type="button" class="btn big bpassbtn"' + (bombSent === b.key ? ' disabled' : '') + '>🙅 Pass <small>(once per game)</small></button>');
-        box.querySelector('.bpassbtn').onclick = function () {
-          if (!net || bombSent === b.key) return; bombSent = b.key; var msg = { pid: pid, key: b.key, pass: true };
-          net.send('bomb', msg); setTimeout(function () { if (state && state.bomb && state.bomb.st === 'pick' && state.bomb.key === msg.key) net.send('bomb', msg); }, 1500);
-          bombView(state);
-        };
-      }
-      [].forEach.call(box.querySelectorAll('.benvbtn:not([disabled])'), function (btn) { btn.onclick = function () {
-        if (!net || bombSent === b.key) return; bombSent = b.key; var msg = { pid: pid, key: b.key, pick: +btn.getAttribute('data-i') };
-        net.send('bomb', msg); setTimeout(function () { if (state && state.bomb && state.bomb.st === 'pick' && state.bomb.key === msg.key) net.send('bomb', msg); }, 1500);
-        bombView(state);
-      }; });
-      return;
-    }
-    box.classList.add('hidden');
-    var nm = bombName(s, b.turn);
-    $('waittitle').textContent = b.st === 'win' ? (b.alive[0] === pid ? '🏆 You win!' : '🏆 ' + bombName(s, b.alive[0]) + ' wins!') : b.st === 'boom' ? (mine ? '💥 BOOM! You are out' : '💥 ' + nm + ' blew up!') : b.st === 'hide' ? '😈 ' + bombName(s, b.hider) + ' is hiding the bomb…' : b.st === 'pass' ? (b.passBy === pid ? '🙅 You passed!' : mine ? '😬 ' + bombName(s, b.passBy) + ' passed: your turn!' : '🙅 ' + bombName(s, b.passBy) + ' passed!') : out ? '💥 You blew up' : b.st === 'safe' ? (mine ? 'Phew, safe!' : nm + ' is safe') : b.st === 'open' ? 'Opening envelope ' + (b.pick + 1) + '…' : b.st === 'pick' ? nm + ' is picking…' : '💌 The Envelope, Please';
-    $('waitsub').textContent = out && b.st !== 'win' ? 'Watch the others sweat on the big screen.' : b.st === 'deal' ? 'New envelopes are coming out. One hides a bomb.' : 'Watch the big screen!';
+    clearInterval(udTimerT);
+    if (b.st === 'decide' && alive) udTimerT = setInterval(function () {
+      var c = box.querySelector('.udcount'); if (!c || !state || state.phase !== 'bomb') { clearInterval(udTimerT); return; }
+      var sec = Math.max(0, Math.ceil((udEnd - Date.now()) / 1000)); c.textContent = sec; c.classList.toggle('hot', sec <= 5);
+    }, 250);
   }
 
   // ---------- Where the Hell Is Edgar? ----------
