@@ -835,88 +835,118 @@
   }
   function edRun(room) {
     var box = $('edui'); edClear(); box.classList.remove('hidden'); $('clueui').classList.add('hidden');
-    var safety = setTimeout(function () { if (edCur === room) { var f = box._score; edFinish(room, typeof f === 'function' ? f() : 0); } }, 42000); edT.push(safety);
-    box._score = null;
-    if (room === 'green') edGreen(box); else if (room === 'club') edClub(box); else if (room === 'back') edBack(box); else edBoud(box);
+    var sc = state && state.clue && state.clue.scene; box._score = null;
+    if (!sc) { edFinish(room, 0); return; }
+    edQuiz(box, room, sc[room]);
   }
-  // Green Room: four contestants on six seats; a fridge on wheels keeps rolling past. Then: who sat where?
-  function edGreen(box) {
-    var ppl = shuffle([['🎤', 'Zara', '#ff5a8a'], ['🎸', 'Milo', '#3fb6ff'], ['🥁', 'Ines', '#ffd23f'], ['🎹', 'Bram', '#3ddc84'], ['🎻', 'Noor', '#c58bff'], ['🎷', 'Kai', '#ff9f1c']]).slice(0, 4);
-    var seats = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 4), placed = {}, sel = -1;
-    $('waittitle').textContent = '🛋️ Green Room'; $('waitsub').textContent = 'Remember who sits where! (Watch out for the fridge…)';
-    var seatHtml = function (show) { var h = ''; for (var i = 0; i < 6; i++) { var w = show ? seats.indexOf(i) : -1, pl = !show ? Object.keys(placed).filter(function (k) { return placed[k] === i; })[0] : null, pp = w >= 0 ? ppl[w] : pl != null ? ppl[pl] : null; h += '<button type="button" class="edseat" data-s="' + i + '">' + (pp ? '<span class="edpp" style="--c:' + pp[2] + '">' + pp[0] + '<b>' + pp[1] + '</b></span>' : '') + '</button>'; } return h; };
-    box.innerHTML = '<div class="edbar"><i></i></div><div class="edsofa">' + seatHtml(true) + '<div class="edfridge">🧊<b>FRIDGE</b></div></div>';
-    box.querySelector('.edbar i').style.animation = 'edbar 7s linear forwards';
-    edLater(function () {
-      $('waitsub').textContent = 'Who sat where? Tap a contestant, then a seat.';
-      var draw = function () {
-        box.innerHTML = '<div class="edsofa">' + seatHtml(false) + '</div><div class="edchips">' + ppl.map(function (p, i) { return '<button type="button" class="edchip' + (sel === i ? ' sel' : '') + (placed[i] != null ? ' used' : '') + '" data-i="' + i + '" style="--c:' + p[2] + '">' + p[0] + ' ' + p[1] + '</button>'; }).join('') + '</div><button type="button" class="btn big eddone"' + (Object.keys(placed).length === 4 ? '' : ' disabled') + '>✅ Done</button>';
-        [].forEach.call(box.querySelectorAll('.edchip'), function (b) { b.onclick = function () { sel = +b.getAttribute('data-i'); draw(); }; });
-        [].forEach.call(box.querySelectorAll('.edseat'), function (b) { b.onclick = function () { var st = +b.getAttribute('data-s'); Object.keys(placed).forEach(function (k) { if (placed[k] === st) delete placed[k]; }); if (sel >= 0) { placed[sel] = st; sel = -1; } draw(); }; });
-        box.querySelector('.eddone').onclick = function () { edFinish('green', box._score()); };
-      };
-      box._score = function () { var ok = ppl.filter(function (p, i) { return placed[i] === seats[i]; }).length; return ok === 4 ? 2 : ok >= 2 ? 1 : 0; };
-      draw();
-    }, 7000);
+  // Every room: three questions about what's in that room on the big screen. The first is a little job (type the code,
+  // copy the light floor, set the fuses, hang the dresses in order); then two picked from a few questions.
+  var ED_NAME = { red: 'red', blue: 'blue', yellow: 'yellow', green: 'green', purple: 'purple', orange: 'orange', pink: 'pink', black: 'black', blonde: 'blonde', brown: 'brown', teal: 'turquoise', white: 'white', gold: 'gold' };
+  var ED_HEX = { red: '#e53950', blue: '#2f80ed', yellow: '#f2c12e', green: '#27ae60', purple: '#9b51e0', orange: '#f2994a', pink: '#ff6fb5', black: '#26262e', blonde: '#f0d070', brown: '#7a4a2a', teal: '#1fc8c8', white: '#f4f4f8', gold: '#d9a520' };
+  var ED_ORD = ['1st', '2nd', '3rd', '4th', '5th'];
+  function edNums(ans, lo, hi) { var o = [ans], n = 0; while (o.length < 4 && n++ < 200) { var x = ans + [-2, -1, 1, 2, 3, -3][Math.floor(Math.random() * 6)]; if (x >= lo && x <= hi && o.indexOf(x) < 0) o.push(x); } return shuffle(o).map(String); }
+  function edPickOpts(ans, pool) { var o = [ans]; shuffle(pool.slice()).forEach(function (x) { if (o.length < 4 && o.indexOf(x) < 0) o.push(x); }); return shuffle(o); }
+  var ED_COLS = ['red', 'blue', 'yellow', 'green', 'purple', 'orange', 'pink', 'black', 'teal', 'white'];
+  function edQs(room, s) {
+    var mc = [];
+    if (room === 'green') {
+      var tm = function (h, m) { return h + ':' + (m < 10 ? '0' : '') + m; }, t0 = tm(s.clock[0], s.clock[1]), sit = pick(s.sitters);
+      mc = [
+        { q: 'How many cans are in the fridge?', a: String(s.cans.length), o: edNums(s.cans.length, 1, 12) },
+        { q: 'What time does the clock say?', a: t0, o: edPickOpts(t0, [tm(s.clock[0] % 12 + 1, s.clock[1]), tm(s.clock[0], (s.clock[1] + 15) % 60), tm((s.clock[0] + 5) % 12 + 1, s.clock[1]), tm(s.clock[1] / 5 || 12, s.clock[0] * 5 % 60)]) },
+        { q: 'How many slices of pizza are left?', a: String(s.pizza), o: edNums(s.pizza, 1, 8) },
+        { q: 'What hair colour has the person in the ' + s.seats[sit.seat] + ' chair?', a: sit.hair, o: edPickOpts(sit.hair, ['blonde', 'pink', 'black', 'red', 'blue', 'brown']), col: 1 },
+        { q: 'How many gold records hang on the wall?', a: String(s.records), o: edNums(s.records, 1, 6) },
+        { q: 'How many people are sitting down?', a: String(s.sitters.length), o: edNums(s.sitters.length, 1, 5) }
+      ];
+      return [{ t: 'code', q: 'Edgar’s suitcase is locked! Type the code from the sticky note on the mirror.', a: s.code }].concat(shuffle(mc).slice(0, 2));
+    }
+    if (room === 'club') {
+      var n = Math.floor(Math.random() * 5);
+      mc = [
+        { q: 'How many disco balls hang from the ceiling?', a: String(s.balls), o: edNums(s.balls, 1, 7) },
+        { q: 'Which song is number ' + (n + 1) + ' on the setlist?', a: s.setlist[n], o: edPickOpts(s.setlist[n], s.setlist) },
+        { q: 'What does the neon sign say?', a: s.neon, o: edPickOpts(s.neon, ['DOUZE', 'PARTY', 'ENCORE', 'DANCE', 'GLAM', 'LOVE']) },
+        { q: 'How many dancers (in colour) are on the floor?', a: String(s.dancers), o: edNums(s.dancers, 1, 7) },
+        { q: 'What colour is the DJ’s jacket?', a: s.jacket, o: edPickOpts(s.jacket, ['purple', 'blue', 'green', 'red', 'gold']), col: 1 }
+      ];
+      return [{ t: 'syms', q: 'The DJ booth lights up five symbols. Tap them in the same order, left to right!', a: s.panel }].concat(shuffle(mc).slice(0, 2));
+    }
+    if (room === 'back') {
+      var k = pick(s.cases), m = Math.floor(Math.random() * 5);
+      mc = [
+        { q: 'What code is on the ' + k.c + ' flight case?', a: k.code, o: edPickOpts(k.code, s.cases.map(function (x) { return x.code; })) },
+        { q: 'How many spotlights hang from the truss?', a: String(s.spots), o: edNums(s.spots, 1, 9) },
+        { q: 'Who is ' + ED_ORD[m] + ' in the running order?', a: s.order[m], o: edPickOpts(s.order[m], s.order) },
+        { q: 'How many guitars are there?', a: String(s.guitars), o: edNums(s.guitars, 1, 5) }
+      ];
+      return [{ t: 'plug', q: 'Plug every cable into the same socket as on the big screen!', a: s }].concat(shuffle(mc).slice(0, 2));
+    }
+    var d = pick(s.rack), w = Math.floor(Math.random() * 4);
+    mc = [
+      { q: 'What does the ' + d.c + ' dress on the rack cost?', a: '€' + d.p, o: edPickOpts('€' + d.p, s.rack.map(function (x) { return '€' + x.p; })) },
+      { q: 'What colour is the ' + ED_ORD[w] + ' wig from the left?', a: s.wigs[w], o: edPickOpts(s.wigs[w], s.wigs), col: 1 },
+      { q: 'What is written in lipstick on the mirror?', a: s.word, o: edPickOpts(s.word, ['KISS', 'DIVA', 'FAB', 'WOW', 'GLAM', 'ICON']) },
+      { q: 'How many perfume bottles are on the dressing table?', a: String(s.perfume), o: edNums(s.perfume, 1, 8) },
+      { q: 'What colour is the woman’s dress?', a: s.woman.dress, o: edPickOpts(s.woman.dress, ['red', 'blue', 'green', 'yellow', 'purple', 'orange']), col: 1 },
+      { q: 'What colour is the man’s suit?', a: s.man.suit, o: edPickOpts(s.man.suit, ['red', 'blue', 'green', 'yellow', 'purple', 'orange']), col: 1 },
+      { q: 'What colour is the child’s hair?', a: s.child.hair, o: edPickOpts(s.child.hair, ['orange', 'blonde', 'brown', 'black']), col: 1 },
+      { q: 'What colour is the woman’s feather boa?', a: s.woman.boa, o: edPickOpts(s.woman.boa, ['pink', 'white', 'teal', 'yellow']), col: 1 }
+    ];
+    return [{ t: 'rack', q: 'Hang the dresses back on the rack in the same order, from left to right!', a: s.rack.map(function (x) { return x.c; }) }].concat(shuffle(mc).slice(0, 2));
   }
-  // Euroclub: DJ Konstantin dances, the disco ball warns, then five sound symbols, one at a time. Play them back in order.
-  var ED_SYM = ['🎺', '🥁', '🎸', '🎹', '🎻', '🔔', '👏', '🎷', '📯', '🪇'];
-  function edClub(box) {
-    var seq = []; for (var i = 0; i < 5; i++) seq.push(Math.floor(Math.random() * ED_SYM.length));
-    $('waittitle').textContent = '🪩 Euroclub'; $('waitsub').textContent = 'DJ Konstantin is warming up… watch the square below him!';
-    box.innerHTML = '<div class="edclub"><div class="eddjw dance">' + ED_DJ + '</div><div class="edballw">🪩</div><div class="edsq"></div></div>';
-    var sq = box.querySelector('.edsq'), ball = box.querySelector('.edballw');
-    edLater(function () { ball.classList.add('warn'); $('waitsub').textContent = '⚠️ Here it comes…'; }, 8000);
-    seq.forEach(function (x, i) { edLater(function () { sq.textContent = ED_SYM[x]; sq.classList.remove('pop'); void sq.offsetWidth; sq.classList.add('pop'); edTone(x); }, 10000 + i * 1300); edLater(function () { sq.textContent = ''; }, 10000 + i * 1300 + 1000); });
-    edLater(function () {
-      var got = [];
-      $('waitsub').textContent = 'Tap the five symbols in the same order!';
-      var draw = function () {
-        box.innerHTML = '<div class="edslots">' + [0, 1, 2, 3, 4].map(function (i) { return '<span>' + (got[i] != null ? ED_SYM[got[i]] : '') + '</span>'; }).join('') + '</div><div class="edsyms">' + ED_SYM.map(function (sy, i) { return '<button type="button" class="edsym" data-i="' + i + '">' + sy + '</button>'; }).join('') + '</div><div class="edrow2"><button type="button" class="btn alt edundo">↩️ Undo</button><button type="button" class="btn eddone"' + (got.length === 5 ? '' : ' disabled') + '>✅ Done</button></div>';
-        [].forEach.call(box.querySelectorAll('.edsym'), function (b) { b.onclick = function () { if (got.length >= 5) return; var i = +b.getAttribute('data-i'); got.push(i); edTone(i); draw(); }; });
-        box.querySelector('.edundo').onclick = function () { got.pop(); draw(); };
-        box.querySelector('.eddone').onclick = function () { edFinish('club', box._score()); };
-      };
-      box._score = function () { var ok = seq.filter(function (x, i) { return got[i] === x; }).length; return ok === 5 ? 3 : ok >= 3 ? 2 : ok >= 1 ? 1 : 0; };
-      draw();
-    }, 10000 + 5 * 1300 + 300);
-  }
-  // Backstage: the wiring plan is on the wall for a moment; then connect mic, speaker, guitar and lights to the right sockets.
-  function edBack(box) {
-    var dev = [['🎤', 'Mic'], ['🔊', 'Speaker'], ['🎸', 'Guitar'], ['💡', 'Lights']], sym = ['▲', '●', '■', '★', '◆', '✚'], plan = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 4), plug = {}, sel = -1;
-    $('waittitle').textContent = '🔌 Backstage'; $('waitsub').textContent = 'Remember the wiring plan!';
-    box.innerHTML = '<div class="edbar"><i></i></div><div class="edplan">' + dev.map(function (d, i) { return '<div><span>' + d[0] + ' ' + d[1] + '</span><b>→</b><em>' + sym[plan[i]] + '</em></div>'; }).join('') + '</div>';
-    box.querySelector('.edbar i').style.animation = 'edbar 6s linear forwards';
-    edLater(function () {
-      $('waitsub').textContent = 'Tap a device, then its socket. Two sockets stay empty.';
-      var draw = function () {
-        box.innerHTML = '<div class="edchips">' + dev.map(function (d, i) { return '<button type="button" class="edchip' + (sel === i ? ' sel' : '') + (plug[i] != null ? ' used' : '') + '" data-i="' + i + '">' + d[0] + ' ' + d[1] + '</button>'; }).join('') + '</div><div class="edsocks">' + sym.map(function (y, j) { var who = Object.keys(plug).filter(function (k) { return plug[k] === j; })[0]; return '<button type="button" class="edsock" data-j="' + j + '"><b>' + y + '</b>' + (who != null ? '<span>' + dev[who][0] + '</span>' : '') + '</button>'; }).join('') + '</div><button type="button" class="btn big eddone"' + (Object.keys(plug).length === 4 ? '' : ' disabled') + '>✅ Done</button>';
-        [].forEach.call(box.querySelectorAll('.edchip'), function (b) { b.onclick = function () { sel = +b.getAttribute('data-i'); draw(); }; });
-        [].forEach.call(box.querySelectorAll('.edsock'), function (b) { b.onclick = function () { var j = +b.getAttribute('data-j'); Object.keys(plug).forEach(function (k) { if (plug[k] === j) delete plug[k]; }); if (sel >= 0) { plug[sel] = j; sel = -1; try { navigator.vibrate && navigator.vibrate(20); } catch (e) {} } draw(); }; });
-        box.querySelector('.eddone').onclick = function () { edFinish('back', box._score()); };
-      };
-      box._score = function () { var ok = dev.filter(function (d, i) { return plug[i] === plan[i]; }).length; return ok === 4 ? 2 : ok >= 2 ? 1 : 0; };
-      draw();
-    }, 6000);
-  }
-  // Woodruff's Boudoir: a woman, a man and a child walk around behind the folding screen and the clothes rack. Then: what did they wear?
-  function edBoud(box) {
-    var HAIR = [['blonde', '#f0d070'], ['brown', '#6b3a1e'], ['black', '#1d1410'], ['red', '#c8402a']], OUT = [['red', '#e0283a'], ['blue', '#2f6ff0'], ['green', '#2fb35a'], ['yellow', '#f2c12e']], SHOE = [['white', '#fafafa'], ['black', '#15151c'], ['red', '#e0283a'], ['gold', '#d9a520']];
-    var who = [['woman', 1], ['man', 1], ['child', .7]].map(function (w) { return { n: w[0], s: w[1], h: Math.floor(Math.random() * 4), o: Math.floor(Math.random() * 4), f: Math.floor(Math.random() * 4) }; });
-    var fig = function (p) { return '<svg viewBox="0 0 60 130" class="edfig" style="height:' + (p.s * 100) + '%"><rect x="20" y="96" width="8" height="26" fill="#e8b890"/><rect x="32" y="96" width="8" height="26" fill="#e8b890"/><rect x="17" y="118" width="13" height="8" rx="3" fill="' + SHOE[p.f][1] + '" stroke="#555"/><rect x="31" y="118" width="13" height="8" rx="3" fill="' + SHOE[p.f][1] + '" stroke="#555"/>' + (p.n === 'woman' ? '<path d="M18 40 L42 40 L50 100 L10 100 Z" fill="' + OUT[p.o][1] + '"/>' : '<rect x="16" y="40" width="28" height="60" rx="6" fill="' + OUT[p.o][1] + '"/>') + '<circle cx="30" cy="24" r="14" fill="#f0c8a8"/><path d="' + (p.n === 'woman' ? 'M15 26 Q14 6 30 8 Q46 6 45 26 L46 44 L40 44 L40 22 L20 22 L20 44 L14 44 Z' : 'M16 22 Q16 8 30 8 Q44 8 44 22 Q38 14 30 15 Q22 14 16 22 Z') + '" fill="' + HAIR[p.h][1] + '"/></svg>'; };
-    $('waittitle').textContent = '👗 Woodruff’s Boudoir'; $('waitsub').textContent = 'Look closely: hair, outfit and shoes!';
-    box.innerHTML = '<div class="edbar"><i></i></div><div class="edboud">' + who.map(function (p, i) { return '<div class="edwalk" style="--i:' + i + '">' + fig(p) + '</div>'; }).join('') + '<div class="edscreen"></div><div class="edrack"></div></div>';
-    box.querySelector('.edbar i').style.animation = 'edbar 9s linear forwards';
-    var attrs = shuffle(['h', 'o', 'f']), qs = who.map(function (p, i) { var a = attrs[i]; return { p: p, a: a, opts: a === 'h' ? HAIR : a === 'o' ? OUT : SHOE, ans: p[a] }; }), qi = 0, right = 0;
+  function edQuiz(box, room, s) {
+    var R = ED_R.filter(function (r) { return r.id === room; })[0], qs = edQs(room, s), qi = 0, right = 0;
+    var score = function () { return R.max === 3 ? right : right === 3 ? 2 : right === 2 ? 1 : 0; };
+    box._score = score;
+    $('waittitle').textContent = R.icon + ' ' + R.name;
+    var next = function (ok) { if (ok) right++; qi++; try { navigator.vibrate && navigator.vibrate(15); } catch (e) {} ask(); };
     var ask = function () {
-      if (qi >= qs.length) { edFinish('boud', right); return; }
-      var q = qs[qi], what = q.a === 'h' ? 'hair' : q.a === 'o' ? 'outfit' : 'shoes';
-      $('waitsub').textContent = 'Question ' + (qi + 1) + ' of 3';
-      box.innerHTML = '<div class="edq">What colour ' + (q.a === 'f' ? 'were' : 'was') + ' the ' + q.p.n + '’s ' + what + '?</div><div class="edopts">' + q.opts.map(function (o, i) { return '<button type="button" class="edopt" data-i="' + i + '"><i style="background:' + o[1] + '"></i>' + o[0] + '</button>'; }).join('') + '</div>';
-      [].forEach.call(box.querySelectorAll('.edopt'), function (b) { b.onclick = function () { if (+b.getAttribute('data-i') === q.ans) right++; qi++; ask(); }; });
+      if (qi >= qs.length) { edFinish(room, score()); return; }
+      var q = qs[qi], head = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / 3</div><div class="edq">' + q.q + '</div>';
+      $('waitsub').textContent = '';
+      if (q.t === 'code') {
+        var got = '';
+        var draw = function () {
+          box.innerHTML = head + '<div class="edcode">' + [0, 1, 2, 3].map(function (i) { return '<span>' + (got[i] || '') + '</span>'; }).join('') + '</div><div class="edpad">' + ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✅'].map(function (k) { return '<button type="button" class="edkey' + (k === '✅' ? ' ok' : '') + '" data-k="' + k + '"' + (k === '✅' && got.length < 4 ? ' disabled' : '') + '>' + k + '</button>'; }).join('') + '</div>';
+          [].forEach.call(box.querySelectorAll('.edkey'), function (b) { b.onclick = function () { var k = b.getAttribute('data-k'); if (k === '⌫') got = got.slice(0, -1); else if (k === '✅') { next(got === q.a); return; } else if (got.length < 4) got += k; draw(); }; });
+        };
+        draw(); return;
+      }
+      if (q.t === 'syms') {
+        var all = shuffle(Object.keys(ED_SYMS2)), got2 = [], sv = function (k) { return '<svg viewBox="0 0 40 40">' + edSym(k, 0, 0, 40) + '</svg>'; };
+        var drawS = function () {
+          box.innerHTML = head + '<div class="edslots2">' + [0, 1, 2, 3, 4].map(function (i) { return '<span>' + (got2[i] ? sv(got2[i]) : '') + '</span>'; }).join('') + '</div><div class="edsyms2">' + all.map(function (k) { return '<button type="button" class="edsym2" data-k="' + k + '">' + sv(k) + '</button>'; }).join('') + '</div><div class="edrow2"><button type="button" class="btn alt edundo">↩️ Undo</button><button type="button" class="btn eddone"' + (got2.length === 5 ? '' : ' disabled') + '>✅ Done</button></div>';
+          [].forEach.call(box.querySelectorAll('.edsym2'), function (b) { b.onclick = function () { if (got2.length < 5) got2.push(b.getAttribute('data-k')); drawS(); }; });
+          box.querySelector('.edundo').onclick = function () { got2.pop(); drawS(); };
+          box.querySelector('.eddone').onclick = function () { next(got2.join() === q.a.join()); };
+        };
+        drawS(); return;
+      }
+      if (q.t === 'plug') {
+        var sc2 = q.a, cab = shuffle(sc2.plug.map(function (p) { return p.c; })), plug = {}, sel = '';
+        var drawP = function () {
+          box.innerHTML = head + '<div class="edcab">' + cab.map(function (c) { return '<button type="button" class="edcb' + (sel === c ? ' sel' : '') + (plug[c] != null ? ' used' : '') + '" data-c="' + c + '"><i style="background:' + ED_HEX[c] + '"></i>' + ED_NAME[c] + '</button>'; }).join('') + '</div><div class="edpanel">' + sc2.socks.map(function (k, i) { var c = Object.keys(plug).filter(function (x) { return plug[x] === i; })[0]; return '<button type="button" class="edsk" data-i="' + i + '"><svg viewBox="0 0 40 40">' + edSock(k, 2, 2, 36) + '</svg><i style="' + (c ? 'background:' + ED_HEX[c] + ';box-shadow:0 0 0 3px #3ddc84' : '') + '"></i></button>'; }).join('') + '</div><button type="button" class="btn big eddone"' + (Object.keys(plug).length === cab.length ? '' : ' disabled') + '>✅ Done</button>';
+          [].forEach.call(box.querySelectorAll('.edcb'), function (b) { b.onclick = function () { sel = b.getAttribute('data-c'); drawP(); }; });
+          [].forEach.call(box.querySelectorAll('.edsk'), function (b) { b.onclick = function () { var i = +b.getAttribute('data-i'); Object.keys(plug).forEach(function (x) { if (plug[x] === i) delete plug[x]; }); if (sel) { plug[sel] = i; sel = ''; try { navigator.vibrate && navigator.vibrate(20); } catch (e) {} } drawP(); }; });
+          box.querySelector('.eddone').onclick = function () { next(sc2.plug.every(function (p) { return plug[p.c] === p.s; })); };
+        };
+        drawP(); return;
+      }
+      if (q.t === 'rack') {
+        var cols = shuffle(q.a.concat([['red', 'blue', 'yellow', 'green', 'purple', 'black'].filter(function (c) { return q.a.indexOf(c) < 0; })[0]])), seq = [];
+        var drawR = function () {
+          box.innerHTML = head + '<div class="edrack2">' + [0, 1, 2, 3, 4].map(function (i) { return '<span>' + (seq[i] ? '<i style="background:' + ED_HEX[seq[i]] + '"></i>' : '') + '</span>'; }).join('') + '</div><div class="eddress">' + cols.map(function (c) { return '<button type="button" class="eddr' + (seq.indexOf(c) >= 0 ? ' used' : '') + '" data-c="' + c + '"><i style="background:' + ED_HEX[c] + '"></i>' + ED_NAME[c] + '</button>'; }).join('') + '</div><div class="edrow2"><button type="button" class="btn alt edundo">↩️ Undo</button><button type="button" class="btn eddone"' + (seq.length === 5 ? '' : ' disabled') + '>✅ Done</button></div>';
+          [].forEach.call(box.querySelectorAll('.eddr'), function (b) { b.onclick = function () { var c = b.getAttribute('data-c'); if (seq.length < 5 && seq.indexOf(c) < 0) seq.push(c); drawR(); }; });
+          box.querySelector('.edundo').onclick = function () { seq.pop(); drawR(); };
+          box.querySelector('.eddone').onclick = function () { next(seq.join() === q.a.join()); };
+        };
+        drawR(); return;
+      }
+      box.innerHTML = head + '<div class="edopts">' + q.o.map(function (o) { return '<button type="button" class="edopt" data-o="' + esc(o) + '">' + (q.col ? '<i style="background:' + (ED_HEX[o] || '#888') + '"></i>' + (ED_NAME[o] || o) : esc(o)) + '</button>'; }).join('') + '</div>';
+      [].forEach.call(box.querySelectorAll('.edopt'), function (b) { b.onclick = function () { next(b.getAttribute('data-o') === q.a); }; });
     };
-    box._score = function () { return right; };
-    edLater(ask, 9000);
+    ask();
   }
 
   // ---------- Hold That Note! ----------

@@ -2650,12 +2650,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
     step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
     // what they say: who they are, what we play tonight and how it works, then off we go
-    // (lines with a third entry are spoken out loud: sounds/<name>.mp3, with how long it takes)
-    var lines = [['him', 'Good evening, Europe!', 'felix_welcome', 2000], ['her', 'I’m Stella, and this is Felix!']].concat(showPlan());
-    lines.push(['her', 'Welcome to EuroQuizion! Grab your phones: here comes the first song!', 'stella_welcome', 6200]);
-    var gap = 1300;
-    lines.forEach(function (l, i) { step(gap, function () { if (l[2]) hostVoice(l[2]); hostSay(l[0], l[1], l[3] ? l[3] + 500 : 3600); if (!i) Music.ding(); }); gap = l[3] ? Math.max(3300, l[3] + 900) : 3300; });
-    step(gap, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
+    var lines = [['him', 'Good evening, Europe! I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
+    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
+    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', vary('first')]);
+    lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
+    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
   // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Stella!").
   function showPlan() {
@@ -2693,12 +2692,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     say(fin);
     return L;
   }
-  // The presenters' recorded voices (Irish, over the top), in sounds/<name>.mp3; played on the big screen only.
-  var hostVoiceEl = {};
-  function hostVoice(name) {
-    if (REMOTE) return;
-    try { var a = hostVoiceEl[name] || (hostVoiceEl[name] = new Audio('sounds/' + name + '.mp3?v=1')); a.currentTime = 0; a.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
-  }
+
 
   // ---------- The Unlucky Draw ----------
   // Every player still in holds an envelope marked with a symbol. Most hold a flag, some hold a bomb.
@@ -3587,15 +3581,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
       ['him', 'Breaking news, Europe… Edgar, our beloved mascot, has been abducted! 😱'],
-      ['her', 'Someone took him, and hid him inside something, somewhere in the building.'],
-      ['him', 'Look at the cards. The top row: where he could be hidden.', 'where'],
-      ['her', 'The middle row: what he is hidden inside.', 'what'],
-      ['him', 'And the bottom row: who took him.', 'who'],
-      ['her', 'In each row, one card is the truth. We need detectives to find out which!'],
-      ['him', 'Here’s how it works: search the four rooms of the building! Pick a room on your phone and solve its task.'],
-      ['her', 'Do it well, and you get secret clues: cards that are NOT the answer. You can visit every room only once.'],
-      ['him', 'You have two minutes in total. The first detective to search all four rooms gets two bonus clues, the second one! ⚡'],
-      ['her', 'Then you make your accusation: where, inside what, and who. Let’s bring Edgar home! 🔍']
+      ['her', 'Whoever took him left clues scattered around four areas of the building, and everyone needs to search them!'],
+      ['him', 'Enter the rooms one by one on your phone, and find the clues on the big screen. Look closely!'],
+      ['her', 'The fastest detective overall wins an extra clue! 🔍']
     ];
     var t = 6600;   // (the poster first, the photo, the presenters walking on: then the story)
     lines.forEach(function (l) {
@@ -3608,7 +3596,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }); })(l, t);
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
     });
-    at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); r.classList.add('on'); }); clueLeave(edStart); });
+    at(t, function () { clueLeave(edStart); });
   }
   function clueSay(who, txt) {
     var ov = $('clueov'); if (!ov) return;
@@ -3757,7 +3745,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Backstage 2, Woodruff's Boudoir 3. The first to finish all four rooms gets 2 bonus clues, the second 1.
   // Twelve clues are exactly the twelve wrong cards, so a perfect detective knows the answer for sure.
   var ED_ROOMS = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 3 }];
-  var ED_MS = 120000, edTick = null;
+  var ED_MS = 150000, edTick = null;
   function edRoom(id) { for (var i = 0; i < ED_ROOMS.length; i++) if (ED_ROOMS[i].id === id) return ED_ROOMS[i]; return null; }
   function edClues(pid, n) {   // n smart clues for this player (from the row where they still have the most cards open)
     var g = G.clue, got = [];
@@ -3770,9 +3758,179 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     return got;
   }
+  // The four rooms on the big screen are full of details (randomised every game): the phones ask about them, so you
+  // have to look up and search the room. The scene goes to the phones too (they check the answers themselves).
+  var ED_COL = { red: '#e53950', blue: '#2f80ed', yellow: '#f2c12e', green: '#27ae60', purple: '#9b51e0', orange: '#f2994a', pink: '#ff6fb5', white: '#f4f4f8', black: '#26262e', brown: '#7a4a2a', blonde: '#f0d070', silver: '#c9ccd6', gold: '#d9a520', teal: '#1fc8c8' };
+  var ED_SONGS = ['Glitter Storm', 'Moonlight Express', 'Paper Crown', 'Neon Heartbeat', 'Volcano Love', 'Disco Dynasty', 'Midnight Tango', 'Silver Waves', 'Cosmic Kiss', 'Thunder Polka', 'Sugar Rocket', 'Velvet Rain'];
+  var ED_ACTS = ['The Velvet Foxes', 'Mira Moon', 'Captain Sequin', 'DJ Paprika', 'Nordic Thunder', 'Lola Lightning', 'The Disco Owls', 'Sir Glitterbeard', 'Bubble Brigade', 'Madame Mambo'];
+  function edRnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function edScene() {
+    var code = ''; for (var i = 0; i < 4; i++) code += edRnd(i ? 0 : 1, 9);
+    var L = 'ABCDEFGHJKLMNPRSTUVWXYZ', cc = function () { return L[edRnd(0, L.length - 1)] + L[edRnd(0, L.length - 1)] + '-' + edRnd(10, 99); };
+    var prices = shuffle([49, 79, 99, 129, 149, 179, 199, 249, 299, 349]).slice(0, 5);
+    var cans = []; for (i = edRnd(3, 9); i > 0; i--) cans.push(pick(['red', 'blue', 'yellow', 'green']));
+    var seats = shuffle(['green', 'pink', 'yellow', 'red', 'blue']), hairs = shuffle(['blonde', 'pink', 'black', 'red', 'blue', 'brown']);
+    var sitters = shuffle([0, 1, 2, 3, 4]).slice(0, edRnd(2, 3)).map(function (k, i) { return { seat: k, hair: hairs[i], top: pick(['purple', 'orange', 'teal', 'white', 'black']) }; });
+    var socks = shuffle(Object.keys(ED_SOCKS)), cables = shuffle(['red', 'blue', 'green', 'yellow']), plugged = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 4);
+    var outs = shuffle(['red', 'blue', 'green', 'yellow', 'purple', 'orange']);
+    return {
+      green: { code: code, cans: cans, clock: [edRnd(1, 12), pick([0, 15, 30, 45])], pizza: edRnd(1, 7), seats: seats, sitters: sitters, fridger: { hair: hairs[3], top: pick(['red', 'green', 'blue']) }, records: edRnd(1, 4) },
+      club: { panel: shuffle(Object.keys(ED_SYMS2)).slice(0, 5), balls: edRnd(1, 5), setlist: shuffle(ED_SONGS.slice()).slice(0, 5), neon: pick(['DOUZE', 'PARTY', 'ENCORE', 'DANCE', 'GLAM', 'LOVE']), neonC: pick(['pink', 'blue', 'green', 'yellow']), dancers: edRnd(2, 5), jacket: pick(['purple', 'blue', 'green', 'red', 'gold']) },
+      back: { socks: socks, plug: plugged.map(function (k, i) { return { s: k, c: cables[i] }; }), cases: shuffle(['red', 'blue', 'yellow', 'green']).map(function (c) { return { c: c, code: cc() }; }), spots: edRnd(3, 7), guitars: edRnd(1, 3), order: shuffle(ED_ACTS.slice()).slice(0, 5) },
+      boud: { rack: shuffle(['red', 'blue', 'yellow', 'green', 'purple', 'black']).slice(0, 5).map(function (c, i) { return { c: c, p: prices[i] }; }), wigs: shuffle(['blonde', 'black', 'pink', 'blue', 'red', 'brown']).slice(0, 4), word: pick(['KISS', 'DIVA', 'FAB', 'WOW', 'GLAM', 'ICON']), perfume: edRnd(2, 6),
+        woman: { dress: outs[0], hair: pick(['black', 'blonde', 'red']), boa: pick(['pink', 'white', 'teal']) }, man: { suit: outs[1], hair: pick(['black', 'brown', 'blonde']) }, child: { dress: outs[2], hair: pick(['orange', 'blonde', 'brown', 'black']) } }
+    };
+  }
+  // A little person: feet at (x, y). o: hair, hairStyle (short / long / curly / pony / bun), top, legs, dress, sit, glasses, boa, s (scale), flip
+  function edPerson(x, y, o) {
+    var s = o.s || 1, skin = o.skin || '#f0c8a8', H = ED_COL[o.hair] || o.hair || '#333', T = ED_COL[o.top] || o.top || '#888', Lg = ED_COL[o.legs] || o.legs || '#2a2a40', h = '';
+    if (o.sit) {
+      h += '<rect x="-10" y="-62" width="34" height="14" rx="6" fill="' + Lg + '"/><rect x="14" y="-56" width="12" height="56" rx="5" fill="' + Lg + '"/><ellipse cx="24" cy="0" rx="11" ry="5" fill="#222"/>';
+    } else if (!o.dress) {
+      h += '<rect x="-12" y="-64" width="10" height="62" rx="4" fill="' + Lg + '" transform="rotate(' + (o.walk ? 8 : 0) + ' -7 -64)"/><rect x="2" y="-64" width="10" height="62" rx="4" fill="' + Lg + '" transform="rotate(' + (o.walk ? -10 : 0) + ' 7 -64)"/>' +
+        '<ellipse cx="' + (o.walk ? -14 : -8) + '" cy="0" rx="10" ry="5" fill="#222"/><ellipse cx="' + (o.walk ? 16 : 8) + '" cy="0" rx="10" ry="5" fill="#222"/>';
+    } else {
+      h += '<rect x="-9" y="-30" width="7" height="30" fill="' + skin + '"/><rect x="3" y="-30" width="7" height="30" fill="' + skin + '"/><ellipse cx="-6" cy="0" rx="8" ry="4" fill="' + (o.shoes || '#e0283a') + '"/><ellipse cx="7" cy="0" rx="8" ry="4" fill="' + (o.shoes || '#e0283a') + '"/>';
+    }
+    if (o.dress) h += '<path d="M-14 -112 L14 -112 L18 -86 L32 -26 L-32 -26 L-18 -86 Z" fill="' + T + '" stroke="rgba(0,0,0,.25)" stroke-width="2"/>';
+    else h += '<rect x="-17" y="-114" width="34" height="56" rx="10" fill="' + T + '" stroke="rgba(0,0,0,.2)" stroke-width="2"/>' + (o.tie ? '<path d="M0 -112 L-4 -100 L0 -80 L4 -100 Z" fill="#111"/><path d="M-6 -114 L0 -104 L6 -114" stroke="#fff" stroke-width="3" fill="none"/>' : '');
+    var arm = o.armUp ? '<rect x="14" y="-150" width="9" height="42" rx="4" fill="' + T + '"/><circle cx="18" cy="-152" r="6" fill="' + skin + '"/>' : '<rect x="14" y="-110" width="9" height="44" rx="4" fill="' + T + '" transform="rotate(-10 18 -110)"/><circle cx="22" cy="-64" r="6" fill="' + skin + '"/>';
+    h += '<rect x="-23" y="-110" width="9" height="44" rx="4" fill="' + T + '" transform="rotate(10 -18 -110)"/><circle cx="-22" cy="-64" r="6" fill="' + skin + '"/>' + arm;
+    if (o.boa) h += '<g fill="' + (ED_COL[o.boa] || o.boa) + '">' + [-22, -14, -6, 2, 10, 18, 24].map(function (bx, i) { return '<circle cx="' + bx + '" cy="' + (-112 + Math.abs(bx) * .25 + (i % 2) * 3) + '" r="7"/>'; }).join('') + '<circle cx="-26" cy="-90" r="6"/><circle cx="28" cy="-92" r="6"/><circle cx="-28" cy="-74" r="5"/><circle cx="30" cy="-76" r="5"/></g>';
+    h += '<rect x="-5" y="-124" width="10" height="12" fill="' + skin + '"/>';
+    var st = o.hairStyle || 'short';
+    if (st === 'long') h += '<path d="M-19 -134 Q-22 -100 -16 -92 L16 -92 Q22 -100 19 -134 Z" fill="' + H + '"/>';
+    if (st === 'pony') h += '<ellipse cx="20" cy="-128" rx="7" ry="16" fill="' + H + '" transform="rotate(25 20 -128)"/>';
+    if (st === 'bun') h += '<circle cx="0" cy="-160" r="9" fill="' + H + '"/>';
+    h += '<circle cx="0" cy="-136" r="17" fill="' + skin + '"/>';
+    if (st === 'curly') h += '<g fill="' + H + '">' + [[-14, -146], [-6, -153], [4, -154], [13, -147], [17, -137], [-17, -136]].map(function (c) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="8"/>'; }).join('') + '</g>';
+    else h += '<path d="M-18 -134 Q-18 -156 0 -156 Q18 -156 18 -134 Q12 -146 0 -146 Q-12 -146 -18 -134 Z" fill="' + H + '"/>';
+    h += o.glasses ? '<rect x="-13" y="-140" width="11" height="7" rx="2" fill="#111"/><rect x="2" y="-140" width="11" height="7" rx="2" fill="#111"/><line x1="-2" y1="-137" x2="2" y2="-137" stroke="#111" stroke-width="2"/>' : '<circle cx="-6" cy="-136" r="2.2" fill="#2a1a10"/><circle cx="6" cy="-136" r="2.2" fill="#2a1a10"/>';
+    h += '<path d="M-5 -128 Q0 -124 5 -128" stroke="#a04a3a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    return '<g transform="translate(' + x + ' ' + y + ') scale(' + (o.flip ? -s : s) + ' ' + s + ')">' + h + '</g>';
+  }
+  function edLabel(txt, x, col) {   // a neon room sign, like the ones above the rooms
+    var w = txt.length * 17 + 46;
+    return '<g transform="translate(' + x + ' 14)"><rect width="' + w + '" height="40" rx="9" fill="rgba(10,6,24,.82)" stroke="' + col + '" stroke-width="3"/><text x="' + (w / 2) + '" y="28" text-anchor="middle" font-size="22" font-weight="900" fill="' + col + '" letter-spacing="2" style="filter:drop-shadow(0 0 4px ' + col + ')">' + esc(txt) + '</text></g>';
+  }
+  function edPlant(x, y, sc) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sc || 1) + ')"><path d="M-14 0 L14 0 L10 -26 L-10 -26 Z" fill="#a0603a"/><g fill="#2f9a50"><ellipse cx="-14" cy="-50" rx="8" ry="24" transform="rotate(-30 -14 -50)"/><ellipse cx="14" cy="-50" rx="8" ry="24" transform="rotate(30 14 -50)"/><ellipse cx="0" cy="-58" rx="8" ry="30"/><ellipse cx="-22" cy="-36" rx="6" ry="18" transform="rotate(-60 -22 -36)"/><ellipse cx="22" cy="-36" rx="6" ry="18" transform="rotate(60 22 -36)"/></g></g>'; }
+  // ---- the rooms, drawn (each 800×450, one quarter of the screen) ----
+  function edGreenSvg(s) {
+    var rad = function (a) { return a * Math.PI / 180; };
+    var h = '<rect width="800" height="300" fill="#3c6b4c"/><g opacity=".1" fill="#fff">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (i) { return '<rect x="' + (i * 52) + '" y="0" width="24" height="300"/>'; }).join('') + '</g>' +
+      '<rect y="300" width="800" height="150" fill="#6e4a30"/><ellipse cx="400" cy="400" rx="330" ry="44" fill="#8a3a4a" opacity=".55"/><rect y="292" width="800" height="10" fill="#24432f"/>';
+    // the lamps hanging from the ceiling
+    [230, 330, 470, 600].forEach(function (x) { h += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="30" stroke="#222" stroke-width="2"/><path d="M' + (x - 12) + ' 44 L' + (x + 12) + ' 44 L' + (x + 7) + ' 30 L' + (x - 7) + ' 30 Z" fill="#d9a520"/><circle cx="' + x + '" cy="46" r="5" fill="#fff6c2"/>'; });
+    // the wall: a poster, gold records, the clock, the mirror with the sticky note
+    h += '<rect x="250" y="70" width="70" height="96" fill="#1a1a1a" stroke="#d9a520" stroke-width="4"/><text x="285" y="100" text-anchor="middle" font-size="14" font-weight="900" fill="#ffd23f">GOOD</text><text x="285" y="118" text-anchor="middle" font-size="14" font-weight="900" fill="#ff6fb5">MUSIC</text><text x="285" y="136" text-anchor="middle" font-size="14" font-weight="900" fill="#ffd23f">GOOD</text><text x="285" y="154" text-anchor="middle" font-size="12" font-weight="900" fill="#3fd6ff">PEOPLE</text>';
+    for (var r = 0; r < s.records; r++) h += '<rect x="' + (338 + r * 46) + '" y="78" width="40" height="40" fill="#2a1a10" stroke="#d9a520" stroke-width="3"/><circle cx="' + (358 + r * 46) + '" cy="98" r="14" fill="#d9a520"/><circle cx="' + (358 + r * 46) + '" cy="98" r="4" fill="#2a1a10"/>';
+    var hr = s.clock[0] % 12, mn = s.clock[1], ha = (hr + mn / 60) * 30 - 90, ma = mn * 6 - 90, cx = 560, cy = 104;
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="36" fill="#fff" stroke="#1a1a1a" stroke-width="5"/>';
+    for (var t = 0; t < 12; t++) { var a = rad(t * 30 - 90), r1 = t % 3 ? 27 : 23; h += '<line x1="' + (cx + Math.cos(a) * r1).toFixed(1) + '" y1="' + (cy + Math.sin(a) * r1).toFixed(1) + '" x2="' + (cx + Math.cos(a) * 32).toFixed(1) + '" y2="' + (cy + Math.sin(a) * 32).toFixed(1) + '" stroke="#1a1a1a" stroke-width="' + (t % 3 ? 2 : 4) + '"/>'; }
+    h += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(rad(ha)) * 16).toFixed(1) + '" y2="' + (cy + Math.sin(rad(ha)) * 16).toFixed(1) + '" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round"/><line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(rad(ma)) * 27).toFixed(1) + '" y2="' + (cy + Math.sin(rad(ma)) * 27).toFixed(1) + '" stroke="#e53950" stroke-width="4" stroke-linecap="round"/><circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#1a1a1a"/>';
+    h += '<rect x="630" y="64" width="140" height="150" rx="8" fill="#d9a520"/><rect x="642" y="76" width="116" height="126" rx="5" fill="#bfe3f2"/><path d="M652 88 L680 80 L662 124 Z" fill="#fff" opacity=".5"/>';
+    for (var b = 0; b < 4; b++) h += '<circle cx="' + (648 + b * 35) + '" cy="68" r="6" fill="#fff6c2"/><circle cx="' + (648 + b * 35) + '" cy="210" r="6" fill="#fff6c2"/>';
+    h += '<g transform="rotate(-6 700 150)"><rect x="660" y="116" width="82" height="66" fill="#ffe24a" stroke="#c9a400" stroke-width="2"/><text x="701" y="136" text-anchor="middle" font-size="11" font-weight="800" fill="#7a5c00">SECRET CODE</text><text x="701" y="170" text-anchor="middle" font-size="28" font-weight="900" fill="#1a1a1a" font-family="Comic Sans MS, Chalkboard, cursive">' + s.code + '</text></g>';
+    // the fridge (glass door, cans on two shelves) and someone getting a drink
+    h += '<rect x="30" y="90" width="130" height="300" rx="10" fill="#e6e9ef" stroke="#9aa0ad" stroke-width="4"/><rect x="42" y="104" width="106" height="260" rx="5" fill="#cdeeff"/><line x1="42" y1="196" x2="148" y2="196" stroke="#8aa" stroke-width="4"/><line x1="42" y1="290" x2="148" y2="290" stroke="#8aa" stroke-width="4"/>';
+    s.cans.forEach(function (c, i) { var row = i < 4 ? 0 : i < 8 ? 1 : 2, k = i % 4, x = 50 + k * 24, y = [164, 258, 332][row]; h += '<rect x="' + x + '" y="' + y + '" width="19" height="30" rx="4" fill="' + ED_COL[c] + '" stroke="rgba(0,0,0,.4)" stroke-width="1.5"/><rect x="' + (x + 2) + '" y="' + y + '" width="15" height="5" fill="#ccc"/>'; });
+    h += edPerson(196, 396, { s: .95, hair: s.fridger.hair, top: s.fridger.top, legs: 'black', flip: 1, armUp: 0 }) + edPlant(760, 420, 1.1);
+    // the chairs (five colours), some of them taken, and the coffee table with the pizza
+    var SX = [120, 250, 400, 540, 670];
+    s.seats.forEach(function (c, i) {
+      var x = SX[i], col = ED_COL[c];
+      if (c === 'blue') h += '<rect x="' + (x - 62) + '" y="318" width="124" height="54" rx="22" fill="' + col + '"/><rect x="' + (x - 66) + '" y="350" width="132" height="44" rx="14" fill="#1b5fc0"/>';
+      else h += '<path d="M' + (x - 44) + ' 386 L' + (x - 44) + ' 330 Q' + (x - 44) + ' 296 ' + x + ' 296 Q' + (x + 44) + ' 296 ' + (x + 44) + ' 330 L' + (x + 44) + ' 386 Z" fill="' + col + '" stroke="rgba(0,0,0,.3)" stroke-width="2"/><rect x="' + (x - 40) + '" y="356" width="80" height="30" rx="10" fill="' + col + '" stroke="rgba(0,0,0,.3)" stroke-width="2"/>';
+      h += '<rect x="' + (x - 36) + '" y="386" width="7" height="18" fill="#3a2a1a"/><rect x="' + (x + 29) + '" y="386" width="7" height="18" fill="#3a2a1a"/>';
+      s.sitters.forEach(function (p, k) { if (p.seat === i) h += edPerson(x - 6, 414, { s: .82, sit: 1, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top, legs: '#2a2a40' }); });
+    });
+    var px = 320, py = 424, R = 32;
+    h += '<rect x="' + (px - 54) + '" y="' + (py - 6) + '" width="108" height="12" rx="4" fill="#4a2c18"/><rect x="' + (px - 44) + '" y="' + (py - 30) + '" width="88" height="26" fill="#e8d2a8" stroke="#a88a5a" stroke-width="2"/><ellipse cx="' + px + '" cy="' + (py - 18) + '" rx="' + (R + 2) + '" ry="' + (R * .38 + 2) + '" fill="#d8bf90"/>';
+    for (var w = 0; w < 8; w++) {
+      if (w >= s.pizza) continue;
+      var a0 = rad(w * 45 - 90), a1 = rad(w * 45 - 45), am = rad(w * 45 - 67.5), qy = py - 18;
+      h += '<path d="M' + px + ' ' + qy + ' L' + (px + Math.cos(a0) * R).toFixed(1) + ' ' + (qy + Math.sin(a0) * R * .38).toFixed(1) + ' A' + R + ' ' + (R * .38) + ' 0 0 1 ' + (px + Math.cos(a1) * R).toFixed(1) + ' ' + (qy + Math.sin(a1) * R * .38).toFixed(1) + ' Z" fill="#f2b53a" stroke="#c2701e" stroke-width="1.5"/><ellipse cx="' + (px + Math.cos(am) * R * .62).toFixed(1) + '" cy="' + (qy + Math.sin(am) * R * .24).toFixed(1) + '" rx="4" ry="2.4" fill="#c0282a"/>';
+    }
+    return h + edLabel('GREEN ROOM', 14, '#3ddc84');
+  }
+  function edClubSvg(s) {
+    var h = '<defs><filter id="edglow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><radialGradient id="edball" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8a8fa6"/></radialGradient></defs>' +
+      '<rect width="800" height="450" fill="#1c0a34"/>' + [[120, '#ff3fd8'], [400, '#3fd6ff'], [680, '#9b51e0']].map(function (b) { return '<path d="M' + b[0] + ' 0 L' + (b[0] - 120) + ' 450 L' + (b[0] + 120) + ' 450 Z" fill="' + b[1] + '" opacity=".1"/>'; }).join('');
+    // the disco balls
+    for (var i = 0; i < s.balls; i++) { var x = 250 + (i + .5) * (300 / s.balls), y = 34 + (i % 2) * 18, R = s.balls > 3 ? 20 : 28; h += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + (y - R) + '" stroke="#aaa" stroke-width="2"/><circle cx="' + x + '" cy="' + y + '" r="' + R + '" fill="url(#edball)"/><g stroke="rgba(60,60,90,.5)" stroke-width="1.2" fill="none"><ellipse cx="' + x + '" cy="' + y + '" rx="' + R + '" ry="' + (R * .36) + '"/><ellipse cx="' + x + '" cy="' + y + '" rx="' + (R * .45) + '" ry="' + R + '"/></g>'; }
+    // the neon sign and a neon palm tree
+    h += '<text x="680" y="150" text-anchor="middle" font-size="44" font-weight="900" fill="none" stroke="' + ED_COL[s.neonC] + '" stroke-width="3.5" filter="url(#edglow)" letter-spacing="3">' + s.neon + '</text>' +
+      '<g stroke="#ff3fd8" stroke-width="4" fill="none" filter="url(#edglow)"><path d="M720 300 Q716 240 726 196"/><path d="M726 196 Q700 180 680 196 M726 196 Q750 176 772 190 M726 196 Q716 172 696 168 M726 196 Q742 168 760 164"/></g>';
+    // the setlist on the wall
+    h += '<rect x="22" y="76" width="200" height="156" rx="6" fill="#20262a" stroke="#8a5a2a" stroke-width="7"/><text x="122" y="102" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" letter-spacing="3">SETLIST</text>' +
+      s.setlist.map(function (t, i) { return '<text x="36" y="' + (128 + i * 22) + '" font-size="15" font-weight="700" fill="#f4f0d0" font-family="Comic Sans MS, Chalkboard, cursive">' + (i + 1) + '. ' + esc(t) + '</text>'; }).join('');
+    // speakers, the DJ (an original character: curls, moustache, sunglasses, a sequin jacket) and the booth with its LED symbols
+    h += '<rect x="196" y="160" width="60" height="110" rx="6" fill="#111" stroke="#333" stroke-width="3"/><circle cx="226" cy="190" r="14" fill="#333"/><circle cx="226" cy="238" r="20" fill="#333"/><rect x="544" y="160" width="60" height="110" rx="6" fill="#111" stroke="#333" stroke-width="3"/><circle cx="574" cy="190" r="14" fill="#333"/><circle cx="574" cy="238" r="20" fill="#333"/>';
+    h += edPerson(400, 290, { s: 1.05, hair: 'black', hairStyle: 'curly', top: s.jacket, glasses: 1, armUp: 1 });
+    h += '<rect x="262" y="226" width="276" height="96" rx="10" fill="#14081f" stroke="#ff6fd8" stroke-width="3"/>';
+    s.panel.forEach(function (k, i) { var x = 274 + i * 52; h += '<rect x="' + x + '" y="240" width="46" height="66" rx="6" fill="#2a1446" stroke="' + ED_SYMS2[k].c + '" stroke-width="2.5"/>' + '<g filter="url(#edglow)">' + edSym(k, x + 5, 251, 36) + '</g>'; });
+    // the crowd and the dancers
+    var dn = s.dancers, cols = ['#ff6fb5', '#3fd6ff', '#ffd23f', '#3ddc84', '#c58bff'];
+    for (i = 0; i < dn; i++) { var dx = i < Math.ceil(dn / 2) ? 60 + i * 60 : 640 + (i - Math.ceil(dn / 2)) * 60; h += edPerson(dx, 410, { s: .78, hair: ['blonde', 'pink', 'black', 'red', 'brown'][i], hairStyle: ['long', 'curly', 'pony', 'bun', 'short'][i], top: cols[i], legs: '#1a1a2a', armUp: i % 2, dress: i % 2 === 0 }); }
+    h += '<g fill="#0a0414">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (k) { var x = 20 + k * 62; return '<circle cx="' + x + '" cy="' + (418 - (k % 3) * 6) + '" r="20"/><rect x="' + (x - 26) + '" y="' + (430 - (k % 3) * 6) + '" width="52" height="40" rx="18"/>' + (k % 4 === 1 ? '<rect x="' + (x + 12) + '" y="' + (370 - (k % 3) * 6) + '" width="9" height="44" rx="4" transform="rotate(14 ' + (x + 16) + ' 410)"/>' : ''); }).join('') + '</g>';
+    return h + edLabel('EUROCLUB', 800 - (8 * 17 + 46) - 84, '#d97bff');
+  }
+  function edBackSvg(s) {
+    var h = '<rect width="800" height="450" fill="#22252e"/><g stroke="#1a1c24" stroke-width="2">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (i) { return '<line x1="0" y1="' + (i * 30) + '" x2="800" y2="' + (i * 30) + '"/>'; }).join('') + '</g><rect y="330" width="800" height="120" fill="#17181e"/>';
+    // the truss with its spotlights
+    h += '<rect x="250" y="12" width="540" height="14" fill="#9aa0ad"/><g stroke="#9aa0ad" stroke-width="2">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(function (i) { return '<line x1="' + (250 + i * 40) + '" y1="12" x2="' + (270 + i * 40) + '" y2="26"/>'; }).join('') + '</g><rect x="760" y="26" width="14" height="300" fill="#6a7080"/>';
+    for (var i = 0; i < s.spots; i++) { var x = 270 + (i + .5) * (480 / s.spots); h += '<rect x="' + (x - 3) + '" y="26" width="6" height="10" fill="#555"/><rect x="' + (x - 14) + '" y="34" width="28" height="32" rx="5" fill="#0c0c10"/><circle cx="' + x + '" cy="68" r="10" fill="#ffe27a"/>'; }
+    // the patch panel: six sockets with symbols, four cables plugged in
+    h += '<rect x="240" y="88" width="420" height="132" rx="8" fill="#3a3e4a" stroke="#6a7080" stroke-width="4"/>';
+    s.socks.forEach(function (k, i) {
+      var x = 262 + i * 66, pl = s.plug.filter(function (p) { return p.s === i; })[0];
+      h += '<rect x="' + x + '" y="100" width="52" height="52" rx="6" fill="#16181e"/>' + edSock(k, x + 8, 106, 36) +
+        '<circle cx="' + (x + 26) + '" cy="186" r="16" fill="#0c0c10" stroke="' + (pl ? '#3ddc84' : '#555') + '" stroke-width="4"/>';
+      if (pl) h += '<circle cx="' + (x + 26) + '" cy="186" r="9" fill="' + ED_COL[pl.c] + '"/><path d="M' + (x + 26) + ' 196 C' + (x + 26) + ' 260 ' + (x + 26 - 40 + i * 10) + ' 300 ' + (x - 20 + i * 18) + ' 360" stroke="' + ED_COL[pl.c] + '" stroke-width="9" fill="none" stroke-linecap="round"/>';
+    });
+    // amps, guitars, a mic stand, the running order and the roadie
+    h += '<rect x="20" y="230" width="120" height="100" rx="6" fill="#1a1a1a" stroke="#555" stroke-width="3"/><rect x="30" y="242" width="100" height="16" fill="#c9a24a"/><rect x="30" y="266" width="100" height="56" fill="#2a2a2a"/>';
+    for (i = 0; i < s.guitars; i++) { var gx = 170 + i * 30; h += '<g transform="rotate(' + (-8 + i * 8) + ' ' + gx + ' 330)"><rect x="' + (gx - 3) + '" y="214" width="6" height="70" fill="#5a3a1a"/><ellipse cx="' + gx + '" cy="300" rx="17" ry="22" fill="' + ['#c0282a', '#e8a020', '#2f80ed'][i] + '"/><ellipse cx="' + gx + '" cy="316" rx="20" ry="16" fill="' + ['#c0282a', '#e8a020', '#2f80ed'][i] + '"/><circle cx="' + gx + '" cy="304" r="5" fill="#111"/></g>'; }
+    h += '<line x1="70" y1="120" x2="70" y2="230" stroke="#888" stroke-width="4"/><line x1="70" y1="120" x2="100" y2="100" stroke="#888" stroke-width="4"/><ellipse cx="104" cy="98" rx="8" ry="6" fill="#333"/>' +
+      '<rect x="20" y="66" width="200" height="0"/>';
+    h += '<g transform="rotate(-3 700 290)"><rect x="618" y="232" width="150" height="118" rx="4" fill="#f8f8f4"/><rect x="668" y="226" width="50" height="12" rx="3" fill="#9aa0ad"/><text x="693" y="256" text-anchor="middle" font-size="13" font-weight="900" fill="#c0282a">RUNNING ORDER</text>' +
+      s.order.map(function (a, i) { return '<text x="628" y="' + (276 + i * 17) + '" font-size="13" font-weight="700" fill="#1a3a8a" font-family="Comic Sans MS, Chalkboard, cursive">' + (i + 1) + '. ' + esc(a) + '</text>'; }).join('') + '</g>';
+    h += edPerson(470, 372, { s: .9, hair: 'black', top: 'black', legs: '#1a1a2a', sit: 1 }) + '<path d="M455 236 Q470 222 486 236" stroke="#111" stroke-width="5" fill="none"/>';
+    // the flight cases with their codes
+    s.cases.forEach(function (k, i) {
+      var x = 22 + i * 196, y = 362;
+      h += '<rect x="' + x + '" y="' + y + '" width="180" height="78" rx="6" fill="' + ED_COL[k.c] + '" stroke="#111" stroke-width="5"/><g fill="#9aa0ad"><rect x="' + x + '" y="' + y + '" width="18" height="18"/><rect x="' + (x + 162) + '" y="' + y + '" width="18" height="18"/></g>' +
+        '<rect x="' + (x + 30) + '" y="' + (y + 22) + '" width="120" height="36" rx="4" fill="rgba(0,0,0,.6)"/><text x="' + (x + 90) + '" y="' + (y + 49) + '" text-anchor="middle" font-size="24" font-weight="900" fill="#fff" font-family="monospace" letter-spacing="2">' + k.code + '</text>';
+    });
+    return h + edLabel('BACKSTAGE', 14, '#3fb6ff');
+  }
+  function edBoudSvg(s) {
+    var h = '<rect width="800" height="450" fill="#5a1a2e"/><g fill="#6e2440">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (i) { return '<rect x="' + (i * 52) + '" y="0" width="22" height="300"/>'; }).join('') + '</g><rect y="300" width="800" height="150" fill="#3a1220"/><ellipse cx="400" cy="400" rx="300" ry="40" fill="#b0306a" opacity=".5"/>' +
+      '<path d="M0 0 L80 0 Q60 150 90 300 L0 300 Z" fill="#8a1a3a"/><path d="M800 0 L720 0 Q740 150 710 300 L800 300 Z" fill="#8a1a3a"/>';
+    // the vanity mirror with the lipstick word, and the perfume bottles
+    h += '<ellipse cx="150" cy="140" rx="70" ry="84" fill="#d9a520"/><ellipse cx="150" cy="140" rx="58" ry="72" fill="#d8eef6"/><text x="150" y="152" text-anchor="middle" font-size="34" font-weight="900" fill="#d0103a" font-family="Brush Script MT, Segoe Script, cursive" transform="rotate(-8 150 146)">' + s.word + '</text>' +
+      '<rect x="60" y="222" width="180" height="16" rx="4" fill="#f4e0c0" stroke="#d9a520" stroke-width="3"/><rect x="70" y="238" width="10" height="70" fill="#f4e0c0"/><rect x="220" y="238" width="10" height="70" fill="#f4e0c0"/>';
+    for (var i = 0; i < s.perfume; i++) { var x = 76 + i * 28, c = ['#ff6fb5', '#9b51e0', '#3fb6ff', '#f2c12e', '#27ae60', '#ff9f1c'][i]; h += '<rect x="' + x + '" y="196" width="18" height="26" rx="5" fill="' + c + '" stroke="#fff" stroke-width="1.5"/><rect x="' + (x + 6) + '" y="188" width="6" height="8" fill="#d9a520"/>'; }
+    // the wig heads on a shelf
+    h += '<rect x="300" y="122" width="210" height="9" fill="#f4e0c0" stroke="#d9a520" stroke-width="2"/>';
+    s.wigs.forEach(function (w, i) { var x = 326 + i * 52, col = ED_COL[w]; h += '<rect x="' + (x - 5) + '" y="104" width="10" height="18" fill="#eee"/><ellipse cx="' + x + '" cy="86" rx="17" ry="20" fill="#f0e6e0"/><path d="M' + (x - 21) + ' 96 Q' + (x - 22) + ' 58 ' + x + ' 60 Q' + (x + 22) + ' 58 ' + (x + 21) + ' 96 Q' + (x + 14) + ' 78 ' + x + ' 76 Q' + (x - 14) + ' 78 ' + (x - 21) + ' 96 Z" fill="' + col + '" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>'; });
+    // the clothes rack: five dresses with price tags
+    h += '<rect x="536" y="96" width="250" height="7" rx="3" fill="#c9ccd6"/><rect x="540" y="96" width="7" height="230" fill="#c9ccd6"/><rect x="776" y="96" width="7" height="230" fill="#c9ccd6"/>';
+    s.rack.forEach(function (d, i) {
+      var x = 570 + i * 47, col = ED_COL[d.c];
+      h += '<path d="M' + (x - 10) + ' 108 L' + (x + 10) + ' 108 L' + (x + 13) + ' 132 L' + (x + 21) + ' 226 L' + (x - 21) + ' 226 L' + (x - 13) + ' 132 Z" fill="' + col + '" stroke="rgba(0,0,0,.35)" stroke-width="2"/><path d="M' + x + ' 108 L' + x + ' 100" stroke="#999" stroke-width="2"/>' +
+        '<rect x="' + (x - 22) + '" y="232" width="44" height="22" rx="4" fill="#fff" stroke="#333" stroke-width="1.5"/><text x="' + x + '" y="248" text-anchor="middle" font-size="14" font-weight="900" fill="#1a1a1a">€' + d.p + '</text>';
+    });
+    // the visitors walking through: a woman with a feather boa, a man in a suit, a child
+    h += edPerson(330, 420, { s: 1.15, hair: s.woman.hair, hairStyle: 'long', top: s.woman.dress, dress: 1, boa: s.woman.boa, shoes: '#d9a520' }) +
+      edPerson(480, 410, { s: 1.1, hair: s.man.hair, top: s.man.suit, legs: s.man.suit, glasses: 1, tie: 1, walk: 1 }) +
+      edPerson(640, 424, { s: .7, hair: s.child.hair, hairStyle: 'curly', top: s.child.dress, dress: 1, shoes: '#fff', walk: 1 }) + edPlant(560, 430, 1.2);
+    return h + edLabel('WOODRUFF’S BOUDOIR', 800 - (18 * 17 + 46) - 14, '#ff6fd8');
+  }
+  var ED_SVG = { green: edGreenSvg, club: edClubSvg, back: edBackSvg, boud: edBoudSvg };
   function edStart() {
     var g = G.clue; if (!g) return;
-    g.st = 'rooms'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS;
+    g.st = 'rooms'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene();
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong(); Music.ding();
@@ -3781,10 +3939,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!players[b.pid] || players[b.pid].off) return;
       var order = shuffle(ED_ROOMS.map(function (r) { return r.id; })), t = 1500 + Math.random() * 2500, id = g.id;
       order.forEach(function (r) {
-        var dur = 17000 + Math.random() * 11000;
+        var dur = 20000 + Math.random() * 12000;
         (function (r, t0, dur) {
           setTimeout(function () { edMsg({ pid: b.pid, id: id, room: r, enter: 1 }); }, t0);
-          setTimeout(function () { var mx = edRoom(r).max; edMsg({ pid: b.pid, id: id, room: r, score: Math.random() < .55 ? mx : Math.floor(Math.random() * (mx + 1)) }); }, t0 + dur);
+          setTimeout(function () { var mx = edRoom(r).max; edMsg({ pid: b.pid, id: id, room: r, score: Math.random() < .5 ? mx : Math.floor(Math.random() * (mx + 1)) }); }, t0 + dur);
         })(r, t, dur);
         t += dur + 2500 + Math.random() * 2000;
       });
@@ -3803,11 +3961,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var n = Math.max(0, Math.min(edRoom(m.room).max, Math.round(Number(m.score) || 0)));
     r.done.push(m.room); r.cur = ''; r.score[m.room] = n;
     var got = edClues(m.pid, n), bonus = [];
-    if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: the first two get bonus clues
-      g.fin.push(m.pid); var bn = g.fin.length === 1 ? 2 : g.fin.length === 2 ? 1 : 0; if (bn) bonus = edClues(m.pid, bn);
+    if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: the fastest detective gets an extra clue
+      g.fin.push(m.pid); if (g.fin.length === 1) bonus = edClues(m.pid, 1);
     }
     g.last[m.pid] = { room: m.room, n: n, c: got, b: bonus, k: g.id + ':' + m.room };
-    Music.plop(n + 1); push();
+    push();   // (quietly: the big screen gives nothing away about who is where)
     if (Object.keys(g.rooms).every(function (k) { return g.rooms[k].done.length === ED_ROOMS.length || (players[k] && players[k].off); })) setTimeout(edEnd, 2500);
     return true;
   }
@@ -3817,37 +3975,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('edov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
     setTimeout(function () { var o = $('edov'); if (o) o.remove(); clueAccuse(); }, 900);
   }
-  // The dollhouse on the big screen: four rooms, the timer in the middle, everyone's character in the room they're in
-  // (or on the stairs in the middle, picking the next one).
+  // The big screen: the four rooms, full screen, with the timer in the middle. Nothing about who is where or how far.
   function edShow() {
-    var g = G.clue; if (!g || g.st !== 'rooms') return;
+    var g = G.clue; if (!g || g.st !== 'rooms' || !g.scene) return;
     var ov = $('edov');
     if (!ov) {
-      ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov enter';
-      ov.innerHTML = '<div class="edsky"></div><div class="edhouse"><div class="edroof"><span>🔍 Where the Hell Is Edgar?</span></div>' +
-        '<div class="edroom green"><b>🛋️ Green Room</b><div class="eddeco"><i class="sofa"></i><i class="sofa two"></i><i class="fridge"></i></div><div class="edin"></div></div>' +
-        '<div class="edroom club"><b>🪩 Euroclub</b><div class="eddeco"><span class="edball">🪩</span><i class="booth"></i>' + ED_DJ + '</div><div class="edin"></div></div>' +
-        '<div class="edroom back"><b>🔌 Backstage</b><div class="eddeco"><i class="spk"></i><i class="spk two"></i><i class="cab"></i><i class="cab two"></i></div><div class="edin"></div></div>' +
-        '<div class="edroom boud"><b>👗 Woodruff’s Boudoir</b><div class="eddeco"><i class="mirror"></i><i class="rack"></i><i class="screen"></i></div><div class="edin"></div></div>' +
-        '<div class="edstairs"><div class="edclock"></div><div class="edin"></div></div></div><div class="edlist"></div>';
+      ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
+      ov.innerHTML = ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') +
+        '<div class="edmid"><span>🔍 Where the Hell<br>Is Edgar?</span><div class="edclock"></div></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
-      setTimeout(function () { ov.classList.remove('enter'); }, 2400);
+      setTimeout(function () { ov.classList.remove('enter'); }, 1600);
     }
     var ck = ov.querySelector('.edclock'), sec = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)), txt = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
     if (ck.textContent !== txt) ck.textContent = txt; ck.classList.toggle('hot', sec <= 15);
-    var where = {}; Object.keys(g.rooms).forEach(function (k) { var r = g.rooms[k], w = r.cur || (r.done.length === ED_ROOMS.length ? 'stairs' : 'stairs'); (where[w] = where[w] || []).push(k); });
-    ['green', 'club', 'back', 'boud', 'stairs'].forEach(function (w) {
-      var box = ov.querySelector((w === 'stairs' ? '.edstairs' : '.edroom.' + w) + ' .edin'), ks = where[w] || [];
-      var h = ks.map(function (k) { var p = players[k]; if (!p) return ''; var r = g.rooms[k]; return '<span class="edp' + (r.done.length === ED_ROOMS.length ? ' fin' : '') + '" data-p="' + esc(k) + '"><span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em></span>'; }).join('');
-      if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
-    });
-    var lh = Object.keys(g.rooms).map(function (k) { var p = players[k], r = g.rooms[k]; if (!p) return ''; return '<div class="edrow' + (g.fin.indexOf(k) >= 0 ? ' fin' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><i>' + ED_ROOMS.map(function (x) { return '<b class="' + (r.done.indexOf(x.id) >= 0 ? 'ok' : r.cur === x.id ? 'now' : '') + '">' + x.icon + '</b>'; }).join('') + '</i>' + (g.fin.indexOf(k) === 0 ? '<em>+2 🔍</em>' : g.fin.indexOf(k) === 1 ? '<em>+1 🔍</em>' : '') + '</div>'; }).join('');
-    var lb = ov.querySelector('.edlist'); if (lb.getAttribute('data-h') !== lh) { lb.setAttribute('data-h', lh); lb.innerHTML = lh; }
   }
   function clueSnap() {
     var g = G.clue, acc = {};
     Object.keys(g.acc).forEach(function (k) { acc[k] = 1; });
-    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' || g.st === 'rooms' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step, rooms: g.st === 'rooms' ? g.rooms : null, last: g.st === 'rooms' ? g.last : null, fin: g.fin || [],
+    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' || g.st === 'rooms' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step, rooms: g.st === 'rooms' ? g.rooms : null, scene: g.st === 'rooms' ? g.scene : null, last: g.st === 'rooms' ? g.last : null, fin: g.fin || [],
       sol: g.st === 'reveal' ? { where: g.step >= 1 ? g.sol.where : '', what: g.step >= 2 ? g.sol.what : '', who: g.step >= 3 ? g.sol.who : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
   }
   // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.

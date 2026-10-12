@@ -891,3 +891,24 @@ function clueText(key) {   // what a clue says: this one is not it
   var x = clueCard(key); if (!x) return '';
   return x.kind === 'who' ? x.c.icon + ' ' + x.c.name + ' has an alibi.' : x.kind === 'where' ? x.c.icon + ' Edgar is not hidden ' + x.c.in + '.' : x.c.icon + ' Edgar is not inside the ' + x.c.name + '.';
 }
+
+// Where the Hell Is Edgar?: the symbols on the DJ booth (Euroclub) and on the patch panel (Backstage), drawn the same
+// on the big screen and on the phones. Each fits a 40×40 box.
+var ED_SYMS2 = {
+  star: { c: '#ff6fd8', d: 'M20 3 L25 15 L38 15 L27.5 23 L31.5 36 L20 28 L8.5 36 L12.5 23 L2 15 L15 15 Z' },
+  heart: { c: '#3fd6ff', d: 'M20 35 C6 25 2 18 2 12 C2 6 7 3 11.5 3 C15 3 18 5 20 8.5 C22 5 25 3 28.5 3 C33 3 38 6 38 12 C38 18 34 25 20 35 Z' },
+  bolt: { c: '#ffd23f', d: 'M23 2 L7 22 L18 22 L14 38 L33 15 L21 15 Z' },
+  diamond: { c: '#3ddc84', d: 'M20 2 L36 20 L20 38 L4 20 Z' },
+  moon: { c: '#c58bff', d: 'M26 3 C14 5 7 13 7 21 C7 30 14 37 24 37 C30 37 34 34 37 30 C26 32 17 25 17 15 C17 9 21 5 26 3 Z' },
+  crown: { c: '#ff9f1c', d: 'M4 32 L4 12 L13 21 L20 6 L27 21 L36 12 L36 32 Z' }
+};
+var ED_SOCKS = {
+  circle: '<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"/>',
+  triangle: '<path d="M20 5 L35 33 L5 33 Z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>',
+  star: '<path d="M20 3 L25 15 L38 15 L27.5 23 L31.5 36 L20 28 L8.5 36 L12.5 23 L2 15 L15 15 Z" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round"/>',
+  square: '<rect x="7" y="7" width="26" height="26" fill="none" stroke="#fff" stroke-width="4"/>',
+  spiral: '<path d="M20 20 m0 -3 a3 3 0 1 1 -3 3 a6 6 0 1 1 6 6 a9 9 0 1 1 -9 -9 a12 12 0 1 1 12 12" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>',
+  hexagon: '<path d="M20 4 L34 12 L34 28 L20 36 L6 28 L6 12 Z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>'
+};
+function edSym(id, x, y, sz) { var s = ED_SYMS2[id]; return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')"><path d="' + s.d + '" fill="' + s.c + '"/></g>'; }
+function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')">' + ED_SOCKS[id] + '</g>'; }
