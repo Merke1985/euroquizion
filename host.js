@@ -3581,7 +3581,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
       ['him', 'Breaking news, Europe… Edgar, our beloved mascot, has been abducted! 😱'],
-      ['her', 'Whoever took him left clues scattered around four areas of the building, and everyone needs to search them!'],
+      ['her', 'Look at these cards. The top row: where he could be hidden…', 'where'],
+      ['him', '…the middle row: what he is hidden inside…', 'what'],
+      ['her', '…and the bottom row: who took him. In every row, one card is the truth.', 'who'],
+      ['him', 'The kidnapper left clues scattered around four areas of the building, and everyone needs to search them!'],
+      ['her', 'Every clue tells you a card that is NOT the answer. Rule out enough cards, and only the truth is left!'],
       ['him', 'Enter the rooms one by one on your phone, and find the clues on the big screen. Look closely!'],
       ['her', 'The fastest detective overall wins an extra clue! 🔍']
     ];
@@ -3648,7 +3652,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
     cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong();   // (the tune plays on)
     clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who took Edgar, where is he hidden, and what is he hidden inside?'); }, 1400);
-    setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Make your choice on your phone. Use your clues, detectives!'); }, 5200);
+    setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Your clues are the cards that are NOT the answer: rule them out, and pick from what’s left on your phone! 🔍'); }, 5200);
     // bots: a guess among what their clues leave open
     bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off) return; setTimeout(function () {
       if (!G.clue || G.clue.st !== 'acc') return;
