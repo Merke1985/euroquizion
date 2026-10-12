@@ -3658,3 +3658,12 @@ body.hasdock main{padding-bottom:84px}
 .tc3front canvas{display:block;width:100%!important;height:100%!important}
 .tcov.is3d .tc3front{display:block}
 .tcov .tcq,.tcov .tcboard,.tcov .tcbub{z-index:7}
+
+/* Sja-la-lie: before the show the stage is still: no singer, no marionettes, the organ not moving */
+.orov:not(.live) .orsinger,.orov:not(.live) .orpuppet{opacity:0;translate:0 6vh}
+.orsinger,.orpuppet{transition:opacity .8s,translate .8s cubic-bezier(.2,.9,.3,1.1)}
+.orov:not(.live) .orsvg,.orov:not(.live) .orsvg *,.orov:not(.live) .orleds i,.orov:not(.live) .orrig i,.orov:not(.live) .orbeams i{animation:none!important}
+.orov:not(.live) .orsvg .orbulb{fill:#7a6a40}
+.orok{font-style:normal;color:#3ddc84}
+.orsta.brk{box-shadow:0 0 0 3px #ff4d4d,0 0 30px rgba(255,77,77,.7);animation:benvshake .25s linear infinite}
+.orsta:not(.brk):not(.done){box-shadow:0 0 0 3px rgba(255,255,255,.3)}

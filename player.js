@@ -708,10 +708,10 @@
     if (g.st === 'fixed') { box.classList.add('hidden'); $('waittitle').textContent = g.fixed ? '🎶 The organ is fixed!' : '💨 Time’s up!'; $('waitsub').textContent = (g.last && g.last[pid] != null ? '+' + g.last[pid] + ' repair points this phase. ' : '') + (g.ph < 3 ? 'Next phase coming up…' : ''); return; }
     var key = g.id + '|' + g.ph;
     if (orKey !== key) { orKey = key; orD = 0; orSentD = 0; orPz = orMake(sta, g.ph); box.removeAttribute('data-k'); }
-    if (g.st === 'brief') { box.classList.add('hidden'); $('waittitle').textContent = 'Phase ' + g.ph + ': ' + OR_TITLE[sta]; $('waitsub').textContent = OR_HELP[sta]; return; }
+    if (g.st === 'brief' || (g.st === 'fix' && !(g.open || {})[sta])) { box.classList.add('hidden'); $('waittitle').textContent = '👀 Keep an eye on: ' + OR_TITLE[sta]; $('waitsub').textContent = 'All good for now… If it breaks down, fix it here as fast as you can! (' + OR_HELP[sta] + ')'; return; }
     var pr = (g.prog || {})[pid]; if (pr && pr[0] < orD && orD > 0) orReport();   /* (the host missed a step: send it again) */
     if (orD >= orPz.of) { box.classList.add('hidden'); $('waittitle').textContent = '✅ ' + OR_TITLE[sta] + ' fixed!'; $('waitsub').textContent = 'Great job! Now cheer on the others… 🔧'; return; }
-    $('waittitle').textContent = OR_TITLE[sta]; $('waitsub').textContent = OR_HELP[sta];
+    $('waittitle').textContent = '⚠️ ' + OR_TITLE[sta] + ' broke down!'; $('waitsub').textContent = OR_HELP[sta];
     box.classList.remove('hidden');
     if (box.getAttribute('data-k') === key) return;
     box.setAttribute('data-k', key);
