@@ -4603,7 +4603,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, RU_RISE + 400);
     }, REMOTE ? 1000 : t);
   }
-  var RU_RISE = 8000, ruSongT = null;
+  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 10000, RU_REVEAL = 175000, ruSongT = null;   // (RU_REVEAL: the winner at 2:55 in the song)
   function ruSay(who, txt) {
     var ov = $('ruov'); if (!ov) return;
     [].forEach.call(ov.querySelectorAll('.rubub'), function (x) { x.classList.remove('on'); });
@@ -4636,7 +4636,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
-    g.st = 'play'; g.t0 = Date.now(); g.ends = g.t0 + RU_MS; push(); Music.ding();
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_REVEAL - RU_COUNT - 600 : g.t0 + RU_MS; push(); Music.ding();   // (the game ends so that the count is done at 2:55 in the song)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
   function ruBot(g, k) {   // a bot: walks in straight lines for a while, preferring tiles that aren't its own
@@ -4698,12 +4698,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function ruEnd() {
     var g = G.rule; if (!g || g.st !== 'play') return;
-    clearInterval(ruLoop); g.st = 'end'; g.cnt = ruCount(g); ruBeat(); ruSong(false, true);
+    clearInterval(ruLoop); g.cnt = ruCount(g); ruBeat(); ruSong(false, true);
     var best = Math.max.apply(null, g.order.map(function (k) { return g.cnt[k] || 0; }));
-    g.win = best > 0 ? g.order.filter(function (k) { return g.cnt[k] === best; }) : [];   // (a tie: they all win)
-    var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
-    g.prize = big; push(); Music.douze();
-    clearTimeout(ruTimer); ruTimer = setTimeout(function () { if (G.phase === 'rule') { G.rule = null; startRound(); } }, 8500);
+    // the count: everyone's tiles counted at the same time, one by one, until the winner is the only one still counting
+    // (the count takes about 10 seconds, so the winner is revealed at 2:55 in the song)
+    g.cstep = Math.max(60, Math.round(RU_COUNT / Math.max(1, best))); g.st = 'count'; g.countAt = Date.now() + 300; push(); Music.ding();
+    var dur = 300 + best * g.cstep + 300;
+    clearTimeout(ruTimer); ruTimer = setTimeout(function () {
+      if (G.rule !== g) return;
+      g.win = best > 0 ? g.order.filter(function (k) { return g.cnt[k] === best; }) : [];   // (a tie: they all win)
+      var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
+      g.st = 'end'; g.prize = big; push(); Music.douze();
+      ruTimer = setTimeout(function () { if (G.phase === 'rule') { G.rule = null; startRound(); } }, 7000);
+    }, dur);
+    var tick = setInterval(function () { if (G.rule !== g || (g.st !== 'count' && g.st !== 'end')) { clearInterval(tick); return; } ruShow(); if (g.st === 'end' && Date.now() - g.countAt > dur + 200) clearInterval(tick); }, Math.min(g.cstep, 120));
   }
   function ruCol(k) { var p = players[k]; return p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#888'; }
   function ruSnap() {
@@ -4772,7 +4780,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.NoToneMapping;
     hostEl.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#0a0414'); sc.fog = new T.Fog('#1a0830', n * 1.6, n * 4);
-    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(n * .02, n * 1.08, n * .9); cam.lookAt(n * .17, 0, n * .14);
+    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(-n * .1, n * 1.08, n * .9); cam.lookAt(0, 0, n * .14);
     sc.rotation.y = RU_TURN;   // (the whole floor turned a little to the right)
     sc.add(new T.HemisphereLight('#7a5aff', '#200830', .38));
     var key = new T.DirectionalLight('#ffffff', .35); key.position.set(-n, n * 2, n); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); var ks = key.shadow.camera; ks.left = -n; ks.right = n; ks.top = n; ks.bottom = -n; ks.far = n * 6; sc.add(key);
@@ -4790,7 +4798,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       m.position.set(x - n / 2 + .5, .12, y - n / 2 + .5); m.receiveShadow = true; sc.add(m); tiles.push(m);
     }
     // the hole in the middle, and the stage that rises out of it with the singer on top
-    var pit = new T.Mesh(new T.BoxGeometry(s, 8, s), new T.MeshBasicMaterial({ color: '#000000' })); pit.position.y = -4; sc.add(pit);
+    var pitM = new T.MeshStandardMaterial({ color: '#0a0612', side: T.BackSide, roughness: 1 }), pitTop = new T.MeshBasicMaterial({ visible: false });
+    var pit = new T.Mesh(new T.BoxGeometry(s, 8, s), [pitM, pitM, pitTop, pitM, pitM, pitM]); pit.position.y = -3.95; sc.add(pit);   // (open at the top: she rises out of it)
     var stage = new T.Group(); sc.add(stage);
     var stTex = ru3Sparkle('#3a1a6a');
     var sb = new T.Mesh(new T.BoxGeometry(s - .06, 6, s - .06), [new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#120620', roughness: .8 }), new T.MeshStandardMaterial({ color: '#000' }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 })]);
@@ -4902,10 +4911,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     var ck = ov.querySelector('.ruclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - now) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - now) / 1000)) : 0;
     var txt = g.st === 'play' ? Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2) : g.st === 'ready' ? String(sec) : ''; if (ck.textContent !== txt) ck.textContent = txt;
-    var cnt = g.cnt && Object.keys(g.cnt).length ? g.cnt : ruCount(g), tot = n * n - g.s * g.s;
-    var lh = g.order.slice().sort(function (a, b) { return (cnt[b] || 0) - (cnt[a] || 0); }).map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="rurow' + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '') + '" style="--c:' + ruCol(k) + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><i>' + (cnt[k] || 0) + '</i><em style="width:' + Math.round((cnt[k] || 0) / tot * 100) + '%"></em></div>'; }).join('');
-    var lb = ov.querySelector('.rulist'); if (lb.getAttribute('data-h') !== lh) { lb.setAttribute('data-h', lh); lb.innerHTML = lh; }
-    var msg = g.st === 'intro' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here she comes… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var cnt = g.cnt && Object.keys(g.cnt).length ? g.cnt : ruCount(g), lb = ov.querySelector('.rulist');
+    if (g.st === 'count' || g.st === 'end') {
+      var best = Math.max.apply(null, g.order.map(function (k) { return cnt[k] || 0; })), k0 = Math.max(0, Math.floor((now - (g.countAt || now)) / (g.cstep || RU_CSTEP)) + 1);
+      if (lb.getAttribute('data-id') !== g.id) {
+        lb.setAttribute('data-id', g.id);
+        lb.innerHTML = '<div class="rult">🪩 Counting the tiles…</div>' + g.order.map(function (k) { var p = players[k]; if (!p) return ''; return '<div class="rurow" data-p="' + esc(k) + '" style="--c:' + ruCol(k) + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em><u></u></em><b class="rucn">0</b></div>'; }).join('');
+      }
+      [].forEach.call(lb.querySelectorAll('.rurow'), function (r) {
+        var k = r.getAttribute('data-p'), c = cnt[k] || 0, v = Math.min(c, g.st === 'end' ? c : k0), done = v >= c;
+        var iEl = r.querySelector('.rucn'); if (iEl.textContent !== String(v)) { iEl.textContent = v; r.classList.remove('tick'); void r.offsetWidth; r.classList.add('tick'); }
+        r.querySelector('u').style.width = (best ? v / best * 100 : 0) + '%';
+        r.classList.toggle('stop', done && g.st === 'count'); r.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+      });
+      lb.querySelector('.rult').textContent = g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? players[k].name : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') : 'The end!') : '🪩 Counting the tiles…';
+      if (g.st === 'count' && k0 > 0 && k0 <= best && lb._k !== k0) { lb._k = k0; Music.plop(k0 % 5, .5); }
+      ov.classList.add('counting');
+    } else { if (lb.innerHTML) { lb.innerHTML = ''; lb.removeAttribute('data-id'); } ov.classList.remove('counting'); }
+    var msg = g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here she comes… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.rumsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('rule', ruMsg);

@@ -662,6 +662,7 @@
   function ruView(s) {
     var r = s.rule, box = $('ruui'), mine = r.order.indexOf(pid) >= 0;
     show('v-wait');
+    if (r.st === 'count') { box.classList.add('hidden'); ruSet(''); $('waittitle').textContent = '🪩 Counting the tiles…'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     if (r.st === 'end') {
       box.classList.add('hidden'); ruSet('');
       var w = (r.win || []).indexOf(pid) >= 0, names = (r.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);

@@ -3640,3 +3640,16 @@ body.hasdock main{padding-bottom:84px}
 .rubub{top:14vh}.rubub.him{left:4vw}.rubub.her{left:auto;right:34vw}
 .rut.pre{display:none}
 .ruov[data-st="ready"] .ruclock{font-size:clamp(5rem,14vw,12rem)}
+
+/* Rule the World: no scores during the game; at the end, the count on the right */
+.ruov.is3d .rulist{right:-40vw;top:10vh;width:34vw;padding:2vh 1.4vw;border-radius:20px;background:rgba(10,4,24,.88);box-shadow:0 0 0 3px #ff3fb0,0 0 40px rgba(255,63,176,.4);transition:right .8s cubic-bezier(.2,.9,.3,1.05);gap:.8vh}
+.ruov.is3d.counting .rulist{right:2vw}
+.ruov.is3d .rulist:empty{display:none}
+.rult{font-weight:900;font-size:clamp(1rem,1.8vw,1.6rem);text-align:center;margin-bottom:.6vh;text-shadow:0 0 14px #ff3fb0}
+.ruov .rulist .rurow{gap:.7vw;padding:.6vh .8vw;font-size:clamp(.75rem,1.25vw,1.1rem)}
+.ruov .rulist .rurow em{position:relative;flex:1.2;height:1.4vh;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;left:auto;bottom:auto;width:auto!important}
+.ruov .rulist .rurow em u{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c);box-shadow:0 0 10px var(--c);transition:width .1s linear}
+.ruov .rulist .rurow i{width:2.4em;text-align:right;font-size:1.25em}
+.ruov .rulist .rurow.tick i{animation:benvin .18s ease-out}
+.ruov .rulist .rurow.stop{opacity:.6}
+.ruov .rulist .rurow.win{opacity:1;background:linear-gradient(90deg,rgba(255,210,63,.35),rgba(0,0,0,.5));box-shadow:inset 4px 0 0 var(--c),0 0 0 2px #ffd23f;animation:uwin .6s ease-in-out infinite alternate}
