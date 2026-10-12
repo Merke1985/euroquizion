@@ -645,7 +645,8 @@
   }
 
   // ---------- We Will Rule the World ----------
-  // A cross-shaped D-pad: tap a direction and you keep dancing that way, hop after hop, until you tap another one.
+  // A cross-shaped D-pad: tap a direction and you keep dancing that way, hop after hop, until you tap another one
+  // (tap the same one again to stand still).
   // The chosen arrow glows. Stunned: the pad dims, 3-2-1 in the middle.
   var ruLive = null, ruD = '', ruDT = null, ruStunEnd = 0, ruStunT = null;
   function ruSendD() { var r = state && state.rule; if (!net || !r || r.st !== 'play') return; net.send('rule', { pid: pid, id: r.id, d: ruD }); }
@@ -673,14 +674,14 @@
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 We Will Rule the World'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var col = (r.cols || {})[pid] || '#888';
-    $('waittitle').textContent = r.st === 'play' ? '🪩 Claim the floor!' : r.st === 'rise' ? '✨ Here she comes…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow: you keep dancing that way until you tap another one.';
+    $('waittitle').textContent = r.st === 'play' ? '🪩 Claim the floor!' : r.st === 'rise' ? '✨ Here she comes…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow and you keep dancing that way. Tap it again to stop.';
     box.classList.remove('hidden'); box.style.setProperty('--c', col);
     if (box.getAttribute('data-id') !== r.id) {
       box.setAttribute('data-id', r.id); ruD = ''; clearInterval(ruDT); ruStunEnd = 0;
       box.innerHTML = '<div class="rupad"><button type="button" class="rub u" data-d="u">▲</button><button type="button" class="rub l" data-d="l">◀</button><span class="ruc"></span><button type="button" class="rub r" data-d="r">▶</button><button type="button" class="rub d" data-d="d">▼</button></div>';
       [].forEach.call(box.querySelectorAll('.rub'), function (b) {
         var d = b.getAttribute('data-d');
-        b.addEventListener('pointerdown', function (e) { e.preventDefault(); [].forEach.call(box.querySelectorAll('.rub'), function (x) { x.classList.toggle('on', x === b); }); b.classList.remove('tap'); void b.offsetWidth; b.classList.add('tap'); ruSet(d); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} });
+        b.addEventListener('pointerdown', function (e) { e.preventDefault(); var stop = ruD === d; [].forEach.call(box.querySelectorAll('.rub'), function (x) { x.classList.toggle('on', !stop && x === b); }); b.classList.remove('tap'); void b.offsetWidth; b.classList.add('tap'); ruSet(stop ? '' : d); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} });
         b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
       });
     }

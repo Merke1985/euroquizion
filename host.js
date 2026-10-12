@@ -2650,11 +2650,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
     step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
     // what they say: who they are, what we play tonight and how it works, then off we go
-    var lines = [['him', 'Good evening, Europe! I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
-    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
-    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', vary('first')]);
-    lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
-    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
+    // (lines with a third entry are spoken out loud: sounds/<name>.mp3, with how long it takes)
+    var lines = [['him', 'Good evening, Europe!', 'felix_welcome', 2000], ['her', 'I’m Stella, and this is Felix!']].concat(showPlan());
+    lines.push(['her', 'Welcome to EuroQuizion! Grab your phones: here comes the first song!', 'stella_welcome', 6200]);
+    var gap = 1300;
+    lines.forEach(function (l, i) { step(gap, function () { if (l[2]) hostVoice(l[2]); hostSay(l[0], l[1], l[3] ? l[3] + 500 : 3600); if (!i) Music.ding(); }); gap = l[3] ? Math.max(3300, l[3] + 900) : 3300; });
+    step(gap, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
   // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Stella!").
   function showPlan() {
@@ -2692,10 +2693,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     say(fin);
     return L;
   }
-  function hostWelcome() {
-    if (G.mgTest) return;   // (a test of the party games or the boutique: straight to it)
-    hostSay('him', 'Good evening, Europe!', 3200);
-    setTimeout(function () { hostSay('her', 'Welcome to EuroQuizion! Grab your phones: here comes the first song!', 4200); }, 2600);
+  // The presenters' recorded voices (Irish, over the top), in sounds/<name>.mp3; played on the big screen only.
+  var hostVoiceEl = {};
+  function hostVoice(name) {
+    if (REMOTE) return;
+    try { var a = hostVoiceEl[name] || (hostVoiceEl[name] = new Audio('sounds/' + name + '.mp3?v=1')); a.currentTime = 0; a.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
   }
 
   // ---------- The Unlucky Draw ----------
@@ -4639,7 +4641,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     clearInterval(ruSongT); ruSongT = null;
     if (REMOTE) return;
     try {
-      if (!on && fade) { var v = 55; ruSongT = setInterval(function () { v -= 3; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(ruSongT); ruSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
+      if (!on && fade) { var v = 55, dv = typeof fade === 'number' ? 55 / (fade / 200) : 3; ruSongT = setInterval(function () { v -= dv; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(ruSongT); ruSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
       if (!on) { yt.pauseVideo(); return; }
       Music.want(false); stage = 'rule'; yt.loadVideoById({ videoId: 'sjb2wMJXeuw', startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
       var g = G.rule, synced = false;
@@ -4678,6 +4680,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.rule; if (!g || G.phase !== 'rule' || g.st !== 'play') { clearInterval(ruLoop); return; }
     var now = Date.now();
     if (now >= g.ends) { ruEnd(); return; }
+    if (!g.faded && g.ends - now <= 2000) { g.faded = 1; ruSong(false, 2000); }   // (1:14 to 1:16: the song fades out)
     // who moves this tick, and where to
     var mv = {};
     g.order.forEach(function (k) {
@@ -4811,7 +4814,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.NoToneMapping;
     hostEl.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#0a0414'); sc.fog = new T.Fog('#1a0830', n * 1.6, n * 4);
-    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(-n * .04, n * .82, n * 1.02); cam.lookAt(0, n * .1, n * .02);   /* (aimed a little higher: everything a bit lower on the screen) */
+    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(-n * .03, n * .9, n * 1.16); cam.lookAt(n * .03, n * .02, n * .1);   /* (aimed a little higher: everything a bit lower on the screen) */
     sc.rotation.y = RU_TURN;   // (the whole floor turned a little to the right)
     sc.add(new T.HemisphereLight('#7a5aff', '#200830', .38));
     var key = new T.DirectionalLight('#ffffff', .35); key.position.set(-n, n * 2, n); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); var ks = key.shadow.camera; ks.left = -n; ks.right = n; ks.top = n; ks.bottom = -n; ks.far = n * 6; sc.add(key);
