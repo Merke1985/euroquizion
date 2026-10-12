@@ -887,7 +887,7 @@
         { q: 'How many dancers (in colour) are on the floor?', a: String(s.dancers), o: edNums(s.dancers, 1, 7) },
         { q: 'What colour is DJ Konstantin’s jacket?', a: s.jacket, o: edPickOpts(s.jacket, ['purple', 'blue', 'green', 'red', 'gold']), col: 1 }
       ];
-      return [{ t: 'syms', q: 'The DJ booth lights up five symbols. Tap them in the same order, left to right!', a: s.panel }].concat(shuffle(mc).slice(0, 2));
+      return [{ t: 'syms', q: 'Watch the DJ booth: five symbols light up, one after the other. Tap them in that order!', a: s.panel }].concat(shuffle(mc).slice(0, 2));
     }
     if (room === 'back') {
       var k = pick(s.cases), m = Math.floor(Math.random() * 5);

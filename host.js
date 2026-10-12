@@ -3773,107 +3773,116 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var sitters = shuffle([0, 1, 2, 3, 4]).slice(0, edRnd(2, 3)).map(function (k, i) { return { seat: k, hair: hairs[i], top: pick(['purple', 'orange', 'teal', 'white', 'black']) }; });
     var socks = shuffle(Object.keys(ED_SOCKS)), cables = shuffle(['red', 'blue', 'green', 'yellow']), plugged = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 4);
     var outs = shuffle(['red', 'blue', 'green', 'yellow', 'purple', 'orange']);
-    return {
+    var R0 = {
       green: { code: code, cans: cans, clock: [edRnd(1, 12), pick([0, 15, 30, 45])], pizza: edRnd(1, 7), seats: seats, sitters: sitters, fridger: { hair: hairs[3], top: pick(['red', 'green', 'blue']) }, records: edRnd(1, 4) },
-      club: { panel: shuffle(Object.keys(ED_SYMS2)).slice(0, 5), balls: edRnd(1, 5), setlist: shuffle(ED_SONGS.slice()).slice(0, 5), neon: pick(['DOUZE', 'PARTY', 'ENCORE', 'DANCE', 'GLAM', 'LOVE']), neonC: pick(['pink', 'blue', 'green', 'yellow']), dancers: edRnd(2, 5), jacket: pick(['purple', 'blue', 'green', 'red', 'gold']) },
+      club: { tiles: (function () { var t = shuffle(Object.keys(ED_SYMS2)); return t; })(), panel: null, balls: edRnd(1, 5), setlist: shuffle(ED_SONGS.slice()).slice(0, 5), neon: pick(['DOUZE', 'PARTY', 'ENCORE', 'DANCE', 'GLAM', 'LOVE']), neonC: pick(['pink', 'blue', 'green', 'yellow']), dancers: edRnd(2, 5), jacket: pick(['purple', 'blue', 'green', 'red', 'gold']) },
       back: { socks: socks, plug: plugged.map(function (k, i) { return { s: k, c: cables[i] }; }), cases: shuffle(['red', 'blue', 'yellow', 'green']).map(function (c) { return { c: c, code: cc() }; }), spots: edRnd(3, 7), guitars: edRnd(1, 3), order: shuffle(ED_ACTS.slice()).slice(0, 5) },
       boud: { rack: shuffle(['red', 'blue', 'yellow', 'green', 'purple', 'black']).slice(0, 5).map(function (c, i) { return { c: c, p: prices[i] }; }), wigs: shuffle(['blonde', 'black', 'pink', 'blue', 'red', 'brown']).slice(0, 4), word: pick(['KISS', 'DIVA', 'FAB', 'WOW', 'GLAM', 'ICON']), perfume: edRnd(2, 6),
         woman: { dress: outs[0], hair: pick(['black', 'blonde', 'red']), boa: pick(['pink', 'white', 'teal']) }, man: { suit: outs[1], hair: pick(['black', 'brown', 'blonde']) }, child: { dress: outs[2], hair: pick(['orange', 'blonde', 'brown', 'black']) } }
     };
+    R0.club.panel = shuffle(R0.club.tiles.slice()).slice(0, 5);   // (the order the DJ lights them up)
+    return R0;
   }
-  // A little person: feet at (x, y). o: hair, hairStyle (short / long / curly / pony / bun), top, legs, dress, sit, glasses, boa, s (scale), flip
+  // A little cartoon person (big head, round body, outlines): feet at (x, y). o: hair, hairStyle (short / long / curly /
+  // pony / bun), top, legs, dress, sit, glasses, boa, tie, walk, armUp, shoes, s (scale), flip
+  var ED_INK = '#2b1830';
   function edPerson(x, y, o) {
-    var s = o.s || 1, skin = o.skin || '#f0c8a8', H = ED_COL[o.hair] || o.hair || '#333', T = ED_COL[o.top] || o.top || '#888', Lg = ED_COL[o.legs] || o.legs || '#2a2a40', h = '';
-    if (o.sit) {
-      h += '<rect x="-10" y="-62" width="34" height="14" rx="6" fill="' + Lg + '"/><rect x="14" y="-56" width="12" height="56" rx="5" fill="' + Lg + '"/><ellipse cx="24" cy="0" rx="11" ry="5" fill="#222"/>';
-    } else if (!o.dress) {
-      h += '<rect x="-12" y="-64" width="10" height="62" rx="4" fill="' + Lg + '" transform="rotate(' + (o.walk ? 8 : 0) + ' -7 -64)"/><rect x="2" y="-64" width="10" height="62" rx="4" fill="' + Lg + '" transform="rotate(' + (o.walk ? -10 : 0) + ' 7 -64)"/>' +
-        '<ellipse cx="' + (o.walk ? -14 : -8) + '" cy="0" rx="10" ry="5" fill="#222"/><ellipse cx="' + (o.walk ? 16 : 8) + '" cy="0" rx="10" ry="5" fill="#222"/>';
-    } else {
-      h += '<rect x="-9" y="-30" width="7" height="30" fill="' + skin + '"/><rect x="3" y="-30" width="7" height="30" fill="' + skin + '"/><ellipse cx="-6" cy="0" rx="8" ry="4" fill="' + (o.shoes || '#e0283a') + '"/><ellipse cx="7" cy="0" rx="8" ry="4" fill="' + (o.shoes || '#e0283a') + '"/>';
-    }
-    if (o.dress) h += '<path d="M-14 -112 L14 -112 L18 -86 L32 -26 L-32 -26 L-18 -86 Z" fill="' + T + '" stroke="rgba(0,0,0,.25)" stroke-width="2"/>';
-    else h += '<rect x="-17" y="-114" width="34" height="56" rx="10" fill="' + T + '" stroke="rgba(0,0,0,.2)" stroke-width="2"/>' + (o.tie ? '<path d="M0 -112 L-4 -100 L0 -80 L4 -100 Z" fill="#111"/><path d="M-6 -114 L0 -104 L6 -114" stroke="#fff" stroke-width="3" fill="none"/>' : '');
-    var arm = o.armUp ? '<rect x="14" y="-150" width="9" height="42" rx="4" fill="' + T + '"/><circle cx="18" cy="-152" r="6" fill="' + skin + '"/>' : '<rect x="14" y="-110" width="9" height="44" rx="4" fill="' + T + '" transform="rotate(-10 18 -110)"/><circle cx="22" cy="-64" r="6" fill="' + skin + '"/>';
-    h += '<rect x="-23" y="-110" width="9" height="44" rx="4" fill="' + T + '" transform="rotate(10 -18 -110)"/><circle cx="-22" cy="-64" r="6" fill="' + skin + '"/>' + arm;
-    if (o.boa) h += '<g fill="' + (ED_COL[o.boa] || o.boa) + '">' + [-22, -14, -6, 2, 10, 18, 24].map(function (bx, i) { return '<circle cx="' + bx + '" cy="' + (-112 + Math.abs(bx) * .25 + (i % 2) * 3) + '" r="7"/>'; }).join('') + '<circle cx="-26" cy="-90" r="6"/><circle cx="28" cy="-92" r="6"/><circle cx="-28" cy="-74" r="5"/><circle cx="30" cy="-76" r="5"/></g>';
-    h += '<rect x="-5" y="-124" width="10" height="12" fill="' + skin + '"/>';
-    var st = o.hairStyle || 'short';
-    if (st === 'long') h += '<path d="M-19 -134 Q-22 -100 -16 -92 L16 -92 Q22 -100 19 -134 Z" fill="' + H + '"/>';
-    if (st === 'pony') h += '<ellipse cx="20" cy="-128" rx="7" ry="16" fill="' + H + '" transform="rotate(25 20 -128)"/>';
-    if (st === 'bun') h += '<circle cx="0" cy="-160" r="9" fill="' + H + '"/>';
-    h += '<circle cx="0" cy="-136" r="17" fill="' + skin + '"/>';
-    if (st === 'curly') h += '<g fill="' + H + '">' + [[-14, -146], [-6, -153], [4, -154], [13, -147], [17, -137], [-17, -136]].map(function (c) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="8"/>'; }).join('') + '</g>';
-    else h += '<path d="M-18 -134 Q-18 -156 0 -156 Q18 -156 18 -134 Q12 -146 0 -146 Q-12 -146 -18 -134 Z" fill="' + H + '"/>';
-    h += o.glasses ? '<rect x="-13" y="-140" width="11" height="7" rx="2" fill="#111"/><rect x="2" y="-140" width="11" height="7" rx="2" fill="#111"/><line x1="-2" y1="-137" x2="2" y2="-137" stroke="#111" stroke-width="2"/>' : '<circle cx="-6" cy="-136" r="2.2" fill="#2a1a10"/><circle cx="6" cy="-136" r="2.2" fill="#2a1a10"/>';
-    h += '<path d="M-5 -128 Q0 -124 5 -128" stroke="#a04a3a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    var s = o.s || 1, skin = o.skin || '#f6cfb2', H = ED_COL[o.hair] || o.hair || '#333', T = ED_COL[o.top] || o.top || '#888', Lg = ED_COL[o.legs] || o.legs || '#3a3a5a', K = ' stroke="' + ED_INK + '" stroke-width="2.6" stroke-linejoin="round"', h = '';
+    var shoe = o.shoes || '#3a2a3a';
+    if (o.sit) h += '<path d="M-14 -40 L20 -40 Q26 -40 26 -32 L26 -4 L14 -4 L14 -28 L-14 -28 Z" fill="' + Lg + '"' + K + '/><ellipse cx="22" cy="-1" rx="10" ry="5" fill="' + shoe + '"' + K + '/>';
+    else if (o.dress) h += '<rect x="-9" y="-24" width="7" height="22" rx="3" fill="' + skin + '"' + K + '/><rect x="2" y="-24" width="7" height="22" rx="3" fill="' + skin + '"' + K + '/><ellipse cx="-7" cy="-1" rx="8" ry="4.5" fill="' + shoe + '"' + K + '/><ellipse cx="8" cy="-1" rx="8" ry="4.5" fill="' + shoe + '"' + K + '/>';
+    else h += '<g class="edlegs"><rect x="-12" y="-40" width="10" height="38" rx="5" fill="' + Lg + '"' + K + ' transform="rotate(' + (o.walk ? 10 : 0) + ' -7 -40)"/><rect x="2" y="-40" width="10" height="38" rx="5" fill="' + Lg + '"' + K + ' transform="rotate(' + (o.walk ? -10 : 0) + ' 7 -40)"/></g><ellipse cx="' + (o.walk ? -13 : -8) + '" cy="-1" rx="9" ry="5" fill="' + shoe + '"' + K + '/><ellipse cx="' + (o.walk ? 13 : 8) + '" cy="-1" rx="9" ry="5" fill="' + shoe + '"' + K + '/>';
+    // arms behind the body
+    var armL = '<path d="M-16 -70 Q-30 -56 -26 -40" stroke="' + ED_INK + '" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M-16 -70 Q-30 -56 -26 -40" stroke="' + T + '" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="-26" cy="-38" r="5.5" fill="' + skin + '"' + K + '/>';
+    var armR = o.armUp ? '<path d="M16 -70 Q30 -86 28 -104" stroke="' + ED_INK + '" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M16 -70 Q30 -86 28 -104" stroke="' + T + '" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="28" cy="-106" r="5.5" fill="' + skin + '"' + K + '/>'
+      : '<path d="M16 -70 Q30 -56 26 -40" stroke="' + ED_INK + '" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M16 -70 Q30 -56 26 -40" stroke="' + T + '" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="26" cy="-38" r="5.5" fill="' + skin + '"' + K + '/>';
+    h += armL + armR;
+    if (o.dress) h += '<path d="M-13 -76 Q0 -80 13 -76 L26 -22 Q0 -16 -26 -22 Z" fill="' + T + '"' + K + '/><path d="M-10 -62 Q0 -58 10 -62" stroke="rgba(255,255,255,.4)" stroke-width="3" fill="none"/>';
+    else h += '<rect x="-17" y="-78" width="34" height="42" rx="15" fill="' + T + '"' + K + '/>' + (o.tie ? '<path d="M0 -76 L-4 -66 L0 -50 L4 -66 Z" fill="#e53950" stroke="' + ED_INK + '" stroke-width="1.5"/>' : '');
+    if (o.boa) h += '<g fill="' + (ED_COL[o.boa] || o.boa) + '" stroke="' + ED_INK + '" stroke-width="1.6">' + [-20, -12, -4, 4, 12, 20].map(function (bx, i) { return '<circle cx="' + bx + '" cy="' + (-76 + Math.abs(bx) * .3 + (i % 2) * 3) + '" r="7"/>'; }).join('') + '<circle cx="-26" cy="-58" r="6"/><circle cx="26" cy="-58" r="6"/><circle cx="-28" cy="-44" r="5"/><circle cx="28" cy="-44" r="5"/></g>';
+    // the big head
+    var st = o.hairStyle || 'short', hy = -104;
+    if (st === 'long') h += '<path d="M-25 ' + (hy - 4) + ' Q-30 ' + (hy + 30) + ' -20 ' + (hy + 34) + ' L20 ' + (hy + 34) + ' Q30 ' + (hy + 30) + ' 25 ' + (hy - 4) + ' Z" fill="' + H + '"' + K + '/>';
+    if (st === 'pony') h += '<ellipse cx="26" cy="' + (hy + 2) + '" rx="8" ry="18" fill="' + H + '"' + K + ' transform="rotate(25 26 ' + hy + ')"/>';
+    if (st === 'bun') h += '<circle cx="0" cy="' + (hy - 28) + '" r="10" fill="' + H + '"' + K + '/>';
+    h += '<ellipse cx="0" cy="' + hy + '" rx="23" ry="22" fill="' + skin + '"' + K + '/>';
+    if (st === 'curly') h += '<g fill="' + H + '"' + K + '>' + [[-18, -14], [-9, -21], [2, -23], [13, -20], [20, -10], [-21, -3]].map(function (c) { return '<circle cx="' + c[0] + '" cy="' + (hy + c[1]) + '" r="9"/>'; }).join('') + '</g>';
+    else h += '<path d="M-24 ' + (hy + 2) + ' Q-25 ' + (hy - 25) + ' 0 ' + (hy - 25) + ' Q25 ' + (hy - 25) + ' 24 ' + (hy + 2) + ' Q18 ' + (hy - 10) + ' 4 ' + (hy - 12) + ' Q-6 ' + (hy - 6) + ' -24 ' + (hy + 2) + ' Z" fill="' + H + '"' + K + '/>';
+    if (o.glasses) h += '<g fill="#15101c" stroke="' + ED_INK + '" stroke-width="1.5"><rect x="-17" y="' + (hy - 3) + '" width="14" height="10" rx="4"/><rect x="3" y="' + (hy - 3) + '" width="14" height="10" rx="4"/></g><line x1="-3" y1="' + (hy + 1) + '" x2="3" y2="' + (hy + 1) + '" stroke="#15101c" stroke-width="2"/><rect x="-14" y="' + (hy - 1) + '" width="4" height="2" fill="#fff" opacity=".7"/>';
+    else h += '<ellipse cx="-8" cy="' + (hy + 2) + '" rx="3.4" ry="4.4" fill="' + ED_INK + '"/><ellipse cx="8" cy="' + (hy + 2) + '" rx="3.4" ry="4.4" fill="' + ED_INK + '"/><circle cx="-7" cy="' + hy + '" r="1.3" fill="#fff"/><circle cx="9" cy="' + hy + '" r="1.3" fill="#fff"/>';
+    h += '<ellipse cx="-14" cy="' + (hy + 9) + '" rx="4.5" ry="2.6" fill="#ff8aa8" opacity=".75"/><ellipse cx="14" cy="' + (hy + 9) + '" rx="4.5" ry="2.6" fill="#ff8aa8" opacity=".75"/><path d="M-4 ' + (hy + 11) + ' Q0 ' + (hy + 15) + ' 4 ' + (hy + 11) + '" stroke="' + ED_INK + '" stroke-width="2" fill="none" stroke-linecap="round"/>';
     return '<g transform="translate(' + x + ' ' + y + ') scale(' + (o.flip ? -s : s) + ' ' + s + ')">' + h + '</g>';
   }
   function edLabel(txt, x, col) {   // a neon room sign, like the ones above the rooms
     var w = txt.length * 17 + 46;
-    return '<g transform="translate(' + x + ' 14)"><rect width="' + w + '" height="40" rx="9" fill="rgba(10,6,24,.82)" stroke="' + col + '" stroke-width="3"/><text x="' + (w / 2) + '" y="28" text-anchor="middle" font-size="22" font-weight="900" fill="' + col + '" letter-spacing="2" style="filter:drop-shadow(0 0 4px ' + col + ')">' + esc(txt) + '</text></g>';
+    return '<g transform="translate(' + x + ' 14)"><rect width="' + w + '" height="40" rx="12" fill="rgba(10,6,24,.85)" stroke="' + col + '" stroke-width="3"/><text x="' + (w / 2) + '" y="28" text-anchor="middle" font-size="22" font-weight="900" fill="' + col + '" letter-spacing="2" style="filter:drop-shadow(0 0 4px ' + col + ')">' + esc(txt) + '</text></g>';
   }
-  function edPlant(x, y, sc) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sc || 1) + ')"><path d="M-14 0 L14 0 L10 -26 L-10 -26 Z" fill="#a0603a"/><g fill="#2f9a50"><ellipse cx="-14" cy="-50" rx="8" ry="24" transform="rotate(-30 -14 -50)"/><ellipse cx="14" cy="-50" rx="8" ry="24" transform="rotate(30 14 -50)"/><ellipse cx="0" cy="-58" rx="8" ry="30"/><ellipse cx="-22" cy="-36" rx="6" ry="18" transform="rotate(-60 -22 -36)"/><ellipse cx="22" cy="-36" rx="6" ry="18" transform="rotate(60 22 -36)"/></g></g>'; }
-  // ---- the rooms, drawn (each 800×450, one quarter of the screen) ----
+  function edPlant(x, y, sc) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sc || 1) + ')" stroke="' + ED_INK + '" stroke-width="2.4" stroke-linejoin="round"><g fill="#3fbf6a"><ellipse cx="-16" cy="-52" rx="10" ry="28" transform="rotate(-30 -16 -52)"/><ellipse cx="16" cy="-52" rx="10" ry="28" transform="rotate(30 16 -52)"/><ellipse cx="0" cy="-62" rx="10" ry="34"/><ellipse cx="-24" cy="-36" rx="8" ry="20" transform="rotate(-62 -24 -36)"/><ellipse cx="24" cy="-36" rx="8" ry="20" transform="rotate(62 24 -36)"/></g><path d="M-18 0 L18 0 L14 -28 L-14 -28 Z" fill="#e0884a"/><rect x="-20" y="-32" width="40" height="8" rx="3" fill="#f2a05e"/></g>'; }
+  function edLamp(x, glow) { return '<circle cx="' + x + '" cy="52" r="34" fill="' + glow + '" opacity=".18"/><line x1="' + x + '" y1="0" x2="' + x + '" y2="30" stroke="' + ED_INK + '" stroke-width="2"/><path d="M' + (x - 14) + ' 46 L' + (x + 14) + ' 46 L' + (x + 8) + ' 30 L' + (x - 8) + ' 30 Z" fill="#f2c14e" stroke="' + ED_INK + '" stroke-width="2"/><circle cx="' + x + '" cy="49" r="5" fill="#fff6c2"/>'; }
+  // ---- the rooms, drawn (each 800×450, one quarter of the screen); the people move with CSS animations ----
   function edGreenSvg(s) {
-    var rad = function (a) { return a * Math.PI / 180; };
-    var h = '<rect width="800" height="300" fill="#3c6b4c"/><g opacity=".1" fill="#fff">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (i) { return '<rect x="' + (i * 52) + '" y="0" width="24" height="300"/>'; }).join('') + '</g>' +
-      '<rect y="300" width="800" height="150" fill="#6e4a30"/><ellipse cx="400" cy="400" rx="330" ry="44" fill="#8a3a4a" opacity=".55"/><rect y="292" width="800" height="10" fill="#24432f"/>';
-    // the lamps hanging from the ceiling
-    [230, 330, 470, 600].forEach(function (x) { h += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="30" stroke="#222" stroke-width="2"/><path d="M' + (x - 12) + ' 44 L' + (x + 12) + ' 44 L' + (x + 7) + ' 30 L' + (x - 7) + ' 30 Z" fill="#d9a520"/><circle cx="' + x + '" cy="46" r="5" fill="#fff6c2"/>'; });
+    var rad = function (a) { return a * Math.PI / 180; }, K = ' stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"';
+    var h = '<rect width="800" height="300" fill="#5f9a74"/><g opacity=".14" fill="#fff">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (i) { return '<rect x="' + (i * 52) + '" y="0" width="24" height="300"/>'; }).join('') + '</g>' +
+      '<rect y="300" width="800" height="150" fill="#b07a52"/><g stroke="#966442" stroke-width="2">' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<line x1="0" y1="' + (318 + i * 24) + '" x2="800" y2="' + (318 + i * 24) + '"/>'; }).join('') + '</g><ellipse cx="420" cy="410" rx="300" ry="34" fill="#e07aa0" opacity=".55"/><rect y="292" width="800" height="12" fill="#3f7356"/>';
+    h += edLamp(240, '#fff2a0') + edLamp(400, '#fff2a0') + edLamp(560, '#fff2a0');
     // the wall: a poster, gold records, the clock, the mirror with the sticky note
-    h += '<rect x="250" y="70" width="70" height="96" fill="#1a1a1a" stroke="#d9a520" stroke-width="4"/><text x="285" y="100" text-anchor="middle" font-size="14" font-weight="900" fill="#ffd23f">GOOD</text><text x="285" y="118" text-anchor="middle" font-size="14" font-weight="900" fill="#ff6fb5">MUSIC</text><text x="285" y="136" text-anchor="middle" font-size="14" font-weight="900" fill="#ffd23f">GOOD</text><text x="285" y="154" text-anchor="middle" font-size="12" font-weight="900" fill="#3fd6ff">PEOPLE</text>';
-    for (var r = 0; r < s.records; r++) h += '<rect x="' + (338 + r * 46) + '" y="78" width="40" height="40" fill="#2a1a10" stroke="#d9a520" stroke-width="3"/><circle cx="' + (358 + r * 46) + '" cy="98" r="14" fill="#d9a520"/><circle cx="' + (358 + r * 46) + '" cy="98" r="4" fill="#2a1a10"/>';
-    var hr = s.clock[0] % 12, mn = s.clock[1], ha = (hr + mn / 60) * 30 - 90, ma = mn * 6 - 90, cx = 560, cy = 104;
-    h += '<circle cx="' + cx + '" cy="' + cy + '" r="36" fill="#fff" stroke="#1a1a1a" stroke-width="5"/>';
-    for (var t = 0; t < 12; t++) { var a = rad(t * 30 - 90), r1 = t % 3 ? 27 : 23; h += '<line x1="' + (cx + Math.cos(a) * r1).toFixed(1) + '" y1="' + (cy + Math.sin(a) * r1).toFixed(1) + '" x2="' + (cx + Math.cos(a) * 32).toFixed(1) + '" y2="' + (cy + Math.sin(a) * 32).toFixed(1) + '" stroke="#1a1a1a" stroke-width="' + (t % 3 ? 2 : 4) + '"/>'; }
-    h += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(rad(ha)) * 16).toFixed(1) + '" y2="' + (cy + Math.sin(rad(ha)) * 16).toFixed(1) + '" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round"/><line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(rad(ma)) * 27).toFixed(1) + '" y2="' + (cy + Math.sin(rad(ma)) * 27).toFixed(1) + '" stroke="#e53950" stroke-width="4" stroke-linecap="round"/><circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#1a1a1a"/>';
-    h += '<rect x="630" y="64" width="140" height="150" rx="8" fill="#d9a520"/><rect x="642" y="76" width="116" height="126" rx="5" fill="#bfe3f2"/><path d="M652 88 L680 80 L662 124 Z" fill="#fff" opacity=".5"/>';
-    for (var b = 0; b < 4; b++) h += '<circle cx="' + (648 + b * 35) + '" cy="68" r="6" fill="#fff6c2"/><circle cx="' + (648 + b * 35) + '" cy="210" r="6" fill="#fff6c2"/>';
-    h += '<g transform="rotate(-6 700 150)"><rect x="660" y="116" width="82" height="66" fill="#ffe24a" stroke="#c9a400" stroke-width="2"/><text x="701" y="136" text-anchor="middle" font-size="11" font-weight="800" fill="#7a5c00">SECRET CODE</text><text x="701" y="170" text-anchor="middle" font-size="28" font-weight="900" fill="#1a1a1a" font-family="Comic Sans MS, Chalkboard, cursive">' + s.code + '</text></g>';
-    // the fridge (glass door, cans on two shelves) and someone getting a drink
-    h += '<rect x="30" y="90" width="130" height="300" rx="10" fill="#e6e9ef" stroke="#9aa0ad" stroke-width="4"/><rect x="42" y="104" width="106" height="260" rx="5" fill="#cdeeff"/><line x1="42" y1="196" x2="148" y2="196" stroke="#8aa" stroke-width="4"/><line x1="42" y1="290" x2="148" y2="290" stroke="#8aa" stroke-width="4"/>';
-    s.cans.forEach(function (c, i) { var row = i < 4 ? 0 : i < 8 ? 1 : 2, k = i % 4, x = 50 + k * 24, y = [164, 258, 332][row]; h += '<rect x="' + x + '" y="' + y + '" width="19" height="30" rx="4" fill="' + ED_COL[c] + '" stroke="rgba(0,0,0,.4)" stroke-width="1.5"/><rect x="' + (x + 2) + '" y="' + y + '" width="15" height="5" fill="#ccc"/>'; });
-    h += edPerson(196, 396, { s: .95, hair: s.fridger.hair, top: s.fridger.top, legs: 'black', flip: 1, armUp: 0 }) + edPlant(760, 420, 1.1);
-    // the chairs (five colours), some of them taken, and the coffee table with the pizza
-    var SX = [120, 250, 400, 540, 670];
+    h += '<rect x="196" y="70" width="70" height="96" rx="4" fill="#2a1a3a"' + K + '/><text x="231" y="100" text-anchor="middle" font-size="14" font-weight="900" fill="#ffd23f">GOOD</text><text x="231" y="118" text-anchor="middle" font-size="14" font-weight="900" fill="#ff6fb5">MUSIC</text><text x="231" y="136" text-anchor="middle" font-size="14" font-weight="900" fill="#ffd23f">GOOD</text><text x="231" y="154" text-anchor="middle" font-size="12" font-weight="900" fill="#3fd6ff">PEOPLE</text>';
+    for (var r = 0; r < s.records; r++) h += '<rect x="' + (282 + r * 46) + '" y="78" width="40" height="40" rx="3" fill="#3a2a1a"' + K + '/><circle cx="' + (302 + r * 46) + '" cy="98" r="14" fill="#f2c14e" stroke="' + ED_INK + '" stroke-width="2"/><circle cx="' + (302 + r * 46) + '" cy="98" r="4" fill="#3a2a1a"/>';
+    var hr = s.clock[0] % 12, mn = s.clock[1], ha = (hr + mn / 60) * 30 - 90, ma = mn * 6 - 90, cx = 510, cy = 100;
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="36" fill="#fffaf0"' + K + ' stroke-width="5"/>';
+    for (var t = 0; t < 12; t++) { var a = rad(t * 30 - 90), r1 = t % 3 ? 27 : 23; h += '<line x1="' + (cx + Math.cos(a) * r1).toFixed(1) + '" y1="' + (cy + Math.sin(a) * r1).toFixed(1) + '" x2="' + (cx + Math.cos(a) * 32).toFixed(1) + '" y2="' + (cy + Math.sin(a) * 32).toFixed(1) + '" stroke="' + ED_INK + '" stroke-width="' + (t % 3 ? 2 : 4) + '"/>'; }
+    h += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(rad(ha)) * 16).toFixed(1) + '" y2="' + (cy + Math.sin(rad(ha)) * 16).toFixed(1) + '" stroke="' + ED_INK + '" stroke-width="6" stroke-linecap="round"/><line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(rad(ma)) * 27).toFixed(1) + '" y2="' + (cy + Math.sin(rad(ma)) * 27).toFixed(1) + '" stroke="#e53950" stroke-width="4" stroke-linecap="round"/><circle cx="' + cx + '" cy="' + cy + '" r="4" fill="' + ED_INK + '"/>';
+    h += '<rect x="574" y="60" width="130" height="146" rx="10" fill="#f2c14e"' + K + '/><rect x="586" y="72" width="106" height="122" rx="6" fill="#cdeefa"' + K + ' stroke-width="2"/><path d="M596 84 L624 76 L606 120 Z" fill="#fff" opacity=".6"/>';
+    for (var b = 0; b < 4; b++) h += '<circle cx="' + (590 + b * 33) + '" cy="64" r="6" fill="#fff6c2"' + K + ' stroke-width="1.5"/><circle cx="' + (590 + b * 33) + '" cy="202" r="6" fill="#fff6c2"' + K + ' stroke-width="1.5"/>';
+    h += '<g transform="rotate(-6 640 146)"><rect x="600" y="112" width="80" height="66" rx="3" fill="#ffe86a"' + K + ' stroke-width="2"/><text x="640" y="132" text-anchor="middle" font-size="11" font-weight="800" fill="#7a5c00">SECRET CODE</text><text x="640" y="166" text-anchor="middle" font-size="28" font-weight="900" fill="' + ED_INK + '" font-family="Comic Sans MS, Chalkboard, cursive">' + s.code + '</text></g>';
+    // the fridge (glass door, cans on shelves)
+    h += '<rect x="26" y="90" width="134" height="300" rx="16" fill="#eef1f6"' + K + '/><rect x="40" y="104" width="106" height="262" rx="8" fill="#d6f3ff"' + K + ' stroke-width="2"/><line x1="40" y1="196" x2="146" y2="196" stroke="#8ab" stroke-width="4"/><line x1="40" y1="290" x2="146" y2="290" stroke="#8ab" stroke-width="4"/><rect x="146" y="180" width="8" height="54" rx="4" fill="#b8bfcc"' + K + ' stroke-width="1.5"/>';
+    s.cans.forEach(function (c, i) { var row = i < 4 ? 0 : i < 8 ? 1 : 2, k = i % 4, x = 48 + k * 24, y = [164, 258, 332][row]; h += '<rect x="' + x + '" y="' + y + '" width="19" height="30" rx="5" fill="' + ED_COL[c] + '" stroke="' + ED_INK + '" stroke-width="1.8"/><rect x="' + (x + 2) + '" y="' + (y + 1) + '" width="15" height="5" rx="2" fill="#dde"/>'; });
+    // the chairs (five colours)
+    var SX = [214, 318, 422, 526, 630];
     s.seats.forEach(function (c, i) {
       var x = SX[i], col = ED_COL[c];
-      if (c === 'blue') h += '<rect x="' + (x - 62) + '" y="318" width="124" height="54" rx="22" fill="' + col + '"/><rect x="' + (x - 66) + '" y="350" width="132" height="44" rx="14" fill="#1b5fc0"/>';
-      else h += '<path d="M' + (x - 44) + ' 386 L' + (x - 44) + ' 330 Q' + (x - 44) + ' 296 ' + x + ' 296 Q' + (x + 44) + ' 296 ' + (x + 44) + ' 330 L' + (x + 44) + ' 386 Z" fill="' + col + '" stroke="rgba(0,0,0,.3)" stroke-width="2"/><rect x="' + (x - 40) + '" y="356" width="80" height="30" rx="10" fill="' + col + '" stroke="rgba(0,0,0,.3)" stroke-width="2"/>';
-      h += '<rect x="' + (x - 36) + '" y="386" width="7" height="18" fill="#3a2a1a"/><rect x="' + (x + 29) + '" y="386" width="7" height="18" fill="#3a2a1a"/>';
-      s.sitters.forEach(function (p, k) { if (p.seat === i) h += edPerson(x - 6, 414, { s: .82, sit: 1, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top, legs: '#2a2a40' }); });
+      h += '<path d="M' + (x - 42) + ' 390 L' + (x - 42) + ' 334 Q' + (x - 42) + ' 300 ' + x + ' 300 Q' + (x + 42) + ' 300 ' + (x + 42) + ' 334 L' + (x + 42) + ' 390 Z" fill="' + col + '"' + K + '/><rect x="' + (x - 38) + '" y="360" width="76" height="30" rx="12" fill="' + col + '"' + K + '/><ellipse cx="' + (x - 18) + '" cy="320" rx="10" ry="6" fill="#fff" opacity=".35"/>' +
+        '<rect x="' + (x - 34) + '" y="390" width="8" height="16" rx="3" fill="#6a4a2a"' + K + ' stroke-width="2"/><rect x="' + (x + 26) + '" y="390" width="8" height="16" rx="3" fill="#6a4a2a"' + K + ' stroke-width="2"/>';
     });
-    var px = 320, py = 424, R = 32;
-    h += '<rect x="' + (px - 54) + '" y="' + (py - 6) + '" width="108" height="12" rx="4" fill="#4a2c18"/><rect x="' + (px - 44) + '" y="' + (py - 30) + '" width="88" height="26" fill="#e8d2a8" stroke="#a88a5a" stroke-width="2"/><ellipse cx="' + px + '" cy="' + (py - 18) + '" rx="' + (R + 2) + '" ry="' + (R * .38 + 2) + '" fill="#d8bf90"/>';
+    // the coffee table with the pizza
+    var px = 300, py = 438, R = 30;
+    h += '<rect x="' + (px - 58) + '" y="' + (py - 10) + '" width="116" height="14" rx="6" fill="#8a5a36"' + K + ' stroke-width="2"/><rect x="' + (px - 44) + '" y="' + (py - 34) + '" width="88" height="26" rx="3" fill="#f4dfb4"' + K + ' stroke-width="2"/><ellipse cx="' + px + '" cy="' + (py - 22) + '" rx="' + (R + 2) + '" ry="' + (R * .38 + 2) + '" fill="#e2c592"/>';
     for (var w = 0; w < 8; w++) {
       if (w >= s.pizza) continue;
-      var a0 = rad(w * 45 - 90), a1 = rad(w * 45 - 45), am = rad(w * 45 - 67.5), qy = py - 18;
-      h += '<path d="M' + px + ' ' + qy + ' L' + (px + Math.cos(a0) * R).toFixed(1) + ' ' + (qy + Math.sin(a0) * R * .38).toFixed(1) + ' A' + R + ' ' + (R * .38) + ' 0 0 1 ' + (px + Math.cos(a1) * R).toFixed(1) + ' ' + (qy + Math.sin(a1) * R * .38).toFixed(1) + ' Z" fill="#f2b53a" stroke="#c2701e" stroke-width="1.5"/><ellipse cx="' + (px + Math.cos(am) * R * .62).toFixed(1) + '" cy="' + (qy + Math.sin(am) * R * .24).toFixed(1) + '" rx="4" ry="2.4" fill="#c0282a"/>';
+      var a0 = rad(w * 45 - 90), a1 = rad(w * 45 - 45), am = rad(w * 45 - 67.5), qy = py - 22;
+      h += '<path d="M' + px + ' ' + qy + ' L' + (px + Math.cos(a0) * R).toFixed(1) + ' ' + (qy + Math.sin(a0) * R * .38).toFixed(1) + ' A' + R + ' ' + (R * .38) + ' 0 0 1 ' + (px + Math.cos(a1) * R).toFixed(1) + ' ' + (qy + Math.sin(a1) * R * .38).toFixed(1) + ' Z" fill="#f7bf45" stroke="#b8641a" stroke-width="1.5"/><ellipse cx="' + (px + Math.cos(am) * R * .62).toFixed(1) + '" cy="' + (qy + Math.sin(am) * R * .24).toFixed(1) + '" rx="4" ry="2.4" fill="#d0302a"/>';
     }
-    return h + edLabel('GREEN ROOM', 14, '#3ddc84');
+    // the people: now and then one walks out from behind the big screen, sits in their own chair for a few seconds, and goes back
+    s.sitters.forEach(function (p, k) {
+      var x = SX[p.seat], from = 742 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top };
+      h += '<g class="edsit" style="--from:' + from + 'px;animation-delay:' + (3 + k * 10) + 's"><g class="edst">' + edPerson(x, 404, Object.assign({ walk: 1 }, o)) + '</g><g class="edsi">' + edPerson(x - 6, 400, Object.assign({ sit: 1 }, o)) + '</g></g>';
+    });
+    // the big folding screen they hide behind, and someone else's legs peeking out under it
+    h += '<g' + K + '>' + [0, 1, 2].map(function (i) { return '<rect x="' + (692 + i * 34) + '" y="' + (150 + (i % 2) * 6) + '" width="34" height="250" rx="6" fill="' + ['#f6c8d8', '#fbe0ea', '#f6c8d8'][i] + '"/>'; }).join('') + '</g><g fill="#ff6fb5" opacity=".7">' + [0, 1, 2].map(function (i) { return '<path d="M' + (709 + i * 34) + ' ' + (210 + i * 30) + ' l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z"/>'; }).join('') + '</g>';
+    return h + edPlant(770, 446, 1) + edLabel('GREEN ROOM', 14, '#3ddc84');
   }
   function edClubSvg(s) {
-    var h = '<defs><filter id="edglow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><radialGradient id="edball" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8a8fa6"/></radialGradient></defs>' +
-      '<rect width="800" height="450" fill="#1c0a34"/>' + [[120, '#ff3fd8'], [400, '#3fd6ff'], [680, '#9b51e0']].map(function (b) { return '<path d="M' + b[0] + ' 0 L' + (b[0] - 120) + ' 450 L' + (b[0] + 120) + ' 450 Z" fill="' + b[1] + '" opacity=".1"/>'; }).join('');
-    // the disco balls
-    for (var i = 0; i < s.balls; i++) { var x = 250 + (i + .5) * (300 / s.balls), y = 34 + (i % 2) * 18, R = s.balls > 3 ? 20 : 28; h += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + (y - R) + '" stroke="#aaa" stroke-width="2"/><circle cx="' + x + '" cy="' + y + '" r="' + R + '" fill="url(#edball)"/><g stroke="rgba(60,60,90,.5)" stroke-width="1.2" fill="none"><ellipse cx="' + x + '" cy="' + y + '" rx="' + R + '" ry="' + (R * .36) + '"/><ellipse cx="' + x + '" cy="' + y + '" rx="' + (R * .45) + '" ry="' + R + '"/></g>'; }
-    // the neon sign and a neon palm tree
+    var K = ' stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"';
+    var h = '<defs><filter id="edglow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><radialGradient id="edball" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#9aa0c0"/></radialGradient></defs>' +
+      '<rect width="800" height="450" fill="#2a1250"/>' + [[120, '#ff3fd8'], [400, '#3fd6ff'], [680, '#b06bff']].map(function (b, i) { return '<path class="edbeam" style="animation-delay:' + (-i * 1.3) + 's" d="M' + b[0] + ' 0 L' + (b[0] - 120) + ' 450 L' + (b[0] + 120) + ' 450 Z" fill="' + b[1] + '" opacity=".14"/>'; }).join('');
+    for (var i = 0; i < s.balls; i++) { var x = 250 + (i + .5) * (300 / s.balls), y = 34 + (i % 2) * 18, R = s.balls > 3 ? 20 : 28; h += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="' + (y - R) + '" stroke="#ccc" stroke-width="2"/><circle cx="' + x + '" cy="' + y + '" r="' + R + '" fill="url(#edball)"' + K + ' stroke-width="2"/><g stroke="rgba(60,60,90,.45)" stroke-width="1.2" fill="none"><ellipse cx="' + x + '" cy="' + y + '" rx="' + R + '" ry="' + (R * .36) + '"/><ellipse cx="' + x + '" cy="' + y + '" rx="' + (R * .45) + '" ry="' + R + '"/></g><circle cx="' + (x - R * .35) + '" cy="' + (y - R * .35) + '" r="' + (R * .2) + '" fill="#fff" class="edtw"/>'; }
     h += '<text x="680" y="150" text-anchor="middle" font-size="44" font-weight="900" fill="none" stroke="' + ED_COL[s.neonC] + '" stroke-width="3.5" filter="url(#edglow)" letter-spacing="3">' + s.neon + '</text>' +
       '<g stroke="#ff3fd8" stroke-width="4" fill="none" filter="url(#edglow)"><path d="M720 300 Q716 240 726 196"/><path d="M726 196 Q700 180 680 196 M726 196 Q750 176 772 190 M726 196 Q716 172 696 168 M726 196 Q742 168 760 164"/></g>';
-    // the setlist on the wall
-    h += '<rect x="22" y="76" width="200" height="156" rx="6" fill="#20262a" stroke="#8a5a2a" stroke-width="7"/><text x="122" y="102" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" letter-spacing="3">SETLIST</text>' +
+    h += '<rect x="22" y="76" width="200" height="156" rx="10" fill="#243034"' + K + ' stroke-width="7" stroke="#a0683a"/><text x="122" y="102" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" letter-spacing="3">SETLIST</text>' +
       s.setlist.map(function (t, i) { return '<text x="36" y="' + (128 + i * 22) + '" font-size="15" font-weight="700" fill="#f4f0d0" font-family="Comic Sans MS, Chalkboard, cursive">' + (i + 1) + '. ' + esc(t) + '</text>'; }).join('');
-    // speakers, the DJ (an original character: curls, moustache, sunglasses, a sequin jacket) and the booth with its LED symbols
-    h += '<rect x="196" y="160" width="60" height="110" rx="6" fill="#111" stroke="#333" stroke-width="3"/><circle cx="226" cy="190" r="14" fill="#333"/><circle cx="226" cy="238" r="20" fill="#333"/><rect x="544" y="160" width="60" height="110" rx="6" fill="#111" stroke="#333" stroke-width="3"/><circle cx="574" cy="190" r="14" fill="#333"/><circle cx="574" cy="238" r="20" fill="#333"/>';
-    h += '<svg x="322" y="96" width="156" height="208" viewBox="0 0 120 160">' + ED_DJ.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace('#c9c9d6', ED_COL[s.jacket]) + '</svg>' +   /* DJ Konstantin himself */
+    h += '<rect x="196" y="160" width="60" height="110" rx="10" fill="#1a1a24"' + K + '/><circle cx="226" cy="190" r="14" fill="#3a3a4a" class="edspk"/><circle cx="226" cy="238" r="20" fill="#3a3a4a" class="edspk"/><rect x="544" y="160" width="60" height="110" rx="10" fill="#1a1a24"' + K + '/><circle cx="574" cy="190" r="14" fill="#3a3a4a" class="edspk"/><circle cx="574" cy="238" r="20" fill="#3a3a4a" class="edspk"/>';
+    // DJ Konstantin, and his booth: six symbols, five of them light up one by one, always in the same order
+    h += '<g class="edbob"><svg x="322" y="96" width="156" height="208" viewBox="0 0 120 160">' + ED_DJ.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace('#c9c9d6', ED_COL[s.jacket]) + '</svg></g>' +
       '<text x="400" y="104" text-anchor="middle" font-size="17" font-weight="900" fill="#fff" letter-spacing="2" style="filter:drop-shadow(0 0 5px #ff6fd8)">DJ KONSTANTIN</text>';
-    h += '<rect x="262" y="226" width="276" height="96" rx="10" fill="#14081f" stroke="#ff6fd8" stroke-width="3"/>';
-    s.panel.forEach(function (k, i) { var x = 274 + i * 52; h += '<rect x="' + x + '" y="240" width="46" height="66" rx="6" fill="#2a1446" stroke="' + ED_SYMS2[k].c + '" stroke-width="2.5"/>' + '<g filter="url(#edglow)">' + edSym(k, x + 5, 251, 36) + '</g>'; });
-    // the crowd and the dancers
+    h += '<rect x="250" y="226" width="300" height="96" rx="14" fill="#160a26"' + K + ' stroke="#ff6fd8"/>';
+    s.tiles.forEach(function (k, i) {
+      var x = 262 + i * 47, j = s.panel.indexOf(k);
+      h += '<rect x="' + x + '" y="240" width="42" height="66" rx="8" fill="#2a1446" stroke="' + ED_SYMS2[k].c + '" stroke-width="2"/><g class="edsg' + (j >= 0 ? ' lit' : '') + '" style="' + (j >= 0 ? 'animation-delay:' + (j * 1.2) + 's' : '') + '"><g filter="url(#edglow)">' + edSym(k, x + 4, 253, 34) + '</g></g>';
+    });
     var dn = s.dancers, cols = ['#ff6fb5', '#3fd6ff', '#ffd23f', '#3ddc84', '#c58bff'];
-    for (i = 0; i < dn; i++) { var dx = i < Math.ceil(dn / 2) ? 60 + i * 60 : 640 + (i - Math.ceil(dn / 2)) * 60; h += edPerson(dx, 410, { s: .78, hair: ['blonde', 'pink', 'black', 'red', 'brown'][i], hairStyle: ['long', 'curly', 'pony', 'bun', 'short'][i], top: cols[i], legs: '#1a1a2a', armUp: i % 2, dress: i % 2 === 0 }); }
-    h += '<g fill="#0a0414">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (k) { var x = 20 + k * 62; return '<circle cx="' + x + '" cy="' + (418 - (k % 3) * 6) + '" r="20"/><rect x="' + (x - 26) + '" y="' + (430 - (k % 3) * 6) + '" width="52" height="40" rx="18"/>' + (k % 4 === 1 ? '<rect x="' + (x + 12) + '" y="' + (370 - (k % 3) * 6) + '" width="9" height="44" rx="4" transform="rotate(14 ' + (x + 16) + ' 410)"/>' : ''); }).join('') + '</g>';
+    for (i = 0; i < dn; i++) { var dx = i < Math.ceil(dn / 2) ? 60 + i * 64 : 640 + (i - Math.ceil(dn / 2)) * 64; h += '<g class="eddance" style="animation-delay:' + (-i * .37) + 's">' + edPerson(dx, 410, { s: .8, hair: ['blonde', 'pink', 'black', 'red', 'brown'][i], hairStyle: ['long', 'curly', 'pony', 'bun', 'short'][i], top: cols[i], legs: '#3a2a5a', armUp: i % 2, dress: i % 2 === 0 }) + '</g>'; }
+    h += '<g fill="#140826">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (k) { var x = 20 + k * 62; return '<circle cx="' + x + '" cy="' + (418 - (k % 3) * 6) + '" r="20"/><rect x="' + (x - 26) + '" y="' + (430 - (k % 3) * 6) + '" width="52" height="40" rx="18"/>' + (k % 4 === 1 ? '<rect x="' + (x + 12) + '" y="' + (370 - (k % 3) * 6) + '" width="9" height="44" rx="4" transform="rotate(14 ' + (x + 16) + ' 410)"/>' : ''); }).join('') + '</g>';
     return h + edLabel('EUROCLUB', 800 - (8 * 17 + 46) - 84, '#d97bff');
   }
   function edBackSvg(s) {
@@ -3906,27 +3915,33 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return h + edLabel('BACKSTAGE', 14, '#3fb6ff');
   }
   function edBoudSvg(s) {
-    var h = '<rect width="800" height="450" fill="#5a1a2e"/><g fill="#6e2440">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (i) { return '<rect x="' + (i * 52) + '" y="0" width="22" height="300"/>'; }).join('') + '</g><rect y="300" width="800" height="150" fill="#3a1220"/><ellipse cx="400" cy="400" rx="300" ry="40" fill="#b0306a" opacity=".5"/>' +
-      '<path d="M0 0 L80 0 Q60 150 90 300 L0 300 Z" fill="#8a1a3a"/><path d="M800 0 L720 0 Q740 150 710 300 L800 300 Z" fill="#8a1a3a"/>';
+    var K = ' stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"';
+    var h = '<rect width="800" height="450" fill="#7a2a4a"/><g fill="#8a3456">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (i) { return '<rect x="' + (i * 52) + '" y="0" width="22" height="310"/>'; }).join('') + '</g><rect y="310" width="800" height="140" fill="#4a1a2e"/><ellipse cx="420" cy="410" rx="320" ry="36" fill="#d0408a" opacity=".5"/>' +
+      '<path d="M0 0 L70 0 Q50 150 80 310 L0 310 Z" fill="#b02a5a"' + K + '/><path d="M800 0 L730 0 Q750 150 720 310 L800 310 Z" fill="#b02a5a"' + K + '/>';
     // the vanity mirror with the lipstick word, and the perfume bottles
-    h += '<ellipse cx="150" cy="140" rx="70" ry="84" fill="#d9a520"/><ellipse cx="150" cy="140" rx="58" ry="72" fill="#d8eef6"/><text x="150" y="152" text-anchor="middle" font-size="34" font-weight="900" fill="#d0103a" font-family="Brush Script MT, Segoe Script, cursive" transform="rotate(-8 150 146)">' + s.word + '</text>' +
-      '<rect x="60" y="222" width="180" height="16" rx="4" fill="#f4e0c0" stroke="#d9a520" stroke-width="3"/><rect x="70" y="238" width="10" height="70" fill="#f4e0c0"/><rect x="220" y="238" width="10" height="70" fill="#f4e0c0"/>';
-    for (var i = 0; i < s.perfume; i++) { var x = 76 + i * 28, c = ['#ff6fb5', '#9b51e0', '#3fb6ff', '#f2c12e', '#27ae60', '#ff9f1c'][i]; h += '<rect x="' + x + '" y="196" width="18" height="26" rx="5" fill="' + c + '" stroke="#fff" stroke-width="1.5"/><rect x="' + (x + 6) + '" y="188" width="6" height="8" fill="#d9a520"/>'; }
+    h += '<ellipse cx="150" cy="140" rx="70" ry="84" fill="#f2c14e"' + K + '/><ellipse cx="150" cy="140" rx="58" ry="72" fill="#dff2fa"' + K + ' stroke-width="2"/><text x="150" y="152" text-anchor="middle" font-size="34" font-weight="900" fill="#d0103a" font-family="Brush Script MT, Segoe Script, cursive" transform="rotate(-8 150 146)">' + s.word + '</text>' +
+      '<rect x="60" y="222" width="180" height="16" rx="6" fill="#fbe8d0"' + K + ' stroke-width="2.5"/><rect x="70" y="238" width="12" height="70" rx="4" fill="#fbe8d0"' + K + ' stroke-width="2"/><rect x="218" y="238" width="12" height="70" rx="4" fill="#fbe8d0"' + K + ' stroke-width="2"/>';
+    for (var i = 0; i < s.perfume; i++) { var x = 76 + i * 28, c = ['#ff6fb5', '#9b51e0', '#3fb6ff', '#f2c12e', '#27ae60', '#ff9f1c'][i]; h += '<rect x="' + x + '" y="196" width="18" height="26" rx="6" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2"/><rect x="' + (x + 6) + '" y="188" width="6" height="8" rx="2" fill="#f2c14e" stroke="' + ED_INK + '" stroke-width="1.5"/><rect x="' + (x + 3) + '" y="200" width="4" height="10" rx="2" fill="#fff" opacity=".5"/>'; }
     // the wig heads on a shelf
-    h += '<rect x="300" y="122" width="210" height="9" fill="#f4e0c0" stroke="#d9a520" stroke-width="2"/>';
-    s.wigs.forEach(function (w, i) { var x = 326 + i * 52, col = ED_COL[w]; h += '<rect x="' + (x - 5) + '" y="104" width="10" height="18" fill="#eee"/><ellipse cx="' + x + '" cy="86" rx="17" ry="20" fill="#f0e6e0"/><path d="M' + (x - 21) + ' 96 Q' + (x - 22) + ' 58 ' + x + ' 60 Q' + (x + 22) + ' 58 ' + (x + 21) + ' 96 Q' + (x + 14) + ' 78 ' + x + ' 76 Q' + (x - 14) + ' 78 ' + (x - 21) + ' 96 Z" fill="' + col + '" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>'; });
-    // the clothes rack: five dresses with price tags
-    h += '<rect x="536" y="96" width="250" height="7" rx="3" fill="#c9ccd6"/><rect x="540" y="96" width="7" height="230" fill="#c9ccd6"/><rect x="776" y="96" width="7" height="230" fill="#c9ccd6"/>';
+    h += '<rect x="262" y="128" width="210" height="10" rx="4" fill="#fbe8d0"' + K + ' stroke-width="2"/>';
+    s.wigs.forEach(function (w, i) { var x = 288 + i * 52, col = ED_COL[w]; h += '<rect x="' + (x - 5) + '" y="110" width="10" height="18" fill="#eee" stroke="' + ED_INK + '" stroke-width="1.5"/><ellipse cx="' + x + '" cy="90" rx="17" ry="20" fill="#f6ece6" stroke="' + ED_INK + '" stroke-width="2"/><path d="M' + (x - 21) + ' 100 Q' + (x - 22) + ' 62 ' + x + ' 64 Q' + (x + 22) + ' 62 ' + (x + 21) + ' 100 Q' + (x + 14) + ' 82 ' + x + ' 80 Q' + (x - 14) + ' 82 ' + (x - 21) + ' 100 Z" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2"/>'; });
+    // the visitors: a woman with a feather boa, a man in a suit, a child. They walk around behind the folding screen
+    // and the clothes rack, and only show up in the gap between the two, now and then.
+    var W = [
+      edPerson(505, 420, { s: 1.15, hair: s.woman.hair, hairStyle: 'long', top: s.woman.dress, dress: 1, boa: s.woman.boa, shoes: '#f2c14e' }),
+      edPerson(505, 416, { s: 1.12, hair: s.man.hair, top: s.man.suit, legs: s.man.suit, glasses: 1, tie: 1, walk: 1 }),
+      edPerson(505, 424, { s: .75, hair: s.child.hair, hairStyle: 'curly', top: s.child.dress, dress: 1, shoes: '#fff' })
+    ];
+    W.forEach(function (w, k) { h += '<g class="edwk2" style="animation-delay:' + (2 + k * 8) + 's"><g class="edbob">' + w + '</g></g>'; });
+    // the folding screen (left) and the clothes rack (right), in front of them
+    h += '<g' + K + '>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<path d="M' + (236 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (272 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (272 + i * 36) + ' 436 L' + (236 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<circle cx="' + (254 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
+    h += '<rect x="556" y="96" width="232" height="8" rx="4" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="560" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="778" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/>';
     s.rack.forEach(function (d, i) {
-      var x = 570 + i * 47, col = ED_COL[d.c];
-      h += '<path d="M' + (x - 10) + ' 108 L' + (x + 10) + ' 108 L' + (x + 13) + ' 132 L' + (x + 21) + ' 226 L' + (x - 21) + ' 226 L' + (x - 13) + ' 132 Z" fill="' + col + '" stroke="rgba(0,0,0,.35)" stroke-width="2"/><path d="M' + x + ' 108 L' + x + ' 100" stroke="#999" stroke-width="2"/>' +
-        '<rect x="' + (x - 22) + '" y="232" width="44" height="22" rx="4" fill="#fff" stroke="#333" stroke-width="1.5"/><text x="' + x + '" y="248" text-anchor="middle" font-size="14" font-weight="900" fill="#1a1a1a">€' + d.p + '</text>';
+      var x = 590 + i * 44, col = ED_COL[d.c];
+      h += '<path d="M' + x + ' 108 L' + x + ' 100" stroke="#999" stroke-width="2"/><path d="M' + (x - 10) + ' 108 L' + (x + 10) + ' 108 L' + (x + 14) + ' 140 L' + (x + 24) + ' 330 L' + (x - 24) + ' 330 L' + (x - 14) + ' 140 Z" fill="' + col + '"' + K + ' stroke-width="2.4"/>' +
+        '<rect x="' + (x - 21) + '" y="336" width="42" height="22" rx="6" fill="#fff"' + K + ' stroke-width="1.8"/><text x="' + x + '" y="352" text-anchor="middle" font-size="14" font-weight="900" fill="' + ED_INK + '">€' + d.p + '</text>';
     });
-    // the visitors walking through: a woman with a feather boa, a man in a suit, a child
-    h += edPerson(330, 420, { s: 1.15, hair: s.woman.hair, hairStyle: 'long', top: s.woman.dress, dress: 1, boa: s.woman.boa, shoes: '#d9a520' }) +
-      edPerson(480, 410, { s: 1.1, hair: s.man.hair, top: s.man.suit, legs: s.man.suit, glasses: 1, tie: 1, walk: 1 }) +
-      edPerson(640, 424, { s: .7, hair: s.child.hair, hairStyle: 'curly', top: s.child.dress, dress: 1, shoes: '#fff', walk: 1 }) + edPlant(560, 430, 1.2);
-    return h + edLabel('WOODRUFF’S BOUDOIR', 800 - (18 * 17 + 46) - 14, '#ff6fd8');
+    return h + edPlant(150, 440, 1.1) + edLabel('WOODRUFF’S BOUDOIR', 800 - (18 * 17 + 46) - 14, '#ff6fd8');
   }
   var ED_SVG = { green: edGreenSvg, club: edClubSvg, back: edBackSvg, boud: edBoudSvg };
   function edStart() {

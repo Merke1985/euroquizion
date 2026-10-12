@@ -3778,3 +3778,23 @@ body.hasdock main{padding-bottom:84px}
 .zgp.wobbly .zgfig{filter:drop-shadow(0 0 10px #ffd23f)}
 .zgov.stagefx .zgsing{animation:zgstage 1.2s ease-out}
 @keyframes zgstage{30%{filter:drop-shadow(0 0 30px #fff) brightness(1.6)}}
+/* Edgar's rooms come alive */
+.edr2 .edsit{animation:edsit 30s linear infinite backwards}
+.edr2 .edsit .edst{animation:edstand 30s linear infinite backwards;animation-delay:inherit}
+.edr2 .edsit .edsi{opacity:0;animation:edseat 30s linear infinite backwards;animation-delay:inherit}
+@keyframes edsit{0%,4%{transform:translateX(var(--from))}12%,26%{transform:translateX(0)}34%,100%{transform:translateX(var(--from))}}
+@keyframes edstand{0%,12%{opacity:1}12.5%,25.5%{opacity:0}26%,100%{opacity:1}}
+@keyframes edseat{0%,12%{opacity:0}12.5%,25.5%{opacity:1}26%,100%{opacity:0}}
+.edr2 .edwk2{animation:edwk2 24s linear infinite backwards;opacity:0}
+@keyframes edwk2{0%{transform:translateX(330px);opacity:0}1%{opacity:1}18%,30%{transform:translateX(0)}50%{transform:translateX(-330px);opacity:1}51%,100%{transform:translateX(-330px);opacity:0}}
+.edr2 .edbob{animation:edbob .5s ease-in-out infinite alternate}
+@keyframes edbob{to{transform:translateY(-4px)}}
+.edr2 .eddance{animation:eddance .45s ease-in-out infinite alternate}
+@keyframes eddance{to{transform:translateY(-9px) rotate(2deg)}}
+.edr2 .edsg{opacity:.16}
+.edr2 .edsg.lit{animation:edsglit 9s linear infinite backwards}
+@keyframes edsglit{0%,11%{opacity:1}13%,100%{opacity:.16}}
+.edr2 .edbeam{animation:edbeam 3.9s ease-in-out infinite alternate;transform-origin:50% 0;transform-box:fill-box}
+@keyframes edbeam{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+.edr2 .edtw{animation:edtw 1.2s ease-in-out infinite alternate}
+@keyframes edtw{to{opacity:.2}}
