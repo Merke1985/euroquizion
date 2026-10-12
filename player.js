@@ -190,7 +190,7 @@
     if (s.phase !== 'carpet' || !s.carpet) $('carpetui').classList.add('hidden');
     if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); }
-    if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); if (zgU) { zgHeld = {}; zgSet(); } }
+    if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
     if (s.phase !== 'clueacc' && s.phase !== 'cluerooms' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (s.phase !== 'cluerooms') { $('edui').classList.add('hidden'); if (edCur) { edCur = ''; edClear(); } }
     if (!(s.phase === 'note' && s.note && (s.note.st === 'guess' || s.note.st === 'ctl'))) { $('noteui').classList.add('hidden'); if ($('ntctl')) $('ntctl').classList.add('hidden'); }
@@ -597,51 +597,68 @@
   }
 
   // ---------- Zero Gravity ----------
-  // Hold LEFT or RIGHT to keep your balance; the meter shows how far you lean (the red ends: you fall).
-  var zgLive = null, zgU = 0, zgUT = null, zgHeld = {};
-  function zgSendU() { var z = state && state.zg; if (!net || !z || z.st !== 'play') return; (net.toHost || net.send)('zg', { pid: pid, id: z.id, u: zgU }); }
-  function zgSet() {
-    var u = (zgHeld.r ? 1 : 0) - (zgHeld.l ? 1 : 0); if (u === zgU) return; zgU = u; zgSendU();
-    clearInterval(zgUT); if (u) zgUT = setInterval(zgSendU, 2000);   /* (repeated while held, in case a message got lost) */
-  }
-  function zgOnLive(m) { var z = state && state.zg; if (!m || !m.x || !z || m.id !== z.id) return; zgLive = m; zgMeter(); }
-  function zgMeter() {
-    var box = $('zgui'), z = state && state.zg; if (!box || !z) return;
-    var src = zgLive && zgLive.id === z.id ? zgLive : z, x = (src.x || {})[pid], out = (src.out || {})[pid];
-    var nd = box.querySelector('.zgneedle'); if (nd && x != null) { nd.style.left = (50 + x / 2) + '%'; nd.classList.toggle('risky', Math.abs(x) > 60); }
-    var sc = box.querySelector('.zgsc b'); if (sc) sc.textContent = (src.sc || {})[pid] || 0;
-    var tm = box.querySelector('.zgsc i'); if (tm && src.left != null) tm.textContent = Math.ceil(src.left / 1000) + 's';
-    if (out != null && !box.classList.contains('fell') && z.st === 'play') zgView(state);
+  // The poles follow a path set by the game (zgPath, the same on every device). Keep your finger on the glowing zone:
+  // off it for too long and you fall. The phone checks all this itself; it only tells the host when your level changes
+  // (0 on target, 1 a bit off, 2 about to fall), when you fall, and your accuracy at the end.
+  var zgS = null;
+  function zgOnLive() {}
+  function zgStop() { if (zgS) { cancelAnimationFrame(zgS.raf); zgS.raf = 0; } }
+  function zgTell(o) { var z = state && state.zg; if (!net || !z) return; o.pid = pid; o.id = z.id; (net.toHost || net.send)('zg', o); }
+  function zgAcc() { return zgS && zgS.tot > 0 ? Math.round(100 * zgS.inT / zgS.tot) : 100; }
+  function zgFrame() {
+    var S = zgS, z = state && state.zg; if (!S || !z || z.id !== S.id) return;
+    S.raf = requestAnimationFrame(zgFrame);
+    if (S.fell || z.st !== 'play') return;
+    var now = Date.now(), t = (now - S.start) / 1000, dt = Math.min(0.1, (now - (S.last || now)) / 1000); S.last = now;
+    if (t >= ZG_LEN) return;
+    var st = zgStage(t), w = ZG_W[st], tg = zgPath(S.seed, t), err = S.f - tg, inside = Math.abs(err) <= w;
+    if (t > 1.5) { S.tot += dt; if (inside) S.inT += dt; }
+    S.outFor = inside ? 0 : S.outFor + dt;
+    var lv = inside ? 0 : (S.outFor < 0.3 && Math.abs(err) < 2 * w) ? 1 : 2;
+    if (t > 3 && S.outFor >= ZG_FALL) {   // you fall
+      S.fell = true; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc() }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
+      zgView(state); return;
+    }
+    if (lv !== S.sent && now - S.sentAt >= 250) { S.sent = lv; S.sentAt = now; zgTell({ l: lv, s: err < 0 ? -1 : 1 }); if (lv === 2) try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
+    // draw: the zone, your finger, the clock
+    var B = S.box; if (!B) return;
+    B.zone.style.left = ((tg - w + 1) / 2 * 100).toFixed(2) + '%'; B.zone.style.width = (w * 100).toFixed(2) + '%';
+    B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%';
+    B.track.setAttribute('data-l', lv);
+    var sec = Math.max(0, Math.ceil(ZG_LEN - t)), txt = 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
+    if (B.info.textContent !== txt) B.info.textContent = txt;
   }
   function zgView(s) {
-    var z = s.zg, box = $('zgui'), fell = (z.out || {})[pid] != null || (zgLive && zgLive.id === z.id && (zgLive.out || {})[pid] != null), mine = z.order.indexOf(pid) >= 0;
+    var z = s.zg, box = $('zgui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
+    if (!zgS || zgS.id !== z.id) { zgStop(); zgS = { id: z.id, seed: z.seed, start: 0, f: 0, inT: 0, tot: 0, outFor: 0, sent: 0, sentAt: 0, fell: false, fin: false, raf: 0, box: null }; }
+    var S = zgS, fell = S.fell || (z.out || {})[pid] != null;
+    if (z.st === 'play' && z.el != null) { var st0 = Date.now() - z.el; if (!S.start || st0 < S.start) S.start = st0; }   /* (the earliest estimate: least network delay) */
     if (z.st === 'end') {
-      box.classList.add('hidden'); zgHeld = {}; zgSet();
+      zgStop(); box.classList.add('hidden');
+      if (mine && !S.fin && !fell) { S.fin = true; zgTell({ acc: zgAcc() }); }
       var w = (z.win || []).indexOf(pid) >= 0, names = (z.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);
-      $('waittitle').textContent = w ? '🏆 You win Zero Gravity!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'Everyone fell into space…';
-      $('waitsub').textContent = mine ? 'Your score: ' + ((z.sc || {})[pid] || 0) + (fell ? ' (you fell)' : ' (still standing!)') : '';
+      $('waittitle').textContent = !z.done ? '🌌 And… stop!' : w ? '🏆 You win Zero Gravity!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'Everyone fell into space…';
+      $('waitsub').textContent = mine ? 'You followed the zone ' + zgAcc() + '% of the time' + (fell ? ' (until you fell)' : ', and you’re still standing!') : '';
       return;
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Watch the big screen!'; return; }
-    if (fell) { box.classList.add('hidden'); box.classList.add('fell'); zgHeld = {}; zgSet(); $('waittitle').textContent = '🚀 You fell into space!'; $('waitsub').textContent = 'Your score so far stays: ' + (((zgLive && zgLive.sc) || z.sc || {})[pid] || 0) + '. Watch the others wobble…'; return; }
-    box.classList.remove('fell');
+    if (fell) { zgStop(); box.classList.add('hidden'); $('waittitle').textContent = '🚀 You fell into space!'; $('waitsub').textContent = 'You followed the zone ' + zgAcc() + '% of the time. Watch the others wobble…'; return; }
     $('waittitle').textContent = z.st === 'ready' ? '🌌 Get ready…' : '🌌 Keep your balance!';
-    $('waitsub').textContent = 'Leaning right? Hold LEFT. Leaning left? Hold RIGHT. Lean further for more points, but don’t fall!';
+    $('waitsub').textContent = 'Keep your finger on the glowing zone. It moves with the music: slow, faster, then chaos! Off it for too long and you fall.';
     box.classList.remove('hidden');
-    if (box.getAttribute('data-id') !== z.id) {
-      box.setAttribute('data-id', z.id); zgHeld = {}; zgU = 0; clearInterval(zgUT);
-      box.innerHTML = '<div class="zgsc"><span>⭐ <b>0</b></span><i></i></div><div class="zgmeter"><span class="zgdz l"></span><span class="zgdz r"></span><span class="zgmid"></span><span class="zgneedle"></span></div>' +
-        '<div class="zgbtns"><button type="button" class="zgb" data-d="l">◀<small>LEFT</small></button><button type="button" class="zgb" data-d="r">▶<small>RIGHT</small></button></div>';
-      [].forEach.call(box.querySelectorAll('.zgb'), function (b) {
-        var d = b.getAttribute('data-d');
-        var on = function (e) { e.preventDefault(); zgHeld[d] = true; b.classList.add('on'); zgSet(); try { navigator.vibrate && navigator.vibrate(15); } catch (x) {} };
-        var off = function (e) { if (e) e.preventDefault(); zgHeld[d] = false; b.classList.remove('on'); zgSet(); };
-        b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
-        b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-      });
+    if (box.getAttribute('data-id') !== z.id || !S.box) {
+      box.setAttribute('data-id', z.id);
+      box.innerHTML = '<div class="zginfo">Stage 1 of 3</div><div class="zgtrack" data-l="0"><span class="zgzone"></span><span class="zgme"></span></div><div class="zghint">👆 Slide left and right</div>';
+      var tr = box.querySelector('.zgtrack');
+      S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo') };
+      var mv = function (e) { e.preventDefault(); var r = tr.getBoundingClientRect(); S.f = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)); };
+      tr.addEventListener('pointerdown', function (e) { try { tr.setPointerCapture(e.pointerId); } catch (x) {} mv(e); });
+      tr.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') mv(e); });
+      tr.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      S.box.zone.style.left = ((zgPath(S.seed, 0) - ZG_W[0] + 1) / 2 * 100) + '%'; S.box.zone.style.width = (ZG_W[0] * 100) + '%'; S.box.me.style.left = '50%';
     }
-    zgMeter();
+    if (z.st === 'play' && !S.raf) { S.last = Date.now(); S.raf = requestAnimationFrame(zgFrame); }
   }
 
   // ---------- We Will Rule the World ----------

@@ -3762,3 +3762,19 @@ body.hasdock main{padding-bottom:84px}
 .jmt.jump{animation:jmjump2 1.15s cubic-bezier(.25,.8,.35,1) both;transform-origin:50% 100%}
 .jmt.falling.hop .hflag{animation:jmjump .75s both}
 .jmt.run .hflag,.jmt.home .hflag,.jmt.falling .hflag{animation:jmrun .18s ease-in-out infinite alternate}
+/* Zero Gravity on the phone: follow the glowing zone with your finger */
+.zginfo{font-weight:900;color:#c58bff;text-align:center}
+.zgtrack{position:relative;width:min(90vw,380px);height:120px;border-radius:20px;background:linear-gradient(90deg,rgba(255,77,77,.35),#1a1240 18%,#1a1240 82%,rgba(255,77,77,.35));box-shadow:inset 0 0 0 3px rgba(255,255,255,.25);touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+.zgzone{position:absolute;top:10px;bottom:10px;border-radius:14px;background:rgba(63,240,255,.35);box-shadow:0 0 24px #3ff0ff,inset 0 0 0 3px #3ff0ff}
+.zgme{position:absolute;top:0;bottom:0;width:8px;margin-left:-4px;border-radius:4px;background:#fff;box-shadow:0 0 12px #fff}
+.zgme::after{content:'';position:absolute;left:50%;bottom:6px;width:34px;height:34px;margin-left:-17px;border-radius:50%;background:#fff;opacity:.9}
+.zgtrack[data-l="1"]{box-shadow:inset 0 0 0 3px #ffd23f}
+.zgtrack[data-l="1"] .zgzone{background:rgba(255,210,63,.35);box-shadow:0 0 24px #ffd23f,inset 0 0 0 3px #ffd23f}
+.zgtrack[data-l="2"]{box-shadow:inset 0 0 0 4px #ff4d4d;animation:uthot .25s ease-in-out infinite alternate}
+.zgtrack[data-l="2"] .zgzone{background:rgba(255,77,77,.35);box-shadow:0 0 24px #ff4d4d,inset 0 0 0 3px #ff4d4d}
+.zghint{font-size:.85rem;color:var(--mute)}
+/* the big screen: the figures follow the path; a bit off = a wobble, about to fall = red and shaking */
+.zgfig{transition:rotate .12s linear}
+.zgp.wobbly .zgfig{filter:drop-shadow(0 0 10px #ffd23f)}
+.zgov.stagefx .zgsing{animation:zgstage 1.2s ease-out}
+@keyframes zgstage{30%{filter:drop-shadow(0 0 30px #fff) brightness(1.6)}}

@@ -912,3 +912,18 @@ var ED_SOCKS = {
 };
 function edSym(id, x, y, sz) { var s = ED_SYMS2[id]; return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')"><path d="' + s.d + '" fill="' + s.c + '"/></g>'; }
 function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')">' + ED_SOCKS[id] + '</g>'; }
+
+// Zero Gravity: the path the poles follow, the same on every device (from one seed). 60 seconds in three stages
+// (0–20 s slow sway, 20–40 s faster, 40–60 s chaos, blending over two seconds). x goes from -1 (far left) to 1 (far right).
+var ZG_LEN = 60, ZG_ST = [20, 40], ZG_W = [0.2, 0.18, 0.16], ZG_FALL = 0.7, zgPar = {};
+function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function zgPath(seed, t) {
+  var p = zgPar[seed]; if (!p) { var r = zgRnd(seed); p = zgPar[seed] = []; for (var i = 0; i < 9; i++) p.push(r() * 6.283); }
+  var sm = function (v) { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
+  var w3 = sm((t - ZG_ST[1] + 1) / 2), w2 = sm((t - ZG_ST[0] + 1) / 2) - w3, w1 = 1 - w2 - w3;
+  var a = 0.6 * Math.sin(0.45 * t + p[0]) + 0.15 * Math.sin(0.9 * t + p[1]);
+  var b = 0.5 * Math.sin(0.8 * t + p[3]) + 0.25 * Math.sin(1.7 * t + p[4]);
+  var c = 0.45 * Math.tanh(3 * Math.sin(1.0 * t + p[6])) + 0.25 * Math.sin(2.3 * t + p[7]) + 0.1 * Math.sin(3.7 * t + p[8]);
+  return Math.max(-0.85, Math.min(0.85, w1 * a + w2 * b + w3 * c));
+}
+function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }
