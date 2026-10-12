@@ -6,7 +6,7 @@
 <title>EuroQuizion – join</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=673">
+<link rel="stylesheet" href="style.css?v=674">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -102,7 +102,7 @@
   </section>
 
   <section id="v-quip" class="hidden" style="display:flex;flex-direction:column;gap:12px">
-    <div class="mute" id="qround">Green Room</div>
+    <div class="mute" id="qround">Disqualivision</div>
     <p class="mute" id="qlead" style="margin:0">About the song that is playing:</p>
     <h2 id="qprompt"></h2>
     <div class="bar"><i id="qbar"></i></div>
@@ -119,9 +119,10 @@
     <p class="mute" id="ssub" style="margin:0"></p>
     <div class="bar"><i id="sbar"></i></div>
     <div id="sopts" class="opts hidden"></div>
+    <div id="slywrap" class="slywrap hidden"><div id="slyrics" class="slyrics"></div><div id="slyover" class="slyover"></div></div>
     <div id="srec" class="hidden" style="display:flex;flex-direction:column;gap:12px">
       <div id="scount" class="bigcount" aria-live="polite">3</div>
-      <button class="btn big recbtn" id="srecbtn" type="button">Start recording</button>
+      <button class="btn big recbtn" id="srecbtn" type="button">🎤 Ready!</button>
       <p id="srecstate" class="fb" style="text-align:center;margin:0"></p>
       <audio id="sprev" class="hidden" controls style="width:100%"></audio>
       <div id="srecdone" class="hidden" style="display:flex;gap:10px">
@@ -167,13 +168,13 @@
   </form>
 </div>
 <button type="button" id="bagbtn" class="bagbtn hidden" aria-label="My items">🛍️<b id="bagn"></b></button><div id="bagpanel" class="bagpanel hidden"></div><div id="ptoast" class="ptoast hidden"></div>
-<script src="vendor/supabase.js?v=673"></script>
-<script src="config.js?v=673"></script>
-<script src="match.js?v=673"></script>
-<script src="quiz.js?v=673"></script>
-<script src="net.js?v=673"></script>
-<script src="music.js?v=673"></script>
-<script src="chars.js?v=673"></script>
-<script src="player.js?v=673"></script>
+<script src="vendor/supabase.js?v=674"></script>
+<script src="config.js?v=674"></script>
+<script src="match.js?v=674"></script>
+<script src="quiz.js?v=674"></script>
+<script src="net.js?v=674"></script>
+<script src="music.js?v=674"></script>
+<script src="chars.js?v=674"></script>
+<script src="player.js?v=674"></script>
 </body>
 </html>

@@ -290,7 +290,7 @@
       var gc = s.gallery.chosen[pid] != null ? s.gallery.chosen[pid] : padPicked;
       if (!go) { show('v-wait'); $('waittitle').textContent = 'Everyone is drawing'; $('waitsub').textContent = 'You can guess the drawings in a moment.'; }
       else if (s.gallery.done[pid] || padDone) { show('v-wait'); $('waittitle').textContent = padSkipped ? 'No drawing this time' : 'Drawing sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
-      else { show('v-draw'); $('dround').textContent = 'Postcard'; drawView(go, gc); }
+      else { show('v-draw'); $('dround').textContent = 'Postcard Picasso'; drawView(go, gc); }
     }
     else if (s.phase === 'loading' && s.draw) { show('v-wait'); $('waittitle').textContent = 'Get ready…'; $('waitsub').textContent = s.draw.pid === pid ? 'Your drawing is next.' : 'Next: a drawing by ' + s.draw.name + '.'; }
     else if (s.phase === 'guess' && s.draw && s.draw.pid === pid) { show('v-wait'); $('waittitle').textContent = 'Your drawing!'; $('waitsub').textContent = 'The others are guessing what it is.'; }
@@ -754,14 +754,14 @@
     clearInterval(recTick);
     if (rec && rec.state !== 'inactive') { try { rec.onstop = null; rec.stop(); } catch (e) {} }
     rec = null; recBlob = null; recChunks = [];
-    $('srecbtn').textContent = 'Start recording'; $('srecbtn').disabled = false; $('srecbtn').classList.remove('live'); $('srecbtn').classList.remove('hidden');
-    $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = ''; $('scount').classList.remove('hidden'); $('scount').classList.remove('live'); $('scount').textContent = '3';
+    $('srecbtn').textContent = '🎤 Ready!'; $('srecbtn').disabled = false; $('srecbtn').classList.remove('live'); $('srecbtn').classList.remove('hidden');
+    $('sprev').classList.add('hidden'); $('srecdone').classList.add('hidden'); $('srecstate').textContent = ''; $('scount').classList.remove('hidden'); $('scount').classList.remove('live', 'counting'); $('scount').textContent = '3';
   }
   function renderSing(s, m) {
     var sg = s.sing, key = s.phase + ':' + s.round, fresh = key !== sKey;
     sKey = key;
     show('v-sing');
-    $('sround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Jury Show';
+    $('sround').textContent = 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) + ' · Key Change!';
     var poll = s.phase === 'svote' || s.phase === 'sbest', recPhase = s.phase === 'srec' && !(m && m.in);
     $('sopts').classList.toggle('hidden', !poll); $('srec').classList.toggle('hidden', !recPhase);
     // While listening or recording: ask for another part of the song (a few times per round at most).
@@ -770,6 +770,17 @@
     if (s.phase === 'slisten' && $('sbad').disabled && sg.bad) { $('sfb').className = 'fb close'; $('sfb').textContent = 'You voted to skip this song: ' + sg.bad + ' of ' + sg.bad_need + ' needed.'; }
     if (fresh) { $('sfb').textContent = ''; $('sfb').className = 'fb'; if (s.phase !== 'srec') { recReset(); recRelease(); } }
     var name = sg.song ? sg.song.title + ' – ' + sg.song.artist : '';
+    /* Key Change!: the lyrics */
+    var lyOn = !!sg.song && (s.phase === 'slisten' || (s.phase === 'srec' && !(m && m.in) && !recBlob));
+    $('slywrap').classList.toggle('hidden', !lyOn);
+    if (sg.song && $('slyrics').getAttribute('data-id') !== sg.song.id) {
+      $('slyrics').setAttribute('data-id', sg.song.id || '');
+      var ly = LYRICS[sg.song.id];
+      $('slyrics').innerHTML = '<b class="slyt">' + esc(sg.song.title) + '</b><small class="slya">' + esc(sg.song.artist) + '</small>' + (ly ? String(ly).split('\n').map(function (l) { return '<p>' + (esc(l) || '&nbsp;') + '</p>'; }).join('') : '<p class="slynone">🎶 No lyrics for this one yet: sing along with what you remember!</p>');
+    }
+    $('slywrap').classList.toggle('dim', s.phase === 'srec' && !(rec && rec.state === 'recording'));
+    var recArea = $('srec'); if (lyOn && s.phase === 'srec' && recArea.parentNode !== $('slyover')) $('slyover').appendChild($('srecbtn')), $('slyover').appendChild($('scount'));
+    if (!(lyOn && s.phase === 'srec') && $('srecbtn').parentNode !== recArea) { recArea.insertBefore($('srecbtn'), recArea.firstChild); recArea.insertBefore($('scount'), recArea.firstChild); }
     if (sg.rec_ms >= 5000) REC_MAX = sg.rec_ms;   // as long as the clip that was played
     if (poll && m && m.in && $('sfb').textContent === 'Sending your vote…') $('sfb').textContent = 'Vote received. You can still change it.';
     if (s.phase === 'svote') {
@@ -780,7 +791,7 @@
       if (fresh) $('sopts').innerHTML = (sg.order || []).map(function (o, i) { return o.pid === pid ? '' : '<button type="button" class="opt" data-i="' + i + '">' + esc(o.name) + '</button>'; }).join('');
     } else if (s.phase === 'srec') {
       $('stitle').textContent = m && m.in ? 'Got it!' : 'Your turn to sing!';
-      $('ssub').textContent = m && m.in ? 'Waiting for the others…' : name + '. Record up to ' + Math.round(REC_MAX / 1000) + ' seconds.';
+      $('ssub').textContent = m && m.in ? 'Waiting for the others…' : recBlob ? 'Listen back, then send it or try again.' : 'Press Ready when you are, then sing!';
       if (fresh) { recReset(); recSent = ''; }
     } else if (s.phase === 'sann' || s.phase === 'svotes') {
       $('stitle').textContent = 'And our 12 points go to…'; $('ssub').textContent = 'Watch the big screen.';
@@ -790,7 +801,7 @@
     } else if (s.phase === 'splay') {
       $('stitle').textContent = sg.now ? (sg.pass === 2 ? 'Once more: ' : 'Now singing: ') + sg.now : 'Showtime!'; $('ssub').textContent = 'Listen on the big screen.';
     } else {
-      $('stitle').textContent = 'We’re singing'; $('ssub').textContent = name ? name + '. Listen first, then it’s your turn.' : 'Get ready…';
+      $('stitle').textContent = s.phase === 'slisten' ? '🎶 Listen and read along' : 'We’re singing'; $('ssub').textContent = name ? name + '. Listen first, then it’s your turn.' : 'Get ready…';
     }
   }
   $('sopts').addEventListener('click', function (e) {
@@ -820,19 +831,19 @@
       rec.onstop = function () {
         recBlob = new Blob(recChunks, { type: (rec && rec.mimeType) || mime || 'audio/webm' });
         recRelease();
-        $('srecbtn').classList.add('hidden'); $('srecbtn').classList.remove('live'); $('scount').classList.add('hidden');
+        $('srecbtn').classList.add('hidden'); $('srecbtn').classList.remove('live'); $('scount').classList.add('hidden'); $('slywrap').classList.add('hidden'); $('slywrap').classList.remove('recording');
         $('sprev').src = URL.createObjectURL(recBlob); $('sprev').classList.remove('hidden'); $('srecdone').classList.remove('hidden');
         $('srecstate').className = 'fb'; $('srecstate').textContent = 'Happy with it?';
       };
       // Three, two, one: time to take a breath before the recording starts.
       var mine = rec, n = 3;
-      $('srecbtn').disabled = true; $('srecstate').className = 'fb close'; $('srecstate').textContent = 'Get ready…';
+      $('srecbtn').disabled = true; $('srecbtn').classList.add('hidden'); $('srecstate').className = 'fb close'; $('srecstate').textContent = 'Get ready…';
       var count = function () {
         if (rec !== mine) { $('srecbtn').disabled = false; $('scount').textContent = '3'; return; }   // taken back in the meantime
         // a giant circle counts 3, 2, 1, 0: at 0 the recording starts
-        $('scount').classList.remove('hidden'); $('scount').classList.remove('live'); $('scount').textContent = String(n);
+        $('scount').classList.remove('hidden'); $('scount').classList.add('counting'); $('scount').classList.remove('live'); $('scount').textContent = String(n);
         if (n > 0) { n--; setTimeout(count, 1000); return; }
-        $('srecbtn').disabled = false; $('scount').classList.add('live');
+        $('srecbtn').disabled = false; $('srecbtn').classList.remove('hidden'); $('scount').classList.add('live'); $('slywrap').classList.remove('dim'); $('slywrap').classList.add('recording');
         rec.start(); recT0 = Date.now();
         $('srecbtn').textContent = 'Stop'; $('srecbtn').classList.add('live');
         recTick = setInterval(function () {
@@ -844,7 +855,7 @@
       count();
     }).catch(function () { $('srecstate').className = 'fb no'; $('srecstate').textContent = 'No access to the microphone. Allow it in your browser, or skip this one.'; });
   });
-  $('sredo').addEventListener('click', recReset);
+  $('sredo').addEventListener('click', function () { recReset(); $('slywrap').classList.remove('hidden', 'recording'); $('slywrap').classList.add('dim'); });
   $('sbad').addEventListener('click', function () { if (!net) return; $('sbad').disabled = true; net.send('poll', { pid: pid, reroll: true }); $('sfb').className = 'fb close'; $('sfb').textContent = 'You voted to skip this song.'; });
   $('sskip').addEventListener('click', function () { recReset(); recRelease(); if (net) net.send('clip', { pid: pid, skip: true }); });
   $('ssend').addEventListener('click', function () {

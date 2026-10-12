@@ -2975,3 +2975,79 @@ body.hasdock main{padding-bottom:84px}
 .testcard h3{margin:16px 0 8px;font-size:1rem;color:var(--mute)}
 .testgrid{display:flex;flex-wrap:wrap;gap:8px;margin:0}
 .shopbtn .price{display:inline-block}
+
+/* ---------- the slot machine (party game: random / Grand tour) ---------- */
+.slotov{position:fixed;inset:0;z-index:58;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;background:radial-gradient(ellipse at 50% 40%,#3a1670,#120724 70%);animation:slin .5s ease-out both}
+.slotov.leaving{animation:slout .6s ease-in forwards}
+@keyframes slin{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:none}}
+@keyframes slout{to{opacity:0;transform:scale(.96)}}
+.slsign{font-size:clamp(2rem,5vw,4.2rem);font-weight:900;color:#fff;text-shadow:0 0 18px #ff4fd8,0 0 40px #ff2e88;padding:.2em .8em;border-radius:24px;border:4px solid #ffd23f;box-shadow:0 0 30px rgba(255,210,63,.6),inset 0 0 20px rgba(255,210,63,.3);background:rgba(40,8,60,.6)}
+.slmachine{position:relative;width:min(88vw,1200px);padding:2.2vh 2vw;border-radius:40px;background:linear-gradient(#ffcf4a,#c88a12);box-shadow:0 0 0 6px #7a4a06,0 0 60px rgba(255,190,60,.55),inset 0 4px 0 rgba(255,255,255,.5)}
+.slrow{position:relative;overflow:hidden;border-radius:16px;background:#1b0a33}
+.slrow.deco{height:7vh;opacity:.75;margin:1vh 0}
+.sldeco{display:flex;gap:2.4vw;font-size:4.4vh;line-height:7vh;white-space:nowrap;padding-left:1vw;filter:saturate(1.2)}
+.sldeco.spinl{animation:sldl .5s linear infinite}.sldeco.spinr{animation:sldr .5s linear infinite}
+@keyframes sldl{to{transform:translateX(-12vw)}}@keyframes sldr{from{transform:translateX(-12vw)}to{transform:none}}
+.slrow.main{height:24vh;box-shadow:inset 0 0 30px rgba(0,0,0,.8)}
+.slstrip{display:flex;height:100%;will-change:transform}
+.slcell{flex:none;width:17vw;max-width:230px;height:100%;margin:0 .5vw;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;text-align:center;background:linear-gradient(160deg,#6a2bd1,#2a0e5c);color:#fff;box-shadow:inset 0 0 0 3px rgba(255,255,255,.15)}
+.slcell:nth-child(4n+2){background:linear-gradient(160deg,#d12b8f,#5c0e3d)}.slcell:nth-child(4n+3){background:linear-gradient(160deg,#16a37a,#0b4d3b)}.slcell:nth-child(4n){background:linear-gradient(160deg,#e08a12,#6b3b05)}
+.slcell .sli{font-size:8vh;line-height:1}
+.slcell b{font-size:clamp(.9rem,1.5vw,1.4rem);font-weight:900;padding:0 .5em;line-height:1.1}
+.slcell.out{filter:grayscale(1) brightness(.55);opacity:.7}
+.slcell.won{box-shadow:0 0 0 5px #ffd23f,0 0 40px #ffd23f;animation:slwon .7s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes slwon{from{transform:scale(1)}to{transform:scale(1.08)}}
+.slwin{position:absolute;left:50%;top:0;bottom:0;width:calc(min(17vw,230px) + 12px);transform:translateX(-50%);border:5px solid #ffd23f;border-radius:18px;box-shadow:0 0 24px #ffd23f,inset 0 0 24px rgba(255,210,63,.4);pointer-events:none}
+.slwin::before,.slwin::after{content:'';position:absolute;left:50%;transform:translateX(-50%);border:14px solid transparent}
+.slwin::before{top:-6px;border-top-color:#ffd23f}.slwin::after{bottom:-6px;border-bottom-color:#ffd23f}
+.sllever{position:absolute;right:-3.2vw;top:10%;width:1.1vw;height:22vh;border-radius:99px;background:linear-gradient(90deg,#999,#eee,#888);transform-origin:50% 100%;transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+.sllever::before{content:'';position:absolute;left:50%;top:-3vh;width:5vh;height:5vh;margin-left:-2.5vh;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe680,#d4a00b)}
+.sllever.pull{transform:rotate(28deg) scaleY(.85)}
+.slbtn{padding:.5em 3em;border-radius:999px;background:linear-gradient(#ff4fa8,#c41a6b);color:#fff;font-weight:900;font-size:clamp(1.4rem,3vw,2.4rem);letter-spacing:.08em;box-shadow:0 8px 0 #7a0c40,0 0 30px rgba(255,79,168,.6)}
+.slbtn.push{transform:translateY(6px);box-shadow:0 2px 0 #7a0c40,0 0 30px rgba(255,79,168,.6);transition:transform .15s,box-shadow .15s}
+.slotov.done .slsign{animation:slwon .6s cubic-bezier(.2,1.6,.4,1) both}
+/* ---------- vote: four game cards ---------- */
+#qopts.gamecards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#qopts.gamecards .optcol{display:flex;flex-direction:column}
+#qopts.gamecards .opt{min-height:120px;align-items:flex-start;padding:16px;font-size:1.3rem;border-radius:18px;background:linear-gradient(160deg,rgba(150,80,255,.35),rgba(40,10,90,.6));box-shadow:0 0 0 2px rgba(255,210,63,.45),0 0 24px rgba(160,90,255,.25)}
+#qopts.gamecards .opt .otx{display:flex;flex-direction:column;gap:6px}
+#qopts.gamecards .gsub{font-size:.85rem;font-weight:600;color:var(--mute);line-height:1.3}
+#qopts.gamecards .opt.right{box-shadow:0 0 0 4px #ffd23f,0 0 30px #ffd23f}
+/* Disqualivision: the winner in the green room */
+.grov .grp.grwin{z-index:3}
+.grov .grcrown{position:absolute;left:50%;top:-34%;transform:translateX(-50%) scale(0);font-size:2.4em;z-index:5;transition:transform .6s cubic-bezier(.2,1.7,.4,1);filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.grov.crowned .grcrown{transform:translateX(-50%) scale(1)}
+.grov.crowned .grp.grwin{animation:grwinhop .7s ease-in-out infinite alternate}
+.grov.crowned .grp:not(.grwin){filter:brightness(.6)}
+@keyframes grwinhop{to{transform:translateY(-14px) scale(1.06)}}
+/* Disqualivision: the answers as social-media posts */
+.notearea .snote,.notearea .sheet{--tilt:0deg!important;transform:none;background:#fff;color:#0f1419;border-radius:16px;padding:12px 14px 10px;box-shadow:0 10px 26px -8px rgba(0,0,0,.6);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.notearea .snote .scrib,.notearea .sheet .scrib{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:500;font-size:clamp(.95rem,1.35vw,1.2rem);line-height:1.3;margin:6px 0}
+.notearea .sheet .scrib{font-size:clamp(1.3rem,2.4vw,2rem)}
+.twhead{display:flex;align-items:center;gap:8px;text-align:left}
+.twhead .char,.twanon{width:34px;height:34px;flex:none;border-radius:50%}
+.twanon{display:flex;align-items:center;justify-content:center;background:#cfd9de;font-size:1.1rem}
+.twname{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.twname b{font-size:.9rem;color:#0f1419;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.twname small{font-size:.75rem;color:#536471}
+.twtick{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#1d9bf0;color:#fff;font-size:.6rem;vertical-align:1px}
+.twfoot{display:flex;justify-content:space-between;color:#536471;font-size:.78rem;padding-top:6px;border-top:1px solid #eff3f4}
+.twfoot .twlike{color:#f91880;font-weight:700}
+.notearea .snote .by{position:static;display:block;margin-top:4px;color:#0f1419}
+.notearea .snote .tag{background:#1d9bf0;color:#fff}
+.notearea .snote.win{box-shadow:0 0 0 5px var(--ok),0 10px 34px -6px rgba(53,240,138,.9)}
+/* Key Change!: the lyrics on the phone, greyed with a big Ready on top after the song */
+.slywrap{position:relative;border-radius:18px;background:linear-gradient(160deg,rgba(255,46,136,.16),rgba(80,40,200,.2));box-shadow:inset 0 0 0 2px rgba(255,255,255,.08);min-height:180px}
+.slyrics{padding:16px 16px 18px;max-height:46vh;overflow:auto;text-align:center;transition:opacity .3s,filter .3s}
+.slyrics .slyt{display:block;font-size:1.2rem}.slyrics .slya{display:block;color:var(--mute);margin-bottom:10px}
+.slyrics p{margin:4px 0;font-size:1.15rem;font-weight:700;line-height:1.35}
+.slyrics .slynone{font-weight:600;color:var(--mute)}
+.slywrap.dim .slyrics{opacity:.35;filter:blur(.5px)}
+.slyover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none}
+.slyover>*{pointer-events:auto}
+.slywrap:not(.dim) .slyover #srecbtn:not(.live){display:none}
+.slyover #srecbtn{font-size:1.6rem;padding:.7em 1.6em;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.slyover #srecbtn.live{position:absolute;bottom:8px;font-size:1rem;padding:.4em 1.2em}
+.slyover .bigcount{font-size:5rem}
+.slywrap.recording .slyover .bigcount.live{position:absolute;top:6px;right:10px;font-size:1.3rem;width:auto;height:auto;padding:.2em .6em}
+.slyover #scount:not(.counting){display:none}

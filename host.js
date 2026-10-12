@@ -271,6 +271,7 @@
     // Phones get the question and the options, never which option is right (until the reveal).
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip, peel: !!G.q.peel, smoke: G.phase === 'guess' && G.smoke && G.smoke.length ? G.smoke : null, fan: G.phase === 'guess' && G.fanQ && G.fanQ.key === qKeyNow() ? G.fanQ.map : null };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
+    if (G.phase === 'pspin' && G.slot) s.fun = { icon: '🎰', title: 'Pick a game!', sub: 'Watch the big screen…' };
     if (G.phase === 'pspin' && G.pspin) s.fun = { icon: '🎉', title: 'Party round!', sub: G.pspin.done ? 'It is ' + G.pspin.games[G.pspin.roll].title : 'Spinning…' };
     if (G.phase === 'fun' && G.fun) s.fun = { icon: G.fun.icon, title: G.fun.title, sub: G.fun.sub };
     if (G.phase === 'part' && G.part) s.part = { n: G.part.n, of: G.part.of, spin: !!G.part.eras, label: G.part.done ? G.part.label : '' };
@@ -603,7 +604,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         $('rmeta').textContent = bw.length ? (G.best.bluff ? '12 points for finding it, 2 for every vote your bluff gets' : G.best.quip ? (G.best.per || 1) + (G.best.per === 1 ? ' point' : ' points') + ' per vote' : '+' + BEST_PTS * partyX() + ' bonus points') : ''; $('rres').textContent = ''; $('ranswer').textContent = '';
         $('next').textContent = lastSong() ? 'Final scores' : 'Next';
       }
-      if (G.phase === 'reveal' && G.song) {
+      if (G.phase === 'reveal' && G.song && G.song[1]) {
         $('rtitle').textContent = G.song[3];
         $('rmeta').innerHTML = esc(G.song[2]) + ' · <img class="metaflag" src="https://flagcdn.com/w40/' + G.song[1] + '.png" alt=""> ' + esc(countries[G.song[1]] || G.song[1]) + ' ' + G.song[0];
         $('rres').textContent = resultText(G.song);
@@ -642,11 +643,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var win = nrev && G.best.wins && G.best.wins.indexOf(i) >= 0, au = players[G.best.pids[i]];
         var just = (cu && cu.fresh && i === nSmall - 1) || G.noteJust === i;
         if (just) movedI = i;
-        return '<div class="snote' + (win ? ' win' : nrev ? ' lost' : '') + (just && !bigRect ? ' shrunk' : '') + '" style="--tilt:' + ((i % 2 ? 1 : -1) * (0.8 + (i * 37 % 20) / 10)).toFixed(1) + 'deg"><b class="tag">' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="scrib">' + esc(o) + '</span>' +
+        return '<div class="snote' + (win ? ' win' : nrev ? ' lost' : '') + (just && !bigRect ? ' shrunk' : '') + '" style="--tilt:' + ((i % 2 ? 1 : -1) * (0.8 + (i * 37 % 20) / 10)).toFixed(1) + 'deg"><b class="tag">' + 'ABCDEFGHIJKLMNOP'[i] + '</b>' + twHead(nrev ? au : undefined, i) + '<span class="scrib">' + esc(o) + '</span>' + twFoot(i, nrev ? who.length : null) +
           '<div class="nvotes">' + who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('') + '</div>' +
           (nrev ? '<small class="by">' + esc(au ? au.name : QUIP_HOUSE) + (au && au.pts ? ' <b>+' + au.pts + '</b>' : '') + '</small>' : '') + '</div>';
       }).join('') + '</div>' +
-        (cu ? '<div class="bigwrap"><div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg"><span class="scrib">' + esc(cu.text) + '</span><small>' + cu.n + ' / ' + cu.of + '</small></div></div>' : '');
+        (cu ? '<div class="bigwrap"><div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg">' + twHead(undefined, cu.n - 1) + '<span class="scrib">' + esc(cu.text) + '</span>' + twFoot(cu.n - 1, null) + '<small>' + cu.n + ' / ' + cu.of + '</small></div></div>' : '');
       // The note that was big travels to its place among the others: it starts where the big one was, at that
       // size, and glides and shrinks into its slot. The next big note comes in once it has landed.
       var mv = movedI >= 0 && bigRect ? $('qopts').querySelectorAll('.snote')[movedI] : null;
@@ -671,14 +672,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       $('qopts').innerHTML = pt.eras ? pt.eras.map(function (e, i) { return '<div class="optcol"><div class="opt' + (i === pt.roll ? (pt.done ? ' right picked' : ' rolling') : e.out ? ' dim' : '') + '">' + esc(e.label) + (e.out ? ' <span class="mute" style="font-size:.8em">played</span>' : '') + '</div></div>'; }).join('') : '';
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
-    $('qopts').classList.remove('eras');
+    $('qopts').classList.remove('eras'); $('qopts').classList.toggle('gamecards', !!(G.best && G.best.four));
     $('qtext').textContent = on ? q.text : G.phase === 'dall' ? 'Everyone is drawing a song!' : G.phase === 'qall' && G.quips ? (G.quips.bluff ? '' : 'Write a funny answer: ') + G.quips.line.p : G.phase === 'qshow' && G.qshow ? 'Here is what you wrote: ' + G.qshow.prompt : '';
     // One answer per row. Behind it: who picked it, first one by one (G.shown), then with the points at the reveal.
     var rev = G.phase === 'reveal', shown = G.phase === 'picks' ? (G.shown || []) : rev ? list().map(function (p) { return p.pid; }) : [];
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
       var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
       if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
-      return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + '</span>' + (rev && i === q.correct && !G.best ? ccBadge() : '') + '</div><div class="voters">' +
+      return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + (G.best && G.best.four && G.best.subs ? '<small class="gsub">' + esc(G.best.subs[i] || '') + '</small>' : '') + '</span>' + (rev && i === q.correct && !G.best ? ccBadge() : '') + '</div><div class="voters">' +
         who.map(function (p) {
           var cq = rev && G.clue && G.clue.st === 'ask' && i === q.correct, fast = cq && G.clue.fast === p.pid;   // Edgar: no points, clues; the fastest gets an extra one
           return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + (fast ? ' fastest' : '') + '">' + charSvg(p.char) + esc(p.name) + (cq ? (fast ? ' <b>🔍 +extra clue</b>' : '') : rev && p.got && i === q.correct && !G.best ? ' <b>+' + p.pts + '</b>' + (p.ccb ? ' <img class="ccbmini" src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="" title="Flag bonus: double points">' : '') : '') + '</span>';
@@ -931,6 +932,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return '--o1:' + o[0] + ';--o2:' + o[1] + ';--ol:' + LEG[(oh >>> 5) % LEG.length];
   }
   function handFlag(p) { return p && p.cc ? '<span class="hflag"><b></b><img src="https://flagcdn.com/w80/' + p.cc + '.png" alt=""></span>' : ''; }
+  /* Disqualivision answers look like posts on social media: anonymous while voting, the writer at the answer */
+  function twHead(au, i) {
+    var anon = au === undefined, nm = anon ? 'Anonymous Eurofan' : au ? au.name : QUIP_HOUSE, hd = anon ? 'eurofan' + (100 + i * 37 % 900) : String(nm).toLowerCase().replace(/[^a-z0-9]+/g, '');
+    return '<div class="twhead">' + (anon || !au ? '<span class="twanon">' + (anon ? '👤' : '🎤') + '</span>' : charSvg(au.char)) + '<span class="twname"><b>' + esc(nm) + (anon ? '' : ' <i class="twtick">✔</i>') + '</b><small>@' + esc(hd) + ' · now</small></span></div>';
+  }
+  function twFoot(i, likes) { var r = function (k) { return 3 + (i * 53 + k * 17) % 90; }; return '<div class="twfoot"><span>💬 ' + r(1) + '</span><span>🔁 ' + r(2) + '</span><span class="twlike">' + (likes ? '❤️ ' + likes : '♡ ' + r(3)) + '</span></div>'; }
   function ccBadge() {
     var ws = list().filter(function (p) { return p.got && p.ccb; }); if (!ws.length) return '';
     return '<span class="ccbadge">' + ws.map(function (p) { return '<img src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="">'; }).join('') + '<em class="ccbt">Flag bonus ×2!</em></span>';
@@ -1283,6 +1290,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       FUN.starter = { icon: '🛍️', title: 'Your Eurofan bag!', sub: 'Everyone gets one of each item from the Eurofan Shop. Use them with the 🛍️ button on your phone, whenever you like.' };
       funIntro('starter', startRound2, 6500); return;
     }
+    if (G.atype === 'party' && G.afterParty && G.quipRun) {   /* Disqualivision / United by Nonsense: three rounds */
+      var qr = G.quipRun;
+      if (qr.n < 3) { qr.n++; G.mode = qr.kind; if (qr.kind === 'bluff') bluffAll(); else quipAll(); return; }
+      if (qr.kind === 'quip' && !qr.shown && !REMOTE) {
+        qr.shown = true; var gain = {}, best = -1; list().forEach(function (p) { if (p.off) return; gain[p.pid] = p.score - ((qr.base || {})[p.pid] || 0); if (gain[p.pid] > best) best = gain[p.pid]; });
+        var wins = Object.keys(gain).filter(function (k) { return best > 0 && gain[k] === best; });
+        greenRoom(startRound2, wins); return;
+      }
+      G.quipRun = null;
+    }
     if (G.atype === 'party' && G.afterParty && G.mgBase) { mgPrize(); return; }
     if (G.atype === 'party' && G.mgTest) { G.afterParty = false; G.quizRun = Math.max(G.quizRun || 0, G.block || 3); }   // testing the party games: no trivia in between   // a party game is over: the winner goes shopping
     if (G.atype === 'party') {
@@ -1421,12 +1438,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
     note: { icon: '🎤', title: 'Hold That Note', sub: 'Technical problems! How long will the diva hold her high note this time? Guess between 10 seconds and one minute on your phone. Once she sings past your time you are out: the closest guess that is still in wins.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
-    quip: { icon: '💬', title: 'Green Room', sub: 'A song plays with a question about it. Everyone writes a funny answer on their phone. Then you all vote for the funniest one.' },
-    draw: { icon: '🎨', title: 'Postcard', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
-    bluff: { icon: '🤥', title: 'Lost in Translation', sub: 'A song title in another language. Make up a translation that fools the others, then find the real one.' },
+    quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
+    draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
+    bluff: { icon: '🗣️', title: 'United by Nonsense', sub: 'Three song titles in another language. Make up a fake translation that fools the others, then find the real one. Most points wins.' },
     final: { icon: '✨', title: 'Grand Final', sub: 'The last three questions: every point counts double! The scores stay hidden until the final reveal.' },
     quiz: { icon: '🎧', title: 'Trivia', sub: 'Trivia time: three questions coming up.' },
-    sing: { icon: '🎤', title: 'Jury Show', sub: 'Vote for a song, listen, then record yourself singing it on your phone.' }
+    sing: { icon: '🎤', title: 'Key Change!', sub: 'Vote for a song, sing along with the lyrics on your phone, and record yourself singing it. Then everyone votes for the best performance.' }
   };
   var funTimer = null;
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
@@ -1434,6 +1451,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function partyGo(kind, ms) {
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
+    G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
     if (kind === 'clue') { if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); } setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
@@ -1475,12 +1493,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!left.length) { done.length = 0; left = games.filter(function (x) { return x !== G.lastParty; }); if (!left.length) left = games.slice(); }
       var next = pick(left); done.push(next);
       if (G.tour && games.every(function (x) { return done.indexOf(x) >= 0; })) G.tourLast = true;   // the last stop of the tour
-      partySpin(left, next, function () { partyGo(next, 3000); });   // (with one minigame left the spin page still shows: it lights up at once)
+      partySlot(left, next, function () { partyGo(next, 2500); });   /* the slot machine: the played ones are on the reel, greyed out */
       return;
     }
-    if (how === 'vote' || how === 'one') { partyVote(games, how === 'one'); return; }
+    if (how === 'vote') { partyVote4(games); return; }
+    if (how === 'one') { partyVote(games, true); return; }
     var fresh = games.filter(function (x) { return x !== G.lastParty; }), chosen = pick(fresh.length ? fresh : games);
-    partySpin(games, chosen, function () { partyGo(chosen, 3000); });   // random: the spin picks one of the rounds that are switched on
+    partySlot(fresh.length ? fresh : games, chosen, function () { partyGo(chosen, 2500); });   // random: the slot machine picks one of the rounds that are switched on
   }
   // A vote (or one player's choice) on the phones, with the party rounds as the answers.
   var PICK_MS = 15000;
@@ -1497,8 +1516,35 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push();
     endTimer = setTimeout(reveal, PICK_MS);
   }
+  /* Vote: four different party games (the ones not shown lately have a better chance), everyone votes on the phone,
+     then a draw among the voted games: more votes, more chance. The old spinner shows the draw. */
+  function partyVote4(games) {
+    var seen = G.partySeen || (G.partySeen = {}), pool = games.slice(), four = [];
+    while (four.length < 4 && pool.length) {
+      var w = pool.map(function (k) { return seen[k] ? 1 / (1 + seen[k]) : 2; }), tot = w.reduce(function (a, b) { return a + b; }, 0), r = Math.random() * tot, i = 0;
+      while (i < pool.length - 1 && r >= w[i]) { r -= w[i]; i++; }
+      four.push(pool.splice(i, 1)[0]);
+    }
+    four.forEach(function (k) { seen[k] = (seen[k] || 0) + 1; });
+    if (four.length < 2) { partyGo(four[0] || games[0]); return; }
+    stopTimers(); G.draw = null; G.song = null; G.clip = null;
+    G.best = { pick: true, four: true, kinds: four, subs: four.map(function (k) { return FUN[k].sub; }), pids: four.map(function () { return null; }), only: null, id: 'pick' + G.round, tally: null, wins: null };
+    G.q = { subject: 'pick', type: 'mc', text: 'Which game shall we play? Vote on your phone!', hint: '', options: four.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), correct: -1, answer: '', noclip: true };
+    if (!REMOTE) { cover(true, '🗳️', 'Which game shall we play?', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); }
+    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push();
+    endTimer = setTimeout(reveal, PICK_MS);
+  }
   // The votes are in: the one with the most plays; a tie (or no votes at all) is settled by the spin.
   function partyPicked(tops) {
+    if (G.best && G.best.four) {   /* four cards: a draw among the voted games, weighted by the votes (no votes: all four, equal) */
+      var kinds4 = G.best.kinds, tally = G.best.tally || [], voted = kinds4.filter(function (k, i) { return tally[i] > 0; }), wts = voted.map(function (k) { return tally[kinds4.indexOf(k)]; });
+      if (!voted.length) { voted = kinds4.slice(); wts = voted.map(function () { return 1; }); }
+      var tw = wts.reduce(function (a, b) { return a + b; }, 0), rr = Math.random() * tw, j = 0; while (j < voted.length - 1 && rr >= wts[j]) { rr -= wts[j]; j++; }
+      var ch = voted[j];
+      clearTimeout(picksTimer); stopTimers(); list().forEach(function (p) { p.pick = null; }); G.best = null; G.q = null;
+      if (voted.length > 1) partySpin(voted, ch, function () { partyGo(ch, 3000); }, voted); else partyGo(ch);
+      return;
+    }
     var kinds = G.best.kinds, cands = tops.length ? tops.map(function (i) { return kinds[i]; }) : kinds;
     clearTimeout(picksTimer); stopTimers();
     list().forEach(function (p) { p.pick = null; });
@@ -1506,12 +1552,47 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (cands.length > 1) { var c = pick(cands); partySpin(cands, c, function () { partyGo(c, 3000); }); }
     else partyGo(cands[0]);
   }
+  /* The slot machine: every party game on the reel (the ones already played greyed out, they never come up);
+     it spins, slows down and stops on the chosen one in the middle. */
+  var slotT = null;
+  function partySlot(games, chosen, then) {
+    G.phase = 'pspin'; G.barMs = 0; G.pspin = null;
+    G.fun = null; autoStop(); stopTimers();
+    if (REMOTE) { push(); setTimeout(then, 1500); return; }
+    try { yt.pauseVideo(); } catch (e) {} cover(true, '🎰', '', false); masks(true); $('cover').classList.add('funcard');
+    G.slot = { kinds: PARTY_KINDS.filter(function (k) { return FUN[k]; }), out: PARTY_KINDS.filter(function (k) { return games.indexOf(k) < 0; }), chosen: chosen };
+    push();
+    var old = $('slotov'); if (old) old.remove();
+    var ks = G.slot.kinds, n = ks.length, REP = 9, deco = ['🪩', '🎤', '💖', '🏆', '✨', '🎶', '🌟', '💃', '🕺', '🎉', '🌈', '👑'];
+    var cell = function (k) { return '<div class="slcell' + (G.slot.out.indexOf(k) >= 0 ? ' out' : '') + '" data-k="' + k + '"><span class="sli">' + FUN[k].icon + '</span><b>' + esc(FUN[k].title) + '</b></div>'; };
+    var strip = ''; for (var r = 0; r < REP; r++) ks.forEach(function (k) { strip += cell(k); });
+    var drow = function () { var h = ''; for (var i = 0; i < 40; i++) h += '<i>' + deco[i % deco.length] + '</i>'; return h; };
+    var ov = document.createElement('div'); ov.id = 'slotov'; ov.className = 'slotov';
+    ov.innerHTML = '<div class="slsign">🎰 Pick a game!</div><div class="slmachine"><div class="slrow deco top"><div class="sldeco">' + drow() + '</div></div><div class="slrow main"><div class="slstrip">' + strip + '</div><div class="slwin"></div></div><div class="slrow deco bot"><div class="sldeco">' + drow() + '</div></div><i class="sllever"></i></div><div class="slbtn">SPIN</div>';
+    document.body.appendChild(ov);
+    var target = n * (REP - 2) + ks.indexOf(chosen), st = ov.querySelector('.slstrip'), win = ov.querySelector('.slrow.main');
+    var place = function (i) { var c = st.children[i]; return -(c.offsetLeft + c.offsetWidth / 2 - win.clientWidth / 2); };
+    st.style.transition = 'none'; st.style.transform = 'translateX(' + place(Math.floor(Math.random() * n) + n) + 'px)';
+    clearTimeout(slotT); slotT = setTimeout(function () {
+      if (!ov.isConnected) return;
+      ov.querySelector('.slbtn').classList.add('push'); ov.querySelector('.sllever').classList.add('pull'); Music.blip();
+      st.getBoundingClientRect(); st.style.transition = 'transform 5.2s cubic-bezier(.12,.62,.08,1)'; st.style.transform = 'translateX(' + place(target) + 'px)';
+      [].forEach.call(ov.querySelectorAll('.sldeco'), function (d, i) { d.classList.add(i ? 'spinr' : 'spinl'); });
+      var t0 = Date.now(), tick = function () { var e = (Date.now() - t0) / 5200; if (e >= 1 || !ov.isConnected) return; Music.plop(Math.floor(e * 12)); slotT = setTimeout(tick, 60 + Math.pow(e, 2.2) * 600); }; tick();
+      slotT = setTimeout(function () {
+        if (!ov.isConnected) return;
+        st.children[target].classList.add('won'); ov.classList.add('done'); Music.ding(); if (chosen === 'clue') { clueSting(); G.clueSting = true; }
+        [].forEach.call(ov.querySelectorAll('.sldeco'), function (d) { d.classList.remove('spinl', 'spinr'); });
+        slotT = setTimeout(function () { ov.classList.add('leaving'); setTimeout(function () { ov.remove(); G.slot = null; then(); }, 600); }, 2600);
+      }, 5400);
+    }, 1800);
+  }
   // More than one party round to choose from: a spin decides, like a party-game minigame picker.
   var LAND = 700;   // a spin: how long the light rests on the winner before that tile turns green
-  function partySpin(games, chosen, then) {
+  function partySpin(games, chosen, then, only) {
     G.phase = 'pspin'; G.barMs = 0;
-    G.pspin = { games: PARTY_KINDS.map(function (k) { return { kind: k, icon: FUN[k].icon, title: FUN[k].title, out: games.indexOf(k) < 0 }; }), roll: -1, done: false };
-    var idx = function (k) { return PARTY_KINDS.indexOf(k); };
+    G.pspin = { games: (only || PARTY_KINDS).map(function (k) { return { kind: k, icon: FUN[k].icon, title: FUN[k].title, out: games.indexOf(k) < 0 }; }), roll: -1, done: false };
+    var idx = function (k) { return (only || PARTY_KINDS).indexOf(k); };
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '🎉', 'Party round!', false); masks(true); $('cover').classList.add('funcard'); }
     var hops = games.length < 2 ? 0 : 16 + Math.floor(Math.random() * games.length), start = (games.indexOf(chosen) - (hops % games.length) + games.length * 8) % games.length, k = 0;   // only one left: no running light, straight to yellow and then green
     var hop = function () {
@@ -2088,7 +2169,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Jury Show', draw: '🖼️ Postcard', quip: '🛋️ Green Room', bluff: '🗣️ Lost in Translation', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Envelope, Please', note: '🎶 Hold That Note', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Envelope, Please', note: '🎶 Hold That Note', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -3648,27 +3729,27 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // One shared scene: a themed stage with its own sign and centrepiece, Felix and Stella on either side,
   // and their story in speech balloons (letter by letter). Then the game itself starts.
   var SCENES = {
-    draw: { sign: '🎨 Postcard', theme: 'postcard',
+    draw: { sign: '🎨 Postcard Picasso', theme: 'postcard',
       art: '<div class="hspost"><div class="hspcard"><div class="hspl"><b>Greetings from</b><i>Eurovision!</i><span class="hsdoodle">🎤✨🎶</span></div><div class="hspr"><span class="hsstamp">12</span><span class="hsline"></span><span class="hsline"></span><span class="hsline"></span></div></div><span class="hspencil">✏️</span></div>',
       lines: [['him', 'Time to get creative, Europe! Your phones are about to become sketchbooks! ✏️'],
         ['her', 'Everyone gets four songs. Pick one, and draw it on your phone, all within one minute.'],
         ['him', 'Then we show every drawing, and the others guess which song it is.'],
         ['her', 'A right guess scores points, more the faster you are… and the artist scores too, for everyone who guessed it!'],
         ['him', 'At the end you give your 12, 10 and 8 points to the best drawings. Pencils ready? 🎨']] },
-    sing: { sign: '🎤 Jury Show', theme: 'jury',
+    sing: { sign: '🎤 Key Change!', theme: 'jury',
       art: '<div class="hsjury"><div class="hsmic">🎙️</div><div class="hsdesk"><span>12</span><span>10</span><span>8</span><span>7</span></div><div class="hsdesklabel">THE JURY</div></div>',
-      lines: [['him', 'Welcome to the Jury Show! Tonight YOU are the singers… 🎤'],
+      lines: [['him', 'Welcome to Key Change! Tonight YOU are the singers… 🎤'],
         ['her', '…and everyone else is the jury! First, vote for the song you all want to sing.'],
-        ['him', 'Listen closely, then record yourself singing it on your phone. Up to ten seconds!'],
+        ['him', 'Listen closely, the lyrics are on your phone. Then record yourself singing it!'],
         ['her', 'Then we play every performance, and the jury votes for the best one.'],
         ['him', 'The most votes gets 12 points, then 10, then 8… Warm up those voices! 🎶']] },
-    bluff: { sign: '🌍 Lost in Translation', theme: 'bluff',
+    bluff: { sign: '🗣️ United by Nonsense', theme: 'bluff',
       art: '<div class="hsbluff"><div class="hsbook">📖</div><span class="hsw" style="--x:-34vh;--y:-6vh">Magyar?</span><span class="hsw" style="--x:30vh;--y:-10vh">Suomi?</span><span class="hsw" style="--x:-28vh;--y:12vh">Shqip?</span><span class="hsw" style="--x:34vh;--y:10vh">Ελληνικά?</span><span class="hsw" style="--x:0vh;--y:-20vh">Polski?</span></div>',
-      lines: [['him', 'Lost in Translation! A song title in a language you probably don’t speak… 🌍'],
+      lines: [['him', 'United by Nonsense! Three song titles in languages you probably don’t speak… 🌍'],
         ['her', 'Make up an English translation that sounds real enough to fool everyone.'],
         ['him', 'Then all the translations appear, with the real one hidden among them.'],
         ['her', 'Find the real one for 12 points…'],
-        ['him', '…and get 2 points for every player who falls for your fake! Good luck, liars! 🤥']] },
+        ['him', '…and get 2 points for every player who falls for your fake! Three rounds, most points wins. Good luck, liars! 🤥']] },
     bomb: { sign: '💌 The Envelope, Please', theme: 'bomb',
       art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
       lines: [['him', 'Psst… the live show starts soon, and we still need to rehearse the big envelope moment! 💌'],
@@ -4430,7 +4511,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The Green Room: the presenters take everyone to the green room, where the stars sit waiting on their sofas
   // (the players on the front sofa). They explain the game, then the performance starts and the question comes.
   var GR_SOFAS = ['#8e1b3a', '#1d6b6b', '#5b2a86', '#a8641a', '#25507f'];
-  function greenRoom(then) {
+  function greenRoom(then, winners) {
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     G.fun = { kind: 'groom', icon: FUN.quip.icon, title: FUN.quip.title, sub: FUN.quip.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); push();
@@ -4440,9 +4521,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var taken = {}; act.forEach(function (p) { taken[p.char] = 1; });
     var stars = shuffle(CHARS.filter(function (c) { return !taken[c.id]; })).slice(0, 12);
     var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0 && !act.some(function (p) { return p.cc === c; }); }));   /* (the crowd: the countries nobody plays for)
-*/    var person = function (charId, name, i, flag) {   // someone on a sofa: body, head, and now and then a flag to wave
-      var col = ['#e8457c', '#f2b134', '#3fb6c9', '#9b6bf2', '#55c27a', '#f07a3a'][i % 6];
-      return '<div class="grp' + (Math.random() < 0.45 ? ' hop' : '') + '" style="--d:' + (-Math.random() * 3).toFixed(2) + 's">' +
+*/    var person = function (charId, name, i, flag, won, pc) {   // someone on a sofa: body, head, and now and then a flag to wave
+      var col = pc != null && PCOLS[pc] ? PCOLS[pc][0] : ['#e8457c', '#f2b134', '#3fb6c9', '#9b6bf2', '#55c27a', '#f07a3a'][i % 6];
+      return '<div class="grp' + (Math.random() < 0.45 ? ' hop' : '') + (won ? ' grwin' : '') + '" style="--d:' + (-Math.random() * 3).toFixed(2) + 's">' + (won ? '<span class="grcrown">👑</span>' : '') +
         (flag ? '<span class="grflag"><img src="https://flagcdn.com/w80/' + flag + '.png" alt=""></span>' : '') +
         '<span class="grbody" style="background:' + col + '"></span>' + charSvg(charId) + '</div>';
     };
@@ -4450,7 +4531,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var row = function (ppl, per, cls, k0, names) { var h = ''; for (var i = 0; i < ppl.length; i += per) h += sofa(ppl.slice(i, i + per), k0 + i / per, names ? names.slice(i, i + per) : null); return '<div class="grrow ' + cls + '">' + h + '</div>'; };
     var back = stars.slice(0, 6).map(function (c, i) { return person(c.id, '', i, i % 2 ? codes[i] : ''); });
     var mid = stars.slice(6, 12).map(function (c, i) { return person(c.id, '', i + 3, i % 2 ? '' : codes[i + 6]); });
-    var front = act.map(function (p, i) { return person(p.char, p.name, i + 1, p.cc || ''); });   /* the players wave their own fan flag */
+    var front = act.map(function (p, i) { return person(p.char, p.name, i + 1, p.cc || '', winners && winners.indexOf(p.pid) >= 0, p.col); });   /* the players wave their own fan flag */
     var ov = document.createElement('div'); ov.id = 'grov'; ov.className = 'grov enter';
     ov.innerHTML = '<div class="grwall"></div><div class="grflags">' + codes.slice(12, 30).map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div>' +
       '<div class="grsign">🛋️ Green Room</div><div class="grfloor"></div>' +
@@ -4460,16 +4541,29 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     whooshes([0, 350, 700]); setTimeout(function () { ov.classList.remove('enter'); }, 2800);
     var at = function (ms, f) { setTimeout(function () { if (ov.isConnected && G.phase === 'fun' && G.fun && G.fun.kind === 'groom') f(); }, ms); };
     var say = function (who, txt) { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); };
-    at(1500, function () { Music.ding(); say('him', 'Welcome to the Green Room, where all the stars are waiting for their results! 🛋️'); });
-    at(5300, function () { say('her', 'We’re going to watch a performance together, and then we have a question for you.'); });
-    at(9100, function () { say('him', 'Write the funniest answer you can think of on your phone…'); });
-    at(12300, function () { say('her', '…and then everyone votes for the best one. Here comes the performance! 🎤'); });
+    if (winners) {   /* back in the green room after three performances: the hosts name the winner */
+      ov.classList.add('reveal');
+      var wn = winners.map(function (k) { return players[k] ? players[k].name : '?'; }), wtxt = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
+      at(1500, function () { Music.ding(); say('him', 'Welcome back to the Green Room! The jury has seen enough… 😵'); });
+      at(5300, function () { say('her', 'Three performances, three roasts. And the winner of Disqualivision is…'); try { Music.dread && Music.dread(true); } catch (e) {} });
+      at(9300, function () { try { Music.dread && Music.dread(false); } catch (e) {} ov.classList.add('crowned'); Music.ding(); say('him', wn.length ? wtxt + '! 🏆 Douze points for the sharpest tongue' + (wn.length > 1 ? 's' : '') + '!' : 'Nobody! Not a single vote… the jury is speechless. 🙊'); });
+      at(14300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
+      at(15300, function () { ov.remove(); then(); });
+      return;
+    }
+    at(1500, function () { Music.ding(); say('him', 'Welcome to Disqualivision! Here in the Green Room, the stars are waiting for their results… 🛋️'); });
+    at(5300, function () { say('her', 'We’re going to watch three performances that should never have been allowed on stage.'); });
+    at(9100, function () { say('him', 'Roast them! Write the funniest answer you can think of on your phone…'); });
+    at(12300, function () { say('her', '…and then everyone votes for the best one. Most points after three rounds wins! 🎤'); });
     at(16300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
     at(17300, function () { ov.remove(); then(); });
   }
   function quipAll() {
     G.quipLoad = true; G.quips = null; G.draw = null; G.best = null; G.q = null;
-    G.phase = 'loading'; push(); loadSong();
+    var qr = G.quipRun || (G.quipRun = { kind: 'quip', n: 1, songs: [] }); qr.songs = qr.songs || [];
+    var left = QUIP_SONGS.filter(function (s) { return qr.songs.indexOf(s.id) < 0 && !BAD_VIDEOS[s.id]; }); if (!left.length) left = QUIP_SONGS.slice();
+    var qs = pick(left); qr.songs.push(qs.id); G.quipStart = qs.s;
+    G.phase = 'loading'; push(); loadSong([0, '', '', 'Disqualivision', qs.id, 0, 0, null, null, null, '', '']);   /* (not a song from the list: no title, country or year to show) */
   }
   // The song is ready (called where a quiz question would start): hand out the question and play.
   // Bluff!: the same round, but the question is what a title in another language means. Everyone makes up
@@ -4536,8 +4630,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ln = { p: 'What does “' + bluff.title + '” mean? Make up a translation to fool the others.', h: bluff.real };
     } else {
     // no question twice in one game, until they have all been used
-    if (!G.quipUsed || G.quipUsed.length >= QUIPS.length) G.quipUsed = [];
-    var left = QUIPS.filter(function (x) { return G.quipUsed.indexOf(x.p) < 0; }); ln = pick(left);
+    if (!G.quipUsed || G.quipUsed.length >= ROASTS.length) G.quipUsed = [];
+    var left = ROASTS.filter(function (x) { return G.quipUsed.indexOf(x.p) < 0; }); ln = pick(left);
     G.quipUsed.push(ln.p);
     }
     list().filter(function (p) { return !p.off; }).forEach(function (p) { items[p.pid] = { prompt: ln.p, text: '', done: 0 }; });
@@ -4546,7 +4640,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('err').textContent = '';
     if (!REMOTE) {
       // the clip plays on while everyone writes (the title stays masked until the answer)
-      clearInterval(poll); stage = 'clip';
+      clearInterval(poll); stage = 'clip'; if (G.quipStart != null && !bluff) { clipStart = G.quipStart; }
       try { yt.seekTo(clipStart, true); yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) {}
       cover(false); masks(true);
     }
@@ -4891,7 +4985,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function singStart2(four) {
     G.sing = { options: four, chosen: null, tried: {}, votes: {}, parts: {}, clips: {}, order: [], idx: -1, now: null, best: {}, result: null, in: {} };
     singPhase('svote', SING.vote);
-    cover(true, '🎤', 'Jury Show', false); masks(true);
+    cover(true, '🎤', 'Key Change!', false); masks(true);
     singTimer = setTimeout(singVoteEnd, SING.vote); push();
   }
   function singVoteEnd() {
@@ -5119,7 +5213,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function singSnapshot() {
     var sg = G.sing, chosen = sg.chosen != null ? sg.options[sg.chosen] : null;
     return { options: G.phase === 'svote' ? sg.options.map(function (o) { return o[3] + ' – ' + o[2]; }) : null,
-      song: chosen ? { title: chosen[3], artist: chosen[2] } : null,
+      song: chosen ? { title: chosen[3], artist: chosen[2], id: chosen[4] } : null,
       order: G.phase === 'sbest' ? sg.order.map(function (pid) { return { pid: pid, name: players[pid] ? players[pid].name : '?' }; }) : null,
       now: sg.now && players[sg.now] ? players[sg.now].name : null, result: sg.result, pass: sg.pass || 1, rerolls_left: 0,   // (the "this song isn't viable" button has been taken out)
        bad: Object.keys(sg.bad || {}).length, bad_need: singBadNeed(),
@@ -5146,7 +5240,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         return '<div class="optcol"><div class="opt' + (i === sg.roll ? (sg.rollDone ? ' right picked' : ' rolling') : tied ? '' : ' dim') + '"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters"><b>' + n + (n === 1 ? ' vote' : ' votes') + '</b></div></div>';
       }).join('');
     }
-    else if (G.phase === 'svote') { t = 'Jury Show: vote for the song'; opts = sg.options.map(function (o, i) {
+    else if (G.phase === 'svote') { t = 'Key Change!: vote for the song'; opts = sg.options.map(function (o, i) {
       // Under each song: who voted for it so far.
       var who = list().filter(function (p) { return sg.votes[p.pid] === i; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
       return '<div class="optcol"><div class="opt"><b>' + 'ABCD'[i] + '</b>' + esc(o[3] + ' – ' + o[2]) + '</div><div class="voters">' +
@@ -5568,7 +5662,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.qj = null; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).

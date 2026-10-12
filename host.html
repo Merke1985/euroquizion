@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=673">
+<link rel="stylesheet" href="style.css?v=674">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -72,7 +72,7 @@
             <label class="swrow"><span><b>2000 – 2012</b><small>Televoting and the first semi-finals</small></span><input type="checkbox" data-era="2000-2012" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>2013 – now</b><small>The modern contest</small></span><input type="checkbox" data-era="2013-2100" checked><i class="sw" aria-hidden="true"></i></label>
           </div></div>
-        <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="order" selected>Grand tour</option><option value="spin">Random</option><option value="vote">Everyone votes</option><option value="one">One player picks</option></select></div>
+        <div id="partypickbox"><label for="s-partypick">Party mode</label><select id="s-partypick"><option value="order" selected>Grand tour</option><option value="spin">Random</option><option value="vote">Vote (4 games)</option><option value="one">One player picks</option></select></div>
         <p class="mute finalhelp" id="finalhelp" style="grid-column:1/-1;margin:2px 0 0;font-size:.9rem"></p>
         <details class="adv" style="grid-column:1/-1"><summary>Advanced settings</summary>
         <div class="settings" style="margin-top:12px">
@@ -97,10 +97,10 @@
         <div class="multi" id="partybox"><label id="partylabel">Party minigames</label>
           <button type="button" class="multibtn" aria-haspopup="true" aria-expanded="false" aria-labelledby="partylabel partysum"><span id="partysum">All</span></button>
           <div class="multipanel hidden">
-            <label class="swrow"><span><b>Jury Show</b><small>Record yourself singing a clip</small></span><input type="checkbox" data-party="sing" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>Postcard</b><small>Draw a song, guess the others</small></span><input type="checkbox" data-party="draw" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>Green Room</b><small>The funniest answer about a song</small></span><input type="checkbox" data-party="quip" checked><i class="sw" aria-hidden="true"></i></label>
-            <label class="swrow"><span><b>Lost in Translation</b><small>Fake a translation, find the real one</small></span><input type="checkbox" data-party="bluff" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Key Change!</b><small>Sing along and record yourself</small></span><input type="checkbox" data-party="sing" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Postcard Picasso</b><small>Draw a song, guess the others</small></span><input type="checkbox" data-party="draw" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>Disqualivision</b><small>Roast three terrible performances</small></span><input type="checkbox" data-party="quip" checked><i class="sw" aria-hidden="true"></i></label>
+            <label class="swrow"><span><b>United by Nonsense</b><small>Fake translations, find the real one</small></span><input type="checkbox" data-party="bluff" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Where the Hell Is Edgar?</b><small>Our mascot has been abducted: answer trivia for secret clues, then accuse</small></span><input type="checkbox" data-party="clue" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>The Envelope, Please</b><small>Take turns opening envelopes: one hides a bomb. Last one standing wins</small></span><input type="checkbox" data-party="bomb" checked><i class="sw" aria-hidden="true"></i></label>
             <label class="swrow"><span><b>Hold That Note</b><small>Guess how long the diva holds her note (10 s to 1 min). Sing past your time and you are out</small></span><input type="checkbox" data-party="note" checked><i class="sw" aria-hidden="true"></i></label>
@@ -357,15 +357,15 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=673"></script>
-<script src="vendor/qrcode.js?v=673"></script>
-<script src="config.js?v=673"></script>
-<script src="net.js?v=673"></script>
-<script src="music.js?v=673"></script>
-<script src="chars.js?v=673"></script>
-<script src="match.js?v=673"></script>
-<script src="shapes.js?v=673"></script>
-<script src="quiz.js?v=673"></script>
-<script src="host.js?v=673"></script>
+<script src="vendor/supabase.js?v=674"></script>
+<script src="vendor/qrcode.js?v=674"></script>
+<script src="config.js?v=674"></script>
+<script src="net.js?v=674"></script>
+<script src="music.js?v=674"></script>
+<script src="chars.js?v=674"></script>
+<script src="match.js?v=674"></script>
+<script src="shapes.js?v=674"></script>
+<script src="quiz.js?v=674"></script>
+<script src="host.js?v=674"></script>
 </body>
 </html>

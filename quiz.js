@@ -457,7 +457,7 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
 // points on an 800 x 600 canvas; the same code paints them on the host screen and on the other phones.
 var DRAW_W = 800, DRAW_H = 600, DRAW_MS = 60000, DRAW_PICK_MS = 20000;
 var PARTY_HELP = 'Quiz questions mixed in with party games.';
-var DRAW_HELP = 'Postcard: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores points, and the artist gets 12 points divided by the number of players who answered, for each of them who guessed it.';
+var DRAW_HELP = 'Postcard Picasso: everyone gets four songs, picks one and draws it on their phone, all within a minute. Then each drawing is a question for the others. A right guess scores points, and the artist gets 12 points divided by the number of players who answered, for each of them who guessed it.';
 var DRAW_COLORS = ['#111111', '#ffffff', '#e11d48', '#f97316', '#f59e0b', '#16a34a', '#2563eb', '#7c3aed', '#ec4899', '#92400e', '#9ca3af', '#ffffff'];   // the last one is the eraser: it paints in the background colour
 var DRAW_SIZES = [3, 7, 14];
 // The paper colour is remembered on the canvas, so that the eraser knows what to paint with.
@@ -670,8 +670,30 @@ function revealHold(yt, clipStart) {
 // ---------- Quip! ----------
 // A song plays and everyone answers a question about it; then the room votes for the best answer.
 // 'h' is the house answer, used when only one player wrote something.
-var QUIP_HELP = 'Green Room: a song plays, with a question about it. Everyone writes their funniest answer, then the room votes for the best one. Every vote scores points: 12 divided by the number of other players, so 4 per vote with four players.';
+var QUIP_HELP = 'Disqualivision: a song plays, with a question about it. Everyone writes their funniest answer, then the room votes for the best one. Every vote scores points: 12 divided by the number of other players, so 4 per vote with four players.';
 var QUIP_MS = 30000, QUIP_VOTE_MS = 25000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
+/* Disqualivision: the performances (YouTube id, start in seconds), one at a time, none twice in one game; and the roasts */
+/* Key Change!: the lyrics shown on the phones (YouTube id -> text, a line per line). Songs without lyrics yet get a sing-along note */
+var LYRICS = {};
+var QUIP_SONGS = [{ id: 'V5GSD2STH50', s: 43 }, { id: 'YwmAU9Xi-bc', s: 80 }, { id: '92vvOqMFSJs', s: 2 }, { id: 'W22baUqdi5Q', s: 0 }];
+var ROASTS = [
+  { p: 'Why should this act be disqualified?', h: 'Crimes against the wind machine' },
+  { p: 'Write the official complaint from the jury', h: 'We have seen things we cannot unsee' },
+  { p: 'What did the EBU stamp on this performance?', h: 'RETURN TO SENDER' },
+  { p: 'Which rule did this act break?', h: 'Rule 12: no more than 400 sequins per square metre' },
+  { p: 'What did the commentator say when it ended?', h: 'And… it’s over. Hold on to your loved ones.' },
+  { p: 'Give this performance a more honest title', h: 'Three Minutes I Want Back' },
+  { p: 'What were the backing dancers promised?', h: 'Free cake. There was no cake.' },
+  { p: 'Write the one-star review', h: 'My cat left the room. My cat never leaves the room.' },
+  { p: 'Why did the stage manager quit after this?', h: 'Too much glitter in the smoke machine' },
+  { p: 'What is the singer secretly apologising for?', h: 'Everything. Especially the key change.' },
+  { p: 'What should they have done instead?', h: 'Literally anything else' },
+  { p: 'How many points would your grandma give this, and why?', h: 'Nul. She hid behind the sofa.' },
+  { p: 'Finish the verdict: “Disqualified, because…”', h: '…the costume filed for divorce' },
+  { p: 'What went wrong at rehearsal?', h: 'The pyro had stage fright' },
+  { p: 'Write the text the singer sent their mum afterwards', h: 'pls dont watch the replay' },
+  { p: 'What is this performance secretly an advert for?', h: 'Earplugs' }
+];
 var QUIPS = [
   { p: 'What is this song really about?', h: 'Losing the car keys, with feeling' },
   { p: 'Give this song a better title', h: 'Three Minutes of This' },
