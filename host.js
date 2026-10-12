@@ -2199,6 +2199,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
+    $('editbtn').addEventListener('click', function () { $('testov').classList.add('hidden'); if (window.escEditorOpen) window.escEditorOpen(); });
     $('testov').addEventListener('click', function (e) { if (e.target === $('testov')) $('testov').classList.add('hidden'); });
     $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #itemtest, #chasetest, #chasetest2, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
     $('onegame').addEventListener('click', function (e) {
@@ -7513,7 +7514,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try { var sk = localStorage.getItem('esc-skip'); if (sk && $('s-skip').querySelector('option[value="' + sk + '"]')) { $('s-skip').value = sk; G.skip = sk; } } catch (e) {}
     ready();
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
-  fetch('chorus.json?v=46').then(function (r) { return r.json(); }).then(function (d) { chorus = d || {}; }).catch(function () {});
+  var chorusBase = {};
+  fetch('chorus.json?v=46').then(function (r) { return r.json(); }).then(function (d) { chorusBase = d || {}; chorus = ESC_EDIT.jury || chorusBase; }).catch(function () {});
+  window.escHostData = function () { return { songs: songs, countries: countries, chorusBase: chorusBase }; };
+  window.escOnApply = function () { chorus = ESC_EDIT.jury && typeof ESC_EDIT.jury === 'object' ? ESC_EDIT.jury : chorusBase; };   // (the editor's Key Change list, when there is one)
   keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   /* Presets: Party Night (the Grand Tour), Quick Quiz (ten questions), or Custom (every setting) */
   var PRESET = 'party';   /* (every time the host page opens: Party Night with the default settings) */

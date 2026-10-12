@@ -18,9 +18,9 @@ function pointsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
 // English translations of the titles that are not in English (titles_en.json: video id -> translation).
 // The question shows the translation; the four answers are original titles, the three wrong ones in
 // the same language where possible. There is no clip: the song only plays at the answer.
-var TITLE_EN = {};
+var TITLE_EN = {}, TITLE_BASE = {};
 if (typeof fetch === 'function' && typeof document !== 'undefined' && document.getElementById('s-subject')) {
-  fetch('titles_en.json?v=1').then(function (r) { return r.json(); }).then(function (d) { TITLE_EN = d || {}; }).catch(function () {});
+  fetch('titles_en.json?v=1').then(function (r) { return r.json(); }).then(function (d) { TITLE_BASE = d || {}; escApply(); }).catch(function () {});
 }
 function makeLost(song, allSongs, opt) {
   var has = function (s) { return !!TITLE_EN[s[4]]; }, swap = null;
@@ -927,3 +927,41 @@ function zgPath(seed, t) {
   return Math.max(-0.85, Math.min(0.85, w1 * a + w2 * b + w3 * c));
 }
 function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }
+
+// ---------- Edited content (the editor in the 🔧 Testing screen) ----------
+// What the host changed is kept in Supabase (table esc_content, readable by everyone; saving goes through esc_save,
+// which checks the optional password). It replaces the built-in lists when the page loads:
+//   jury   (Key Change!: video id -> [from, to] seconds; replaces chorus.json)   lyrics (Key Change!: video id -> text)
+//   green  (Disqualivision clips: [{ id, s, name }])   roasts (Disqualivision prompts: [{ p, h }])
+//   titles (United by Nonsense: video id -> English translation; only what differs from titles_en.json, null = removed)
+var ESC_EDIT = {}, ESC_DEF = { green: QUIP_SONGS.slice(), roasts: ROASTS.slice(), lyrics: {} }, escSb = null, escLoaded = false;
+function escClient() {
+  var c = window.ESC_CONFIG || {};
+  if (!escSb && c.supabaseUrl && c.supabaseKey && window.supabase) { try { escSb = window.supabase.createClient(c.supabaseUrl, c.supabaseKey); } catch (e) {} }
+  return escSb;
+}
+function escApply() {
+  var E = ESC_EDIT;
+  if (Array.isArray(E.green) && E.green.length) QUIP_SONGS = E.green.filter(function (x) { return x && /^[\w-]{11}$/.test(x.id); }).map(function (x) { return { id: x.id, s: Math.max(0, +x.s || 0), name: x.name || '' }; });
+  if (Array.isArray(E.roasts) && E.roasts.length) ROASTS = E.roasts.filter(function (x) { return x && x.p; });
+  if (E.lyrics && typeof E.lyrics === 'object') LYRICS = E.lyrics;
+  var t = {}; Object.keys(TITLE_BASE).forEach(function (k) { t[k] = TITLE_BASE[k]; });
+  if (E.titles && typeof E.titles === 'object') Object.keys(E.titles).forEach(function (k) { if (E.titles[k]) t[k] = String(E.titles[k]); else delete t[k]; });
+  TITLE_EN = t;
+  if (typeof window.escOnApply === 'function') window.escOnApply();
+}
+function escLoad(cb) {
+  var sb = escClient(); if (!sb) { escLoaded = true; if (cb) cb(); return; }
+  sb.from('esc_content').select('key,data').then(function (r) {
+    (r && r.data || []).forEach(function (row) { ESC_EDIT[row.key] = row.data; });
+    escLoaded = true; escApply(); if (cb) cb();
+  }, function () { escLoaded = true; if (cb) cb(); });
+}
+function escSave(key, data, pass) {   // -> a promise: true, or an error message
+  var sb = escClient(); if (!sb) return Promise.resolve('No Supabase connection');
+  return sb.rpc('esc_save', { p_key: key, p_data: data, p_pass: pass || '' }).then(function (r) {
+    if (r.error) return /password/.test(r.error.message) ? 'Wrong password' : r.error.message;
+    ESC_EDIT[key] = data; escApply(); return true;
+  }, function (e) { return String(e && e.message || e); });
+}
+if (typeof document !== 'undefined') escLoad();

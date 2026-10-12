@@ -3798,3 +3798,30 @@ body.hasdock main{padding-bottom:84px}
 @keyframes edbeam{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
 .edr2 .edtw{animation:edtw 1.2s ease-in-out infinite alternate}
 @keyframes edtw{to{opacity:.2}}
+/* the content editor (🔧 Testing → ✏️ Edit songs & prompts) */
+.editov .xecard{width:min(1000px,100%);display:flex;flex-direction:column;gap:10px}
+.editov .testhead input{flex:1;max-width:260px;padding:8px 12px;border-radius:10px;border:0;background:#2a2050;color:#fff;font-family:inherit}
+.xetabs{display:flex;flex-wrap:wrap;gap:6px}
+.xetab{border:0;border-radius:999px;padding:8px 14px;font-weight:800;font-family:inherit;background:#2a2050;color:#cfc6ff;cursor:pointer}
+.xetab.on{background:#ffd23f;color:#1a1040}
+#xebody{display:flex;flex-direction:column;gap:10px}
+#xebody p{margin:0}
+.xelist{display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow:auto;padding-right:4px}
+.xerow{background:#241a52;border-radius:12px;padding:8px 10px}
+.xerowtop{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.xerowtop>b{flex:1 1 260px;font-size:.95rem}
+.xerow input[type=text],.xerow input[type=number],#xebody input[type=search],#xebody input[type=password]{padding:7px 10px;border-radius:8px;border:0;background:#160f38;color:#fff;font-family:inherit;font-size:.95rem}
+.xerow input[type=number]{width:76px}
+.xerow .xep{flex:2 1 300px}.xerow .xeh{flex:1 1 200px}.xerow .xename{flex:1 1 140px}.xerow .xeyt{flex:1 1 160px;font-family:monospace}
+.xerow .xetr{flex:1 1 260px}
+.xerow input.bad{box-shadow:0 0 0 2px #ff4d4d}
+.xerow label{font-size:.85rem;color:var(--mute);display:flex;align-items:center;gap:4px}
+.xeorig{display:flex;flex-direction:column;flex:1 1 240px}.xeorig small{font-weight:500;color:var(--mute);font-size:.78rem}
+.xelytxt{width:100%;margin-top:8px;border-radius:8px;border:0;background:#160f38;color:#fff;padding:8px 10px;font-family:inherit;font-size:.95rem;resize:vertical}
+#xebody input[type=search]{flex:1;min-width:220px}
+.xefound{display:flex;flex-direction:column;gap:4px;max-height:24vh;overflow:auto}
+.xehit{text-align:left;border:0;border-radius:8px;padding:8px 10px;background:#2a2050;color:#fff;font-family:inherit;cursor:pointer}
+.xehit:hover{background:#3a2c70}
+.xechk{font-size:.85rem;color:var(--mute);display:flex;align-items:center;gap:6px}
+.xefoot{display:flex;align-items:center;gap:8px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.1);padding-top:10px}
+#xemsg{flex:1;font-weight:700;font-size:.9rem}#xemsg.ok{color:#3ddc84}#xemsg.bad{color:#ff6b6b}#xemsg.warn{color:#ffd23f}
