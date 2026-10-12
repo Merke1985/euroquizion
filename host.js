@@ -5112,7 +5112,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       orShow(); if (Date.now() >= g2.ends) orDone();
     }, 250);
   }
-  var OR_FXK = ['echo'];   // (sound effects broken: a really weird echo)
+  var OR_FXK = ['robot'];   // (sound effects broken: a robot voice)
   function orOpen(g, s2) { return !!(g.brk && g.brk[s2] && Date.now() >= g.brk[s2]); }
   function orMsg(m) {
     var g = G.organ; if (!g || G.phase !== 'organ' || g.st !== 'fix' || !m || m.id !== g.id || m.ph !== g.ph || !g.prog[m.pid] || !orOpen(g, g.sta[m.pid])) return;
@@ -5161,7 +5161,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       filt.type = 'allpass'; dl.delayTime.value = .32; fb.gain.value = 0; wet.gain.value = 0;
       src.connect(filt); filt.connect(dry); dry.connect(orAc.destination);
       filt.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(orAc.destination);
-      orNodes = { filt: filt, dl: dl, fb: fb, wet: wet, dry: dry };
+      // the robot voice: ring modulation (the song multiplied by a low hum) and a short metallic comb echo
+      var ring = orAc.createGain(), osc = orAc.createOscillator(), comb = orAc.createDelay(.1), cfb = orAc.createGain(), rob = orAc.createGain();
+      ring.gain.value = 0; osc.type = 'sine'; osc.frequency.value = 55; osc.connect(ring.gain); osc.start();
+      comb.delayTime.value = .011; cfb.gain.value = .55; rob.gain.value = 0;
+      filt.connect(ring); ring.connect(comb); comb.connect(cfb); cfb.connect(comb); ring.connect(rob); comb.connect(rob); rob.connect(orAc.destination);
+      orNodes = { filt: filt, dl: dl, fb: fb, wet: wet, dry: dry, rob: rob, osc: osc };
     } catch (e) { orNodes = null; }
     return orNodes;
   }
@@ -5179,7 +5184,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           var ty = k === 'under' ? 'lowpass' : k === 'phone' ? 'bandpass' : 'allpass';
           if (n.filt.type !== ty) n.filt.type = ty;
           n.filt.frequency.value = k === 'under' ? 420 : k === 'phone' ? 1700 : 1000; n.filt.Q.value = k === 'phone' ? 2.2 : 1;   // underwater / an old telephone
-          var ec = k === 'echo'; n.fb.gain.value = ec ? .74 : 0; n.wet.gain.value = ec ? .95 : 0; n.dry.gain.value = ec ? .55 : 1;   // a really weird echo: loud, long, and wobbling in pitch
+          var ec = k === 'echo', rb = k === 'robot'; n.fb.gain.value = ec ? .74 : 0; n.wet.gain.value = ec ? .95 : 0; n.dry.gain.value = ec ? .55 : rb ? .08 : 1;
+          n.rob.gain.value = rb ? 1.6 : 0; if (rb) n.osc.frequency.value = 50 + 12 * Math.sin(t * .9);   // the robot voice   // a really weird echo: loud, long, and wobbling in pitch
           if (ec) n.dl.delayTime.value = .24 + .09 * Math.sin(t * 1.6) + .03 * Math.sin(t * 7.3);
         }
         if (k === 'skip' && Date.now() - orSkipAt > 380) { orSkipAt = Date.now(); if (Math.random() < .7) orAud.currentTime = Math.max(0, orAud.currentTime - .3); }   // a skipping CD
