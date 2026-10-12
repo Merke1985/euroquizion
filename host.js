@@ -5106,7 +5106,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       orShow(); if (Date.now() >= g2.ends) orDone();
     }, 250);
   }
-  var OR_FXK = ['cut', 'echo', 'under', 'phone', 'skip'];
+  var OR_FXK = ['echo'];   // (sound effects broken: a really weird echo)
   function orOpen(g, s2) { return !!(g.brk && g.brk[s2] && Date.now() >= g.brk[s2]); }
   function orMsg(m) {
     var g = G.organ; if (!g || G.phase !== 'organ' || g.st !== 'fix' || !m || m.id !== g.id || m.ph !== g.ph || !g.prog[m.pid] || !orOpen(g, g.sta[m.pid])) return;
@@ -5173,7 +5173,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           var ty = k === 'under' ? 'lowpass' : k === 'phone' ? 'bandpass' : 'allpass';
           if (n.filt.type !== ty) n.filt.type = ty;
           n.filt.frequency.value = k === 'under' ? 420 : k === 'phone' ? 1700 : 1000; n.filt.Q.value = k === 'phone' ? 2.2 : 1;   // underwater / an old telephone
-          n.fb.gain.value = k === 'echo' ? .55 : 0; n.wet.gain.value = k === 'echo' ? .7 : 0;   // a weird echo
+          var ec = k === 'echo'; n.fb.gain.value = ec ? .74 : 0; n.wet.gain.value = ec ? .95 : 0; n.dry.gain.value = ec ? .55 : 1;   // a really weird echo: loud, long, and wobbling in pitch
+          if (ec) n.dl.delayTime.value = .24 + .09 * Math.sin(t * 1.6) + .03 * Math.sin(t * 7.3);
         }
         if (k === 'skip' && Date.now() - orSkipAt > 380) { orSkipAt = Date.now(); if (Math.random() < .7) orAud.currentTime = Math.max(0, orAud.currentTime - .3); }   // a skipping CD
       } catch (e) {}
