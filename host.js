@@ -3918,7 +3918,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     rule: { sign: '🪩 We Will Rule the World', theme: 'rule',
       get art() { return '<div class="hsrule"><span class="ruball">🪩</span>' + RU_SINGER + '<div class="hsfloor"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'; },
       lines: [['her', 'Welcome to the disco floor! 🪩 In a moment you all land on it…'],
-        ['him', '…and then our singer rises from that hole in the middle. Every tile you step on lights up in your colour!'],
+        ['him', 'Every tile you step on lights up in your colour!'],
         ['her', 'Hold a direction on your phone to keep dancing: one tile per second. You can steal tiles from others too.'],
         ['him', 'But watch out: bump into someone and you’re stunned for 3 seconds! 💫'],
         ['her', 'After three minutes, whoever owns the most tiles rules the world! 👑']] },
@@ -4614,12 +4614,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.rule !== g) return; ruSay(''); g.st = 'drop'; g.dropAt = Date.now();
       g.order.forEach(function (k) { var c = g.pos[k]; ruClaim(g, k, c[0], c[1]); }); g.cnt = ruCount(g); push();
       ruTimer = setTimeout(function () {   // then the song starts, and the stage with the singer rises: up by the 8th second
-        if (G.rule !== g) return; g.st = 'rise'; g.riseAt = Date.now(); push(); ruSong(true);
-        ruTimer = setTimeout(function () {   // and a 5-second countdown
-          if (G.rule !== g) return; g.st = 'ready'; g.goAt = Date.now() + 5000; push();
+        if (G.rule !== g) return; g.st = 'rise'; g.riseAt = 0; push(); ruSong(true);   // (the rise starts when the song really starts playing)
+        setTimeout(function () { if (G.rule === g && g.st === 'rise' && !g.riseAt) { g.riseAt = Date.now(); ruShow(); } }, REMOTE ? 0 : 3000);
+        var up = function () {   // and once she is all the way up: a 5-second countdown
+          if (G.rule !== g) return;
+          if (!g.riseAt || Date.now() < g.riseAt + RU_RISE + 300) { ruTimer = setTimeout(up, 100); return; }
+          g.st = 'ready'; g.goAt = Date.now() + 5000; push();
           [1000, 2000, 3000, 4000].forEach(function (t2) { setTimeout(function () { if (G.rule === g && g.st === 'ready') { ruShow(); Music.blip(); } }, t2); });
           ruTimer = setTimeout(ruGo, 5000);
-        }, RU_RISE + 400);
+        };
+        ruTimer = setTimeout(up, 500);
       }, 5600);
     }, REMOTE ? 1000 : t);
   }
@@ -4643,7 +4647,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (G.phase !== 'rule' || !G.rule) { clearInterval(ruSongT); ruSongT = null; return; }
         try {
           var st = yt.getPlayerState(), ct = yt.getCurrentTime();
-          if (!synced && st === 1 && ct > 0 && g.st === 'rise') { synced = true; g.riseAt = Date.now() - ct * 1000; var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
+          if (!synced && st === 1 && ct > 0 && g.st === 'rise' && !g.riseAt) { synced = true; g.riseAt = Date.now() - Math.min(ct, .4) * 1000; var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
           if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo();
         } catch (e) {}
       }, 250);
@@ -4806,7 +4810,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.NoToneMapping;
     hostEl.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#0a0414'); sc.fog = new T.Fog('#1a0830', n * 1.6, n * 4);
-    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(-n * .04, n * .82, n * 1.02); cam.lookAt(0, 0, n * .06);
+    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(-n * .04, n * .82, n * 1.02); cam.lookAt(0, n * .1, n * .02);   /* (aimed a little higher: everything a bit lower on the screen) */
     sc.rotation.y = RU_TURN;   // (the whole floor turned a little to the right)
     sc.add(new T.HemisphereLight('#7a5aff', '#200830', .38));
     var key = new T.DirectionalLight('#ffffff', .35); key.position.set(-n, n * 2, n); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); var ks = key.shadow.camera; ks.left = -n; ks.right = n; ks.top = n; ks.bottom = -n; ks.far = n * 6; sc.add(key);
@@ -4837,7 +4841,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var piston = new T.Mesh(new T.CylinderGeometry(s * .18, s * .22, 16, 20), new T.MeshStandardMaterial({ color: '#8a8fa8', metalness: .9, roughness: .25 })); piston.position.y = -8.4; stage.add(piston);
     var stM = new T.MeshStandardMaterial({ color: '#08080c', roughness: .35, metalness: .4 });   // the stage floor: the same tiles, in black
     for (var sy = 0; sy < s; sy++) for (var sx = 0; sx < s; sx++) { var tl = new T.Mesh(geo, stM); tl.position.set(sx - s / 2 + .5, .07, sy - s / 2 + .5); tl.receiveShadow = true; stage.add(tl); }
-    var singer = ru3Singer(); singer.scale.setScalar(s === 3 ? 1.15 : 1.7); stage.add(singer);
+    var singer = ru3Singer(); singer.scale.setScalar(s === 3 ? .95 : 1.4); stage.add(singer);
     var sLight = new T.PointLight('#fff0f8', 0, s * 4, 1.8); sLight.position.set(0, 3.5, 1.2); stage.add(sLight);
     stage.position.y = -11;
     // the singer and her platform once more, on a see-through layer over the players who stand behind her
@@ -4944,7 +4948,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var now = Date.now(), tr = {};
     g.order.forEach(function (k) { (g.trail[k] || []).forEach(function (i) { if (g.own[i] === k) tr[i] = 1; }); });
     if (ov._3) {
-      var s3 = ov._3; if (g.riseAt) s3.riseAt = g.riseAt; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true;
+      var s3 = ov._3; s3.riseAt = g.riseAt || 0; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true;
       s3.paint(g.own, tr, ruCol);
       g.order.forEach(function (k) {
         var o = s3.toks[k], p = g.pos[k]; if (!o || !p) return;
