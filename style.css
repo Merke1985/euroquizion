@@ -3515,7 +3515,8 @@ body.hasdock main{padding-bottom:84px}
 .notearea .sheet:before{display:none}
 .notearea .sheet .twname small,.notearea .snote .twname small{position:static;font-size:.75rem;font-weight:400;color:#536471}
 .notearea .sheet small.shcount{position:static;display:block;text-align:right;margin-top:6px;color:#8899a6}
-.notearea .snote .nvotes{position:static;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:8px}
+.notearea .snote .nvotes{position:absolute;left:0;right:0;bottom:-17px;display:flex;flex-direction:row;flex-wrap:nowrap;justify-content:center;gap:4px;margin:0;z-index:2}
+.notearea .snote{margin-bottom:12px}
 .notearea .snote .nvotes span{margin-left:0}
 
 /* Turquoise Carpet: the presenters welcome everyone on the carpet */

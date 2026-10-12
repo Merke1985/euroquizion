@@ -4681,32 +4681,50 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ru3Sparkle(base) { return v3Tex(function (x, W, H) { x.fillStyle = base; x.fillRect(0, 0, W, H); for (var i = 0; i < 700; i++) { var v = Math.random(); x.fillStyle = v < .5 ? 'rgba(255,255,255,' + (.4 + v) + ')' : 'rgba(120,120,140,.6)'; x.fillRect(Math.random() * W, Math.random() * H, 2, 2); } }, 128, 128); }
   // The singer (an original character): long wavy blonde hair, a sparkly silver outfit with flared trousers and a fringed top.
   function ru3Singer() {
-    var T = THREE, g = new T.Group(), sp = ru3Sparkle('#c9c9d4'); sp.repeat.set(2, 3);
-    var silver = new T.MeshStandardMaterial({ color: '#e4e4ee', map: sp, metalness: .85, roughness: .28, emissive: '#555566', emissiveMap: sp, emissiveIntensity: .35 });
-    var skin = new T.MeshStandardMaterial({ color: '#f3d2bd', roughness: .6 }), hair = new T.MeshStandardMaterial({ color: '#f1d68c', roughness: .55 });
+    var T = THREE, g = new T.Group(), sp = ru3Sparkle('#b8b8c6'); sp.repeat.set(3, 4);
+    var silver = new T.MeshStandardMaterial({ color: '#d6d6e2', map: sp, metalness: .9, roughness: .3, emissive: '#3a3a48', emissiveMap: sp, emissiveIntensity: .5, side: T.DoubleSide });
+    var skin = new T.MeshStandardMaterial({ color: '#f0c8ae', roughness: .65 }), hair = new T.MeshStandardMaterial({ color: '#d9a640', roughness: .45, metalness: .1 });
     var add = function (par, geo, mat, x, y, z) { var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
-    [-1, 1].forEach(function (s) { add(g, new T.CylinderGeometry(.12, .3, 1.55, 14, 1, true), silver, s * .15, .8, 0).material.side = T.DoubleSide; });   // flared trousers
-    add(g, new T.CylinderGeometry(.27, .25, .3, 14), silver, 0, 1.68, 0);   // high waist
-    add(g, new T.CylinderGeometry(.24, .26, .3, 14), skin, 0, 1.96, 0);     // bare midriff
-    add(g, new T.CylinderGeometry(.29, .25, .36, 14), silver, 0, 2.27, 0);  // the top
+    // sparkly silver flared trousers: fitted to the knee, then wide bell bottoms
+    [-1, 1].forEach(function (s2) {
+      add(g, new T.CylinderGeometry(.14, .12, .85, 14), silver, s2 * .13, 1.25, 0);
+      add(g, new T.CylinderGeometry(.12, .36, .86, 18, 1, true), silver, s2 * .15, .43, 0);
+    });
+    add(g, new T.CylinderGeometry(.27, .27, .2, 18), silver, 0, 1.72, 0);              // high waist
+    add(g, new T.CylinderGeometry(.22, .26, .32, 16), skin, 0, 1.97, 0);              // bare midriff
+    add(g, new T.CylinderGeometry(.25, .23, .14, 16), silver, 0, 2.16, 0);            // the sparkly top
+    [-1, 1].forEach(function (s2) { var c = add(g, new T.SphereGeometry(.13, 14, 12), silver, s2 * .1, 2.26, .12); c.scale.set(1, .85, .7); });
+    add(g, new T.CylinderGeometry(.21, .25, .24, 16), skin, 0, 2.38, 0);              // shoulders
     var fr = new T.Group(); g.add(fr);
-    for (var i = 0; i < 26; i++) { var a = i / 26 * Math.PI * 2; add(fr, new T.CylinderGeometry(.012, .012, .32, 4), silver, Math.cos(a) * .27, 1.95, Math.sin(a) * .27); }   // fringe on the top
-    var mkArm = function (s) {
-      var sh = new T.Group(); sh.position.set(s * .34, 2.4, 0); g.add(sh);
-      add(sh, new T.CylinderGeometry(.075, .065, .85, 10), silver, 0, -.42, 0); add(sh, new T.SphereGeometry(.07, 10, 8), skin, 0, -.9, 0);
-      for (var j = 0; j < 7; j++) add(sh, new T.CylinderGeometry(.01, .01, .3, 4), silver, s * .08, -.15 - j * .1, -.02);   // fringed sleeves
+    for (var i = 0; i < 34; i++) { var a = (i / 34 - .5) * Math.PI * 1.3; add(fr, new T.CylinderGeometry(.008, .008, .34 + (i % 3) * .05, 4), silver, Math.sin(a) * .25, 1.98, Math.cos(a) * .23); }   // the fringe hanging from the top
+    var mkArm = function (s2) {
+      var sh = new T.Group(); sh.position.set(s2 * .3, 2.42, 0); g.add(sh);
+      add(sh, new T.CylinderGeometry(.06, .05, .85, 10), skin, 0, -.42, 0);
+      var hd = add(sh, new T.SphereGeometry(.06, 10, 8), skin, 0, -.89, .01); hd.scale.set(.8, 1.2, .55);
+      for (var j = 0; j < 10; j++) add(sh, new T.CylinderGeometry(.007, .007, .42, 4), silver, s2 * .07, -.3 - j * .05, -.02 + (j % 2) * .04);   // the fringed, sparkly sleeves
       return sh;
     };
     var la = mkArm(-1), ra = mkArm(1);
-    add(g, new T.CylinderGeometry(.07, .08, .18, 10), skin, 0, 2.55, 0);
-    add(g, new T.TorusGeometry(.09, .012, 6, 16), silver, 0, 2.5, .03).rotation.x = Math.PI / 2.3;
-    var head = new T.Group(); head.position.set(0, 2.85, 0); g.add(head);
-    add(head, new T.SphereGeometry(.26, 20, 16), skin);
-    add(head, new T.SphereGeometry(.03, 8, 6), new T.MeshStandardMaterial({ color: '#2a3a5a' }), -.09, .04, .24); add(head, new T.SphereGeometry(.03, 8, 6), new T.MeshStandardMaterial({ color: '#2a3a5a' }), .09, .04, .24);
-    add(head, new T.BoxGeometry(.11, .03, .03), new T.MeshStandardMaterial({ color: '#d0505a' }), 0, -.1, .24);
-    add(head, new T.SphereGeometry(.28, 18, 12, 0, Math.PI * 2, 0, Math.PI * .5), hair, 0, .03, -.02);
-    for (var c = 0; c < 14; c++) { var side = c % 2 ? 1 : -1, k = Math.floor(c / 2); add(head, new T.SphereGeometry(.11 - k * .004, 10, 8), hair, side * (.2 + (k % 2) * .05), -.05 - k * .1, -.08 - (k % 3) * .03); }   // long wavy curls
-    add(head, new T.BoxGeometry(.4, .7, .12), hair, 0, -.35, -.17);
+    add(g, new T.CylinderGeometry(.055, .065, .16, 10), skin, 0, 2.55, 0);
+    add(g, new T.TorusGeometry(.07, .01, 6, 16), silver, 0, 2.5, .02).rotation.x = Math.PI / 2.4;
+    var head = new T.Group(); head.position.set(0, 2.78, 0); g.add(head);
+    var hd2 = add(head, new T.SphereGeometry(.2, 22, 18), skin); hd2.scale.set(.9, 1.08, .95);
+    [-1, 1].forEach(function (e) {
+      var ew = add(head, new T.SphereGeometry(.035, 10, 8), new T.MeshStandardMaterial({ color: '#ffffff' }), e * .065, .03, .165); ew.scale.set(1.2, .8, .5);
+      add(head, new T.SphereGeometry(.018, 8, 6), new T.MeshStandardMaterial({ color: '#3a6ea8' }), e * .065, .03, .182);
+      add(head, new T.BoxGeometry(.06, .01, .015), new T.MeshStandardMaterial({ color: '#8a6030' }), e * .065, .085, .172).rotation.z = -e * .12;
+      var ck = add(head, new T.SphereGeometry(.03, 8, 6), new T.MeshStandardMaterial({ color: '#ff8fa3', transparent: true, opacity: .45 }), e * .1, -.03, .15); ck.scale.set(1, .6, .4);
+    });
+    var ns = add(head, new T.ConeGeometry(.02, .055, 8), skin, 0, -.01, .19); ns.rotation.x = Math.PI / 2.6;
+    var lp = add(head, new T.CapsuleGeometry(.014, .045, 4, 8), new T.MeshStandardMaterial({ color: '#d0505a' }), 0, -.08, .17); lp.rotation.z = Math.PI / 2;
+    // long, wavy, golden-blonde hair: a crown on top and many wavy locks falling over the shoulders and back
+    var cap = add(head, new T.SphereGeometry(.215, 22, 14, 0, Math.PI * 2, 0, Math.PI * .5), hair, 0, .02, -.02); cap.rotation.x = -.35;
+    for (var k = 0; k < 26; k++) {
+      var ang = Math.PI * (.32 + (k / 25) * 1.36), r0 = .2, pts = [];
+      for (var q = 0; q <= 10; q++) { var tq = q / 10, rr = r0 + tq * .12 + Math.sin(tq * 9 + k) * .03; pts.push(new T.Vector3(Math.sin(ang) * rr, .1 - tq * (.62 + (k % 4) * .06), Math.cos(ang) * rr - .02)); }
+      var tube = new T.TubeGeometry(new T.CatmullRomCurve3(pts), 24, .038 + (k % 3) * .008, 6);
+      add(head, tube, hair);
+    }
     g.userData = { la: la, ra: ra, head: head, fr: fr };
     return g;
   }
@@ -4736,10 +4754,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var pit = new T.Mesh(new T.BoxGeometry(s, 8, s), new T.MeshBasicMaterial({ color: '#000000' })); pit.position.y = -4; sc.add(pit);
     var stage = new T.Group(); sc.add(stage);
     var stTex = ru3Sparkle('#3a1a6a');
-    var sb = new T.Mesh(new T.BoxGeometry(s - .06, 6, s - .06), [new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#ffd23f', map: stTex, emissive: '#ffb000', emissiveIntensity: .35, metalness: .6, roughness: .3 }), new T.MeshStandardMaterial({ color: '#000' }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 })]);
+    var sb = new T.Mesh(new T.BoxGeometry(s - .06, 6, s - .06), [new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#120620', roughness: .8 }), new T.MeshStandardMaterial({ color: '#000' }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 })]);
     sb.position.y = -3; sb.castShadow = sb.receiveShadow = true; stage.add(sb);
+    var stM = new T.MeshStandardMaterial({ color: '#2a0f4a', roughness: .7, emissive: '#3a1070', emissiveIntensity: .25 });   // the stage floor: the same tiles, in dark purple
+    for (var sy = 0; sy < s; sy++) for (var sx = 0; sx < s; sx++) { var tl = new T.Mesh(geo, stM); tl.position.set(sx - s / 2 + .5, .07, sy - s / 2 + .5); tl.receiveShadow = true; stage.add(tl); }
     var singer = ru3Singer(); singer.scale.setScalar(s === 3 ? 1.15 : 1.7); stage.add(singer);
-    var sLight = new T.PointLight('#ffe6ff', 0, s * 4, 1.6); sLight.position.set(0, 3.5, 1.2); stage.add(sLight);
+    var sLight = new T.PointLight('#fff0f8', 0, s * 4, 1.8); sLight.position.set(0, 3.5, 1.2); stage.add(sLight);
     stage.position.y = -6.2;
     // six big disco balls overhead, slowly turning
     var ballM = new T.MeshStandardMaterial({ color: '#dfe3ff', metalness: 1, roughness: .18, flatShading: true, emissive: '#6a5aa0', emissiveIntensity: .35 });
@@ -4764,7 +4784,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var t = now / 1000;
       // the stage: in the hole, rising over 10 seconds, then up
       var k = st.risen ? 1 : st.riseAt ? Math.min(1, (Date.now() - st.riseAt) / 10000) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-      stage.position.y = -6.2 + e * 6.5; sLight.intensity = e * 2.2;
+      stage.position.y = -6.2 + e * 6.5; sLight.intensity = e * 1.1;
       var u = singer.userData, dance = e >= 1 ? 1 : 0;
       u.la.rotation.z = -(.25 + dance * (.7 + Math.sin(t * 4.2) * .55)); u.ra.rotation.z = .25 + dance * (.5 + Math.max(0, Math.cos(t * 2.1)) * 2.2); u.la.rotation.x = -dance * .3;
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; u.fr.rotation.y = Math.sin(t * 8) * .15; u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
