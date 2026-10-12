@@ -3757,3 +3757,8 @@ body.hasdock main{padding-bottom:84px}
 #qopts.gamecards .opt>b{display:none}
 #qopts.gamecards .gsub{font-size:.72rem;line-height:1.25}
 #opts.shotgrid .opt>b{display:none}
+/* Lost in Verona: the jump moves the whole character, flag in hand and all */
+.jmt.jump .char,.jmt.jump .jmbody,.jmt.jump .jmlegs{animation:none}
+.jmt.jump{animation:jmjump2 1.15s cubic-bezier(.25,.8,.35,1) both;transform-origin:50% 100%}
+.jmt.falling.hop .hflag{animation:jmjump .75s both}
+.jmt.run .hflag,.jmt.home .hflag,.jmt.falling .hflag{animation:jmrun .18s ease-in-out infinite alternate}

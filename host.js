@@ -5713,9 +5713,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (hit.length) setTimeout(function () { crashSnd(); }, 1600);   /* crash! someone didn't jump */
     setTimeout(function () { car.remove(); grp.querySelectorAll('.jmt.jump').forEach(function (el) { el.classList.remove('jump'); }); }, 2900);
   }
-  /* this round's route: a brand-new one every round, one step longer each time; from round 4 one car in it, from round 8 two */
+  /* this round's route: a brand-new one every round, one step longer each time, except round 4: three steps again, but
+     now one of them is a car (that's the step up); then four, five… From a length of eight, two cars */
   function jmSeq(g) {
-    var n = g.round, cars = n >= 8 ? 2 : n >= JM_CAR ? 1 : 0, r = [], prev = -1;
+    var n = g.round <= 3 ? g.round : g.round - 1, cars = n >= 8 ? 2 : g.round >= JM_CAR ? 1 : 0, r = [], prev = -1;
     for (var i = 0; i < n - cars; i++) { var w = []; [0, 1, 2, 3].forEach(function (d) { if (prev >= 0 && d === (prev + 2) % 4) return; for (var k = 0; k < (d === 1 ? 3 : d === 3 ? 1 : 2); k++) w.push(d); }); prev = pick(w); r.push(prev); }
     for (var c = 0; c < cars; c++) {   // the cars somewhere in it, never two in a row
       var spots = []; for (var j = 0; j <= r.length; j++) if (r[j - 1] !== 4 && r[j] !== 4) spots.push(j);
@@ -5800,15 +5801,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(0, function () { cdEl('Round ' + g.round, 'Get ready!'); });
     [3, 2, 1].forEach(function (n, k) { at(1300 + k * 800, function () { cdEl(String(n)); }); });
     at(1300 + 3 * 800, function () { cdEl(''); });
-    for (var i = 0; i < g.round; i++) (function (i) {
+    for (var i = 0; i < g.seq.length; i++) (function (i) {
       at(CD + 1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4, 12][g.seq[i]]); });
       at(CD + 1200 + i * STEP + STEP * 0.7, function () { g.show = -2; qjShow(); });
     })(i);
-    at(CD + 1200 + g.round * STEP + 300, function () {
-      g.show = -1; g.st = 'input'; var ms = 4500 + g.round * 1300; g.ends = Date.now() + ms; push(); qjShow(); Music.ding();
-      g.botMiss = {}; bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; if (Math.random() < 0.1) g.botMiss[b.pid] = Math.floor(Math.random() * g.round) + 1; });   /* bots: 9 times out of 10 they get the whole route right */
+    at(CD + 1200 + g.seq.length * STEP + 300, function () {
+      g.show = -1; g.st = 'input'; var ms = 4500 + g.seq.length * 1300; g.ends = Date.now() + ms; push(); qjShow(); Music.ding();
+      g.botMiss = {}; bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; if (Math.random() < 0.1) g.botMiss[b.pid] = Math.floor(Math.random() * g.seq.length) + 1; });   /* bots: 9 times out of 10 they get the whole route right */
       bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; var n = 0, step = function () {
-        if (G.qj !== g || g.st !== 'input' || g.fail[b.pid] || (g.prog[b.pid] || 0) >= g.round) return;
+        if (G.qj !== g || g.st !== 'input' || g.fail[b.pid] || (g.prog[b.pid] || 0) >= g.seq.length) return;
         var ok = (g.botMiss || {})[b.pid] !== (g.prog[b.pid] || 0) + 1, d = ok ? g.seq[g.prog[b.pid] || 0] : (g.seq[g.prog[b.pid] || 0] + 1 + Math.floor(Math.random() * 3)) % 4;
         qjMsg({ pid: b.pid, id: g.id, round: g.round, i: g.prog[b.pid] || 0, dir: d }); n++; setTimeout(step, 380 + Math.random() * 520);
       }; setTimeout(step, 900 + Math.random() * 900); });
@@ -5820,27 +5821,27 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.qj; if (!g || G.phase !== 'qj' || g.st !== 'input' || !m || m.id !== g.id || m.round !== g.round || g.alive.indexOf(m.pid) < 0 || g.fail[m.pid]) return;
     if (Array.isArray(m.route)) {   /* the whole route at once (phones send it with the Send button): right up to the first wrong step */
       if ((g.prog[m.pid] || 0) > 0) return;
-      var r = m.route.slice(0, g.round).map(function (x) { return Math.floor(Number(x)); }), k = 0;
-      while (k < g.round && r[k] === g.seq[k]) k++;
+      var r = m.route.slice(0, g.seq.length).map(function (x) { return Math.floor(Number(x)); }), k = 0;
+      while (k < g.seq.length && r[k] === g.seq[k]) k++;
       g.prog[m.pid] = k;
-      if (k < g.round) { g.fail[m.pid] = 1; var wd = r[k]; g.wrong[m.pid] = wd >= 0 && wd < 5 ? wd : pick([0, 1, 2, 3].filter(function (x) { return x !== g.seq[k]; })); if (g.seq[k] !== 4 && g.wrong[m.pid] === g.seq[k]) g.wrong[m.pid] = (g.seq[k] + 1) % 4; }
+      if (k < g.seq.length) { g.fail[m.pid] = 1; var wd = r[k]; g.wrong[m.pid] = wd >= 0 && wd < 5 ? wd : pick([0, 1, 2, 3].filter(function (x) { return x !== g.seq[k]; })); if (g.seq[k] !== 4 && g.wrong[m.pid] === g.seq[k]) g.wrong[m.pid] = (g.seq[k] + 1) % 4; }
     } else {
-      var p = g.prog[m.pid] || 0; if (m.i !== p || p >= g.round) return;
+      var p = g.prog[m.pid] || 0; if (m.i !== p || p >= g.seq.length) return;
       var d = Math.floor(Number(m.dir)); if (!(d >= 0 && d < 5)) return;
       if (d === g.seq[p]) g.prog[m.pid] = p + 1;
       else { g.fail[m.pid] = 1; g.wrong[m.pid] = d; }
     }
-    if (g.fail[m.pid] || g.prog[m.pid] >= g.round) Music.plop(6);   /* one sound when someone is done (right or wrong: no spoilers), none for each tap */
+    if (g.fail[m.pid] || g.prog[m.pid] >= g.seq.length) Music.plop(6);   /* one sound when someone is done (right or wrong: no spoilers), none for each tap */
     push(); qjShow();
-    if (g.alive.every(function (k) { return g.fail[k] || (g.prog[k] || 0) >= g.round || !players[k] || players[k].off; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 700); }
+    if (g.alive.every(function (k) { return g.fail[k] || (g.prog[k] || 0) >= g.seq.length || !players[k] || players[k].off; })) { clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, 700); }
   }
   function qjResolve() {
     var g = G.qj; if (!g || g.st !== 'input') return;
     clearInterval(qjTick);
-    g.alive.forEach(function (k) { if (!g.fail[k] && (g.prog[k] || 0) < g.round) { g.fail[k] = 1; var c = g.seq[g.prog[k] || 0], o = [0, 1, 2, 3].filter(function (d) { return d !== c; }); g.wrong[k] = pick(o); } });   // (too slow: lost at the step they were on)
+    g.alive.forEach(function (k) { if (!g.fail[k] && (g.prog[k] || 0) < g.seq.length) { g.fail[k] = 1; var c = g.seq[g.prog[k] || 0], o = [0, 1, 2, 3].filter(function (d) { return d !== c; }); g.wrong[k] = pick(o); } });   // (too slow: lost at the step they were on)
     g.st = 'run'; g.pos = 0; g.falls = {}; push(); qjShow();
     var t = 900, at = function (ms, f) { setTimeout(function () { if (G.qj === g) f(); }, ms); }, left = g.alive.slice();
-    for (var i = 0; i < g.round; i++) (function (i) {
+    for (var i = 0; i < g.seq.length; i++) (function (i) {
       var fall = left.filter(function (k) { return g.fail[k] && (g.prog[k] || 0) === i; });
       if (g.seq[i] === 4) {   /* a car comes out of the mist: the others jump over it at the last second, whoever didn't jump is sent flying */
         var stay = left.filter(function (k) { return fall.indexOf(k) < 0; });
@@ -5866,7 +5867,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function qjJudge() {
     var g = G.qj; if (!g || g.st !== 'run') return;
-    var ok = g.alive.filter(function (k) { return !g.fail[k] && (g.prog[k] || 0) >= g.round; }), lost = g.alive.filter(function (k) { return ok.indexOf(k) < 0; });
+    var ok = g.alive.filter(function (k) { return !g.fail[k] && (g.prog[k] || 0) >= g.seq.length; }), lost = g.alive.filter(function (k) { return ok.indexOf(k) < 0; });
     lost.forEach(function (k) { g.outAt[k] = g.round; g.best[k] = g.prog[k] || 0; });
     var nm = function (k) { return players[k] ? players[k].name : '?'; };
     g.st = 'res'; push(); qjShow();
@@ -5935,7 +5936,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [[30, 79, 7], [44, 79, 10], [58, 79, 6], [70, 79, 9]].map(function (q) { return '<path d="M' + q[0] + ' ' + q[1] + ' q-2 ' + (q[2] / 2) + ' 0 ' + q[2] + '" stroke="#3f7a3a" stroke-width="1.1" fill="none"/><circle cx="' + q[0] + '" cy="' + (q[1] + q[2]) + '" r="1.2" fill="#ff7aa8"/>'; }).join('') + '</svg>';
   function qjSnap() {
     var g = G.qj;
-    return { id: g.id, st: g.st, round: g.round, alive: g.alive, prog: g.prog, fail: g.fail, left: g.st === 'input' ? Math.max(0, g.ends - Date.now()) : 0, win: g.win, outAt: g.outAt, jump: !!g.carOn || g.round >= JM_CAR, pad: !!g.pad };
+    return { id: g.id, st: g.st, round: g.round, len: g.seq ? g.seq.length : g.round, alive: g.alive, prog: g.prog, fail: g.fail, left: g.st === 'input' ? Math.max(0, g.ends - Date.now()) : 0, win: g.win, outAt: g.outAt, jump: !!g.carOn || g.round >= JM_CAR, pad: !!g.pad };
   }
   // The big screen: a crossroads in Verona seen from above, the group in the middle, Juliet's balcony at the top in the
   // mist. When the group walks, the city slides the other way; who goes wrong runs into a side street and falls in a hole.
@@ -6092,7 +6093,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         tbi.style.transition = 'width ' + lft + 'ms linear'; tbi.style.width = '0%';
       }
     }
-    ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + g.round + ' step' + (g.round === 1 ? '' : 's') : '';
+    var rl = g.seq ? g.seq.length : g.round; ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + rl + ' step' + (rl === 1 ? '' : 's') : '';
     // Juliet calls out an arrow
     var easy = g.round === 1 && g.st === 'input', si = easy ? 0 : g.show;   /* (round 1: the arrow stays up while everyone taps it in) */
     var say = ov.querySelector('.jmsay'), sv = (g.st === 'show' && g.show >= 0) || easy ? JM_ARROW[g.seq[si]] : '';
