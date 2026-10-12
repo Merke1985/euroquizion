@@ -4172,22 +4172,41 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var sh = new T.Group(); sh.position.set(sx * .36, 2.52, 0); g.add(sh);
       add(sh, new T.SphereGeometry(.1, 10, 8), sleeve, 0, 0, 0);
       add(sh, new T.CylinderGeometry(.075, .065, .95, 10), sleeve, 0, -.48, 0);
-      add(sh, new T.SphereGeometry(.08, 10, 8), sk, 0, -.98, 0);
+      var hand = add(sh, new T.SphereGeometry(.085, 12, 10), sk, 0, -1.02, .01); hand.scale.set(.75, 1.25, .5);   // a hand, with a thumb
+      add(sh, new T.CapsuleGeometry(.022, .06, 4, 6), sk, sx * -.055, -.99, .045).rotation.z = sx * .6;
       return sh;
     };
     var la = mkArm(-1), ra = mkArm(1);
     // head
     add(g, new T.CylinderGeometry(.08, .09, .2, 10), sk, 0, 2.7, 0);
     var head = new T.Group(); head.position.set(0, 3.02, 0); g.add(head);
-    add(head, new T.SphereGeometry(.3, 20, 16), sk);
-    add(head, new T.SphereGeometry(.035, 8, 6), sk, 0, -.02, .3);
-    if (w.g) { add(head, new T.BoxGeometry(.42, .1, .04), M('#0a0a0a', { metalness: .6, roughness: .2 }), 0, .05, .28); }
-    else { add(head, new T.SphereGeometry(.035, 8, 6), M('#1a1010'), -.1, .06, .27); add(head, new T.SphereGeometry(.035, 8, 6), M('#1a1010'), .1, .06, .27); }
-    add(head, new T.BoxGeometry(.12, .035, .03), M('#c0303a'), 0, -.13, .28);
-    var cap = add(head, new T.SphereGeometry(.315, 20, 12, 0, Math.PI * 2, 0, Math.PI * .55), hr, 0, .02, -.02); cap.rotation.x = -.25;
-    if (w.y === 0) add(head, new T.BoxGeometry(.56, .85, .22), hr, 0, -.38, -.18);
-    else if (w.y === 1) add(head, new T.CylinderGeometry(.33, .36, .4, 16, 1, true), hr, 0, -.12, -.03);
-    else add(head, new T.SphereGeometry(.16, 12, 10), hr, 0, .2, -.3);
+    var hd = add(head, new T.SphereGeometry(.3, 24, 18), sk); hd.scale.set(.92, 1.06, .95);
+    [-1, 1].forEach(function (e) {   // a face: eyes with whites, brows, ears
+      var ew = add(head, new T.SphereGeometry(.05, 12, 10), M('#ffffff', { roughness: .3 }), e * .1, .05, .25); ew.scale.set(1.15, .8, .45);
+      add(head, new T.SphereGeometry(.027, 10, 8), M('#3a2a1a', { roughness: .2 }), e * .1, .05, .275);
+      add(head, new T.SphereGeometry(.009, 6, 5), M('#ffffff'), e * .1 + .01, .062, .298);
+      var br = add(head, new T.BoxGeometry(.09, .016, .02), M(TC_HAIR[w.r] === '#cfd3dc' ? '#9aa0ad' : '#3a2416'), e * .1, .125, .262); br.rotation.z = -e * .12;
+      var ea = add(head, new T.SphereGeometry(.055, 10, 8), sk, e * .272, .02, 0); ea.scale.set(.45, 1, .8);
+      var ck = add(head, new T.SphereGeometry(.045, 10, 8), M('#ff8fa3', { transparent: true, opacity: .45 }), e * .15, -.04, .23); ck.scale.set(1, .6, .4);
+    });
+    var nose = add(head, new T.ConeGeometry(.03, .085, 10), sk, 0, -.02, .29); nose.rotation.x = Math.PI / 2.6;
+    var lu = add(head, new T.CapsuleGeometry(.018, .06, 4, 8), M('#c0303a', { roughness: .35 }), 0, -.115, .262); lu.rotation.z = Math.PI / 2;
+    var ll = add(head, new T.CapsuleGeometry(.021, .05, 4, 8), M('#b02634', { roughness: .35 }), 0, -.142, .255); ll.rotation.z = Math.PI / 2;
+    if (w.g) {   // real sunglasses: two dark lenses, a bridge, and the arms back to the ears
+      var lens = M('#0b0b12', { metalness: .9, roughness: .08 }), frame = M('#1c1c22', { metalness: .6, roughness: .3 });
+      [-1, 1].forEach(function (e) {
+        var l = add(head, new T.CylinderGeometry(.075, .075, .02, 24), lens, e * .1, .05, .3); l.rotation.x = Math.PI / 2; l.scale.set(1.15, 1, .9);
+        var rimG = add(head, new T.TorusGeometry(.078, .009, 6, 24), frame, e * .1, .05, .305); rimG.scale.set(1.15, .9, 1);
+        var arm = add(head, new T.BoxGeometry(.012, .014, .3), frame, e * .275, .06, .14); arm.rotation.y = e * .08;
+      });
+      add(head, new T.BoxGeometry(.06, .012, .012), frame, 0, .065, .31);
+    }
+    // the hair: on the back of the head, the face free
+    var cap = add(head, new T.SphereGeometry(.322, 24, 14, 0, Math.PI * 2, 0, Math.PI * .5), hr, 0, .02, -.035); cap.rotation.x = -.42; cap.scale.set(.96, 1.04, 1);
+    var fr = add(head, new T.SphereGeometry(.31, 18, 8, 0, Math.PI, 0, Math.PI * .22), hr, 0, .05, .02); fr.rotation.x = .15;   // a soft fringe at the top of the forehead
+    if (w.y === 0) { var lng = add(head, new T.CylinderGeometry(.3, .36, .95, 20, 1, true, Math.PI * .55, Math.PI * .9), hr, 0, -.38, -.02); lng.material.side = T.DoubleSide; }
+    else if (w.y === 1) { var bob = add(head, new T.CylinderGeometry(.315, .345, .42, 20, 1, true, Math.PI * .5, Math.PI), hr, 0, -.1, 0); bob.material.side = T.DoubleSide; }
+    else add(head, new T.SphereGeometry(.15, 14, 12), hr, 0, .22, -.3);
     if (w.h === 1) { add(head, new T.CylinderGeometry(.24, .24, .5, 18), M('#15151c'), 0, .5, 0); add(head, new T.CylinderGeometry(.4, .4, .03, 20), M('#15151c'), 0, .26, 0); add(head, new T.CylinderGeometry(.245, .245, .08, 18), M('#3a3a48'), 0, .32, 0); }
     else if (w.h === 2) { add(head, new T.CylinderGeometry(.62, .62, .03, 24), M('#efdcab'), 0, .22, 0); add(head, new T.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#efdcab'), 0, .22, 0); add(head, new T.CylinderGeometry(.3, .3, .07, 18), M('#8b5cf6'), 0, .26, 0); }
     else if (w.h === 3) { var b = add(head, new T.SphereGeometry(.34, 16, 10), M('#6d3cc0'), -.05, .26, 0); b.scale.set(1.1, .38, 1.1); b.rotation.z = .25; }
@@ -4438,17 +4457,31 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2) { quipAll(); return; }
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
-    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} v3Load(function () {}); }
     var sz = ruSize(act.length), n = sz[0], order = shuffle(act.map(function (p) { return p.pid; }));
-    var g = G.rule = { id: 'ru' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'ready', n: n, s: sz[1], order: order, own: [], pos: {}, dir: {}, next: {}, stun: {}, trail: {}, cnt: {}, ends: 0, win: [], bot: {} };
+    var g = G.rule = { id: 'ru' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'drop', n: n, s: sz[1], order: order, own: [], pos: {}, dir: {}, next: {}, stun: {}, trail: {}, cnt: {}, ends: 0, win: [], bot: {} };
     for (var i = 0; i < n * n; i++) g.own.push('');
-    // the starting tiles: spread around the edge of the floor
-    var ring = []; for (var x = 0; x < n - 1; x++) ring.push([x, 0]); for (var y = 0; y < n - 1; y++) ring.push([n - 1, y]); for (x = n - 1; x > 0; x--) ring.push([x, n - 1]); for (y = n - 1; y > 0; y--) ring.push([0, y]);
-    var off = Math.floor(Math.random() * ring.length);
-    order.forEach(function (k, i) { var c = ring[(off + Math.floor(i * ring.length / order.length)) % ring.length]; g.pos[k] = c; g.dir[k] = ''; g.next[k] = 0; g.stun[k] = 0; g.trail[k] = []; ruClaim(g, k, c[0], c[1]); g.bot[k] = { d: '', left: 0 }; });
-    G.phase = 'rule'; G.barMs = 0; g.goAt = Date.now() + 3600; push();
-    [1000, 2000, 3000].forEach(function (t) { setTimeout(function () { if (G.rule === g && g.st === 'ready') ruShow(); }, t); });
-    clearTimeout(ruTimer); ruTimer = setTimeout(ruGo, 3600);
+    // dropped in at random, as far away from each other as possible
+    var free = []; for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) if (!ruStage(g, x, y)) free.push([x, y]);
+    var spots = [pick(free)];
+    while (spots.length < order.length) {
+      var best = -1, cand = [];
+      free.forEach(function (c) { var d = Math.min.apply(null, spots.map(function (s) { return Math.abs(s[0] - c[0]) + Math.abs(s[1] - c[1]); })); if (d > best) { best = d; cand = [c]; } else if (d === best) cand.push(c); });
+      spots.push(pick(cand));
+    }
+    order.forEach(function (k, i) { var c = spots[i]; g.pos[k] = c; g.dir[k] = ''; g.next[k] = 0; g.stun[k] = 0; g.trail[k] = []; ruClaim(g, k, c[0], c[1]); g.bot[k] = { d: '', left: 0 }; });
+    g.cnt = ruCount(g);
+    G.phase = 'rule'; G.barMs = 0; push();
+    clearTimeout(ruTimer);
+    ruTimer = setTimeout(function () {   // everyone has landed: the stage rises out of the floor (10 seconds)
+      if (G.rule !== g) return; g.st = 'rise'; g.riseAt = Date.now(); push(); if (!REMOTE) Music.dread(true);
+      ruTimer = setTimeout(function () {
+        if (G.rule !== g) return; if (!REMOTE) Music.dread(false);
+        g.st = 'ready'; g.goAt = Date.now() + 3600; push(); Music.douze();
+        [1000, 2000, 3000].forEach(function (t) { setTimeout(function () { if (G.rule === g && g.st === 'ready') ruShow(); }, t); });
+        ruTimer = setTimeout(ruGo, 3600);
+      }, 10000);
+    }, 3200 + order.length * 250);
   }
   function ruClaim(g, k, x, y) {
     var i = y * g.n + x; g.own[i] = k;
@@ -4532,6 +4565,125 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return { id: g.id, st: g.st, order: g.order, cols: cols, cnt: g.cnt, left: g.st === 'play' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
   }
   // The big screen: the disco floor from above, the singer on her stage in the middle, the players as tokens.
+  // ---------- We Will Rule the World in 3D (three.js) ----------
+  // A glowing disco floor in a dark club, purple spotlights sweeping over it, six big disco balls overhead. The singer's
+  // stage is a square hole in the floor at first; once everyone has landed it rises out of it (10 seconds).
+  // The players are the same little characters as in Lost in Verona, drawn over the 3D floor.
+  function ru3Sparkle(base) { return v3Tex(function (x, W, H) { x.fillStyle = base; x.fillRect(0, 0, W, H); for (var i = 0; i < 700; i++) { var v = Math.random(); x.fillStyle = v < .5 ? 'rgba(255,255,255,' + (.4 + v) + ')' : 'rgba(120,120,140,.6)'; x.fillRect(Math.random() * W, Math.random() * H, 2, 2); } }, 128, 128); }
+  // The singer (an original character): long wavy blonde hair, a sparkly silver outfit with flared trousers and a fringed top.
+  function ru3Singer() {
+    var T = THREE, g = new T.Group(), sp = ru3Sparkle('#c9c9d4'); sp.repeat.set(2, 3);
+    var silver = new T.MeshStandardMaterial({ color: '#e4e4ee', map: sp, metalness: .85, roughness: .28, emissive: '#555566', emissiveMap: sp, emissiveIntensity: .35 });
+    var skin = new T.MeshStandardMaterial({ color: '#f3d2bd', roughness: .6 }), hair = new T.MeshStandardMaterial({ color: '#f1d68c', roughness: .55 });
+    var add = function (par, geo, mat, x, y, z) { var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
+    [-1, 1].forEach(function (s) { add(g, new T.CylinderGeometry(.12, .3, 1.55, 14, 1, true), silver, s * .15, .8, 0).material.side = T.DoubleSide; });   // flared trousers
+    add(g, new T.CylinderGeometry(.27, .25, .3, 14), silver, 0, 1.68, 0);   // high waist
+    add(g, new T.CylinderGeometry(.24, .26, .3, 14), skin, 0, 1.96, 0);     // bare midriff
+    add(g, new T.CylinderGeometry(.29, .25, .36, 14), silver, 0, 2.27, 0);  // the top
+    var fr = new T.Group(); g.add(fr);
+    for (var i = 0; i < 26; i++) { var a = i / 26 * Math.PI * 2; add(fr, new T.CylinderGeometry(.012, .012, .32, 4), silver, Math.cos(a) * .27, 1.95, Math.sin(a) * .27); }   // fringe on the top
+    var mkArm = function (s) {
+      var sh = new T.Group(); sh.position.set(s * .34, 2.4, 0); g.add(sh);
+      add(sh, new T.CylinderGeometry(.075, .065, .85, 10), silver, 0, -.42, 0); add(sh, new T.SphereGeometry(.07, 10, 8), skin, 0, -.9, 0);
+      for (var j = 0; j < 7; j++) add(sh, new T.CylinderGeometry(.01, .01, .3, 4), silver, s * .08, -.15 - j * .1, -.02);   // fringed sleeves
+      return sh;
+    };
+    var la = mkArm(-1), ra = mkArm(1);
+    add(g, new T.CylinderGeometry(.07, .08, .18, 10), skin, 0, 2.55, 0);
+    add(g, new T.TorusGeometry(.09, .012, 6, 16), silver, 0, 2.5, .03).rotation.x = Math.PI / 2.3;
+    var head = new T.Group(); head.position.set(0, 2.85, 0); g.add(head);
+    add(head, new T.SphereGeometry(.26, 20, 16), skin);
+    add(head, new T.SphereGeometry(.03, 8, 6), new T.MeshStandardMaterial({ color: '#2a3a5a' }), -.09, .04, .24); add(head, new T.SphereGeometry(.03, 8, 6), new T.MeshStandardMaterial({ color: '#2a3a5a' }), .09, .04, .24);
+    add(head, new T.BoxGeometry(.11, .03, .03), new T.MeshStandardMaterial({ color: '#d0505a' }), 0, -.1, .24);
+    add(head, new T.SphereGeometry(.28, 18, 12, 0, Math.PI * 2, 0, Math.PI * .5), hair, 0, .03, -.02);
+    for (var c = 0; c < 14; c++) { var side = c % 2 ? 1 : -1, k = Math.floor(c / 2); add(head, new T.SphereGeometry(.11 - k * .004, 10, 8), hair, side * (.2 + (k % 2) * .05), -.05 - k * .1, -.08 - (k % 3) * .03); }   // long wavy curls
+    add(head, new T.BoxGeometry(.4, .7, .12), hair, 0, -.35, -.17);
+    g.userData = { la: la, ra: ra, head: head, fr: fr };
+    return g;
+  }
+  function ru3Init(hostEl, g) {
+    if (!window.THREE) return null;
+    var T = THREE, w = hostEl.clientWidth || innerWidth, h = hostEl.clientHeight || innerHeight, n = g.n, s = g.s;
+    var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.NoToneMapping;
+    hostEl.appendChild(rn.domElement);
+    var sc = new T.Scene(); sc.background = new T.Color('#0a0414'); sc.fog = new T.Fog('#1a0830', n * 1.6, n * 4);
+    var cam = new T.PerspectiveCamera(42, w / h, .3, 400); cam.position.set(n * .1, n * 1.02, n * 1.0); cam.lookAt(n * .28, 0, n * .08);
+    sc.add(new T.HemisphereLight('#7a5aff', '#200830', .38));
+    var key = new T.DirectionalLight('#ffffff', .35); key.position.set(-n, n * 2, n); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); var ks = key.shadow.camera; ks.left = -n; ks.right = n; ks.top = n; ks.bottom = -n; ks.far = n * 6; sc.add(key);
+    // the club around the floor: a dark floor, a back wall with LED strips
+    var club = new T.Mesh(new T.PlaneGeometry(n * 8, n * 8), new T.MeshStandardMaterial({ color: '#120822', roughness: .5, metalness: .3 })); club.rotation.x = -Math.PI / 2; club.position.y = -.01; club.receiveShadow = true; sc.add(club);
+    var wall = new T.Mesh(new T.PlaneGeometry(n * 8, n * 3), new T.MeshStandardMaterial({ color: '#1c0b33' })); wall.position.set(0, n * 1.2, -n * 1.6); sc.add(wall);
+    var led = ['#ff3fb0', '#3fd0ff', '#b04dff'].map(function (c, i) { var m = new T.Mesh(new T.BoxGeometry(n * 8, .12, .1), new T.MeshBasicMaterial({ color: c })); m.position.set(0, n * .3 + i * n * .35, -n * 1.58); sc.add(m); return m; });
+    // the edge of the dance floor, glowing
+    var rim = new T.Mesh(new T.BoxGeometry(n + .5, .16, n + .5), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#b04dff', emissiveIntensity: .45 })); rim.position.y = .02; sc.add(rim);
+    // the tiles
+    var tiles = [], geo = new T.BoxGeometry(.94, .14, .94);
+    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
+      if (ruStage(g, x, y)) { tiles.push(null); continue; }
+      var m = new T.Mesh(geo, new T.MeshStandardMaterial({ color: '#241040', roughness: .35, metalness: .2, emissive: '#000000' }));
+      m.position.set(x - n / 2 + .5, .12, y - n / 2 + .5); m.receiveShadow = true; sc.add(m); tiles.push(m);
+    }
+    // the hole in the middle, and the stage that rises out of it with the singer on top
+    var pit = new T.Mesh(new T.BoxGeometry(s, 8, s), new T.MeshBasicMaterial({ color: '#000000' })); pit.position.y = -4; sc.add(pit);
+    var stage = new T.Group(); sc.add(stage);
+    var stTex = ru3Sparkle('#3a1a6a');
+    var sb = new T.Mesh(new T.BoxGeometry(s - .06, 6, s - .06), [new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#ffd23f', map: stTex, emissive: '#ffb000', emissiveIntensity: .35, metalness: .6, roughness: .3 }), new T.MeshStandardMaterial({ color: '#000' }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 })]);
+    sb.position.y = -3; sb.castShadow = sb.receiveShadow = true; stage.add(sb);
+    var singer = ru3Singer(); singer.scale.setScalar(s === 3 ? 1.15 : 1.7); stage.add(singer);
+    var sLight = new T.PointLight('#ffe6ff', 0, s * 4, 1.6); sLight.position.set(0, 3.5, 1.2); stage.add(sLight);
+    stage.position.y = -6.2;
+    // six big disco balls overhead, slowly turning
+    var ballM = new T.MeshStandardMaterial({ color: '#dfe3ff', metalness: 1, roughness: .18, flatShading: true, emissive: '#6a5aa0', emissiveIntensity: .35 });
+    var balls = []; for (var b = 0; b < 6; b++) {
+      var a = b / 6 * Math.PI * 2 + .3, r = n * .42, bg = new T.Group();
+      var ball = new T.Mesh(new T.IcosahedronGeometry(.5 + n * .05, 2), ballM); bg.add(ball);
+      var cord = new T.Mesh(new T.CylinderGeometry(.02, .02, n * 2, 4), new T.MeshBasicMaterial({ color: '#555' })); cord.position.y = n; bg.add(cord);
+      bg.position.set(-n * .55 + b * n * .3, n * .34 + (b % 2) * n * .07, -n * .62 - (b % 3) * n * .08); sc.add(bg); balls.push(ball);
+    }
+    // purple spotlights sweeping over the floor, with visible beams
+    var beamGeo = new T.CylinderGeometry(.05, 1, 1, 20, 1, true); beamGeo.translate(0, -.5, 0);
+    var spots = [[-1, -1, '#b04dff'], [1, -1, '#ff3fd0'], [-1, 1, '#8a3dff'], [1, 1, '#d04dff']].map(function (c, i) {
+      var L = new T.SpotLight(c[2], 1.1, n * 4, .26, .5, 1.2); L.position.set(c[0] * n * .6, n * 1.3, c[1] * n * .55); sc.add(L); sc.add(L.target);
+      var beam = new T.Mesh(beamGeo, new T.MeshBasicMaterial({ color: c[2], transparent: true, opacity: .07, depthWrite: false, side: T.DoubleSide, blending: T.AdditiveBlending })); sc.add(beam);
+      return { L: L, beam: beam, ph: i * 1.7 };
+    });
+    var st = { alive: true, cam: cam, rn: rn, tiles: tiles, n: n, stage: stage, singer: singer, sLight: sLight, toks: {}, riseAt: 0, risen: false };
+    var up = new T.Vector3(0, 1, 0), tmp = new T.Vector3();
+    function frame(now) {
+      if (!hostEl.isConnected) { st.alive = false; rn.dispose(); return; }
+      var w2 = hostEl.clientWidth, h2 = hostEl.clientHeight; if (w2 && h2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
+      var t = now / 1000;
+      // the stage: in the hole, rising over 10 seconds, then up
+      var k = st.risen ? 1 : st.riseAt ? Math.min(1, (Date.now() - st.riseAt) / 10000) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      stage.position.y = -6.2 + e * 6.5; sLight.intensity = e * 2.2;
+      var u = singer.userData, dance = e >= 1 ? 1 : 0;
+      u.la.rotation.z = -(.3 + dance * (1.6 + Math.sin(t * 4.2) * .6)); u.ra.rotation.z = .3 + dance * (1.2 + Math.cos(t * 4.2) * .7);
+      singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; u.fr.rotation.y = Math.sin(t * 8) * .15; u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
+      balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
+      spots.forEach(function (sp, i) {
+        var tx = Math.cos(t * .5 + sp.ph) * n * .38, tz = Math.sin(t * .63 + sp.ph * 1.3) * n * .38; sp.L.target.position.set(tx, 0, tz);
+        tmp.set(tx, 0, tz).sub(sp.L.position); var len = tmp.length(); sp.beam.position.copy(sp.L.position); sp.beam.scale.set(n * .12, len, n * .12); sp.beam.quaternion.setFromUnitVectors(up, tmp.normalize().negate());
+      });
+      led.forEach(function (m, i) { m.material.color.setHSL((t * .08 + i * .33) % 1, 1, .55); });
+      // the unclaimed tiles pulse like a disco floor
+      tiles.forEach(function (m, i) { if (!m || m.userData.own) return; var x = i % n, y = Math.floor(i / n); m.material.emissive.setHSL((.75 + Math.sin(x * .7 + y * .5 + t) * .08) % 1, .9, .5); m.material.emissiveIntensity = .08 + .1 * (.5 + .5 * Math.sin(t * 3 + x * .8 + y * 1.1)); });
+      // the players: drawn over the floor, gliding from tile to tile
+      Object.keys(st.toks).forEach(function (pk) {
+        var o = st.toks[pk], kk = o.t0 ? Math.min(1, (Date.now() - o.t0) / 330) : 1, ee = 1 - Math.pow(1 - kk, 2);
+        var cx = o.fx + (o.tx - o.fx) * ee, cy = o.fy + (o.ty - o.fy) * ee;
+        tmp.set(cx - n / 2 + .5, .2, cy - n / 2 + .5).project(cam);
+        o.el.style.left = ((tmp.x + 1) / 2 * w2) + 'px'; o.el.style.top = ((1 - tmp.y) / 2 * h2) + 'px'; o.el.style.zIndex = String(10 + Math.round(cy * 10));
+        o.j.classList.toggle('run', kk < 1);
+      });
+      rn.render(sc, cam); requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    st.paint = function (own, trail, col) {
+      own.forEach(function (k, i) { var m = tiles[i]; if (!m) return; var v = (k || '') + (trail[i] ? '*' : ''); if (m.userData.v === v) return; m.userData.v = v; m.userData.own = k;
+        if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = trail[i] ? .9 : .5; } else { m.material.color.set('#241040'); } });
+    };
+    return st;
+  }
   function ruShow() {
     var g = G.rule; if (!g) return;
     var ov = $('ruov'), n = g.n;
@@ -4539,28 +4691,52 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov = document.createElement('div'); ov.id = 'ruov'; ov.className = 'ruov enter';
       var cells = ''; for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) cells += ruStage(g, x, y) ? '' : '<i style="grid-area:' + (y + 1) + '/' + (x + 1) + '"></i>';
       var a = (n - g.s) / 2;
-      ov.innerHTML = '<div class="rulights"><i></i><i></i><i></i><i></i></div><div class="rusign">🪩 We Will Rule the World</div><div class="ruclock"></div>' +
+      ov.innerHTML = '<div class="ru3"></div><div class="rutoks3"></div><div class="rulights"><i></i><i></i><i></i><i></i></div><div class="rusign">🪩 We Will Rule the World</div><div class="ruclock"></div>' +
         '<div class="ruboard" style="--n:' + n + '"><div class="rugrid">' + cells + '<div class="rustage" style="grid-area:' + (a + 1) + '/' + (a + 1) + '/' + (a + g.s + 1) + '/' + (a + g.s + 1) + '"><span class="ruball">🪩</span>' + RU_SINGER + '</div></div><div class="rutoks"></div></div><div class="rulist"></div><div class="rumsg"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       ov._cells = {}; [].forEach.call(ov.querySelectorAll('.rugrid > i'), function (c) { var ga = c.style.gridArea.split('/').map(function (v) { return parseInt(v, 10); }); ov._cells[(ga[0] - 1) * n + (ga[1] - 1)] = c; });
       ov.querySelector('.rutoks').innerHTML = g.order.map(function (k) { var p = players[k]; return p ? '<div class="rutok" data-p="' + esc(k) + '" style="--c:' + ruCol(k) + '">' + charSvg(p.char) + '<span class="rustar">💫</span></div>' : ''; }).join('');
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
+    if (!ov._3 && window.THREE && !REMOTE) {
+      ov._3 = ru3Init(ov.querySelector('.ru3'), g);
+      if (ov._3) {
+        ov.classList.add('is3d'); var rs = n <= 9 ? 1 : n <= 11 ? .9 : n <= 15 ? .74 : .66;
+        g.order.forEach(function (k, i) {
+          var p = players[k]; if (!p) return;
+          var el = document.createElement('div'); el.className = 'rut' + (g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', (i * 250) + 'ms'); el.style.setProperty('--c', ruCol(k));
+          el.innerHTML = '<div class="jmt" style="' + bodyOutfit(k) + '"><div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div><span class="rustar">💫</span>';
+          ov.querySelector('.rutoks3').appendChild(el);
+          var c = g.pos[k]; ov._3.toks[k] = { el: el, j: el.firstChild, fx: c[0], fy: c[1], tx: c[0], ty: c[1], t0: 0 };
+        });
+      }
+    }
     ov.setAttribute('data-st', g.st);
     var now = Date.now(), tr = {};
     g.order.forEach(function (k) { (g.trail[k] || []).forEach(function (i) { if (g.own[i] === k) tr[i] = 1; }); });
-    g.own.forEach(function (k, i) { var c = ov._cells[i]; if (!c) return; var v = (k ? k : '') + (tr[i] ? '*' : ''); if (c._v === v) return; c._v = v; c.style.background = k ? ruCol(k) : ''; c.className = k ? (tr[i] ? 'own trail' : 'own') : ''; });
-    [].forEach.call(ov.querySelectorAll('.rutok'), function (el) {
-      var k = el.getAttribute('data-p'), p = g.pos[k]; if (!p) return;
-      el.style.left = ((p[0] + 0.5) / n * 100) + '%'; el.style.top = ((p[1] + 0.5) / n * 100) + '%';
-      el.classList.toggle('stun', g.stun[k] > now); el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
-    });
+    if (ov._3) {
+      var s3 = ov._3; if (g.riseAt && !s3.riseAt) s3.riseAt = g.riseAt; if (g.st === 'ready' || g.st === 'play' || g.st === 'end') s3.risen = true;
+      s3.paint(g.own, tr, ruCol);
+      g.order.forEach(function (k) {
+        var o = s3.toks[k], p = g.pos[k]; if (!o || !p) return;
+        if (o.tx !== p[0] || o.ty !== p[1]) { var kk = o.t0 ? Math.min(1, (now - o.t0) / 330) : 1; o.fx = o.fx + (o.tx - o.fx) * kk; o.fy = o.fy + (o.ty - o.fy) * kk; o.tx = p[0]; o.ty = p[1]; o.t0 = now; }
+        o.el.classList.toggle('stun', g.stun[k] > now); o.el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+        if (g.st !== 'drop') o.el.classList.remove('drop');
+      });
+    } else {
+      g.own.forEach(function (k, i) { var c = ov._cells[i]; if (!c) return; var v = (k ? k : '') + (tr[i] ? '*' : ''); if (c._v === v) return; c._v = v; c.style.background = k ? ruCol(k) : ''; c.className = k ? (tr[i] ? 'own trail' : 'own') : ''; });
+      [].forEach.call(ov.querySelectorAll('.rutok'), function (el) {
+        var k = el.getAttribute('data-p'), p = g.pos[k]; if (!p) return;
+        el.style.left = ((p[0] + 0.5) / n * 100) + '%'; el.style.top = ((p[1] + 0.5) / n * 100) + '%';
+        el.classList.toggle('stun', g.stun[k] > now); el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+      });
+    }
     var ck = ov.querySelector('.ruclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - now) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - now) / 1000)) : 0;
-    var txt = g.st === 'play' ? Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2) : String(sec); if (ck.textContent !== txt) ck.textContent = txt;
+    var txt = g.st === 'play' ? Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2) : g.st === 'ready' ? String(sec) : ''; if (ck.textContent !== txt) ck.textContent = txt;
     var cnt = g.cnt && Object.keys(g.cnt).length ? g.cnt : ruCount(g), tot = n * n - g.s * g.s;
     var lh = g.order.slice().sort(function (a, b) { return (cnt[b] || 0) - (cnt[a] || 0); }).map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="rurow' + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '') + '" style="--c:' + ruCol(k) + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><i>' + (cnt[k] || 0) + '</i><em style="width:' + Math.round((cnt[k] || 0) / tot * 100) + '%"></em></div>'; }).join('');
     var lb = ov.querySelector('.rulist'); if (lb.getAttribute('data-h') !== lh) { lb.setAttribute('data-h', lh); lb.innerHTML = lh; }
-    var msg = g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var msg = g.st === 'drop' ? 'The dancers are landing on the floor… 🪩' : g.st === 'rise' ? 'Here she comes… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.rumsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('rule', ruMsg);

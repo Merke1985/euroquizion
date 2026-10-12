@@ -3447,3 +3447,19 @@ body.hasdock main{padding-bottom:84px}
 .tcov.is3d .tcsky,.tcov.is3d .tchall,.tcov.is3d .tctrees,.tcov.is3d .tcrun,.tcov.is3d .tcwalk,.tcov.is3d .tcropes,.tcov.is3d .tccams{display:none}
 .tcov.is3d.flashed::after{animation:tcwhite3 .22s ease-out forwards}
 @keyframes tcwhite3{0%{opacity:.12}100%{opacity:0}}
+/* We Will Rule the World in 3D */
+.ru3{position:absolute;inset:0;z-index:0;display:none}
+.ru3 canvas{display:block;width:100%!important;height:100%!important}
+.rutoks3{position:absolute;inset:0;z-index:2;pointer-events:none;display:none}
+.ruov.is3d .ru3,.ruov.is3d .rutoks3{display:block}
+.ruov.is3d .ruboard,.ruov.is3d .rulights{display:none}
+.ruov.is3d{background:#0a0414}
+.rut{position:absolute;width:0;height:0;scale:var(--rs,1);transform-origin:0 0}
+.rut .jmt{translate:0 0;margin:-10.5vh 0 0 -3vh;transition:none}
+.rut .jmt .char{box-shadow:0 0 0 3px var(--c),0 4px 10px rgba(0,0,0,.6)}
+.rut.drop .jmt{animation:rudrop .9s var(--d,0ms) cubic-bezier(.55,0,.75,1.25) backwards}
+@keyframes rudrop{from{transform:translateY(-90vh)}to{transform:none}}
+.rut .rustar{position:absolute;left:-1.6vh;top:-15vh;font-size:3.2vh;display:none;animation:ruspin 1s linear infinite}
+.rut.stun .rustar{display:block}.rut.stun .jmt{filter:grayscale(.7) brightness(.8)}
+.rut.win .jmt .char{box-shadow:0 0 0 4px #ffd23f,0 0 24px #ffd23f}
+.ruov.is3d .rumsg{left:0;right:32vw;width:auto;bottom:3vh}

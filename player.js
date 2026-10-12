@@ -669,7 +669,7 @@
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 We Will Rule the World'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var col = (r.cols || {})[pid] || '#888';
-    $('waittitle').textContent = r.st === 'ready' ? '🪩 Get ready…' : '🪩 Claim the floor!'; $('waitsub').textContent = 'Hold a direction to keep dancing. Your colour:';
+    $('waittitle').textContent = r.st === 'play' ? '🪩 Claim the floor!' : r.st === 'rise' ? '✨ Here she comes…' : '🪩 Get ready…'; $('waitsub').textContent = 'Hold a direction to keep dancing. Your colour:';
     box.classList.remove('hidden'); box.style.setProperty('--c', col);
     if (box.getAttribute('data-id') !== r.id) {
       box.setAttribute('data-id', r.id); ruD = ''; clearInterval(ruDT); ruStunEnd = 0;
