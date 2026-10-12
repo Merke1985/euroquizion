@@ -4793,14 +4793,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.userData = { la: la, ra: ra, head: head, fr: fr };
     return g;
   }
-  var RU_TURN = -0.26;
+  var RU_TURN = -0.07;
   function ru3Init(hostEl, g) {
     if (!window.THREE) return null;
     var T = THREE, w = hostEl.clientWidth || innerWidth, h = hostEl.clientHeight || innerHeight, n = g.n, s = g.s;
     var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.NoToneMapping;
     hostEl.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#0a0414'); sc.fog = new T.Fog('#1a0830', n * 1.6, n * 4);
-    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(-n * .1, n * 1.08, n * .9); cam.lookAt(0, 0, n * .14);
+    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(-n * .04, n * .82, n * 1.02); cam.lookAt(0, 0, n * .06);
     sc.rotation.y = RU_TURN;   // (the whole floor turned a little to the right)
     sc.add(new T.HemisphereLight('#7a5aff', '#200830', .38));
     var key = new T.DirectionalLight('#ffffff', .35); key.position.set(-n, n * 2, n); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); var ks = key.shadow.camera; ks.left = -n; ks.right = n; ks.top = n; ks.bottom = -n; ks.far = n * 6; sc.add(key);
@@ -4817,18 +4817,31 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var m = new T.Mesh(geo, new T.MeshStandardMaterial({ color: '#241040', roughness: .85, metalness: 0, emissive: '#000000' }));
       m.position.set(x - n / 2 + .5, .12, y - n / 2 + .5); m.receiveShadow = true; sc.add(m); tiles.push(m);
     }
-    // the hole in the middle, and the stage that rises out of it with the singer on top
-    var pitM = new T.MeshStandardMaterial({ color: '#0a0612', side: T.BackSide, roughness: 1 }), pitTop = new T.MeshBasicMaterial({ visible: false });
-    var pit = new T.Mesh(new T.BoxGeometry(s, 8, s), [pitM, pitM, pitTop, pitM, pitM, pitM]); pit.position.y = -3.95; sc.add(pit);   // (open at the top: she rises out of it)
+    // the hole in the middle: a deep shaft with glowing walls and haze at the bottom; the lift platform with the singer
+    // comes up out of it on a big piston
+    var shaftTex = v3Tex(function (x, W, H) { var gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#2a1050'); gr.addColorStop(.5, '#14072a'); gr.addColorStop(1, '#3a0a5a'); x.fillStyle = gr; x.fillRect(0, 0, W, H); for (var r = 0; r < 9; r++) { x.fillStyle = r % 2 ? 'rgba(255,63,176,.55)' : 'rgba(120,80,255,.55)'; x.fillRect(0, 18 + r * (H - 30) / 9, W, 4); } x.fillStyle = 'rgba(0,0,0,.35)'; for (var c = 0; c < 6; c++) x.fillRect(c * W / 6, 0, 3, H); }, 128, 512);
+    var pitM = new T.MeshStandardMaterial({ map: shaftTex, emissive: '#ffffff', emissiveMap: shaftTex, emissiveIntensity: .32, side: T.BackSide, roughness: .9 }), pitTop = new T.MeshBasicMaterial({ visible: false });
+    var pitBot = new T.MeshBasicMaterial({ color: '#7a2aff' });
+    var pit = new T.Mesh(new T.BoxGeometry(s, 16, s), [pitM, pitM, pitTop, pitBot, pitM, pitM]); pit.position.y = -7.95; sc.add(pit);   // (open at the top: a deep shaft)
+    var haze = new T.PointLight('#b04dff', 3, 14, 1.5); haze.position.set(0, -9, 0); sc.add(haze);
     var stage = new T.Group(); sc.add(stage);
-    var stTex = ru3Sparkle('#3a1a6a');
-    var sb = new T.Mesh(new T.BoxGeometry(s - .06, 6, s - .06), [new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#120620', roughness: .8 }), new T.MeshStandardMaterial({ color: '#000' }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 })]);
-    sb.position.y = -3; sb.castShadow = sb.receiveShadow = true; stage.add(sb);
+    var edgeM = new T.MeshStandardMaterial({ color: '#1a0830', emissive: '#ff3fd0', emissiveIntensity: .8 });
+    var slab = new T.Mesh(new T.BoxGeometry(s - .08, .4, s - .08), [edgeM, edgeM, new T.MeshStandardMaterial({ color: '#120620' }), new T.MeshStandardMaterial({ color: '#0a0410' }), edgeM, edgeM]);
+    slab.position.y = -.2; slab.castShadow = slab.receiveShadow = true; stage.add(slab);
+    var piston = new T.Mesh(new T.CylinderGeometry(s * .18, s * .22, 16, 20), new T.MeshStandardMaterial({ color: '#8a8fa8', metalness: .9, roughness: .25 })); piston.position.y = -8.4; stage.add(piston);
     var stM = new T.MeshStandardMaterial({ color: '#08080c', roughness: .35, metalness: .4 });   // the stage floor: the same tiles, in black
     for (var sy = 0; sy < s; sy++) for (var sx = 0; sx < s; sx++) { var tl = new T.Mesh(geo, stM); tl.position.set(sx - s / 2 + .5, .07, sy - s / 2 + .5); tl.receiveShadow = true; stage.add(tl); }
     var singer = ru3Singer(); singer.scale.setScalar(s === 3 ? 1.15 : 1.7); stage.add(singer);
     var sLight = new T.PointLight('#fff0f8', 0, s * 4, 1.8); sLight.position.set(0, 3.5, 1.2); stage.add(sLight);
-    stage.position.y = -6.2;
+    stage.position.y = -11;
+    // the singer and her platform once more, on a see-through layer over the players who stand behind her
+    var mask = new T.MeshBasicMaterial({ colorWrite: false });   // (on that layer, the floor hides what is still down in the shaft)
+    var B = n * 8;   // (a big floor all around, with the hole left open)
+    [[0, -(B + s) / 4, B, (B - s) / 2], [0, (B + s) / 4, B, (B - s) / 2], [-(B + s) / 4, 0, (B - s) / 2, s], [(B + s) / 4, 0, (B - s) / 2, s]].forEach(function (q) {
+      var m = new T.Mesh(new T.PlaneGeometry(q[2], q[3]), mask); m.rotation.x = -Math.PI / 2; m.position.set(q[0], .19, q[1]); m.renderOrder = -1; m.layers.set(1); sc.add(m);
+    });
+    stage.traverse(function (o) { o.layers.enable(1); });
+    sc.traverse(function (o) { if (o.isLight) o.layers.enable(1); });
     // six big disco balls overhead, slowly turning
     var ballM = new T.MeshStandardMaterial({ color: '#dfe3ff', metalness: 1, roughness: .18, flatShading: true, emissive: '#6a5aa0', emissiveIntensity: .35 });
     var balls = []; for (var b = 0; b < 6; b++) {
@@ -4845,16 +4858,22 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       return { L: L, beam: beam, ph: i * 1.7 };
     });
     var st = { alive: true, cam: cam, rn: rn, tiles: tiles, n: n, stage: stage, singer: singer, sLight: sLight, toks: {}, riseAt: 0, risen: false };
+    // the layers: the floor (canvas), the players behind the singer, the singer again (see-through canvas), the players in front
+    var back = document.createElement('div'); back.className = 'rutoksb'; hostEl.parentNode.insertBefore(back, hostEl.nextSibling);
+    var rn2 = new T.WebGLRenderer({ antialias: true, alpha: true }); rn2.setPixelRatio(rn.getPixelRatio()); rn2.setSize(w, h); rn2.setClearColor(0x000000, 0); rn2.outputEncoding = T.sRGBEncoding; rn2.toneMapping = T.NoToneMapping;
+    var over = document.createElement('div'); over.className = 'ru3front'; over.appendChild(rn2.domElement); hostEl.parentNode.insertBefore(over, back.nextSibling);
+    var cam2 = cam.clone(); cam2.layers.set(1); st.back = back;
+    var sPos = new T.Vector3();
     var up = new T.Vector3(0, 1, 0), tmp = new T.Vector3();
     function frame(now) {
-      if (!hostEl.isConnected) { st.alive = false; rn.dispose(); return; }
+      if (!hostEl.isConnected) { st.alive = false; rn.dispose(); rn2.dispose(); return; }
       var w2 = hostEl.clientWidth, h2 = hostEl.clientHeight; if (w2 && h2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
       var t = now / 1000;
       // the stage: in the hole, rising over 10 seconds, then up
       var k = st.risen ? 1 : st.riseAt ? Math.min(1, (Date.now() - st.riseAt) / RU_RISE) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-      stage.position.y = -6.2 + e * 6.5; sLight.intensity = e * 1.1;
+      stage.position.y = -11 + e * 11.3; sLight.intensity = Math.max(0, e * 1.6 - .5); haze.intensity = 3 * (1 - e * .6);
       var u = singer.userData, dance = e >= 1 ? 1 : 0;
-      u.la.rotation.z = -(.25 + dance * (.7 + Math.sin(t * 4.2) * .55)); u.ra.rotation.z = .25 + dance * (.5 + Math.max(0, Math.cos(t * 2.1)) * 2.2); u.la.rotation.x = -dance * .3;
+      u.la.rotation.z = -(.15 + dance * (.25 + Math.max(0, Math.sin(t * 2.1)) * .5)); u.ra.rotation.z = .15 + dance * (.2 + Math.max(0, Math.cos(t * 1.05)) * 2.3); u.la.rotation.x = -dance * (.3 + Math.sin(t * 4.2) * .2);
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; u.fr.rotation.y = Math.sin(t * 8) * .15; u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
       spots.forEach(function (sp, i) {
@@ -4865,14 +4884,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // the unclaimed tiles pulse like a disco floor
       tiles.forEach(function (m, i) { if (!m || m.userData.own) return; var x = i % n, y = Math.floor(i / n); m.material.emissive.setHSL((.75 + Math.sin(x * .7 + y * .5 + t) * .08) % 1, .9, .5); m.material.emissiveIntensity = .08 + .1 * (.5 + .5 * Math.sin(t * 3 + x * .8 + y * 1.1)); });
       // the players: drawn over the floor, gliding from tile to tile
+      sPos.set(0, .2, 0).applyAxisAngle(up, RU_TURN).project(cam);
       Object.keys(st.toks).forEach(function (pk) {
         var o = st.toks[pk], kk = o.t0 ? Math.min(1, (Date.now() - o.t0) / 330) : 1, ee = 1 - Math.pow(1 - kk, 2);
         var cx = o.fx + (o.tx - o.fx) * ee, cy = o.fy + (o.ty - o.fy) * ee;
         tmp.set(cx - n / 2 + .5, .2, cy - n / 2 + .5).applyAxisAngle(up, RU_TURN).project(cam);
         o.el.style.left = ((tmp.x + 1) / 2 * w2) + 'px'; o.el.style.top = ((1 - tmp.y) / 2 * h2) + 'px'; o.el.style.zIndex = String(10 + Math.round(cy * 10));
+        var behind = e > .05 && tmp.z > sPos.z, par = behind ? st.back : o.front;   // (behind the singer: under her layer)
+        if (o.el.parentNode !== par && par) par.appendChild(o.el);
         o.j.classList.toggle('run', kk < 1);
       });
-      rn.render(sc, cam); requestAnimationFrame(frame);
+      rn.render(sc, cam);
+      if (w2 && h2 && (w2 !== rn2.domElement.width / rn2.getPixelRatio() || h2 !== rn2.domElement.height / rn2.getPixelRatio())) rn2.setSize(w2, h2);
+      cam2.position.copy(cam.position); cam2.quaternion.copy(cam.quaternion); cam2.aspect = cam.aspect; cam2.updateProjectionMatrix();
+      var bgc = sc.background, fgc = sc.fog; sc.background = null; sc.fog = null; rn2.render(sc, cam2); sc.background = bgc; sc.fog = fgc;
+      requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
     st.paint = function (own, trail, col) {
@@ -4904,7 +4930,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           var el = document.createElement('div'); el.className = 'rut' + (g.st === 'intro' || g.st === 'rise' ? ' pre' : g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', Math.round(i * 4400 / Math.max(1, g.order.length - 1)) + 'ms'); el.style.setProperty('--c', ruCol(k));
           el.innerHTML = '<div class="jmt" style="' + bodyOutfit(k) + '"><div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div><span class="rustar">💫</span>';
           ov.querySelector('.rutoks3').appendChild(el);
-          var c = g.pos[k]; ov._3.toks[k] = { el: el, j: el.firstChild, fx: c[0], fy: c[1], tx: c[0], ty: c[1], t0: 0 };
+          var c = g.pos[k]; ov._3.toks[k] = { el: el, j: el.firstChild, front: ov.querySelector('.rutoks3'), fx: c[0], fy: c[1], tx: c[0], ty: c[1], t0: 0 };
         });
       }
     }
