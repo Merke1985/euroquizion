@@ -4623,7 +4623,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, RU_RISE + 400);
     }, REMOTE ? 1000 : t);
   }
-  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 10000, RU_REVEAL = 175000, ruSongT = null;   // (RU_REVEAL: the winner at 2:55 in the song)
+  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 76000, ruSongT = null;   // (RU_STOP: the game stops at 1:16 in the song)
   function ruSay(who, txt) {
     var ov = $('ruov'); if (!ov) return;
     [].forEach.call(ov.querySelectorAll('.rubub'), function (x) { x.classList.remove('on'); });
@@ -4656,7 +4656,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
-    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_REVEAL - RU_COUNT - 600 : g.t0 + RU_MS; push(); Music.ding();   // (the game ends so that the count is done at 2:55 in the song)
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP : g.t0 + RU_MS; push(); Music.ding();   // (the game ends so that the count is done at 2:55 in the song)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
   function ruBot(g, k) {   // a bot: walks in straight lines for a while, preferring tiles that aren't its own
@@ -4718,11 +4718,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function ruEnd() {
     var g = G.rule; if (!g || g.st !== 'play') return;
-    clearInterval(ruLoop); g.cnt = ruCount(g); ruBeat(); ruSong(false, true);
+    clearInterval(ruLoop); g.cnt = ruCount(g); ruBeat(); ruSong(false);   // (the song stops right there, at 1:16)
     var best = Math.max.apply(null, g.order.map(function (k) { return g.cnt[k] || 0; }));
     // the count: everyone's tiles counted at the same time, one by one, until the winner is the only one still counting
     // (the count takes about 10 seconds, so the winner is revealed at 2:55 in the song)
-    g.cstep = Math.max(60, Math.round(RU_COUNT / Math.max(1, best))); g.st = 'count'; g.countAt = Date.now() + 300; push(); Music.ding();
+    g.cstep = Math.max(180, Math.min(420, Math.round(RU_COUNT / Math.max(1, best)))); g.st = 'count'; g.countAt = Date.now() + 300; push(); Music.ding();
     var dur = 300 + best * g.cstep + 300;
     clearTimeout(ruTimer); ruTimer = setTimeout(function () {
       if (G.rule !== g) return;
@@ -4902,8 +4902,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     requestAnimationFrame(frame);
     st.paint = function (own, trail, col) {
-      own.forEach(function (k, i) { var m = tiles[i]; if (!m) return; var v = (k || '') + (trail[i] ? '*' : ''); if (m.userData.v === v) return; m.userData.v = v; m.userData.own = k;
-        if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = trail[i] ? .55 : .18; } else { m.material.color.set('#241040'); } });
+      own.forEach(function (k, i) { var m = tiles[i]; if (!m) return; var v = k || ''; if (m.userData.v === v) return; m.userData.v = v; m.userData.own = k;
+        if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = .18; } else { m.material.color.set('#241040'); } });   /* (no lighter trail behind the players) */
     };
     return st;
   }
@@ -4971,7 +4971,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         r.classList.toggle('stop', done && g.st === 'count'); r.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
       });
       lb.querySelector('.rult').textContent = g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? players[k].name : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') : 'The end!') : '🪩 Counting the tiles…';
-      if (g.st === 'count' && k0 > 0 && k0 <= best && lb._k !== k0) { lb._k = k0; Music.plop(k0 % 5, .5); }
+      if (g.st === 'count' && k0 > 0 && k0 <= best && lb._k !== k0) { lb._k = k0; Music.plop(k0, .8); }   // (a sound for every square counted)
       ov.classList.add('counting');
     } else { if (lb.innerHTML) { lb.innerHTML = ''; lb.removeAttribute('data-id'); } ov.classList.remove('counting'); }
     var msg = g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here she comes… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
