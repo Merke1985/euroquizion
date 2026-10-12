@@ -141,6 +141,7 @@
     net.on('result', onResult);
     net.on('bomb', udOnMap);
     net.on('zg', zgOnLive);
+    net.on('rule', ruOnLive);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
       if (kicked) return;
@@ -187,6 +188,7 @@
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb) $('bombui').classList.add('hidden');
     if (s.phase !== 'carpet' || !s.carpet) $('carpetui').classList.add('hidden');
+    if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); if (zgU) { zgHeld = {}; zgSet(); } }
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (!(s.phase === 'note' && s.note && (s.note.st === 'guess' || s.note.st === 'ctl'))) { $('noteui').classList.add('hidden'); if ($('ntctl')) $('ntctl').classList.add('hidden'); }
@@ -199,7 +201,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -288,6 +290,7 @@
     else if (s.phase === 'note' && s.note) noteView(s);
     else if (s.phase === 'carpet' && s.carpet) carpetView(s);
     else if (s.phase === 'zg' && s.zg) zgView(s);
+    else if (s.phase === 'rule' && s.rule) ruView(s);
     else if (s.phase === 'qj' && s.qj) qjView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
@@ -635,6 +638,49 @@
       });
     }
     zgMeter();
+  }
+
+  // ---------- We Will Rule the World ----------
+  // A cross-shaped D-pad: hold a direction to keep moving (one tile per second). Stunned: the pad dims, 3-2-1 in the middle.
+  var ruLive = null, ruD = '', ruDT = null, ruStunEnd = 0, ruStunT = null;
+  function ruSendD() { var r = state && state.rule; if (!net || !r || r.st !== 'play') return; net.send('rule', { pid: pid, id: r.id, d: ruD }); }
+  function ruSet(d) { if (d === ruD) return; ruD = d; ruSendD(); clearInterval(ruDT); if (d) ruDT = setInterval(ruSendD, 700); }
+  function ruOnLive(m) { var r = state && state.rule; if (!m || !m.cnt || !r || m.id !== r.id) return; ruLive = m; if ((m.stun || {})[pid]) ruStunEnd = Date.now() + m.stun[pid]; ruPad(); }
+  function ruPad() {
+    var box = $('ruui'), r = state && state.rule; if (!box || !r) return;
+    var src = ruLive && ruLive.id === r.id ? ruLive : r, n = (src.cnt || {})[pid] || 0;
+    var c = box.querySelector('.rucnt b'); if (c) c.textContent = n;
+    var tm = box.querySelector('.rucnt i'); if (tm && src.left != null) { var s = Math.ceil(src.left / 1000); tm.textContent = Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+    var left = ruStunEnd - Date.now(), pad = box.querySelector('.rupad'); if (!pad) return;
+    pad.classList.toggle('stun', left > 0); pad.querySelector('.ruc').textContent = left > 0 ? Math.ceil(left / 1000) : '';
+    clearTimeout(ruStunT); if (left > 0) ruStunT = setTimeout(ruPad, Math.min(250, left));
+  }
+  function ruView(s) {
+    var r = s.rule, box = $('ruui'), mine = r.order.indexOf(pid) >= 0;
+    show('v-wait');
+    if (r.st === 'end') {
+      box.classList.add('hidden'); ruSet('');
+      var w = (r.win || []).indexOf(pid) >= 0, names = (r.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);
+      $('waittitle').textContent = w ? '👑 You rule the world!' : names.length ? '👑 ' + names.join(' & ') + (names.length > 1 ? ' rule the world!' : ' rules the world!') : 'The end!';
+      $('waitsub').textContent = mine ? 'You had ' + ((r.cnt || {})[pid] || 0) + ' tiles.' : '';
+      return;
+    }
+    if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 We Will Rule the World'; $('waitsub').textContent = 'Watch the big screen!'; return; }
+    var col = (r.cols || {})[pid] || '#888';
+    $('waittitle').textContent = r.st === 'ready' ? '🪩 Get ready…' : '🪩 Claim the floor!'; $('waitsub').textContent = 'Hold a direction to keep dancing. Your colour:';
+    box.classList.remove('hidden'); box.style.setProperty('--c', col);
+    if (box.getAttribute('data-id') !== r.id) {
+      box.setAttribute('data-id', r.id); ruD = ''; clearInterval(ruDT); ruStunEnd = 0;
+      box.innerHTML = '<div class="rucnt"><span><span class="rusw"></span> <b>0</b> tiles</span><i></i></div><div class="rupad"><button type="button" class="rub u" data-d="u">▲</button><button type="button" class="rub l" data-d="l">◀</button><span class="ruc"></span><button type="button" class="rub r" data-d="r">▶</button><button type="button" class="rub d" data-d="d">▼</button></div>';
+      [].forEach.call(box.querySelectorAll('.rub'), function (b) {
+        var d = b.getAttribute('data-d');
+        b.addEventListener('pointerdown', function (e) { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (x) {} [].forEach.call(box.querySelectorAll('.rub'), function (x) { x.classList.toggle('on', x === b); }); ruSet(d); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} });
+        var off = function (e) { if (e) e.preventDefault(); b.classList.remove('on'); if (ruD === d) ruSet(''); };
+        b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
+        b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      });
+    }
+    ruPad();
   }
 
   // ---------- Hold That Note! ----------

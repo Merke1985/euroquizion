@@ -3283,3 +3283,57 @@ body.hasdock main{padding-bottom:84px}
 .zgb{height:min(38vh,260px);border:0;border-radius:22px;font-size:3.4rem;font-weight:900;color:#fff;background:linear-gradient(160deg,#6a4dff,#3a1d9e);box-shadow:0 8px 0 #22106a,0 10px 24px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:inherit;cursor:pointer;touch-action:none}
 .zgb small{font-size:1rem;letter-spacing:2px}
 .zgb.on{transform:translateY(6px);box-shadow:0 2px 0 #22106a;background:linear-gradient(160deg,#9a7bff,#6a3dff)}
+
+/* ---------- We Will Rule the World ---------- */
+.ruov{position:fixed;inset:0;z-index:55;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#2a0f4a 0%,#12062a 55%,#05020d 100%);font-family:inherit}
+.rulights i{position:absolute;top:-10vh;width:30vw;height:120vh;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);transform-origin:50% 0;opacity:.18;animation:chbeam 4s ease-in-out infinite alternate}
+.rulights i:nth-child(1){left:-6vw;background:linear-gradient(#ff3fb0,transparent)}.rulights i:nth-child(2){left:20vw;background:linear-gradient(#3fd0ff,transparent);animation-delay:-1s}.rulights i:nth-child(3){left:48vw;background:linear-gradient(#ffd23f,transparent);animation-delay:-2s}.rulights i:nth-child(4){left:74vw;background:linear-gradient(#7dff8a,transparent);animation-delay:-3s}
+.rusign{position:absolute;top:2vh;left:2vw;padding:.4vh 1.4vw;border-radius:14px;border:3px solid #ff3fb0;color:#fff0fb;font-weight:900;font-size:clamp(1.1rem,2.2vw,2rem);text-shadow:0 0 12px #ff3fb0;box-shadow:0 0 18px rgba(255,63,176,.5);background:rgba(30,5,40,.6);z-index:3;white-space:nowrap}
+.ruclock{position:absolute;top:2vh;right:3vw;font-weight:900;font-size:clamp(2rem,4.5vw,4rem);font-variant-numeric:tabular-nums;text-shadow:0 0 18px #ff3fb0;z-index:3}
+.ruov[data-st="ready"] .ruclock{left:0;right:0;top:36vh;text-align:center;font-size:clamp(4rem,12vw,10rem);z-index:9;animation:uthot .5s ease-in-out infinite alternate}
+.ruboard{position:absolute;left:4vw;top:11vh;width:86vh;height:86vh;max-width:62vw;max-height:62vw}
+.rugrid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--n),1fr);grid-template-rows:repeat(var(--n),1fr);gap:2px;padding:4px;border-radius:12px;background:#0a0418;box-shadow:0 0 0 3px rgba(255,255,255,.15),0 0 40px rgba(255,63,176,.3)}
+.rugrid > i{border-radius:3px;background:rgba(255,255,255,.07);transition:background .3s,filter .3s}
+.rugrid > i.own{filter:brightness(.72) saturate(.9)}
+.rugrid > i.own.trail{filter:brightness(1.15) saturate(1.2);box-shadow:0 0 10px rgba(255,255,255,.5) inset}
+.rustage{position:relative;border-radius:10px;background:radial-gradient(circle,#4a1a7a,#1d0838);box-shadow:inset 0 0 0 3px #ffd23f,0 0 24px rgba(255,210,63,.4);display:flex;align-items:flex-end;justify-content:center;overflow:visible}
+.rustage .rusing{height:92%;width:auto;filter:drop-shadow(0 0 12px rgba(255,210,63,.6))}
+.ruov[data-st="play"] .rusing{animation:rudance .5s ease-in-out infinite alternate}
+@keyframes rudance{from{rotate:-4deg}to{rotate:4deg;translate:0 -3%}}
+.ruball{position:absolute;left:50%;top:-14%;translate:-50% 0;font-size:3.6vh;animation:ruspin 3s linear infinite;z-index:2}
+@keyframes ruspin{to{rotate:360deg}}
+.rutoks{position:absolute;inset:4px}
+.rutok{position:absolute;width:calc(100% / var(--n));height:calc(100% / var(--n));translate:-50% -50%;transition:left .32s ease-out,top .32s ease-out;z-index:2;display:flex;align-items:center;justify-content:center}
+.rutok .char{width:118%;height:118%;flex:none;box-shadow:0 0 0 3px var(--c),0 4px 10px rgba(0,0,0,.6)}
+.rutok .rustar{position:absolute;top:-40%;font-size:2.6vh;display:none;animation:ruspin 1s linear infinite}
+.rutok.stun .rustar{display:block}.rutok.stun .char{filter:grayscale(.7) brightness(.8)}
+.rutok.win .char{box-shadow:0 0 0 4px #ffd23f,0 0 24px #ffd23f}
+.rulist{position:absolute;right:2vw;top:13vh;width:30vw;display:flex;flex-direction:column;gap:.5vh;z-index:3}
+.rurow{position:relative;display:flex;align-items:center;gap:.6vw;padding:.4vh .8vw;border-radius:12px;background:rgba(0,0,0,.5);font-weight:800;font-size:clamp(.7rem,1.2vw,1.05rem);overflow:hidden;box-shadow:inset 4px 0 0 var(--c)}
+.rurow em{position:absolute;left:0;bottom:0;height:3px;background:var(--c);transition:width .4s}
+.rurow b{width:1.5em;text-align:center;opacity:.7}.rurow .char{width:3.2vh;height:3.2vh;flex:none;box-shadow:0 0 0 2px var(--c)}
+.rurow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rurow i{font-style:normal;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+.rurow.win{background:linear-gradient(90deg,rgba(255,210,63,.35),rgba(0,0,0,.5));box-shadow:inset 4px 0 0 var(--c),0 0 0 2px #ffd23f}
+.rumsg{position:absolute;right:2vw;bottom:4vh;width:30vw;text-align:center;font-weight:900;font-size:clamp(1rem,2vw,1.7rem);text-shadow:0 3px 12px #000;z-index:4}
+.ruov.enter .ruboard{animation:inBottom .8s .2s cubic-bezier(.2,.9,.3,1.08) both}
+.hs-rule .grwall{background:radial-gradient(ellipse at 50% 40%,#2a0f4a 0%,#12062a 55%,#05020d 100%)}
+.hs-rule .hssign{border-color:#ff3fb0;color:#fff0fb;text-shadow:0 0 12px #ff3fb0;box-shadow:0 0 18px rgba(255,63,176,.5)}
+.hsrule{position:relative;display:flex;flex-direction:column;align-items:center}
+.hsrule .rusing{height:30vh;width:auto;position:relative;z-index:1;animation:rudance .5s ease-in-out infinite alternate}
+.hsrule .ruball{top:-8vh;font-size:7vh}
+.hsfloor{display:grid;grid-template-columns:repeat(3,7vh);gap:4px;margin-top:-1vh;transform:perspective(40vh) rotateX(40deg)}
+.hsfloor i{height:5vh;border-radius:4px;animation:ruflash 1.2s steps(1) infinite}
+.hsfloor i:nth-child(3n+1){background:#ff3fb0}.hsfloor i:nth-child(3n+2){background:#3fd0ff;animation-delay:-.4s}.hsfloor i:nth-child(3n){background:#ffd23f;animation-delay:-.8s}
+@keyframes ruflash{50%{filter:brightness(.4)}}
+/* the phone */
+.ruui{width:100%;margin-top:6px;user-select:none;-webkit-user-select:none;touch-action:none}
+.rucnt{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:1.3rem;margin-bottom:12px}
+.rucnt i{font-style:normal;opacity:.75;font-variant-numeric:tabular-nums}
+.rusw{display:inline-block;width:22px;height:22px;border-radius:6px;background:var(--c);vertical-align:-4px;box-shadow:0 0 0 2px #fff}
+.rupad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px;width:min(86vw,340px);aspect-ratio:1;margin:0 auto;transition:opacity .2s,filter .2s}
+.rub{border:0;border-radius:18px;font-size:2.6rem;color:#fff;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 85%,#fff),var(--c));box-shadow:0 6px 0 rgba(0,0,0,.35);cursor:pointer;touch-action:none;font-family:inherit}
+.rub.u{grid-area:1/2}.rub.l{grid-area:2/1}.rub.r{grid-area:2/3}.rub.d{grid-area:3/2}
+.rub.on{transform:translateY(5px);box-shadow:0 1px 0 rgba(0,0,0,.35);filter:brightness(1.2)}
+.ruc{grid-area:2/2;display:flex;align-items:center;justify-content:center;font-size:3.4rem;font-weight:900;color:#fff}
+.rupad.stun .rub{opacity:.3;filter:grayscale(.8)}

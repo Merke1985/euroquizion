@@ -257,6 +257,7 @@
     if (G.note && G.phase === 'note') s.note = noteSnap();
     if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
+    if (G.rule && G.phase === 'rule') s.rule = ruSnap();
     if (G.qj && G.phase === 'qj') s.qj = qjSnap();
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
@@ -375,7 +376,7 @@
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   var viewNow = '';
-  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
+  function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); Music.want((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && (((G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel)) || (roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin' || (G.phase === 'rule' && G.rule && G.rule.st === 'play'))) && !G.clue || !!G.fsMusic); }   // menu music until the fanfare
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -491,6 +492,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
+    if (G.phase !== 'rule' && $('ruov')) { $('ruov').remove(); clearInterval(ruLoop); }
     if (G.phase !== 'zg' && $('zgov')) { $('zgov').remove(); clearInterval(zgLoop); if (zgSongT) zgSong(false); }
     if (G.phase !== 'carpet' && $('tcov')) { $('tcov').remove(); clearInterval(tcFadeT); if (tcSongT) tcSong(false); }
     if (G.phase !== 'qj' && $('qjov')) { $('qjov').remove(); if (!REMOTE) try { yt.pauseVideo(); } catch (e) {} }   // (the game is over, or was ended)
@@ -582,6 +584,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); carpetShow();
     } else if (G.phase === 'zg') {
       show('v-game'); zgShow();
+    } else if (G.phase === 'rule') {
+      show('v-game'); ruShow();
     } else if (G.phase === 'qj') {
       show('v-game'); qjShow();
     } else {
@@ -1435,7 +1439,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet', 'zg'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet', 'zg', 'rule'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
@@ -1447,6 +1451,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five mini-parades on the turquoise carpet! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Keep your balance with LEFT and RIGHT on your phone. Lean further for more points, but lean too far and you fall. The highest score still standing wins!' },
+    rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. After 3 minutes, most tiles wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -1459,7 +1464,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
@@ -1486,7 +1491,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The party games that can be played now: switched on, and possible with this group (most need two players or more).
   function partyGames(pOn, two) {
     pOn = pOn || G.partyOn || {}; if (two == null) two = list().filter(function (p) { return !p.off; }).length >= 2;
-    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb')); });
+    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule')); });
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
@@ -2179,7 +2184,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -3800,6 +3805,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'Then all the translations appear, with the real one hidden among them.'],
         ['her', 'Find the real one for 12 points…'],
         ['him', '…and get 2 points for every player who falls for your fake! Three rounds, most points wins. Good luck, liars! 🤥']] },
+    rule: { sign: '🪩 We Will Rule the World', theme: 'rule',
+      get art() { return '<div class="hsrule"><span class="ruball">🪩</span>' + RU_SINGER + '<div class="hsfloor"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'; },
+      lines: [['her', 'Disco time! 🪩 Our singer is on stage in the middle of a huge disco floor…'],
+        ['him', 'Every tile you step on lights up in your colour. Hold a direction on your phone to keep dancing: one tile per second!'],
+        ['her', 'You can steal tiles from others too. But watch out: bump into someone and you’re stunned for 3 seconds! 💫'],
+        ['him', 'After three minutes, whoever owns the most tiles rules the world! 👑']] },
     zg: { sign: '🌌 Zero Gravity', theme: 'zg',
       get art() { return '<div class="hszg">' + ZG_SINGER + '<span class="hspole"></span></div>'; },
       lines: [['him', 'Welcome to space! 🌌 Tonight our singer performs on top of a very tall pole…'],
@@ -4242,6 +4253,153 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
   }
   net.on('zg', zgMsg);
+  // ---------- We Will Rule the World ----------
+  // A disco floor of tiles, with the singer on an unclaimable stage in the middle. Everyone moves one tile per second
+  // (hold a direction on the phone's D-pad); every tile you step on becomes your colour. Two players moving into the
+  // same tile (or swapping places) both bounce back and are stunned for 3 seconds; walking into a player who stands
+  // still stuns only you. After 3 minutes, whoever owns the most tiles wins. The host runs all moves at once, per tick.
+  var RU_MS = 180000, RU_TICK = 200, RU_STEP = 1000, RU_STUN = 3000, ruLoop = null, ruTimer = null, ruSent = 0;
+  var RU_DIRS = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] };
+  var RU_SINGER = '<svg class="rusing" viewBox="0 0 120 160" aria-hidden="true"><defs><linearGradient id="rusuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe066"/><stop offset=".5" stop-color="#f2b821"/><stop offset="1" stop-color="#c47f0a"/></linearGradient></defs>' +
+    '<path d="M44 80 L40 150 L56 150 L60 104 L64 150 L80 150 L76 80 Z" fill="url(#rusuit)"/><path d="M38 150 h20 v6 h-22 z M62 150 h20 v6 h-22 z" fill="#fff"/>' +
+    '<path d="M40 50 Q60 42 80 50 L78 90 L42 90 Z" fill="url(#rusuit)"/><path d="M52 48 L60 66 L68 48" fill="#ff5ab4"/>' +
+    '<path class="ruarm" d="M80 54 Q98 40 104 16" stroke="url(#rusuit)" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="104" cy="13" r="5" fill="#c68a5e"/>' +
+    '<path d="M40 54 Q26 66 24 86" stroke="url(#rusuit)" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="24" cy="89" r="5" fill="#c68a5e"/>' +
+    '<rect x="55" y="34" width="10" height="12" rx="4" fill="#c68a5e"/><circle cx="60" cy="24" r="15" fill="#c68a5e"/>' +
+    '<path d="M42 22 Q40 2 60 4 Q82 4 78 24 Q74 12 60 14 Q48 14 42 22 Z" fill="#2a1a10"/><circle cx="44" cy="18" r="9" fill="#2a1a10"/><circle cx="76" cy="18" r="9" fill="#2a1a10"/>' +
+    '<circle cx="55" cy="24" r="2" fill="#1a1010"/><circle cx="65" cy="24" r="2" fill="#1a1010"/><path d="M54 31 Q60 36 66 31" stroke="#8a1a30" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';   // (an original character: a disco singer in a golden suit)
+  function ruSize(n) { return n <= 3 ? [9, 3] : n === 4 ? [11, 3] : n <= 8 ? [15, 5] : [17, 5]; }
+  function ruStage(g, x, y) { var a = (g.n - g.s) / 2; return x >= a && x < a + g.s && y >= a && y < a + g.s; }
+  function ruAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (act.length < 2) { quipAll(); return; }
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    var sz = ruSize(act.length), n = sz[0], order = shuffle(act.map(function (p) { return p.pid; }));
+    var g = G.rule = { id: 'ru' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'ready', n: n, s: sz[1], order: order, own: [], pos: {}, dir: {}, next: {}, stun: {}, trail: {}, cnt: {}, ends: 0, win: [], bot: {} };
+    for (var i = 0; i < n * n; i++) g.own.push('');
+    // the starting tiles: spread around the edge of the floor
+    var ring = []; for (var x = 0; x < n - 1; x++) ring.push([x, 0]); for (var y = 0; y < n - 1; y++) ring.push([n - 1, y]); for (x = n - 1; x > 0; x--) ring.push([x, n - 1]); for (y = n - 1; y > 0; y--) ring.push([0, y]);
+    var off = Math.floor(Math.random() * ring.length);
+    order.forEach(function (k, i) { var c = ring[(off + Math.floor(i * ring.length / order.length)) % ring.length]; g.pos[k] = c; g.dir[k] = ''; g.next[k] = 0; g.stun[k] = 0; g.trail[k] = []; ruClaim(g, k, c[0], c[1]); g.bot[k] = { d: '', left: 0 }; });
+    G.phase = 'rule'; G.barMs = 0; g.goAt = Date.now() + 3600; push();
+    [1000, 2000, 3000].forEach(function (t) { setTimeout(function () { if (G.rule === g && g.st === 'ready') ruShow(); }, t); });
+    clearTimeout(ruTimer); ruTimer = setTimeout(ruGo, 3600);
+  }
+  function ruClaim(g, k, x, y) {
+    var i = y * g.n + x; g.own[i] = k;
+    var t = g.trail[k]; t.push(i); if (t.length > 4) t.shift();
+  }
+  function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
+  function ruGo() {
+    var g = G.rule; if (!g || G.phase !== 'rule') return;
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.t0 + RU_MS; push(); Music.ding();
+    clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
+  }
+  function ruBot(g, k) {   // a bot: walks in straight lines for a while, preferring tiles that aren't its own
+    var b = g.bot[k], p = g.pos[k];
+    if (b.left > 0 && b.d) { b.left--; var t = [p[0] + RU_DIRS[b.d][0], p[1] + RU_DIRS[b.d][1]]; if (t[0] >= 0 && t[1] >= 0 && t[0] < g.n && t[1] < g.n && !ruStage(g, t[0], t[1])) return b.d; }
+    var best = [], bs = -9;
+    Object.keys(RU_DIRS).forEach(function (d) {
+      var x = p[0] + RU_DIRS[d][0], y = p[1] + RU_DIRS[d][1]; if (x < 0 || y < 0 || x >= g.n || y >= g.n || ruStage(g, x, y)) return;
+      var o = g.own[y * g.n + x], sc = (o === k ? 0 : o ? 2 : 3) + Math.random() * 2;
+      if (sc > bs) { bs = sc; best = [d]; }
+    });
+    b.d = best[0] || ''; b.left = 2 + Math.floor(Math.random() * 5); return b.d;
+  }
+  function ruTick() {
+    var g = G.rule; if (!g || G.phase !== 'rule' || g.st !== 'play') { clearInterval(ruLoop); return; }
+    var now = Date.now();
+    if (now >= g.ends) { ruEnd(); return; }
+    // who moves this tick, and where to
+    var mv = {};
+    g.order.forEach(function (k) {
+      if (g.stun[k] > now || g.next[k] > now) return;
+      var p = players[k], d = p && p.bot ? ruBot(g, k) : (p && p.off ? '' : g.dir[k]); if (!d || !RU_DIRS[d]) return;
+      var x = g.pos[k][0] + RU_DIRS[d][0], y = g.pos[k][1] + RU_DIRS[d][1];
+      if (x < 0 || y < 0 || x >= g.n || y >= g.n || ruStage(g, x, y)) return;   // (the edge and the stage: you just don't move)
+      mv[k] = [x, y];
+    });
+    var ks = Object.keys(mv); if (!ks.length) { ruShow(); return; }
+    var key = function (c) { return c[0] + ',' + c[1]; }, bump = {};
+    // two movers into the same tile, or swapping places: both bounce
+    ks.forEach(function (a) { ks.forEach(function (b) { if (a >= b) return; if (key(mv[a]) === key(mv[b]) || (key(mv[a]) === key(g.pos[b]) && key(mv[b]) === key(g.pos[a]))) { bump[a] = 1; bump[b] = 1; } }); });
+    // walking into someone who stays where they are (or who bounced): only the walker bounces (repeat: a bounce can block another)
+    var changed = true;
+    while (changed) {
+      changed = false;
+      ks.forEach(function (a) {
+        if (bump[a]) return;
+        g.order.forEach(function (b) { if (b === a || bump[a]) return; var stays = !mv[b] || bump[b]; if (stays && key(g.pos[b]) === key(mv[a])) { bump[a] = 1; changed = true; } });
+      });
+    }
+    var hit = false;
+    ks.forEach(function (k) {
+      g.next[k] = now + RU_STEP;
+      if (bump[k]) { g.stun[k] = now + RU_STUN; hit = true; return; }
+      g.pos[k] = mv[k]; ruClaim(g, k, mv[k][0], mv[k][1]);
+    });
+    if (hit && !REMOTE) Music.buzz();
+    g.cnt = ruCount(g); ruShow();
+    if (now - ruSent >= 900 || hit) ruBeat();
+  }
+  function ruBeat() {   // the small update for the phones: tiles owned and who is stunned
+    var g = G.rule; if (!g || !net) return; ruSent = Date.now();
+    var st = {}; g.order.forEach(function (k) { if (g.stun[k] > ruSent) st[k] = g.stun[k] - ruSent; });
+    net.send('rule', { id: g.id, cnt: g.cnt, stun: st, left: Math.max(0, g.ends - ruSent) });
+  }
+  function ruMsg(m) {
+    var g = G.rule; if (!g || G.phase !== 'rule' || !m || m.id !== g.id || !m.pid || !g.pos[m.pid]) return;
+    g.dir[m.pid] = RU_DIRS[m.d] ? m.d : '';
+    if (g.st === 'play' && g.dir[m.pid] && g.next[m.pid] <= Date.now() && g.stun[m.pid] <= Date.now()) ruTick();   // (a fresh press moves right away)
+  }
+  function ruEnd() {
+    var g = G.rule; if (!g || g.st !== 'play') return;
+    clearInterval(ruLoop); g.st = 'end'; g.cnt = ruCount(g); ruBeat();
+    var best = Math.max.apply(null, g.order.map(function (k) { return g.cnt[k] || 0; }));
+    g.win = best > 0 ? g.order.filter(function (k) { return g.cnt[k] === best; }) : [];   // (a tie: they all win)
+    var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
+    g.prize = big; push(); Music.douze();
+    clearTimeout(ruTimer); ruTimer = setTimeout(function () { if (G.phase === 'rule') { G.rule = null; startRound(); } }, 8500);
+  }
+  function ruCol(k) { var p = players[k]; return p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#888'; }
+  function ruSnap() {
+    var g = G.rule, cols = {}; g.order.forEach(function (k) { cols[k] = ruCol(k); });
+    return { id: g.id, st: g.st, order: g.order, cols: cols, cnt: g.cnt, left: g.st === 'play' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
+  }
+  // The big screen: the disco floor from above, the singer on her stage in the middle, the players as tokens.
+  function ruShow() {
+    var g = G.rule; if (!g) return;
+    var ov = $('ruov'), n = g.n;
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'ruov'; ov.className = 'ruov enter';
+      var cells = ''; for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) cells += ruStage(g, x, y) ? '' : '<i style="grid-area:' + (y + 1) + '/' + (x + 1) + '"></i>';
+      var a = (n - g.s) / 2;
+      ov.innerHTML = '<div class="rulights"><i></i><i></i><i></i><i></i></div><div class="rusign">🪩 We Will Rule the World</div><div class="ruclock"></div>' +
+        '<div class="ruboard" style="--n:' + n + '"><div class="rugrid">' + cells + '<div class="rustage" style="grid-area:' + (a + 1) + '/' + (a + 1) + '/' + (a + g.s + 1) + '/' + (a + g.s + 1) + '"><span class="ruball">🪩</span>' + RU_SINGER + '</div></div><div class="rutoks"></div></div><div class="rulist"></div><div class="rumsg"></div>';
+      document.body.appendChild(ov); whooshes([0, 350, 700]);
+      ov._cells = {}; [].forEach.call(ov.querySelectorAll('.rugrid > i'), function (c) { var ga = c.style.gridArea.split('/').map(function (v) { return parseInt(v, 10); }); ov._cells[(ga[0] - 1) * n + (ga[1] - 1)] = c; });
+      ov.querySelector('.rutoks').innerHTML = g.order.map(function (k) { var p = players[k]; return p ? '<div class="rutok" data-p="' + esc(k) + '" style="--c:' + ruCol(k) + '">' + charSvg(p.char) + '<span class="rustar">💫</span></div>' : ''; }).join('');
+      setTimeout(function () { ov.classList.remove('enter'); }, 2600);
+    }
+    ov.setAttribute('data-st', g.st);
+    var now = Date.now(), tr = {};
+    g.order.forEach(function (k) { (g.trail[k] || []).forEach(function (i) { if (g.own[i] === k) tr[i] = 1; }); });
+    g.own.forEach(function (k, i) { var c = ov._cells[i]; if (!c) return; var v = (k ? k : '') + (tr[i] ? '*' : ''); if (c._v === v) return; c._v = v; c.style.background = k ? ruCol(k) : ''; c.className = k ? (tr[i] ? 'own trail' : 'own') : ''; });
+    [].forEach.call(ov.querySelectorAll('.rutok'), function (el) {
+      var k = el.getAttribute('data-p'), p = g.pos[k]; if (!p) return;
+      el.style.left = ((p[0] + 0.5) / n * 100) + '%'; el.style.top = ((p[1] + 0.5) / n * 100) + '%';
+      el.classList.toggle('stun', g.stun[k] > now); el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+    });
+    var ck = ov.querySelector('.ruclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - now) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - now) / 1000)) : 0;
+    var txt = g.st === 'play' ? Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2) : String(sec); if (ck.textContent !== txt) ck.textContent = txt;
+    var cnt = g.cnt && Object.keys(g.cnt).length ? g.cnt : ruCount(g), tot = n * n - g.s * g.s;
+    var lh = g.order.slice().sort(function (a, b) { return (cnt[b] || 0) - (cnt[a] || 0); }).map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="rurow' + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '') + '" style="--c:' + ruCol(k) + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><i>' + (cnt[k] || 0) + '</i><em style="width:' + Math.round((cnt[k] || 0) / tot * 100) + '%"></em></div>'; }).join('');
+    var lb = ov.querySelector('.rulist'); if (lb.getAttribute('data-h') !== lh) { lb.setAttribute('data-h', lh); lb.innerHTML = lh; }
+    var msg = g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var me = ov.querySelector('.rumsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
+  }
+  net.on('rule', ruMsg);
   // ---------- Hold That Note ----------
   // Technical problems: the sound system breaks down in the middle of every high note. A diva rises on stage in an
   // enormous gown; everyone predicts on their phone how long the note will last (10 to 60 seconds) and, once locked in,
@@ -6088,7 +6246,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
@@ -6310,7 +6468,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 5 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
