@@ -3681,3 +3681,14 @@ body.hasdock main{padding-bottom:84px}
 
 .orpuppet.p1{left:23vw}.orpuppet.p2{right:23vw}
 .orov .orsign{z-index:6}
+/* the avatar as a head: a bit smaller, sitting on top of the body instead of swallowing the shoulders */
+.jmt .char{width:4.6vh;height:4.6vh;margin-top:.3vh}
+.jmt b{margin-top:5.6vh}
+.lobbyplayers .chip.lobfig .char{width:54px;height:54px}
+.lobbyplayers .chip.lobfig .lbod{top:50px}
+.lobbyplayers .chip.lobfig .pname{margin-top:60px}
+.edp .char{width:3.6vh;height:3.6vh}
+.edp .lbod{top:3.4vh}
+.chtok .ch-face{width:calc(var(--tok,56px) * .8);height:calc(var(--tok,56px) * .8)}
+.chtok .chbod{top:calc(var(--tok,56px) * .74)}
+.zgfig .char{width:4.6vh;height:4.6vh;margin-left:-2.3vh;top:.9vh}
