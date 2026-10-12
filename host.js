@@ -3942,7 +3942,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b']];
   var TC_SHOES = ['High heels', 'Boots', 'Sneakers', 'Flats'];
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
-  var TC_SIZES = [[2, 3], [3, 4], [4, 5], [5, 6], [6, 7]], TC_Q_MS = 20000, TC_STEP = 3400, tcTimer = null, tcFadeT = null;
+  var TC_SIZES = [[2, 3], [3, 4], [4, 5], [5, 6], [6, 7]], TC_Q_MS = 20000, TC_STEP = 5600, tcTimer = null, tcFadeT = null;
   var TC_ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
   function tcGirl() { return { o: pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 3), g: Math.random() < .45 ? 1 : 0, s: Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * TC_HAIR.length), y: Math.floor(Math.random() * 3) }; }
   // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
@@ -4079,8 +4079,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'tcov'; ov.className = 'tcov enter';
       var cams = ''; for (var i = 0; i < 7; i++) cams += '<span class="tccam" style="--i:' + i + '"><i class="tcflash"></i></span>';
-      ov.innerHTML = '<div class="tcwall"><i></i><i></i><i></i><i></i><i></i></div><div class="tcsign">💎 Turquoise Carpet</div><div class="tcsec"></div><div class="tcrope l"></div><div class="tcrope r"></div>' +
-        '<div class="tcrun"></div><div class="tcwalk"></div><div class="tccams">' + cams + '</div><div class="tcq"></div><div class="tcboard"></div>';
+      var wins = ''; for (var w = 0; w < 18; w++) wins += '<i style="--d:' + ((w * 7) % 5) + '"></i>';
+      var posts = ''; for (var q = 0; q < 9; q++) posts += '<span style="left:' + (q * 12.5) + '%"></span>';
+      ov.innerHTML = '<div class="tcsky"><i class="tcmoon"></i><i class="tcbeam a"></i><i class="tcbeam b"></i></div><div class="tchall"><div class="tcwins">' + wins + '</div><div class="tcdoor"></div></div><div class="tctrees"><i></i><i></i><i></i><i></i></div>' +
+        '<div class="tcsign">💎 Turquoise Carpet</div><div class="tcsec"></div>' +
+        '<div class="tcrun"><div class="tctopf"></div><div class="tcedge"></div></div><div class="tcwalk"></div><div class="tcropes">' + posts + '</div><div class="tccams">' + cams + '</div><div class="tcq"></div><div class="tcboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
@@ -4092,9 +4095,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       wk.setAttribute('data-k', key);
       wk.innerHTML = '<div class="tcg walking">' + tcSvg(g.girls[g.cur]) + '</div>';
       var el = wk.firstChild, at = function (ms, f) { setTimeout(function () { if (el.isConnected) f(); }, ms); };
-      at(1150, function () { el.classList.remove('walking'); el.classList.add('posing'); });
-      [1250, 1500, 1700, 1950].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
-      at(2250, function () { el.classList.remove('posing'); el.classList.add('walking'); });
+      at(1400, function () { el.classList.remove('walking'); el.classList.add('posing'); });   // she stops, turns to the cameras and poses…
+      [1650, 1900, 2250, 2600, 2800, 3200, 3550, 3800].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
+      at(4150, function () { el.classList.remove('posing'); el.classList.add('walking'); });   // …and walks on
     }
     if (g.st !== 'walk') { wk.innerHTML = ''; wk.removeAttribute('data-k'); }
     // the question card

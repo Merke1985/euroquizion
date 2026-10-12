@@ -3147,20 +3147,39 @@ body.hasdock main{padding-bottom:84px}
 .noteov.ctlopen .ntmsg{bottom:17vh}
 
 /* ---------- Turquoise Carpet ---------- */
-.tcov{position:fixed;inset:0;z-index:55;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#24305e 0%,#121735 50%,#070914 100%);font-family:inherit}
+.tcov{position:fixed;inset:0;z-index:55;overflow:hidden;background:#0b1030;font-family:inherit}
 .tcov.flashed::after{content:'';position:absolute;inset:0;background:#fff;pointer-events:none;animation:tcwhite .35s ease-out forwards;z-index:9}
 @keyframes tcwhite{0%{opacity:.28}100%{opacity:0}}
-.tcwall{position:absolute;inset:0 0 40vh 0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 9vw),linear-gradient(#1b2350,#0e1330)}
-.tcwall i{position:absolute;top:-6vh;width:18vw;height:80vh;background:linear-gradient(rgba(120,255,240,.16),transparent 75%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);transform-origin:50% 0;animation:chbeam 6s ease-in-out infinite alternate}
-.tcwall i:nth-child(1){left:-2vw;animation-delay:-1s}.tcwall i:nth-child(2){left:20vw;animation-delay:-3s}.tcwall i:nth-child(3){left:41vw;animation-delay:-2s}.tcwall i:nth-child(4){left:62vw;animation-delay:-4s}.tcwall i:nth-child(5){left:84vw;animation-delay:-5s}
+.tcsky{position:absolute;inset:0;background:linear-gradient(#0b1440 0%,#2a2a78 38%,#b04d8f 62%,#ff9a5a 74%,#ffcf7a 80%);overflow:hidden}
+.tcsky::before{content:'';position:absolute;inset:0 0 40% 0;background-image:radial-gradient(1.5px 1.5px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 33% 9%,#fff,transparent),radial-gradient(1.5px 1.5px at 58% 22%,#fff,transparent),radial-gradient(1px 1px at 82% 12%,#fff,transparent),radial-gradient(1px 1px at 92% 30%,#fff,transparent);background-size:420px 260px;opacity:.85}
+.tcmoon{position:absolute;right:12vw;top:8vh;width:9vh;height:9vh;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fffbe8,#f3e3b0 60%,#d9c27a);box-shadow:0 0 50px rgba(255,240,190,.6)}
+.tcbeam{position:absolute;bottom:30vh;width:4vw;height:90vh;background:linear-gradient(rgba(255,255,255,0),rgba(200,255,250,.22));clip-path:polygon(0 0,100% 0,60% 100%,40% 100%);transform-origin:50% 100%}
+.tcbeam.a{left:20vw;animation:tcsweep 7s ease-in-out infinite alternate}.tcbeam.b{left:74vw;animation:tcsweep 8s ease-in-out infinite alternate-reverse}
+@keyframes tcsweep{from{rotate:-28deg}to{rotate:24deg}}
+.tchall{position:absolute;left:8vw;right:8vw;bottom:36vh;height:30vh;border-radius:24px 24px 0 0;background:linear-gradient(#3b3570,#23204a);box-shadow:inset 0 6px 0 rgba(255,255,255,.12),0 0 60px rgba(64,224,208,.25)}
+.tcwins{position:absolute;left:4%;right:4%;top:14%;bottom:30%;display:grid;grid-template-columns:repeat(9,1fr);gap:1.4vh 1.4vw}
+.tcwins i{border-radius:6px 6px 2px 2px;background:linear-gradient(#ffe7a3,#ffb84d);opacity:calc(.55 + var(--d) * .1);box-shadow:0 0 10px rgba(255,200,100,.4)}
+.tcdoor{position:absolute;left:42%;right:42%;bottom:0;height:34%;border-radius:12px 12px 0 0;background:linear-gradient(#40e0d0,#1aa79c);box-shadow:0 0 30px rgba(64,224,208,.6)}
+.tctrees i{position:absolute;bottom:34vh;width:7vw;height:16vh;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 40% 35%,#2f6b4a,#173a2a 70%)}
+.tctrees i::after{content:'';position:absolute;left:46%;bottom:-5vh;width:8%;height:6vh;background:#3a2516}
+.tctrees i:nth-child(1){left:1vw}.tctrees i:nth-child(2){left:10vw;height:12vh}.tctrees i:nth-child(3){right:10vw;height:12vh}.tctrees i:nth-child(4){right:1vw}
+.tcsky,.tchall,.tctrees{pointer-events:none}
 .tcsign{position:absolute;top:2.5vh;left:0;right:0;margin:0 auto;width:fit-content;padding:.5vh 2.2vw;border-radius:14px;border:3px solid #40e0d0;color:#e8fffc;font-weight:900;font-size:clamp(1.5rem,3.2vw,2.8rem);text-shadow:0 0 12px #40e0d0,0 0 26px #1ab3a6;box-shadow:0 0 18px rgba(64,224,208,.55),inset 0 0 18px rgba(64,224,208,.3);background:rgba(4,30,40,.55);white-space:nowrap;z-index:3}
 .tcsec{position:absolute;top:12.5vh;left:0;right:0;text-align:center;font-weight:800;font-size:clamp(.9rem,1.6vw,1.3rem);opacity:.8;z-index:3}
-.tcrun{position:absolute;left:-2vw;right:-2vw;bottom:15vh;height:15vh;background:linear-gradient(#5ff2e2 0%,#30d5c8 30%,#1aa79c 100%);box-shadow:0 -4px 0 rgba(255,255,255,.4),0 10px 40px rgba(64,224,208,.45);transform:perspective(60vh) rotateX(38deg);transform-origin:50% 100%}
-.tcrun::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.08) 0 2px,transparent 2px 6vw)}
-.tcwalk{position:absolute;left:0;right:0;bottom:21vh;height:64vh;z-index:2;pointer-events:none}
-.tcg{position:absolute;left:50%;bottom:0;height:100%;transform:translateX(-50%);animation:tcpass 3.25s linear both}
+.tcrun{position:absolute;left:0;right:0;bottom:0;height:36vh;background:linear-gradient(#5a5470,#3a3550 40%,#1c1a2c);z-index:1}
+.tcrun::before{content:'';position:absolute;left:0;right:0;top:-1px;height:30%;background:linear-gradient(#6b6488,#5a5470)}
+.tctopf{position:absolute;left:-6vw;right:-6vw;top:6vh;height:13vh;background:linear-gradient(#2fbfb2 0%,#40e0d0 45%,#6ff3e6 100%);clip-path:polygon(7% 0,93% 0,100% 100%,0 100%);box-shadow:0 0 40px rgba(64,224,208,.5)}
+.tctopf::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 2px,transparent 2px 5vw),linear-gradient(rgba(0,0,0,.18),transparent 40%)}
+.tcedge{position:absolute;left:-6vw;right:-6vw;top:19vh;height:3vh;background:linear-gradient(#17867c,#0d5a53);box-shadow:0 8px 18px rgba(0,0,0,.45)}
+.tcropes{position:absolute;left:3vw;right:3vw;bottom:9vh;height:9vh;z-index:3;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 0)}
+.tcropes span{position:absolute;bottom:0;width:1.1vh;height:8vh;margin-left:-.55vh;border-radius:99px;background:linear-gradient(90deg,#b8860b,#ffe27a,#b8860b)}
+.tcropes span::before{content:'';position:absolute;left:-.5vh;top:-1.6vh;width:2.1vh;height:2.1vh;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#d9a520)}
+.tcropes span::after{content:'';position:absolute;left:.55vh;top:-.6vh;width:calc(94vw / 8);height:4vh;border:solid #c8102e;border-width:0 0 .9vh 0;border-radius:0 0 50% 50%}
+.tcropes span:last-child::after{display:none}
+.tcwalk{position:absolute;left:0;right:0;bottom:23vh;height:60vh;z-index:2;pointer-events:none}
+.tcg{position:absolute;left:50%;bottom:0;height:100%;transform:translateX(-50%);animation:tcpass 5.6s linear both}
 .tcg .tcgirl{height:100%;width:auto;display:block;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))}
-@keyframes tcpass{0%{translate:-78vw 0;animation-timing-function:cubic-bezier(.2,.6,.4,1)}34%{translate:0 0}68%{translate:0 0;animation-timing-function:cubic-bezier(.6,0,.8,.5)}100%{translate:80vw 0}}
+@keyframes tcpass{0%{translate:-78vw 0;animation-timing-function:cubic-bezier(.2,.6,.4,1)}25%{translate:0 0}74%{translate:0 0;animation-timing-function:cubic-bezier(.6,0,.8,.5)}100%{translate:80vw 0}}
 .tcgirl .tcleg,.tcgirl .tcarm{transform-box:view-box}
 .tcgirl .tcleg{transform-origin:108px 256px}
 .tcgirl .tcarm{transform-origin:109px 150px}
@@ -3169,10 +3188,10 @@ body.hasdock main{padding-bottom:84px}
 @keyframes tcswing{from{rotate:-17deg}to{rotate:17deg}}
 .tcg.walking .tcgirl{animation:tcbob .36s ease-in-out infinite alternate}
 @keyframes tcbob{from{translate:0 0}to{translate:0 -1.2%}}
-.tcg.posing .tcgirl{animation:tcpose 1s ease-in-out both}
-.tcg.posing .tcarm.f{rotate:-28deg;transition:rotate .25s}
+.tcg.posing .tcgirl{animation:tcpose 2.7s ease-in-out both}
+.tcg.posing .tcarm.f{rotate:-38deg;transition:rotate .35s}.tcg.posing .tcarm.b{rotate:150deg;transition:rotate .45s .3s}
 .tcg.posing .tcleg.f{rotate:10deg;transition:rotate .25s}.tcg.posing .tcleg.b{rotate:-8deg;transition:rotate .25s}
-@keyframes tcpose{0%{rotate:0deg}40%{rotate:-2deg;scale:1.03}100%{rotate:0deg;scale:1.02}}
+@keyframes tcpose{0%{rotate:0deg;scale:1}15%{rotate:-3deg;scale:1.05;translate:0 2%}35%{rotate:2deg;scale:1.06;translate:0 2%}55%{rotate:-2deg;scale:1.06;translate:0 2%}80%{rotate:1deg;scale:1.05;translate:0 2%}100%{rotate:0deg;scale:1;translate:0 0}}
 .tccams{position:absolute;left:0;right:0;bottom:-2vh;height:19vh;display:flex;justify-content:space-around;z-index:4;pointer-events:none}
 .tccam{position:relative;width:11vw;height:100%;background:radial-gradient(circle at 50% 30%,#05060c 0 28%,transparent 29%),radial-gradient(ellipse at 50% 100%,#05060c 0 58%,transparent 59%)}
 .tccam::before{content:'';position:absolute;left:58%;top:12%;width:4vw;height:3vw;border-radius:6px;background:#1c1f2c;box-shadow:inset 0 0 0 2px #333a52}
@@ -3180,7 +3199,7 @@ body.hasdock main{padding-bottom:84px}
 .tcflash{position:absolute;left:68%;top:8%;width:2vw;height:2vw;border-radius:50%;background:#fff;opacity:0}
 .tcflash.pop{animation:tcpop .45s ease-out}
 @keyframes tcpop{0%{opacity:1;box-shadow:0 0 0 0 #fff,0 0 60px 30px rgba(255,255,255,.9)}100%{opacity:0;box-shadow:0 0 0 40px rgba(255,255,255,0),0 0 80px 40px rgba(255,255,255,0)}}
-.tcq{position:absolute;left:6vw;right:33vw;top:18vh;z-index:6}
+.tcq{position:absolute;left:4vw;right:31vw;top:17vh;z-index:6;padding:2vh 2vw;border-radius:22px;background:rgba(8,12,40,.82);box-shadow:0 0 0 2px rgba(64,224,208,.5),0 20px 50px rgba(0,0,0,.5)}
 .tcq:empty{display:none}
 .tcqt{font-weight:900;font-size:clamp(1.4rem,3vw,2.6rem);text-align:center;text-shadow:0 3px 14px rgba(0,0,0,.7);margin-bottom:2.4vh;animation:benvin .5s cubic-bezier(.3,1.4,.5,1) both}
 .tcopts{display:grid;grid-template-columns:1fr 1fr;gap:1.6vh 1.4vw}
@@ -3199,7 +3218,7 @@ body.hasdock main{padding-bottom:84px}
 .tcp .char{width:26px;height:26px}.tcp i{font-style:normal}
 .tcp.in{opacity:1}.tcp.ok{opacity:1;box-shadow:0 0 0 2px #2fd27a}.tcp.no{opacity:.45}
 .tcov[data-st="ask"] .tcwalk,.tcov[data-st="reveal"] .tcwalk{opacity:0}
-.tcboard{position:absolute;right:2vw;top:18vh;width:28vw;max-height:62vh;overflow:hidden;z-index:6;display:flex;flex-direction:column;gap:.6vh}
+.tcboard{position:absolute;right:2vw;top:17vh;width:27vw;max-height:66vh;overflow:hidden;z-index:6;display:flex;flex-direction:column;gap:.6vh;padding:1.4vh 1vw;border-radius:18px;background:rgba(8,12,40,.82)}
 .tcboard:empty{display:none}
 .tcbt{font-weight:900;font-size:clamp(.9rem,1.5vw,1.3rem);color:#40e0d0;margin-bottom:.4vh}
 .tcrow{display:flex;align-items:center;gap:.6vw;padding:.4vh .8vw;border-radius:12px;background:rgba(0,0,0,.45);font-weight:800;font-size:clamp(.7rem,1.15vw,1rem)}
