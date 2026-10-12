@@ -3745,3 +3745,15 @@ body.hasdock main{padding-bottom:84px}
 .edsk{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;border-radius:8px;padding:8px 10px;background:#16181e;cursor:pointer}
 .edsk svg{width:40px;height:40px}
 .edsk i{width:26px;height:26px;border-radius:50%;background:#0c0c10;box-shadow:0 0 0 3px #555}
+/* the party game vote: a screenshot of every game on its card (big screen) and button (phone) */
+#qopts.gamecards .opt{flex-wrap:wrap}
+#qopts.gamecards .opt .gshot{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;display:block;margin-bottom:8px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#opts.shotgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#opts.shotgrid .opt{flex-wrap:wrap;align-items:flex-start;padding:8px}
+#opts.shotgrid .opt .gshot{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;display:block;margin-bottom:6px}
+#qopts.gamecards{grid-template-columns:repeat(4,1fr);gap:10px}
+#qopts.gamecards .opt{min-height:0;padding:8px 10px 10px;font-size:1rem;border-radius:14px}
+#qopts.gamecards .opt .gshot{margin-bottom:6px;border-radius:9px}
+#qopts.gamecards .opt>b{display:none}
+#qopts.gamecards .gsub{font-size:.72rem;line-height:1.25}
+#opts.shotgrid .opt>b{display:none}

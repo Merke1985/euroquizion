@@ -273,7 +273,7 @@
     if (G.phase === 'reveal' && lastSong()) s.last = true;
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'qall' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
-    if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, noclip: !!G.q.noclip, peel: !!G.q.peel, smoke: G.phase === 'guess' && G.smoke && G.smoke.length ? G.smoke : null, fan: G.phase === 'guess' && G.fanQ && G.fanQ.key === qKeyNow() ? G.fanQ.map : null };
+    if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, shots: G.q.shots || null, noclip: !!G.q.noclip, peel: !!G.q.peel, smoke: G.phase === 'guess' && G.smoke && G.smoke.length ? G.smoke : null, fan: G.phase === 'guess' && G.fanQ && G.fanQ.key === qKeyNow() ? G.fanQ.map : null };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
     if (G.phase === 'pspin' && G.slot) s.fun = { icon: '🎰', title: 'Pick a game!', sub: 'Watch the big screen…' };
     if (G.phase === 'pspin' && G.pspin) s.fun = { icon: '🎉', title: 'Party round!', sub: G.pspin.done ? 'It is ' + G.pspin.games[G.pspin.roll].title : 'Spinning…' };
@@ -698,7 +698,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('qopts').innerHTML = on && q.options ? (rev && q.reveal ? q.reveal : q.options).map(function (o, i) {
       var who = shown.map(function (pid) { return players[pid]; }).filter(function (p) { return p && p.pick === i && !(G.draw && p.pid === G.draw.pid); });
       if (rev) who.sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
-      return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '"><b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + (G.best && G.best.four && G.best.subs ? '<small class="gsub">' + esc(G.best.subs[i] || '') + '</small>' : '') + '</span>' + (rev && i === q.correct && !G.best ? ccBadge() : '') + '</div><div class="voters">' +
+      return '<div class="optcol"><div class="opt' + (rev ? ((G.best && G.best.wins ? G.best.wins.indexOf(i) >= 0 : i === q.correct) ? ' right' : ' dim') : '') + '">' + (G.best && G.best.four && q.shots && q.shots[i] ? '<img class="gshot" src="' + q.shots[i] + '" alt="">' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[i] + '</b><span class="otx">' + esc(o) + (G.best && G.best.four && G.best.subs ? '<small class="gsub">' + esc(G.best.subs[i] || '') + '</small>' : '') + '</span>' + (rev && i === q.correct && !G.best ? ccBadge() : '') + '</div><div class="voters">' +
         who.map(function (p) {
           var cq = rev && G.clue && G.clue.st === 'ask' && i === q.correct, fast = cq && G.clue.fast === p.pid;   // Edgar: no points, clues; the fastest gets an extra one
           return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + (fast ? ' fastest' : '') + '">' + charSvg(p.char) + esc(p.name) + (cq ? (fast ? ' <b>🔍 +extra clue</b>' : '') : rev && p.got && i === q.correct && !G.best ? ' <b>+' + p.pts + '</b>' + (p.ccb ? ' <img class="ccbmini" src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="" title="Flag bonus: double points">' : '') : '') + '</span>';
@@ -1555,7 +1555,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (four.length < 2) { partyGo(four[0] || games[0]); return; }
     stopTimers(); G.draw = null; G.song = null; G.clip = null;
     G.best = { pick: true, four: true, kinds: four, subs: four.map(function (k) { return FUN[k].sub; }), pids: four.map(function () { return null; }), only: null, id: 'pick' + G.round, tally: null, wins: null };
-    G.q = { subject: 'pick', type: 'mc', text: 'Which game shall we play? Vote on your phone!', hint: '', options: four.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), correct: -1, answer: '', noclip: true };
+    G.q = { subject: 'pick', type: 'mc', text: 'Which game shall we play? Vote on your phone!', hint: '', options: four.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), shots: four.map(function (k) { return 'images/games/' + k + '.jpg'; }), correct: -1, answer: '', noclip: true };
     if (!REMOTE) { cover(true, '🗳️', 'Which game shall we play?', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); }
     G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push();
     endTimer = setTimeout(reveal, PICK_MS);

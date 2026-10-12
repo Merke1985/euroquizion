@@ -345,9 +345,9 @@
           var order = mc ? q.options.map(function (o, i) { return i; }) : []; if (flagged) for (var j = order.length - 1; j > 0; j--) { var r2 = Math.floor(Math.random() * (j + 1)), tmp = order[j]; order[j] = order[r2]; order[r2] = tmp; }
           $('opts').innerHTML = mc ? order.map(function (i, pos) { var o = q.options[i];
             var own = !!s.best && s.best.pids[i] === pid;   // your own drawing or answer cannot be picked
-            return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[flagged ? pos : i] + '</b><span class="otx">' + esc(o) + (own ? ' (yours)' : '') + '</span></button>';
+            return '<button type="button" class="opt' + (bq ? ' bestopt' : '') + '" data-i="' + i + '"' + (own ? ' disabled' : '') + '>' + (q.shots && q.shots[i] ? '<img class="gshot" src="' + q.shots[i] + '" alt="">' : '') + (bq ? '<canvas data-g="' + i + '" width="' + DRAW_W + '" height="' + DRAW_H + '"></canvas>' : '') + '<b>' + 'ABCDEFGHIJKLMNOP'[flagged ? pos : i] + '</b><span class="otx">' + esc(o) + (own ? ' (yours)' : '') + '</span></button>';
           }).join('') : '';
-          $('opts').classList.toggle('bestgrid', !!bq);
+          $('opts').classList.toggle('bestgrid', !!bq); $('opts').classList.toggle('shotgrid', !!q.shots);
           $('opts').classList.toggle('smoked', !!(q.smoke && q.smoke.indexOf(pid) < 0));   // someone else's Smoke Machine: guess blind
           if (bq) bestPaint();
           if (q.peel) setTimeout(peelPaint, 0);
