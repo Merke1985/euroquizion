@@ -256,6 +256,7 @@
     if (G.clue) s.clue = clueSnap();
     if (G.note && G.phase === 'note') s.note = noteSnap();
     if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
+    if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.qj && G.phase === 'qj') s.qj = qjSnap();
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
@@ -490,6 +491,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
+    if (G.phase !== 'zg' && $('zgov')) { $('zgov').remove(); clearInterval(zgLoop); if (zgSongT) zgSong(false); }
     if (G.phase !== 'carpet' && $('tcov')) { $('tcov').remove(); clearInterval(tcFadeT); if (tcSongT) tcSong(false); }
     if (G.phase !== 'qj' && $('qjov')) { $('qjov').remove(); if (!REMOTE) try { yt.pauseVideo(); } catch (e) {} }   // (the game is over, or was ended)
     // A player who has just joined pops in with a chime, so nobody misses it.
@@ -578,6 +580,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); noteShow();
     } else if (G.phase === 'carpet') {
       show('v-game'); carpetShow();
+    } else if (G.phase === 'zg') {
+      show('v-game'); zgShow();
     } else if (G.phase === 'qj') {
       show('v-game'); qjShow();
     } else {
@@ -1431,7 +1435,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet', 'zg'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
@@ -1442,6 +1446,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five mini-parades on the turquoise carpet! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
+    zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Keep your balance with LEFT and RIGHT on your phone. Lean further for more points, but lean too far and you fall. The highest score still standing wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -1454,7 +1459,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
@@ -2174,7 +2179,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -3795,6 +3800,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'Then all the translations appear, with the real one hidden among them.'],
         ['her', 'Find the real one for 12 points…'],
         ['him', '…and get 2 points for every player who falls for your fake! Three rounds, most points wins. Good luck, liars! 🤥']] },
+    zg: { sign: '🌌 Zero Gravity', theme: 'zg',
+      get art() { return '<div class="hszg">' + ZG_SINGER + '<span class="hspole"></span></div>'; },
+      lines: [['him', 'Welcome to space! 🌌 Tonight our singer performs on top of a very tall pole…'],
+        ['her', '…and you are on poles too! They sway, and they sway harder and harder.'],
+        ['him', 'Keep your balance with the LEFT and RIGHT buttons on your phone.'],
+        ['her', 'The further you lean, the more points you score! But lean too far and you fall off, into space. 🚀'],
+        ['him', 'After one minute, the highest score of the players still standing wins!']] },
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
       lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
@@ -4100,6 +4112,136 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!REMOTE) Music.snap();
   }
   net.on('carpet', tcMsg);
+  // ---------- Zero Gravity ----------
+  // A cosmic stage: the singer on a high central pole, the players on swaying poles around her. Everyone keeps their
+  // balance with LEFT and RIGHT on the phone; the poles sway harder and harder. Leaning further scores more, but lean
+  // too far and you fall (and float off into space). After a minute, the highest score among those still standing wins
+  // (if everyone fell: the highest score overall). The host runs the physics; the phones get a small update 4× a second.
+  var ZG_MS = 60000, ZG_DT = 0.05, ZG_G = 0.6, ZG_P = 1.6, ZG_DAMP = 0.94, ZG_VMAX = 0.8, ZG_DIST = 0.6, zgLoop = null, zgTimer = null, zgSent = 0, zgSongT = null;
+  var ZG_SINGER = '<svg class="zgsing" viewBox="0 0 200 380" aria-hidden="true"><defs><linearGradient id="zggown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2a8f"/><stop offset=".5" stop-color="#1d1660"/><stop offset="1" stop-color="#0b0a2e" stop-opacity=".2"/></linearGradient><radialGradient id="zgskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f6d6c0"/><stop offset="1" stop-color="#dba98a"/></radialGradient></defs>' +
+    '<path class="zgtrain" d="M78 130 Q100 120 122 130 Q150 230 196 380 L4 380 Q50 230 78 130 Z" fill="url(#zggown)"/>' +
+    '<g fill="#fff"><circle cx="70" cy="250" r="2"/><circle cx="120" cy="210" r="1.6"/><circle cx="140" cy="300" r="2.2"/><circle cx="90" cy="330" r="1.8"/><circle cx="56" cy="320" r="1.5"/><circle cx="104" cy="270" r="1.4"/><circle cx="160" cy="350" r="2"/><circle cx="36" cy="360" r="1.6"/></g>' +
+    '<path d="M80 128 Q100 116 120 128 L118 168 Q100 176 82 168 Z" fill="#4a36b0"/>' +
+    '<path d="M82 132 Q56 108 38 66" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M118 132 Q146 116 164 84" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/>' +
+    '<path class="zgsleeve" d="M82 132 Q50 120 26 150 Q50 150 70 160 Z M118 132 Q150 126 178 156 Q152 156 130 162 Z" fill="#6b58e0" opacity=".55"/>' +
+    '<rect x="93" y="94" width="14" height="22" rx="6" fill="url(#zgskin)"/><ellipse cx="100" cy="74" rx="22" ry="26" fill="url(#zgskin)"/>' +
+    '<path d="M76 74 Q72 40 100 40 Q130 40 126 76 Q132 120 118 140 Q122 100 114 84 Q100 64 86 84 Q78 100 82 140 Q68 120 76 74 Z" fill="#e8ecf6"/>' +
+    '<circle cx="92" cy="76" r="2.6" fill="#2a1a40"/><circle cx="108" cy="76" r="2.6" fill="#2a1a40"/><ellipse class="zgmouth" cx="100" cy="88" rx="4.5" ry="5.5" fill="#8a1a40"/>' +
+    '<g fill="#ffd23f"><path d="M88 38 l3 6 l6 1 l-5 4 l1 6 l-5 -3 l-5 3 l1 -6 l-5 -4 l6 -1 z"/><path d="M112 34 l2.4 5 l5 .8 l-4 3.4 l1 5 l-4.4 -2.6 l-4.4 2.6 l1 -5 l-4 -3.4 l5 -.8 z"/></g></svg>';   // (an original character: a singer in a starry gown that flows down her pole)
+  function zgAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (!act.length) { quipAll(); return; }
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    var order = shuffle(act.map(function (p) { return p.pid; })), ph = {};
+    G.zg = { id: 'zg' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'ready', order: order, x: {}, v: {}, u: {}, sc: {}, out: {}, ph: {}, t: 0, ends: 0, win: [], bot: {} };
+    order.forEach(function (k) { var g = G.zg; g.x[k] = (Math.random() - .5) * 0.04; g.v[k] = 0; g.u[k] = 0; g.sc[k] = 0; g.ph[k] = Math.random() * 6; g.bot[k] = { tgt: 0.2 + Math.random() * 0.45, hist: [], delay: 4 + Math.floor(Math.random() * 4) }; });
+    G.phase = 'zg'; G.barMs = 0; push();
+    G.zg.goAt = Date.now() + 3600; [1000, 2000, 3000].forEach(function (t) { setTimeout(function () { if (G.zg && G.zg.st === 'ready') zgShow(); }, t); });
+    clearTimeout(zgTimer); zgTimer = setTimeout(zgGo, 3600);   // 3, 2, 1…
+  }
+  function zgGo() {
+    var g = G.zg; if (!g || G.phase !== 'zg') return;
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.t0 + ZG_MS; push(); Music.ding(); zgSong(true);
+    clearInterval(zgLoop); zgLoop = setInterval(zgStep, ZG_DT * 1000);
+  }
+  function zgStep() {
+    var g = G.zg; if (!g || G.phase !== 'zg' || g.st !== 'play') { clearInterval(zgLoop); return; }
+    var t = (Date.now() - g.t0) / 1000, I = (0.35 + 1.1 * Math.min(1, t / 60)) * ZG_DIST, fell = false;
+    g.t = t;
+    g.order.forEach(function (k) {
+      if (g.out[k]) return;
+      var p = players[k];
+      if (p && p.bot) {   // a bot: reacts a little late, and aims for its own lean (some are braver than others)
+        var b = g.bot[k]; b.hist.push([g.x[k], g.v[k]]); if (b.hist.length > 12) b.hist.shift();
+        var seen = b.hist[Math.max(0, b.hist.length - 1 - b.delay)], side = seen[0] >= 0 ? 1 : -1, err = seen[0] + 0.5 * seen[1] - side * b.tgt;
+        g.u[k] = err > 0.05 ? -1 : err < -0.05 ? 1 : 0;
+      }
+      var D = I * (0.9 * Math.sin(1.1 * t) + 0.5 * Math.sin(2.5 * t + g.ph[k]));
+      var v = (g.v[k] + (ZG_G * g.x[k] + D + ZG_P * (g.u[k] || 0)) * ZG_DT) * ZG_DAMP;
+      v = Math.max(-ZG_VMAX, Math.min(ZG_VMAX, v)); g.v[k] = v; g.x[k] += v * ZG_DT;
+      if (Math.abs(g.x[k]) >= 1) { g.x[k] = g.x[k] > 0 ? 1 : -1; g.out[k] = Math.round(t * 10) / 10; fell = true; return; }
+      g.sc[k] += 20 * g.x[k] * g.x[k] * ZG_DT;   // leaning further scores more
+    });
+    if (fell) { Music.scream(); push(); }
+    zgShow();
+    var left = g.order.filter(function (k) { return !g.out[k]; }).length;
+    if (Date.now() >= g.ends || !left) { zgEnd(); return; }
+    if (Date.now() - zgSent >= 250) zgBeat();
+  }
+  function zgBeat() {   // the small update for the phones: everyone's lean and score
+    var g = G.zg; if (!g || !net) return; zgSent = Date.now();
+    var x = {}, sc = {}; g.order.forEach(function (k) { x[k] = Math.round(g.x[k] * 100); sc[k] = Math.floor(g.sc[k]); });
+    net.send('zg', { id: g.id, x: x, sc: sc, out: g.out, left: Math.max(0, g.ends - Date.now()) });
+  }
+  function zgMsg(m) {
+    var g = G.zg; if (!g || G.phase !== 'zg' || !m || m.id !== g.id || !m.pid || g.x[m.pid] == null || g.out[m.pid]) return;
+    g.u[m.pid] = m.u === 1 ? 1 : m.u === -1 ? -1 : 0;
+  }
+  function zgRank(g) {   // the ones still standing first, then by score
+    return g.order.map(function (k) { return { pid: k, sc: Math.floor(g.sc[k]), up: !g.out[k] }; }).sort(function (a, b) { return (b.up - a.up) || b.sc - a.sc; });
+  }
+  function zgEnd() {
+    var g = G.zg; if (!g || g.st !== 'play') return;
+    clearInterval(zgLoop); g.st = 'end'; zgBeat();
+    var r = zgRank(g), top = r[0];
+    g.win = top && (top.up || top.sc > 0) ? r.filter(function (x) { return x.up === top.up && x.sc === top.sc; }).map(function (x) { return x.pid; }) : [];
+    var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
+    g.prize = big; push(); Music.douze(); zgSong(false, true);
+    clearTimeout(zgTimer); zgTimer = setTimeout(function () { if (G.phase === 'zg') { G.zg = null; startRound(); } }, 8500);
+  }
+  // "Zero Gravity" (Australia 2019) plays during the game, and fades out at the end
+  function zgSong(on, fade) {
+    clearInterval(zgSongT); zgSongT = null;
+    if (REMOTE) return;
+    try {
+      if (!on && fade) { var v = 55; zgSongT = setInterval(function () { v -= 3; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(zgSongT); zgSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
+      if (!on) { yt.pauseVideo(); return; }
+      Music.want(false); stage = 'zg'; yt.loadVideoById({ videoId: 'Eo5H62mCIsg', startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
+    } catch (e) {}
+  }
+  function zgSnap() {
+    var g = G.zg, x = {}, sc = {};
+    g.order.forEach(function (k) { x[k] = Math.round(g.x[k] * 100); sc[k] = Math.floor(g.sc[k]); });
+    return { id: g.id, st: g.st, order: g.order, x: x, sc: sc, out: g.out, left: g.st === 'play' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
+  }
+  // The big screen: space, the singer's pole in the middle, the players' poles around it, swaying together.
+  function zgShow() {
+    var g = G.zg; if (!g) return;
+    var ov = $('zgov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'zgov'; ov.className = 'zgov enter';
+      var n = g.order.length, half = Math.ceil(n / 2), cols = '';
+      g.order.forEach(function (k, i) {
+        var p = players[k]; if (!p) return;
+        var left = i < half ? 4 + (i + 0.5) * (36 / half) : 60 + (i - half + 0.5) * (36 / (n - half)), h = 40 + ((i * 37) % 5) * 2.4;
+        cols += '<div class="zgp" data-p="' + esc(k) + '" style="left:' + left.toFixed(1) + '%;--h:' + h.toFixed(1) + 'vh"><div class="zgrod"><div class="zgtop"><div class="zgfig"><span class="lbod zgbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '</div><div class="zglab"><b>' + esc(p.name) + '</b><i>0</i></div></div></div></div>';
+      });
+      ov.innerHTML = '<div class="zgstars"></div><div class="zgstars two"></div><div class="zgplanet"></div><div class="zgsign">🌌 Zero Gravity</div><div class="zgclock"></div>' +
+        '<div class="zgmid"><div class="zgrod"><div class="zgtop">' + ZG_SINGER + '</div></div></div>' + cols + '<div class="zgmsg"></div><div class="zgboard"></div>';
+      document.body.appendChild(ov); whooshes([0, 350, 700]);
+      setTimeout(function () { ov.classList.remove('enter'); }, 2600);
+    }
+    ov.setAttribute('data-st', g.st);
+    var t = g.st === 'play' ? (Date.now() - g.t0) / 1000 : 0, I = 0.35 + 1.1 * Math.min(1, t / 60), sway = g.st === 'play' ? 5 * I * Math.sin(1.1 * t) : 0;
+    ov.style.setProperty('--sw', sway.toFixed(2) + 'deg');
+    [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
+      var k = el.getAttribute('data-p'), x = g.x[k] || 0, o = !!g.out[k];
+      if (!o) el.querySelector('.zgfig').style.rotate = (x * 55).toFixed(1) + 'deg';
+      if (o && !el.classList.contains('out')) { el.classList.add('out'); el.style.setProperty('--dir', x > 0 ? 1 : -1); }
+      el.classList.toggle('risky', !o && Math.abs(x) > 0.6);
+      var lb = el.querySelector('.zglab i'), sc = String(Math.floor(g.sc[k] || 0)); if (lb.textContent !== sc) lb.textContent = sc;
+      el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+    });
+    var ck = ov.querySelector('.zgclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - Date.now()) / 1000)) : 0;
+    if (ck.textContent !== String(sec)) ck.textContent = sec;
+    var up = g.order.filter(function (k) { return !g.out[k]; }).length;
+    var msg = g.st === 'ready' ? 'Hold on tight… use LEFT and RIGHT on your phone to keep your balance! 🌌' : g.st === 'play' ? (up + ' of ' + g.order.length + ' still standing · lean further for more points!') : g.win.length ? '🏆 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' win!' : ' wins!') + (shopOn() ? '' : ' +' + g.prize) : 'Everyone fell into space… 🌌';
+    var me = ov.querySelector('.zgmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
+    var bd = ov.querySelector('.zgboard'), bh = g.st === 'end' ? zgRank(g).map(function (x, i) { var p = players[x.pid]; if (!p) return ''; return '<div class="tcrow' + (g.win.indexOf(x.pid) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (x.up ? '🧍 standing' : '🌌 fell') + '</em><i>' + x.sc + '</i></div>'; }).join('') : '';
+    if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
+  }
+  net.on('zg', zgMsg);
   // ---------- Hold That Note ----------
   // Technical problems: the sound system breaks down in the middle of every high note. A diva rises on stage in an
   // enormous gown; everyone predicts on their phone how long the note will last (10 to 60 seconds) and, once locked in,
@@ -5946,7 +6088,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
@@ -6168,7 +6310,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];

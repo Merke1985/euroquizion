@@ -3230,3 +3230,56 @@ body.hasdock main{padding-bottom:84px}
 .tcbtn.mine{opacity:1;box-shadow:0 0 0 3px #fff,0 4px 14px rgba(0,0,0,.35)}
 .tcbtn.right{opacity:1;background:linear-gradient(135deg,#2fd27a,#139a50)}
 .tcbtn.wrong.mine{background:linear-gradient(135deg,#e0402a,#a01a1a)}
+
+/* ---------- Zero Gravity ---------- */
+.zgov{position:fixed;inset:0;z-index:55;overflow:hidden;background:radial-gradient(ellipse at 30% 20%,#3a1d6e 0%,#170b35 40%,#05030f 100%);font-family:inherit}
+.zgstars{position:absolute;inset:0;background-image:radial-gradient(1.5px 1.5px at 10% 20%,#fff,transparent),radial-gradient(1px 1px at 30% 70%,#fff,transparent),radial-gradient(2px 2px at 55% 15%,#cfe3ff,transparent),radial-gradient(1px 1px at 75% 45%,#fff,transparent),radial-gradient(1.5px 1.5px at 90% 80%,#ffe9c9,transparent),radial-gradient(1px 1px at 45% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 20% 90%,#fff,transparent),radial-gradient(1px 1px at 65% 85%,#fff,transparent);background-size:340px 300px;animation:zgtw 6s ease-in-out infinite alternate;opacity:.9}
+.zgstars.two{background-size:520px 460px;background-position:120px 60px;animation-delay:-3s;opacity:.6}
+@keyframes zgtw{from{opacity:.4}to{opacity:1}}
+.zgplanet{position:absolute;right:8vw;top:14vh;width:16vh;height:16vh;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffb3e6,#b04dff 50%,#3a1070 80%);box-shadow:0 0 60px rgba(176,77,255,.5)}
+.zgplanet::after{content:'';position:absolute;left:-30%;right:-30%;top:44%;height:14%;border-radius:50%;border:3px solid rgba(255,220,255,.55);transform:rotate(-14deg)}
+.zgsign{position:absolute;top:2.5vh;left:0;right:0;margin:0 auto;width:fit-content;padding:.5vh 2.2vw;border-radius:14px;border:3px solid #9a7bff;color:#f1ecff;font-weight:900;font-size:clamp(1.5rem,3.2vw,2.8rem);text-shadow:0 0 12px #9a7bff,0 0 26px #6a3dff;box-shadow:0 0 18px rgba(154,123,255,.55);background:rgba(20,10,50,.55);white-space:nowrap;z-index:3}
+.zgclock{position:absolute;top:3vh;right:4vw;font-weight:900;font-size:clamp(2rem,5vw,4.4rem);font-variant-numeric:tabular-nums;text-shadow:0 0 20px #9a7bff;z-index:3}
+.zgov[data-st="ready"] .zgclock{font-size:clamp(4rem,12vw,10rem);right:0;left:0;text-align:center;top:30vh;animation:uthot .5s ease-in-out infinite alternate}
+.zgrod{position:absolute;left:50%;bottom:0;width:.7vw;min-width:5px;margin-left:-.35vw;height:var(--h,44vh);border-radius:99px;background:linear-gradient(90deg,#8b90b0,#f2f4ff 45%,#8b90b0);box-shadow:0 0 14px rgba(200,210,255,.35);transform-origin:50% 100%;rotate:var(--sw,0deg)}
+.zgmid{position:absolute;left:50%;bottom:0;width:0;height:0;z-index:2}
+.zgmid .zgrod{--h:58vh;width:1vw;margin-left:-.5vw;rotate:calc(var(--sw,0deg) * .6)}
+.zgmid .zgtop{position:absolute;left:50%;bottom:calc(100% - 20vh);transform:translateX(-50%)}
+.zgsing{height:36vh;width:auto;display:block;filter:drop-shadow(0 0 24px rgba(140,120,255,.6))}
+.zgov[data-st="play"] .zgsing .zgsleeve{animation:zgsl 2.4s ease-in-out infinite alternate}
+@keyframes zgsl{to{opacity:.9}}
+.zgov[data-st="play"] .zgmouth{animation:nthold .5s ease-in-out infinite alternate;transform-origin:100px 88px}
+.zgp{position:absolute;bottom:0;width:0;height:0;z-index:3}
+.zgp .zgtop{position:absolute;left:50%;bottom:100%;width:0;height:0}
+.zgfig{position:absolute;left:-3.6vh;bottom:0;width:7.2vh;height:11vh;transform-origin:50% 100%;transition:rotate .08s linear}
+.zgfig .char{position:absolute;left:50%;top:0;width:6vh;height:6vh;margin-left:-3vh;z-index:2;box-shadow:0 0 0 2px #fff}
+.zgfig .zgbod{position:absolute;left:50%;top:5.2vh;width:3.8vh;height:5.8vh;margin-left:-1.9vh;z-index:1}
+.zglab{position:absolute;left:0;top:-15vh;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;white-space:nowrap;font-weight:900;text-shadow:0 2px 8px #000;pointer-events:none}
+.zglab b{font-size:clamp(.65rem,1.1vw,1rem)}.zglab i{font-style:normal;color:#ffd23f;font-size:clamp(.8rem,1.4vw,1.2rem)}
+.zgp.risky .zgfig .char{box-shadow:0 0 0 3px #ff4d4d,0 0 20px #ff4d4d}
+.zgp.out .zgfig{animation:zgfloat 5s cubic-bezier(.3,.1,.5,1) forwards}
+.zgp.out .zglab{opacity:.45}
+.zgp.out .zglab b::after{content:' 🚀'}
+@keyframes zgfloat{0%{translate:0 0;rotate:calc(var(--dir,1) * 60deg);opacity:1}100%{translate:calc(var(--dir,1) * 22vw) -75vh;rotate:calc(var(--dir,1) * 1080deg);opacity:0}}
+.zgp.win .zgfig .char{box-shadow:0 0 0 4px #ffd23f,0 0 30px #ffd23f}
+.zgmsg{position:absolute;left:0;right:0;bottom:2.5vh;text-align:center;font-weight:900;font-size:clamp(1rem,2.2vw,1.9rem);text-shadow:0 3px 12px #000;z-index:5;padding:0 10vw}
+.zgboard{position:absolute;left:50%;top:15vh;width:min(560px,60vw);transform:translateX(-50%);display:flex;flex-direction:column;gap:.6vh;z-index:6}
+.zgboard:empty{display:none}
+.zgboard .tcrow{font-size:clamp(.9rem,1.5vw,1.3rem);animation:benvin .5s cubic-bezier(.3,1.4,.5,1) both;background:rgba(10,5,30,.8)}
+.zgov.enter .zgsign{animation:inTop .8s cubic-bezier(.2,.9,.3,1.08) both}
+.hs-zg .grwall{background:radial-gradient(ellipse at 30% 20%,#3a1d6e 0%,#170b35 45%,#05030f 100%)}
+.hs-zg .hssign{border-color:#9a7bff;color:#f1ecff;text-shadow:0 0 12px #9a7bff;box-shadow:0 0 18px rgba(154,123,255,.55)}
+.hszg{position:relative;height:50vh;display:flex;flex-direction:column;align-items:center}
+.hszg .zgsing{height:32vh;position:relative;z-index:1}
+.hszg .hspole{width:10px;flex:1;margin-top:-12vh;border-radius:99px;background:linear-gradient(90deg,#8b90b0,#f2f4ff 45%,#8b90b0)}
+/* the phone */
+.zgui{width:100%;margin-top:10px;display:flex;flex-direction:column;gap:14px;user-select:none;-webkit-user-select:none;touch-action:none}
+.zgsc{display:flex;justify-content:space-between;font-weight:900;font-size:1.3rem}.zgsc b{color:var(--yellow)}.zgsc i{font-style:normal;opacity:.75}
+.zgmeter{position:relative;height:46px;border-radius:99px;background:linear-gradient(90deg,#ff3a3a 0%,#ff9f1c 20%,#3ddc84 42%,#3ddc84 58%,#ff9f1c 80%,#ff3a3a 100%);box-shadow:inset 0 0 0 3px rgba(255,255,255,.3)}
+.zgmeter .zgmid{position:absolute;left:50%;top:6px;bottom:6px;width:2px;background:rgba(0,0,0,.4)}
+.zgneedle{position:absolute;top:-8px;bottom:-8px;width:10px;margin-left:-5px;left:50%;border-radius:99px;background:#fff;box-shadow:0 0 0 2px #111,0 0 12px #fff;transition:left .25s linear}
+.zgneedle.risky{background:#ffd23f;box-shadow:0 0 0 2px #111,0 0 16px #ff3a3a}
+.zgbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.zgb{height:min(38vh,260px);border:0;border-radius:22px;font-size:3.4rem;font-weight:900;color:#fff;background:linear-gradient(160deg,#6a4dff,#3a1d9e);box-shadow:0 8px 0 #22106a,0 10px 24px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:inherit;cursor:pointer;touch-action:none}
+.zgb small{font-size:1rem;letter-spacing:2px}
+.zgb.on{transform:translateY(6px);box-shadow:0 2px 0 #22106a;background:linear-gradient(160deg,#9a7bff,#6a3dff)}

@@ -140,6 +140,7 @@
       if (!d || !d.batch || !state || !state.draw || d.pid !== state.draw.pid) return; if (d.first) drawClear($('pdraw')); d.batch.forEach(function (m) { drawPaint($('pdraw'), m); }); });
     net.on('result', onResult);
     net.on('bomb', udOnMap);
+    net.on('zg', zgOnLive);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
       if (kicked) return;
@@ -186,6 +187,7 @@
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb) $('bombui').classList.add('hidden');
     if (s.phase !== 'carpet' || !s.carpet) $('carpetui').classList.add('hidden');
+    if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); if (zgU) { zgHeld = {}; zgSet(); } }
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (!(s.phase === 'note' && s.note && (s.note.st === 'guess' || s.note.st === 'ctl'))) { $('noteui').classList.add('hidden'); if ($('ntctl')) $('ntctl').classList.add('hidden'); }
     if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'show' || s.qj.st === 'input'))) $('qjui').classList.add('hidden');
@@ -197,7 +199,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -285,6 +287,7 @@
     else if ((s.phase === 'clueacc' || s.phase === 'cluerev') && s.clue) clueView(s);
     else if (s.phase === 'note' && s.note) noteView(s);
     else if (s.phase === 'carpet' && s.carpet) carpetView(s);
+    else if (s.phase === 'zg' && s.zg) zgView(s);
     else if (s.phase === 'qj' && s.qj) qjView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
@@ -584,6 +587,54 @@
       }; });
     }
     if (c.st === 'ask') { var tick = function () { var e = box.querySelector('.tccount'); if (!e) return; var sec = Math.max(0, Math.ceil((tcEnd - Date.now()) / 1000)); e.textContent = sec; e.classList.toggle('hot', sec <= 5); }; tick(); tcTimerT = setInterval(function () { if (!state || state.phase !== 'carpet') { clearInterval(tcTimerT); return; } tick(); }, 250); }
+  }
+
+  // ---------- Zero Gravity ----------
+  // Hold LEFT or RIGHT to keep your balance; the meter shows how far you lean (the red ends: you fall).
+  var zgLive = null, zgU = 0, zgUT = null, zgHeld = {};
+  function zgSendU() { var z = state && state.zg; if (!net || !z || z.st !== 'play') return; net.send('zg', { pid: pid, id: z.id, u: zgU }); }
+  function zgSet() {
+    var u = (zgHeld.r ? 1 : 0) - (zgHeld.l ? 1 : 0); if (u === zgU) return; zgU = u; zgSendU();
+    clearInterval(zgUT); if (u) zgUT = setInterval(zgSendU, 700);   /* (repeated while held, in case a message got lost) */
+  }
+  function zgOnLive(m) { var z = state && state.zg; if (!m || !m.x || !z || m.id !== z.id) return; zgLive = m; zgMeter(); }
+  function zgMeter() {
+    var box = $('zgui'), z = state && state.zg; if (!box || !z) return;
+    var src = zgLive && zgLive.id === z.id ? zgLive : z, x = (src.x || {})[pid], out = (src.out || {})[pid];
+    var nd = box.querySelector('.zgneedle'); if (nd && x != null) { nd.style.left = (50 + x / 2) + '%'; nd.classList.toggle('risky', Math.abs(x) > 60); }
+    var sc = box.querySelector('.zgsc b'); if (sc) sc.textContent = (src.sc || {})[pid] || 0;
+    var tm = box.querySelector('.zgsc i'); if (tm && src.left != null) tm.textContent = Math.ceil(src.left / 1000) + 's';
+    if (out != null && !box.classList.contains('fell') && z.st === 'play') zgView(state);
+  }
+  function zgView(s) {
+    var z = s.zg, box = $('zgui'), fell = (z.out || {})[pid] != null || (zgLive && zgLive.id === z.id && (zgLive.out || {})[pid] != null), mine = z.order.indexOf(pid) >= 0;
+    show('v-wait');
+    if (z.st === 'end') {
+      box.classList.add('hidden'); zgHeld = {}; zgSet();
+      var w = (z.win || []).indexOf(pid) >= 0, names = (z.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);
+      $('waittitle').textContent = w ? '🏆 You win Zero Gravity!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'Everyone fell into space…';
+      $('waitsub').textContent = mine ? 'Your score: ' + ((z.sc || {})[pid] || 0) + (fell ? ' (you fell)' : ' (still standing!)') : '';
+      return;
+    }
+    if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Watch the big screen!'; return; }
+    if (fell) { box.classList.add('hidden'); box.classList.add('fell'); zgHeld = {}; zgSet(); $('waittitle').textContent = '🚀 You fell into space!'; $('waitsub').textContent = 'Your score so far stays: ' + (((zgLive && zgLive.sc) || z.sc || {})[pid] || 0) + '. Watch the others wobble…'; return; }
+    box.classList.remove('fell');
+    $('waittitle').textContent = z.st === 'ready' ? '🌌 Get ready…' : '🌌 Keep your balance!';
+    $('waitsub').textContent = 'Leaning right? Hold LEFT. Leaning left? Hold RIGHT. Lean further for more points, but don’t fall!';
+    box.classList.remove('hidden');
+    if (box.getAttribute('data-id') !== z.id) {
+      box.setAttribute('data-id', z.id); zgHeld = {}; zgU = 0; clearInterval(zgUT);
+      box.innerHTML = '<div class="zgsc"><span>⭐ <b>0</b></span><i></i></div><div class="zgmeter"><span class="zgdz l"></span><span class="zgdz r"></span><span class="zgmid"></span><span class="zgneedle"></span></div>' +
+        '<div class="zgbtns"><button type="button" class="zgb" data-d="l">◀<small>LEFT</small></button><button type="button" class="zgb" data-d="r">▶<small>RIGHT</small></button></div>';
+      [].forEach.call(box.querySelectorAll('.zgb'), function (b) {
+        var d = b.getAttribute('data-d');
+        var on = function (e) { e.preventDefault(); zgHeld[d] = true; b.classList.add('on'); zgSet(); try { navigator.vibrate && navigator.vibrate(15); } catch (x) {} };
+        var off = function (e) { if (e) e.preventDefault(); zgHeld[d] = false; b.classList.remove('on'); zgSet(); };
+        b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
+        b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      });
+    }
+    zgMeter();
   }
 
   // ---------- Hold That Note! ----------
