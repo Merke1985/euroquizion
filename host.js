@@ -663,7 +663,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           '<div class="nvotes">' + who.map(function (p) { return '<span class="' + (p.pid === G.plopped ? 'plop' : '') + '" title="' + esc(p.name) + '">' + charSvg(p.char) + '</span>'; }).join('') + '</div>' +
           (nrev ? '<small class="by">' + esc(au ? au.name : QUIP_HOUSE) + (au && au.pts ? ' <b>+' + au.pts + '</b>' : '') + '</small>' : '') + '</div>';
       }).join('') + '</div>' +
-        (cu ? '<div class="bigwrap"><div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg">' + twHead(undefined, cu.n - 1) + '<span class="scrib">' + esc(cu.text) + '</span>' + twFoot(cu.n - 1, null) + '<small>' + cu.n + ' / ' + cu.of + '</small></div></div>' : '');
+        (cu ? '<div class="bigwrap"><div class="sheet' + (cu.fresh ? ' in' : '') + '" style="--tilt:' + ((cu.n % 2 ? -1 : 1) * (1 + (cu.n * 37 % 20) / 10)).toFixed(1) + 'deg">' + twHead(undefined, cu.n - 1) + '<span class="scrib">' + esc(cu.text) + '</span>' + twFoot(cu.n - 1, null) + '<small class="shcount">' + cu.n + ' / ' + cu.of + '</small></div></div>' : '');
       // The note that was big travels to its place among the others: it starts where the big one was, at that
       // size, and glides and shrinks into its slot. The next big note comes in once it has landed.
       var mv = movedI >= 0 && bigRect ? $('qopts').querySelectorAll('.snote')[movedI] : null;
@@ -4620,7 +4620,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tiles = [], geo = new T.BoxGeometry(.94, .14, .94);
     for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
       if (ruStage(g, x, y)) { tiles.push(null); continue; }
-      var m = new T.Mesh(geo, new T.MeshStandardMaterial({ color: '#241040', roughness: .35, metalness: .2, emissive: '#000000' }));
+      var m = new T.Mesh(geo, new T.MeshStandardMaterial({ color: '#241040', roughness: .85, metalness: 0, emissive: '#000000' }));
       m.position.set(x - n / 2 + .5, .12, y - n / 2 + .5); m.receiveShadow = true; sc.add(m); tiles.push(m);
     }
     // the hole in the middle, and the stage that rises out of it with the singer on top
@@ -4636,9 +4636,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ballM = new T.MeshStandardMaterial({ color: '#dfe3ff', metalness: 1, roughness: .18, flatShading: true, emissive: '#6a5aa0', emissiveIntensity: .35 });
     var balls = []; for (var b = 0; b < 6; b++) {
       var a = b / 6 * Math.PI * 2 + .3, r = n * .42, bg = new T.Group();
-      var ball = new T.Mesh(new T.IcosahedronGeometry(.5 + n * .05, 2), ballM); bg.add(ball);
+      var ball = new T.Mesh(new T.IcosahedronGeometry(.4 + n * .04, 2), ballM); bg.add(ball);
       var cord = new T.Mesh(new T.CylinderGeometry(.02, .02, n * 2, 4), new T.MeshBasicMaterial({ color: '#555' })); cord.position.y = n; bg.add(cord);
-      bg.position.set(-n * .55 + b * n * .3, n * .34 + (b % 2) * n * .07, -n * .62 - (b % 3) * n * .08); sc.add(bg); balls.push(ball);
+      bg.position.set(-n * .3 + b * n * .21, n * .26 + (b % 2) * n * .05, -n * .3 - (b % 2) * n * .08); sc.add(bg); balls.push(ball);
     }
     // purple spotlights sweeping over the floor, with visible beams
     var beamGeo = new T.CylinderGeometry(.05, 1, 1, 20, 1, true); beamGeo.translate(0, -.5, 0);
@@ -4657,7 +4657,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var k = st.risen ? 1 : st.riseAt ? Math.min(1, (Date.now() - st.riseAt) / 10000) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       stage.position.y = -6.2 + e * 6.5; sLight.intensity = e * 2.2;
       var u = singer.userData, dance = e >= 1 ? 1 : 0;
-      u.la.rotation.z = -(.3 + dance * (1.6 + Math.sin(t * 4.2) * .6)); u.ra.rotation.z = .3 + dance * (1.2 + Math.cos(t * 4.2) * .7);
+      u.la.rotation.z = -(.25 + dance * (.7 + Math.sin(t * 4.2) * .55)); u.ra.rotation.z = .25 + dance * (.5 + Math.max(0, Math.cos(t * 2.1)) * 2.2); u.la.rotation.x = -dance * .3;
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; u.fr.rotation.y = Math.sin(t * 8) * .15; u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
       spots.forEach(function (sp, i) {
@@ -4680,7 +4680,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     requestAnimationFrame(frame);
     st.paint = function (own, trail, col) {
       own.forEach(function (k, i) { var m = tiles[i]; if (!m) return; var v = (k || '') + (trail[i] ? '*' : ''); if (m.userData.v === v) return; m.userData.v = v; m.userData.own = k;
-        if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = trail[i] ? .9 : .5; } else { m.material.color.set('#241040'); } });
+        if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = trail[i] ? .55 : .18; } else { m.material.color.set('#241040'); } });
     };
     return st;
   }
@@ -4750,17 +4750,72 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var OR_ST = ['speed', 'pitch', 'fx'], OR_NEED = { speed: [3, 5, 8], pitch: [3, 4, 6], fx: [1, 2, 3] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
   var OR_NAME = { speed: '⚙️ Speed', pitch: '🎵 Pitch', fx: '🔌 Sound effects' };
   var OR_LINES = ['The organ is slowing down! Grab your tools! 🔧', 'Oh no, it’s falling apart even more! 💨', 'Total meltdown! Save the organ, save the song! 🔥'];
-  var ORGAN = '<svg class="orsvg" viewBox="0 0 600 420" aria-hidden="true"><defs><linearGradient id="orwood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4562a"/><stop offset="1" stop-color="#6b2a12"/></linearGradient><linearGradient id="orgold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8860b"/><stop offset=".5" stop-color="#ffe27a"/><stop offset="1" stop-color="#b8860b"/></linearGradient></defs>' +
-    '<g class="orpipes">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (i) { var h = 70 + Math.abs(5 - i) * -9 + 60, x = 150 + i * 28; return '<g class="orpipe" style="--i:' + i + '"><rect x="' + x + '" y="' + (150 - h) + '" width="20" height="' + h + '" rx="8" fill="url(#orgold)"/><ellipse cx="' + (x + 10) + '" cy="' + (150 - h + 18) + '" rx="6" ry="4" fill="#5a3a00"/></g>'; }).join('') + '</g>' +
-    '<rect x="90" y="140" width="420" height="220" rx="18" fill="url(#orwood)" stroke="#ffd23f" stroke-width="5"/>' +
-    '<path d="M90 160 Q300 100 510 160" fill="none" stroke="#ffd23f" stroke-width="5"/>' +
-    '<rect x="130" y="190" width="340" height="110" rx="14" fill="#f6e7c8" stroke="#c8102e" stroke-width="5"/>' +
-    '<g class="orfig"><circle cx="210" cy="245" r="26" fill="#ff7a1a"/><circle cx="300" cy="245" r="26" fill="#2f6ff0"/><circle cx="390" cy="245" r="26" fill="#c8102e"/><path d="M196 245 l14 -14 l14 14 l-14 14 z M286 245 l14 -14 l14 14 l-14 14 z M376 245 l14 -14 l14 14 l-14 14 z" fill="#fff" opacity=".85"/></g>' +
-    '<g fill="#ff7a1a"><path d="M150 330 q8 -26 16 0 q-8 10 -16 0 z"/><path d="M430 330 q8 -26 16 0 q-8 10 -16 0 z"/></g><g fill="#2f7a3a"><rect x="157" y="330" width="3" height="18"/><rect x="437" y="330" width="3" height="18"/></g>' +
-    '<g class="orwheel"><circle cx="560" cy="250" r="38" fill="none" stroke="url(#orgold)" stroke-width="9"/><path d="M560 212 V288 M522 250 H598" stroke="url(#orgold)" stroke-width="6"/><circle cx="560" cy="250" r="9" fill="#ffe27a"/><rect x="553" y="198" width="14" height="30" rx="6" fill="#6b2a12"/></g>' +
-    '<rect x="510" y="244" width="40" height="12" fill="url(#orgold)"/>' +
-    '<g class="orpanel"><rect x="20" y="200" width="70" height="120" rx="10" fill="#2a2440" stroke="#ffd23f" stroke-width="3"/><circle cx="42" cy="230" r="8" fill="#ff4d4d"/><circle cx="68" cy="230" r="8" fill="#3ddc84"/><circle cx="42" cy="262" r="8" fill="#ffd23f"/><circle cx="68" cy="262" r="8" fill="#3fb6ff"/><path class="orcab" d="M42 238 Q30 300 60 320 M68 238 Q90 300 50 330" stroke="#ff4d4d" stroke-width="4" fill="none"/></g>' +
-    '<circle cx="150" cy="380" r="30" fill="#3a2010" stroke="url(#orgold)" stroke-width="6"/><circle cx="450" cy="380" r="30" fill="#3a2010" stroke="url(#orgold)" stroke-width="6"/><path d="M150 356 V404 M126 380 H174 M450 356 V404 M426 380 H474" stroke="#ffd23f" stroke-width="3"/></svg>';   // (an original drawing: a Dutch street organ, with tulips)
+  // The barrel organ, big and ornate (an original drawing in the style of a Dutch street organ): a gilded, scalloped
+  // frame with light bulbs, painted tulip panels, cream columns, glowing windows with rows of coloured pipes, a crank.
+  var ORGAN = (function () {
+    var bulbs = '', x;
+    for (x = 70; x <= 930; x += 34) bulbs += '<circle class="orbulb" cx="' + x + '" cy="' + (120 - Math.round(Math.sin((x - 70) / 860 * Math.PI) * 70)) + '" r="7" style="--i:' + (x % 7) + '"/>';
+    for (x = 70; x <= 930; x += 43) bulbs += '<circle class="orbulb" cx="' + x + '" cy="522" r="6" style="--i:' + (x % 5) + '"/>';
+    var pipes = function (x0, y0, w, h, n, cls) { var s = '', cols = ['#ffe27a', '#ff5a5a', '#7dffb0', '#fff7d6', '#ffb347']; for (var i = 0; i < n; i++) { var ph = h * (.6 + .4 * Math.abs(Math.sin(i * .7))); s += '<rect class="' + cls + '" style="--i:' + i + '" x="' + (x0 + i * w / n + 2) + '" y="' + (y0 + h - ph) + '" width="' + (w / n - 4) + '" height="' + ph + '" rx="' + (w / n / 3) + '" fill="' + cols[i % cols.length] + '"/>'; } return s; };
+    var tulip = function (cx, cy, s) { return '<g transform="translate(' + cx + ' ' + cy + ') scale(' + s + ')"><path d="M0 0 V40" stroke="#2f7a3a" stroke-width="4"/><path d="M0 26 Q-14 18 -16 6 Q-4 12 0 26 M0 30 Q14 22 16 10 Q4 16 0 30" fill="#3a9a4a"/><path d="M-11 -2 Q-12 -22 -4 -26 L0 -16 L4 -26 Q12 -22 11 -2 Q0 8 -11 -2 Z" fill="#e0283a"/></g>'; };
+    var panel = function (x0, y0, w, h) { return '<rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="10" fill="#f3e2c0" stroke="#c8962a" stroke-width="5"/>' + tulip(x0 + w * .3, y0 + h * .45, h / 110) + tulip(x0 + w * .5, y0 + h * .38, h / 95) + tulip(x0 + w * .7, y0 + h * .45, h / 110); };
+    var column = function (x0, y0, h) { return '<rect x="' + x0 + '" y="' + y0 + '" width="34" height="' + h + '" fill="url(#orcol)"/><rect x="' + (x0 - 6) + '" y="' + y0 + '" width="46" height="14" rx="4" fill="url(#orgold)"/><rect x="' + (x0 - 6) + '" y="' + (y0 + h - 14) + '" width="46" height="14" rx="4" fill="url(#orgold)"/>'; };
+    var mill = function (cx, cy) { return '<g transform="translate(' + cx + ' ' + cy + ')"><path d="M-12 30 L-8 -6 L8 -6 L12 30 Z" fill="#6b4a2a"/><path d="M-10 -6 L0 -16 L10 -6 Z" fill="#8a3a20"/><g class="ormill"><path d="M0 -8 L-4 -40 L4 -40 Z M0 -8 L32 -12 L32 -4 Z M0 -8 L4 24 L-4 24 Z M0 -8 L-32 -4 L-32 -12 Z" fill="#f3e2c0" stroke="#6b4a2a" stroke-width="1.5"/></g></g>'; };
+    return '<svg class="orsvg" viewBox="0 0 1000 560" aria-hidden="true"><defs>' +
+      '<linearGradient id="orgold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a10"/><stop offset=".45" stop-color="#ffe27a"/><stop offset="1" stop-color="#a87010"/></linearGradient>' +
+      '<linearGradient id="orcol" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9c49a"/><stop offset=".5" stop-color="#fff6e0"/><stop offset="1" stop-color="#cdb486"/></linearGradient>' +
+      '<linearGradient id="orwood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c26a34"/><stop offset="1" stop-color="#7a3518"/></linearGradient>' +
+      '<radialGradient id="orglow" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#d8ffe6"/><stop offset=".55" stop-color="#3ddc84"/><stop offset="1" stop-color="#0d5a2a"/></radialGradient></defs>' +
+      // the scalloped gilded frame and the body
+      '<path d="M40 540 L40 170 Q40 120 90 110 Q150 40 260 60 Q330 10 420 30 Q500 -10 580 30 Q670 10 740 60 Q850 40 910 110 Q960 120 960 170 L960 540 Z" fill="url(#orgold)" stroke="#6b4210" stroke-width="6"/>' +
+      '<path d="M70 525 L70 180 Q70 145 110 138 Q165 80 265 95 Q335 55 420 70 Q500 35 580 70 Q665 55 735 95 Q835 80 890 138 Q930 145 930 180 L930 525 Z" fill="url(#orwood)"/>' +
+      // the crest: a glowing arched window with gold scrolls
+      '<path d="M420 72 Q500 20 580 72 L580 150 L420 150 Z" fill="url(#orglow)" stroke="url(#orgold)" stroke-width="8"/>' + pipes(432, 80, 136, 64, 7, 'orpipe') +
+      '<path d="M380 100 Q350 60 400 50 M620 100 Q650 60 600 50 M300 120 Q270 80 320 70 M700 120 Q730 80 680 70" stroke="#ffe27a" stroke-width="8" fill="none" stroke-linecap="round"/>' +
+      // the top row of painted panels
+      panel(120, 160, 230, 90) + panel(650, 160, 230, 90) + '<rect x="370" y="160" width="260" height="90" rx="10" fill="#f3e2c0" stroke="#c8962a" stroke-width="5"/>' + mill(440, 205) + mill(560, 205) + tulip(500, 210, .9) +
+      // the middle: columns, the big pipe window in the centre, a glowing window with a figurine each side
+      column(100, 265, 245) + column(866, 265, 245) + column(330, 265, 245) + column(636, 265, 245) +
+      '<rect x="380" y="270" width="240" height="235" rx="16" fill="#1a3a20" stroke="url(#orgold)" stroke-width="8"/>' + pipes(394, 284, 212, 210, 11, 'orpipe') +
+      '<path d="M150 300 Q235 250 320 300 L320 470 L150 470 Z" fill="url(#orglow)" stroke="url(#orgold)" stroke-width="7"/><path d="M680 300 Q765 250 850 300 L850 470 L680 470 Z" fill="url(#orglow)" stroke="url(#orgold)" stroke-width="7"/>' +
+      '<g class="orfigs"><g class="orfig1"><circle cx="235" cy="352" r="12" fill="#f3d2b8"/><path d="M222 340 L235 322 L248 340 Z" fill="#c8102e"/><rect x="225" y="364" width="20" height="44" rx="6" fill="#2f6ff0"/><rect x="226" y="408" width="7" height="30" fill="#fff"/><rect x="237" y="408" width="7" height="30" fill="#fff"/></g>' +
+      '<g class="orfig2"><circle cx="765" cy="352" r="12" fill="#f3d2b8"/><path d="M752 340 L765 322 L778 340 Z" fill="#2f6ff0"/><rect x="755" y="364" width="20" height="44" rx="6" fill="#c8102e"/><rect x="756" y="408" width="7" height="30" fill="#fff"/><rect x="767" y="408" width="7" height="30" fill="#fff"/></g></g>' +
+      // the bottom: a gold rail and the light bulbs
+      '<rect x="60" y="505" width="880" height="22" rx="8" fill="url(#orgold)"/>' + bulbs +
+      // the crank on the side
+      '<g class="orwheel"><circle cx="975" cy="400" r="40" fill="none" stroke="url(#orgold)" stroke-width="10"/><path d="M975 360 V440 M935 400 H1015" stroke="url(#orgold)" stroke-width="7"/><circle cx="975" cy="400" r="10" fill="#ffe27a"/><rect x="968" y="346" width="14" height="30" rx="6" fill="#6b2a12"/></g>' +
+      // the cable box (sound effects) on the other side
+      '<g class="orpanel"><rect x="0" y="330" width="60" height="140" rx="10" fill="#2a2440" stroke="url(#orgold)" stroke-width="4"/><circle cx="18" cy="360" r="8" fill="#ff4d4d"/><circle cx="42" cy="360" r="8" fill="#3ddc84"/><circle cx="18" cy="392" r="8" fill="#ffd23f"/><circle cx="42" cy="392" r="8" fill="#3fb6ff"/><path class="orcab" d="M18 368 Q6 430 36 450 M42 368 Q60 430 26 460" stroke="#ff4d4d" stroke-width="4" fill="none"/></g>' +
+      '</svg>';
+  })();
+  // The singer in front of the organ (an original character): long dark wavy hair, a white lace top, white trousers, a mic.
+  var OR_SINGER = '<svg class="orsing" viewBox="0 0 200 520" aria-hidden="true"><defs><pattern id="orlace" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#fbf4f0"/><circle cx="7" cy="7" r="4" fill="none" stroke="#d9c6c0" stroke-width="1.5"/><circle cx="0" cy="0" r="2" fill="#e8d8d2"/><circle cx="14" cy="14" r="2" fill="#e8d8d2"/></pattern></defs>' +
+    '<path d="M62 52 Q60 10 100 10 Q142 10 140 56 Q150 110 136 170 Q120 150 122 110 L80 110 Q82 150 64 170 Q50 110 62 52 Z" fill="#3a1e14"/>' +
+    '<path d="M76 268 L70 500 L96 500 L100 300 L104 500 L130 500 L124 268 Z" fill="#fbf7f2" stroke="#e6dcd2" stroke-width="2"/><path d="M68 500 h30 v8 h-32 z M102 500 h30 v8 h-32 z" fill="#f2d6c6"/>' +
+    '<path d="M74 140 Q100 126 126 140 L130 272 Q100 280 70 272 Z" fill="url(#orlace)" stroke="#e8dad4" stroke-width="2"/>' +
+    '<path d="M74 146 Q56 200 64 250 L76 248 Q70 204 86 160 Z" fill="#f3d2b8"/><circle cx="70" cy="252" r="9" fill="#f3d2b8"/>' +
+    '<g class="orsarm"><path d="M126 146 Q148 150 140 112" stroke="#f3d2b8" stroke-width="13" fill="none" stroke-linecap="round"/><rect x="128" y="88" width="9" height="28" rx="4" fill="#222" transform="rotate(-18 132 102)"/><circle cx="128" cy="86" r="9" fill="#8a8f9a"/></g>' +
+    '<rect x="92" y="108" width="16" height="24" rx="6" fill="#f3d2b8"/><ellipse cx="100" cy="76" rx="27" ry="33" fill="#f3d2b8"/>' +
+    '<path d="M72 70 Q74 34 102 34 Q130 36 130 70 Q116 50 98 54 Q82 58 72 70 Z" fill="#3a1e14"/>' +
+    '<ellipse cx="90" cy="78" rx="3" ry="3.6" fill="#2a1a10"/><ellipse cx="111" cy="78" rx="3" ry="3.6" fill="#2a1a10"/><path d="M85 70 q5 -3 10 0 M106 70 q5 -3 10 0" stroke="#2a1a10" stroke-width="2" fill="none"/>' +
+    '<ellipse class="orsmouth" cx="100" cy="95" rx="5" ry="6" fill="#b02634"/><ellipse cx="84" cy="88" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="116" cy="88" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/></svg>';
+  // Two marionettes (original characters) on strings: a drummer in a green coat and tricorn hat, and a dancer in a
+  // blue flowered dress. They dance stiffly, like robots.
+  var OR_PUPPET1 = '<svg class="orpup" viewBox="0 0 200 520" aria-hidden="true"><g class="orstr" stroke="#ddd" stroke-width="1.2" opacity=".7"><line x1="60" y1="0" x2="62" y2="190"/><line x1="140" y1="0" x2="140" y2="190"/><line x1="100" y1="0" x2="100" y2="40"/><line x1="76" y1="0" x2="80" y2="370"/><line x1="124" y1="0" x2="120" y2="370"/></g><rect x="40" y="0" width="120" height="8" rx="3" fill="#6b4a2a"/>' +
+    '<g class="pleg l"><rect x="78" y="300" width="20" height="110" rx="8" fill="#f2a64a"/><path d="M74 400 h30 v70 h8 v14 h-40 z" fill="#1d1d24"/></g><g class="pleg r"><rect x="102" y="300" width="20" height="110" rx="8" fill="#f2a64a"/><path d="M98 400 h30 v70 h8 v14 h-40 z" fill="#1d1d24"/></g>' +
+    '<path d="M66 150 Q100 136 134 150 L140 320 L60 320 Z" fill="#2f7a5a"/><g fill="#e0283a"><circle cx="80" cy="190" r="5"/><circle cx="116" cy="210" r="5"/><circle cx="92" cy="260" r="5"/><circle cx="124" cy="290" r="5"/><circle cx="74" cy="300" r="5"/></g>' +
+    '<g class="parm l"><rect x="50" y="150" width="18" height="100" rx="8" fill="#2f7a5a"/><circle cx="59" cy="254" r="9" fill="#f3d2b8"/><rect x="56" y="250" width="5" height="44" fill="#6b4a2a" transform="rotate(-30 59 254)"/></g>' +
+    '<g class="pdrum"><ellipse cx="148" cy="240" rx="34" ry="34" fill="#f3e2c0" stroke="#8a5a2a" stroke-width="5"/><ellipse cx="148" cy="240" rx="24" ry="24" fill="none" stroke="#c8962a" stroke-width="2"/></g>' +
+    '<g class="parm r"><rect x="132" y="150" width="18" height="90" rx="8" fill="#2f7a5a"/><circle cx="141" cy="244" r="9" fill="#f3d2b8"/></g>' +
+    '<rect x="92" y="122" width="16" height="22" fill="#f3d2b8"/><circle cx="100" cy="98" r="28" fill="#f3d2b8"/><circle cx="90" cy="96" r="3" fill="#2a1a10"/><circle cx="110" cy="96" r="3" fill="#2a1a10"/><circle cx="84" cy="108" r="6" fill="#ff8fa3" opacity=".6"/><circle cx="116" cy="108" r="6" fill="#ff8fa3" opacity=".6"/><path d="M92 112 q8 6 16 0" stroke="#8a1a30" stroke-width="3" fill="none"/>' +
+    '<path d="M56 80 L100 46 L144 80 Q100 92 56 80 Z" fill="#1d1d24"/><path d="M104 50 Q130 20 150 30 Q132 40 112 56 Z" fill="#e0283a"/></svg>';
+  var OR_PUPPET2 = '<svg class="orpup" viewBox="0 0 200 520" aria-hidden="true"><g class="orstr" stroke="#ddd" stroke-width="1.2" opacity=".7"><line x1="60" y1="0" x2="58" y2="230"/><line x1="140" y1="0" x2="142" y2="230"/><line x1="100" y1="0" x2="100" y2="50"/><line x1="80" y1="0" x2="84" y2="420"/><line x1="120" y1="0" x2="116" y2="420"/></g><rect x="40" y="0" width="120" height="8" rx="3" fill="#6b4a2a"/>' +
+    '<g class="pleg l"><rect x="82" y="330" width="14" height="110" rx="6" fill="#f3d2b8"/><path d="M78 436 h22 v10 h-28 z" fill="#1d1d24"/></g><g class="pleg r"><rect x="104" y="330" width="14" height="110" rx="6" fill="#f3d2b8"/><path d="M100 436 h22 v10 h-28 z" fill="#1d1d24"/></g>' +
+    '<path class="pskirt" d="M76 210 Q100 200 124 210 L170 360 Q100 384 30 360 Z" fill="#4aa0c8"/><path d="M34 356 Q100 378 166 356 L170 368 Q100 392 30 368 Z" fill="#fff"/><g fill="#e0283a"><circle cx="70" cy="300" r="7"/><circle cx="120" cy="280" r="7"/><circle cx="96" cy="340" r="7"/><circle cx="146" cy="340" r="6"/><circle cx="52" cy="340" r="6"/><circle cx="100" cy="236" r="5"/></g>' +
+    '<path d="M76 150 Q100 140 124 150 L126 214 L74 214 Z" fill="#4aa0c8"/>' +
+    '<g class="parm l"><rect x="62" y="150" width="14" height="96" rx="7" fill="#f3d2b8"/><circle cx="69" cy="250" r="8" fill="#f3d2b8"/></g><g class="parm r"><rect x="124" y="150" width="14" height="96" rx="7" fill="#f3d2b8"/><circle cx="131" cy="250" r="8" fill="#f3d2b8"/></g>' +
+    '<rect x="93" y="124" width="14" height="22" fill="#f3d2b8"/><circle cx="100" cy="100" r="26" fill="#f3d2b8"/><circle cx="91" cy="98" r="3" fill="#2a1a10"/><circle cx="109" cy="98" r="3" fill="#2a1a10"/><circle cx="85" cy="110" r="6" fill="#ff8fa3" opacity=".6"/><circle cx="115" cy="110" r="6" fill="#ff8fa3" opacity=".6"/><path d="M93 114 q7 5 14 0" stroke="#8a1a30" stroke-width="3" fill="none"/>' +
+    '<path d="M72 96 Q70 66 100 66 Q132 66 128 98 Q118 80 100 82 Q84 82 72 96 Z" fill="#c8602a"/><circle cx="100" cy="62" r="16" fill="#c8602a"/><circle cx="114" cy="56" r="5" fill="#e0283a"/></svg>';
   function orAll() {
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2) { quipAll(); return; }
@@ -4852,8 +4907,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('orov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'orov'; ov.className = 'orov enter';
-      ov.innerHTML = '<div class="orsky"></div><div class="orhouses"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="orstreet"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
+      var leds = ''; for (var li = 0; li < 9; li++) leds += '<i style="--i:' + li + '"></i>';
+      ov.innerHTML = '<div class="orbg"><div class="orleds l">' + leds + '</div><div class="orleds r">' + leds + '</div><div class="orrig">' + leds + leds + '</div><div class="orbeams"><i></i><i></i><i></i><i></i></div></div><div class="orfloor"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
         '<div class="ormid">' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
+        '<div class="orpuppet p1">' + OR_PUPPET1 + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
         '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="ormsg"></div><div class="orboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
