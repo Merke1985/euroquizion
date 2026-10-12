@@ -4109,7 +4109,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the presenters, standing on the carpet, welcome everyone and explain the game; then they step aside
     var g = G.carpet, lines = (SCENES.carpet && SCENES.carpet.lines) || [], t = 2200;
     lines.forEach(function (l) { (function (l, t0) { tcTimer = setTimeout(function () { if (G.carpet === g && g.st === 'intro') tcSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
-    setTimeout(function () { if (G.carpet !== g || g.st !== 'intro') return; tcSay(''); g.st = 'ready'; push(); whooshes([0, 300]); tcTimer = setTimeout(tcParade, 1800); }, t);
+    setTimeout(function () { if (G.carpet !== g || g.st !== 'intro') return; tcSay(''); g.st = 'ready'; push(); whooshes([0, 300]); tcSong(true); tcTimer = setTimeout(tcParade, 1800); }, t);
   }
   function tcParade() {
     var g = G.carpet; if (!g || G.phase !== 'carpet') return;
@@ -4120,9 +4120,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.carpet !== g) return;
       if (i >= n) { tcTimer = setTimeout(tcAsk, 700); return; }
       g.cur = i; push();
-      if (g.sec === 1 && i === 0) tcSong(true);   // the music starts exactly with the first step
       tcTimer = setTimeout(function () { step(i + 1); }, TC_STEP);
     };
+    if (g.sec === 1 && !REMOTE) {   // the song is already playing: the first contestant starts walking so that her first photo is at 0:16
+      var t0 = Date.now(), wait = function () {
+        if (G.carpet !== g) return;
+        var ct = -1; try { if (yt.getPlayerState() === 1) ct = yt.getCurrentTime(); } catch (e) {}
+        if (ct >= TC_FIRST - TC3_T.turn1 / 1000 - .1 || Date.now() - t0 > 22000) { step(0); return; }
+        tcTimer = setTimeout(wait, 40);
+      };
+      wait(); return;
+    }
     tcTimer = setTimeout(function () { step(0); }, 1600);
   }
   function tcAsk() {
@@ -4185,7 +4193,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Outdoors on a summer evening: a venue with lit windows, trees, sweeping searchlights, a raised turquoise carpet with
   // golden posts and red ropes, and photographers in front. Each contestant (built from simple shapes, an original
   // design) walks in from the left, turns to face the cameras, poses while the flashes go off, turns back and walks on.
-  var TC3_T = { inEnd: 3000, turn1: 3600, poseEnd: 6200, turn2: 6700, outEnd: 8800 };   // the timeline of one contestant (ms)
+  var TC3_T = { inEnd: 3000, turn1: 3600, poseEnd: 6200, turn2: 6700, outEnd: 8800 }, TC_FIRST = 16;   // (TC_FIRST: the first photo of the first contestant, in seconds into the song)   // the timeline of one contestant (ms)
   function tc3Init(host) {
     if (!window.THREE) return null;
     var T = THREE, w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
@@ -4224,11 +4232,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // golden posts and red ropes in front of the carpet
     var gold = new T.MeshStandardMaterial({ color: '#e0b030', metalness: .8, roughness: .3 }), red = new T.MeshStandardMaterial({ color: '#c8102e', roughness: .6 });
     var px = []; for (var x = -22; x <= 22; x += 4) px.push(x);   // (no post right in the middle: the shoes stay in view)
+    var front = [];
     [2.6, -2.6].forEach(function (z) {   // a low barrier on both sides of the carpet
       px.forEach(function (x, i) {
         var p = new T.Mesh(new T.CylinderGeometry(.06, .08, .72, 10), gold); p.position.set(x, .36, z); p.castShadow = true; sc.add(p);
         var k = new T.Mesh(new T.SphereGeometry(.11, 12, 10), gold); k.position.set(x, .75, z); sc.add(k);
-        if (i < px.length - 1) { var cv = new T.QuadraticBezierCurve3(new T.Vector3(x, .68, z), new T.Vector3(x + 2, .4, z), new T.Vector3(x + 4, .68, z)); sc.add(new T.Mesh(new T.TubeGeometry(cv, 16, .04, 6), red)); }
+        if (z > 0) front.push(p, k);
+        if (i < px.length - 1) { var cv = new T.QuadraticBezierCurve3(new T.Vector3(x, .68, z), new T.Vector3(x + 2, .4, z), new T.Vector3(x + 4, .68, z)); var rp = new T.Mesh(new T.TubeGeometry(cv, 16, .04, 6), red); sc.add(rp); if (z > 0) front.push(rp); }
       });
     });
     // the photographers in front (dark silhouettes), each with a camera that flashes
@@ -4238,17 +4248,27 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var head = new T.Mesh(new T.SphereGeometry(.38, 14, 12), dark); head.position.y = 2.05; g.add(head);
       var c = new T.Mesh(new T.BoxGeometry(.5, .34, .3), camM); c.position.set(.12, 2.05, -.42); g.add(c);
       var fl = new T.Mesh(new T.SphereGeometry(.1, 10, 8), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 })); fl.position.set(.25, 2.3, -.5); g.add(fl);
-      g.position.set(x, -.3, 7 + (i % 2) * .6); g.rotation.y = (x > 0 ? 1 : -1) * .35; g.scale.setScalar(.9); sc.add(g); return fl;
+      g.position.set(x, -.3, 7 + (i % 2) * .6); g.rotation.y = (x > 0 ? 1 : -1) * .35; g.scale.setScalar(.9); sc.add(g); front.push(g); return fl;
     });
+    // the front rope and the photographers once more, on a see-through layer over the presenters (they stand behind the rope)
+    front.forEach(function (o) { o.traverse(function (c) { c.layers.enable(1); }); });
+    sc.traverse(function (o) { if (o.isLight) o.layers.enable(1); });
+    var rn2 = new T.WebGLRenderer({ antialias: true, alpha: true }); rn2.setPixelRatio(rn.getPixelRatio()); rn2.setSize(w, h); rn2.setClearColor(0x000000, 0); rn2.outputEncoding = T.sRGBEncoding; rn2.toneMapping = T.NoToneMapping;
+    var over = document.createElement('div'); over.className = 'tc3front'; over.appendChild(rn2.domElement); host.parentNode.appendChild(over);
+    var cam2 = cam.clone(); cam2.layers.set(1);
     var st = { alive: true, rn: rn, sc: sc, cam: cam, flash: flash, cams: cams, fig: null, key: '', t0: 0, flashAt: 0, flashCam: null };
     function frame(now) {
-      if (!host.isConnected) { st.alive = false; rn.dispose(); return; }
+      if (!host.isConnected) { st.alive = false; rn.dispose(); rn2.dispose(); return; }
       var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
       var t = now / 1000; beams[0].rotation.z = Math.sin(t * .5) * .45; beams[1].rotation.z = -Math.sin(t * .43 + 1) * .45;
       if (st.fig) tc3Pose(st, Date.now() - st.t0);
       var fk = Math.max(0, 1 - (Date.now() - st.flashAt) / 200); flash.intensity = fk * 2.2;
       cams.forEach(function (f) { f.material.opacity = f === st.flashCam ? fk : 0; });
-      rn.render(sc, cam); requestAnimationFrame(frame);
+      rn.render(sc, cam);
+      if (w2 && (w2 !== rn2.domElement.width / rn2.getPixelRatio() || h2 !== rn2.domElement.height / rn2.getPixelRatio())) rn2.setSize(w2, h2);
+      cam2.aspect = cam.aspect; cam2.updateProjectionMatrix();
+      var bgc = sc.background, fgc = sc.fog; sc.background = null; sc.fog = null; rn2.render(sc, cam2); sc.background = bgc; sc.fog = fgc;
+      requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
     return st;
@@ -4346,7 +4366,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!key) return;
     st.fig = tc3Girl(g.girls[g.cur]); st.fig.position.set(-16, .28, .2); st.sc.add(st.fig); st.t0 = Date.now();
     var T3 = TC3_T, n = 0, step = (T3.poseEnd - T3.turn1 - 200) / 7;
-    for (var t = T3.turn1 + 100; t < T3.poseEnd - 100; t += step) (function (t, i) { setTimeout(function () { if (st.key !== key || !st.alive) return; st.flashAt = Date.now(); st.flashCam = st.cams[Math.floor(Math.random() * st.cams.length)]; tcFlash(ov, i); }, t); })(t + Math.random() * 120, n++);
+    for (var t = T3.turn1; t < T3.poseEnd - 100; t += step) (function (t, i) { setTimeout(function () { if (st.key !== key || !st.alive) return; st.flashAt = Date.now(); st.flashCam = st.cams[Math.floor(Math.random() * st.cams.length)]; tcFlash(ov, i); }, t); })(n === 0 ? t : t + Math.random() * 120, n++);
   }
   function carpetSnap() {
     var g = G.carpet, open = g.st === 'reveal' || g.st === 'win', done = {};

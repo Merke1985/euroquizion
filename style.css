@@ -3653,3 +3653,8 @@ body.hasdock main{padding-bottom:84px}
 .ruov .rulist .rurow.tick i{animation:benvin .18s ease-out}
 .ruov .rulist .rurow.stop{opacity:.6}
 .ruov .rulist .rurow.win{opacity:1;background:linear-gradient(90deg,rgba(255,210,63,.35),rgba(0,0,0,.5));box-shadow:inset 4px 0 0 var(--c),0 0 0 2px #ffd23f;animation:uwin .6s ease-in-out infinite alternate}
+
+.tc3front{position:absolute;inset:0;z-index:5;pointer-events:none;display:none}
+.tc3front canvas{display:block;width:100%!important;height:100%!important}
+.tcov.is3d .tc3front{display:block}
+.tcov .tcq,.tcov .tcboard,.tcov .tcbub{z-index:7}
