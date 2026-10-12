@@ -3912,7 +3912,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       get art() { return '<div class="hsorgan">' + ORGAN + '</div>'; },
       lines: [['him', 'Look at this beauty: a real Dutch barrel organ! 🎡'],
         ['her', 'Our Dutch singer is about to perform with it, and she has asked for your help to look after her musical machine.'],
-        ['him', 'She has divided three tasks among you: SPEED, PITCH and SOUND EFFECTS. Your phone shows which one you keep an eye on.'],
+        ['him', 'She has divided three parts among you: the GEARBOX, the ORGAN PIPES and the WIRING. Your phone shows which one you keep an eye on.'],
         ['her', 'If your part breaks down, fix it on your phone as fast as you can!'],
         ['him', 'Bring the song to a successful end! Points for what you fix and how fast, and the best repairer wins. 🔧']] },
     rule: { sign: '🪩 We Will Rule the World', theme: 'rule',
@@ -4992,7 +4992,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // for finishing fast, and a team bonus when the whole organ is fixed before the time runs out. Highest total wins.
   var OR_TEAMS = { 2: [1, 1, 0], 3: [1, 1, 1], 4: [2, 1, 1], 5: [2, 2, 1], 6: [2, 2, 2], 7: [3, 2, 2], 8: [3, 3, 2], 9: [3, 3, 3], 10: [4, 3, 3], 11: [4, 4, 3], 12: [4, 4, 4] };
   var OR_TASK = [26000, 32000, 38000], OR_ST = ['speed', 'pitch', 'fx'], OR_NEED = { speed: [3, 5, 8], pitch: [3, 4, 6], fx: [1, 2, 3] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
-  var OR_NAME = { speed: '⚙️ Speed', pitch: '🎵 Pitch', fx: '🔌 Sound effects' };
+  var OR_NAME = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring' };
   var OR_LINES = ['The organ is slowing down! Grab your tools! 🔧', 'Oh no, it’s falling apart even more! 💨', 'Total meltdown! Save the organ, save the song! 🔥'];
   // The barrel organ, big and ornate (an original drawing in the style of a Dutch street organ): a gilded, scalloped
   // frame with light bulbs, painted tulip panels, cream columns, glowing windows with rows of coloured pipes, a crank.

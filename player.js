@@ -692,8 +692,8 @@
   // Your station's repair job: turn the crank (SPEED), slide the pipes into the dashed lines (PITCH), or unplug the wrong
   // cables and plug them into the socket of their own colour (SOUND EFFECTS). Each phone gets its own puzzle.
   var orKey = '', orD = 0, orSentD = 0, orPz = null, OR_COLS = ['#e53950', '#2f80ed', '#f2c12e', '#27ae60', '#9b51e0'];
-  var OR_HELP = { speed: 'Turn the brass crank: drag the handle round and round!', pitch: 'Slide each pipe up or down until its top sits in the dashed band.', fx: 'Tap a wrongly plugged cable to unplug it, then drag it to the socket of its own colour.' };
-  var OR_TITLE = { speed: '⚙️ Speed', pitch: '🎵 Pitch', fx: '🔌 Sound effects' };
+  var OR_HELP = { speed: 'The gears are jammed! Turn the brass crank: drag the handle round and round.', pitch: 'The pipes slipped out of place! Slide each pipe until its top sits in the dashed band.', fx: 'The wires got mixed up! Tap a wrong plug to unplug it, then drag it to the socket of its own colour.' };
+  var OR_TITLE = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring' };
   function orReport(o) { var g = state && state.organ; if (!net || !g || g.st !== 'fix') return; net.send('organ', { pid: pid, id: g.id, ph: g.ph, d: orD }); orSentD = orD; }
   function orStep(d) { if (d <= orD) return; orD = d; try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} Music.plop(d); orReport(); var c = $('orui').querySelector('.orcount'); if (c) c.textContent = orD + ' / ' + orPz.of; if (orD >= orPz.of) setTimeout(function () { if (state) orView(state); }, 400); }
   function orView(s) {
