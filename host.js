@@ -494,7 +494,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'cluerooms' && $('edov')) { $('edov').remove(); clearInterval(edTick); }
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
-    if (G.phase !== 'organ' && $('orov')) { $('orov').remove(); clearInterval(orTick); if (orSongT) orSong(false); }
+    if (G.phase !== 'organ' && $('orov')) { $('orov').remove(); clearInterval(orTick); if (orSongT || orFxT || (orAud && !orAud.paused)) orSong(false); }
     if (G.phase !== 'rule' && $('ruov')) { $('ruov').remove(); clearInterval(ruLoop); }
     if (G.phase !== 'zg' && $('zgov')) { $('zgov').remove(); clearInterval(zgLoop); if (zgSongT) zgSong(false); }
     if (G.phase !== 'carpet' && $('tcov')) { $('tcov').remove(); clearInterval(tcFadeT); if (tcSongT) tcSong(false); }
@@ -1492,7 +1492,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, 400 + (Array.from(l1).length + Array.from(l2).length) * TALK_MS + 4600);
       return;
     }
-    if (kind === 'carpet' && !REMOTE) { carpetAll(); return; }   // (the presenters welcome everyone on the carpet itself)
+    if (kind === 'carpet' && !REMOTE) { carpetAll(); return; }
+    if (kind === 'organ' && !REMOTE) { orAll(); return; }   // (the presenters explain it in front of the organ itself)   // (the presenters welcome everyone on the carpet itself)
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
@@ -4932,7 +4933,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse class="orsmouth" cx="100" cy="95" rx="5" ry="6" fill="#b02634"/><ellipse cx="84" cy="88" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="116" cy="88" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/></svg>';
   // Two marionettes (original characters) on strings: a drummer in a green coat and tricorn hat, and a dancer in a
   // blue flowered dress. They dance stiffly, like robots.
-  var OR_PUPPET1 = '<svg class="orpup" viewBox="0 0 200 520" aria-hidden="true"><g class="orstr" stroke="#ddd" stroke-width="1.2" opacity=".7"><line x1="60" y1="0" x2="62" y2="190"/><line x1="140" y1="0" x2="140" y2="190"/><line x1="100" y1="0" x2="100" y2="40"/><line x1="76" y1="0" x2="80" y2="370"/><line x1="124" y1="0" x2="120" y2="370"/></g><rect x="40" y="0" width="120" height="8" rx="3" fill="#6b4a2a"/>' +
+  var OR_PUPPET1 = '<svg class="orpup" viewBox="0 -400 200 920" aria-hidden="true"><g class="orstr" stroke="#ddd" stroke-width="1.2" opacity=".7"><line x1="60" y1="-392" x2="62" y2="190"/><line x1="140" y1="-392" x2="140" y2="190"/><line x1="100" y1="-392" x2="100" y2="40"/><line x1="76" y1="-392" x2="80" y2="370"/><line x1="124" y1="-392" x2="120" y2="370"/></g><rect x="30" y="-400" width="140" height="10" rx="3" fill="#6b4a2a"/><rect x="94" y="-410" width="12" height="40" rx="3" fill="#6b4a2a"/>' +
     '<g class="pleg l"><rect x="78" y="300" width="20" height="110" rx="8" fill="#f2a64a"/><path d="M74 400 h30 v70 h8 v14 h-40 z" fill="#1d1d24"/></g><g class="pleg r"><rect x="102" y="300" width="20" height="110" rx="8" fill="#f2a64a"/><path d="M98 400 h30 v70 h8 v14 h-40 z" fill="#1d1d24"/></g>' +
     '<path d="M66 150 Q100 136 134 150 L140 320 L60 320 Z" fill="#2f7a5a"/><g fill="#e0283a"><circle cx="80" cy="190" r="5"/><circle cx="116" cy="210" r="5"/><circle cx="92" cy="260" r="5"/><circle cx="124" cy="290" r="5"/><circle cx="74" cy="300" r="5"/></g>' +
     '<g class="parm l"><rect x="50" y="150" width="18" height="100" rx="8" fill="#2f7a5a"/><circle cx="59" cy="254" r="9" fill="#f3d2b8"/><rect x="56" y="250" width="5" height="44" fill="#6b4a2a" transform="rotate(-30 59 254)"/></g>' +
@@ -4940,7 +4941,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<g class="parm r"><rect x="132" y="150" width="18" height="90" rx="8" fill="#2f7a5a"/><circle cx="141" cy="244" r="9" fill="#f3d2b8"/></g>' +
     '<rect x="92" y="122" width="16" height="22" fill="#f3d2b8"/><circle cx="100" cy="98" r="28" fill="#f3d2b8"/><circle cx="90" cy="96" r="3" fill="#2a1a10"/><circle cx="110" cy="96" r="3" fill="#2a1a10"/><circle cx="84" cy="108" r="6" fill="#ff8fa3" opacity=".6"/><circle cx="116" cy="108" r="6" fill="#ff8fa3" opacity=".6"/><path d="M92 112 q8 6 16 0" stroke="#8a1a30" stroke-width="3" fill="none"/>' +
     '<path d="M56 80 L100 46 L144 80 Q100 92 56 80 Z" fill="#1d1d24"/><path d="M104 50 Q130 20 150 30 Q132 40 112 56 Z" fill="#e0283a"/></svg>';
-  var OR_PUPPET2 = '<svg class="orpup" viewBox="0 0 200 520" aria-hidden="true"><g class="orstr" stroke="#ddd" stroke-width="1.2" opacity=".7"><line x1="60" y1="0" x2="58" y2="230"/><line x1="140" y1="0" x2="142" y2="230"/><line x1="100" y1="0" x2="100" y2="50"/><line x1="80" y1="0" x2="84" y2="420"/><line x1="120" y1="0" x2="116" y2="420"/></g><rect x="40" y="0" width="120" height="8" rx="3" fill="#6b4a2a"/>' +
+  var OR_PUPPET2 = '<svg class="orpup" viewBox="0 -400 200 920" aria-hidden="true"><g class="orstr" stroke="#ddd" stroke-width="1.2" opacity=".7"><line x1="60" y1="-392" x2="58" y2="230"/><line x1="140" y1="-392" x2="142" y2="230"/><line x1="100" y1="-392" x2="100" y2="50"/><line x1="80" y1="-392" x2="84" y2="420"/><line x1="120" y1="-392" x2="116" y2="420"/></g><rect x="30" y="-400" width="140" height="10" rx="3" fill="#6b4a2a"/><rect x="94" y="-410" width="12" height="40" rx="3" fill="#6b4a2a"/>' +
     '<g class="pleg l"><rect x="82" y="330" width="14" height="110" rx="6" fill="#f3d2b8"/><path d="M78 436 h22 v10 h-28 z" fill="#1d1d24"/></g><g class="pleg r"><rect x="104" y="330" width="14" height="110" rx="6" fill="#f3d2b8"/><path d="M100 436 h22 v10 h-28 z" fill="#1d1d24"/></g>' +
     '<path class="pskirt" d="M76 210 Q100 200 124 210 L170 360 Q100 384 30 360 Z" fill="#4aa0c8"/><path d="M34 356 Q100 378 166 356 L170 368 Q100 392 30 368 Z" fill="#fff"/><g fill="#e0283a"><circle cx="70" cy="300" r="7"/><circle cx="120" cy="280" r="7"/><circle cx="96" cy="340" r="7"/><circle cx="146" cy="340" r="6"/><circle cx="52" cy="340" r="6"/><circle cx="100" cy="236" r="5"/></g>' +
     '<path d="M76 150 Q100 140 124 150 L126 214 L74 214 Z" fill="#4aa0c8"/>' +
@@ -4956,7 +4957,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     order.forEach(function (k) { pts[k] = 0; });
     G.organ = { id: 'or' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', ph: 0, order: order, sta: {}, prog: {}, pts: pts, last: {}, ends: 0, win: [], fixed: false };
     G.phase = 'organ'; G.barMs = 0; push();
-    clearTimeout(orTimer); orTimer = setTimeout(orPhase, 1500);
+    clearTimeout(orTimer);
+    if (REMOTE) { orTimer = setTimeout(orPhase, 1500); return; }
+    // the presenters, in front of the organ and the singer, explain the game; then they step aside
+    var g = G.organ, lines = (SCENES.organ && SCENES.organ.lines) || [], t = 2200;
+    lines.forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.organ === g && g.st === 'intro') orSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
+    orTimer = setTimeout(function () { if (G.organ !== g || g.st !== 'intro') return; orSay(''); var ov = $('orov'); if (ov) ov.classList.add('hostsoff'); whooshes([0, 300]); orTimer = setTimeout(orPhase, 1400); }, t);
   }
   function orPhase() {   // a new phase: everyone gets a station (a different one from last time, where possible)
     var g = G.organ; if (!g || G.phase !== 'organ') return;
@@ -5010,22 +5016,65 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'end'; g.prize = big; push(); Music.douze(); orSong(false, true);
     clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.phase === 'organ') { G.organ = null; startRound(); } }, 8500);
   }
-  // Sieneke's song: slowed down while the organ is broken, back to normal speed when it is fixed
-  var orSongT = null;
-  function orRate(r) { if (REMOTE) return; try { yt.setPlaybackRate(r); } catch (e) {} }
+  // Sieneke's song, from a sound file (sounds/sjalalie.mp3; the YouTube video if that file isn't there). While a
+  // station is broken you hear it: SPEED broken = slowed down, PITCH broken = warbling out of tune, SOUND EFFECTS
+  // broken = the sound keeps cutting out. Fixed stations sound normal again.
+  var orSongT = null, orAud = null, orFile = null, orFxT = null;   // orFile: null (not tried yet), true or false
+  function orRate() {}   // (the effects follow the stations, see orFx)
+  function orBroken() {   // which stations are broken right now
+    var g = G.organ, b = {}; if (!g) return b;
+    if (g.st === 'intro' || g.st === 'brief' || g.st === 'fix' || (g.st === 'fixed' && !g.fixed)) OR_ST.forEach(function (s) { var who = g.order.filter(function (k) { return g.sta[k] === s; }); b[s] = who.some(function (k) { var pr = g.prog[k]; return !pr || pr.d < pr.of; }); });
+    return b;
+  }
+  function orFx() {
+    var g = G.organ; if (!g || REMOTE) return;
+    var br = orBroken(), t = performance.now() / 1000, base = br.speed ? .78 : 1;
+    if (orFile && orAud) {
+      try {
+        if (br.pitch) { orAud.preservesPitch = false; orAud.mozPreservesPitch = false; orAud.webkitPreservesPitch = false; orAud.playbackRate = base * (1 + .06 * Math.sin(t * 5.5) + .03 * Math.sin(t * 13)); }
+        else { orAud.preservesPitch = true; orAud.mozPreservesPitch = true; orAud.webkitPreservesPitch = true; orAud.playbackRate = base; }
+        var vol = Math.max(0, Math.min(1, .8 * (Music.vol ? Music.vol.music : 1)));
+        orAud.volume = br.fx && (t % 1.7) < .22 ? vol * .08 : vol;   // (sound effects broken: it keeps cutting out)
+      } catch (e) {}
+    } else { try { yt.setPlaybackRate(base < 1 ? .75 : 1); } catch (e) {} }
+  }
   function orSong(on, fade) {
-    clearInterval(orSongT); orSongT = null;
+    clearInterval(orSongT); orSongT = null; clearInterval(orFxT); orFxT = null;
     if (REMOTE) return;
-    try {
-      if (!on && fade) { var v = 55; orSongT = setInterval(function () { v -= 3; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(orSongT); orSongT = null; try { yt.pauseVideo(); yt.setPlaybackRate(1); } catch (e) {} } }, 200); return; }
-      if (!on) { yt.pauseVideo(); try { yt.setPlaybackRate(1); } catch (e) {} return; }
-      Music.want(false); stage = 'organ'; yt.loadVideoById({ videoId: 'HdA2SsM3BLI', startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
-      setTimeout(function () { orRate(G.organ && G.organ.st === 'fixed' && G.organ.fixed ? 1 : 0.75); }, 900);
+    if (!on) {
+      if (orFile && orAud) {
+        if (fade) { var v = orAud.volume; orSongT = setInterval(function () { v -= .04; orAud.volume = Math.max(0, v); if (v <= 0) { clearInterval(orSongT); orSongT = null; orAud.pause(); } }, 150); }
+        else orAud.pause();
+        return;
+      }
+      try { if (fade) { var v2 = 55; orSongT = setInterval(function () { v2 -= 3; try { yt.setVolume(Math.max(0, v2)); } catch (e) {} if (v2 <= 0) { clearInterval(orSongT); orSongT = null; try { yt.pauseVideo(); yt.setPlaybackRate(1); } catch (e) {} } }, 200); } else { yt.pauseVideo(); yt.setPlaybackRate(1); } } catch (e) {}
+      return;
+    }
+    Music.want(false);
+    var useYt = function () {
+      orFile = false;
+      try { stage = 'organ'; yt.loadVideoById({ videoId: 'HdA2SsM3BLI', startSeconds: 0 }); yt.unMute(); yt.setVolume(55); } catch (e) {}
       orSongT = setInterval(function () {
         if (G.phase !== 'organ' || !G.organ) { clearInterval(orSongT); orSongT = null; return; }
         try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
       }, 1500);
-    } catch (e) {}
+    };
+    if (orFile === false) useYt();
+    else {
+      try {
+        if (!orAud) { orAud = new Audio('sounds/sjalalie.mp3?v=1'); orAud.loop = true; orAud.preload = 'auto'; orAud.addEventListener('error', function () { if (orFile !== true && G.organ) { orAud = null; useYt(); } }); }
+        orAud.currentTime = 0; var pr = orAud.play();
+        if (pr && pr.then) pr.then(function () { orFile = true; }).catch(function () { if (orFile !== true) { orAud = null; useYt(); } });
+        else orFile = true;
+      } catch (e) { useYt(); }
+    }
+    orFxT = setInterval(function () { if (G.phase !== 'organ' || !G.organ) { clearInterval(orFxT); orFxT = null; return; } orFx(); }, 80);
+  }
+  function orSay(who, txt) {
+    var ov = $('orov'); if (!ov) return;
+    [].forEach.call(ov.querySelectorAll('.orbub'), function (x) { x.classList.remove('on'); });
+    if (!who) return;
+    var b = ov.querySelector('.orbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who);
   }
   function orSnap() {
     var g = G.organ, pr = {};
@@ -5042,6 +5091,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.innerHTML = '<div class="orbg"><div class="orleds l">' + leds + '</div><div class="orleds r">' + leds + '</div><div class="orrig">' + leds + leds + '</div><div class="orbeams"><i></i><i></i><i></i><i></i></div></div><div class="orfloor"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
         '<div class="ormid">' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
         '<div class="orpuppet p1">' + OR_PUPPET1 + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
+        '<div class="orhosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub orbub him"></div><div class="tcbub orbub her"></div>' +
         '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="ormsg"></div><div class="orboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);

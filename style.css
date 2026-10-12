@@ -3622,3 +3622,13 @@ body.hasdock main{padding-bottom:84px}
 .edopt{display:flex;align-items:center;gap:10px;border:0;border-radius:14px;padding:16px 12px;font-weight:900;font-size:1.1rem;font-family:inherit;background:#2a2050;color:#fff;cursor:pointer}
 .edopt i{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 2px #fff}
 .ednext{width:100%;margin-top:10px}
+
+/* Sja-la-lie: a smaller singer; the marionettes hang from bars up near the ceiling */
+.orsinger{height:42vh}
+.orpuppet{height:94vh;bottom:2vh}
+
+.orhosts .ehost{position:absolute;bottom:2vh;height:56vh;width:auto;z-index:5;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3.2s ease-in-out infinite alternate;transition:translate 1.2s cubic-bezier(.5,0,.7,.4),opacity 1.2s}
+.orhosts .him{left:27vw}.orhosts .her{right:27vw;animation-delay:-1.6s}
+.orov.hostsoff .orhosts .him,.orov:not([data-st="intro"]) .orhosts .him{translate:-60vw 0;opacity:0}
+.orov.hostsoff .orhosts .her,.orov:not([data-st="intro"]) .orhosts .her{translate:60vw 0;opacity:0}
+.orbub{top:22vh}.orbub.him{left:6vw}.orbub.her{right:6vw}
