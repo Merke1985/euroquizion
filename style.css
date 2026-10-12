@@ -3632,3 +3632,11 @@ body.hasdock main{padding-bottom:84px}
 .orov.hostsoff .orhosts .him,.orov:not([data-st="intro"]) .orhosts .him{translate:-60vw 0;opacity:0}
 .orov.hostsoff .orhosts .her,.orov:not([data-st="intro"]) .orhosts .her{translate:60vw 0;opacity:0}
 .orbub{top:22vh}.orbub.him{left:6vw}.orbub.her{right:6vw}
+/* Rule the World: the presenters on the disco floor; the dancers appear only when they land */
+.ruhosts .ehost{position:absolute;bottom:4vh;height:54vh;width:auto;z-index:5;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3.2s ease-in-out infinite alternate;transition:translate 1.2s cubic-bezier(.5,0,.7,.4),opacity 1.2s}
+.ruhosts .him{left:18vw}.ruhosts .her{left:44vw;animation-delay:-1.6s}
+.ruov:not([data-st="intro"]) .ruhosts .him{translate:-60vw 0;opacity:0}
+.ruov:not([data-st="intro"]) .ruhosts .her{translate:70vw 0;opacity:0}
+.rubub{top:14vh}.rubub.him{left:4vw}.rubub.her{left:auto;right:34vw}
+.rut.pre{display:none}
+.ruov[data-st="ready"] .ruclock{font-size:clamp(5rem,14vw,12rem)}
