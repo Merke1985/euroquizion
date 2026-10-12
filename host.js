@@ -4728,13 +4728,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.userData = { la: la, ra: ra, head: head, fr: fr };
     return g;
   }
+  var RU_TURN = -0.26;
   function ru3Init(hostEl, g) {
     if (!window.THREE) return null;
     var T = THREE, w = hostEl.clientWidth || innerWidth, h = hostEl.clientHeight || innerHeight, n = g.n, s = g.s;
     var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.shadowMap.enabled = true; rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.NoToneMapping;
     hostEl.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#0a0414'); sc.fog = new T.Fog('#1a0830', n * 1.6, n * 4);
-    var cam = new T.PerspectiveCamera(42, w / h, .3, 400); cam.position.set(n * .1, n * 1.02, n * 1.0); cam.lookAt(n * .28, 0, n * .08);
+    var cam = new T.PerspectiveCamera(40, w / h, .3, 400); cam.position.set(n * .02, n * 1.08, n * .9); cam.lookAt(n * .17, 0, n * .14);
+    sc.rotation.y = RU_TURN;   // (the whole floor turned a little to the right)
     sc.add(new T.HemisphereLight('#7a5aff', '#200830', .38));
     var key = new T.DirectionalLight('#ffffff', .35); key.position.set(-n, n * 2, n); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); var ks = key.shadow.camera; ks.left = -n; ks.right = n; ks.top = n; ks.bottom = -n; ks.far = n * 6; sc.add(key);
     // the club around the floor: a dark floor, a back wall with LED strips
@@ -4756,7 +4758,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var stTex = ru3Sparkle('#3a1a6a');
     var sb = new T.Mesh(new T.BoxGeometry(s - .06, 6, s - .06), [new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#120620', roughness: .8 }), new T.MeshStandardMaterial({ color: '#000' }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 }), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#7a2aff', emissiveIntensity: .5 })]);
     sb.position.y = -3; sb.castShadow = sb.receiveShadow = true; stage.add(sb);
-    var stM = new T.MeshStandardMaterial({ color: '#2a0f4a', roughness: .7, emissive: '#3a1070', emissiveIntensity: .25 });   // the stage floor: the same tiles, in dark purple
+    var stM = new T.MeshStandardMaterial({ color: '#08080c', roughness: .35, metalness: .4 });   // the stage floor: the same tiles, in black
     for (var sy = 0; sy < s; sy++) for (var sx = 0; sx < s; sx++) { var tl = new T.Mesh(geo, stM); tl.position.set(sx - s / 2 + .5, .07, sy - s / 2 + .5); tl.receiveShadow = true; stage.add(tl); }
     var singer = ru3Singer(); singer.scale.setScalar(s === 3 ? 1.15 : 1.7); stage.add(singer);
     var sLight = new T.PointLight('#fff0f8', 0, s * 4, 1.8); sLight.position.set(0, 3.5, 1.2); stage.add(sLight);
@@ -4800,7 +4802,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       Object.keys(st.toks).forEach(function (pk) {
         var o = st.toks[pk], kk = o.t0 ? Math.min(1, (Date.now() - o.t0) / 330) : 1, ee = 1 - Math.pow(1 - kk, 2);
         var cx = o.fx + (o.tx - o.fx) * ee, cy = o.fy + (o.ty - o.fy) * ee;
-        tmp.set(cx - n / 2 + .5, .2, cy - n / 2 + .5).project(cam);
+        tmp.set(cx - n / 2 + .5, .2, cy - n / 2 + .5).applyAxisAngle(up, RU_TURN).project(cam);
         o.el.style.left = ((tmp.x + 1) / 2 * w2) + 'px'; o.el.style.top = ((1 - tmp.y) / 2 * h2) + 'px'; o.el.style.zIndex = String(10 + Math.round(cy * 10));
         o.j.classList.toggle('run', kk < 1);
       });
