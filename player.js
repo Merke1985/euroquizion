@@ -188,6 +188,7 @@
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb) $('bombui').classList.add('hidden');
     if (s.phase !== 'carpet' || !s.carpet) $('carpetui').classList.add('hidden');
+    if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); if (zgU) { zgHeld = {}; zgSet(); } }
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
@@ -201,7 +202,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' && s.phase !== 'organ' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -291,6 +292,7 @@
     else if (s.phase === 'carpet' && s.carpet) carpetView(s);
     else if (s.phase === 'zg' && s.zg) zgView(s);
     else if (s.phase === 'rule' && s.rule) ruView(s);
+    else if (s.phase === 'organ' && s.organ) orView(s);
     else if (s.phase === 'qj' && s.qj) qjView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
@@ -681,6 +683,105 @@
       });
     }
     ruPad();
+  }
+
+  // ---------- Sja-la-lie Sja-la-Mayhem! ----------
+  // Your station's repair job: turn the crank (SPEED), slide the pipes into the dashed lines (PITCH), or unplug the wrong
+  // cables and plug them into the socket of their own colour (SOUND EFFECTS). Each phone gets its own puzzle.
+  var orKey = '', orD = 0, orSentD = 0, orPz = null, OR_COLS = ['#e53950', '#2f80ed', '#f2c12e', '#27ae60', '#9b51e0'];
+  var OR_HELP = { speed: 'Turn the brass crank: drag the handle round and round!', pitch: 'Slide each pipe up or down until its top sits in the dashed band.', fx: 'Tap a wrongly plugged cable to unplug it, then drag it to the socket of its own colour.' };
+  var OR_TITLE = { speed: '⚙️ Speed', pitch: '🎵 Pitch', fx: '🔌 Sound effects' };
+  function orReport(o) { var g = state && state.organ; if (!net || !g || g.st !== 'fix') return; net.send('organ', { pid: pid, id: g.id, ph: g.ph, d: orD }); orSentD = orD; }
+  function orStep(d) { if (d <= orD) return; orD = d; try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} Music.plop(d); orReport(); var c = $('orui').querySelector('.orcount'); if (c) c.textContent = orD + ' / ' + orPz.of; if (orD >= orPz.of) setTimeout(function () { if (state) orView(state); }, 400); }
+  function orView(s) {
+    var g = s.organ, box = $('orui'), sta = g.sta[pid], mine = g.order.indexOf(pid) >= 0;
+    show('v-wait');
+    if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🎡 Sja-la-lie Sja-la-Mayhem!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
+    if (g.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🎡 Get your tools ready…'; $('waitsub').textContent = ''; return; }
+    if (g.st === 'end') {
+      box.classList.add('hidden'); var w = (g.win || []).indexOf(pid) >= 0;
+      $('waittitle').textContent = w ? '🏆 Best repairer!' : '🎡 The organ is saved!'; $('waitsub').textContent = 'Your repair points: ' + ((g.pts || {})[pid] || 0); return;
+    }
+    if (g.st === 'fixed') { box.classList.add('hidden'); $('waittitle').textContent = g.fixed ? '🎶 The organ is fixed!' : '💨 Time’s up!'; $('waitsub').textContent = (g.last && g.last[pid] != null ? '+' + g.last[pid] + ' repair points this phase. ' : '') + (g.ph < 3 ? 'Next phase coming up…' : ''); return; }
+    var key = g.id + '|' + g.ph;
+    if (orKey !== key) { orKey = key; orD = 0; orSentD = 0; orPz = orMake(sta, g.ph); box.removeAttribute('data-k'); }
+    if (g.st === 'brief') { box.classList.add('hidden'); $('waittitle').textContent = 'Phase ' + g.ph + ': ' + OR_TITLE[sta]; $('waitsub').textContent = OR_HELP[sta]; return; }
+    var pr = (g.prog || {})[pid]; if (pr && pr[0] < orD && orD > 0) orReport();   /* (the host missed a step: send it again) */
+    if (orD >= orPz.of) { box.classList.add('hidden'); $('waittitle').textContent = '✅ ' + OR_TITLE[sta] + ' fixed!'; $('waitsub').textContent = 'Great job! Now cheer on the others… 🔧'; return; }
+    $('waittitle').textContent = OR_TITLE[sta]; $('waitsub').textContent = OR_HELP[sta];
+    box.classList.remove('hidden');
+    if (box.getAttribute('data-k') === key) return;
+    box.setAttribute('data-k', key);
+    box.innerHTML = '<div class="orcount">0 / ' + orPz.of + '</div><div class="orpz"></div>';
+    var pz = box.querySelector('.orpz');
+    if (sta === 'speed') orSpeed(pz); else if (sta === 'pitch') orPitch(pz); else orFx(pz);
+  }
+  function orMake(sta, ph) {
+    var of = { speed: [3, 5, 8], pitch: [3, 4, 6], fx: [1, 2, 3] }[sta][ph - 1];
+    if (sta === 'pitch') { var tol = [7, 5, 3.5][ph - 1], pipes = []; for (var i = 0; i < of; i++) { var t = 25 + Math.random() * 55, h; do { h = 12 + Math.random() * 80; } while (Math.abs(h - t) < tol * 2 + 8); pipes.push({ t: t, h: h, ok: false }); } return { of: of, tol: tol, pipes: pipes }; }
+    if (sta === 'fx') {
+      var m = of + 2, cab = []; for (var c = 0; c < m; c++) cab.push({ col: c, at: -1 });
+      var socks = shuffle(cab.map(function (x) { return x.col; }).concat([-1]));   // the sockets (−1: the grey spare)
+      var wrong = shuffle(cab.map(function (x, i) { return i; })).slice(0, of);
+      cab.forEach(function (x, i) { x.at = socks.indexOf(i); });
+      wrong.forEach(function (w, i) { cab[w].at = i < of - 1 ? socks.indexOf(wrong[i + 1]) : socks.indexOf(-1); });
+      return { of: of, cab: cab, socks: socks, base: m - of };
+    }
+    return { of: of };
+  }
+  function orAng(e, el) { var r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)); }
+  function orSpeed(pz) {
+    pz.innerHTML = '<svg class="orwh" viewBox="-110 -110 220 220"><circle r="100" fill="#3a2010"/><circle r="92" fill="none" stroke="#ffd23f" stroke-width="10"/><g class="orrot"><path d="M0 -88 V88 M-88 0 H88 M-62 -62 L62 62 M62 -62 L-62 62" stroke="#ffd23f" stroke-width="7"/><circle r="18" fill="#ffe27a"/><circle class="orknob" cx="0" cy="-76" r="20" fill="#c8102e" stroke="#fff" stroke-width="4"/></g></svg><p class="orhint">↻ Drag the red handle round!</p>';
+    var sv = pz.querySelector('.orwh'), rot = pz.querySelector('.orrot'), acc = 0, last = null;
+    sv.addEventListener('pointerdown', function (e) { e.preventDefault(); try { sv.setPointerCapture(e.pointerId); } catch (x) {} last = orAng(e, sv); });
+    sv.addEventListener('pointermove', function (e) {
+      if (last == null) return; var a = orAng(e, sv), d = a - last; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; last = a; acc += d;
+      rot.setAttribute('transform', 'rotate(' + (acc * 180 / Math.PI).toFixed(1) + ')');
+      var n = Math.floor(Math.abs(acc) / (2 * Math.PI)); if (n > orD) orStep(Math.min(n, orPz.of));
+    });
+    var up = function () { last = null; }; sv.addEventListener('pointerup', up); sv.addEventListener('pointercancel', up);
+  }
+  function orPitch(pz) {
+    pz.innerHTML = '<div class="orpipes">' + orPz.pipes.map(function (p, i) { return '<div class="orpp" data-i="' + i + '"><div class="ortg" style="bottom:' + (p.t - orPz.tol) + '%;height:' + (orPz.tol * 2) + '%"></div><div class="orpb" style="height:' + p.h + '%"><i></i></div></div>'; }).join('') + '</div>';
+    [].forEach.call(pz.querySelectorAll('.orpp'), function (col) {
+      var p = orPz.pipes[+col.getAttribute('data-i')], body = col.querySelector('.orpb'), drag = false;
+      var set = function (e) { var r = col.getBoundingClientRect(); p.h = Math.max(6, Math.min(97, (r.bottom - e.clientY) / r.height * 100)); body.style.height = p.h + '%'; col.classList.toggle('near', Math.abs(p.h - p.t) <= orPz.tol); };
+      col.addEventListener('pointerdown', function (e) { if (p.ok) return; e.preventDefault(); drag = true; try { col.setPointerCapture(e.pointerId); } catch (x) {} set(e); });
+      col.addEventListener('pointermove', function (e) { if (drag) set(e); });
+      var up = function () { if (!drag) return; drag = false; if (Math.abs(p.h - p.t) <= orPz.tol) { p.ok = true; col.classList.add('ok'); orStep(orPz.pipes.filter(function (x) { return x.ok; }).length); } };
+      col.addEventListener('pointerup', up); col.addEventListener('pointercancel', up);
+    });
+  }
+  function orFx(pz) {
+    var z = orPz, m = z.cab.length, ns = z.socks.length;
+    pz.innerHTML = '<div class="orfx"><svg class="orwires" viewBox="0 0 300 300" preserveAspectRatio="none"></svg>' + z.cab.map(function (c, i) { return '<span class="orsrc" style="left:' + ((i + 0.5) / m * 100) + '%;--c:' + OR_COLS[c.col] + '"></span>'; }).join('') +
+      z.socks.map(function (c, j) { return '<span class="orsock' + (c < 0 ? ' spare' : '') + '" style="left:' + ((j + 0.5) / ns * 100) + '%;--c:' + (c < 0 ? '#666' : OR_COLS[c]) + '"></span>'; }).join('') +
+      z.cab.map(function (c, i) { return '<span class="orplug" data-i="' + i + '" style="--c:' + OR_COLS[c.col] + '"></span>'; }).join('') + '</div><p class="orhint">Tap a wrong plug to unplug it, then drag it home.</p>';
+    var box = pz.querySelector('.orfx'), wires = pz.querySelector('.orwires');
+    var pos = function (c, i) { if (c.drag) return c.drag; if (c.at >= 0) return [(c.at + 0.5) / ns * 300, 262]; return [(i + 0.5) / m * 300, 160 + (i % 2) * 22]; };
+    var draw = function () {
+      var ok = 0;
+      wires.innerHTML = z.cab.map(function (c, i) { var a = [(i + 0.5) / m * 300, 30], b = pos(c, i); return '<path d="M' + a[0] + ' ' + a[1] + ' C' + a[0] + ' ' + (a[1] + 90) + ' ' + b[0] + ' ' + (b[1] - 90) + ' ' + b[0] + ' ' + b[1] + '" stroke="' + OR_COLS[c.col] + '" stroke-width="7" fill="none" stroke-linecap="round"/>'; }).join('');
+      [].forEach.call(box.querySelectorAll('.orplug'), function (el) { var i = +el.getAttribute('data-i'), c = z.cab[i], p = pos(c, i); el.style.left = (p[0] / 3) + '%'; el.style.top = (p[1] / 3) + '%'; var home = c.at >= 0 && z.socks[c.at] === c.col; el.classList.toggle('loose', c.at < 0); el.classList.toggle('bad', c.at >= 0 && !home); el.classList.toggle('home', home); if (home) ok++; });
+      orStep(Math.max(0, ok - z.base));
+    };
+    [].forEach.call(box.querySelectorAll('.orplug'), function (el) {
+      var i = +el.getAttribute('data-i'), c = z.cab[i], dragging = false;
+      el.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        if (c.at >= 0) { c.at = -1; el.classList.add('pop'); setTimeout(function () { el.classList.remove('pop'); }, 300); draw(); return; }   // unplug first (a tap)
+        dragging = true; try { el.setPointerCapture(e.pointerId); } catch (x) {}
+      });
+      el.addEventListener('pointermove', function (e) { if (!dragging) return; var r = box.getBoundingClientRect(); c.drag = [(e.clientX - r.left) / r.width * 300, (e.clientY - r.top) / r.height * 300]; draw(); });
+      var up = function () {
+        if (!dragging) return; dragging = false; var p = c.drag; c.drag = null;
+        if (p) { var j = Math.round(p[0] / 300 * ns - 0.5), free = j >= 0 && j < ns && !z.cab.some(function (o) { return o.at === j; });
+          if (free && p[1] > 200 && z.socks[j] === c.col) { c.at = j; try { navigator.vibrate && navigator.vibrate(30); } catch (x) {} } else { el.classList.add('nope'); setTimeout(function () { el.classList.remove('nope'); }, 400); } }
+        draw();
+      };
+      el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    });
+    draw();
   }
 
   // ---------- Hold That Note! ----------

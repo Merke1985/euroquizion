@@ -258,6 +258,7 @@
     if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.rule && G.phase === 'rule') s.rule = ruSnap();
+    if (G.organ && G.phase === 'organ') s.organ = orSnap();
     if (G.qj && G.phase === 'qj') s.qj = qjSnap();
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
@@ -492,6 +493,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
+    if (G.phase !== 'organ' && $('orov')) { $('orov').remove(); clearInterval(orTick); if (orSongT) orSong(false); }
     if (G.phase !== 'rule' && $('ruov')) { $('ruov').remove(); clearInterval(ruLoop); }
     if (G.phase !== 'zg' && $('zgov')) { $('zgov').remove(); clearInterval(zgLoop); if (zgSongT) zgSong(false); }
     if (G.phase !== 'carpet' && $('tcov')) { $('tcov').remove(); clearInterval(tcFadeT); if (tcSongT) tcSong(false); }
@@ -586,6 +588,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); zgShow();
     } else if (G.phase === 'rule') {
       show('v-game'); ruShow();
+    } else if (G.phase === 'organ') {
+      show('v-game'); orShow();
     } else if (G.phase === 'qj') {
       show('v-game'); qjShow();
     } else {
@@ -1439,7 +1443,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet', 'zg', 'rule'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet', 'zg', 'rule', 'organ'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
@@ -1452,6 +1456,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five mini-parades on the turquoise carpet! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Keep your balance with LEFT and RIGHT on your phone. Lean further for more points, but lean too far and you fall. The highest score still standing wins!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. After 3 minutes, most tiles wins!' },
+    organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes and fix the cables. Three phases, each harder than the last. The best repairer wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -1464,7 +1469,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
@@ -1491,7 +1496,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The party games that can be played now: switched on, and possible with this group (most need two players or more).
   function partyGames(pOn, two) {
     pOn = pOn || G.partyOn || {}; if (two == null) two = list().filter(function (p) { return !p.off; }).length >= 2;
-    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule')); });
+    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule' && x !== 'organ')); });
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
@@ -2184,7 +2189,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -3805,6 +3810,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'Then all the translations appear, with the real one hidden among them.'],
         ['her', 'Find the real one for 12 points…'],
         ['him', '…and get 2 points for every player who falls for your fake! Three rounds, most points wins. Good luck, liars! 🤥']] },
+    organ: { sign: '🎡 Sja-la-lie Sja-la-Mayhem!', theme: 'organ',
+      get art() { return '<div class="hsorgan">' + ORGAN + '</div>'; },
+      lines: [['him', 'Oh no! Our giant Dutch barrel organ is broken, right in the middle of the song! 😱'],
+        ['her', 'You have to repair it together! Everyone gets a station on their phone.'],
+        ['him', 'SPEED: turn the brass crank. PITCH: slide the pipes into the dashed lines. SOUND EFFECTS: unplug the wrong cables and plug them in where they belong! 🔌'],
+        ['her', 'Three phases, and it gets worse every time. You get a new station each phase.'],
+        ['him', 'Points for what you fix and how fast, plus a team bonus if the whole organ works again. Best repairer wins! 🔧']] },
     rule: { sign: '🪩 We Will Rule the World', theme: 'rule',
       get art() { return '<div class="hsrule"><span class="ruball">🪩</span>' + RU_SINGER + '<div class="hsfloor"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'; },
       lines: [['her', 'Disco time! 🪩 Our singer is on stage in the middle of a huge disco floor…'],
@@ -3942,7 +3954,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b']];
   var TC_SHOES = ['High heels', 'Boots', 'Sneakers', 'Flats'];
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
-  var TC_SIZES = [[2, 3], [3, 4], [4, 5], [5, 6], [6, 7]], TC_Q_MS = 20000, TC_STEP = 5600, tcTimer = null, tcFadeT = null;
+  var TC_SIZES = [[2, 3], [3, 4], [4, 5], [5, 6], [6, 7]], TC_Q_MS = 20000, TC_STEP = 9000, tcTimer = null, tcFadeT = null;
   var TC_ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
   function tcGirl() { return { o: pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 3), g: Math.random() < .45 ? 1 : 0, s: Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * TC_HAIR.length), y: Math.floor(Math.random() * 3) }; }
   // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
@@ -3991,6 +4003,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
     G.carpet = { id: 'tc' + G.round + '-' + Math.random().toString(36).slice(2, 6), sec: 0, st: 'ready', girls: [], cur: -1, q: null, qid: '', used: [], ans: {}, tot: {}, win: [], ends: 0 };
+    if (!REMOTE) v3Load(function () {});   // (three.js, for the 3D carpet)
     G.phase = 'carpet'; G.barMs = 0; push();
     clearTimeout(tcTimer); tcTimer = setTimeout(tcParade, 2600);
   }
@@ -4064,6 +4077,152 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, 1500);
     } catch (e) {}
   }
+  // ---------- Turquoise Carpet in 3D (three.js) ----------
+  // Outdoors on a summer evening: a venue with lit windows, trees, sweeping searchlights, a raised turquoise carpet with
+  // golden posts and red ropes, and photographers in front. Each contestant (built from simple shapes, an original
+  // design) walks in from the left, turns to face the cameras, poses while the flashes go off, turns back and walks on.
+  var TC3_T = { inEnd: 3000, turn1: 3600, poseEnd: 6200, turn2: 6700, outEnd: 8800 };   // the timeline of one contestant (ms)
+  function tc3Init(host) {
+    if (!window.THREE) return null;
+    var T = THREE, w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
+    var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h);
+    rn.shadowMap.enabled = true; rn.shadowMap.type = T.PCFSoftShadowMap; rn.outputEncoding = T.sRGBEncoding; rn.toneMapping = T.NoToneMapping;   /* (no tone mapping: the outfit colours must stay clearly red, blue, gold or green) */
+    host.appendChild(rn.domElement);
+    var sc = new T.Scene();
+    sc.background = v3Tex(function (x, W, H) { var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b1440'); g.addColorStop(.45, '#2a2a78'); g.addColorStop(.72, '#b04d8f'); g.addColorStop(.86, '#ff9a5a'); g.addColorStop(1, '#ffcf7a'); x.fillStyle = g; x.fillRect(0, 0, W, H); for (var i = 0; i < 160; i++) { x.fillStyle = 'rgba(255,255,255,' + (.3 + Math.random() * .7) + ')'; x.fillRect(Math.random() * W, Math.random() * H * .5, 1.5, 1.5); } }, 512, 512);
+    sc.fog = new T.Fog('#4a3070', 40, 120);
+    var cam = new T.PerspectiveCamera(34, w / h, 0.3, 300); cam.position.set(0, 3.9, 15.5); cam.lookAt(0, 2.6, 0);
+    sc.add(new T.HemisphereLight('#c8c4ff', '#5a4030', 0.42));
+    var sun = new T.DirectionalLight('#ffe6cc', 0.5); sun.position.set(-12, 14, 10); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+    var sh = sun.shadow.camera; sh.left = -20; sh.right = 20; sh.top = 12; sh.bottom = -6; sh.near = 1; sh.far = 60; sun.shadow.bias = -0.0006; sc.add(sun);
+    var spot = new T.SpotLight('#ffffff', 0.75, 40, 0.42, 0.5, 1.2); spot.position.set(0, 13, 7); spot.target.position.set(0, 0, 0); spot.castShadow = true; sc.add(spot); sc.add(spot.target);
+    var flash = new T.PointLight('#ffffff', 0, 30, 1.6); flash.position.set(0, 2.6, 6); sc.add(flash);
+    // the ground: paving
+    var pave = v3Tex(function (x, W, H) { x.fillStyle = '#5c5468'; x.fillRect(0, 0, W, H); x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 3; for (var i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * W / 8, 0); x.lineTo(i * W / 8, H); x.stroke(); x.beginPath(); x.moveTo(0, i * H / 8); x.lineTo(W, i * H / 8); x.stroke(); } }, 256, 256);
+    pave.repeat.set(40, 30);
+    var ground = new T.Mesh(new T.PlaneGeometry(200, 150), new T.MeshStandardMaterial({ map: pave, roughness: .95 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; sc.add(ground);
+    // the venue behind, with lit windows and a glowing turquoise entrance
+    var hallTex = v3Tex(function (x, W, H) { x.fillStyle = '#2e2a5a'; x.fillRect(0, 0, W, H); for (var r = 0; r < 3; r++) for (var c = 0; c < 12; c++) { x.fillStyle = Math.random() < .8 ? 'rgba(255,' + (190 + Math.random() * 50 | 0) + ',110,' + (.75 + Math.random() * .25) + ')' : '#3c3870'; x.fillRect(16 + c * (W - 32) / 12, 22 + r * 70, (W - 32) / 12 - 14, 46); } x.fillStyle = '#40e0d0'; x.fillRect(W / 2 - 60, H - 70, 120, 70); }, 1024, 256);
+    var hall = new T.Mesh(new T.BoxGeometry(56, 14, 4), [new T.MeshStandardMaterial({ color: '#2e2a5a' }), new T.MeshStandardMaterial({ color: '#2e2a5a' }), new T.MeshStandardMaterial({ color: '#3b3570' }), new T.MeshStandardMaterial({ color: '#2e2a5a' }), new T.MeshStandardMaterial({ map: hallTex, emissive: '#ffffff', emissiveMap: hallTex, emissiveIntensity: .55 }), new T.MeshStandardMaterial({ color: '#2e2a5a' })]);
+    hall.scale.set(1.5, .62, 1); hall.position.set(0, 4.3, -42); sc.add(hall);
+    var roofSign = new T.Mesh(new T.BoxGeometry(18, 2.2, .6), new T.MeshStandardMaterial({ color: '#40e0d0', emissive: '#40e0d0', emissiveIntensity: .8 })); roofSign.position.set(0, 9.8, -41.5); sc.add(roofSign);
+    // trees and lamp posts along the square
+    var leaf = new T.MeshStandardMaterial({ color: '#2f6b4a', roughness: .9, flatShading: true }), bark = new T.MeshStandardMaterial({ color: '#3a2516' });
+    [-20, -13, 13, 20].forEach(function (x, i) { var t = new T.Group(), tr = new T.Mesh(new T.CylinderGeometry(.25, .35, 3, 8), bark); tr.position.y = 1.5; t.add(tr); var c = new T.Mesh(new T.IcosahedronGeometry(2 + (i % 2) * .5, 1), leaf); c.position.y = 4.2; c.castShadow = true; t.add(c); t.position.set(x * 1.3, 0, -16 - (i % 2) * 4); sc.add(t); });
+    var lampM = new T.MeshStandardMaterial({ color: '#222' }), bulbM = new T.MeshStandardMaterial({ color: '#fff3c0', emissive: '#ffd27a', emissiveIntensity: 1.5 });
+    [-9, 9].forEach(function (x) { var p = new T.Mesh(new T.CylinderGeometry(.1, .14, 5, 8), lampM); p.position.set(x, 2.5, -5); sc.add(p); var b = new T.Mesh(new T.SphereGeometry(.35, 12, 10), bulbM); b.position.set(x, 5.1, -5); sc.add(b); var l = new T.PointLight('#ffcf7a', .8, 12, 2); l.position.set(x, 5, -4.6); sc.add(l); });
+    // searchlights sweeping the sky
+    var beamM = new T.MeshBasicMaterial({ color: '#cffff8', transparent: true, opacity: .12, depthWrite: false, side: T.DoubleSide });
+    var beams = [-24, 24].map(function (x) { var g = new T.Group(), b = new T.Mesh(new T.ConeGeometry(2.6, 70, 16, 1, true), beamM); b.position.y = 35; g.add(b); g.position.set(x, 0, -46); sc.add(g); return g; });
+    // the raised turquoise carpet, with its darker edge
+    var carpet = new T.Mesh(new T.BoxGeometry(44, .28, 4.2), [new T.MeshStandardMaterial({ color: '#178a80' }), new T.MeshStandardMaterial({ color: '#178a80' }), new T.MeshStandardMaterial({ color: '#40e0d0', roughness: .8, emissive: '#0d6f66', emissiveIntensity: .35 }), new T.MeshStandardMaterial({ color: '#0d5a53' }), new T.MeshStandardMaterial({ color: '#178a80' }), new T.MeshStandardMaterial({ color: '#178a80' })]);
+    carpet.position.set(0, .14, 0); carpet.receiveShadow = true; sc.add(carpet);
+    // golden posts and red ropes in front of the carpet
+    var gold = new T.MeshStandardMaterial({ color: '#e0b030', metalness: .8, roughness: .3 }), red = new T.MeshStandardMaterial({ color: '#c8102e', roughness: .6 });
+    var px = []; for (var x = -20; x <= 20; x += 4) px.push(x);
+    px.forEach(function (x, i) {
+      var p = new T.Mesh(new T.CylinderGeometry(.07, .09, 1.1, 10), gold); p.position.set(x, .55, 2.7); p.castShadow = true; sc.add(p);
+      var k = new T.Mesh(new T.SphereGeometry(.14, 12, 10), gold); k.position.set(x, 1.15, 2.7); sc.add(k);
+      if (i < px.length - 1) { var cv = new T.QuadraticBezierCurve3(new T.Vector3(x, 1.05, 2.7), new T.Vector3(x + 2, .55, 2.7), new T.Vector3(x + 4, 1.05, 2.7)); sc.add(new T.Mesh(new T.TubeGeometry(cv, 16, .045, 6), red)); }
+    });
+    // the photographers in front (dark silhouettes), each with a camera that flashes
+    var dark = new T.MeshStandardMaterial({ color: '#111018', roughness: 1 }), camM = new T.MeshStandardMaterial({ color: '#2a2c3a' });
+    var cams = [-7.6, -4.4, 4.2, 7.4].map(function (x, i) {
+      var g = new T.Group(), body = new T.Mesh(new T.CapsuleGeometry(.55, .9, 4, 10), dark); body.position.y = .9; g.add(body);
+      var head = new T.Mesh(new T.SphereGeometry(.38, 14, 12), dark); head.position.y = 2.05; g.add(head);
+      var c = new T.Mesh(new T.BoxGeometry(.5, .34, .3), camM); c.position.set(.12, 2.05, -.42); g.add(c);
+      var fl = new T.Mesh(new T.SphereGeometry(.1, 10, 8), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 })); fl.position.set(.25, 2.3, -.5); g.add(fl);
+      g.position.set(x, -.3, 7 + (i % 2) * .6); g.rotation.y = (x > 0 ? 1 : -1) * .35; g.scale.setScalar(.9); sc.add(g); return fl;
+    });
+    var st = { alive: true, rn: rn, sc: sc, cam: cam, flash: flash, cams: cams, fig: null, key: '', t0: 0, flashAt: 0, flashCam: null };
+    function frame(now) {
+      if (!host.isConnected) { st.alive = false; rn.dispose(); return; }
+      var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
+      var t = now / 1000; beams[0].rotation.z = Math.sin(t * .5) * .45; beams[1].rotation.z = -Math.sin(t * .43 + 1) * .45;
+      if (st.fig) tc3Pose(st, Date.now() - st.t0);
+      var fk = Math.max(0, 1 - (Date.now() - st.flashAt) / 200); flash.intensity = fk * 2.2;
+      cams.forEach(function (f) { f.material.opacity = f === st.flashCam ? fk : 0; });
+      rn.render(sc, cam); requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    return st;
+  }
+  // A contestant out of simple shapes, facing +z (towards the audience) when not rotated.
+  function tc3Girl(w) {
+    var T = THREE, g = new T.Group(), M = function (c, o) { var m = new T.MeshStandardMaterial(Object.assign({ color: c, roughness: .6 }, o || {})); return m; };
+    var sk = M(TC_SKIN[w.k]), hr = M(TC_HAIR[w.r], { roughness: .5 }), cl = M(TC_COLORS[w.c][1], { roughness: .45 }), cd = M(TC_COLORS[w.c][2], { roughness: .5 });
+    var leg = w.o === 'dress' ? sk : cl, sleeve = w.o === 'suit' ? cl : sk;
+    var add = function (par, geo, mat, x, y, z) { var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
+    var shoeMat = M(['#d9dce6', '#6b3b1f', '#fafafa', '#1d1d24'][w.s], w.s === 0 ? { metalness: .7, roughness: .25 } : {});
+    var mkLeg = function (sx) {
+      var hip = new T.Group(); hip.position.set(sx * .17, 1.62, 0); g.add(hip);
+      add(hip, new T.CylinderGeometry(w.o === 'dress' ? .1 : .14, w.o === 'dress' ? .08 : .13, 1.5, 12), leg, 0, -.75, 0);
+      if (w.s === 1) add(hip, new T.CylinderGeometry(.12, .11, .62, 12), shoeMat, 0, -1.28, 0);
+      var sh = w.s === 0 ? add(hip, new T.BoxGeometry(.16, .1, .34), shoeMat, 0, -1.52, .08) : w.s === 2 ? add(hip, new T.BoxGeometry(.22, .18, .4), shoeMat, 0, -1.54, .07) : w.s === 1 ? add(hip, new T.BoxGeometry(.2, .14, .36), shoeMat, 0, -1.55, .07) : add(hip, new T.BoxGeometry(.17, .08, .32), shoeMat, 0, -1.56, .07);
+      if (w.s === 0) add(hip, new T.CylinderGeometry(.025, .02, .2, 6), shoeMat, 0, -1.6, -.07);
+      return hip;
+    };
+    var lh = mkLeg(-1), rh = mkLeg(1);
+    // body
+    add(g, new T.CylinderGeometry(.3, .26, .95, 16), cl, 0, 2.15, 0);
+    if (w.o === 'dress') { add(g, new T.CylinderGeometry(.28, .82, 1.2, 20, 1, true), M(TC_COLORS[w.c][1], { roughness: .45, side: T.DoubleSide }), 0, 1.25, 0); add(g, new T.TorusGeometry(.27, .05, 8, 20), cd, 0, 1.86, 0).rotation.x = Math.PI / 2; }
+    else if (w.o === 'jumpsuit') { add(g, new T.CylinderGeometry(.28, .32, .5, 16), cl, 0, 1.6, 0); add(g, new T.TorusGeometry(.29, .06, 8, 20), cd, 0, 1.82, 0).rotation.x = Math.PI / 2; }
+    else { add(g, new T.CylinderGeometry(.31, .34, .7, 16), cl, 0, 1.55, 0); add(g, new T.BoxGeometry(.18, .5, .05), M('#ffffff'), 0, 2.38, .27); add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 2.0, .3); add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 1.75, .32); }
+    var mkArm = function (sx) {
+      var sh = new T.Group(); sh.position.set(sx * .36, 2.52, 0); g.add(sh);
+      add(sh, new T.SphereGeometry(.1, 10, 8), sleeve, 0, 0, 0);
+      add(sh, new T.CylinderGeometry(.075, .065, .95, 10), sleeve, 0, -.48, 0);
+      add(sh, new T.SphereGeometry(.08, 10, 8), sk, 0, -.98, 0);
+      return sh;
+    };
+    var la = mkArm(-1), ra = mkArm(1);
+    // head
+    add(g, new T.CylinderGeometry(.08, .09, .2, 10), sk, 0, 2.7, 0);
+    var head = new T.Group(); head.position.set(0, 3.02, 0); g.add(head);
+    add(head, new T.SphereGeometry(.3, 20, 16), sk);
+    add(head, new T.SphereGeometry(.035, 8, 6), sk, 0, -.02, .3);
+    if (w.g) { add(head, new T.BoxGeometry(.42, .1, .04), M('#0a0a0a', { metalness: .6, roughness: .2 }), 0, .05, .28); }
+    else { add(head, new T.SphereGeometry(.035, 8, 6), M('#1a1010'), -.1, .06, .27); add(head, new T.SphereGeometry(.035, 8, 6), M('#1a1010'), .1, .06, .27); }
+    add(head, new T.BoxGeometry(.12, .035, .03), M('#c0303a'), 0, -.13, .28);
+    var cap = add(head, new T.SphereGeometry(.315, 20, 12, 0, Math.PI * 2, 0, Math.PI * .55), hr, 0, .02, -.02); cap.rotation.x = -.25;
+    if (w.y === 0) add(head, new T.BoxGeometry(.56, .85, .22), hr, 0, -.38, -.18);
+    else if (w.y === 1) add(head, new T.CylinderGeometry(.33, .36, .4, 16, 1, true), hr, 0, -.12, -.03);
+    else add(head, new T.SphereGeometry(.16, 12, 10), hr, 0, .2, -.3);
+    if (w.h === 1) { add(head, new T.CylinderGeometry(.24, .24, .5, 18), M('#15151c'), 0, .5, 0); add(head, new T.CylinderGeometry(.4, .4, .03, 20), M('#15151c'), 0, .26, 0); add(head, new T.CylinderGeometry(.245, .245, .08, 18), M('#3a3a48'), 0, .32, 0); }
+    else if (w.h === 2) { add(head, new T.CylinderGeometry(.62, .62, .03, 24), M('#efdcab'), 0, .22, 0); add(head, new T.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#efdcab'), 0, .22, 0); add(head, new T.CylinderGeometry(.3, .3, .07, 18), M('#8b5cf6'), 0, .26, 0); }
+    else if (w.h === 3) { var b = add(head, new T.SphereGeometry(.34, 16, 10), M('#6d3cc0'), -.05, .26, 0); b.scale.set(1.1, .38, 1.1); b.rotation.z = .25; }
+    g.userData = { lh: lh, rh: rh, la: la, ra: ra, head: head };
+    return g;
+  }
+  // Where the contestant is at time ms of their walk: in from the left, turn to the cameras, pose, turn back, out to the right.
+  function tc3Pose(st, ms) {
+    var f = st.fig, u = f.userData, T3 = TC3_T, ease = function (k) { return k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; };
+    var X0 = -16, X1 = 17, walk = 0, x = 0, rot = Math.PI / 2;
+    if (ms < T3.inEnd) { var k = ms / T3.inEnd; x = X0 + (0 - X0) * (1 - Math.pow(1 - k, 1.6)); walk = 1; }
+    else if (ms < T3.turn1) { x = 0; rot = Math.PI / 2 * (1 - ease((ms - T3.inEnd) / (T3.turn1 - T3.inEnd))); }
+    else if (ms < T3.poseEnd) { x = 0; rot = 0; }
+    else if (ms < T3.turn2) { x = 0; rot = Math.PI / 2 * ease((ms - T3.poseEnd) / (T3.turn2 - T3.poseEnd)); }
+    else { var k2 = Math.min(1, (ms - T3.turn2) / (T3.outEnd - T3.turn2)); x = X1 * Math.pow(k2, 1.5); walk = 1; }
+    f.position.x = x; f.rotation.y = rot;
+    var ph = ms / 1000 * 2 * Math.PI * 1.1, sw = walk ? Math.sin(ph) * .5 : 0;
+    u.lh.rotation.x = sw; u.rh.rotation.x = -sw; u.la.rotation.x = -sw * .8; u.ra.rotation.x = sw * .8;
+    f.position.y = .28 + (walk ? Math.abs(Math.sin(ph)) * .05 : 0);
+    var posing = ms >= T3.turn1 - 200 && ms < T3.poseEnd + 100, pk = posing ? Math.min(1, (ms - T3.turn1 + 200) / 400) * Math.min(1, (T3.poseEnd + 100 - ms) / 300) : 0;
+    // the pose: one hand on the hip, the other waving, hips swaying, head tilted
+    u.ra.rotation.z = pk * .9; u.ra.rotation.x = posing ? -pk * .2 : u.ra.rotation.x;
+    u.la.rotation.z = -pk * (2.5 + Math.sin(ms / 160) * .25);
+    u.lh.rotation.z = -pk * .08; u.rh.rotation.z = pk * .16;
+    f.rotation.z = pk * Math.sin(ms / 420) * .06; u.head.rotation.z = pk * .18; u.head.rotation.y = pk * Math.sin(ms / 600) * .2;
+  }
+  function tc3Show(st, ov, g) {   // a new contestant on the carpet (or none)
+    var key = g.st === 'walk' && g.cur >= 0 ? g.sec + ':' + g.cur : '';
+    if (st.key === key) return; st.key = key;
+    if (st.fig) { st.sc.remove(st.fig); st.fig = null; }
+    if (!key) return;
+    st.fig = tc3Girl(g.girls[g.cur]); st.fig.position.set(-16, .28, .2); st.sc.add(st.fig); st.t0 = Date.now();
+    var T3 = TC3_T, n = 0, step = (T3.poseEnd - T3.turn1 - 200) / 7;
+    for (var t = T3.turn1 + 100; t < T3.poseEnd - 100; t += step) (function (t, i) { setTimeout(function () { if (st.key !== key || !st.alive) return; st.flashAt = Date.now(); st.flashCam = st.cams[Math.floor(Math.random() * st.cams.length)]; tcFlash(ov, i); }, t); })(t + Math.random() * 120, n++);
+  }
   function carpetSnap() {
     var g = G.carpet, open = g.st === 'reveal' || g.st === 'win', done = {};
     Object.keys(g.ans).forEach(function (k) { done[k] = 1; });
@@ -4081,23 +4240,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var cams = ''; for (var i = 0; i < 7; i++) cams += '<span class="tccam" style="--i:' + i + '"><i class="tcflash"></i></span>';
       var wins = ''; for (var w = 0; w < 18; w++) wins += '<i style="--d:' + ((w * 7) % 5) + '"></i>';
       var posts = ''; for (var q = 0; q < 9; q++) posts += '<span style="left:' + (q * 12.5) + '%"></span>';
-      ov.innerHTML = '<div class="tcsky"><i class="tcmoon"></i><i class="tcbeam a"></i><i class="tcbeam b"></i></div><div class="tchall"><div class="tcwins">' + wins + '</div><div class="tcdoor"></div></div><div class="tctrees"><i></i><i></i><i></i><i></i></div>' +
+      ov.innerHTML = '<div class="tc3d"></div><div class="tcsky"><i class="tcmoon"></i><i class="tcbeam a"></i><i class="tcbeam b"></i></div><div class="tchall"><div class="tcwins">' + wins + '</div><div class="tcdoor"></div></div><div class="tctrees"><i></i><i></i><i></i><i></i></div>' +
         '<div class="tcsign">💎 Turquoise Carpet</div><div class="tcsec"></div>' +
         '<div class="tcrun"><div class="tctopf"></div><div class="tcedge"></div></div><div class="tcwalk"></div><div class="tcropes">' + posts + '</div><div class="tccams">' + cams + '</div><div class="tcq"></div><div class="tcboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
+    if (!ov._3 && window.THREE && !REMOTE) { ov._3 = tc3Init(ov.querySelector('.tc3d')); if (ov._3) ov.classList.add('is3d'); }
+    if (ov._3) tc3Show(ov._3, ov, g);
     ov.setAttribute('data-st', g.st);
     ov.querySelector('.tcsec').innerHTML = g.sec ? 'Parade ' + g.sec + ' of 5' : 'Get ready…';
     // the contestant of the moment: walks on, poses for the flashes, walks off
     var wk = ov.querySelector('.tcwalk'), key = g.sec + ':' + g.cur;
-    if (g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
+    if (!ov._3 && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
       wk.setAttribute('data-k', key);
       wk.innerHTML = '<div class="tcg walking">' + tcSvg(g.girls[g.cur]) + '</div>';
       var el = wk.firstChild, at = function (ms, f) { setTimeout(function () { if (el.isConnected) f(); }, ms); };
-      at(1400, function () { el.classList.remove('walking'); el.classList.add('posing'); });   // she stops, turns to the cameras and poses…
-      [1650, 1900, 2250, 2600, 2800, 3200, 3550, 3800].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
-      at(4150, function () { el.classList.remove('posing'); el.classList.add('walking'); });   // …and walks on
+      at(2200, function () { el.classList.remove('walking'); el.classList.add('posing'); });   // she stops, turns to the cameras and poses…
+      [2500, 2900, 3400, 3900, 4400, 4900, 5500, 6000].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
+      at(6500, function () { el.classList.remove('posing'); el.classList.add('walking'); });   // …and walks on
     }
     if (g.st !== 'walk') { wk.innerHTML = ''; wk.removeAttribute('data-k'); }
     // the question card
@@ -4403,6 +4564,141 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var me = ov.querySelector('.rumsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('rule', ruMsg);
+  // ---------- Sja-la-lie Sja-la-Mayhem! ----------
+  // A gigantic Dutch barrel organ is breaking down while Sieneke's song plays (too slow, out of tune). Everyone repairs it
+  // together, on three stations: SPEED (turn the brass crank), PITCH (slide the organ pipes into the dashed targets) and
+  // SOUND EFFECTS (unplug the wrong cables and plug them into the right sockets). Three phases, harder each time, and
+  // everyone gets a new station each phase. Personal score per phase: how much of your own task you finished, a bonus
+  // for finishing fast, and a team bonus when the whole organ is fixed before the time runs out. Highest total wins.
+  var OR_TEAMS = { 2: [1, 1, 0], 3: [1, 1, 1], 4: [2, 1, 1], 5: [2, 2, 1], 6: [2, 2, 2], 7: [3, 2, 2], 8: [3, 3, 2], 9: [3, 3, 3], 10: [4, 3, 3], 11: [4, 4, 3], 12: [4, 4, 4] };
+  var OR_ST = ['speed', 'pitch', 'fx'], OR_NEED = { speed: [3, 5, 8], pitch: [3, 4, 6], fx: [1, 2, 3] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
+  var OR_NAME = { speed: '⚙️ Speed', pitch: '🎵 Pitch', fx: '🔌 Sound effects' };
+  var OR_LINES = ['The organ is slowing down! Grab your tools! 🔧', 'Oh no, it’s falling apart even more! 💨', 'Total meltdown! Save the organ, save the song! 🔥'];
+  var ORGAN = '<svg class="orsvg" viewBox="0 0 600 420" aria-hidden="true"><defs><linearGradient id="orwood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4562a"/><stop offset="1" stop-color="#6b2a12"/></linearGradient><linearGradient id="orgold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8860b"/><stop offset=".5" stop-color="#ffe27a"/><stop offset="1" stop-color="#b8860b"/></linearGradient></defs>' +
+    '<g class="orpipes">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (i) { var h = 70 + Math.abs(5 - i) * -9 + 60, x = 150 + i * 28; return '<g class="orpipe" style="--i:' + i + '"><rect x="' + x + '" y="' + (150 - h) + '" width="20" height="' + h + '" rx="8" fill="url(#orgold)"/><ellipse cx="' + (x + 10) + '" cy="' + (150 - h + 18) + '" rx="6" ry="4" fill="#5a3a00"/></g>'; }).join('') + '</g>' +
+    '<rect x="90" y="140" width="420" height="220" rx="18" fill="url(#orwood)" stroke="#ffd23f" stroke-width="5"/>' +
+    '<path d="M90 160 Q300 100 510 160" fill="none" stroke="#ffd23f" stroke-width="5"/>' +
+    '<rect x="130" y="190" width="340" height="110" rx="14" fill="#f6e7c8" stroke="#c8102e" stroke-width="5"/>' +
+    '<g class="orfig"><circle cx="210" cy="245" r="26" fill="#ff7a1a"/><circle cx="300" cy="245" r="26" fill="#2f6ff0"/><circle cx="390" cy="245" r="26" fill="#c8102e"/><path d="M196 245 l14 -14 l14 14 l-14 14 z M286 245 l14 -14 l14 14 l-14 14 z M376 245 l14 -14 l14 14 l-14 14 z" fill="#fff" opacity=".85"/></g>' +
+    '<g fill="#ff7a1a"><path d="M150 330 q8 -26 16 0 q-8 10 -16 0 z"/><path d="M430 330 q8 -26 16 0 q-8 10 -16 0 z"/></g><g fill="#2f7a3a"><rect x="157" y="330" width="3" height="18"/><rect x="437" y="330" width="3" height="18"/></g>' +
+    '<g class="orwheel"><circle cx="560" cy="250" r="38" fill="none" stroke="url(#orgold)" stroke-width="9"/><path d="M560 212 V288 M522 250 H598" stroke="url(#orgold)" stroke-width="6"/><circle cx="560" cy="250" r="9" fill="#ffe27a"/><rect x="553" y="198" width="14" height="30" rx="6" fill="#6b2a12"/></g>' +
+    '<rect x="510" y="244" width="40" height="12" fill="url(#orgold)"/>' +
+    '<g class="orpanel"><rect x="20" y="200" width="70" height="120" rx="10" fill="#2a2440" stroke="#ffd23f" stroke-width="3"/><circle cx="42" cy="230" r="8" fill="#ff4d4d"/><circle cx="68" cy="230" r="8" fill="#3ddc84"/><circle cx="42" cy="262" r="8" fill="#ffd23f"/><circle cx="68" cy="262" r="8" fill="#3fb6ff"/><path class="orcab" d="M42 238 Q30 300 60 320 M68 238 Q90 300 50 330" stroke="#ff4d4d" stroke-width="4" fill="none"/></g>' +
+    '<circle cx="150" cy="380" r="30" fill="#3a2010" stroke="url(#orgold)" stroke-width="6"/><circle cx="450" cy="380" r="30" fill="#3a2010" stroke="url(#orgold)" stroke-width="6"/><path d="M150 356 V404 M126 380 H174 M450 356 V404 M426 380 H474" stroke="#ffd23f" stroke-width="3"/></svg>';   // (an original drawing: a Dutch street organ, with tulips)
+  function orAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (act.length < 2) { quipAll(); return; }
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    var order = shuffle(act.map(function (p) { return p.pid; })), pts = {};
+    order.forEach(function (k) { pts[k] = 0; });
+    G.organ = { id: 'or' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', ph: 0, order: order, sta: {}, prog: {}, pts: pts, last: {}, ends: 0, win: [], fixed: false };
+    G.phase = 'organ'; G.barMs = 0; push();
+    clearTimeout(orTimer); orTimer = setTimeout(orPhase, 1500);
+  }
+  function orPhase() {   // a new phase: everyone gets a station (a different one from last time, where possible)
+    var g = G.organ; if (!g || G.phase !== 'organ') return;
+    g.ph++; g.fixed = false;
+    var n = g.order.length, t = OR_TEAMS[Math.min(12, Math.max(2, n))], slots = [];
+    var rot = n === 2 ? [[0, 1], [1, 2], [2, 0]][g.ph - 1] : null;   // (two players: two of the three stations, a different pair each phase)
+    if (rot) slots = [OR_ST[rot[0]], OR_ST[rot[1]]];
+    else OR_ST.forEach(function (s, i) { for (var c = 0; c < t[i]; c++) slots.push(s); });
+    var shift = (g.ph - 1) * Math.max(1, Math.round(n / 3));
+    g.order.forEach(function (k, i) { var s = slots[(i + shift) % n]; g.sta[k] = s; g.prog[k] = { d: 0, of: OR_NEED[s][g.ph - 1], at: 0 }; });
+    g.st = 'brief'; g.ends = 0; push(); Music.woosh(); orRate(0.75);
+    clearTimeout(orTimer); orTimer = setTimeout(orFix, 4500);
+  }
+  function orFix() {
+    var g = G.organ; if (!g || G.phase !== 'organ') return;
+    g.st = 'fix'; g.t0 = Date.now(); g.ends = g.t0 + OR_MS[g.ph - 1]; push(); Music.blip();
+    if (g.ph === 1) orSong(true);
+    var id = g.id, ph = g.ph;
+    g.order.forEach(function (k) {   // the bots repair at their own pace (some don't quite finish)
+      var p = players[k]; if (!p || !p.bot) return;
+      var of = g.prog[k].of, total = OR_MS[ph - 1] * (0.45 + Math.random() * 0.6);
+      for (var s = 1; s <= of; s++) (function (s) { setTimeout(function () { orMsg({ pid: k, id: id, ph: ph, d: s }); }, total * s / of); })(s);
+    });
+    clearInterval(orTick); orTick = setInterval(function () { if (!G.organ || G.organ.st !== 'fix') { clearInterval(orTick); return; } orShow(); if (Date.now() >= G.organ.ends) orDone(); }, 250);
+  }
+  function orMsg(m) {
+    var g = G.organ; if (!g || G.phase !== 'organ' || g.st !== 'fix' || !m || m.id !== g.id || m.ph !== g.ph || !g.prog[m.pid]) return;
+    var pr = g.prog[m.pid], d = Math.max(0, Math.min(pr.of, Math.round(Number(m.d) || 0)));
+    if (d <= pr.d) return;
+    pr.d = d; if (!REMOTE) Music.plop(d);
+    if (d >= pr.of && !pr.at) { pr.at = Date.now(); push(); if (!REMOTE) Music.ding(); } else orShow();
+    if (g.order.every(function (k) { return g.prog[k].d >= g.prog[k].of || (players[k] && players[k].off); })) { g.fixed = true; orDone(); }
+  }
+  function orDone() {   // the phase is over: points, then the organ plays (properly, for a moment)
+    var g = G.organ; if (!g || g.st !== 'fix') return;
+    clearInterval(orTick);
+    var total = OR_MS[g.ph - 1];
+    g.last = {};
+    g.order.forEach(function (k) {
+      var pr = g.prog[k], frac = pr.d / pr.of, pts = Math.round(60 * frac) + (pr.at ? Math.round(40 * Math.max(0, g.ends - pr.at) / total) : 0) + (g.fixed ? 15 : 0);
+      g.pts[k] += pts; g.last[k] = pts;
+    });
+    g.st = 'fixed'; push(); if (g.fixed) { Music.douze(); orRate(1); } else Music.buzz();
+    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd(); }, 5500);
+  }
+  function orEnd() {
+    var g = G.organ; if (!g) return;
+    var best = Math.max.apply(null, g.order.map(function (k) { return g.pts[k]; }));
+    g.win = best > 0 ? g.order.filter(function (k) { return g.pts[k] === best; }) : [];
+    var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
+    g.st = 'end'; g.prize = big; push(); Music.douze(); orSong(false, true);
+    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.phase === 'organ') { G.organ = null; startRound(); } }, 8500);
+  }
+  // Sieneke's song: slowed down while the organ is broken, back to normal speed when it is fixed
+  var orSongT = null;
+  function orRate(r) { if (REMOTE) return; try { yt.setPlaybackRate(r); } catch (e) {} }
+  function orSong(on, fade) {
+    clearInterval(orSongT); orSongT = null;
+    if (REMOTE) return;
+    try {
+      if (!on && fade) { var v = 55; orSongT = setInterval(function () { v -= 3; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(orSongT); orSongT = null; try { yt.pauseVideo(); yt.setPlaybackRate(1); } catch (e) {} } }, 200); return; }
+      if (!on) { yt.pauseVideo(); try { yt.setPlaybackRate(1); } catch (e) {} return; }
+      Music.want(false); stage = 'organ'; yt.loadVideoById({ videoId: 'HdA2SsM3BLI', startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
+      setTimeout(function () { orRate(G.organ && G.organ.st === 'fixed' && G.organ.fixed ? 1 : 0.75); }, 900);
+      orSongT = setInterval(function () {
+        if (G.phase !== 'organ' || !G.organ) { clearInterval(orSongT); orSongT = null; return; }
+        try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
+      }, 1500);
+    } catch (e) {}
+  }
+  function orSnap() {
+    var g = G.organ, pr = {};
+    g.order.forEach(function (k) { var p = g.prog[k]; if (p) pr[k] = [p.d, p.of]; });
+    return { id: g.id, st: g.st, ph: g.ph, order: g.order, sta: g.sta, prog: pr, pts: g.pts, last: g.st === 'fixed' || g.st === 'end' ? g.last : null, fixed: g.fixed, left: g.st === 'fix' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
+  }
+  // The big screen: the organ in the middle, steaming and rattling; the three stations around it with who works there.
+  function orShow() {
+    var g = G.organ; if (!g) return;
+    var ov = $('orov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'orov'; ov.className = 'orov enter';
+      ov.innerHTML = '<div class="orsky"></div><div class="orhouses"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="orstreet"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
+        '<div class="ormid">' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
+        '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="ormsg"></div><div class="orboard"></div>';
+      document.body.appendChild(ov); whooshes([0, 350, 700]);
+      setTimeout(function () { ov.classList.remove('enter'); }, 2600);
+    }
+    var broken = g.st === 'brief' || g.st === 'fix' || (g.st === 'fixed' && !g.fixed);
+    ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.setAttribute('data-ph', g.ph);
+    ov.querySelector('.orph').textContent = g.ph ? 'Phase ' + g.ph + ' of 3' : '';
+    var ck = ov.querySelector('.orclock'), sec = g.st === 'fix' ? String(Math.max(0, Math.ceil((g.ends - Date.now()) / 1000))) : ''; if (ck.textContent !== sec) ck.textContent = sec;
+    OR_ST.forEach(function (s) {
+      var box = ov.querySelector('.orsta.' + s), who = g.order.filter(function (k) { return g.sta[k] === s; });
+      var done = who.length && who.every(function (k) { return g.prog[k] && g.prog[k].d >= g.prog[k].of; });
+      var h = g.ph && g.st !== 'end' ? '<div class="orst">' + OR_NAME[s] + (done ? ' ✅' : who.length ? ' <i class="orbad">⚠️</i>' : '') + '</div>' + who.map(function (k) { var p = players[k], pr = g.prog[k]; if (!p || !pr) return ''; return '<div class="orpl' + (pr.d >= pr.of ? ' ok' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em><i style="width:' + Math.round(pr.d / pr.of * 100) + '%"></i></em><b>' + pr.d + '/' + pr.of + '</b></div>'; }).join('') : '';
+      if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
+      box.classList.toggle('done', !!done); box.classList.toggle('empty', !who.length || !g.ph || g.st === 'end');
+    });
+    var msg = g.st === 'intro' ? '' : g.st === 'brief' ? OR_LINES[g.ph - 1] + ' Check your phone for your station!' : g.st === 'fix' ? 'Repair your part on your phone! Together you can save the organ! 🔧' : g.st === 'fixed' ? (g.fixed ? '🎶 The organ is fixed! Sja-la-lie, sja-la-la! 🎶' : '💨 Time’s up… the organ is still a mess!') : g.st === 'end' ? (g.win.length ? '🏆 Best repairer: ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + '!' + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var me = ov.querySelector('.ormsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
+    var bd = ov.querySelector('.orboard'), bh = g.st === 'fixed' || g.st === 'end' ? g.order.slice().sort(function (a, b) { return g.pts[b] - g.pts[a]; }).map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="tcrow' + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (g.last && g.last[k] != null && g.st === 'fixed' ? '+' + g.last[k] : '') + '</em><i>' + g.pts[k] + '</i></div>'; }).join('') : '';
+    if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
+  }
+  net.on('organ', orMsg);
   // ---------- Hold That Note ----------
   // Technical problems: the sound system breaks down in the middle of every high note. A diva rises on stage in an
   // enormous gown; everyone predicts on their phone how long the note will last (10 to 60 seconds) and, once locked in,
@@ -6249,7 +6545,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
@@ -6471,7 +6767,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 5 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 5, organ: 4.5 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
