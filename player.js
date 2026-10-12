@@ -645,7 +645,8 @@
   }
 
   // ---------- We Will Rule the World ----------
-  // A cross-shaped D-pad: hold a direction to keep moving (one tile per second). Stunned: the pad dims, 3-2-1 in the middle.
+  // A cross-shaped D-pad: tap a direction and you keep dancing that way, hop after hop, until you tap another one.
+  // The chosen arrow glows. Stunned: the pad dims, 3-2-1 in the middle.
   var ruLive = null, ruD = '', ruDT = null, ruStunEnd = 0, ruStunT = null;
   function ruSendD() { var r = state && state.rule; if (!net || !r || r.st !== 'play') return; net.send('rule', { pid: pid, id: r.id, d: ruD }); }
   function ruSet(d) { if (d === ruD) return; ruD = d; ruSendD(); clearInterval(ruDT); if (d) ruDT = setInterval(ruSendD, 700); }
@@ -672,16 +673,14 @@
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 We Will Rule the World'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var col = (r.cols || {})[pid] || '#888';
-    $('waittitle').textContent = r.st === 'play' ? '🪩 Claim the floor!' : r.st === 'rise' ? '✨ Here she comes…' : '🪩 Get ready…'; $('waitsub').textContent = 'Hold a direction to keep dancing. Your colour:';
+    $('waittitle').textContent = r.st === 'play' ? '🪩 Claim the floor!' : r.st === 'rise' ? '✨ Here she comes…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow: you keep dancing that way until you tap another one.';
     box.classList.remove('hidden'); box.style.setProperty('--c', col);
     if (box.getAttribute('data-id') !== r.id) {
       box.setAttribute('data-id', r.id); ruD = ''; clearInterval(ruDT); ruStunEnd = 0;
-      box.innerHTML = '<div class="rucnt"><span><span class="rusw"></span> <b>0</b> tiles</span><i></i></div><div class="rupad"><button type="button" class="rub u" data-d="u">▲</button><button type="button" class="rub l" data-d="l">◀</button><span class="ruc"></span><button type="button" class="rub r" data-d="r">▶</button><button type="button" class="rub d" data-d="d">▼</button></div>';
+      box.innerHTML = '<div class="rupad"><button type="button" class="rub u" data-d="u">▲</button><button type="button" class="rub l" data-d="l">◀</button><span class="ruc"></span><button type="button" class="rub r" data-d="r">▶</button><button type="button" class="rub d" data-d="d">▼</button></div>';
       [].forEach.call(box.querySelectorAll('.rub'), function (b) {
         var d = b.getAttribute('data-d');
-        b.addEventListener('pointerdown', function (e) { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (x) {} [].forEach.call(box.querySelectorAll('.rub'), function (x) { x.classList.toggle('on', x === b); }); ruSet(d); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} });
-        var off = function (e) { if (e) e.preventDefault(); b.classList.remove('on'); if (ruD === d) ruSet(''); };
-        b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
+        b.addEventListener('pointerdown', function (e) { e.preventDefault(); [].forEach.call(box.querySelectorAll('.rub'), function (x) { x.classList.toggle('on', x === b); }); b.classList.remove('tap'); void b.offsetWidth; b.classList.add('tap'); ruSet(d); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} });
         b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
       });
     }
