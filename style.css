@@ -3527,3 +3527,97 @@ body.hasdock main{padding-bottom:84px}
 .tcbub.him{left:14vw;border-bottom-right-radius:4px}.tcbub.her{right:14vw;border-bottom-left-radius:4px}
 .tcbub.on{opacity:1;transform:none}
 .tcbub .unsaid{visibility:hidden}
+
+/* ---------- Where the Hell Is Edgar?: the dollhouse ---------- */
+.edov{position:fixed;inset:0;z-index:55;overflow:hidden;background:linear-gradient(#1a1240,#3a1a5a 60%,#2a1030);font-family:inherit}
+.edov.leaving{animation:fadeout .9s forwards}
+.edsky{position:absolute;inset:0;background-image:radial-gradient(1.5px 1.5px at 10% 20%,#fff,transparent),radial-gradient(1px 1px at 40% 10%,#fff,transparent),radial-gradient(1.5px 1.5px at 80% 25%,#fff,transparent);background-size:300px 220px;opacity:.6}
+.edhouse{position:absolute;left:3vw;top:4vh;bottom:3vh;width:68vw;display:grid;grid-template-columns:1fr 13vw 1fr;grid-template-rows:12vh 1fr 1fr;gap:1.2vh;padding:0 1vw 1vw;background:#6b3a1e;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,.6),inset 0 0 0 6px #4a2410}
+.edroof{grid-column:1/-1;margin:0 -2vw;background:linear-gradient(#b4532f,#7a3518);clip-path:polygon(4% 100%,50% 0,96% 100%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:1.2vh;font-weight:900;font-size:clamp(1rem,2vw,1.8rem);color:#ffe0c0;text-shadow:0 2px 8px #000}
+.edroom{position:relative;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 4px rgba(0,0,0,.25)}
+.edroom > b{position:absolute;left:1vw;top:1vh;z-index:3;font-weight:900;font-size:clamp(.8rem,1.4vw,1.2rem);background:rgba(0,0,0,.55);padding:.2em .6em;border-radius:8px}
+.edroom.green{grid-area:2/1;background:linear-gradient(#2f7a4a 0 70%,#5a3a20 70%)}
+.edroom.club{grid-area:2/3;background:linear-gradient(#2a0f4a 0 70%,#1a0830 70%)}
+.edroom.back{grid-area:3/1;background:linear-gradient(#3a3a48 0 70%,#22222c 70%)}
+.edroom.boud{grid-area:3/3;background:linear-gradient(#e8a8c8 0 70%,#a85a7a 70%)}
+.eddeco i{position:absolute;display:block}
+.edroom.green .sofa{left:8%;bottom:22%;width:34%;height:22%;border-radius:12px 12px 6px 6px;background:linear-gradient(#ff5a8a,#c02a5a)}
+.edroom.green .sofa.two{left:auto;right:30%}
+.edroom.green .fridge{right:6%;bottom:22%;width:12%;height:52%;border-radius:6px;background:linear-gradient(90deg,#e8eef4,#fff,#cfd8e0);animation:edfr 4s ease-in-out infinite alternate}
+@keyframes edfr{to{translate:-30vw 0}}
+.edroom.club .edball{position:absolute;left:50%;top:6%;font-size:5vh;translate:-50% 0;animation:ruspin 3s linear infinite}
+.edroom.club .booth{left:30%;bottom:22%;width:40%;height:18%;background:linear-gradient(#3a3a48,#15151c);border-radius:6px;box-shadow:0 0 18px #ff3fb0}
+.edroom.club .eddj{position:absolute;left:50%;bottom:34%;height:34%;translate:-50% 0;animation:rudance .4s ease-in-out infinite alternate}
+.edroom.back .spk{left:6%;bottom:22%;width:14%;height:40%;border-radius:6px;background:radial-gradient(circle at 50% 35%,#555 0 22%,#222 24% 30%,#111 32%)}
+.edroom.back .spk.two{left:auto;right:6%}
+.edroom.back .cab{left:20%;bottom:24%;width:60%;height:4%;border-radius:99px;background:#ff4d4d}
+.edroom.back .cab.two{bottom:30%;background:#3fb6ff;rotate:-6deg}
+.edroom.boud .mirror{left:8%;top:22%;width:16%;height:44%;border-radius:50% 50% 8px 8px;background:linear-gradient(135deg,#e8f6ff,#9fc8e8);box-shadow:0 0 0 5px #d9a520}
+.edroom.boud .rack{left:40%;bottom:22%;width:30%;height:40%;border-top:4px solid #888;background:repeating-linear-gradient(90deg,#ff5a8a 0 12%,#3fb6ff 12% 24%,#ffd23f 24% 36%,transparent 36% 40%)}
+.edroom.boud .screen{right:6%;bottom:22%;width:16%;height:50%;background:repeating-linear-gradient(90deg,#f3e2c0 0 30%,#c8962a 30% 33%)}
+.edstairs{grid-area:2/2/4/3;position:relative;border-radius:8px;background:repeating-linear-gradient(170deg,#8a5a30 0 4vh,#6b3a1e 4vh 4.6vh);display:flex;flex-direction:column;align-items:center;padding-top:1vh}
+.edclock{font-weight:900;font-size:clamp(1.6rem,3.4vw,3rem);background:#1a0a30;color:#fff;border-radius:14px;padding:.1em .4em;box-shadow:0 0 0 4px #ffd23f,0 0 20px rgba(255,210,63,.5);font-variant-numeric:tabular-nums;z-index:3}
+.edclock.hot{color:#ff4d4d;animation:uthot .5s ease-in-out infinite alternate}
+.edin{position:absolute;left:4%;right:4%;bottom:4%;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:.4vw;z-index:4}
+.edstairs .edin{top:12vh;bottom:auto;flex-direction:column;align-items:center}
+.edp{position:relative;display:flex;flex-direction:column;align-items:center;width:5.4vh;animation:benvin .6s cubic-bezier(.3,1.4,.5,1) both}
+.edp .char{width:4.4vh;height:4.4vh;position:relative;z-index:2;box-shadow:0 0 0 2px #fff}
+.edp .lbod{position:absolute;left:50%;top:3.8vh;width:3vh;height:4.2vh;margin-left:-1.5vh;z-index:1}
+.edp em{font-style:normal;font-weight:800;font-size:clamp(.5rem,.75vw,.68rem);margin-top:4.4vh;background:rgba(0,0,0,.6);padding:0 .3em;border-radius:4px;white-space:nowrap;max-width:9vh;overflow:hidden;text-overflow:ellipsis}
+.edp.fin .char{box-shadow:0 0 0 3px #3ddc84}
+.edlist{position:absolute;right:2vw;top:6vh;width:24vw;display:flex;flex-direction:column;gap:.6vh}
+.edrow{display:flex;align-items:center;gap:.6vw;padding:.4vh .8vw;border-radius:12px;background:rgba(0,0,0,.5);font-weight:800;font-size:clamp(.7rem,1.1vw,.95rem)}
+.edrow .char{width:3.2vh;height:3.2vh;flex:none}
+.edrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.edrow i{font-style:normal;display:flex;gap:2px}.edrow i b{opacity:.25;font-weight:400}.edrow i b.ok{opacity:1}.edrow i b.now{opacity:1;animation:uthot .5s ease-in-out infinite alternate}
+.edrow em{font-style:normal;color:#ffd23f;font-weight:900}
+.edrow.fin{box-shadow:0 0 0 2px #3ddc84}
+.edov.enter .edhouse{animation:inBottom .8s cubic-bezier(.2,.9,.3,1.08) both}
+/* the phone */
+.edui{width:100%;margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:10px;user-select:none;-webkit-user-select:none}
+.eddoors{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.eddoor{border:0;border-radius:16px;padding:16px 8px;background:linear-gradient(160deg,#8a5a30,#5a3418);box-shadow:inset 0 0 0 3px #ffd23f,0 6px 14px rgba(0,0,0,.4);color:#fff;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.eddoor span{font-size:2.4rem}.eddoor b{font-size:1rem}.eddoor small{opacity:.75;font-weight:700}
+.eddoor.done{opacity:.4;filter:grayscale(.6)}
+.edwait{font-weight:900;font-size:1.2rem;padding:20px}
+.edbar{width:100%;height:8px;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
+.edbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ffd23f,#ff5a8a);transform-origin:0 50%}
+@keyframes edbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.edsofa{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;padding:12px;border-radius:18px;background:linear-gradient(#ff5a8a,#a02450);overflow:hidden}
+.edseat{height:84px;border:0;border-radius:12px;background:rgba(0,0,0,.25);box-shadow:inset 0 -6px 0 rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit}
+.edpp{display:flex;flex-direction:column;align-items:center;font-size:1.9rem;color:#fff}.edpp b{font-size:.8rem;background:var(--c);color:#111;border-radius:6px;padding:0 6px}
+.edfridge{position:absolute;top:0;bottom:0;width:38%;left:-40%;background:linear-gradient(90deg,#d8e2ea,#fff,#c8d4de);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2rem;color:#7a8a9a;animation:edfridge 2.6s ease-in-out .4s infinite;box-shadow:0 0 0 3px #9aa8b6}
+.edfridge b{font-size:.8rem}
+@keyframes edfridge{0%{left:-40%}45%{left:104%}50%{left:104%}95%{left:-40%}100%{left:-40%}}
+.edchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.edchip{border:0;border-radius:99px;padding:10px 14px;font-weight:900;font-size:1rem;font-family:inherit;background:var(--c,#5b3bd6);color:#111;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.35)}
+.edchip.sel{box-shadow:0 0 0 3px #fff,0 0 14px #fff}
+.edchip.used{opacity:.45}
+.edclub{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;border-radius:18px;background:radial-gradient(circle,#4a1a7a,#12062a)}
+.eddjw{height:170px}.eddjw svg{height:100%;width:auto}
+.eddjw.dance svg{animation:rudance .35s ease-in-out infinite alternate}
+.edballw{position:absolute;top:6px;right:16px;font-size:2.4rem;animation:ruspin 3s linear infinite}
+.edballw.warn{filter:drop-shadow(0 0 12px #ff3a3a);animation:ruspin .5s linear infinite,uthot .25s ease-in-out infinite alternate}
+.edsq{width:96px;height:96px;border-radius:14px;background:#0a0418;box-shadow:inset 0 0 0 3px #ffd23f;display:flex;align-items:center;justify-content:center;font-size:3.4rem}
+.edsq.pop{animation:benvin .3s cubic-bezier(.3,1.5,.5,1)}
+.edslots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%}
+.edslots span{height:54px;border-radius:10px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 2px rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.edsyms{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:100%}
+.edsym{height:60px;border:0;border-radius:12px;font-size:1.9rem;background:linear-gradient(160deg,#6a4dff,#3a1d9e);cursor:pointer}
+.edrow2{display:flex;gap:10px;width:100%}.edrow2 .btn{flex:1}
+.edplan{display:flex;flex-direction:column;gap:8px;width:100%;padding:14px;border-radius:14px;background:#f3e2c0;color:#2a1a10;font-weight:900;font-size:1.3rem}
+.edplan div{display:flex;align-items:center;justify-content:space-between}.edplan em{font-style:normal;font-size:2rem;color:#c8102e}
+.edsocks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.edsock{height:78px;border:0;border-radius:50%;background:#1c1830;box-shadow:inset 0 0 0 5px #ffd23f;color:#fff;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;aspect-ratio:1;justify-self:center}
+.edsock b{font-size:1.5rem}.edsock span{font-size:1.4rem}
+.edboud{position:relative;width:100%;height:260px;border-radius:18px;overflow:hidden;background:linear-gradient(#f3c8dc 0 72%,#a85a7a 72%)}
+.edwalk{position:absolute;bottom:6%;height:72%;animation:edwalk 4.5s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -1.6s)}
+.edwalk svg{height:100%;width:auto}
+@keyframes edwalk{from{left:-4%}to{left:72%}}
+.edscreen{position:absolute;bottom:6%;width:28%;height:60%;background:repeating-linear-gradient(90deg,#f3e2c0 0 30%,#c8962a 30% 33%);animation:edwalk 3.1s ease-in-out infinite alternate-reverse;box-shadow:0 0 0 3px #c8962a}
+.edrack{position:absolute;bottom:6%;width:22%;height:46%;border-top:5px solid #777;background:repeating-linear-gradient(90deg,#ff5a8a 0 14%,#3fb6ff 14% 28%,transparent 28% 34%);animation:edwalk 5.3s ease-in-out infinite alternate}
+.edq{font-weight:900;font-size:1.3rem;text-align:center}
+.edopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.edopt{display:flex;align-items:center;gap:10px;border:0;border-radius:14px;padding:16px 12px;font-weight:900;font-size:1.1rem;font-family:inherit;background:#2a2050;color:#fff;cursor:pointer}
+.edopt i{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 2px #fff}
+.ednext{width:100%;margin-top:10px}

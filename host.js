@@ -491,6 +491,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'scene') && $('hsov')) $('hsov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
+    if (G.phase !== 'cluerooms' && $('edov')) { $('edov').remove(); clearInterval(edTick); }
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
     if (G.phase !== 'organ' && $('orov')) { $('orov').remove(); clearInterval(orTick); if (orSongT) orSong(false); }
@@ -578,6 +579,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); shopShow();
     } else if (G.phase === 'bomb') {
       show('v-game'); bombShow();
+    } else if (G.phase === 'cluerooms') {
+      show('v-game'); edShow();
     } else if (G.phase === 'clueacc' || G.phase === 'cluerev') {
       show('v-game'); clueShow();
     } else if (G.phase === 'note') {
@@ -1450,7 +1453,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     partytime: { icon: '🎉', title: 'Party round!', sub: '' },
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
-    clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
+    clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Search the four rooms on your phone in two minutes for secret clues, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five mini-parades on the turquoise carpet! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
@@ -3569,7 +3572,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     G.clue = { id: 'clue' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', n: 0, known: {}, fresh: {}, acc: {}, step: 0, res: null,
       sol: { who: pick(CLUE_WHO).id, where: pick(CLUE_WHERE).id, what: pick(CLUE_WHAT).id } };
-    if (G.atype === 'party' && G.total < ENDLESS) G.total += CLUE_N - 1;
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
     clueShow(); clueSong();   // Edgar's tune: from the start of the game to the end of the clue questions
@@ -3586,11 +3588,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['her', 'The middle row: what he is hidden inside.', 'what'],
       ['him', 'And the bottom row: who took him.', 'who'],
       ['her', 'In each row, one card is the truth. We need detectives to find out which!'],
-      ['him', 'Here’s how it works: four trivia questions are coming. Answer right, and your phone gets secret clues.'],
-      ['her', 'A clue is a card that is NOT the answer. A right answer gets you three clues…'],
-      ['him', '…and be quick: the fastest right answer gets an extra clue! ⚡'],
-      ['her', 'After every question, your phone shows which cards are still possible.'],
-      ['him', 'After the last question, you make your accusation: where, inside what, and who. Let’s bring Edgar home! 🔍']
+      ['him', 'Here’s how it works: search the four rooms of the building! Pick a room on your phone and solve its task.'],
+      ['her', 'Do it well, and you get secret clues: cards that are NOT the answer. You can visit every room only once.'],
+      ['him', 'You have two minutes in total. The first detective to search all four rooms gets two bonus clues, the second one! ⚡'],
+      ['her', 'Then you make your accusation: where, inside what, and who. Let’s bring Edgar home! 🔍']
     ];
     var t = 6600;   // (the poster first, the photo, the presenters walking on: then the story)
     lines.forEach(function (l) {
@@ -3603,7 +3604,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }); })(l, t);
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
     });
-    at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); r.classList.add('on'); }); clueLeave(function () { G.clue.st = 'ask'; clueNext(); }); });
+    at(t, function () { var ov2 = $('clueov'); if (ov2) [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { r.classList.remove('lit'); r.classList.add('on'); }); clueLeave(edStart); });
   }
   function clueSay(who, txt) {
     var ov = $('clueov'); if (!ov) return;
@@ -3672,6 +3673,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 1000);   // (the countdown on the screen)
   }
   function clueMsg(m) {
+    if (m && m.room) { edMsg(m); return; }
     var g = G.clue; if (!g || G.phase !== 'clueacc' || g.st !== 'acc' || !m || m.id !== g.id || !players[m.pid] || g.acc[m.pid]) return;
     var ok = ['who', 'where', 'what'].every(function (k) { return CLUE_SETS[k].some(function (c) { return c.id === m[k]; }); }); if (!ok) return;
     g.acc[m.pid] = { who: m.who, where: m.where, what: m.what }; Music.plop(Object.keys(g.acc).length); push();
@@ -3745,10 +3747,103 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       clueLeave(function () { clueSongStop(); G.clue = null; shopVisit(pr.who, 1, function () { backFromShop(pr.who.length, function () { startRound2(); }); }, true, line); });
     });
   }
+  // ---------- Where the Hell Is Edgar?: the four rooms ----------
+  // A dollhouse of four rooms; everyone has 2 minutes to visit them (any order, no second visits), each room a little
+  // task on the phone. Doing it well earns secret clues (cards that are NOT the answer): Green Room 2, Euroclub 3,
+  // Backstage 2, Woodruff's Boudoir 3. The first to finish all four rooms gets 2 bonus clues, the second 1.
+  // Twelve clues are exactly the twelve wrong cards, so a perfect detective knows the answer for sure.
+  var ED_ROOMS = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 3 }];
+  var ED_MS = 120000, edTick = null;
+  function edRoom(id) { for (var i = 0; i < ED_ROOMS.length; i++) if (ED_ROOMS[i].id === id) return ED_ROOMS[i]; return null; }
+  function edClues(pid, n) {   // n smart clues for this player (from the row where they still have the most cards open)
+    var g = G.clue, got = [];
+    for (var k = 0; k < n; k++) {
+      var pool = cluePool(pid); if (!pool.length) break;
+      var left = {}; pool.forEach(function (c) { var r = c.split(':')[0]; left[r] = (left[r] || 0) + 1; });
+      var most = Math.max.apply(null, Object.keys(left).map(function (r) { return left[r]; }));
+      var row = pick(Object.keys(left).filter(function (r) { return left[r] === most; }));
+      var c = pick(pool.filter(function (x) { return x.split(':')[0] === row; })); (g.known[pid] = g.known[pid] || []).push(c); got.push(c);
+    }
+    return got;
+  }
+  function edStart() {
+    var g = G.clue; if (!g) return;
+    g.st = 'rooms'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS;
+    list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
+    G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
+    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong(); Music.ding();
+    // the bots: a room, ~20–32 seconds, a few seconds walking to the next
+    bots.forEach(function (b) {
+      if (!players[b.pid] || players[b.pid].off) return;
+      var order = shuffle(ED_ROOMS.map(function (r) { return r.id; })), t = 1500 + Math.random() * 2500, id = g.id;
+      order.forEach(function (r) {
+        var dur = 17000 + Math.random() * 11000;
+        (function (r, t0, dur) {
+          setTimeout(function () { edMsg({ pid: b.pid, id: id, room: r, enter: 1 }); }, t0);
+          setTimeout(function () { var mx = edRoom(r).max; edMsg({ pid: b.pid, id: id, room: r, score: Math.random() < .55 ? mx : Math.floor(Math.random() * (mx + 1)) }); }, t0 + dur);
+        })(r, t, dur);
+        t += dur + 2500 + Math.random() * 2000;
+      });
+    });
+    clearInterval(edTick); edTick = setInterval(function () {
+      var g2 = G.clue; if (!g2 || g2.st !== 'rooms') { clearInterval(edTick); return; }
+      edShow(); if (Date.now() >= g2.ends) edEnd();
+    }, 500);
+  }
+  function edMsg(m) {
+    var g = G.clue; if (!g || g.st !== 'rooms' || !m || m.id !== g.id || !g.rooms[m.pid] || !edRoom(m.room)) return false;
+    var r = g.rooms[m.pid];
+    if (r.done.indexOf(m.room) >= 0) return true;   // (no second visits)
+    if (m.enter) { if (!r.cur) { r.cur = m.room; push(); } return true; }
+    if (m.score == null || (r.cur && r.cur !== m.room)) return true;
+    var n = Math.max(0, Math.min(edRoom(m.room).max, Math.round(Number(m.score) || 0)));
+    r.done.push(m.room); r.cur = ''; r.score[m.room] = n;
+    var got = edClues(m.pid, n), bonus = [];
+    if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: the first two get bonus clues
+      g.fin.push(m.pid); var bn = g.fin.length === 1 ? 2 : g.fin.length === 2 ? 1 : 0; if (bn) bonus = edClues(m.pid, bn);
+    }
+    g.last[m.pid] = { room: m.room, n: n, c: got, b: bonus, k: g.id + ':' + m.room };
+    Music.plop(n + 1); push();
+    if (Object.keys(g.rooms).every(function (k) { return g.rooms[k].done.length === ED_ROOMS.length || (players[k] && players[k].off); })) setTimeout(edEnd, 2500);
+    return true;
+  }
+  function edEnd() {
+    var g = G.clue; if (!g || g.st !== 'rooms') return;
+    clearInterval(edTick); g.st = 'ask'; g.n = CLUE_N;   // (on to the accusation)
+    var ov = $('edov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
+    setTimeout(function () { var o = $('edov'); if (o) o.remove(); clueAccuse(); }, 900);
+  }
+  // The dollhouse on the big screen: four rooms, the timer in the middle, everyone's character in the room they're in
+  // (or on the stairs in the middle, picking the next one).
+  function edShow() {
+    var g = G.clue; if (!g || g.st !== 'rooms') return;
+    var ov = $('edov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov enter';
+      ov.innerHTML = '<div class="edsky"></div><div class="edhouse"><div class="edroof"><span>🔍 Where the Hell Is Edgar?</span></div>' +
+        '<div class="edroom green"><b>🛋️ Green Room</b><div class="eddeco"><i class="sofa"></i><i class="sofa two"></i><i class="fridge"></i></div><div class="edin"></div></div>' +
+        '<div class="edroom club"><b>🪩 Euroclub</b><div class="eddeco"><span class="edball">🪩</span><i class="booth"></i>' + ED_DJ + '</div><div class="edin"></div></div>' +
+        '<div class="edroom back"><b>🔌 Backstage</b><div class="eddeco"><i class="spk"></i><i class="spk two"></i><i class="cab"></i><i class="cab two"></i></div><div class="edin"></div></div>' +
+        '<div class="edroom boud"><b>👗 Woodruff’s Boudoir</b><div class="eddeco"><i class="mirror"></i><i class="rack"></i><i class="screen"></i></div><div class="edin"></div></div>' +
+        '<div class="edstairs"><div class="edclock"></div><div class="edin"></div></div></div><div class="edlist"></div>';
+      document.body.appendChild(ov); whooshes([0, 350, 700]);
+      setTimeout(function () { ov.classList.remove('enter'); }, 2400);
+    }
+    var ck = ov.querySelector('.edclock'), sec = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)), txt = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
+    if (ck.textContent !== txt) ck.textContent = txt; ck.classList.toggle('hot', sec <= 15);
+    var where = {}; Object.keys(g.rooms).forEach(function (k) { var r = g.rooms[k], w = r.cur || (r.done.length === ED_ROOMS.length ? 'stairs' : 'stairs'); (where[w] = where[w] || []).push(k); });
+    ['green', 'club', 'back', 'boud', 'stairs'].forEach(function (w) {
+      var box = ov.querySelector((w === 'stairs' ? '.edstairs' : '.edroom.' + w) + ' .edin'), ks = where[w] || [];
+      var h = ks.map(function (k) { var p = players[k]; if (!p) return ''; var r = g.rooms[k]; return '<span class="edp' + (r.done.length === ED_ROOMS.length ? ' fin' : '') + '" data-p="' + esc(k) + '"><span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em></span>'; }).join('');
+      if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
+    });
+    var lh = Object.keys(g.rooms).map(function (k) { var p = players[k], r = g.rooms[k]; if (!p) return ''; return '<div class="edrow' + (g.fin.indexOf(k) >= 0 ? ' fin' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><i>' + ED_ROOMS.map(function (x) { return '<b class="' + (r.done.indexOf(x.id) >= 0 ? 'ok' : r.cur === x.id ? 'now' : '') + '">' + x.icon + '</b>'; }).join('') + '</i>' + (g.fin.indexOf(k) === 0 ? '<em>+2 🔍</em>' : g.fin.indexOf(k) === 1 ? '<em>+1 🔍</em>' : '') + '</div>'; }).join('');
+    var lb = ov.querySelector('.edlist'); if (lb.getAttribute('data-h') !== lh) { lb.setAttribute('data-h', lh); lb.innerHTML = lh; }
+  }
   function clueSnap() {
     var g = G.clue, acc = {};
     Object.keys(g.acc).forEach(function (k) { acc[k] = 1; });
-    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step,
+    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' || g.st === 'rooms' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step, rooms: g.st === 'rooms' ? g.rooms : null, last: g.st === 'rooms' ? g.last : null, fin: g.fin || [],
       sol: g.st === 'reveal' ? { where: g.step >= 1 ? g.sol.where : '', what: g.step >= 2 ? g.sol.what : '', who: g.step >= 3 ? g.sol.who : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
   }
   // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.
