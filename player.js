@@ -599,10 +599,10 @@
   // ---------- Zero Gravity ----------
   // Hold LEFT or RIGHT to keep your balance; the meter shows how far you lean (the red ends: you fall).
   var zgLive = null, zgU = 0, zgUT = null, zgHeld = {};
-  function zgSendU() { var z = state && state.zg; if (!net || !z || z.st !== 'play') return; net.send('zg', { pid: pid, id: z.id, u: zgU }); }
+  function zgSendU() { var z = state && state.zg; if (!net || !z || z.st !== 'play') return; (net.toHost || net.send)('zg', { pid: pid, id: z.id, u: zgU }); }
   function zgSet() {
     var u = (zgHeld.r ? 1 : 0) - (zgHeld.l ? 1 : 0); if (u === zgU) return; zgU = u; zgSendU();
-    clearInterval(zgUT); if (u) zgUT = setInterval(zgSendU, 700);   /* (repeated while held, in case a message got lost) */
+    clearInterval(zgUT); if (u) zgUT = setInterval(zgSendU, 2000);   /* (repeated while held, in case a message got lost) */
   }
   function zgOnLive(m) { var z = state && state.zg; if (!m || !m.x || !z || m.id !== z.id) return; zgLive = m; zgMeter(); }
   function zgMeter() {
@@ -649,8 +649,8 @@
   // (tap the same one again to stand still).
   // The chosen arrow glows. Stunned: the pad dims, 3-2-1 in the middle.
   var ruLive = null, ruD = '', ruDT = null, ruStunEnd = 0, ruStunT = null;
-  function ruSendD() { var r = state && state.rule; if (!net || !r || r.st !== 'play') return; net.send('rule', { pid: pid, id: r.id, d: ruD }); }
-  function ruSet(d) { if (d === ruD) return; ruD = d; ruSendD(); clearInterval(ruDT); if (d) ruDT = setInterval(ruSendD, 700); }
+  function ruSendD() { var r = state && state.rule; if (!net || !r || r.st !== 'play') return; (net.toHost || net.send)('rule', { pid: pid, id: r.id, d: ruD }); }
+  function ruSet(d) { if (d === ruD) return; ruD = d; ruSendD(); clearInterval(ruDT); if (d) ruDT = setInterval(ruSendD, 2500); }
   function ruOnLive(m) { var r = state && state.rule; if (!m || !m.cnt || !r || m.id !== r.id) return; ruLive = m; if ((m.stun || {})[pid]) ruStunEnd = Date.now() + m.stun[pid]; ruPad(); }
   function ruPad() {
     var box = $('ruui'), r = state && state.rule; if (!box || !r) return;
@@ -868,7 +868,7 @@
         { q: 'Which song is number ' + (n + 1) + ' on the setlist?', a: s.setlist[n], o: edPickOpts(s.setlist[n], s.setlist) },
         { q: 'What does the neon sign say?', a: s.neon, o: edPickOpts(s.neon, ['DOUZE', 'PARTY', 'ENCORE', 'DANCE', 'GLAM', 'LOVE']) },
         { q: 'How many dancers (in colour) are on the floor?', a: String(s.dancers), o: edNums(s.dancers, 1, 7) },
-        { q: 'What colour is the DJ’s jacket?', a: s.jacket, o: edPickOpts(s.jacket, ['purple', 'blue', 'green', 'red', 'gold']), col: 1 }
+        { q: 'What colour is DJ Konstantin’s jacket?', a: s.jacket, o: edPickOpts(s.jacket, ['purple', 'blue', 'green', 'red', 'gold']), col: 1 }
       ];
       return [{ t: 'syms', q: 'The DJ booth lights up five symbols. Tap them in the same order, left to right!', a: s.panel }].concat(shuffle(mc).slice(0, 2));
     }

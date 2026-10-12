@@ -18,11 +18,28 @@ function escConnect(room) {
       var m = { type: 'broadcast', event: event, payload: payload };
       if (ready) ch.send(m); else queue.push(m);
     };
+    // Fast phone controls (Zero Gravity, We Will Rule the World) only matter to the host: they go to a second channel
+    // that only the host listens to, sent over plain HTTP (the phone never joins it). Each one then counts as two
+    // Supabase messages instead of one for every phone in the room. If that fails, the normal way is used.
+    var inCh = null, seq = 0, lastQ = {};
+    api.toHost = function (event, payload) {
+      payload._q = ++seq;
+      try {
+        if (!inCh) inCh = sb.channel('esc-' + room + '-in');
+        inCh.httpSend(event, payload).then(function (r) { if (!r || !r.success) api.send(event, payload); }, function () { api.send(event, payload); });
+      } catch (e) { api.send(event, payload); }
+    };
+    api.hostIn = function () {   // (the host only)
+      var hc = sb.channel('esc-' + room + '-in');
+      EVENTS.forEach(function (ev) { hc.on('broadcast', { event: ev }, function (m) { var p = m.payload; if (p && p._q && p.pid) { var k = ev + '|' + p.pid; if (lastQ[k] >= p._q) return; lastQ[k] = p._q; } emit(ev, p); }); });
+      hc.subscribe();
+    };
     return api;
   }
   var bc = new BroadcastChannel('esc-' + room);
   bc.onmessage = function (e) { emit(e.data.event, e.data.payload); };
   api.send = function (event, payload) { bc.postMessage({ event: event, payload: payload }); };
+  api.toHost = api.send; api.hostIn = function () {};
   setTimeout(function () { emit('_open'); }, 0);
   return api;
 }

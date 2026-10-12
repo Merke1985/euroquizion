@@ -77,7 +77,7 @@
   $('joinhint').textContent = joinUrl.replace(/^https?:\/\//, '').replace(/\?k=.*$/, '');
   try { var q = qrcode(0, 'M'); q.addData(joinUrl); q.make(); $('qr').innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('qr').classList.add('hidden'); }
 
-  net = escConnect(room);
+  net = escConnect(room); if (net.hostIn) net.hostIn();   // (the fast phone controls arrive on their own channel)
   // The handlers are also kept here, so the test bots (further down) can act exactly like a phone would.
   var H = {}, netOn = net.on; net.on = function (e, f) { H[e] = f; netOn(e, f); };
   $('demo').classList.toggle('hidden', !net.demo);
@@ -3866,7 +3866,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       s.setlist.map(function (t, i) { return '<text x="36" y="' + (128 + i * 22) + '" font-size="15" font-weight="700" fill="#f4f0d0" font-family="Comic Sans MS, Chalkboard, cursive">' + (i + 1) + '. ' + esc(t) + '</text>'; }).join('');
     // speakers, the DJ (an original character: curls, moustache, sunglasses, a sequin jacket) and the booth with its LED symbols
     h += '<rect x="196" y="160" width="60" height="110" rx="6" fill="#111" stroke="#333" stroke-width="3"/><circle cx="226" cy="190" r="14" fill="#333"/><circle cx="226" cy="238" r="20" fill="#333"/><rect x="544" y="160" width="60" height="110" rx="6" fill="#111" stroke="#333" stroke-width="3"/><circle cx="574" cy="190" r="14" fill="#333"/><circle cx="574" cy="238" r="20" fill="#333"/>';
-    h += edPerson(400, 290, { s: 1.05, hair: 'black', hairStyle: 'curly', top: s.jacket, glasses: 1, armUp: 1 });
+    h += '<svg x="322" y="96" width="156" height="208" viewBox="0 0 120 160">' + ED_DJ.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace('#c9c9d6', ED_COL[s.jacket]) + '</svg>' +   /* DJ Konstantin himself */
+      '<text x="400" y="104" text-anchor="middle" font-size="17" font-weight="900" fill="#fff" letter-spacing="2" style="filter:drop-shadow(0 0 5px #ff6fd8)">DJ KONSTANTIN</text>';
     h += '<rect x="262" y="226" width="276" height="96" rx="10" fill="#14081f" stroke="#ff6fd8" stroke-width="3"/>';
     s.panel.forEach(function (k, i) { var x = 274 + i * 52; h += '<rect x="' + x + '" y="240" width="46" height="66" rx="6" fill="#2a1446" stroke="' + ED_SYMS2[k].c + '" stroke-width="2.5"/>' + '<g filter="url(#edglow)">' + edSym(k, x + 5, 251, 36) + '</g>'; });
     // the crowd and the dancers
@@ -4640,7 +4641,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     zgShow();
     var left = g.order.filter(function (k) { return !g.out[k]; }).length;
     if (Date.now() >= g.ends || !left) { zgEnd(); return; }
-    if (Date.now() - zgSent >= 250) zgBeat();
+    if (Date.now() - zgSent >= 400) zgBeat();
   }
   function zgBeat() {   // the small update for the phones: everyone's lean and score
     var g = G.zg; if (!g || !net) return; zgSent = Date.now();
