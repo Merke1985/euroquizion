@@ -1489,6 +1489,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, 400 + (Array.from(l1).length + Array.from(l2).length) * TALK_MS + 4600);
       return;
     }
+    if (kind === 'carpet' && !REMOTE) { carpetAll(); return; }   // (the presenters welcome everyone on the carpet itself)
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
@@ -4002,10 +4003,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!act.length) { quipAll(); return; }
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
-    G.carpet = { id: 'tc' + G.round + '-' + Math.random().toString(36).slice(2, 6), sec: 0, st: 'ready', girls: [], cur: -1, q: null, qid: '', used: [], ans: {}, tot: {}, win: [], ends: 0 };
-    if (!REMOTE) v3Load(function () {});   // (three.js, for the 3D carpet)
+    G.carpet = { id: 'tc' + G.round + '-' + Math.random().toString(36).slice(2, 6), sec: 0, st: REMOTE ? 'ready' : 'intro', girls: [], cur: -1, q: null, qid: '', used: [], ans: {}, tot: {}, win: [], ends: 0 };
+    if (!REMOTE) v3Load(function () { if (G.carpet && G.phase === 'carpet') carpetShow(); });   // (three.js, for the 3D carpet)
     G.phase = 'carpet'; G.barMs = 0; push();
-    clearTimeout(tcTimer); tcTimer = setTimeout(tcParade, 2600);
+    clearTimeout(tcTimer);
+    if (REMOTE) { tcTimer = setTimeout(tcParade, 2600); return; }
+    // the presenters, standing on the carpet, welcome everyone and explain the game; then they step aside
+    var g = G.carpet, lines = (SCENES.carpet && SCENES.carpet.lines) || [], t = 2200;
+    lines.forEach(function (l) { (function (l, t0) { tcTimer = setTimeout(function () { if (G.carpet === g && g.st === 'intro') tcSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
+    setTimeout(function () { if (G.carpet !== g || g.st !== 'intro') return; tcSay(''); g.st = 'ready'; push(); whooshes([0, 300]); tcTimer = setTimeout(tcParade, 1800); }, t);
   }
   function tcParade() {
     var g = G.carpet; if (!g || G.phase !== 'carpet') return;
@@ -4119,11 +4125,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     carpet.position.set(0, .14, 0); carpet.receiveShadow = true; sc.add(carpet);
     // golden posts and red ropes in front of the carpet
     var gold = new T.MeshStandardMaterial({ color: '#e0b030', metalness: .8, roughness: .3 }), red = new T.MeshStandardMaterial({ color: '#c8102e', roughness: .6 });
-    var px = []; for (var x = -20; x <= 20; x += 4) px.push(x);
-    px.forEach(function (x, i) {
-      var p = new T.Mesh(new T.CylinderGeometry(.07, .09, 1.1, 10), gold); p.position.set(x, .55, 2.7); p.castShadow = true; sc.add(p);
-      var k = new T.Mesh(new T.SphereGeometry(.14, 12, 10), gold); k.position.set(x, 1.15, 2.7); sc.add(k);
-      if (i < px.length - 1) { var cv = new T.QuadraticBezierCurve3(new T.Vector3(x, 1.05, 2.7), new T.Vector3(x + 2, .55, 2.7), new T.Vector3(x + 4, 1.05, 2.7)); sc.add(new T.Mesh(new T.TubeGeometry(cv, 16, .045, 6), red)); }
+    var px = []; for (var x = -22; x <= 22; x += 4) px.push(x);   // (no post right in the middle: the shoes stay in view)
+    [2.6, -2.6].forEach(function (z) {   // a low barrier on both sides of the carpet
+      px.forEach(function (x, i) {
+        var p = new T.Mesh(new T.CylinderGeometry(.06, .08, .72, 10), gold); p.position.set(x, .36, z); p.castShadow = true; sc.add(p);
+        var k = new T.Mesh(new T.SphereGeometry(.11, 12, 10), gold); k.position.set(x, .75, z); sc.add(k);
+        if (i < px.length - 1) { var cv = new T.QuadraticBezierCurve3(new T.Vector3(x, .68, z), new T.Vector3(x + 2, .4, z), new T.Vector3(x + 4, .68, z)); sc.add(new T.Mesh(new T.TubeGeometry(cv, 16, .04, 6), red)); }
+      });
     });
     // the photographers in front (dark silhouettes), each with a camera that flashes
     var dark = new T.MeshStandardMaterial({ color: '#111018', roughness: 1 }), camM = new T.MeshStandardMaterial({ color: '#2a2c3a' });
@@ -4261,14 +4269,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var posts = ''; for (var q = 0; q < 9; q++) posts += '<span style="left:' + (q * 12.5) + '%"></span>';
       ov.innerHTML = '<div class="tc3d"></div><div class="tcsky"><i class="tcmoon"></i><i class="tcbeam a"></i><i class="tcbeam b"></i></div><div class="tchall"><div class="tcwins">' + wins + '</div><div class="tcdoor"></div></div><div class="tctrees"><i></i><i></i><i></i><i></i></div>' +
         '<div class="tcsign">💎 Turquoise Carpet</div><div class="tcsec"></div>' +
-        '<div class="tcrun"><div class="tctopf"></div><div class="tcedge"></div></div><div class="tcwalk"></div><div class="tcropes">' + posts + '</div><div class="tccams">' + cams + '</div><div class="tcq"></div><div class="tcboard"></div>';
+        '<div class="tcrun"><div class="tctopf"></div><div class="tcedge"></div></div><div class="tcwalk"></div><div class="tchosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub him"></div><div class="tcbub her"></div><div class="tcropes">' + posts + '</div><div class="tccams">' + cams + '</div><div class="tcq"></div><div class="tcboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
     if (!ov._3 && window.THREE && !REMOTE) { ov._3 = tc3Init(ov.querySelector('.tc3d')); if (ov._3) ov.classList.add('is3d'); }
     if (ov._3) tc3Show(ov._3, ov, g);
     ov.setAttribute('data-st', g.st);
-    ov.querySelector('.tcsec').innerHTML = g.sec ? 'Parade ' + g.sec + ' of 5' : 'Get ready…';
+    ov.querySelector('.tcsec').innerHTML = g.sec ? 'Parade ' + g.sec + ' of 5' : g.st === 'intro' ? '' : 'Get ready…';
     // the contestant of the moment: walks on, poses for the flashes, walks off
     var wk = ov.querySelector('.tcwalk'), key = g.sec + ':' + g.cur;
     if (!ov._3 && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
@@ -4298,6 +4306,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var bh = g.sec >= 1 && g.st !== 'walk' && g.st !== 'ready' ? '<div class="tcbt">' + (g.st === 'win' ? '🏆 ' + (g.win.length ? (g.win.length > 1 ? 'Tie! ' : '') + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + ' ' + (g.win.length > 1 ? 'win' : 'wins') + '!' + (shopOn() ? '' : ' +' + g.prize) : 'Nobody got one right…') : 'Right answers') + '</div>' + r.map(function (x, i) { var p = players[x.pid]; if (!p) return ''; return '<div class="tcrow' + (g.st === 'win' && g.win.indexOf(x.pid) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + '★'.repeat(x.n) + '<small>' + '☆'.repeat(Math.max(0, g.sec - x.n)) + '</small></em><i>' + (x.n ? (x.ms / 1000).toFixed(1) + 's' : '') + '</i></div>'; }).join('') : '';
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
     ov.classList.toggle('final', g.st === 'win');
+  }
+  function tcSay(who, txt) {
+    var ov = $('tcov'); if (!ov) return;
+    [].forEach.call(ov.querySelectorAll('.tcbub'), function (x) { x.classList.remove('on'); });
+    if (!who) return;
+    var b = ov.querySelector('.tcbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who);
   }
   function tcFlash(ov, n) {
     var cs = ov.querySelectorAll('.tcflash'); if (!cs.length) return;
@@ -4457,7 +4471,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2) { quipAll(); return; }
     stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
-    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} v3Load(function () {}); }
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} v3Load(function () { if (G.rule && G.phase === 'rule') ruShow(); }); }
     var sz = ruSize(act.length), n = sz[0], order = shuffle(act.map(function (p) { return p.pid; }));
     var g = G.rule = { id: 'ru' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'drop', n: n, s: sz[1], order: order, own: [], pos: {}, dir: {}, next: {}, stun: {}, trail: {}, cnt: {}, ends: 0, win: [], bot: {} };
     for (var i = 0; i < n * n; i++) g.own.push('');

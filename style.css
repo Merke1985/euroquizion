@@ -3517,3 +3517,13 @@ body.hasdock main{padding-bottom:84px}
 .notearea .sheet small.shcount{position:static;display:block;text-align:right;margin-top:6px;color:#8899a6}
 .notearea .snote .nvotes{position:static;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:8px}
 .notearea .snote .nvotes span{margin-left:0}
+
+/* Turquoise Carpet: the presenters welcome everyone on the carpet */
+.tchosts .ehost{position:absolute;bottom:21vh;height:48vh;width:auto;z-index:4;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3.2s ease-in-out infinite alternate;transition:translate 1.2s cubic-bezier(.5,0,.7,.4),opacity 1.2s}
+.tchosts .him{left:31vw}.tchosts .her{right:31vw;animation-delay:-1.6s}
+.tcov:not([data-st="intro"]) .tchosts .him{translate:-60vw 0;opacity:0}
+.tcov:not([data-st="intro"]) .tchosts .her{translate:60vw 0;opacity:0}
+.tcbub{position:absolute;top:16vh;max-width:30vw;z-index:6;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(1rem,1.7vw,1.4rem);line-height:1.25;padding:.65em 1em;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:scale(.6);transition:opacity .25s,transform .25s}
+.tcbub.him{left:14vw;border-bottom-right-radius:4px}.tcbub.her{right:14vw;border-bottom-left-radius:4px}
+.tcbub.on{opacity:1;transform:none}
+.tcbub .unsaid{visibility:hidden}
