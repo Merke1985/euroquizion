@@ -1436,7 +1436,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
-    note: { icon: '🎤', title: 'Hold That Note', sub: 'Technical problems! How long will the diva hold her high note this time? Guess between 10 seconds and one minute on your phone. Once she sings past your time you are out: the closest guess that is still in wins.' },
+    note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts (10 seconds to one minute), then grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -2169,7 +2169,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -3899,11 +3899,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
   }
   // ---------- Hold That Note ----------
-  // Technical problems: one of the stars keeps getting cut off in the middle of her high note. A diva rises on stage
-  // in an enormous gown; everyone guesses on their phone how long she will hold it this time (10 to 20 seconds);
-  // she sings, a timer runs, and the note is cut at a random moment. The closest guess wins.
+  // Technical problems: the sound system breaks down in the middle of every high note. A diva rises on stage in an
+  // enormous gown; everyone predicts on their phone how long the note will last (10 to 60 seconds) and, once locked in,
+  // gets the controls (power slider, power boost, cooling fan) until 10 seconds into the note. Everyone steers the same
+  // singer; a hidden random glitch of up to 10 seconds either way is added. The closest prediction wins.
   var DIVA = '<svg class="diva" viewBox="0 0 600 720" aria-hidden="true"><defs><linearGradient id="ntgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f7fb"/><stop offset=".5" stop-color="#bfc2d3"/><stop offset="1" stop-color="#6e7290"/></linearGradient><linearGradient id="nttier" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffb3e1"/></linearGradient><radialGradient id="ntskin" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#f7d2b6"/><stop offset="1" stop-color="#d9a17f"/></radialGradient></defs><path d="M262 250 Q300 238 338 250 L360 330 L240 330 Z" fill="url(#ntgown)"/><path d="M240 320 Q300 300 360 320 Q420 430 470 470 Q300 500 130 470 Q180 430 240 320 Z" fill="url(#ntgown)"/><path d="M130 462 Q300 492 470 462 Q520 540 560 590 Q300 640 40 590 Q80 540 130 462 Z" fill="url(#ntgown)"/><path d="M40 582 Q300 632 560 582 Q590 650 600 720 L0 720 Q10 650 40 582 Z" fill="url(#ntgown)"/><path d="M130 466 Q300 496 470 466" stroke="url(#nttier)" stroke-width="9" fill="none"/><path d="M40 586 Q300 636 560 586" stroke="url(#nttier)" stroke-width="11" fill="none"/><path d="M240 322 Q300 302 360 322" stroke="url(#nttier)" stroke-width="7" fill="none"/><g class="dvfringe" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity=".9"><line x1="245" y1="322" x2="247" y2="344"/><line x1="259" y1="317" x2="261" y2="339"/><line x1="272" y1="313" x2="274" y2="335"/><line x1="286" y1="311" x2="288" y2="333"/><line x1="300" y1="310" x2="302" y2="332"/><line x1="314" y1="311" x2="316" y2="333"/><line x1="328" y1="313" x2="330" y2="335"/><line x1="341" y1="317" x2="343" y2="339"/><line x1="355" y1="322" x2="357" y2="344"/><line x1="135" y1="466" x2="137" y2="496"/><line x1="151" y1="469" x2="153" y2="499"/><line x1="166" y1="471" x2="168" y2="501"/><line x1="182" y1="473" x2="184" y2="503"/><line x1="198" y1="475" x2="200" y2="505"/><line x1="214" y1="477" x2="216" y2="507"/><line x1="229" y1="478" x2="231" y2="508"/><line x1="245" y1="479" x2="247" y2="509"/><line x1="261" y1="480" x2="263" y2="510"/><line x1="276" y1="481" x2="278" y2="511"/><line x1="292" y1="481" x2="294" y2="511"/><line x1="308" y1="481" x2="310" y2="511"/><line x1="324" y1="481" x2="326" y2="511"/><line x1="339" y1="480" x2="341" y2="510"/><line x1="355" y1="479" x2="357" y2="509"/><line x1="371" y1="478" x2="373" y2="508"/><line x1="386" y1="477" x2="388" y2="507"/><line x1="402" y1="475" x2="404" y2="505"/><line x1="418" y1="473" x2="420" y2="503"/><line x1="434" y1="471" x2="436" y2="501"/><line x1="449" y1="469" x2="451" y2="499"/><line x1="465" y1="466" x2="467" y2="496"/><line x1="45" y1="586" x2="47" y2="622"/><line x1="63" y1="589" x2="65" y2="625"/><line x1="80" y1="592" x2="82" y2="628"/><line x1="98" y1="595" x2="100" y2="631"/><line x1="115" y1="598" x2="117" y2="634"/><line x1="133" y1="600" x2="135" y2="636"/><line x1="151" y1="602" x2="153" y2="638"/><line x1="168" y1="604" x2="170" y2="640"/><line x1="186" y1="606" x2="188" y2="642"/><line x1="203" y1="607" x2="205" y2="643"/><line x1="221" y1="609" x2="223" y2="645"/><line x1="238" y1="610" x2="240" y2="646"/><line x1="256" y1="610" x2="258" y2="646"/><line x1="274" y1="611" x2="276" y2="647"/><line x1="291" y1="611" x2="293" y2="647"/><line x1="309" y1="611" x2="311" y2="647"/><line x1="326" y1="611" x2="328" y2="647"/><line x1="344" y1="610" x2="346" y2="646"/><line x1="362" y1="610" x2="364" y2="646"/><line x1="379" y1="609" x2="381" y2="645"/><line x1="397" y1="607" x2="399" y2="643"/><line x1="414" y1="606" x2="416" y2="642"/><line x1="432" y1="604" x2="434" y2="640"/><line x1="449" y1="602" x2="451" y2="638"/><line x1="467" y1="600" x2="469" y2="636"/><line x1="485" y1="598" x2="487" y2="634"/><line x1="502" y1="595" x2="504" y2="631"/><line x1="520" y1="592" x2="522" y2="628"/><line x1="537" y1="589" x2="539" y2="625"/><line x1="555" y1="586" x2="557" y2="622"/></g><g fill="#fff" opacity=".95"><circle cx="200" cy="420" r="3"/><circle cx="380" cy="400" r="3"/><circle cx="300" cy="440" r="2.5"/><circle cx="150" cy="540" r="3"/><circle cx="450" cy="530" r="3"/><circle cx="300" cy="560" r="3.5"/><circle cx="90" cy="650" r="3"/><circle cx="520" cy="660" r="3"/><circle cx="240" cy="670" r="3"/><circle cx="380" cy="690" r="3"/><circle cx="330" cy="360" r="2"/><circle cx="270" cy="380" r="2"/></g><path d="M268 200 Q300 190 332 200 L340 258 Q300 270 260 258 Z" fill="url(#ntgown)"/><g fill="#ffd6f0"><circle cx="285" cy="215" r="2.5"/><circle cx="310" cy="222" r="2.5"/><circle cx="296" cy="238" r="2.5"/><circle cx="320" cy="245" r="2"/><circle cx="278" cy="244" r="2"/></g><g fill="#e9c060"><circle cx="252" cy="80" r="34"/><circle cx="300" cy="52" r="38"/><circle cx="348" cy="80" r="34"/><circle cx="250" cy="126" r="22"/><circle cx="350" cy="126" r="22"/><circle cx="260" cy="160" r="16"/><circle cx="340" cy="160" r="16"/></g><g fill="#f7dc8c"><circle cx="262" cy="70" r="14"/><circle cx="300" cy="40" r="16"/><circle cx="338" cy="70" r="14"/><circle cx="244" cy="118" r="8"/><circle cx="356" cy="118" r="8"/></g><path d="M266 206 Q230 170 214 120" stroke="url(#ntskin)" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M334 206 Q372 180 388 132" stroke="url(#ntskin)" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="213" cy="114" r="11" fill="url(#ntskin)"/><circle cx="389" cy="126" r="11" fill="url(#ntskin)"/><g class="dvmic"><rect x="200" y="96" width="10" height="34" rx="4" fill="#333" transform="rotate(-25 205 113)"/><circle cx="198" cy="94" r="9" fill="#777"/></g><rect x="290" y="168" width="20" height="30" rx="8" fill="url(#ntskin)"/><ellipse cx="300" cy="118" rx="44" ry="52" fill="url(#ntskin)"/><path d="M254 100 Q258 56 300 54 Q342 56 346 100 Q332 76 312 74 Q300 92 270 84 Q262 90 254 100 Z" fill="#e9c060"/><g class="dveyesc"><path d="M276 112 Q284 118 292 112" stroke="#2a1410" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M308 112 Q316 118 324 112" stroke="#2a1410" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M276 112 L272 108 M292 112 L295 107 M308 112 L305 107 M324 112 L328 108" stroke="#2a1410" stroke-width="2"/></g><g class="dveyeso"><ellipse cx="284" cy="111" rx="9" ry="7" fill="#fff"/><ellipse cx="316" cy="111" rx="9" ry="7" fill="#fff"/><circle cx="285" cy="111" r="4.5" fill="#3a6ea8"/><circle cx="317" cy="111" r="4.5" fill="#3a6ea8"/><circle cx="285" cy="111" r="2" fill="#111"/><circle cx="317" cy="111" r="2" fill="#111"/><circle cx="286.5" cy="109.5" r="1.2" fill="#fff"/><circle cx="318.5" cy="109.5" r="1.2" fill="#fff"/><path d="M274 106 Q284 100 294 106 M306 106 Q316 100 326 106" stroke="#2a1410" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M275 106 L271 102 M293 106 L296 101 M307 106 L304 101 M325 106 L329 102" stroke="#2a1410" stroke-width="2"/></g><path d="M273 100 Q284 94 293 100" stroke="#a07a2a" stroke-width="3" fill="none"/><path d="M307 100 Q316 94 327 100" stroke="#a07a2a" stroke-width="3" fill="none"/><ellipse cx="270" cy="132" rx="8" ry="5" fill="#ff8fa3" opacity=".5"/><ellipse cx="330" cy="132" rx="8" ry="5" fill="#ff8fa3" opacity=".5"/><ellipse class="dvmouth" cx="300" cy="146" rx="10" ry="13" fill="#7a1430"/><ellipse class="dvtongue" cx="300" cy="152" rx="6" ry="4" fill="#e05570"/><circle cx="256" cy="130" r="5" fill="#ffd23f"/><circle cx="344" cy="130" r="5" fill="#ffd23f"/></svg>';   // (an original character: big blonde curls, a towering silver fringe gown)
-  var NOTE_GUESS_MS = 20000, NOTE_MIN = 10, NOTE_MAX = 60, NOTE_LEAD = 6, noteTimer = null, noteTick = null;   // (NOTE_LEAD: seconds of the recording before the note itself)
+  var NOTE_PRE_MS = 14000, NOTE_MIN = 10, NOTE_MAX = 60, NOTE_LEAD = 6, NOTE_CTL = 10, noteTimer = null, noteTick = null;   // (NOTE_LEAD: seconds of the recording before the note itself; NOTE_CTL: the controls close this many seconds into the note)
   function noteElapsed(g) {   // seconds of the note so far (negative during the lead-in); the recording's own clock when it plays
     var a = ntAudio; if (a && !a.paused && a.currentTime > 0.05) return a.currentTime - NOTE_LEAD;
     return (Date.now() - g.t0) / 1000;
@@ -3913,25 +3914,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 2 || REMOTE) { quipAll(); return; }
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
-    G.note = { id: 'note' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', guess: {}, out: {}, len: Math.round((NOTE_MIN + Math.random() * (NOTE_MAX - NOTE_MIN)) * 10) / 10, t0: 0, ends: 0, win: [] };
+    G.note = { id: 'note' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', guess: {}, ctl: {}, lk: false, len: 0, base: 0, off: 0, t0: 0, ends: 0, lockAt: 0, win: [] };
     G.phase = 'note'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); noteShow();
     if (!REMOTE && !ntAudio) { try { ntAudio = new Audio('sounds/long_note.mp3'); ntAudio.preload = 'auto'; ntAudio.load(); } catch (e) {} }   // (loaded in advance: the note starts on time)
     var g = G.note, at = function (ms, f) { clearTimeout(f._t); setTimeout(function () { if (G.note === g && $('noteov')) f(); }, ms); };
     var lines = [
-      ['him', 'Oh no, Europe… we have technical problems! 😱'],
-      ['her', 'One of our stars keeps getting cut off in the middle of her big high note!'],
-      ['him', 'Our engineers need your help: they want to find the exact moment the sound system breaks down! 🔧'],
-      ['her', 'So: how long will she hold her note before it all goes wrong?'],
-      ['him', 'Guess on your phone: anywhere between 10 seconds and one minute.'],
-      ['her', 'But careful: once she sings past your time, you’re out! The closest guess that’s still in at the end wins. 🎯'],
-      ['him', 'Ladies and gentlemen… our diva! 💃']
+      ['him', 'Oh no, Europe… we have technical problems! 😱 Our sound system breaks down in the middle of every big high note!'],
+      ['her', 'How long will the next note last before it all goes wrong? Predict it on your phone: between 10 seconds and one minute.'],
+      ['him', 'Lock in your prediction and you get the controls: the POWER slider, a POWER BOOST and a COOLING FAN! 🎛️'],
+      ['her', 'More power and the boost make it break down sooner. The fan keeps it going longer. You all control the same singer!'],
+      ['him', 'But hurry: the controls close 10 seconds after the note starts. And there’s always a little random glitch… 😈'],
+      ['her', 'The closest prediction wins! Ladies and gentlemen… our diva! 💃']
     ];
     var t = 1800;
     lines.forEach(function (l, i) { (function (l, t0) { at(t0, function () { noteSay(l[0], l[1]); if (i === lines.length - 1) { $('noteov').classList.add('diva-on'); Music.douze(); whooshes([0, 300]); } }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
     at(t + 800, function () { noteGuess(); });
   }
-  // The diva's note: a recording of over two minutes, played from the start and stopped dead when the mic drops.
+  // The diva's note: a recording of over two minutes, played from the start and stopped dead when the equipment breaks down.
   var ntAudio = null;
   function noteAudio(on) {
     if (REMOTE) return;
@@ -3948,72 +3948,102 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!who) return;
     var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who);
   }
-  function noteGuess() {
+  // How hard everyone pushes the equipment, from 0 (normal power, fans on) to 1 (high power, boosts on). Everyone counts the same.
+  function notePush(g) {
+    var act = list().filter(function (p) { return !p.off; }); if (!act.length) return 0;
+    var P = 0, B = 0; act.forEach(function (p) { var c = g.ctl[p.pid] || {}; P += c.p || 0; B += c.t || 0; });
+    P /= act.length; B /= act.length;
+    return Math.max(0, Math.min(1, 0.6 * P + 0.4 * (B + 1) / 2));
+  }
+  function noteGuess() {   // predictions open (and the controls, once you have locked in); the diva warms up first
     var g = G.note; if (!g) return;
-    g.st = 'guess'; g.ends = Date.now() + NOTE_GUESS_MS; noteSay(''); push(); noteShow(); Music.ding();
-    bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off) return; setTimeout(function () { noteMsg({ pid: b.pid, id: g.id, guess: Math.round(NOTE_MIN + Math.random() * (NOTE_MAX - NOTE_MIN)) }); }, 3000 + Math.random() * 9000); });
-    clearTimeout(noteTimer); noteTimer = setTimeout(noteSing, NOTE_GUESS_MS);
-    clearInterval(noteTick); noteTick = setInterval(function () { if (!G.note || G.note.st !== 'guess') { clearInterval(noteTick); return; } noteShow(); }, 1000);
+    g.st = 'guess'; g.ends = Date.now() + NOTE_PRE_MS; g.lockAt = g.ends + (NOTE_LEAD + NOTE_CTL) * 1000; noteSay(''); push(); noteShow(); Music.ding();
+    bots.forEach(function (b) {
+      if (!players[b.pid] || players[b.pid].off) return;
+      var v = Math.round(15 + Math.random() * 40), id = g.id;
+      setTimeout(function () { noteMsg({ pid: b.pid, id: id, guess: v }); }, 2000 + Math.random() * 8000);
+      setTimeout(function () {   // and they steer towards their own prediction (more or less)
+        var lo = v < 32, hi = v > 42, r = Math.random();
+        noteMsg({ pid: b.pid, id: id, ctl: { p: lo ? 0.6 + 0.4 * r : hi ? 0.2 * r : r, t: lo ? (r < .7 ? 1 : 0) : hi ? (r < .7 ? -1 : 0) : (r < .3 ? 1 : r > .7 ? -1 : 0) } });
+      }, 11000 + Math.random() * 9000);
+    });
+    clearTimeout(noteTimer); noteTimer = setTimeout(noteSing, NOTE_PRE_MS);
+    clearInterval(noteTick); noteTick = setInterval(function () { if (!G.note || G.note.st !== 'guess') { clearInterval(noteTick); return; } noteShow(); }, 500);
   }
   function noteMsg(m) {
-    var g = G.note; if (!g || G.phase !== 'note' || g.st !== 'guess' || !m || m.id !== g.id || !players[m.pid] || g.guess[m.pid] != null) return;
-    var v = Math.round(Number(m.guess)); if (!(v >= NOTE_MIN && v <= NOTE_MAX)) return;
-    g.guess[m.pid] = v; Music.plop(Object.keys(g.guess).length); push(); noteShow();
-    if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.guess[p.pid] != null; })) { clearTimeout(noteTimer); noteTimer = setTimeout(noteSing, 1500); }
+    var g = G.note; if (!g || G.phase !== 'note' || (g.st !== 'guess' && g.st !== 'sing') || g.lk || !m || m.id !== g.id || !players[m.pid]) return;
+    if (m.guess != null) {
+      if (g.guess[m.pid] != null) return;
+      var v = Math.round(Number(m.guess)); if (!(v >= NOTE_MIN && v <= NOTE_MAX)) return;
+      g.guess[m.pid] = v; Music.plop(Object.keys(g.guess).length); push(); noteShow();
+      return;
+    }
+    if (m.ctl && g.guess[m.pid] != null) {   // (the controls only work once your prediction is locked in)
+      var p = Math.max(0, Math.min(1, Number(m.ctl.p) || 0)), t = m.ctl.t === 1 ? 1 : m.ctl.t === -1 ? -1 : 0;
+      var o = g.ctl[m.pid]; if (o && o.p === p && o.t === t) return;
+      g.ctl[m.pid] = { p: p, t: t }; noteShow();
+    }
   }
   function noteSing() {
     var g = G.note; if (!g || g.st !== 'guess') return;
-    clearInterval(noteTick); g.st = 'sing'; g.t0 = Date.now() + NOTE_LEAD * 1000; push(); noteShow();   // (the recording has a lead-in: the timer starts when the note does)
+    clearInterval(noteTick); g.st = 'sing'; g.t0 = Date.now() + NOTE_LEAD * 1000; g.lockAt = g.t0 + NOTE_CTL * 1000; push(); noteShow();   // (the recording has a lead-in: the timer starts when the note does)
     noteAudio(true);
     var tick = function () {
       if (G.note !== g || g.st !== 'sing') return;
       var el = noteElapsed(g);
-      if (el >= g.len) { noteCut(); return; }
-      var gone = Object.keys(g.guess).filter(function (k) { return !g.out[k] && g.guess[k] < el; });   // she sang past these guesses: out
-      if (gone.length) { gone.forEach(function (k) { g.out[k] = 1; }); Music.buzz(); push(); }
+      if (!g.lk && el >= NOTE_CTL) noteLock();
+      if (g.lk && el >= g.len) { noteCut(); return; }
       noteShow(); noteTick = requestAnimationFrame(tick);
     };
     noteTick = requestAnimationFrame(tick);
+  }
+  function noteLock() {   // ten seconds in: the controls close, and how long the note lasts is settled (with a hidden random glitch)
+    var g = G.note; if (!g || g.lk) return;
+    g.lk = true;
+    var s = notePush(g); g.base = Math.round((50 - 30 * s) * 10) / 10; g.off = Math.round((Math.random() * 20 - 10) * 10) / 10;
+    g.len = Math.max(NOTE_CTL + 0.5, Math.min(NOTE_MAX, Math.round((g.base + g.off) * 10) / 10));
+    Music.blip(); push();
   }
   function noteCut() {
     var g = G.note; if (!g) return;
     g.st = 'cut'; noteAudio(false);   // oops: an electric shock, and she drops her microphone
     if (!REMOTE) try { var zz = new Audio('sounds/shock.mp3'); zz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var zp = zz.play(); if (zp && zp.catch) zp.catch(function () {}); } catch (e) {}
     setTimeout(function () { Music.micdrop(); }, 500);   // (the thud as it lands)
-    var act = list().filter(function (p) { return !p.off; }), best = Infinity;
-    act.forEach(function (p) { var v = g.guess[p.pid]; if (v != null && v >= g.len) best = Math.min(best, v - g.len); });   // the closest of those still in (not passed)
-    g.win = act.filter(function (p) { var v = g.guess[p.pid]; return v != null && v >= g.len && v - g.len === best; }).map(function (p) { return p.pid; });
+    var act = list().filter(function (p) { return !p.off && g.guess[p.pid] != null; }), off = function (p) { return Math.round(Math.abs(g.guess[p.pid] - g.len) * 10); };
+    var best = act.length ? Math.min.apply(null, act.map(off)) : 0;
+    g.win = act.filter(function (p) { return off(p) === best; }).map(function (p) { return p.pid; });   // (equally close: all of them win)
     g.win.forEach(function (k) { var p = players[k]; p.score += 12; p.pts = 12; p.got = true; });
     push(); noteShow();
     var at = function (ms, f) { setTimeout(function () { if (G.note === g) f(); }, ms); };
-    at(1400, function () { noteSay('him', 'Oops… she dropped her microphone! 🎤💥 She held the note for ' + noteTime(g.len, true) + '!'); });
-    at(4600, function () {
+    at(1400, function () { noteSay('him', 'Kaboom! The sound system gave out after ' + noteTime(g.len, true) + '! 🎤💥 Your settings aimed for ' + noteTime(g.base, true) + ', and the glitch added ' + (g.off >= 0 ? '+' : '−') + Math.abs(g.off).toFixed(1) + ' seconds!'); });
+    at(6400, function () {
       var w = g.win.map(function (k) { return players[k] ? players[k].name + ' (' + noteTime(g.guess[k]) + ')' : ''; }).filter(Boolean);
-      noteSay('her', w.length ? (w.length > 1 ? w.slice(0, -1).join(', ') + ' and ' + w[w.length - 1] + ' were' : w[0] + ' was') + ' closest, and still in! 🏆' : Object.keys(g.guess).length ? 'She sang past every guess… nobody is left! 😅' : 'Nobody made a guess… what a shame!');
+      noteSay('her', w.length ? (w.length > 1 ? w.slice(0, -1).join(', ') + ' and ' + w[w.length - 1] + ' were' : w[0] + ' was') + ' closest! 🏆' : 'Nobody made a prediction… what a shame!');
       g.st = 'done'; push(); noteShow(); Music.douze();
     });
-    at(9600, function () {
+    at(11400, function () {
       var ov = $('noteov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
       setTimeout(function () { if (G.note !== g) return; G.note = null; G.phase = 'loading'; push(); startRound2(); }, 1000);
     });
   }
   function noteSnap() {
-    var g = G.note, locked = {};
+    var g = G.note, locked = {}, end = g.st === 'cut' || g.st === 'done';
     Object.keys(g.guess).forEach(function (k) { locked[k] = 1; });
-    return { id: g.id, st: g.st, left: g.st === 'guess' ? Math.max(0, g.ends - Date.now()) : 0, locked: locked,
-      guess: g.st === 'cut' || g.st === 'done' ? g.guess : null, out: g.out, len: g.st === 'cut' || g.st === 'done' ? g.len : null, win: g.st === 'done' ? g.win : null, min: NOTE_MIN, max: NOTE_MAX };
+    return { id: g.id, st: g.st, open: (g.st === 'guess' || g.st === 'sing') && !g.lk ? 1 : 0, left: g.st === 'guess' ? Math.max(0, g.ends - Date.now()) : 0, shut: g.lockAt && !g.lk ? Math.max(0, g.lockAt - Date.now()) : 0, locked: locked,
+      guess: end ? g.guess : null, len: end ? g.len : null, base: end ? g.base : null, off: end ? g.off : null, win: g.st === 'done' ? g.win : null, min: NOTE_MIN, max: NOTE_MAX };
   }
-  // The big screen: the stage, the diva (once she is announced), a timer, and a line from 0 to 20 seconds
-  // with everyone's guess on it (shown when she starts) and a needle running along it while she sings.
+  // The big screen: the stage, the diva (once she is announced), the control desk while the controls are open, a timer,
+  // and a line from 0 to 60 seconds with a needle running along it while she sings (everyone's prediction appears at the end).
   function noteShow() {
     var g = G.note; if (!g) return;
     var ov = $('noteov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'noteov'; ov.className = 'grov noteov enter';
-      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="ntspot"></div><div class="grsign ntsign">🎤 Hold That Note</div>' +
+      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="ntspot"></div><div class="grsign ntsign">🎤 Hold That Note!</div>' +
         '<div class="ntstage"><div class="ntstop"></div><div class="ntsfront"></div></div>' +
         '<div class="ntdiva">' + DIVA + '<div class="ntnotes"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></div><div class="ntsparks"></div><div class="ntshock"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="16" fill="#e9f8ff" opacity=".9"/><g fill="none" stroke="#dff6ff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="50,50 40,36 47,30 34,12"/><polyline points="50,50 64,40 60,30 78,18"/><polyline points="50,50 66,58 74,52 94,60"/><polyline points="50,50 58,68 50,74 60,94"/><polyline points="50,50 36,62 30,56 10,70"/><polyline points="50,50 32,46 28,52 6,40"/></g></svg></div></div>' +
-        '<div class="nttimer">0:00.0</div><div class="ntline"><div class="ntscale"></div><div class="ntpins"></div><div class="ntneedle"></div></div>' +
+        '<div class="nttimer">0:00.0</div><div class="ntdesk"><div class="ntdt">🎛️ Sound desk</div><div class="ntgauge"><i></i></div><div class="ntgl"><span>Normal</span><span>Overload 🔥</span></div><div class="ntknobs"><span class="ntkb">🚀 <b>0</b></span><span class="ntkf">🌀 <b>0</b></span></div><div class="ntshut"></div></div>' +
+        '<div class="ntline"><div class="ntscale"></div><div class="ntpins"></div><div class="ntneedle"></div></div>' +
         '<div class="ntmsg"></div><div class="ntplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
@@ -4022,25 +4052,34 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
     }
     ov.setAttribute('data-st', g.st);
+    var open = (g.st === 'guess' || g.st === 'sing') && !g.lk;
     ov.classList.toggle('lead', g.st === 'sing' && noteElapsed(g) < 0);   // the lead-in of the recording: her mouth goes quickly open and shut
+    ov.classList.toggle('ctlopen', open); ov.classList.toggle('ctlshut', g.lk && g.st === 'sing');
     var el = g.st === 'sing' ? Math.max(0, noteElapsed(g)) : g.st === 'cut' || g.st === 'done' ? g.len : 0;
     ov.querySelector('.nttimer').textContent = noteTime(el, true);
     ov.querySelector('.ntneedle').style.left = Math.min(100, el / NOTE_MAX * 100) + '%';
     var act = list().filter(function (p) { return !p.off; });
-    var pinKey = (g.st === 'intro' || g.st === 'guess' ? 'none' : 'pins') + '|' + Object.keys(g.guess).length;
+    // the sound desk: how hard everyone pushes, and how many boosts and fans are on
+    var pw = notePush(g), nb = 0, nf = 0; act.forEach(function (p) { var c = g.ctl[p.pid]; if (c && c.t === 1) nb++; if (c && c.t === -1) nf++; });
+    ov.querySelector('.ntgauge i').style.width = Math.round(pw * 100) + '%';
+    ov.querySelector('.ntkb b').textContent = nb; ov.querySelector('.ntkf b').textContent = nf;
+    var shut = Math.max(0, Math.ceil(((g.st === 'guess' ? g.lockAt : g.t0 + NOTE_CTL * 1000) - Date.now()) / 1000));
+    ov.querySelector('.ntshut').textContent = g.lk ? '🔒 Controls closed!' : g.st === 'guess' || g.st === 'sing' ? 'Controls close in ' + shut + 's' : '';
+    var end = g.st === 'cut' || g.st === 'done';
+    var pinKey = (end ? 'pins' : 'none') + '|' + Object.keys(g.guess).length;
     var pins = ov.querySelector('.ntpins');
-    if (pins.getAttribute('data-k') !== pinKey) {   // the guesses go up on the line when she starts to sing
+    if (pins.getAttribute('data-k') !== pinKey) {   // the predictions go up on the line when the note is over
       pins.setAttribute('data-k', pinKey);
       var sorted = act.filter(function (p) { return g.guess[p.pid] != null; }).sort(function (a, b) { return g.guess[a.pid] - g.guess[b.pid]; });
-      pins.innerHTML = g.st === 'intro' || g.st === 'guess' ? '' : sorted.map(function (p, i) {
+      pins.innerHTML = !end ? '' : sorted.map(function (p, i) {
         return '<div class="ntpin" data-pid="' + esc(p.pid) + '" style="left:' + (g.guess[p.pid] / NOTE_MAX * 100) + '%;--i:' + (i % 2) + '">' + charSvg(p.char) + '<b>' + esc(p.name) + ' ' + noteTime(g.guess[p.pid]) + '</b></div>';
       }).join('');
     }
-    [].forEach.call(pins.querySelectorAll('.ntpin'), function (el) { var k = el.getAttribute('data-pid'); el.classList.toggle('out', !!g.out[k]); el.classList.toggle('win', g.st === 'done' && g.win.indexOf(k) >= 0); });
-    var msg = g.st === 'intro' ? '' : g.st === 'guess' ? 'How long will she hold it? Guess on your phone! ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's' : g.st === 'sing' ? (noteElapsed(g) < 0 ? 'She takes a deep breath… 🌬️' : 'Hold it… hold it…') : g.st === 'cut' ? '💥 Oops!' : '';
+    [].forEach.call(pins.querySelectorAll('.ntpin'), function (e) { var k = e.getAttribute('data-pid'); e.classList.toggle('win', g.st === 'done' && g.win.indexOf(k) >= 0); });
+    var msg = g.st === 'intro' ? '' : g.st === 'guess' ? 'Predict on your phone, then grab the controls! 🎛️' : g.st === 'sing' ? (noteElapsed(g) < 0 ? 'She takes a deep breath… 🌬️' : g.lk ? 'Hold it… hold it…' : 'Push the power… or cool it down! 🎛️') : g.st === 'cut' ? '💥 Kaboom!' : '';
     var me = ov.querySelector('.ntmsg'); if (me.textContent !== msg) me.textContent = msg;
-    var ph = act.map(function (p) { return '<div class="clp">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="' + (g.guess[p.pid] != null ? 'ok' : 'wait') + '">' + (g.guess[p.pid] != null ? '✔' : '…') + '</em></div>'; }).join('');
-    var pl = ov.querySelector('.ntplayers'); if (g.st !== 'guess') ph = ''; if (pl.getAttribute('data-h') !== ph) { pl.setAttribute('data-h', ph); pl.innerHTML = ph; }
+    var ph = open ? act.map(function (p) { return '<div class="clp">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="' + (g.guess[p.pid] != null ? 'ok' : 'wait') + '">' + (g.guess[p.pid] != null ? '🔒' : '…') + '</em></div>'; }).join('') : '';
+    var pl = ov.querySelector('.ntplayers'); if (pl.getAttribute('data-h') !== ph) { pl.setAttribute('data-h', ph); pl.innerHTML = ph; }
   }
   // ---------- Lost in Verona (Juliet's maze) ----------
   // Juliet, on her balcony, knows the way through a hidden maze. Like Simon says she calls out the route: one step,

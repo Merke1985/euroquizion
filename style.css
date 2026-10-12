@@ -3121,3 +3121,27 @@ body.hasdock main{padding-bottom:84px}
 .udm em{font-style:normal;font-size:1.1rem}
 .udm.bomb{background:rgba(255,60,40,.3);box-shadow:0 0 0 2px #ff4d4d}
 .udm .udenv{width:52px}.udm .udenv b{font-size:1.3rem}
+
+/* ---------- Hold That Note! (controls) ---------- */
+.ntctl{display:flex;flex-direction:column;gap:12px;width:100%;margin-top:14px}
+.ntctl.hidden{display:none}
+.ntctl .ntcl{font-weight:900;font-size:1.2rem;text-align:center}
+.ntctl input[type=range]{width:100%;height:44px;accent-color:#ff6a1f}
+.ntctl .ntends{display:flex;justify-content:space-between;font-weight:700;opacity:.7;margin-top:-8px}
+.ntctl .ntgl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ntctl .ntt{border:0;border-radius:14px;padding:16px 6px;font-size:1.05rem;font-weight:900;color:#fff;background:#3a2a6a;opacity:.6;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s}
+.ntctl .ntt small{font-size:.72rem;font-weight:700;opacity:.85}
+.ntctl .ntt[data-t="1"].on{background:linear-gradient(135deg,#ff9f1c,#e0302a);opacity:1;box-shadow:0 0 0 3px #fff,0 6px 18px rgba(255,90,40,.5)}
+.ntctl .ntt[data-t="-1"].on{background:linear-gradient(135deg,#3fd0ff,#2a6ae0);opacity:1;box-shadow:0 0 0 3px #fff,0 6px 18px rgba(60,160,255,.5)}
+.ntctl .ntcd{text-align:center;font-weight:800;color:var(--yellow)}
+.noteov .ntdesk{position:absolute;right:3vw;top:30vh;width:22vw;padding:1.4vh 1.2vw;border-radius:16px;background:rgba(10,4,30,.75);box-shadow:0 0 0 2px rgba(255,122,217,.7),0 10px 30px rgba(0,0,0,.5);z-index:5;opacity:0;transform:translateX(30vw);transition:opacity .5s,transform .7s cubic-bezier(.2,.9,.3,1.05)}
+.noteov.ctlopen .ntdesk,.noteov.ctlshut .ntdesk{opacity:1;transform:none}
+.noteov .ntdt{font-weight:900;font-size:clamp(.9rem,1.5vw,1.3rem);margin-bottom:1vh}
+.noteov .ntgauge{height:2.4vh;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
+.noteov .ntgauge i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fd0ff,#ffd23f 50%,#ff3a2a);background-size:22vw 100%;transition:width .4s}
+.noteov .ntgl{display:flex;justify-content:space-between;font-size:clamp(.6rem,.9vw,.8rem);font-weight:800;opacity:.7;margin-top:.4vh}
+.noteov .ntknobs{display:flex;gap:1vw;margin-top:1vh;font-weight:900;font-size:clamp(.9rem,1.4vw,1.2rem)}
+.noteov .ntshut{margin-top:1vh;font-weight:900;color:var(--yellow);font-size:clamp(.8rem,1.3vw,1.1rem)}
+.noteov.ctlshut .ntshut{color:#ff7a7a}
+.noteov.ctlshut .ntgauge{opacity:.6}
+.noteov.ctlopen .ntmsg{bottom:17vh}

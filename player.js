@@ -186,7 +186,7 @@
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb) $('bombui').classList.add('hidden');
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
-    if (!(s.phase === 'note' && s.note && s.note.st === 'guess')) $('noteui').classList.add('hidden');
+    if (!(s.phase === 'note' && s.note && s.note.open)) { $('noteui').classList.add('hidden'); if ($('ntctl')) $('ntctl').classList.add('hidden'); }
     if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'show' || s.qj.st === 'input'))) $('qjui').classList.add('hidden');
     bagUpdate(s); robCheck(s);
     remoteVideo(s);
@@ -196,7 +196,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -542,31 +542,65 @@
     $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '') + (c.gift && c.gift.pid === pid ? ' 🎁 Lynda gave you the ' + shopName(c.gift.item) + '! It’s in your bag.' : '');
   }
 
-  // ---------- Hold That Note ----------
-  // Guess how long the diva holds her note: a slider from 10 to 20 seconds, then lock it in.
-  var noteSent = '', noteMine = null;
+  // ---------- Hold That Note! ----------
+  // Predict how long the note lasts (10 s to 1 min) and lock it in; that unlocks the controls (the power slider and
+  // the Power Boost / Cooling Fan toggles) until 10 seconds into the note.
+  var noteSent = '', noteMine = null, ntCtl = { p: 0, t: 0 }, ntCtlId = '', ntCtlAt = 0, ntShutEnd = 0, ntShutT = null;
   function ntTime(s, tenths) { var m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + (tenths ? r.toFixed(1) : Math.floor(r)); }
   $('ntrange').addEventListener('input', function () { $('ntv').textContent = ntTime(+this.value); });
   $('ntgo').addEventListener('click', function () {
-    var s = state; if (!net || !s || !s.note || s.note.st !== 'guess' || noteSent === s.note.id) return;
+    var s = state; if (!net || !s || !s.note || !s.note.open || noteSent === s.note.id) return;
     noteSent = s.note.id; noteMine = Math.round(+$('ntrange').value);
     var msg = { pid: pid, id: s.note.id, guess: noteMine };
-    net.send('note', msg); setTimeout(function () { if (state && state.note && state.note.st === 'guess') net.send('note', msg); }, 1500);
+    net.send('note', msg); setTimeout(function () { if (state && state.note && state.note.open && !(state.note.locked || {})[pid]) net.send('note', msg); }, 1500);
     noteView(state);
   });
+  function ntSendCtl() { var s = state; if (!net || !s || !s.note || !s.note.open) return; net.send('note', { pid: pid, id: s.note.id, ctl: { p: ntCtl.p, t: ntCtl.t } }); ntCtlAt = Date.now(); }
+  function ntCtlBox() {
+    var c = $('ntctl'); if (c) return c;
+    c = document.createElement('div'); c.id = 'ntctl'; c.className = 'ntctl hidden';
+    c.innerHTML = '<div class="ntcl">⚡ Power</div><input type="range" id="ntpow" min="0" max="100" step="1" value="0"><div class="ntends"><span>Normal</span><span>High 🔥</span></div>' +
+      '<div class="ntgl"><button type="button" class="ntt" data-t="1">🚀 Power Boost<small>breaks down sooner</small></button><button type="button" class="ntt" data-t="-1">🌀 Cooling Fan<small>keeps it going longer</small></button></div>' +
+      '<div class="ntcd"></div>';
+    $('noteui').parentNode.insertBefore(c, $('noteui').nextSibling);
+    var thr = null;
+    c.querySelector('#ntpow').addEventListener('input', function () { ntCtl.p = Math.round(+this.value) / 100; clearTimeout(thr); thr = setTimeout(ntSendCtl, 120); });
+    [].forEach.call(c.querySelectorAll('.ntt'), function (b) { b.addEventListener('click', function () {
+      var t = +b.getAttribute('data-t'); ntCtl.t = ntCtl.t === t ? 0 : t;   /* tap the active one again: off (both may be off) */
+      [].forEach.call(c.querySelectorAll('.ntt'), function (x) { x.classList.toggle('on', +x.getAttribute('data-t') === ntCtl.t); });
+      try { navigator.vibrate && navigator.vibrate(25); } catch (e) {}
+      ntSendCtl();
+    }); });
+    return c;
+  }
   function noteView(s) {
-    var n = s.note, box = $('noteui'), mine = noteSent === n.id || (n.locked || {})[pid];
+    var n = s.note, box = $('noteui'), cb = ntCtlBox(), mine = noteSent === n.id || (n.locked || {})[pid];
     show('v-wait');
     if (box.getAttribute('data-id') !== n.id) { box.setAttribute('data-id', n.id); $('ntrange').value = 35; $('ntv').textContent = ntTime(35); noteMine = null; }
-    if (n.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
-    if (n.st === 'guess' && !mine) { $('waittitle').textContent = '🎤 How long will she hold it?'; $('waitsub').textContent = 'Between 10 seconds and one minute. Once she sings past your time you’re out: the closest guess that’s still in wins!'; box.classList.remove('hidden'); return; }
+    if (ntCtlId !== n.id) { ntCtlId = n.id; ntCtl = { p: 0, t: 0 }; cb.querySelector('#ntpow').value = 0; [].forEach.call(cb.querySelectorAll('.ntt'), function (x) { x.classList.remove('on'); }); }
+    if (n.shut) ntShutEnd = Date.now() + n.shut;
+    var g = noteMine != null ? noteMine : null;
+    clearInterval(ntShutT);
+    var cd = function () { var sec = Math.max(0, Math.ceil((ntShutEnd - Date.now()) / 1000)); var e = cb.querySelector('.ntcd'); if (e) e.textContent = 'Controls close in ' + sec + 's'; };
+    if (n.st === 'intro') { box.classList.add('hidden'); cb.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note!'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
+    if (n.open && !mine) {
+      cb.classList.add('hidden'); box.classList.remove('hidden');
+      $('waittitle').textContent = '🎤 How long will the note last?'; $('waitsub').textContent = 'Between 10 seconds and one minute. Lock it in to unlock the controls!';
+      return;
+    }
     box.classList.add('hidden');
-    var g = n.guess && n.guess[pid] != null ? n.guess[pid] : noteMine;
-    if (n.st === 'sing' && n.out && n.out[pid]) { $('waittitle').textContent = '💥 You’re out!'; $('waitsub').textContent = 'She sang past your time' + (g != null ? ' (' + ntTime(g) + ')' : '') + '. Watch the others sweat!'; return; }
-    if (n.st === 'guess' || n.st === 'sing') { $('waittitle').textContent = n.st === 'sing' ? '🎶 Hold it… hold it…' : '🎤 Locked in!'; $('waitsub').textContent = (g != null ? 'Your guess: ' + ntTime(g) + '. ' : '') + 'Watch the big screen!'; return; }
+    if (n.open && mine) {
+      cb.classList.remove('hidden');
+      $('waittitle').textContent = '🎛️ Your prediction: ' + (g != null ? ntTime(g) : '🔒'); $('waitsub').textContent = 'Steer the singer! More power and the boost break it sooner, the fan keeps it going longer.';
+      cd(); ntShutT = setInterval(function () { if (!state || !state.note || !state.note.open) { clearInterval(ntShutT); return; } cd(); if (Date.now() - ntCtlAt > 2500) ntSendCtl(); }, 250);   /* (sent again now and then, in case a message got lost) */
+      return;
+    }
+    cb.classList.add('hidden');
+    if (n.st === 'guess' || n.st === 'sing') { $('waittitle').textContent = '🔒 Controls closed'; $('waitsub').textContent = (g != null ? 'Your prediction: ' + ntTime(g) + '. ' : 'You didn’t lock in a prediction. ') + 'Hold it… hold it… 🎶'; return; }
+    var gg = n.guess && n.guess[pid] != null ? n.guess[pid] : g;
     var won = n.win && n.win.indexOf(pid) >= 0;
-    $('waittitle').textContent = won ? '🏆 Closest, and still in!' : n.out && n.out[pid] ? '💥 She sang past your time' : '💥 She dropped the mic at ' + ntTime(n.len, true);
-    $('waitsub').textContent = g != null ? 'She held it for ' + ntTime(n.len, true) + '. You guessed ' + ntTime(g) + ': ' + Math.abs(g - n.len).toFixed(1) + ' seconds off.' : 'She held it for ' + ntTime(n.len, true) + '.';
+    $('waittitle').textContent = won ? '🏆 Closest prediction!' : '💥 Kaboom at ' + ntTime(n.len, true);
+    $('waitsub').textContent = gg != null ? 'The note lasted ' + ntTime(n.len, true) + '. You predicted ' + ntTime(gg) + ': ' + Math.abs(gg - n.len).toFixed(1) + ' seconds off.' : 'The note lasted ' + ntTime(n.len, true) + '.';
   }
 
   // ---------- Lost in Verona (Juliet's maze) ----------
