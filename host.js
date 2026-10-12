@@ -4751,7 +4751,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The singer (an original character): long wavy blonde hair, a sparkly silver outfit with flared trousers and a fringed top.
   function ru3Singer() {
     var T = THREE, g = new T.Group(), sp = ru3Sparkle('#b8b8c6'); sp.repeat.set(3, 4);
-    var silver = new T.MeshStandardMaterial({ color: '#d6d6e2', map: sp, metalness: .9, roughness: .3, emissive: '#3a3a48', emissiveMap: sp, emissiveIntensity: .5, side: T.DoubleSide });
+    var silver = new T.MeshStandardMaterial({ color: '#eeeef6', map: sp, metalness: .3, roughness: .32, emissive: '#9a9ab4', emissiveMap: sp, emissiveIntensity: .75, side: T.DoubleSide });   /* (not too metallic: with nothing around to reflect, metal looks black) */
     var skin = new T.MeshStandardMaterial({ color: '#f0c8ae', roughness: .65 }), hair = new T.MeshStandardMaterial({ color: '#d9a640', roughness: .45, metalness: .1 });
     var add = function (par, geo, mat, x, y, z) { var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
     // sparkly silver flared trousers: fitted to the knee, then wide bell bottoms
