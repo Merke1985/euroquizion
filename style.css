@@ -3145,3 +3145,88 @@ body.hasdock main{padding-bottom:84px}
 .noteov.ctlshut .ntshut{color:#ff7a7a}
 .noteov.ctlshut .ntgauge{opacity:.6}
 .noteov.ctlopen .ntmsg{bottom:17vh}
+
+/* ---------- Turquoise Carpet ---------- */
+.tcov{position:fixed;inset:0;z-index:55;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#24305e 0%,#121735 50%,#070914 100%);font-family:inherit}
+.tcov.flashed::after{content:'';position:absolute;inset:0;background:#fff;pointer-events:none;animation:tcwhite .35s ease-out forwards;z-index:9}
+@keyframes tcwhite{0%{opacity:.28}100%{opacity:0}}
+.tcwall{position:absolute;inset:0 0 40vh 0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 9vw),linear-gradient(#1b2350,#0e1330)}
+.tcwall i{position:absolute;top:-6vh;width:18vw;height:80vh;background:linear-gradient(rgba(120,255,240,.16),transparent 75%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);transform-origin:50% 0;animation:chbeam 6s ease-in-out infinite alternate}
+.tcwall i:nth-child(1){left:-2vw;animation-delay:-1s}.tcwall i:nth-child(2){left:20vw;animation-delay:-3s}.tcwall i:nth-child(3){left:41vw;animation-delay:-2s}.tcwall i:nth-child(4){left:62vw;animation-delay:-4s}.tcwall i:nth-child(5){left:84vw;animation-delay:-5s}
+.tcsign{position:absolute;top:2.5vh;left:0;right:0;margin:0 auto;width:fit-content;padding:.5vh 2.2vw;border-radius:14px;border:3px solid #40e0d0;color:#e8fffc;font-weight:900;font-size:clamp(1.5rem,3.2vw,2.8rem);text-shadow:0 0 12px #40e0d0,0 0 26px #1ab3a6;box-shadow:0 0 18px rgba(64,224,208,.55),inset 0 0 18px rgba(64,224,208,.3);background:rgba(4,30,40,.55);white-space:nowrap;z-index:3}
+.tcsec{position:absolute;top:12.5vh;left:0;right:0;text-align:center;font-weight:800;font-size:clamp(.9rem,1.6vw,1.3rem);opacity:.8;z-index:3}
+.tcrun{position:absolute;left:-2vw;right:-2vw;bottom:15vh;height:15vh;background:linear-gradient(#5ff2e2 0%,#30d5c8 30%,#1aa79c 100%);box-shadow:0 -4px 0 rgba(255,255,255,.4),0 10px 40px rgba(64,224,208,.45);transform:perspective(60vh) rotateX(38deg);transform-origin:50% 100%}
+.tcrun::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.08) 0 2px,transparent 2px 6vw)}
+.tcwalk{position:absolute;left:0;right:0;bottom:21vh;height:64vh;z-index:2;pointer-events:none}
+.tcg{position:absolute;left:50%;bottom:0;height:100%;transform:translateX(-50%);animation:tcpass 3.25s linear both}
+.tcg .tcgirl{height:100%;width:auto;display:block;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))}
+@keyframes tcpass{0%{translate:-78vw 0;animation-timing-function:cubic-bezier(.2,.6,.4,1)}34%{translate:0 0}68%{translate:0 0;animation-timing-function:cubic-bezier(.6,0,.8,.5)}100%{translate:80vw 0}}
+.tcgirl .tcleg,.tcgirl .tcarm{transform-box:view-box}
+.tcgirl .tcleg{transform-origin:108px 256px}
+.tcgirl .tcarm{transform-origin:109px 150px}
+.tcg.walking .tcleg.f,.tcg.walking .tcarm.b{animation:tcswing .36s ease-in-out infinite alternate}
+.tcg.walking .tcleg.b,.tcg.walking .tcarm.f{animation:tcswing .36s ease-in-out infinite alternate-reverse}
+@keyframes tcswing{from{rotate:-17deg}to{rotate:17deg}}
+.tcg.walking .tcgirl{animation:tcbob .36s ease-in-out infinite alternate}
+@keyframes tcbob{from{translate:0 0}to{translate:0 -1.2%}}
+.tcg.posing .tcgirl{animation:tcpose 1s ease-in-out both}
+.tcg.posing .tcarm.f{rotate:-28deg;transition:rotate .25s}
+.tcg.posing .tcleg.f{rotate:10deg;transition:rotate .25s}.tcg.posing .tcleg.b{rotate:-8deg;transition:rotate .25s}
+@keyframes tcpose{0%{rotate:0deg}40%{rotate:-2deg;scale:1.03}100%{rotate:0deg;scale:1.02}}
+.tccams{position:absolute;left:0;right:0;bottom:-2vh;height:19vh;display:flex;justify-content:space-around;z-index:4;pointer-events:none}
+.tccam{position:relative;width:11vw;height:100%;background:radial-gradient(circle at 50% 30%,#05060c 0 28%,transparent 29%),radial-gradient(ellipse at 50% 100%,#05060c 0 58%,transparent 59%)}
+.tccam::before{content:'';position:absolute;left:58%;top:12%;width:4vw;height:3vw;border-radius:6px;background:#1c1f2c;box-shadow:inset 0 0 0 2px #333a52}
+.tccam:nth-child(odd){translate:0 2vh}
+.tcflash{position:absolute;left:68%;top:8%;width:2vw;height:2vw;border-radius:50%;background:#fff;opacity:0}
+.tcflash.pop{animation:tcpop .45s ease-out}
+@keyframes tcpop{0%{opacity:1;box-shadow:0 0 0 0 #fff,0 0 60px 30px rgba(255,255,255,.9)}100%{opacity:0;box-shadow:0 0 0 40px rgba(255,255,255,0),0 0 80px 40px rgba(255,255,255,0)}}
+.tcq{position:absolute;left:6vw;right:33vw;top:18vh;z-index:6}
+.tcq:empty{display:none}
+.tcqt{font-weight:900;font-size:clamp(1.4rem,3vw,2.6rem);text-align:center;text-shadow:0 3px 14px rgba(0,0,0,.7);margin-bottom:2.4vh;animation:benvin .5s cubic-bezier(.3,1.4,.5,1) both}
+.tcopts{display:grid;grid-template-columns:1fr 1fr;gap:1.6vh 1.4vw}
+.tcopt{position:relative;display:flex;align-items:center;gap:1vw;padding:1.8vh 1.4vw;border-radius:16px;font-weight:900;font-size:clamp(1.1rem,2.2vw,2rem);background:linear-gradient(135deg,#1aa79c,#0e6f8a);box-shadow:0 6px 18px rgba(0,0,0,.4);animation:benvin .5s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i) * 90ms + .2s);transition:opacity .4s,filter .4s}
+.tcopt b{display:inline-flex;width:2.2em;height:2.2em;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.2);font-size:.8em}
+.tcopt em{position:absolute;right:.8vw;top:50%;transform:translateY(-50%);display:flex;gap:2px;font-style:normal}
+.tcopt .tcav .char{width:3.4vh;height:3.4vh}
+.tcopt.right,.tcopt.wrong{animation:none}
+.tcopt.right{background:linear-gradient(135deg,#2fd27a,#139a50);box-shadow:0 0 0 4px #fff,0 0 34px #2fd27a}
+.tcopt.wrong{opacity:.4;filter:grayscale(.6)}
+.tctime{height:1.2vh;border-radius:99px;background:rgba(255,255,255,.15);margin-top:2vh;overflow:hidden}
+.tctime i{display:block;height:100%;background:linear-gradient(90deg,#40e0d0,#ffd23f);transition:width .5s linear}
+.tcov[data-st="reveal"] .tctime{visibility:hidden}
+.tcwho{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:2vh}
+.tcp{display:flex;align-items:center;gap:5px;padding:2px 10px 2px 2px;border-radius:99px;background:rgba(0,0,0,.45);font-weight:800;font-size:clamp(.7rem,1.1vw,.95rem);opacity:.55}
+.tcp .char{width:26px;height:26px}.tcp i{font-style:normal}
+.tcp.in{opacity:1}.tcp.ok{opacity:1;box-shadow:0 0 0 2px #2fd27a}.tcp.no{opacity:.45}
+.tcov[data-st="ask"] .tcwalk,.tcov[data-st="reveal"] .tcwalk{opacity:0}
+.tcboard{position:absolute;right:2vw;top:18vh;width:28vw;max-height:62vh;overflow:hidden;z-index:6;display:flex;flex-direction:column;gap:.6vh}
+.tcboard:empty{display:none}
+.tcbt{font-weight:900;font-size:clamp(.9rem,1.5vw,1.3rem);color:#40e0d0;margin-bottom:.4vh}
+.tcrow{display:flex;align-items:center;gap:.6vw;padding:.4vh .8vw;border-radius:12px;background:rgba(0,0,0,.45);font-weight:800;font-size:clamp(.7rem,1.15vw,1rem)}
+.tcrow b{width:1.6em;text-align:center;opacity:.7}.tcrow .char{width:3.4vh;height:3.4vh;flex:none}
+.tcrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcrow em{font-style:normal;color:#ffd23f;letter-spacing:1px}.tcrow em small{color:rgba(255,255,255,.3);font-size:1em}
+.tcrow i{font-style:normal;opacity:.7;width:3.4em;text-align:right}
+.tcov.final .tcboard{left:50%;right:auto;top:17vh;width:min(560px,60vw);transform:translateX(-50%);max-height:none}
+.tcov.final .tcbt{font-size:clamp(1.3rem,2.6vw,2.2rem);text-align:center;color:#fff;text-shadow:0 0 18px #40e0d0}
+.tcov.final .tcrow{font-size:clamp(.9rem,1.5vw,1.3rem);animation:benvin .5s cubic-bezier(.3,1.4,.5,1) both}
+.tcrow.win{background:linear-gradient(90deg,rgba(255,210,63,.4),rgba(64,224,208,.3));box-shadow:0 0 0 2px #ffd23f}
+.tcov.enter .tcsign{animation:inTop .8s cubic-bezier(.2,.9,.3,1.08) both}
+.tcov.enter .tccams{animation:inBottom .8s .5s cubic-bezier(.2,.9,.3,1.08) both}
+/* the intro scene */
+.hs-carpet .grwall{background:radial-gradient(ellipse at 50% 0%,#24305e 0%,#121735 55%,#070914 100%)}
+.hs-carpet .hssign{border-color:#40e0d0;color:#e8fffc;text-shadow:0 0 12px #40e0d0;box-shadow:0 0 18px rgba(64,224,208,.55)}
+.hscarpet{position:relative;display:flex;gap:2vw;align-items:flex-end;height:46vh}
+.hscarpet .hsg{height:100%}.hscarpet .hsg svg{height:100%;width:auto}
+.hscarpet .hsg.b{height:92%}
+.hscarpet .hsflash{position:absolute;right:-5vw;top:0;font-size:6vh;animation:benvshake .3s linear infinite}
+/* the phone */
+.carpetui{display:grid;grid-template-columns:1fr;gap:10px;width:100%;margin-top:12px}
+.tccount{text-align:center;font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums}
+.tccount.hot{color:#ff4d4d}
+.tcbtn{display:flex;align-items:center;gap:12px;border:0;border-radius:16px;padding:16px 14px;font-size:1.3rem;font-weight:900;color:#fff;font-family:inherit;text-align:left;cursor:pointer;background:linear-gradient(135deg,#1aa79c,#0e6f8a);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.tcbtn b{display:inline-flex;flex:none;width:2em;height:2em;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.22);font-size:.85em}
+.tcbtn:disabled{cursor:default;opacity:.55}
+.tcbtn.mine{opacity:1;box-shadow:0 0 0 3px #fff,0 4px 14px rgba(0,0,0,.35)}
+.tcbtn.right{opacity:1;background:linear-gradient(135deg,#2fd27a,#139a50)}
+.tcbtn.wrong.mine{background:linear-gradient(135deg,#e0402a,#a01a1a)}

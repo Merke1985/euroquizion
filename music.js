@@ -119,6 +119,21 @@ var Music = (function () {
       o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.22);
     } catch (e) {}
   }
+  // A camera shutter with a flash pop (the Turquoise Carpet photographers)
+  var snapBuf = null;
+  function snap() {
+    try {
+      if (!ac()) return;
+      if (!snapBuf) { snapBuf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate); var d = snapBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      var t = ctx.currentTime + 0.01;
+      [0, 0.055].forEach(function (dt, k) {
+        var s = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        s.buffer = snapBuf; f.type = 'bandpass'; f.frequency.value = k ? 2600 : 4200; f.Q.value = 0.9;
+        g.gain.setValueAtTime(k ? 0.28 : 0.4, t + dt); g.gain.exponentialRampToValueAtTime(0.0001, t + dt + 0.05);
+        s.connect(f); f.connect(g); g.connect(fxOut()); s.start(t + dt); s.stop(t + dt + 0.07);
+      });
+    } catch (e) {}
+  }
   // A clock tick for the last seconds (n: seconds left; the last one is a little higher)
   function clock(n) {
     try {
@@ -388,5 +403,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

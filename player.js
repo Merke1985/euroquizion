@@ -185,8 +185,9 @@
     onState2(s);
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb) $('bombui').classList.add('hidden');
+    if (s.phase !== 'carpet' || !s.carpet) $('carpetui').classList.add('hidden');
     if (s.phase !== 'clueacc' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
-    if (!(s.phase === 'note' && s.note && s.note.open)) { $('noteui').classList.add('hidden'); if ($('ntctl')) $('ntctl').classList.add('hidden'); }
+    if (!(s.phase === 'note' && s.note && (s.note.st === 'guess' || s.note.st === 'ctl'))) { $('noteui').classList.add('hidden'); if ($('ntctl')) $('ntctl').classList.add('hidden'); }
     if (!(s.phase === 'qj' && s.qj && (s.qj.st === 'show' || s.qj.st === 'input'))) $('qjui').classList.add('hidden');
     bagUpdate(s); robCheck(s);
     remoteVideo(s);
@@ -196,7 +197,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -283,6 +284,7 @@
     else if (s.phase === 'bomb' && s.bomb) bombView(s);
     else if ((s.phase === 'clueacc' || s.phase === 'cluerev') && s.clue) clueView(s);
     else if (s.phase === 'note' && s.note) noteView(s);
+    else if (s.phase === 'carpet' && s.carpet) carpetView(s);
     else if (s.phase === 'qj' && s.qj) qjView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
@@ -542,20 +544,62 @@
     $('waitsub').textContent = (parts.length ? parts.join(' ') + (parts.length === 3 ? '!' : '…') : 'Watch the big screen!') + (r && r.pts ? ' +' + r.pts + ' points' : '') + (c.gift && c.gift.pid === pid ? ' 🎁 Lynda gave you the ' + shopName(c.gift.item) + '! It’s in your bag.' : '');
   }
 
+  // ---------- Turquoise Carpet ----------
+  // Watch the runway; after each parade, the question with four answers (20 seconds).
+  var tcSent = {}, tcTimerT = null, tcEnd = 0;
+  function carpetView(s) {
+    var c = s.carpet, box = $('carpetui');
+    show('v-wait'); $('waitlabel').textContent = c.sec ? 'Parade ' + c.sec + ' of 5' : '';
+    var mineT = (c.tot || {})[pid] || { n: 0 }, score = '⭐ ' + mineT.n + ' right so far';
+    clearInterval(tcTimerT);
+    if (c.st === 'ready' || c.st === 'walk') {
+      box.classList.add('hidden'); box.innerHTML = ''; box.removeAttribute('data-k');
+      $('waittitle').textContent = '👀 Watch the runway!'; $('waitsub').textContent = (c.st === 'walk' && c.n ? c.n + ' contestants in this parade. ' : '') + 'Remember hats, sunglasses, outfits, colours and shoes!' + (c.sec > 1 ? ' ' + score : '');
+      return;
+    }
+    if (c.st === 'win') {
+      box.classList.add('hidden'); var w = (c.win || []).indexOf(pid) >= 0;
+      var names = (c.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);
+      $('waittitle').textContent = w ? '🏆 You win the Turquoise Carpet!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'Nobody got one right…';
+      $('waitsub').textContent = 'You got ' + mineT.n + ' of 5 right.';
+      return;
+    }
+    var q = c.q; if (!q) return;
+    var sent = tcSent[c.qid], done = (c.done || {})[pid] || sent != null;
+    if (c.st === 'ask') tcEnd = Date.now() + (c.left || 0);
+    var mine = c.mine && c.mine[pid] ? c.mine[pid].a : sent;
+    $('waittitle').textContent = c.st === 'reveal' ? (mine === q.ans ? '✅ Right!' : mine != null ? '❌ It was ' + q.opts[q.ans] : '⏰ It was ' + q.opts[q.ans]) : q.text;
+    $('waitsub').textContent = c.st === 'reveal' ? q.text : done ? 'Answer locked! Waiting for the others…' : '';
+    var key = c.qid + '|' + c.st + '|' + (done ? 1 : 0) + '|' + mine;
+    box.classList.remove('hidden');
+    if (box.getAttribute('data-k') !== key) {
+      box.setAttribute('data-k', key);
+      box.innerHTML = (c.st === 'ask' ? '<div class="tccount"></div>' : '') + q.opts.map(function (o, i) { return '<button type="button" class="tcbtn' + (mine === i ? ' mine' : '') + (c.st === 'reveal' ? (i === q.ans ? ' right' : ' wrong') : '') + '" data-i="' + i + '" style="--i:' + i + '"' + (done || c.st !== 'ask' ? ' disabled' : '') + '><b>' + 'ABCD'[i] + '</b>' + esc(o) + '</button>'; }).join('');
+      [].forEach.call(box.querySelectorAll('.tcbtn:not([disabled])'), function (b) { b.onclick = function () {
+        var cc = state && state.carpet; if (!net || !cc || cc.st !== 'ask' || cc.qid !== c.qid || tcSent[c.qid] != null) return;
+        var a = +b.getAttribute('data-i'); tcSent[c.qid] = a; var msg = { pid: pid, qid: c.qid, a: a };
+        net.send('carpet', msg); setTimeout(function () { var c2 = state && state.carpet; if (c2 && c2.st === 'ask' && c2.qid === msg.qid && !(c2.done || {})[pid]) net.send('carpet', msg); }, 1500);
+        try { navigator.vibrate && navigator.vibrate(25); } catch (e) {}
+        carpetView(state);
+      }; });
+    }
+    if (c.st === 'ask') { var tick = function () { var e = box.querySelector('.tccount'); if (!e) return; var sec = Math.max(0, Math.ceil((tcEnd - Date.now()) / 1000)); e.textContent = sec; e.classList.toggle('hot', sec <= 5); }; tick(); tcTimerT = setInterval(function () { if (!state || state.phase !== 'carpet') { clearInterval(tcTimerT); return; } tick(); }, 250); }
+  }
+
   // ---------- Hold That Note! ----------
-  // Predict how long the note lasts (10 s to 1 min) and lock it in; that unlocks the controls (the power slider and
-  // the Power Boost / Cooling Fan toggles) until 10 seconds into the note.
+  // First predict how long the note lasts (10 s to 1 min) and lock it in; then, before she sings, everyone who locked in
+  // gets the controls (the power slider and the Power Boost / Cooling Fan toggles).
   var noteSent = '', noteMine = null, ntCtl = { p: 0, t: 0 }, ntCtlId = '', ntCtlAt = 0, ntShutEnd = 0, ntShutT = null;
   function ntTime(s, tenths) { var m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + (tenths ? r.toFixed(1) : Math.floor(r)); }
   $('ntrange').addEventListener('input', function () { $('ntv').textContent = ntTime(+this.value); });
   $('ntgo').addEventListener('click', function () {
-    var s = state; if (!net || !s || !s.note || !s.note.open || noteSent === s.note.id) return;
+    var s = state; if (!net || !s || !s.note || s.note.st !== 'guess' || noteSent === s.note.id) return;
     noteSent = s.note.id; noteMine = Math.round(+$('ntrange').value);
     var msg = { pid: pid, id: s.note.id, guess: noteMine };
-    net.send('note', msg); setTimeout(function () { if (state && state.note && state.note.open && !(state.note.locked || {})[pid]) net.send('note', msg); }, 1500);
+    net.send('note', msg); setTimeout(function () { if (state && state.note && state.note.st === 'guess' && !(state.note.locked || {})[pid]) net.send('note', msg); }, 1500);
     noteView(state);
   });
-  function ntSendCtl() { var s = state; if (!net || !s || !s.note || !s.note.open) return; net.send('note', { pid: pid, id: s.note.id, ctl: { p: ntCtl.p, t: ntCtl.t } }); ntCtlAt = Date.now(); }
+  function ntSendCtl() { var s = state; if (!net || !s || !s.note || s.note.st !== 'ctl') return; net.send('note', { pid: pid, id: s.note.id, ctl: { p: ntCtl.p, t: ntCtl.t } }); ntCtlAt = Date.now(); }
   function ntCtlBox() {
     var c = $('ntctl'); if (c) return c;
     c = document.createElement('div'); c.id = 'ntctl'; c.className = 'ntctl hidden';
@@ -578,25 +622,27 @@
     show('v-wait');
     if (box.getAttribute('data-id') !== n.id) { box.setAttribute('data-id', n.id); $('ntrange').value = 35; $('ntv').textContent = ntTime(35); noteMine = null; }
     if (ntCtlId !== n.id) { ntCtlId = n.id; ntCtl = { p: 0, t: 0 }; cb.querySelector('#ntpow').value = 0; [].forEach.call(cb.querySelectorAll('.ntt'), function (x) { x.classList.remove('on'); }); }
-    if (n.shut) ntShutEnd = Date.now() + n.shut;
+    if (n.st === 'guess' || n.st === 'ctl') ntShutEnd = Date.now() + (n.left || 0);
     var g = noteMine != null ? noteMine : null;
     clearInterval(ntShutT);
     var cd = function () { var sec = Math.max(0, Math.ceil((ntShutEnd - Date.now()) / 1000)); var e = cb.querySelector('.ntcd'); if (e) e.textContent = 'Controls close in ' + sec + 's'; };
     if (n.st === 'intro') { box.classList.add('hidden'); cb.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note!'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
-    if (n.open && !mine) {
+    if (n.st === 'guess' && !mine) {
       cb.classList.add('hidden'); box.classList.remove('hidden');
-      $('waittitle').textContent = '🎤 How long will the note last?'; $('waitsub').textContent = 'Between 10 seconds and one minute. Lock it in to unlock the controls!';
+      $('waittitle').textContent = '🎤 How long will the note last?'; $('waitsub').textContent = 'Between 10 seconds and one minute. Lock it in to get the controls!';
       return;
     }
     box.classList.add('hidden');
-    if (n.open && mine) {
+    if (n.st === 'guess') { cb.classList.add('hidden'); $('waittitle').textContent = '🔒 Locked in: ' + (g != null ? ntTime(g) : ''); $('waitsub').textContent = 'Waiting for the others… then you get the controls! 🎛️'; return; }
+    if (n.st === 'ctl' && mine) {
       cb.classList.remove('hidden');
       $('waittitle').textContent = '🎛️ Your prediction: ' + (g != null ? ntTime(g) : '🔒'); $('waitsub').textContent = 'Steer the singer! More power and the boost break it sooner, the fan keeps it going longer.';
-      cd(); ntShutT = setInterval(function () { if (!state || !state.note || !state.note.open) { clearInterval(ntShutT); return; } cd(); if (Date.now() - ntCtlAt > 2500) ntSendCtl(); }, 250);   /* (sent again now and then, in case a message got lost) */
+      cd(); ntShutT = setInterval(function () { if (!state || !state.note || state.note.st !== 'ctl') { clearInterval(ntShutT); return; } cd(); if (Date.now() - ntCtlAt > 2500) ntSendCtl(); }, 250);   /* (sent again now and then, in case a message got lost) */
       return;
     }
     cb.classList.add('hidden');
-    if (n.st === 'guess' || n.st === 'sing') { $('waittitle').textContent = '🔒 Controls closed'; $('waitsub').textContent = (g != null ? 'Your prediction: ' + ntTime(g) + '. ' : 'You didn’t lock in a prediction. ') + 'Hold it… hold it… 🎶'; return; }
+    if (n.st === 'ctl') { $('waittitle').textContent = '🎛️ The others are at the controls'; $('waitsub').textContent = 'You didn’t lock in a prediction this time. Watch the big screen!'; return; }
+    if (n.st === 'sing') { $('waittitle').textContent = '🎶 Hold it… hold it…'; $('waitsub').textContent = g != null ? 'Your prediction: ' + ntTime(g) + '.' : 'Watch the big screen!'; return; }
     var gg = n.guess && n.guess[pid] != null ? n.guess[pid] : g;
     var won = n.win && n.win.indexOf(pid) >= 0;
     $('waittitle').textContent = won ? '🏆 Closest prediction!' : '💥 Kaboom at ' + ntTime(n.len, true);

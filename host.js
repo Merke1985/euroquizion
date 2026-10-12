@@ -255,6 +255,7 @@
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
     if (G.note && G.phase === 'note') s.note = noteSnap();
+    if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
     if (G.qj && G.phase === 'qj') s.qj = qjSnap();
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
@@ -489,6 +490,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
+    if (G.phase !== 'carpet' && $('tcov')) { $('tcov').remove(); clearInterval(tcFadeT); if (tcSongT) tcSong(false); }
     if (G.phase !== 'qj' && $('qjov')) { $('qjov').remove(); if (!REMOTE) try { yt.pauseVideo(); } catch (e) {} }   // (the game is over, or was ended)
     // A player who has just joined pops in with a chime, so nobody misses it.
     var nowT = Date.now(), fresh = false;
@@ -574,6 +576,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); clueShow();
     } else if (G.phase === 'note') {
       show('v-game'); noteShow();
+    } else if (G.phase === 'carpet') {
+      show('v-game'); carpetShow();
     } else if (G.phase === 'qj') {
       show('v-game'); qjShow();
     } else {
@@ -1427,7 +1431,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
@@ -1436,7 +1440,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Answer trivia right for secret clues on your phone, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
-    note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts (10 seconds to one minute), then grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
+    note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
+    carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five mini-parades on the turquoise carpet! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -1449,7 +1454,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
@@ -2169,7 +2174,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -3790,6 +3795,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'Then all the translations appear, with the real one hidden among them.'],
         ['her', 'Find the real one for 12 points…'],
         ['him', '…and get 2 points for every player who falls for your fake! Three rounds, most points wins. Good luck, liars! 🤥']] },
+    carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
+      get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
+      lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
+        ['her', 'They walk by one at a time and pose for the photographers. Watch them closely!'],
+        ['him', 'Hats, sunglasses, dresses, colours, shoes… remember everything you can! 👒🕶️👠'],
+        ['her', 'After each parade comes one question on your phone. You have 20 seconds to answer.'],
+        ['him', 'Five parades, five questions, and each parade gets a bit longer!'],
+        ['her', 'Most right answers wins. A tie? Then the fastest wins! 📸']] },
     bomb: { sign: '💣 The Unlucky Draw', theme: 'bomb',
       art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
       lines: [['him', 'Welcome to The Unlucky Draw! Everyone gets an envelope with a symbol on it. 💌'],
@@ -3898,13 +3911,202 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }
     }
   }
+  // ---------- Turquoise Carpet ----------
+  // Five mini-parades on a turquoise runway, seen from the side: 2–3, then 3–4 … up to 6–7 randomly dressed
+  // contestants walk on one at a time, pose for the photographers, and walk off. After each parade one memory
+  // question (on the phones, 4 options, 20 seconds). Most right answers wins; a tie goes to the fastest (only the
+  // time of right answers counts). "Because of You" plays from the first step to the winner.
+  var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b']];
+  var TC_SHOES = ['High heels', 'Boots', 'Sneakers', 'Flats'];
+  var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
+  var TC_SIZES = [[2, 3], [3, 4], [4, 5], [5, 6], [6, 7]], TC_Q_MS = 20000, TC_STEP = 3400, tcTimer = null, tcFadeT = null;
+  var TC_ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
+  function tcGirl() { return { o: pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 3), g: Math.random() < .45 ? 1 : 0, s: Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * TC_HAIR.length), y: Math.floor(Math.random() * 3) }; }
+  // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
+  // 2 sun hat, 3 beret), g: sunglasses, s: shoes, k: skin, r: hair colour, y: hairstyle (0 long, 1 bob, 2 bun).
+  function tcSvg(w) {
+    var sk = TC_SKIN[w.k], hr = TC_HAIR[w.r], c = TC_COLORS[w.c][1], cd = TC_COLORS[w.c][2], legC = w.o === 'dress' ? sk : c, legD = w.o === 'dress' ? sk : cd;
+    var shoe = function () {
+      if (w.s === 0) return '<path d="M98 452 L128 458 Q140 462 140 470 L112 470 L104 466 L102 482 L98 482 Z" fill="#d9dce6" stroke="#8a8fa0" stroke-width="2"/>';
+      if (w.s === 1) return '<path d="M96 396 L120 396 L122 452 Q142 456 144 470 L96 470 Z" fill="#6b3b1f" stroke="#3b1f0f" stroke-width="2"/>';
+      if (w.s === 2) return '<path d="M96 446 L122 446 Q146 452 148 466 L148 474 L96 474 Z" fill="#fafafa" stroke="#9aa0ad" stroke-width="2"/><path d="M96 468 L148 468" stroke="#ff5a8a" stroke-width="4"/>';
+      return '<path d="M98 456 L126 456 Q140 460 140 468 L98 468 Z" fill="#1d1d24"/>';
+    };
+    var leg = function (cls, col) { return '<g class="tcleg ' + cls + '"><rect x="' + (w.o === 'dress' ? 97 : 94) + '" y="246" width="' + (w.o === 'dress' ? 22 : 28) + '" height="212" rx="10" fill="' + col + '"/>' + shoe() + '</g>'; };
+    var arm = function (cls, col) { return '<g class="tcarm ' + cls + '"><rect x="100" y="146" width="18" height="118" rx="9" fill="' + col + '"/><circle cx="109" cy="267" r="10" fill="' + sk + '"/></g>'; };
+    var sleeve = w.o === 'suit' ? c : sk, sleeveD = w.o === 'suit' ? cd : sk;
+    var body = w.o === 'dress' ? '<path d="M82 144 Q108 130 134 144 Q138 186 128 224 Q156 300 170 366 Q110 384 46 366 Q62 300 88 224 Q78 186 82 144 Z" fill="' + c + '"/><path d="M88 224 Q108 230 128 224" stroke="' + cd + '" stroke-width="6" fill="none"/>'
+      : w.o === 'jumpsuit' ? '<path d="M82 144 Q108 130 134 144 Q138 186 130 222 Q138 244 134 266 L82 266 Q78 244 86 222 Q78 186 82 144 Z" fill="' + c + '"/><path d="M86 222 Q108 228 130 222" stroke="' + cd + '" stroke-width="8" fill="none"/>'
+      : '<path d="M80 142 Q108 128 136 142 L140 284 L78 284 Z" fill="' + c + '"/><path d="M106 136 L118 182 L130 140 Z" fill="#fff"/><path d="M118 182 L130 140 M118 182 L112 270" stroke="' + cd + '" stroke-width="3" fill="none"/><circle cx="124" cy="214" r="3" fill="' + cd + '"/><circle cx="124" cy="240" r="3" fill="' + cd + '"/>';
+    var hairBack = w.y === 0 ? '<path d="M84 80 Q80 50 110 50 Q132 52 132 78 L118 76 Q112 120 100 196 Q80 190 78 150 Q74 110 84 80 Z" fill="' + hr + '"/>' : w.y === 1 ? '<path d="M82 82 Q80 50 112 50 Q136 54 134 80 L124 80 Q118 104 108 126 Q84 124 82 82 Z" fill="' + hr + '"/>' : '<circle cx="80" cy="70" r="17" fill="' + hr + '"/><path d="M84 84 Q82 52 112 50 Q134 52 134 78 Q112 64 92 92 Z" fill="' + hr + '"/>';
+    var hairFront = '<path d="M86 78 Q92 54 116 54 Q132 56 136 74 Q120 64 104 70 Q96 74 92 92 Z" fill="' + hr + '"/>';
+    var face = '<rect x="102" y="112" width="16" height="30" rx="6" fill="' + sk + '"/><circle cx="112" cy="92" r="30" fill="' + sk + '"/><path d="M140 88 Q148 96 141 100" fill="' + sk + '" stroke="' + sk + '" stroke-width="2"/>' +
+      '<path d="M130 109 Q136 112 140 108" stroke="#b0303a" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="126" cy="99" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/>' +
+      (w.g ? '<path d="M104 86 L118 84" stroke="#111" stroke-width="3"/><path d="M118 80 L144 80 Q146 92 138 95 L124 95 Q118 92 118 80 Z" fill="#111"/><path d="M122 83 L130 83" stroke="#5a6a8a" stroke-width="2"/>' : '<circle cx="129" cy="87" r="3.2" fill="#2a1a10"/><path d="M124 81 Q129 78 134 81" stroke="#2a1a10" stroke-width="2" fill="none"/>');
+    var hat = w.h === 1 ? '<rect x="92" y="18" width="42" height="44" rx="3" fill="#15151c"/><rect x="92" y="48" width="42" height="7" fill="#3a3a48"/><ellipse cx="113" cy="62" rx="34" ry="6" fill="#15151c"/>'
+      : w.h === 2 ? '<ellipse cx="112" cy="64" rx="56" ry="10" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M88 64 Q90 34 112 34 Q136 34 138 64 Z" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M89 58 Q112 52 137 58" stroke="#8b5cf6" stroke-width="6" fill="none"/>'
+      : w.h === 3 ? '<ellipse cx="104" cy="60" rx="36" ry="14" fill="#6d3cc0" transform="rotate(-10 104 60)"/><circle cx="104" cy="45" r="4" fill="#6d3cc0"/>' : '';
+    return '<svg class="tcgirl" viewBox="0 0 200 490" aria-hidden="true">' + hairBack + leg('b', legD) + arm('b', sleeveD) + leg('f', legC) + body + face + hairFront + hat + arm('f', sleeve) + '</svg>';
+  }
+  function tcQuestion(girls, used) {
+    var n = girls.length, types = ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'].filter(function (t) { return used.indexOf(t) < 0; });
+    if (!types.length) types = ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'];
+    var t = pick(types), cnt = function (f) { return girls.filter(f).length; };
+    var nums = function (ans) { var hi = Math.max(3, n), lo = Math.max(0, Math.min(ans - Math.floor(Math.random() * 4), hi - 3)); var o = []; for (var i = lo; i < lo + 4; i++) o.push(String(i)); return { opts: o, ans: ans - lo }; };
+    var q;
+    if (t === 'hat') q = nums(cnt(function (w) { return w.h > 0; })), q.text = 'How many contestants wore a hat?';
+    else if (t === 'glasses') q = nums(cnt(function (w) { return w.g; })), q.text = 'How many contestants wore sunglasses?';
+    else if (t === 'dress') q = nums(cnt(function (w) { return w.o === 'dress'; })), q.text = 'How many contestants wore a dress?';
+    else if (t === 'red') q = nums(cnt(function (w) { return w.c === 0; })), q.text = 'How many contestants wore a red outfit?';
+    else if (t === 'color') { var i = Math.floor(Math.random() * n); q = { opts: TC_COLORS.map(function (x) { return x[0]; }), ans: girls[i].c, text: 'What colour was the outfit of the ' + TC_ORD[i] + ' contestant?' }; }
+    else { var j = Math.floor(Math.random() * n); q = { opts: TC_SHOES.slice(), ans: girls[j].s, text: 'Which shoes did the ' + TC_ORD[j] + ' contestant wear?' }; }
+    q.type = t; return q;
+  }
+  function carpetAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (!act.length) { quipAll(); return; }
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    G.carpet = { id: 'tc' + G.round + '-' + Math.random().toString(36).slice(2, 6), sec: 0, st: 'ready', girls: [], cur: -1, q: null, qid: '', used: [], ans: {}, tot: {}, win: [], ends: 0 };
+    G.phase = 'carpet'; G.barMs = 0; push();
+    clearTimeout(tcTimer); tcTimer = setTimeout(tcParade, 2600);
+  }
+  function tcParade() {
+    var g = G.carpet; if (!g || G.phase !== 'carpet') return;
+    g.sec++; var sz = TC_SIZES[g.sec - 1], n = sz[0] + Math.floor(Math.random() * (sz[1] - sz[0] + 1));
+    g.girls = []; for (var i = 0; i < n; i++) g.girls.push(tcGirl());
+    g.st = 'walk'; g.cur = -1; g.q = null; push();
+    var step = function (i) {
+      if (G.carpet !== g) return;
+      if (i >= n) { tcTimer = setTimeout(tcAsk, 700); return; }
+      g.cur = i; push();
+      if (g.sec === 1 && i === 0) tcSong(true);   // the music starts exactly with the first step
+      tcTimer = setTimeout(function () { step(i + 1); }, TC_STEP);
+    };
+    tcTimer = setTimeout(function () { step(0); }, 1600);
+  }
+  function tcAsk() {
+    var g = G.carpet; if (!g || G.phase !== 'carpet') return;
+    g.q = tcQuestion(g.girls, g.used); g.used.push(g.q.type);
+    g.qid = g.id + '-q' + g.sec; g.ans = {}; g.cur = -1; g.st = 'ask'; g.askAt = Date.now(); g.ends = Date.now() + TC_Q_MS; push(); Music.ding();
+    if (!REMOTE) try { yt.setVolume(30); } catch (e) {}
+    var qid = g.qid;
+    list().forEach(function (p) {
+      if (!p.bot || p.off) return;
+      var a = Math.random() < .65 ? g.q.ans : Math.floor(Math.random() * 4);
+      setTimeout(function () { tcMsg({ pid: p.pid, qid: qid, a: a }); }, 2500 + Math.random() * 11000);
+    });
+    clearTimeout(tcTimer); tcTimer = setTimeout(tcReveal, TC_Q_MS);
+    clearInterval(tcFadeT); tcFadeT = setInterval(function () { if (!G.carpet || G.carpet.st !== 'ask') { clearInterval(tcFadeT); return; } carpetShow(); }, 500);
+  }
+  function tcMsg(m) {
+    var g = G.carpet; if (!g || G.phase !== 'carpet' || g.st !== 'ask' || !m || m.qid !== g.qid || !players[m.pid] || g.ans[m.pid]) return;
+    var a = Math.round(Number(m.a)); if (!(a >= 0 && a <= 3)) return;
+    g.ans[m.pid] = { a: a, ms: Date.now() - g.askAt }; Music.plop(Object.keys(g.ans).length); push();
+    if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.ans[p.pid]; })) { clearTimeout(tcTimer); tcTimer = setTimeout(tcReveal, 900); }
+  }
+  function tcReveal() {
+    var g = G.carpet; if (!g || g.st !== 'ask') return;
+    clearInterval(tcFadeT); g.st = 'reveal';
+    Object.keys(g.ans).forEach(function (k) { var t = g.tot[k] || (g.tot[k] = { n: 0, ms: 0 }); if (g.ans[k].a === g.q.ans) { t.n++; t.ms += g.ans[k].ms; } });
+    push(); Music.ding();
+    if (!REMOTE) try { yt.setVolume(55); } catch (e) {}
+    clearTimeout(tcTimer); tcTimer = setTimeout(function () { if (G.carpet !== g) return; if (g.sec < 5) tcParade(); else tcWin(); }, 5600);
+  }
+  function tcRank(g) {   // most right answers first; a tie: the shortest total time of the right answers
+    return list().filter(function (p) { return !p.off || g.tot[p.pid]; }).map(function (p) { var t = g.tot[p.pid] || { n: 0, ms: 0 }; return { pid: p.pid, n: t.n, ms: t.ms }; })
+      .sort(function (a, b) { return b.n - a.n || a.ms - b.ms; });
+  }
+  function tcWin() {
+    var g = G.carpet; if (!g) return;
+    var r = tcRank(g), top = r[0];
+    g.win = top && top.n > 0 ? r.filter(function (x) { return x.n === top.n && x.ms === top.ms; }).map(function (x) { return x.pid; }) : [];
+    var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
+    g.st = 'win'; g.prize = big; push(); Music.douze();
+    tcSong(false, true);
+    clearTimeout(tcTimer); tcTimer = setTimeout(function () { if (G.phase === 'carpet') { G.carpet = null; startRound(); } }, 8000);
+  }
+  // "Because of You" (Belgium 2023): from the first step of the first parade until the winner (then it fades out)
+  var tcSongT = null;
+  function tcSong(on, fade) {
+    clearInterval(tcSongT); tcSongT = null;
+    if (REMOTE) return;
+    try {
+      if (!on && fade) { var v = 55; tcSongT = setInterval(function () { v -= 3; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(tcSongT); tcSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
+      if (!on) { yt.pauseVideo(); return; }
+      Music.want(false); stage = 'carpet'; yt.loadVideoById({ videoId: 'ORhEoS6d8e4', startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
+      tcSongT = setInterval(function () {
+        if (G.phase !== 'carpet' || !G.carpet || G.carpet.st === 'win') { clearInterval(tcSongT); tcSongT = null; return; }
+        try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
+      }, 1500);
+    } catch (e) {}
+  }
+  function carpetSnap() {
+    var g = G.carpet, open = g.st === 'reveal' || g.st === 'win', done = {};
+    Object.keys(g.ans).forEach(function (k) { done[k] = 1; });
+    return { id: g.id, st: g.st, sec: g.sec, n: g.girls.length, cur: g.cur, qid: g.qid, left: g.st === 'ask' ? Math.max(0, g.ends - Date.now()) : 0,
+      q: g.q ? { text: g.q.text, opts: g.q.opts, ans: open ? g.q.ans : -1 } : null, done: done, mine: open ? g.ans : null,
+      tot: g.tot, win: g.st === 'win' ? g.win : null, prize: g.prize || 0 };
+  }
+  // The big screen: the runway seen from the side, photographers in front, the contestant of the moment walking by;
+  // then the question card with the answers, and at the end the ranking.
+  function carpetShow() {
+    var g = G.carpet; if (!g) return;
+    var ov = $('tcov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'tcov'; ov.className = 'tcov enter';
+      var cams = ''; for (var i = 0; i < 7; i++) cams += '<span class="tccam" style="--i:' + i + '"><i class="tcflash"></i></span>';
+      ov.innerHTML = '<div class="tcwall"><i></i><i></i><i></i><i></i><i></i></div><div class="tcsign">💎 Turquoise Carpet</div><div class="tcsec"></div><div class="tcrope l"></div><div class="tcrope r"></div>' +
+        '<div class="tcrun"></div><div class="tcwalk"></div><div class="tccams">' + cams + '</div><div class="tcq"></div><div class="tcboard"></div>';
+      document.body.appendChild(ov); whooshes([0, 350, 700]);
+      setTimeout(function () { ov.classList.remove('enter'); }, 2600);
+    }
+    ov.setAttribute('data-st', g.st);
+    ov.querySelector('.tcsec').innerHTML = g.sec ? 'Parade ' + g.sec + ' of 5' : 'Get ready…';
+    // the contestant of the moment: walks on, poses for the flashes, walks off
+    var wk = ov.querySelector('.tcwalk'), key = g.sec + ':' + g.cur;
+    if (g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
+      wk.setAttribute('data-k', key);
+      wk.innerHTML = '<div class="tcg walking">' + tcSvg(g.girls[g.cur]) + '</div>';
+      var el = wk.firstChild, at = function (ms, f) { setTimeout(function () { if (el.isConnected) f(); }, ms); };
+      at(1150, function () { el.classList.remove('walking'); el.classList.add('posing'); });
+      [1250, 1500, 1700, 1950].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
+      at(2250, function () { el.classList.remove('posing'); el.classList.add('walking'); });
+    }
+    if (g.st !== 'walk') { wk.innerHTML = ''; wk.removeAttribute('data-k'); }
+    // the question card
+    var qb = ov.querySelector('.tcq'), act = list().filter(function (p) { return !p.off; });
+    if ((g.st === 'ask' || g.st === 'reveal') && g.q) {
+      if (qb.getAttribute('data-k') !== g.qid) {
+        qb.setAttribute('data-k', g.qid);
+        qb.innerHTML = '<div class="tcqt">' + esc(g.q.text) + '</div><div class="tcopts">' + g.q.opts.map(function (o, i) { return '<div class="tcopt" style="--i:' + i + '"><b>' + 'ABCD'[i] + '</b><span>' + esc(o) + '</span><em></em></div>'; }).join('') + '</div><div class="tctime"><i></i></div><div class="tcwho"></div>';
+      }
+      [].forEach.call(qb.querySelectorAll('.tcopt'), function (o, i) { o.classList.toggle('right', g.st === 'reveal' && i === g.q.ans); o.classList.toggle('wrong', g.st === 'reveal' && i !== g.q.ans); });
+      var tb = qb.querySelector('.tctime i'); if (tb) tb.style.width = (g.st === 'ask' ? Math.max(0, (g.ends - Date.now()) / TC_Q_MS * 100) : 0) + '%';
+      if (g.st === 'reveal') [].forEach.call(qb.querySelectorAll('.tcopt'), function (o, i) { var who = act.filter(function (p) { return g.ans[p.pid] && g.ans[p.pid].a === i; }); o.querySelector('em').innerHTML = who.map(function (p) { return '<span class="tcav">' + charSvg(p.char) + '</span>'; }).join(''); });
+      var wh = act.map(function (p) { var a = g.ans[p.pid], ok = g.st === 'reveal' && a && a.a === g.q.ans; return '<span class="tcp' + (a ? ' in' : '') + (g.st === 'reveal' ? (ok ? ' ok' : ' no') : '') + '">' + charSvg(p.char) + '<i>' + esc(p.name) + (g.st === 'reveal' && ok ? ' ✔ ' + (a.ms / 1000).toFixed(1) + 's' : g.st === 'ask' && a ? ' 🔒' : '') + '</i></span>'; }).join('');
+      var wb = qb.querySelector('.tcwho'); if (wb.getAttribute('data-h') !== wh) { wb.setAttribute('data-h', wh); wb.innerHTML = wh; }
+    } else if (qb.innerHTML) { qb.innerHTML = ''; qb.removeAttribute('data-k'); }
+    // the ranking (during the questions a small one; at the end the big one)
+    var r = tcRank(g), bd = ov.querySelector('.tcboard');
+    var bh = g.sec >= 1 && g.st !== 'walk' && g.st !== 'ready' ? '<div class="tcbt">' + (g.st === 'win' ? '🏆 ' + (g.win.length ? (g.win.length > 1 ? 'Tie! ' : '') + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + ' ' + (g.win.length > 1 ? 'win' : 'wins') + '!' + (shopOn() ? '' : ' +' + g.prize) : 'Nobody got one right…') : 'Right answers') + '</div>' + r.map(function (x, i) { var p = players[x.pid]; if (!p) return ''; return '<div class="tcrow' + (g.st === 'win' && g.win.indexOf(x.pid) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + '★'.repeat(x.n) + '<small>' + '☆'.repeat(Math.max(0, g.sec - x.n)) + '</small></em><i>' + (x.n ? (x.ms / 1000).toFixed(1) + 's' : '') + '</i></div>'; }).join('') : '';
+    if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
+    ov.classList.toggle('final', g.st === 'win');
+  }
+  function tcFlash(ov, n) {
+    var cs = ov.querySelectorAll('.tcflash'); if (!cs.length) return;
+    var a = cs[Math.floor(Math.random() * cs.length)]; a.classList.remove('pop'); void a.offsetWidth; a.classList.add('pop');
+    ov.classList.remove('flashed'); void ov.offsetWidth; ov.classList.add('flashed');
+    if (!REMOTE) Music.snap();
+  }
+  net.on('carpet', tcMsg);
   // ---------- Hold That Note ----------
   // Technical problems: the sound system breaks down in the middle of every high note. A diva rises on stage in an
   // enormous gown; everyone predicts on their phone how long the note will last (10 to 60 seconds) and, once locked in,
   // gets the controls (power slider, power boost, cooling fan) until 10 seconds into the note. Everyone steers the same
   // singer; a hidden random glitch of up to 10 seconds either way is added. The closest prediction wins.
   var DIVA = '<svg class="diva" viewBox="0 0 600 720" aria-hidden="true"><defs><linearGradient id="ntgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f7fb"/><stop offset=".5" stop-color="#bfc2d3"/><stop offset="1" stop-color="#6e7290"/></linearGradient><linearGradient id="nttier" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffb3e1"/></linearGradient><radialGradient id="ntskin" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#f7d2b6"/><stop offset="1" stop-color="#d9a17f"/></radialGradient></defs><path d="M262 250 Q300 238 338 250 L360 330 L240 330 Z" fill="url(#ntgown)"/><path d="M240 320 Q300 300 360 320 Q420 430 470 470 Q300 500 130 470 Q180 430 240 320 Z" fill="url(#ntgown)"/><path d="M130 462 Q300 492 470 462 Q520 540 560 590 Q300 640 40 590 Q80 540 130 462 Z" fill="url(#ntgown)"/><path d="M40 582 Q300 632 560 582 Q590 650 600 720 L0 720 Q10 650 40 582 Z" fill="url(#ntgown)"/><path d="M130 466 Q300 496 470 466" stroke="url(#nttier)" stroke-width="9" fill="none"/><path d="M40 586 Q300 636 560 586" stroke="url(#nttier)" stroke-width="11" fill="none"/><path d="M240 322 Q300 302 360 322" stroke="url(#nttier)" stroke-width="7" fill="none"/><g class="dvfringe" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity=".9"><line x1="245" y1="322" x2="247" y2="344"/><line x1="259" y1="317" x2="261" y2="339"/><line x1="272" y1="313" x2="274" y2="335"/><line x1="286" y1="311" x2="288" y2="333"/><line x1="300" y1="310" x2="302" y2="332"/><line x1="314" y1="311" x2="316" y2="333"/><line x1="328" y1="313" x2="330" y2="335"/><line x1="341" y1="317" x2="343" y2="339"/><line x1="355" y1="322" x2="357" y2="344"/><line x1="135" y1="466" x2="137" y2="496"/><line x1="151" y1="469" x2="153" y2="499"/><line x1="166" y1="471" x2="168" y2="501"/><line x1="182" y1="473" x2="184" y2="503"/><line x1="198" y1="475" x2="200" y2="505"/><line x1="214" y1="477" x2="216" y2="507"/><line x1="229" y1="478" x2="231" y2="508"/><line x1="245" y1="479" x2="247" y2="509"/><line x1="261" y1="480" x2="263" y2="510"/><line x1="276" y1="481" x2="278" y2="511"/><line x1="292" y1="481" x2="294" y2="511"/><line x1="308" y1="481" x2="310" y2="511"/><line x1="324" y1="481" x2="326" y2="511"/><line x1="339" y1="480" x2="341" y2="510"/><line x1="355" y1="479" x2="357" y2="509"/><line x1="371" y1="478" x2="373" y2="508"/><line x1="386" y1="477" x2="388" y2="507"/><line x1="402" y1="475" x2="404" y2="505"/><line x1="418" y1="473" x2="420" y2="503"/><line x1="434" y1="471" x2="436" y2="501"/><line x1="449" y1="469" x2="451" y2="499"/><line x1="465" y1="466" x2="467" y2="496"/><line x1="45" y1="586" x2="47" y2="622"/><line x1="63" y1="589" x2="65" y2="625"/><line x1="80" y1="592" x2="82" y2="628"/><line x1="98" y1="595" x2="100" y2="631"/><line x1="115" y1="598" x2="117" y2="634"/><line x1="133" y1="600" x2="135" y2="636"/><line x1="151" y1="602" x2="153" y2="638"/><line x1="168" y1="604" x2="170" y2="640"/><line x1="186" y1="606" x2="188" y2="642"/><line x1="203" y1="607" x2="205" y2="643"/><line x1="221" y1="609" x2="223" y2="645"/><line x1="238" y1="610" x2="240" y2="646"/><line x1="256" y1="610" x2="258" y2="646"/><line x1="274" y1="611" x2="276" y2="647"/><line x1="291" y1="611" x2="293" y2="647"/><line x1="309" y1="611" x2="311" y2="647"/><line x1="326" y1="611" x2="328" y2="647"/><line x1="344" y1="610" x2="346" y2="646"/><line x1="362" y1="610" x2="364" y2="646"/><line x1="379" y1="609" x2="381" y2="645"/><line x1="397" y1="607" x2="399" y2="643"/><line x1="414" y1="606" x2="416" y2="642"/><line x1="432" y1="604" x2="434" y2="640"/><line x1="449" y1="602" x2="451" y2="638"/><line x1="467" y1="600" x2="469" y2="636"/><line x1="485" y1="598" x2="487" y2="634"/><line x1="502" y1="595" x2="504" y2="631"/><line x1="520" y1="592" x2="522" y2="628"/><line x1="537" y1="589" x2="539" y2="625"/><line x1="555" y1="586" x2="557" y2="622"/></g><g fill="#fff" opacity=".95"><circle cx="200" cy="420" r="3"/><circle cx="380" cy="400" r="3"/><circle cx="300" cy="440" r="2.5"/><circle cx="150" cy="540" r="3"/><circle cx="450" cy="530" r="3"/><circle cx="300" cy="560" r="3.5"/><circle cx="90" cy="650" r="3"/><circle cx="520" cy="660" r="3"/><circle cx="240" cy="670" r="3"/><circle cx="380" cy="690" r="3"/><circle cx="330" cy="360" r="2"/><circle cx="270" cy="380" r="2"/></g><path d="M268 200 Q300 190 332 200 L340 258 Q300 270 260 258 Z" fill="url(#ntgown)"/><g fill="#ffd6f0"><circle cx="285" cy="215" r="2.5"/><circle cx="310" cy="222" r="2.5"/><circle cx="296" cy="238" r="2.5"/><circle cx="320" cy="245" r="2"/><circle cx="278" cy="244" r="2"/></g><g fill="#e9c060"><circle cx="252" cy="80" r="34"/><circle cx="300" cy="52" r="38"/><circle cx="348" cy="80" r="34"/><circle cx="250" cy="126" r="22"/><circle cx="350" cy="126" r="22"/><circle cx="260" cy="160" r="16"/><circle cx="340" cy="160" r="16"/></g><g fill="#f7dc8c"><circle cx="262" cy="70" r="14"/><circle cx="300" cy="40" r="16"/><circle cx="338" cy="70" r="14"/><circle cx="244" cy="118" r="8"/><circle cx="356" cy="118" r="8"/></g><path d="M266 206 Q230 170 214 120" stroke="url(#ntskin)" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M334 206 Q372 180 388 132" stroke="url(#ntskin)" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="213" cy="114" r="11" fill="url(#ntskin)"/><circle cx="389" cy="126" r="11" fill="url(#ntskin)"/><g class="dvmic"><rect x="200" y="96" width="10" height="34" rx="4" fill="#333" transform="rotate(-25 205 113)"/><circle cx="198" cy="94" r="9" fill="#777"/></g><rect x="290" y="168" width="20" height="30" rx="8" fill="url(#ntskin)"/><ellipse cx="300" cy="118" rx="44" ry="52" fill="url(#ntskin)"/><path d="M254 100 Q258 56 300 54 Q342 56 346 100 Q332 76 312 74 Q300 92 270 84 Q262 90 254 100 Z" fill="#e9c060"/><g class="dveyesc"><path d="M276 112 Q284 118 292 112" stroke="#2a1410" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M308 112 Q316 118 324 112" stroke="#2a1410" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M276 112 L272 108 M292 112 L295 107 M308 112 L305 107 M324 112 L328 108" stroke="#2a1410" stroke-width="2"/></g><g class="dveyeso"><ellipse cx="284" cy="111" rx="9" ry="7" fill="#fff"/><ellipse cx="316" cy="111" rx="9" ry="7" fill="#fff"/><circle cx="285" cy="111" r="4.5" fill="#3a6ea8"/><circle cx="317" cy="111" r="4.5" fill="#3a6ea8"/><circle cx="285" cy="111" r="2" fill="#111"/><circle cx="317" cy="111" r="2" fill="#111"/><circle cx="286.5" cy="109.5" r="1.2" fill="#fff"/><circle cx="318.5" cy="109.5" r="1.2" fill="#fff"/><path d="M274 106 Q284 100 294 106 M306 106 Q316 100 326 106" stroke="#2a1410" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M275 106 L271 102 M293 106 L296 101 M307 106 L304 101 M325 106 L329 102" stroke="#2a1410" stroke-width="2"/></g><path d="M273 100 Q284 94 293 100" stroke="#a07a2a" stroke-width="3" fill="none"/><path d="M307 100 Q316 94 327 100" stroke="#a07a2a" stroke-width="3" fill="none"/><ellipse cx="270" cy="132" rx="8" ry="5" fill="#ff8fa3" opacity=".5"/><ellipse cx="330" cy="132" rx="8" ry="5" fill="#ff8fa3" opacity=".5"/><ellipse class="dvmouth" cx="300" cy="146" rx="10" ry="13" fill="#7a1430"/><ellipse class="dvtongue" cx="300" cy="152" rx="6" ry="4" fill="#e05570"/><circle cx="256" cy="130" r="5" fill="#ffd23f"/><circle cx="344" cy="130" r="5" fill="#ffd23f"/></svg>';   // (an original character: big blonde curls, a towering silver fringe gown)
-  var NOTE_PRE_MS = 14000, NOTE_MIN = 10, NOTE_MAX = 60, NOTE_LEAD = 6, NOTE_CTL = 10, noteTimer = null, noteTick = null;   // (NOTE_LEAD: seconds of the recording before the note itself; NOTE_CTL: the controls close this many seconds into the note)
+  var NOTE_GUESS_MS = 20000, NOTE_CTL_MS = 12000, NOTE_MIN = 10, NOTE_MAX = 60, NOTE_LEAD = 6, noteTimer = null, noteTick = null;   // (NOTE_LEAD: seconds of the recording before the note itself)
   function noteElapsed(g) {   // seconds of the note so far (negative during the lead-in); the recording's own clock when it plays
     var a = ntAudio; if (a && !a.paused && a.currentTime > 0.05) return a.currentTime - NOTE_LEAD;
     return (Date.now() - g.t0) / 1000;
@@ -3922,9 +4124,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lines = [
       ['him', 'Oh no, Europe… we have technical problems! 😱 Our sound system breaks down in the middle of every big high note!'],
       ['her', 'How long will the next note last before it all goes wrong? Predict it on your phone: between 10 seconds and one minute.'],
-      ['him', 'Lock in your prediction and you get the controls: the POWER slider, a POWER BOOST and a COOLING FAN! 🎛️'],
+      ['him', 'Once everyone has locked in, you get the controls: the POWER slider, a POWER BOOST and a COOLING FAN! 🎛️'],
       ['her', 'More power and the boost make it break down sooner. The fan keeps it going longer. You all control the same singer!'],
-      ['him', 'But hurry: the controls close 10 seconds after the note starts. And there’s always a little random glitch… 😈'],
+      ['him', 'Only players who locked in a prediction get the controls. And there’s always a little random glitch… 😈'],
       ['her', 'The closest prediction wins! Ladies and gentlemen… our diva! 💃']
     ];
     var t = 1800;
@@ -3955,54 +4157,60 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     P /= act.length; B /= act.length;
     return Math.max(0, Math.min(1, 0.6 * P + 0.4 * (B + 1) / 2));
   }
-  function noteGuess() {   // predictions open (and the controls, once you have locked in); the diva warms up first
+  function noteGuess() {   // first everyone predicts…
     var g = G.note; if (!g) return;
-    g.st = 'guess'; g.ends = Date.now() + NOTE_PRE_MS; g.lockAt = g.ends + (NOTE_LEAD + NOTE_CTL) * 1000; noteSay(''); push(); noteShow(); Music.ding();
+    g.st = 'guess'; g.ends = Date.now() + NOTE_GUESS_MS; noteSay(''); push(); noteShow(); Music.ding();
     bots.forEach(function (b) {
       if (!players[b.pid] || players[b.pid].off) return;
       var v = Math.round(15 + Math.random() * 40), id = g.id;
       setTimeout(function () { noteMsg({ pid: b.pid, id: id, guess: v }); }, 2000 + Math.random() * 8000);
-      setTimeout(function () {   // and they steer towards their own prediction (more or less)
+    });
+    clearTimeout(noteTimer); noteTimer = setTimeout(noteCtl, NOTE_GUESS_MS);
+    clearInterval(noteTick); noteTick = setInterval(function () { if (!G.note || (G.note.st !== 'guess' && G.note.st !== 'ctl')) { clearInterval(noteTick); return; } noteShow(); }, 500);
+  }
+  function noteCtl() {   // …then the controls, for everyone who locked in a prediction, before she sings
+    var g = G.note; if (!g || g.st !== 'guess') return;
+    g.st = 'ctl'; g.ends = Date.now() + NOTE_CTL_MS; push(); noteShow(); Music.blip();
+    bots.forEach(function (b) {
+      var v = g.guess[b.pid], id = g.id; if (v == null || !players[b.pid] || players[b.pid].off) return;
+      setTimeout(function () {   // they steer towards their own prediction (more or less)
         var lo = v < 32, hi = v > 42, r = Math.random();
         noteMsg({ pid: b.pid, id: id, ctl: { p: lo ? 0.6 + 0.4 * r : hi ? 0.2 * r : r, t: lo ? (r < .7 ? 1 : 0) : hi ? (r < .7 ? -1 : 0) : (r < .3 ? 1 : r > .7 ? -1 : 0) } });
-      }, 11000 + Math.random() * 9000);
+      }, 1500 + Math.random() * 8000);
     });
-    clearTimeout(noteTimer); noteTimer = setTimeout(noteSing, NOTE_PRE_MS);
-    clearInterval(noteTick); noteTick = setInterval(function () { if (!G.note || G.note.st !== 'guess') { clearInterval(noteTick); return; } noteShow(); }, 500);
+    clearTimeout(noteTimer); noteTimer = setTimeout(function () { noteLock(); noteSing(); }, NOTE_CTL_MS);
   }
   function noteMsg(m) {
-    var g = G.note; if (!g || G.phase !== 'note' || (g.st !== 'guess' && g.st !== 'sing') || g.lk || !m || m.id !== g.id || !players[m.pid]) return;
+    var g = G.note; if (!g || G.phase !== 'note' || !m || m.id !== g.id || !players[m.pid]) return;
     if (m.guess != null) {
-      if (g.guess[m.pid] != null) return;
+      if (g.st !== 'guess' || g.guess[m.pid] != null) return;
       var v = Math.round(Number(m.guess)); if (!(v >= NOTE_MIN && v <= NOTE_MAX)) return;
       g.guess[m.pid] = v; Music.plop(Object.keys(g.guess).length); push(); noteShow();
+      if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.guess[p.pid] != null; })) { clearTimeout(noteTimer); noteTimer = setTimeout(noteCtl, 1200); }
       return;
     }
-    if (m.ctl && g.guess[m.pid] != null) {   // (the controls only work once your prediction is locked in)
+    if (m.ctl && g.st === 'ctl' && g.guess[m.pid] != null) {   // (the controls only work once your prediction is locked in)
       var p = Math.max(0, Math.min(1, Number(m.ctl.p) || 0)), t = m.ctl.t === 1 ? 1 : m.ctl.t === -1 ? -1 : 0;
       var o = g.ctl[m.pid]; if (o && o.p === p && o.t === t) return;
-      g.ctl[m.pid] = { p: p, t: t }; noteShow();
+      g.ctl[m.pid] = { p: p, t: t };
     }
   }
   function noteSing() {
-    var g = G.note; if (!g || g.st !== 'guess') return;
-    clearInterval(noteTick); g.st = 'sing'; g.t0 = Date.now() + NOTE_LEAD * 1000; g.lockAt = g.t0 + NOTE_CTL * 1000; push(); noteShow();   // (the recording has a lead-in: the timer starts when the note does)
+    var g = G.note; if (!g || g.st !== 'ctl') return;
+    clearInterval(noteTick); g.st = 'sing'; g.t0 = Date.now() + NOTE_LEAD * 1000; push(); noteShow();   // (the recording has a lead-in: the timer starts when the note does)
     noteAudio(true);
     var tick = function () {
       if (G.note !== g || g.st !== 'sing') return;
-      var el = noteElapsed(g);
-      if (!g.lk && el >= NOTE_CTL) noteLock();
-      if (g.lk && el >= g.len) { noteCut(); return; }
+      if (noteElapsed(g) >= g.len) { noteCut(); return; }
       noteShow(); noteTick = requestAnimationFrame(tick);
     };
     noteTick = requestAnimationFrame(tick);
   }
-  function noteLock() {   // ten seconds in: the controls close, and how long the note lasts is settled (with a hidden random glitch)
+  function noteLock() {   // the controls close, and how long the note lasts is settled (with a hidden random glitch)
     var g = G.note; if (!g || g.lk) return;
     g.lk = true;
     var s = notePush(g); g.base = Math.round((50 - 30 * s) * 10) / 10; g.off = Math.round((Math.random() * 20 - 10) * 10) / 10;
-    g.len = Math.max(NOTE_CTL + 0.5, Math.min(NOTE_MAX, Math.round((g.base + g.off) * 10) / 10));
-    Music.blip(); push();
+    g.len = Math.max(NOTE_MIN, Math.min(NOTE_MAX, Math.round((g.base + g.off) * 10) / 10));
   }
   function noteCut() {
     var g = G.note; if (!g) return;
@@ -4015,13 +4223,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.win.forEach(function (k) { var p = players[k]; p.score += 12; p.pts = 12; p.got = true; });
     push(); noteShow();
     var at = function (ms, f) { setTimeout(function () { if (G.note === g) f(); }, ms); };
-    at(1400, function () { noteSay('him', 'Kaboom! The sound system gave out after ' + noteTime(g.len, true) + '! 🎤💥 Your settings aimed for ' + noteTime(g.base, true) + ', and the glitch added ' + (g.off >= 0 ? '+' : '−') + Math.abs(g.off).toFixed(1) + ' seconds!'); });
-    at(6400, function () {
+    at(1400, function () { noteSay('him', 'Kaboom! The sound system gave out after ' + noteTime(g.len, true) + '! 🎤💥'); });
+    at(5400, function () {
       var w = g.win.map(function (k) { return players[k] ? players[k].name + ' (' + noteTime(g.guess[k]) + ')' : ''; }).filter(Boolean);
       noteSay('her', w.length ? (w.length > 1 ? w.slice(0, -1).join(', ') + ' and ' + w[w.length - 1] + ' were' : w[0] + ' was') + ' closest! 🏆' : 'Nobody made a prediction… what a shame!');
       g.st = 'done'; push(); noteShow(); Music.douze();
     });
-    at(11400, function () {
+    at(10400, function () {
       var ov = $('noteov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
       setTimeout(function () { if (G.note !== g) return; G.note = null; G.phase = 'loading'; push(); startRound2(); }, 1000);
     });
@@ -4029,8 +4237,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function noteSnap() {
     var g = G.note, locked = {}, end = g.st === 'cut' || g.st === 'done';
     Object.keys(g.guess).forEach(function (k) { locked[k] = 1; });
-    return { id: g.id, st: g.st, open: (g.st === 'guess' || g.st === 'sing') && !g.lk ? 1 : 0, left: g.st === 'guess' ? Math.max(0, g.ends - Date.now()) : 0, shut: g.lockAt && !g.lk ? Math.max(0, g.lockAt - Date.now()) : 0, locked: locked,
-      guess: end ? g.guess : null, len: end ? g.len : null, base: end ? g.base : null, off: end ? g.off : null, win: g.st === 'done' ? g.win : null, min: NOTE_MIN, max: NOTE_MAX };
+    return { id: g.id, st: g.st, left: g.st === 'guess' || g.st === 'ctl' ? Math.max(0, g.ends - Date.now()) : 0, locked: locked,
+      guess: end ? g.guess : null, len: end ? g.len : null, win: g.st === 'done' ? g.win : null, min: NOTE_MIN, max: NOTE_MAX };
   }
   // The big screen: the stage, the diva (once she is announced), the control desk while the controls are open, a timer,
   // and a line from 0 to 60 seconds with a needle running along it while she sings (everyone's prediction appears at the end).
@@ -4042,7 +4250,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="ntspot"></div><div class="grsign ntsign">🎤 Hold That Note!</div>' +
         '<div class="ntstage"><div class="ntstop"></div><div class="ntsfront"></div></div>' +
         '<div class="ntdiva">' + DIVA + '<div class="ntnotes"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></div><div class="ntsparks"></div><div class="ntshock"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="16" fill="#e9f8ff" opacity=".9"/><g fill="none" stroke="#dff6ff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><polyline points="50,50 40,36 47,30 34,12"/><polyline points="50,50 64,40 60,30 78,18"/><polyline points="50,50 66,58 74,52 94,60"/><polyline points="50,50 58,68 50,74 60,94"/><polyline points="50,50 36,62 30,56 10,70"/><polyline points="50,50 32,46 28,52 6,40"/></g></svg></div></div>' +
-        '<div class="nttimer">0:00.0</div><div class="ntdesk"><div class="ntdt">🎛️ Sound desk</div><div class="ntgauge"><i></i></div><div class="ntgl"><span>Normal</span><span>Overload 🔥</span></div><div class="ntknobs"><span class="ntkb">🚀 <b>0</b></span><span class="ntkf">🌀 <b>0</b></span></div><div class="ntshut"></div></div>' +
+        '<div class="nttimer">0:00.0</div>' +
         '<div class="ntline"><div class="ntscale"></div><div class="ntpins"></div><div class="ntneedle"></div></div>' +
         '<div class="ntmsg"></div><div class="ntplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
@@ -4052,19 +4260,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       setTimeout(function () { ov.classList.remove('enter'); }, 2800);
     }
     ov.setAttribute('data-st', g.st);
-    var open = (g.st === 'guess' || g.st === 'sing') && !g.lk;
+    var open = g.st === 'guess';
     ov.classList.toggle('lead', g.st === 'sing' && noteElapsed(g) < 0);   // the lead-in of the recording: her mouth goes quickly open and shut
-    ov.classList.toggle('ctlopen', open); ov.classList.toggle('ctlshut', g.lk && g.st === 'sing');
+    ov.classList.toggle('ctlopen', g.st === 'guess' || g.st === 'ctl');
     var el = g.st === 'sing' ? Math.max(0, noteElapsed(g)) : g.st === 'cut' || g.st === 'done' ? g.len : 0;
     ov.querySelector('.nttimer').textContent = noteTime(el, true);
     ov.querySelector('.ntneedle').style.left = Math.min(100, el / NOTE_MAX * 100) + '%';
     var act = list().filter(function (p) { return !p.off; });
-    // the sound desk: how hard everyone pushes, and how many boosts and fans are on
-    var pw = notePush(g), nb = 0, nf = 0; act.forEach(function (p) { var c = g.ctl[p.pid]; if (c && c.t === 1) nb++; if (c && c.t === -1) nf++; });
-    ov.querySelector('.ntgauge i').style.width = Math.round(pw * 100) + '%';
-    ov.querySelector('.ntkb b').textContent = nb; ov.querySelector('.ntkf b').textContent = nf;
-    var shut = Math.max(0, Math.ceil(((g.st === 'guess' ? g.lockAt : g.t0 + NOTE_CTL * 1000) - Date.now()) / 1000));
-    ov.querySelector('.ntshut').textContent = g.lk ? '🔒 Controls closed!' : g.st === 'guess' || g.st === 'sing' ? 'Controls close in ' + shut + 's' : '';
     var end = g.st === 'cut' || g.st === 'done';
     var pinKey = (end ? 'pins' : 'none') + '|' + Object.keys(g.guess).length;
     var pins = ov.querySelector('.ntpins');
@@ -4076,7 +4278,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }).join('');
     }
     [].forEach.call(pins.querySelectorAll('.ntpin'), function (e) { var k = e.getAttribute('data-pid'); e.classList.toggle('win', g.st === 'done' && g.win.indexOf(k) >= 0); });
-    var msg = g.st === 'intro' ? '' : g.st === 'guess' ? 'Predict on your phone, then grab the controls! 🎛️' : g.st === 'sing' ? (noteElapsed(g) < 0 ? 'She takes a deep breath… 🌬️' : g.lk ? 'Hold it… hold it…' : 'Push the power… or cool it down! 🎛️') : g.st === 'cut' ? '💥 Kaboom!' : '';
+    var secs = Math.ceil(Math.max(0, g.ends - Date.now()) / 1000);
+    var msg = g.st === 'intro' ? '' : g.st === 'guess' ? 'How long will the note last? Predict on your phone! ⏱️ ' + secs + 's' : g.st === 'ctl' ? '🎛️ Grab the controls: power, boost or fan! ' + secs + 's' : g.st === 'sing' ? (noteElapsed(g) < 0 ? 'She takes a deep breath… 🌬️' : 'Hold it… hold it…') : g.st === 'cut' ? '💥 Kaboom!' : '';
     var me = ov.querySelector('.ntmsg'); if (me.textContent !== msg) me.textContent = msg;
     var ph = open ? act.map(function (p) { return '<div class="clp">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="' + (g.guess[p.pid] != null ? 'ok' : 'wait') + '">' + (g.guess[p.pid] != null ? '🔒' : '…') + '</em></div>'; }).join('') : '';
     var pl = ov.querySelector('.ntplayers'); if (pl.getAttribute('data-h') !== ph) { pl.setAttribute('data-h', ph); pl.innerHTML = ph; }
@@ -5743,7 +5946,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
@@ -5965,7 +6168,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
