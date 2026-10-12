@@ -3917,8 +3917,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'Bring the song to a successful end! Points for what you fix and how fast, and the best repairer wins. 🔧']] },
     rule: { sign: '🪩 We Will Rule the World', theme: 'rule',
       get art() { return '<div class="hsrule"><span class="ruball">🪩</span>' + RU_SINGER + '<div class="hsfloor"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'; },
-      lines: [['her', 'Welcome to the disco floor! 🪩 In a moment our singer rises from that hole in the middle…'],
-        ['him', '…and then you all land on the floor. Every tile you step on lights up in your colour!'],
+      lines: [['her', 'Welcome to the disco floor! 🪩 In a moment you all land on it…'],
+        ['him', '…and then our singer rises from that hole in the middle. Every tile you step on lights up in your colour!'],
         ['her', 'Hold a direction on your phone to keep dancing: one tile per second. You can steal tiles from others too.'],
         ['him', 'But watch out: bump into someone and you’re stunned for 3 seconds! 💫'],
         ['her', 'After three minutes, whoever owns the most tiles rules the world! 👑']] },
@@ -4610,17 +4610,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var lines = (SCENES.rule && SCENES.rule.lines) || [];
       lines.forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.rule === g && g.st === 'intro') ruSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
     }
-    ruTimer = setTimeout(function () {   // the song starts, and the stage with the singer rises: up by the 8th second
-      if (G.rule !== g) return; ruSay(''); g.st = 'rise'; g.riseAt = Date.now(); push(); ruSong(true);
-      ruTimer = setTimeout(function () {   // then, over 5 seconds, the dancers land on the floor
-        if (G.rule !== g) return; g.st = 'drop'; g.dropAt = Date.now();
-        g.order.forEach(function (k) { var c = g.pos[k]; ruClaim(g, k, c[0], c[1]); }); g.cnt = ruCount(g); push();
+    ruTimer = setTimeout(function () {   // first, over 5 seconds, the dancers land on the floor
+      if (G.rule !== g) return; ruSay(''); g.st = 'drop'; g.dropAt = Date.now();
+      g.order.forEach(function (k) { var c = g.pos[k]; ruClaim(g, k, c[0], c[1]); }); g.cnt = ruCount(g); push();
+      ruTimer = setTimeout(function () {   // then the song starts, and the stage with the singer rises: up by the 8th second
+        if (G.rule !== g) return; g.st = 'rise'; g.riseAt = Date.now(); push(); ruSong(true);
         ruTimer = setTimeout(function () {   // and a 5-second countdown
           if (G.rule !== g) return; g.st = 'ready'; g.goAt = Date.now() + 5000; push();
           [1000, 2000, 3000, 4000].forEach(function (t2) { setTimeout(function () { if (G.rule === g && g.st === 'ready') { ruShow(); Music.blip(); } }, t2); });
           ruTimer = setTimeout(ruGo, 5000);
-        }, 5600);
-      }, RU_RISE + 400);
+        }, RU_RISE + 400);
+      }, 5600);
     }, REMOTE ? 1000 : t);
   }
   var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 76000, ruSongT = null;   // (RU_STOP: the game stops at 1:16 in the song)
@@ -4751,28 +4751,34 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var skin = new T.MeshStandardMaterial({ color: '#f0c8ae', roughness: .65 }), hair = new T.MeshStandardMaterial({ color: '#d9a640', roughness: .45, metalness: .1 });
     var add = function (par, geo, mat, x, y, z) { var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
     // sparkly silver flared trousers: fitted to the knee, then wide bell bottoms
-    [-1, 1].forEach(function (s2) {
-      add(g, new T.CylinderGeometry(.14, .12, .85, 14), silver, s2 * .13, 1.25, 0);
-      add(g, new T.CylinderGeometry(.12, .36, .86, 18, 1, true), silver, s2 * .15, .43, 0);
+    [-1, 1].forEach(function (s2) {   // the legs: shaped thighs, then the bell bottoms
+      var th = add(g, new T.LatheGeometry([new T.Vector2(.105, 0), new T.Vector2(.13, .3), new T.Vector2(.15, .62), new T.Vector2(.14, .85)], 16), silver, s2 * .125, .82, 0); th.scale.z = .9;
+      add(g, new T.CylinderGeometry(.105, .34, .84, 18, 1, true), silver, s2 * .14, .42, 0);
     });
-    add(g, new T.CylinderGeometry(.27, .27, .2, 18), silver, 0, 1.72, 0);              // high waist
-    add(g, new T.CylinderGeometry(.22, .26, .32, 16), skin, 0, 1.97, 0);              // bare midriff
-    add(g, new T.CylinderGeometry(.25, .23, .14, 16), silver, 0, 2.16, 0);            // the sparkly top
-    [-1, 1].forEach(function (s2) { var c = add(g, new T.SphereGeometry(.13, 14, 12), silver, s2 * .1, 2.26, .12); c.scale.set(1, .85, .7); });
-    add(g, new T.CylinderGeometry(.21, .25, .24, 16), skin, 0, 2.38, 0);              // shoulders
+    // an hourglass figure: round hips, a narrow bare waist, a fitted top
+    var lathe = function (pts, mat, y) { var m = add(g, new T.LatheGeometry(pts.map(function (q) { return new T.Vector2(q[0], q[1]); }), 24), mat, 0, y, 0); m.scale.z = .78; return m; };
+    lathe([[.2, 0], [.29, .1], [.3, .2], [.27, .3], [.22, .38]], silver, 1.5);               // hips, high-waisted
+    lathe([[.215, 0], [.18, .1], [.165, .18], [.18, .28], [.2, .34]], skin, 1.86);          // the bare waist
+    lathe([[.2, 0], [.225, .1], [.235, .2], [.22, .28], [.2, .34]], silver, 2.18);          // the sparkly top
+    [-1, 1].forEach(function (s2) { var c = add(g, new T.SphereGeometry(.105, 16, 12), silver, s2 * .085, 2.33, .1); c.scale.set(1, .9, .75); });
+    lathe([[.2, 0], [.19, .06], [.15, .14], [.08, .2]], skin, 2.5);                       // shoulders and chest
+    [-1, 1].forEach(function (s2) { add(g, new T.SphereGeometry(.075, 12, 10), skin, s2 * .22, 2.56, 0); });
     var fr = new T.Group(); g.add(fr);
-    for (var i = 0; i < 34; i++) { var a = (i / 34 - .5) * Math.PI * 1.3; add(fr, new T.CylinderGeometry(.008, .008, .34 + (i % 3) * .05, 4), silver, Math.sin(a) * .25, 1.98, Math.cos(a) * .23); }   // the fringe hanging from the top
+    for (var i = 0; i < 34; i++) { var a = (i / 34 - .5) * Math.PI * 1.3; add(fr, new T.CylinderGeometry(.008, .008, .34 + (i % 3) * .05, 4), silver, Math.sin(a) * .23, 2.04, Math.cos(a) * .19); }   // the fringe hanging from the top
     var mkArm = function (s2) {
-      var sh = new T.Group(); sh.position.set(s2 * .3, 2.42, 0); g.add(sh);
-      add(sh, new T.CylinderGeometry(.06, .05, .85, 10), skin, 0, -.42, 0);
-      var hd = add(sh, new T.SphereGeometry(.06, 10, 8), skin, 0, -.89, .01); hd.scale.set(.8, 1.2, .55);
+      var sh = new T.Group(); sh.position.set(s2 * .24, 2.56, 0); g.add(sh);
+      add(sh, new T.LatheGeometry([new T.Vector2(.045, 0), new T.Vector2(.05, .2), new T.Vector2(.058, .5), new T.Vector2(.06, .85)], 12), skin, 0, -.87, 0);   // a slim arm
+      var hand = new T.Group(); hand.position.set(0, -.92, .01); sh.add(hand);   // a hand: palm, fingers and a thumb
+      var palm = add(hand, new T.SphereGeometry(.055, 12, 10), skin); palm.scale.set(.75, 1.05, .45);
+      for (var f = 0; f < 4; f++) { var fg = add(hand, new T.CapsuleGeometry(.012, .07, 4, 6), skin, (f - 1.5) * .022, -.085, .005); fg.rotation.x = .15; }
+      var thb = add(hand, new T.CapsuleGeometry(.014, .05, 4, 6), skin, -s2 * .045, -.02, .03); thb.rotation.z = s2 * .7;
       for (var j = 0; j < 10; j++) add(sh, new T.CylinderGeometry(.007, .007, .42, 4), silver, s2 * .07, -.3 - j * .05, -.02 + (j % 2) * .04);   // the fringed, sparkly sleeves
       return sh;
     };
     var la = mkArm(-1), ra = mkArm(1);
-    add(g, new T.CylinderGeometry(.055, .065, .16, 10), skin, 0, 2.55, 0);
-    add(g, new T.TorusGeometry(.07, .01, 6, 16), silver, 0, 2.5, .02).rotation.x = Math.PI / 2.4;
-    var head = new T.Group(); head.position.set(0, 2.78, 0); g.add(head);
+    add(g, new T.CylinderGeometry(.05, .06, .18, 10), skin, 0, 2.68, 0);
+    add(g, new T.TorusGeometry(.065, .01, 6, 16), silver, 0, 2.63, .02).rotation.x = Math.PI / 2.4;
+    var head = new T.Group(); head.position.set(0, 2.9, 0); g.add(head);
     var hd2 = add(head, new T.SphereGeometry(.2, 22, 18), skin); hd2.scale.set(.9, 1.08, .95);
     [-1, 1].forEach(function (e) {
       var ew = add(head, new T.SphereGeometry(.035, 10, 8), new T.MeshStandardMaterial({ color: '#ffffff' }), e * .065, .03, .165); ew.scale.set(1.2, .8, .5);
@@ -4927,7 +4933,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ov.classList.add('is3d'); var rs = n <= 9 ? 1 : n <= 11 ? .9 : n <= 15 ? .74 : .66;
         g.order.forEach(function (k, i) {
           var p = players[k]; if (!p) return;
-          var el = document.createElement('div'); el.className = 'rut' + (g.st === 'intro' || g.st === 'rise' ? ' pre' : g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', Math.round(i * 4400 / Math.max(1, g.order.length - 1)) + 'ms'); el.style.setProperty('--c', ruCol(k));
+          var el = document.createElement('div'); el.className = 'rut' + (g.st === 'intro' ? ' pre' : g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', Math.round(i * 4400 / Math.max(1, g.order.length - 1)) + 'ms'); el.style.setProperty('--c', ruCol(k));
           el.innerHTML = '<div class="jmt" style="' + bodyOutfit(k) + '"><div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div><span class="rustar">💫</span>';
           ov.querySelector('.rutoks3').appendChild(el);
           var c = g.pos[k]; ov._3.toks[k] = { el: el, j: el.firstChild, front: ov.querySelector('.rutoks3'), fx: c[0], fy: c[1], tx: c[0], ty: c[1], t0: 0 };
@@ -4938,14 +4944,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var now = Date.now(), tr = {};
     g.order.forEach(function (k) { (g.trail[k] || []).forEach(function (i) { if (g.own[i] === k) tr[i] = 1; }); });
     if (ov._3) {
-      var s3 = ov._3; if (g.riseAt) s3.riseAt = g.riseAt; if (g.st === 'drop' || g.st === 'ready' || g.st === 'play' || g.st === 'end') s3.risen = true;
+      var s3 = ov._3; if (g.riseAt) s3.riseAt = g.riseAt; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true;
       s3.paint(g.own, tr, ruCol);
       g.order.forEach(function (k) {
         var o = s3.toks[k], p = g.pos[k]; if (!o || !p) return;
         if (o.tx !== p[0] || o.ty !== p[1]) { var kk = o.t0 ? Math.min(1, (now - o.t0) / 330) : 1; o.fx = o.fx + (o.tx - o.fx) * kk; o.fy = o.fy + (o.ty - o.fy) * kk; o.tx = p[0]; o.ty = p[1]; o.t0 = now; }
         o.el.classList.toggle('stun', g.stun[k] > now); o.el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
         if (g.st === 'drop' && o.el.classList.contains('pre')) { o.el.classList.remove('pre'); o.el.classList.add('drop'); }
-        if (g.st !== 'drop' && g.st !== 'intro' && g.st !== 'rise') o.el.classList.remove('drop', 'pre');
+        if (g.st !== 'drop' && g.st !== 'intro') o.el.classList.remove('drop', 'pre');
       });
     } else {
       g.own.forEach(function (k, i) { var c = ov._cells[i]; if (!c) return; var v = (k ? k : '') + (tr[i] ? '*' : ''); if (c._v === v) return; c._v = v; c.style.background = k ? ruCol(k) : ''; c.className = k ? (tr[i] ? 'own trail' : 'own') : ''; });
