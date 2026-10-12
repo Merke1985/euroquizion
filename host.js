@@ -493,7 +493,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
     if (fresh && G.phase === 'lobby') Music.blip();
-    if (G.phase === 'lobby' && nowT > joinQuiet) ps.forEach(function (p) { if (!greeted[p.pid] && p.cc) { greeted[p.pid] = 1; greetQ.push(p.pid); if (greetQ.length > 3) greetQ.shift(); } }); else ps.forEach(function (p) { greeted[p.pid] = 1; });
+    if (G.phase === 'lobby' && nowT > joinQuiet) ps.forEach(function (p) { if (!greeted[p.pid] && p.cc && !p.bot && String(p.pid).indexOf('bot') !== 0) { greeted[p.pid] = 1; greetQ.push(p.pid); if (greetQ.length > 3) greetQ.shift(); } }); else ps.forEach(function (p) { greeted[p.pid] = 1; });
+    if (G.phase !== 'lobby') { greetQ = []; var lhx = $('lobhosts'); if (lhx) lhx.remove(); greetBusy = false; }   /* the game started: the hosts in the corner leave at once */
     lobbyGreet();
     $('players').innerHTML = ps.map(function (p) {
       var age = nowT - joinSeen[p.pid], pop = age < 700;
