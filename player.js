@@ -720,7 +720,7 @@
     if (fell) { zgStop(); box.classList.add('hidden'); $('waittitle').textContent = '🚀 You fell into space!'; $('waitsub').textContent = 'You followed the zone ' + zgAcc() + '% of the time. Watch the others wobble…'; return; }
     if (z.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Listen to the astronauts on the big screen… 👩‍🚀'; return; }
     $('waittitle').textContent = z.st === 'ready' ? '🌌 Get ready…' : '🌌 Keep your balance!';
-    $('waitsub').textContent = 'Keep your finger on the glowing zone: it moves with the music. Off it? Get back within 3 seconds (stage 2: 2 seconds, stage 3: just 1) or you fall!';
+    $('waitsub').textContent = 'Keep your finger on the glowing zone: it moves with the music. Stay in the zone, or you fall!';
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id || !S.box) {
       box.setAttribute('data-id', z.id);
