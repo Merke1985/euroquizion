@@ -873,7 +873,7 @@ function shopItem(id) { for (var i = 0; i < SHOP_ITEMS.length; i++) if (SHOP_ITE
 // has been abducted. Who took him, where is he hidden, and what is he hidden inside? All made-up characters and
 // things from the show itself. One of each is the secret answer; the others turn up as clues.
 var CLUE_WHO = [
-  { id: 'lynda', icon: '👠', name: 'Lynda' }, { id: 'felix', icon: '🎩', name: 'Felix' }, { id: 'stella', icon: '💃', name: 'Stella' },
+  { id: 'lynda', icon: '👠', name: 'Lynda' }, { id: 'felix', icon: '🎩', name: 'Oliver' }, { id: 'stella', icon: '💃', name: 'Sofia' },
   { id: 'dancer', icon: '🕺', name: 'Loreen’s Backup Dancer' }, { id: 'manager', icon: '🎧', name: 'The Stage Manager' }];
 var CLUE_WHERE = [
   { id: 'green', icon: '🛋️', name: 'Green Room', in: 'in the Green Room' }, { id: 'club', icon: '🪩', name: 'Euroclub', in: 'in the Euroclub' },

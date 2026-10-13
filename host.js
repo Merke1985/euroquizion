@@ -153,7 +153,7 @@
     chaseBuilt = '';
   }
   var helloAt = 0, lenN = -1, rmPid = '', rmT = null;
-  /* the lobby: Felix and Stella pop up in the corner and welcome every player who joins, with their country */
+  /* the lobby: Oliver and Sofia pop up in the corner and welcome every player who joins, with their country */
   var greeted = {}, greetQ = [], greetBusy = false, greetTurn = 0, greetAway = null;
   var GREET = [function (n, c) { return 'Welcome, ' + n + ', representing ' + c + '! 🎉'; }, function (n, c) { return 'Give it up for ' + n + ' from ' + c + '! 👏'; }, function (n, c) { return n + ' is here for ' + c + '! Douze points? 😉'; }, function (n, c) { return 'Hello ' + n + '! ' + c + ' is counting on you! ✨'; }, function (n, c) { return 'And now… ' + n + ', for ' + c + '! 🎤'; }];
   function lobbyGreet() {
@@ -1486,7 +1486,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
     if (kind === 'clue') { if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
-    if (kind === 'queue') {   // Stella needs some air first, and takes everyone outside, to Verona
+    if (kind === 'queue') {   // Sofia needs some air first, and takes everyone outside, to Verona
       if (REMOTE) { qjAll(); return; }
       autoStop(); stopTimers(); try { yt.pauseVideo(); } catch (e) {} G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
       hostHold = true; clearTimeout(hostT.away);
@@ -2740,7 +2740,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
     step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
     // what they say: who they are, what we play tonight and how it works, then off we go
-    var lines = [['him', 'Good evening, Europe! I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
+    var lines = [['him', 'Good evening, Europe! I’m Oliver Lindström…'], ['her', '…and I’m Sofia Lindberg! Welcome to EuroQuizion!']].concat(showPlan());
     // Party with the boutique: after the plan, straight to Lynda (she gives everyone a first item), and only then the first trivia
     var shopNow = G.atype === 'party' && shopOn() && !G.mgTest && !G.itemTest && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2;
     if (shopNow) lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'But first… let’s pay a visit to Lynda in Woodruff’s Boutique! 🛍️']);
@@ -2762,7 +2762,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
     step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
-  // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Stella!").
+  // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Sofia!").
   function showPlan() {
     var L = [], who = 'him', say = function (t) { L.push([who, t]); who = who === 'him' ? 'her' : 'him'; };
     var party = G.atype === 'party', lad = !party && (ladderGame() || G.partLadder), multi = !party && G.parts > 1;
@@ -3794,7 +3794,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lines = {
       where: ['Where was Edgar hidden?', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'],
       what: ['And what was he hidden inside?', 'Inside the ' + what.name + '! ' + what.icon],
-      who: ['And who abducted Edgar? It was…', who.id === 'felix' ? 'Felix?! You took our own mascot?! 😱' : who.id === 'stella' ? '…me?! I only wanted a cuddle! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, Edgar is not for sale! 👠' : who.name + '! 😱']
+      who: ['And who abducted Edgar? It was…', who.id === 'felix' ? 'Oliver?! You took our own mascot?! 😱' : who.id === 'stella' ? '…me?! I only wanted a cuddle! 🙈' : who.id === 'lynda' ? 'Lynda! Darling, Edgar is not for sale! 👠' : who.name + '! 😱']
     };
     var t = 800;
     ['where', 'what', 'who'].forEach(function (k, n) {
@@ -4243,7 +4243,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
 
 
   // ---------- The presenters introduce every party game ----------
-  // One shared scene: a themed stage with its own sign and centrepiece, Felix and Stella on either side,
+  // One shared scene: a themed stage with its own sign and centrepiece, Oliver and Sofia on either side,
   // and their story in speech balloons (letter by letter). Then the game itself starts.
   var SCENES = {
     draw: { sign: '🎨 Postcard Picasso', theme: 'postcard',
@@ -4333,7 +4333,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(t + 1000, function () { ov.remove(); then(); });
   }
   // ---------- Postcard: the whole game in the presenters' studio ----------
-  // From the drawing to the vote for the best one, Felix and Stella stay on stage. Every drawing arrives as a real
+  // From the drawing to the vote for the best one, Oliver and Sofia stay on stage. Every drawing arrives as a real
   // postcard (the drawing on the front, a stamp, who sent it), the answers sit underneath, and at the answer
   // the song title is stamped on the card.
   var pcSt = '', pcCard = '', pcBest = '', pcRev = '';
@@ -6376,15 +6376,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     cover(true, '', '', false); masks(true); hostsAway(); push(); qjShow();
     if (!REMOTE) Music.want(true);   /* the studio music plays on in Verona until the song starts */
     var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
-    // outside: Stella feels better, and the presenters run off home; then Juliet comes out on her balcony
+    // outside: Sofia feels better, and the presenters run off home; then Juliet comes out on her balcony
     var l0 = 'Ahh… I feel much better! 😌 See you back at the studio… bye for now! 👋';
-    /* first two seconds of black, then Stella, still puffing out her smoke: "…" */
-    /* Stella first finishes her smoke: puffs of smoke for about five seconds, then she feels better */
+    /* first two seconds of black, then Sofia, still puffing out her smoke: "…" */
+    /* Sofia first finishes her smoke: puffs of smoke for about five seconds, then she feels better */
     at(600, function () { var o = $('qjov'); if (o) o.classList.add('puff'); qjSay('her', '…'); });
     at(5600, function () { var o = $('qjov'); if (o) o.classList.remove('puff'); });
     at(5900, function () { qjSay('her', l0); });
     var t = 5900 + Array.from(l0).length * TALK_MS + 1800;
-    at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Stella and Felix run off north, into the clouds
+    at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Sofia and Oliver run off north, into the clouds
     /* the players are on their own: five seconds of nothing, then "Now what…?", two seconds later the song, five seconds later Juliet */
     t += 2400 + 4000;
     at(t, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) { b.innerHTML = '<i class="e">🤔</i><span class="t"></span>'; b.classList.add('on'); typeSay(b.querySelector('.t'), 'Now what…?', 'him'); Music.plop(5); setTimeout(function () { Music.plop(2); }, 200); } });   /* a puzzled "huh?" */
