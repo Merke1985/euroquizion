@@ -3825,3 +3825,4 @@ body.hasdock main{padding-bottom:84px}
 .xechk{font-size:.85rem;color:var(--mute);display:flex;align-items:center;gap:6px}
 .xefoot{display:flex;align-items:center;gap:8px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.1);padding-top:10px}
 #xemsg{flex:1;font-weight:700;font-size:.9rem}#xemsg.ok{color:#3ddc84}#xemsg.bad{color:#ff6b6b}#xemsg.warn{color:#ffd23f}
+.xerow input.xetime{width:92px;font-variant-numeric:tabular-nums;text-align:center}

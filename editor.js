@@ -10,6 +10,18 @@
   function ytId(v) { v = String(v || '').trim(); var m = v.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/); return m ? m[1] : /^[\w-]{11}$/.test(v) ? v : ''; }
   function songOf(id) { var s = H().songs.filter(function (x) { return x[4] === id; })[0]; return s; }
   function songName(s) { var c = H().countries[s[1]] || s[1]; return s[3] + ' – ' + s[2] + ' (' + c + ' ' + s[0] + ')'; }
+  // Times are shown and typed as m:ss.cc (1:20.00); typing plain seconds (80 or 80,5) works too.
+  function tFmt(v) { v = Math.max(0, +v || 0); var m = Math.floor(v / 60), r = v - m * 60; return m + ':' + (r < 10 ? '0' : '') + r.toFixed(2); }
+  function tParse(t) {
+    t = String(t || '').trim().replace(',', '.'); if (!t) return null;
+    var m = t.match(/^(\d+):(\d{1,2}(?:\.\d*)?)$/); if (m) return +m[1] * 60 + +m[2];
+    return /^\d+(\.\d*)?$/.test(t) ? +t : null;
+  }
+  function tInput(cls, v, k) { return '<input type="text" inputmode="decimal" class="' + cls + ' xetime" placeholder="0:00.00"' + (k != null ? ' data-k="' + k + '"' : '') + ' value="' + tFmt(v) + '">'; }
+  function tWire(el, set) {
+    el.addEventListener('input', function () { var v = tParse(el.value); el.classList.toggle('bad', v == null); if (v != null) { set(v); touch(); } });
+    el.addEventListener('change', function () { var v = tParse(el.value); if (v != null) el.value = tFmt(v); });
+  }
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function fresh() {   // a working copy of what is live now
     var h = H();
@@ -54,14 +66,14 @@
       '<div class="xelist">' + (ids.length ? ids.map(function (id) {
         var s = songOf(id), c = data.jury[id] || [0, 0], ly = data.lyrics[id] || '';
         return '<div class="xerow" data-id="' + id + '"><div class="xerowtop"><b>' + esc(s ? songName(s) : id) + '</b>' +
-          '<label>from <input type="number" step="0.5" min="0" class="xen" data-k="0" value="' + c[0] + '"></label><label>to <input type="number" step="0.5" min="0" class="xen" data-k="1" value="' + c[1] + '"></label>' +
+          '<label>from ' + tInput('xen', c[0], 0) + '</label><label>to ' + tInput('xen', c[1], 1) + '</label>' +
           '<a class="btn alt small" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + id + '&t=' + Math.floor(c[0]) + 's">▶ Listen</a><button type="button" class="btn alt small xely">' + (ly ? '📝 Lyrics ✓' : '📝 Lyrics') + '</button><button type="button" class="btn alt small xedel">🗑</button></div>' +
           '<textarea class="xelytxt hidden" rows="8" placeholder="The lyrics, one line per line">' + esc(ly) + '</textarea></div>';
       }).join('') : '<p class="mute">No songs yet: Key Change! then picks random songs.</p>') + '</div>' +
       '<h3>Add a song</h3><input type="search" id="xefind" placeholder="Search title, artist, country or year…"><div id="xefound" class="xefound"></div>';
     [].forEach.call(B.querySelectorAll('.xerow'), function (r) {
       var id = r.getAttribute('data-id');
-      [].forEach.call(r.querySelectorAll('.xen'), function (n) { n.addEventListener('input', function () { data.jury[id][+n.getAttribute('data-k')] = Math.max(0, +n.value || 0); touch(); }); });
+      [].forEach.call(r.querySelectorAll('.xen'), function (n) { tWire(n, function (v) { data.jury[id][+n.getAttribute('data-k')] = v; }); });
       r.querySelector('.xely').addEventListener('click', function () { r.querySelector('.xelytxt').classList.toggle('hidden'); });
       r.querySelector('.xelytxt').addEventListener('input', function () { if (this.value.trim()) data.lyrics[id] = this.value; else delete data.lyrics[id]; touch(); });
       r.querySelector('.xedel').addEventListener('click', function () { delete data.jury[id]; touch(); draw(); });
@@ -81,14 +93,14 @@
   function drawGreen(B) {
     B.innerHTML = '<p class="mute">The performances shown in Disqualivision: one per round, never twice in one game. Paste a YouTube link (or the video id) and the second it should start at.</p>' +
       '<div class="xelist">' + data.green.map(function (c, i) {
-        return '<div class="xerow" data-i="' + i + '"><div class="xerowtop"><input type="text" class="xename" placeholder="Name (for you)" value="' + esc(c.name || '') + '"><input type="text" class="xeyt" placeholder="YouTube link or id" value="' + esc(c.id) + '"><label>start <input type="number" min="0" class="xen" value="' + (c.s || 0) + '"></label>' +
+        return '<div class="xerow" data-i="' + i + '"><div class="xerowtop"><input type="text" class="xename" placeholder="Name (for you)" value="' + esc(c.name || '') + '"><input type="text" class="xeyt" placeholder="YouTube link or id" value="' + esc(c.id) + '"><label>start ' + tInput('xen', c.s || 0) + '</label>' +
           '<a class="btn alt small" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + esc(c.id) + '&t=' + (c.s || 0) + 's">▶ Watch</a><button type="button" class="btn alt small xedel">🗑</button></div></div>';
       }).join('') + '</div><button type="button" class="btn alt small" id="xeadd">＋ Add a clip</button>';
     [].forEach.call(B.querySelectorAll('.xerow'), function (r) {
       var c = data.green[+r.getAttribute('data-i')];
       r.querySelector('.xename').addEventListener('input', function () { c.name = this.value; touch(); });
       r.querySelector('.xeyt').addEventListener('change', function () { var id = ytId(this.value); this.classList.toggle('bad', !id); if (id) { c.id = id; this.value = id; } touch(); });
-      r.querySelector('.xen').addEventListener('input', function () { c.s = Math.max(0, +this.value || 0); touch(); });
+      tWire(r.querySelector('.xen'), function (v) { c.s = v; });
       r.querySelector('.xedel').addEventListener('click', function () { data.green.splice(data.green.indexOf(c), 1); touch(); draw(); });
     });
     $('xeadd').addEventListener('click', function () { data.green.push({ id: '', s: 0, name: '' }); touch(); draw(); });
