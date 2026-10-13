@@ -4518,3 +4518,15 @@ body.hasdock main{padding-bottom:84px}
 .jcov.rise .jcdesk{animation:jcrise .9s calc(var(--i) * .18s) cubic-bezier(.25,1.35,.5,1) both}
 .jcov.rise .jcguest{animation:jcrise .9s cubic-bezier(.25,1.35,.5,1) both}
 @keyframes jcrise{0%{translate:0 45vh;opacity:0}30%{opacity:1}100%{translate:0 0}}
+/* Just One!: the clue and guess fields, clearly visible on the phone */
+.fkform input{background:#fff;color:#1a1147;font-weight:800;border:3px solid #ffd23f;box-shadow:0 0 0 4px rgba(255,210,63,.25),0 6px 16px rgba(0,0,0,.35);caret-color:#e8457c}
+.fkform input::placeholder{color:#8a83a8;font-weight:700;opacity:1}
+.fkform input:focus{outline:none;border-color:#ff6fd8;box-shadow:0 0 0 4px rgba(255,111,216,.35),0 6px 16px rgba(0,0,0,.35)}
+#fktimer{position:fixed;top:56px;right:14px;z-index:60;display:none;padding:6px 14px;border-radius:99px;background:#ffd23f;color:#221a00;font-weight:900;font-size:1.25rem;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+#fktimer.on{display:block}
+#fktimer.hot{background:#e0283a;color:#fff;animation:fktpulse .5s ease-in-out infinite alternate}
+@keyframes fktpulse{to{transform:scale(1.12)}}
+/* the clue check on the phone: a big red cross right through the clue */
+.fkck{overflow:hidden}
+.fkck.out::after{content:'';position:absolute;inset:0;right:0;top:0;transform:none;background:linear-gradient(to top right,transparent calc(50% - 3px),#e0283a calc(50% - 3px),#e0283a calc(50% + 3px),transparent calc(50% + 3px)),linear-gradient(to bottom right,transparent calc(50% - 3px),#e0283a calc(50% - 3px),#e0283a calc(50% + 3px),transparent calc(50% + 3px));font-size:0;pointer-events:none}
+.fkck.out b{color:#e0283a;text-decoration-color:#e0283a}

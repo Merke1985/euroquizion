@@ -622,13 +622,20 @@
   var fkMe = null, fkAsked = '', fkSent = {};
   function fkOnPriv(m) { if (!m || m.to !== pid || !m.id) return; fkMe = m; if (state && state.phase === 'fake') fkView(state); }
   function fkSend(o) { var f = state && state.fake; if (!net || !f) return; o.pid = pid; o.id = f.id; net.send('fake', o); }
+  var fkEndAt = 0;   // (the countdown on the phone: for the clues, the check, the guess and the vote)
+  setInterval(function () {
+    var el = $('fktimer'); if (!el) { el = document.createElement('div'); el.id = 'fktimer'; document.body.appendChild(el); }
+    var on = !!(state && state.phase === 'fake' && state.fake && fkEndAt > Date.now()); el.classList.toggle('on', on);
+    if (on) { var sec = Math.ceil((fkEndAt - Date.now()) / 1000), t = '⏱️ ' + sec; if (el.textContent !== t) el.textContent = t; el.classList.toggle('hot', sec <= 5); }
+  }, 250);
   function fkView(s) {
     var f = s.fake, box = $('fkui'), mine = f.order.indexOf(pid) >= 0, me = fkMe && fkMe.id === f.id ? fkMe : null, isG = f.guesser === pid;
+    fkEndAt = f.left > 0 ? Date.now() + f.left : 0;
     show('v-wait'); box.classList.remove('hidden');
     if (mine && !me && fkAsked !== f.id) { fkAsked = f.id; fkSend({ ask: 1 }); }
     var nm = function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; };
     var card = !mine || f.st === 'end' ? '' : isG ? '<div class="fkcard fake"><b>☝️ You’re guessing!</b><span>Don’t look at the others’ phones… The clues appear on the big screen.</span></div>'
-      : !me ? '<div class="fkcard wait">🤫 Getting the secret word…</div>' : '<div class="fkcard"><small>The secret word</small><b>' + esc(me.song.t) + '</b><span>Give ' + esc(nm(f.guesser)) + ' a clue: ONE word</span></div>';
+      : !me ? '<div class="fkcard wait">🤫 Getting the secret word…</div>' : '<div class="fkcard"><small>The secret word</small><b>' + esc(me.song.t) + '</b><span>Give ' + esc(nm(f.guesser)) + ' a clue: ' + (f.per > 1 ? 'TWO words' : 'ONE word') + '</span></div>';
     var key = f.id + '|' + f.st + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.clues) + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0) + '|' + JSON.stringify(f.judged || {}) + '|' + JSON.stringify(me && me.check ? me.check.out : null);
     if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
     var body = '';
@@ -637,7 +644,7 @@
     else if (f.st === 'clues') {
       if (isG) { $('waittitle').textContent = '⏳ They’re writing clues…'; $('waitsub').textContent = 'The same clues cancel each other out!'; }
       else if (f.clues[pid + '#0'] || fkSent[f.id + ':w']) { $('waittitle').textContent = '✅ Clue sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
-      else { $('waittitle').textContent = '✍️ Your clue'; $('waitsub').textContent = (f.per > 1 ? 'TWO clues, one word each.' : 'ONE word.') + ' Be different: the same clues cancel each other out!'; body = '<form class="fkform' + (f.per > 1 ? ' two' : '') + '">' + (f.per > 1 ? '<input type="text" maxlength="24" placeholder="Clue 1" autocomplete="off" autocapitalize="off"><input type="text" maxlength="24" placeholder="Clue 2" autocomplete="off" autocapitalize="off">' : '<input type="text" maxlength="24" placeholder="One word" autocomplete="off" autocapitalize="off">') + '<button type="submit" class="btn">Send</button></form>'; }
+      else { $('waittitle').textContent = '✍️ Your clue'; $('waitsub').textContent = (f.per > 1 ? 'TWO clues, one word each.' : 'ONE word.') + ' Be different: the same clues cancel each other out!'; body = '<form class="fkform' + (f.per > 1 ? ' two' : '') + '">' + (f.per > 1 ? '<input type="text" maxlength="24" placeholder="Clue 1" autocomplete="off" autocapitalize="words"><input type="text" maxlength="24" placeholder="Clue 2" autocomplete="off" autocapitalize="words">' : '<input type="text" maxlength="24" placeholder="One word" autocomplete="off" autocapitalize="words">') + '<button type="submit" class="btn">Send</button></form>'; }
     } else if (f.st === 'check') {
       var chk = me && me.check, isC = chk && chk.checker === pid;
       if (isG || !chk) { $('waittitle').textContent = '🔍 Checking the clues…'; $('waitsub').textContent = isG ? 'No peeking! The clues appear in a moment.' : 'Watch the big screen!'; }
@@ -647,7 +654,7 @@
       }
     }
     else if (f.st === 'guess') {
-      if (isG && !fkSent[f.id + ':g']) { $('waittitle').textContent = '🤔 What’s the word?'; $('waitsub').textContent = 'Look at the clues on the big screen. One guess!'; body = '<form class="fkform fkgf"><input type="text" maxlength="40" placeholder="Your guess" autocomplete="off"><button type="submit" class="btn">Guess</button></form>'; }
+      if (isG && !fkSent[f.id + ':g']) { $('waittitle').textContent = '🤔 What’s the word?'; $('waitsub').textContent = 'Look at the clues on the big screen. One guess!'; body = '<form class="fkform fkgf"><input type="text" maxlength="40" placeholder="Your guess" autocomplete="off" autocapitalize="words"><button type="submit" class="btn">Guess</button></form>'; }
       else { $('waittitle').textContent = '🤔 ' + nm(f.guesser) + ' is guessing…'; $('waitsub').textContent = 'Fingers crossed!'; }
     } else if (f.st === 'judge') {
       if (isG) { $('waittitle').textContent = '🤞 The others are judging…'; $('waitsub').textContent = 'You said: “' + f.guess + '”'; }
@@ -665,6 +672,7 @@
     [].forEach.call(box.querySelectorAll('.fkj'), function (b) { b.onclick = function () { fkSent[f.id + ':j'] = 1; fkSend({ judge: +b.getAttribute('data-v') }); box.removeAttribute('data-k'); fkView(state); }; });
     [].forEach.call(box.querySelectorAll('.fkck:not([disabled])'), function (b) { b.onclick = function () { fkSend({ toggle: b.getAttribute('data-k') }); b.classList.toggle('out'); }; });
     var cd = box.querySelector('.fkckdone'); if (cd) cd.onclick = function () { cd.disabled = true; fkSend({ checked: 1 }); };
+    [].forEach.call(box.querySelectorAll('.fkform input'), function (x) { x.oninput = function () { var v = x.value, c = v.charAt(0).toLocaleUpperCase(); if (v && v.charAt(0) !== c) { var at = x.selectionStart; x.value = c + v.slice(1); try { x.setSelectionRange(at, at); } catch (e) {} } }; });   // (every clue and guess starts with a capital, already while typing)
     var fm = box.querySelector('.fkform:not(.fkgf)'); if (fm) { var inp = fm.querySelector('input'); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 50); fm.onsubmit = function (e) { e.preventDefault(); var ws = [].map.call(fm.querySelectorAll('input'), function (x) { return x.value.trim().split(/\s+/)[0]; }); if (ws.some(function (x) { return !x; })) return; fkSent[f.id + ':w'] = 1; fkSend({ words: ws }); box.removeAttribute('data-k'); fkView(state); }; }
   }
 
