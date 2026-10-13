@@ -4503,7 +4503,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var t0 = Date.now(), wait = function () {
         if (G.carpet !== g) return;
         var ct = -1; try { if (yt.getPlayerState() === 1) ct = yt.getCurrentTime(); } catch (e) {}
-        if (ct >= TC_FIRST - TC3_T.turn1 / 1000 - .1 || Date.now() - t0 > 22000) { step(); return; }
+        if (ct >= TC_FIRST - TC3_T.turn1 / 1000 - .1 || Date.now() - t0 > 17000) { step(); return; }
         tcTimer = setTimeout(wait, 40);
       };
       wait(); return;
@@ -4559,7 +4559,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try {
       if (!on && fade) { var v = 55; tcSongT = setInterval(function () { v -= 3; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(tcSongT); tcSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
       if (!on) { yt.pauseVideo(); return; }
-      Music.want(false); stage = 'carpet'; yt.loadVideoById({ videoId: 'ORhEoS6d8e4', startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
+      Music.want(false); stage = 'carpet'; yt.loadVideoById({ videoId: 'ORhEoS6d8e4', startSeconds: 5 });   /* (from 0:05: less waiting; the first photo is still at 0:16 in the video) */ yt.unMute(); yt.setVolume(55);
       tcSongT = setInterval(function () {
         if (G.phase !== 'carpet' || !G.carpet || G.carpet.st === 'win') { clearInterval(tcSongT); tcSongT = null; return; }
         try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
@@ -5004,9 +5004,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var r = zgRank(g), top = r[0];
       g.win = top ? r.filter(function (x) { return x.up === top.up && x.at === top.at && x.acc === top.acc; }).map(function (x) { return x.pid; }) : [];
       var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
-      g.prize = big; g.done = true; push(); Music.douze(); zgSong(false, true); zgShow();
-      zgTimer = setTimeout(function () { if (G.phase === 'zg') { G.zg = null; startRound(); } }, 8500);
-    }, 1500);
+      g.prize = big; g.done = true; push(); Music.douze(); zgShow();   // (the song plays on to its end)
+      var left = 0; try { if (yt.getPlayerState() === 1) left = Math.max(0, (yt.getDuration() || 0) - (yt.getCurrentTime() || 0)) * 1000; } catch (e) {}
+      left = Math.min(left, 40000);
+      zgTimer = setTimeout(function () { if (G.phase === 'zg') { if (left < 8500) zgSong(false, true); G.zg = null; startRound(); } }, Math.max(8500, left + 500));
+    }, 4500);   // (a few seconds before the scores are revealed)
   }
   // "Zero Gravity" (Australia 2019) plays during the game, and fades out at the end
   function zgSong(on, fade) {

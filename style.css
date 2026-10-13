@@ -3378,7 +3378,7 @@ body.hasdock main{padding-bottom:84px}
 .orclock{position:absolute;top:2vh;right:3vw;font-weight:900;font-size:clamp(2rem,4.5vw,4rem);color:#fff;text-shadow:0 0 16px #ff7a1a,0 3px 0 #6b2a12;font-variant-numeric:tabular-nums;z-index:3}
 .ormid{position:absolute;left:50%;bottom:6vh;width:min(62vw,98vh);transform:translateX(-50%);z-index:2}
 .orsvg{width:100%;height:auto;display:block;filter:drop-shadow(0 16px 20px rgba(0,0,0,.35))}
-.orov.brk-speed .orsvg,.orov.brk-pitch .orsvg{animation:orrattle .18s linear infinite}
+.orov.brk-speed .orsvg{animation:orrattle .18s linear infinite}
 @keyframes orrattle{0%,100%{translate:0 0;rotate:0deg}25%{translate:-3px 1px;rotate:-.4deg}75%{translate:3px -1px;rotate:.4deg}}
 .orov.brk-pitch .orpipe{animation:orpipe .4s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.13s);transform-box:fill-box;transform-origin:50% 100%}
 @keyframes orpipe{from{rotate:-6deg}to{rotate:7deg;translate:0 -4px}}
@@ -3488,7 +3488,7 @@ body.hasdock main{padding-bottom:84px}
 .orsvg .ormill{transform-box:fill-box;transform-origin:50% 25%;animation:ruspin 6s linear infinite}
 .orov.brk-pitch .orsvg .orpipe{animation:orpipe .4s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.13s);transform-box:fill-box;transform-origin:50% 100%}
 .orov:not(.brk-pitch) .orsvg .orpipe{animation:orplay .45s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.09s);transform-box:fill-box;transform-origin:50% 100%}
-.orov.brk-speed .orsvg,.orov.brk-pitch .orsvg{animation:orrattle .2s linear infinite}
+.orov.brk-speed .orsvg{animation:orrattle .2s linear infinite}
 .orsvg .orfig1,.orsvg .orfig2{transform-box:fill-box;transform-origin:50% 100%;animation:orwob 1s steps(2) infinite alternate}
 .orsinger{position:absolute;left:50%;bottom:3vh;height:52vh;transform:translateX(-50%);z-index:3;filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
 .orsinger svg{height:100%;width:auto;display:block}
