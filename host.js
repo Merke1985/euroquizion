@@ -1484,7 +1484,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
-    if (kind === 'clue') { if (!REMOTE) { Music.want(false); clueYt(true); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
+    if (kind === 'clue') { if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
     if (kind === 'queue') {   // Sofia needs some air first, and takes everyone outside, to Verona
       if (REMOTE) { qjAll(); return; }
@@ -3126,8 +3126,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else act.forEach(function (p) { var mine = []; while (mine.length < Math.min(SHOP_OFFER, stock.length)) mine.push(deal(mine)); offer[p.pid] = mine; });
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
-    var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = 7600, TALK2 = 6000;
-    if (talk) { G.shopTalked = true; G.shop.talk = 1; G.phase = 'shop'; G.barMs = 0; push(); Music.ding(); var g0 = G.shop; setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, TALK1 + TALK2); return; }
+    var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = 5600, TALK2 = 5600;
+    if (talk) { G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 1; G.phase = 'shop'; G.barMs = 0; push(); Music.ding(); var g0 = G.shop; setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, TALK1 + TALK2); return; }
     shopOpen();
   }
   function shopOpen() {
@@ -3265,7 +3265,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (v.classList.contains('leaving')) { v.classList.remove('leaving'); G.phase = 'loading'; cover(true, '', '', false); push(); viewEnter('v-game'); setTimeout(then, 2100); }   // the studio slides back in first
         else then();
       }, 1300);
-    }, 3800);
+    }, g.welcome ? 5400 : 3800);   // (the first visit: time for her goodbye)
   }
   // The used items land: one card on the big screen with everything that happens, then the next question.
   function shopDeliver(then) {
@@ -3493,28 +3493,43 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // The big screen during the shopping: the items, and who has picked already.
   // The shopkeeper of Woodruff’s Boutique (an original character): big red curls, cat-eye glasses, an emerald sequinned jumpsuit.
+  // Lynda Woodruff, the shopkeeper (an original character, in the style of the reference photo): auburn waves to her
+  // shoulders, rectangular silver glasses, red lipstick, a black blazer and a black scarf with big autumn flowers.
   var SHOPKEEPER = '<svg class="keeper" viewBox="0 0 220 420" aria-hidden="true"><defs>' +
-    '<linearGradient id="kpsuit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#19c48a"/><stop offset="1" stop-color="#0a6b52"/></linearGradient>' +
-    '<radialGradient id="kpskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f6d2b8"/><stop offset="1" stop-color="#d9a585"/></radialGradient>' +
-    '<pattern id="kpsq" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.4" fill="#d6fff0" opacity=".8"/><circle cx="9" cy="9" r="1.1" fill="#ffd23f" opacity=".8"/></pattern></defs>' +
+    '<linearGradient id="kpsuit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2a33"/><stop offset="1" stop-color="#121218"/></linearGradient>' +
+    '<radialGradient id="kpskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f7d6bf"/><stop offset="1" stop-color="#dba98a"/></radialGradient>' +
+    '<linearGradient id="kphair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a4424"/><stop offset="1" stop-color="#5e2a14"/></linearGradient>' +
+    '<pattern id="kpflow" width="26" height="26" patternUnits="userSpaceOnUse"><rect width="26" height="26" fill="#17141a"/><ellipse cx="7" cy="8" rx="6" ry="3.4" fill="#ff7a2a" transform="rotate(-30 7 8)"/><ellipse cx="18" cy="17" rx="6" ry="3.4" fill="#e23a3a" transform="rotate(40 18 17)"/><ellipse cx="19" cy="5" rx="4" ry="2.4" fill="#f4dcb0" transform="rotate(20 19 5)"/><ellipse cx="6" cy="20" rx="4.4" ry="2.6" fill="#f2b821" transform="rotate(-50 6 20)"/><circle cx="13" cy="12" r="1.6" fill="#7a3a1e"/></pattern></defs>' +
     '<ellipse cx="110" cy="410" rx="64" ry="9" fill="rgba(0,0,0,.45)"/>' +
-    '<path d="M80 250 L74 404 L102 404 L110 290 L118 404 L146 404 L140 250 Z" fill="url(#kpsuit)"/><path d="M80 250 L74 404 L102 404 L110 290 L118 404 L146 404 L140 250 Z" fill="url(#kpsq)"/>' +
-    '<path d="M70 402 h34 l-2 10 h-34 z M116 402 h34 l2 10 h-34 z" fill="#ffd23f"/>' +
-    '<path d="M70 146 Q110 132 150 146 L144 256 Q110 266 76 256 Z" fill="url(#kpsuit)"/><path d="M70 146 Q110 132 150 146 L144 256 Q110 266 76 256 Z" fill="url(#kpsq)"/>' +
-    '<path d="M60 140 Q70 128 92 136 L84 160 Q66 160 60 140 Z M160 140 Q150 128 128 136 L136 160 Q154 160 160 140 Z" fill="#ffd23f"/>' +
-    '<path d="M76 248 Q110 258 144 248 L144 256 Q110 266 76 256 Z" fill="#ffd23f"/>' +
-    '<path d="M64 150 Q48 196 56 236 L70 236 Q66 200 78 166 Z" fill="url(#kpsuit)"/><circle cx="62" cy="242" r="9" fill="url(#kpskin)"/>' +
-    '<g class="kbag"><path d="M150 152 Q172 190 168 214 L156 216 Q158 190 140 166 Z" fill="url(#kpsuit)"/><circle cx="163" cy="222" r="9" fill="url(#kpskin)"/>' +
-    '<path d="M150 226 h34 l6 46 h-46 z" fill="#ff2fa8"/><path d="M158 228 q9 -16 18 0" stroke="#ffd23f" stroke-width="3" fill="none"/><text x="167" y="256" font-size="16" text-anchor="middle" fill="#fff">✦</text></g>' +
-    '<rect x="102" y="116" width="16" height="24" fill="#d9a585"/>' +
-    '<g fill="#c0392b"><circle cx="78" cy="78" r="20"/><circle cx="142" cy="78" r="20"/><circle cx="90" cy="52" r="20"/><circle cx="130" cy="52" r="20"/><circle cx="110" cy="42" r="20"/><circle cx="72" cy="104" r="16"/><circle cx="148" cy="104" r="16"/><circle cx="76" cy="126" r="13"/><circle cx="144" cy="126" r="13"/></g>' +
-    '<ellipse cx="110" cy="90" rx="27" ry="32" fill="url(#kpskin)"/>' +
-    '<path d="M86 74 Q98 60 122 66 Q132 70 134 80 Q120 70 100 72 Z" fill="#c0392b"/>' +
-    '<path d="M84 88 h22 v10 h-22 z M114 88 h22 v10 h-22 z" fill="none" stroke="#111" stroke-width="3" stroke-linejoin="round"/><path d="M84 88 l-6 -6 M136 88 l6 -6 M106 92 h8" stroke="#111" stroke-width="3" stroke-linecap="round"/>' +
-    '<circle cx="95" cy="93" r="2.6" fill="#1a1a1a"/><circle cx="125" cy="93" r="2.6" fill="#1a1a1a"/>' +
-    '<path d="M98 107 Q110 118 122 107" stroke="#c0204a" stroke-width="4" fill="#fff" stroke-linecap="round"/>' +
-    '<circle cx="84" cy="104" r="3.5" fill="#ffd23f"/><circle cx="136" cy="104" r="3.5" fill="#ffd23f"/>' +
+    '<path d="M82 258 L78 402 L104 402 L110 300 L116 402 L142 402 L138 258 Z" fill="#17171d"/>' +
+    '<path d="M72 400 h34 l-2 10 h-34 z M114 400 h34 l2 10 h-34 z" fill="#0c0c10"/>' +
+    '<path d="M66 148 Q110 134 154 148 L150 266 Q110 274 70 266 Z" fill="url(#kpsuit)"/>' +
+    '<path d="M88 140 L104 200 L96 150 Z M132 140 L116 200 L124 150 Z" fill="#3a3a46"/>' +
+    '<path d="M66 150 Q50 196 58 238 L72 238 Q68 200 80 166 Z" fill="url(#kpsuit)"/><circle cx="64" cy="244" r="9" fill="url(#kpskin)"/>' +
+    '<g class="kbag"><path d="M152 152 Q176 186 170 212 L158 214 Q160 190 140 166 Z" fill="url(#kpsuit)"/>' +
+    '<rect x="154" y="206" width="20" height="18" rx="7" fill="url(#kpskin)" stroke="#b9876a" stroke-width="1.2"/><rect x="167" y="192" width="7" height="18" rx="3.5" fill="url(#kpskin)" stroke="#b9876a" stroke-width="1.2"/></g>' +
+    '<rect x="102" y="114" width="16" height="26" fill="#dba98a"/>' +
+    '<path d="M84 132 Q110 150 136 132 L142 152 Q122 172 116 238 Q110 244 102 238 Q98 172 78 152 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/>' +
+    '<path d="M86 134 Q110 156 134 134 Q130 146 110 150 Q90 146 86 134 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/>' +
+    '<path d="M72 88 Q64 44 110 36 Q156 44 148 88 Q160 112 150 136 Q146 146 136 142 Q144 118 136 96 L84 96 Q76 118 84 142 Q74 146 70 136 Q60 112 72 88 Z" fill="url(#kphair)"/>' +
+    '<g fill="url(#kphair)"><circle cx="76" cy="134" r="10"/><circle cx="144" cy="134" r="10"/><circle cx="70" cy="114" r="9"/><circle cx="150" cy="114" r="9"/></g>' +
+    '<ellipse cx="110" cy="92" rx="26" ry="31" fill="url(#kpskin)"/>' +
+    '<path d="M82 82 Q86 52 116 52 Q140 56 140 84 Q132 66 116 64 Q102 66 96 74 Q90 70 82 82 Z" fill="url(#kphair)"/>' +
+    '<path d="M100 60 Q112 56 124 62" stroke="#a65a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+    '<path d="M90 86 Q96 83 102 86 M118 86 Q124 83 130 86" stroke="#5e2a14" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="96" cy="94" r="2.4" fill="#2a1a12"/><circle cx="124" cy="94" r="2.4" fill="#2a1a12"/>' +
+    '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
+    '<ellipse cx="88" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
     '</svg>';
+  // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
+  var SHOPTILL = '<svg class="till" viewBox="0 0 300 190" aria-hidden="true">' +
+    '<rect x="6" y="92" width="288" height="92" rx="8" fill="#c48a3a" stroke="#6b4518" stroke-width="4"/><rect x="0" y="84" width="300" height="16" rx="6" fill="#e0b060" stroke="#6b4518" stroke-width="4"/>' +
+    '<path d="M24 112 h252 M24 140 h252 M24 168 h252" stroke="#a8702c" stroke-width="3"/><g fill="#ffd23f"><circle cx="150" cy="140" r="12"/><text x="150" y="146" font-size="16" font-weight="900" text-anchor="middle" fill="#6b4518">€</text></g>' +
+    '<path d="M150 84 L156 34 Q158 22 170 22 L262 22 Q274 22 276 34 L282 84 Z" fill="#ff5fa8" stroke="#7a1e4a" stroke-width="4" stroke-linejoin="round"/>' +
+    '<rect x="186" y="4" width="62" height="24" rx="4" fill="#1d2a44" stroke="#7a1e4a" stroke-width="3"/><text x="217" y="22" font-size="15" font-weight="900" text-anchor="middle" fill="#7dffb0" font-family="monospace" class="tilln">0.00</text>' +
+    '<g fill="#fff" stroke="#7a1e4a" stroke-width="2">' + [0, 1, 2].map(function (r) { return [0, 1, 2, 3].map(function (c) { return '<rect x="' + (174 + c * 22) + '" y="' + (38 + r * 14) + '" width="17" height="10" rx="3"/>'; }).join(''); }).join('') + '</g>' +
+    '<rect x="164" y="76" width="106" height="10" rx="2" fill="#ffd23f" stroke="#7a1e4a" stroke-width="2.5"/></svg>';
   function shopShow() {
     var g = G.shop; if (!g) return;
     var ov = $('shopov');
@@ -3532,7 +3547,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           var shelf = function (items) { return items.map(function (it) { var so = soldOut(it.id); return '<span class="bqi' + (so ? ' sold' : '') + '" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + shopPrice(it) + ' pts</i><i class="bqstock' + (it.stock ? ' one' : '') + '">' + (so ? 'Sold out' : it.stock ? 'Only ' + it.stock + ' in stock' : '∞ in stock') + '</i></span>'; }).join(''); }, av = SHOP_ITEMS.filter(function (it) { return !it.final || G.finalMode === 'chase'; });   /* (sold out: still on the shelf, crossed out) */
           return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">⚡ Instant items: during a question · 📦 Deliveries: any time, they land before the next question</div></div>';
         })() +
-        '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqbubble"></div><div class="shoppers"></div><div class="bqtimer"></div>';
+        '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqtill">' + SHOPTILL + '</div><div class="bqbubble"></div><div class="shoppers"></div><div class="bqtimer"></div>';
       document.body.appendChild(ov);
       var tick = setInterval(function () {   // the 30 seconds to choose, counting down
         if (!ov.isConnected) { clearInterval(tick); return; }
@@ -3543,8 +3558,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
     var one = act.length === 1, wn = act.map(function (p) { return p.name; }), wnames = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
     var bq = ov.querySelector('.bqbubble');
-    if (g.talk === 1) typeSay(bq, 'Welcome to Woodruff’s Boutique, darling' + (one ? '' : 's') + '! 💋 This is where you get items to use in the trivia rounds. Not during the party games, mind you!', 'lynda');
-    else if (g.talk === 2) typeSay(bq, 'And as a token of goodwill, I’m giving everyone one item for free! 🎁 From the bargain shelf, of course, darling. 😉', 'lynda');
+    if (g.talk === 1) typeSay(bq, 'Hello Eurovision fans, my name is Lynda Woodruff, welcome to my shop! 💋', 'lynda');
+    else if (g.talk === 2) typeSay(bq, 'Whoever wins a party game gets to shop here! So put your best foot forward! 👠', 'lynda');
+    else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course. Take your pick!', 'lynda');   // (the very first visit)
     else if (g.line && !g.over && !g.buy) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
     else if (g.buy) { var fw = (g.free || []).map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), fn = fw.length > 1 ? fw.slice(0, -1).join(', ') + ' and ' + fw[fw.length - 1] : fw[0], bought = act.some(function (p) { return (g.picks[p.pid] || []).length; }); typeSay(bq, g.over ? (bought ? 'Pleasure doing business, darling' + (one ? '' : 's') + '! 😘' : 'Next time then, darling' + (one ? '' : 's') + '! 😘') : (g.line ? g.line + ' ' : 'Congratulations, ' + wnames + '! 🛍️ ') + 'I have a little selection for ' + (one ? 'you' : 'you two') + ': I handpicked one item from each shelf. Fancy one? It will cost you, darling! 💸', 'lynda'); }
     else if (g.win) typeSay(bq, g.over ? (one ? 'Fabulous choice, darling! Use it wisely. 😘' : 'Fabulous choices, darlings! Use them wisely. 😘') : 'Congratulations, ' + wnames + '! 🛍️ I picked two items just for ' + (one ? 'you' : 'each of you') + '. Choose one on your phone!', 'lynda');
@@ -3556,8 +3572,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov._coined = ov._coined || {};
     act.forEach(function (p, i) {
       if (!g.paid || !g.paid[p.pid] || ov._coined[g.id + p.pid]) return; ov._coined[g.id + p.pid] = 1;
-      var chip = ov.querySelectorAll('.shoppers .shopper')[i], kp = ov.querySelector('.bqkeeper'); if (!chip || !kp) return;
-      var a = chip.getBoundingClientRect(), b = kp.getBoundingClientRect(), tx = b.left + b.width * 0.7, ty = b.top + b.height * 0.55;
+      var chip = ov.querySelectorAll('.shoppers .shopper')[i], kp = ov.querySelector('.bqtill') || ov.querySelector('.bqkeeper'); if (!chip || !kp) return;
+      var a = chip.getBoundingClientRect(), b = kp.getBoundingClientRect(), tx = b.left + b.width * 0.75, ty = b.top + b.height * 0.3;
       for (var c = 0; c < 12; c++) (function (c) {
         var e = document.createElement('i'); e.className = 'bqcoin'; e.textContent = '🪙';
         var x0 = a.left + 20 + Math.random() * Math.max(10, a.width - 40), y0 = a.top + a.height / 2;
@@ -3623,7 +3639,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var clueTimer = null, clueTick = null;
   // Edgar's own tune loops from the start of his game through the four clue questions. Those questions are only ones
   // without a video, so nothing else plays over it.
-  // The music: one YouTube track from 0:14, from the moment Edgar is chosen until the end of the game (looping; a pause
+  // The music: the mysterious tune under the story and the briefing; then, once the search starts, one YouTube track from 0:14 until the end of the game (looping; a pause
   // anywhere in the game is picked up again within a second).
   var poeAudio = null, clueYtT = null, clueYtOn = false, CLUE_YT = 'ZMmLeV47Au4', CLUE_YT_AT = 14;
   function clueYt(on) {
@@ -3662,7 +3678,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       sol: { who: pick(CLUE_WHO).id, where: pick(CLUE_WHERE).id, what: pick(CLUE_WHAT).id } };
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
-    clueShow(); if (!REMOTE) { Music.want(false); clueYt(true); }   // mysterious music under the story and the briefing; Edgar's tune once the search starts
+    clueShow(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); }   // mysterious music under the story and the briefing; Edgar's tune once the search starts
     G.clueSting = false;   // (the sting plays right after “abducted!”)
     var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); ov.classList.add('nohosts'); ov.classList.add('noframe'); }
     setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('noframe'); Music.blip(); } }, 2600);   // the framed photo, a little later
@@ -4062,7 +4078,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = '';
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); clueYt(true); } edShow();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } edShow();
     var lines = [
       ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
       ['her', 'The Green Room! Who sits where? The guests only sit down now and then, so keep your eyes open. 🛋️', 'green'],
