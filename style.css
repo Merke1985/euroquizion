@@ -4385,3 +4385,18 @@ body.hasdock main{padding-bottom:84px}
 .edduo.walking span{animation:edduowalk .32s ease-in-out infinite alternate}
 .edduo.walking span:nth-child(2){animation-delay:-.16s}
 @keyframes edduowalk{from{translate:0 0}to{translate:0 -.8vh}}
+/* Edgar: the strolling duo inside the rooms */
+.edduo2 .ddp{transition:transform 3s linear}
+.edduo2 .ddact{display:none}.edduo2.act .ddact{display:inline}.edduo2.act .ddst{display:none}
+.edduo2.walk .ddin{animation:ddwalk .3s ease-in-out infinite alternate}
+@keyframes ddwalk{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+.edduo2.r-club.act .ddin{animation:dddance .42s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.edduo2.r-club.act .ddp:nth-child(2) .ddin{animation-delay:-.21s}
+@keyframes dddance{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-10px) rotate(6deg)}}
+.edduo2.r-back.act .ddin{animation:ddstrum .25s ease-in-out infinite alternate}
+@keyframes ddstrum{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.edduo2.r-boud.act .ddin{animation:ddpose 1.2s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes ddpose{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+.edtab{transition:box-shadow .4s,opacity .4s,filter .4s}
+.edtab:not(.busy){opacity:.45;filter:saturate(.4) brightness(.7)}
+.edtab.busy{box-shadow:0 0 22px var(--tc),inset 0 0 14px var(--tb)}

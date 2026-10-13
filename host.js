@@ -3900,28 +3900,47 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // pony / bun), top, legs, dress, sit, glasses, boa, tie, walk, armUp, shoes, s (scale), flip
   var ED_INK = '#2b1830';
   // Two stars (original characters, in the style of a famous duo: one all in shiny black with dark hair, one blonde in
-  // white) stroll from room to room together during the search, saluting, to distract everyone.
+  // red and white) go from room to room during the search, to distract everyone. They come in from behind a screen or
+  // a wall, do something funny for about 20 seconds (sit in the empty chairs in the Green Room, dance to DJ Ohrmeister,
+  // put on sunglasses in the Boudoir, play guitar backstage), walk out again, and are gone for about 5 seconds.
+  var ED_DUO = [{ hair: '#16121a', hairStyle: 'long', top: '#141418', legs: '#141418', shoes: '#141418' }, { hair: '#e8cf8a', hairStyle: 'long', top: '#e0283a', legs: '#f4f4f6', shoes: '#f4f4f6' }];
+  var ED_DUO_AT = {   // per room: where they come in (x), where they stand (two x's), the floor (y), the size, and whether a screen hides them
+    green: { from: 742, y: 404, s: .82, screen: true }, club: { from: 880, at: [560, 640], y: 400, s: .9 },
+    boud: { from: 344, at: [470, 530], y: 426, s: 1.05, screen: true }, back: { from: -70, at: [140, 200], y: 436, s: .95 }
+  };
+  function edDuoGuitar(col) { return '<g class="ddgt"><path d="M-30 -52 L22 -82" stroke="#5a3a1a" stroke-width="5" stroke-linecap="round"/><ellipse cx="-22" cy="-48" rx="16" ry="12" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2.4" transform="rotate(-30 -22 -48)"/><circle cx="-22" cy="-48" r="4" fill="' + ED_INK + '"/><rect x="18" y="-90" width="10" height="12" rx="3" fill="#3a2a1a" transform="rotate(-30 23 -84)"/></g>'; }
   function edDuo(ov, g) {
-    var d = ov.querySelector('.edduo');
-    if (!d) {
-      var one = function (o) { return '<svg viewBox="-40 -150 80 156" aria-hidden="true">' + edPerson(0, 0, o) + '</svg>'; };
-      d = document.createElement('div'); d.className = 'edduo';
-      d.innerHTML = '<span>' + one({ s: 1, hair: '#16121a', hairStyle: 'long', top: '#141418', legs: '#141418', shoes: '#141418', armUp: 1, walk: 1 }) + '</span><span>' + one({ s: 1, hair: '#e8cf8a', hairStyle: 'long', top: '#e0283a', legs: '#f4f4f6', shoes: '#f4f4f6', armUp: 1, walk: 1 }) + '</span>';
-      ov.appendChild(d);
-    }
-    var on = g.st === 'rooms'; d.classList.toggle('on', on);
-    if (!on) { clearTimeout(d._t); d._go = false; return; }
-    if (d._go) return; d._go = true;
-    var hop = function () {
-      if (!d.isConnected || !G.clue || G.clue.st !== 'rooms') { d._go = false; return; }
-      var rooms = ['green', 'club', 'back', 'boud'].filter(function (r) { return r !== d._r; }), r = rooms[Math.floor(Math.random() * rooms.length)], cell = ov.querySelector('.edr2.' + r); if (!cell) return;
-      var oc = ov.getBoundingClientRect(), rc = cell.getBoundingClientRect(), x = rc.left - oc.left + rc.width * (.25 + Math.random() * .5), y = rc.bottom - oc.top - rc.height * .04;
-      var px = parseFloat(d.style.left) || x; d.classList.toggle('flip', x < px); d.classList.add('walking');
-      d.style.left = x + 'px'; d.style.top = y + 'px'; d._r = r;
-      clearTimeout(d._w); d._w = setTimeout(function () { d.classList.remove('walking'); }, 3200);
-      d._t = setTimeout(hop, 9000 + Math.random() * 5000);
+    var D = ov._duo || (ov._duo = { on: false, i: 0, order: shuffle(['green', 'club', 'boud', 'back']), t: [] });
+    var on = g.st === 'rooms';
+    if (!on) { D.t.forEach(clearTimeout); D.t = []; D.on = false; [].forEach.call(ov.querySelectorAll('.edduo2'), function (x) { x.remove(); }); return; }
+    if (D.on) return; D.on = true;
+    var later = function (ms, f) { D.t.push(setTimeout(function () { if (ov.isConnected && G.clue && G.clue.st === 'rooms') f(); }, ms)); };
+    var visit = function () {
+      var r = D.order[D.i++ % D.order.length], P = ED_DUO_AT[r], svg = ov.querySelector('.edr2.' + r + ' svg'); if (!svg) { later(1000, visit); return; }
+      var at = P.at;
+      if (r === 'green') {   // two of the empty chairs (the guests' own chairs stay free)
+        var SXg = [214, 318, 422, 526, 630], used = ((g.scene.green || {}).sitters || []).map(function (p) { return p.seat; }), free = SXg.map(function (x, k) { return k; }).filter(function (k) { return used.indexOf(k) < 0; });
+        var two = free.length >= 2 ? free.slice(-2) : [0, 1]; at = [SXg[two[0]], SXg[two[1]]];
+      }
+      var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g'); wrap.setAttribute('class', 'edduo2 r-' + r);
+      wrap.innerHTML = ED_DUO.map(function (o, k) {
+        var base = Object.assign({ s: P.s, walk: 1 }, o), st = edPerson(0, 0, base);
+        var act = r === 'green' ? edPerson(-6, -4, Object.assign({}, base, { sit: 1, walk: 0 }))
+          : r === 'club' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
+          : r === 'boud' ? edPerson(0, 0, Object.assign({}, base, { glasses: 1, walk: 0, armUp: 1 }))
+          : edPerson(0, 0, Object.assign({}, base, { walk: 0 })) + '<g transform="scale(' + P.s + ')">' + edDuoGuitar(k ? '#e0283a' : '#f2b821') + '</g>';
+        return '<g class="ddp" style="transform:translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)"><g class="ddin"><g class="ddst">' + st + '</g><g class="ddact">' + act + '</g></g></g>';
+      }).join('');
+      var scr = P.screen ? svg.querySelector('.edscr') : null; if (scr) svg.insertBefore(wrap, scr); else svg.appendChild(wrap);
+      var ps = wrap.querySelectorAll('.ddp');
+      wrap.getBoundingClientRect();
+      wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + at[k] + 'px,' + P.y + 'px)'; });   // walking in (3 s)
+      later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); });   // the funny bit
+      later(16900, function () { wrap.classList.remove('act'); wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)'; }); });   // and off again
+      later(20000, function () { wrap.remove(); });
+      later(25000, visit);   // (gone for 5 seconds, then the next room)
     };
-    d._t = setTimeout(hop, 1500);
+    later(2000, visit);
   }
   function edPerson(x, y, o) {
     var s = o.s || 1, skin = o.skin || '#f6cfb2', H = ED_COL[o.hair] || o.hair || '#333', T = ED_COL[o.top] || o.top || '#888', Lg = ED_COL[o.legs] || o.legs || '#3a3a5a', K = ' stroke="' + ED_INK + '" stroke-width="2.6" stroke-linejoin="round"', h = '';
@@ -4009,7 +4028,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<g class="edfdoor" style="' + dl + '"><path d="M24 124 L4 104 L4 452 L24 428 Z" fill="#dfe3ea" stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M20 136 L8 124 L8 438 L20 420 Z" fill="#eef1f6" stroke="#c9ced8" stroke-width="1.5"/>' + [200, 280, 360].map(function (y) { return '<path d="M8 ' + (y - 8) + ' L20 ' + y + ' L20 ' + (y + 12) + ' L8 ' + (y + 6) + ' Z" fill="#bfe8ff" stroke="' + ED_INK + '" stroke-width="1.2"/>'; }).join('') + '</g>';   /* (the left door, swung open to the left on its hinge: the inside of the door with its shelves; they lean into the fridge) */
     });
     // the big folding screen they hide behind, and someone else's legs peeking out under it
-    h += '<g' + K + '>' + [0, 1, 2].map(function (i) { return '<rect x="' + (692 + i * 34) + '" y="' + (150 + (i % 2) * 6) + '" width="34" height="250" rx="6" fill="' + ['#f6c8d8', '#fbe0ea', '#f6c8d8'][i] + '"/>'; }).join('') + '</g><g fill="#ff6fb5" opacity=".7">' + [0, 1, 2].map(function (i) { return '<path d="M' + (709 + i * 34) + ' ' + (210 + i * 30) + ' l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z"/>'; }).join('') + '</g>';
+    h += '<g class="edscr"' + K + '>' + [0, 1, 2].map(function (i) { return '<rect x="' + (692 + i * 34) + '" y="' + (150 + (i % 2) * 6) + '" width="34" height="250" rx="6" fill="' + ['#f6c8d8', '#fbe0ea', '#f6c8d8'][i] + '"/>'; }).join('') + '</g><g fill="#ff6fb5" opacity=".7">' + [0, 1, 2].map(function (i) { return '<path d="M' + (709 + i * 34) + ' ' + (210 + i * 30) + ' l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z"/>'; }).join('') + '</g>';
     return h + edPlant(770, 446, 1) + edLabel('GREEN ROOM', 14, '#3ddc84');
   }
   function edClubSvg(s) {
@@ -4089,7 +4108,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ];
     W.forEach(function (w, k) { h += '<g class="edwk2" style="animation-delay:' + (2 + k * 10) + 's"><g class="edbob">' + w + '</g></g>'; });
     // the folding screen (left) and the clothes rack (right), in front of them
-    h += '<g' + K + '>' + [0, 1, 2, 3].map(function (i) { return '<path d="M' + (272 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (308 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (308 + i * 36) + ' 436 L' + (272 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3].map(function (i) { return '<circle cx="' + (290 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
+    h += '<g class="edscr"' + K + '>' + [0, 1, 2, 3].map(function (i) { return '<path d="M' + (272 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (308 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (308 + i * 36) + ' 436 L' + (272 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3].map(function (i) { return '<circle cx="' + (290 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
     h += '<rect x="556" y="96" width="232" height="8" rx="4" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="560" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="778" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/>';
     s.rack.forEach(function (d, i) {
       var x = 590 + i * 44, col = ED_COL[d.c];
@@ -4209,7 +4228,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var r = g.rooms[k].cur || '', x, y, cell = r ? ov.querySelector('.edr2.' + r) : null, rc = cell ? cell.getBoundingClientRect() : null;
       if (rc) {   // in a room: on the outside edge of it (above the top rooms, below the bottom ones), at their own spot
         var mates = ks.filter(function (k2) { return (g.rooms[k2].cur || '') === r; }), mi = mates.indexOf(k), step = Math.min(Hh * 0.088, (rc.width * 0.9) / Math.max(1, mates.length));   // (neatly side by side in the room's label)
-        var tw0 = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, mates.length * Hh * 0.088 + Hh * 0.03));   // (the label sits at the left of the room's edge)
+        var tw0 = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, N * Hh * 0.088 + Hh * 0.03));   // (the label always has room for everyone)   // (the label sits at the left of the room's edge)
         x = (r === 'green' || r === 'back' ? rc.right - oc.left - tw0 / 2 : rc.left - oc.left + tw0 / 2) + (mi - (mates.length - 1) / 2) * step;   // (against the middle line between the rooms)
         y = (r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.07 + Hh * 0.004 : rc.bottom - oc.top + Hh * 0.004;   // (inside the room's own tab)
       } else {   // in the lobby: two columns, at their own spot
@@ -4231,7 +4250,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var cell = ov.querySelector('.edr2.' + r); if (!cell) return;
       var tab = toks.querySelector('.edtab.' + r); if (!tab) { tab = document.createElement('div'); tab.className = 'edtab ' + r; toks.insertBefore(tab, toks.firstChild); }
       var rc = cell.getBoundingClientRect(), top = r === 'green' || r === 'club', th = Hh * 0.07, cnt = ks.filter(function (k2) { return (g.rooms[k2].cur || '') === r; }).length;
-      var tw = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, cnt * Hh * 0.088 + Hh * 0.03));   // (a label a quarter of the room wide, growing only when it's crowded)
+      var tw = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, ks.length * Hh * 0.088 + Hh * 0.03));   // (always the same size; it lights up when someone is inside)   // (a label a quarter of the room wide, growing only when it's crowded)
       tab.style.left = (100 * ((r === 'green' || r === 'back' ? rc.right - tw : rc.left) - oc.left) / W).toFixed(2) + '%'; tab.style.width = (100 * tw / W).toFixed(2) + '%'; tab.style.height = (100 * th / Hh).toFixed(2) + '%';
       tab.style.top = (100 * ((top ? rc.top - th : rc.bottom) - oc.top) / Hh).toFixed(2) + '%'; tab.classList.toggle('top', top);
       var busy = ks.some(function (k) { return (g.rooms[k].cur || '') === r; }); tab.classList.toggle('busy', busy); cell.classList.toggle('dim', g.st === 'rooms' && !busy);   // (nobody in there: the room's lights go down)
