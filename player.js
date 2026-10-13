@@ -182,6 +182,7 @@
   }
   var kicked = false;
   function onState(s) {
+    if (s && s.phase !== 'clueacc') $('v-wait').classList.remove('accmode');
     if (kicked) return;
     if (s && s.players) charCC(s.players);
     onState2(s);
@@ -204,7 +205,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'fake' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' && s.phase !== 'organ' && s.phase !== 'cluerooms' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'fake' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' && s.phase !== 'organ' && s.phase !== 'cluerooms' && s.phase !== 'clueacc' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -529,7 +530,7 @@
   }
   function clueView(s) {
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [];
-    box.classList.remove('compact'); box.classList.remove('acc');
+    box.classList.remove('compact'); box.classList.remove('acc'); $('v-wait').classList.remove('accmode');
     show('v-wait');
     if (s.phase === 'clueacc') {
       if (clueSentId === c.id || (c.acc || {})[pid]) {
@@ -537,7 +538,7 @@
         $('waittitle').textContent = '🔍 Accusation sent!'; $('waitsub').textContent = 'Waiting for the other detectives…'; return;
       }
       $('waittitle').textContent = ''; $('waitsub').textContent = ''; $('waitlabel').textContent = '';   // (everything on one screen: the timer bar on top, all the cards, the button)
-      box.classList.remove('hidden'); box.classList.add('compact'); box.classList.add('acc');
+      box.classList.remove('hidden'); box.classList.add('compact'); box.classList.add('acc'); $('v-wait').classList.add('accmode');
       var endNew = Date.now() + (c.left || 0); if (!clueAccEnd || clueAccId !== c.id || Math.abs(endNew - clueAccEnd) > 1500) { clueAccEnd = endNew; clueAccId = c.id; }
       clearInterval(clueAccT); clueAccT = setInterval(clueAccTick, 250);
       if (clueSel.id !== c.id) clueSel = { id: c.id };

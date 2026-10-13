@@ -4128,3 +4128,9 @@ body.hasdock main{padding-bottom:84px}
 .zgov.hostsoff .zgbub{opacity:0!important}
 .zgov[data-st="intro"] .zgclock{display:none}
 .zgov .zgmsg,.zgov .zgboard,.zgov .zgclock{z-index:8}
+
+/* Edgar's accusation on the phone: nothing above the timer bar, everything moved up */
+#v-wait.accmode{justify-content:flex-start;padding-top:0;gap:0;margin-top:-28px}
+#v-wait.accmode #waitlabel,#v-wait.accmode #waittitle,#v-wait.accmode #waitsub{display:none}
+.clueui.acc .clbtn{min-height:56px;font-size:.8rem}.clueui.acc .clbtn i{font-size:1.25rem}
+.clueui.acc .clacctop{padding:10px 12px 14px}
