@@ -612,7 +612,7 @@
     var card = !mine ? '' : !me ? '<div class="fkcard wait">🤫 Getting your card…</div>' : me.role === 'fake'
       ? '<div class="fkcard fake"><b>🤫 You’re the FAKE FAN!</b><span>You don’t know the song. Blend in: listen to the others’ words, and don’t get caught!</span></div>'
       : '<div class="fkcard"><small>The secret song</small><b>' + esc(me.song.t) + '</b><span>' + esc(me.song.a) + ' · ' + esc(me.song.c) + ' ' + me.song.y + '</span></div>';
-    var key = f.id + '|' + f.st + '|' + f.turn + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.words) + '|' + JSON.stringify(f.voted) + '|' + f.fake + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0);
+    var key = f.id + '|' + f.st + '|' + f.turn + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.words) + '|' + JSON.stringify(f.voted) + '|' + f.fake + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0) + '|' + JSON.stringify(f.judged || {});
     if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
     var body = '';
     if (!mine) { $('waittitle').textContent = '🤫 The Fake Fan'; $('waitsub').textContent = 'Watch the big screen!'; }
@@ -632,8 +632,12 @@
       }
     } else if (f.st === 'reveal') { $('waittitle').textContent = f.fake ? (f.fake === pid ? (f.caught ? '😱 They caught you!' : '😈 You got away!') : (f.caught ? '🎯 Caught: ' + nm(f.fake) + '!' : '🤫 It was ' + nm(f.fake) + '!')) : '🥁 And the fake fan is…'; $('waitsub').textContent = 'Watch the big screen!'; }
     else if (f.st === 'guess') {
-      if (f.fake === pid && !fkSent[f.id + ':g']) { $('waittitle').textContent = '🎵 Last chance!'; $('waitsub').textContent = 'Which song was it? Guess right and you still score!'; body = '<div class="fkvote">' + (f.opts || []).map(function (o) { return '<button type="button" class="opt fkg" data-id="' + esc(o.id) + '"><span>' + esc(o.t) + '</span><small>' + esc(o.a) + '</small></button>'; }).join('') + '</div>'; }
-      else { $('waittitle').textContent = '🎵 ' + nm(f.fake) + ' is guessing the song…'; $('waitsub').textContent = ''; }
+      if (f.fake === pid && !fkSent[f.id + ':g']) { $('waittitle').textContent = '🎵 Last chance!'; $('waitsub').textContent = 'Type the song (the title is enough). The others decide if you got it right!'; body = '<form class="fkform fkgf"><input type="text" maxlength="60" placeholder="The song" autocomplete="off"><button type="submit" class="btn">Send</button></form>'; }
+      else { $('waittitle').textContent = '🎵 ' + nm(f.fake) + ' is typing the song…'; $('waitsub').textContent = 'Then you decide if it’s right!'; }
+    } else if (f.st === 'judge') {
+      if (f.fake === pid) { $('waittitle').textContent = '🤞 The others are judging…'; $('waitsub').textContent = 'You said: “' + f.guess + '”'; }
+      else if ((f.judged || {})[pid] || fkSent[f.id + ':j']) { $('waittitle').textContent = '✅ Vote sent'; $('waitsub').textContent = 'Waiting for the others…'; }
+      else { $('waittitle').textContent = nm(f.fake) + ' says:'; $('waitsub').textContent = 'Is that the secret song?'; body = '<div class="fkguess">“' + esc(f.guess) + '”</div><div class="fkjudge"><button type="button" class="btn big fkj" data-v="1">✅ Right</button><button type="button" class="btn big alt fkj" data-v="0">❌ Wrong</button></div>'; }
     } else if (f.st === 'end') {
       var won = (f.win || []).indexOf(pid) >= 0, pts = (f.res || {})[pid] || 0;
       if (f.done) { $('waittitle').textContent = won ? '🏆 You win The Fake Fan!' : '🤫 The Fake Fan is over!'; $('waitsub').textContent = 'Your total: ' + ((f.tot || {})[pid] || 0) + ' points over ' + f.of + ' rounds.'; box.innerHTML = ''; return; }
@@ -641,7 +645,9 @@
       $('waitsub').textContent = f.fake === pid ? (f.caught ? (f.right ? 'You knew the song after all! 😎' : 'You didn’t know the song… 🙈') : 'Nobody caught you! 😈') : (f.caught ? (f.right ? 'Caught, but the fake knew the song!' : 'The real fans win!') : 'The fake fan got away…');
     }
     box.innerHTML = card + body;
-    var fm = box.querySelector('.fkform'); if (fm) { var inp = fm.querySelector('input'); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 50); fm.onsubmit = function (e) { e.preventDefault(); var w = inp.value.trim(); if (!w) return; fkSent[f.id + ':w'] = 1; fkSend({ word: w }); box.removeAttribute('data-k'); fkView(state); }; }
+    var gf = box.querySelector('.fkgf'); if (gf) { var gi = gf.querySelector('input'); setTimeout(function () { try { gi.focus(); } catch (e) {} }, 50); gf.onsubmit = function (e) { e.preventDefault(); var w = gi.value.trim(); if (!w) return; fkSent[f.id + ':g'] = 1; fkSend({ guess: w }); box.removeAttribute('data-k'); fkView(state); }; }
+    [].forEach.call(box.querySelectorAll('.fkj'), function (b) { b.onclick = function () { fkSent[f.id + ':j'] = 1; fkSend({ judge: +b.getAttribute('data-v') }); box.removeAttribute('data-k'); fkView(state); }; });
+    var fm = box.querySelector('.fkform:not(.fkgf)'); if (fm) { var inp = fm.querySelector('input'); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 50); fm.onsubmit = function (e) { e.preventDefault(); var w = inp.value.trim(); if (!w) return; fkSent[f.id + ':w'] = 1; fkSend({ word: w }); box.removeAttribute('data-k'); fkView(state); }; }
     [].forEach.call(box.querySelectorAll('.fkv'), function (b) { b.onclick = function () { fkSend({ vote: b.getAttribute('data-k') }); box.querySelectorAll('.fkv').forEach(function (x) { x.disabled = true; }); b.classList.add('picked'); }; });
     [].forEach.call(box.querySelectorAll('.fkg'), function (b) { b.onclick = function () { fkSent[f.id + ':g'] = 1; fkSend({ guess: b.getAttribute('data-id') }); box.querySelectorAll('.fkg').forEach(function (x) { x.disabled = true; }); b.classList.add('picked'); }; });
   }

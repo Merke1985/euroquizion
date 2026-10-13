@@ -3966,3 +3966,10 @@ body.hasdock main{padding-bottom:84px}
 .fkvote .opt small{opacity:.7;font-weight:700}
 .fkvote .opt.picked{box-shadow:0 0 0 3px #ffd23f}
 .fksign small{display:block;text-align:center;font-size:.45em;color:#ffd23f;font-weight:800;margin-top:-.1em}
+/* Edgar's avatars: no flying across the screen; a pop out and a pop in at the new place */
+.edtok{transition:transform .25s ease-in,opacity .25s ease-in}
+.edtok.out{transform:translate(-50%,0) scale(.2);opacity:0}
+.edtok.in{animation:edtokin .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes edtokin{from{transform:translate(-50%,0) scale(.2);opacity:0}}
+.fkguess{font-size:1.6rem;font-weight:900;text-align:center;padding:14px;border-radius:14px;background:#2a2050;width:100%;max-width:360px}
+.fkjudge{display:flex;gap:10px;width:100%;max-width:360px}.fkjudge .btn{flex:1}
