@@ -923,15 +923,14 @@ function zgW(t) { return 0.24 - 0.12 * Math.max(0, Math.min(1, t / ZG_LEN)); }  
 function zgNext(t) { var n = ZG_LEN; ZG_BRK.forEach(function (b) { if (b[0] > t && b[0] < n) n = b[0]; if (t >= b[0] && t < b[1] && b[1] < n) n = b[1]; }); return n; }   // (the end of the current stage, or break)
 function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
 function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function zgPath(seed, t) {
-  var p = zgPar[seed]; if (!p) { var r = zgRnd(seed); p = zgPar[seed] = []; for (var i = 0; i < 9; i++) p.push(r() * 6.283); }
-  var sm = function (v) { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
-  var w3 = sm((t - ZG_ST[1] + 1) / 2), w2 = sm((t - ZG_ST[0] + 1) / 2) - w3, w1 = 1 - w2 - w3;
-  var a = 0.62 * Math.sin(2 * Math.PI * t / 8);     // stage 1: a slow, steady swing (left and right every 8 seconds): predictable
-  var b = 0.72 * Math.sin(2 * Math.PI * t / 4.5);   // stage 2: the same steady swing, faster and wider (every 4.5 seconds)
-  var c = 0.55 * Math.tanh(3 * Math.sin(1.1 * t + p[6])) + 0.3 * Math.sin(2.5 * t + p[7]) + 0.12 * Math.sin(3.9 * t + p[8]);   // (the last stage: maximum sway)
-  var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 1.5) : t > b[1] ? sm((t - b[1]) / 1.5) : 0; });   // (the breaks: back to the middle, and calm)
-  return Math.max(-0.88, Math.min(0.88, env * (w1 * a + w2 * b + w3 * c)));
+function zgPath(seed, t) {   // the same on every device; seed is kept for older callers
+  var sm = function (v) { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); }, x;
+  if (t < 9) x = 0;   // still until she starts singing (0:09)…
+  else if (t < ZG_ST[0]) x = 0.29 * sm((t - 9) / 12) * Math.sin(2 * Math.PI * (t - 9) / 8);   // …then slowly, a third of the way (every 8 s)
+  else if (t < ZG_ST[1]) x = 0.59 * Math.sin(2 * Math.PI * (t - ZG_ST[0]) / 4.5);   // stage 2: two thirds of the way, faster
+  else { var u = t - ZG_ST[1], L = Math.max(1, ZG_LEN - ZG_ST[1]), f0 = 1 / 3.4, f1 = 1 / 1.5; x = 0.88 * Math.sin(2 * Math.PI * (f0 * u + (f1 - f0) * u * u / (2 * L))); }   // stage 3: all the way, faster and faster
+  var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 1.5) : t > b[1] ? sm((t - b[1]) / 1.5) : 0; });   // (the breaks: back to the middle)
+  return env * x;
 }
 function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }
 
