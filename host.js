@@ -4310,14 +4310,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // contestants walk on one at a time, pose for the photographers, and walk off. After each parade one memory
   // question (on the phones, 4 options, 20 seconds). Most right answers wins; a tie goes to the fastest (only the
   // time of right answers counts). "Because of You" plays from the first step to the winner.
-  var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b']];
+  var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b'], ['Pink', '#ff5fa8', '#c2347a'], ['Purple', '#8b4fe0', '#5a2aa8'], ['Orange', '#ff8a2a', '#c25a10'], ['Silver', '#c8ccd8', '#8a90a0'], ['Black', '#121218', '#050508']];
   var TC_SHOES = ['High heels', 'Boots', 'Flats'];
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
   var TC_SIZES = [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]], TC_Q_MS = 20000, tcTimer = null, tcFadeT = null;
   var TC_ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'], TC_POSES = ['hips', 'wave', 'up', 'kneel', 'point', 'lean', 'kneel'];
   function tcGirl() {
     var m = Math.random() < .4 ? 1 : 0;
-    return { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? 3 : Math.floor(Math.random() * 3) };
+    return { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * TC_COLORS.length), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? 3 : Math.floor(Math.random() * 3) };
   }
   // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
   // 2 sun hat, 3 beret), g: sunglasses, s: shoes, k: skin, r: hair colour, y: hairstyle (0 long, 1 bob, 2 bun).
@@ -4360,7 +4360,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (t === 'glasses') q = nums(cnt(function (w) { return w.g; })), q.text = 'How many contestants wore sunglasses?';
     else if (t === 'dress') q = nums(cnt(function (w) { return w.o === 'dress'; })), q.text = 'How many contestants wore a dress?';
     else if (t === 'red') q = nums(cnt(function (w) { return w.c === 0; })), q.text = 'How many contestants wore a red outfit?';
-    else if (t === 'color') { var i = Math.floor(Math.random() * n); q = { opts: TC_COLORS.map(function (x) { return x[0]; }), ans: girls[i].c, text: 'What colour was the outfit of ' + who(girls[i]) + '?' }; }
+    else if (t === 'color') { var i = Math.floor(Math.random() * n); var co = shuffle([girls[i].c].concat(shuffle(TC_COLORS.map(function (x, k) { return k; }).filter(function (k) { return k !== girls[i].c; })).slice(0, 3))); q = { opts: co.map(function (k) { return TC_COLORS[k][0]; }), ans: co.indexOf(girls[i].c), text: 'What colour was the outfit of ' + who(girls[i]) + '?' }; }
     else { var j = Math.floor(Math.random() * n); q = { opts: TC_SHOES.slice(), ans: girls[j].s, text: 'Which shoes did ' + who(girls[j]) + ' wear?' }; }
     q.type = t; return q;
   }
