@@ -1005,7 +1005,7 @@
         { q: 'How many disco balls hang from the ceiling?', a: String(s.balls), o: edNums(s.balls, 1, 7) },
         { q: 'Which song is number ' + (n + 1) + ' on the setlist?', a: s.setlist[n], o: edPickOpts(s.setlist[n], s.setlist) },
         { q: 'What does the neon sign say?', a: s.neon, o: edPickOpts(s.neon, ['DOUZE', 'PARTY', 'ENCORE', 'DANCE', 'GLAM', 'LOVE']) },
-        { q: 'How many dancers (in colour) are on the floor?', a: String(s.dancers), o: edNums(s.dancers, 1, 7) },
+        { q: 'How many dancers (in colour) are on the dance floor? (Not in the DJ booth)', a: String(s.dancers), o: edNums(s.dancers, 1, 7) },
         { q: 'What colour is DJ Ohrmeister’s jacket?', a: s.jacket, o: edPickOpts(s.jacket, ['purple', 'blue', 'green', 'red', 'gold']), col: 1 }
       ];
       return [{ t: 'syms', q: 'Watch the DJ booth: five symbols light up, one after the other. Tap them in that order!', a: s.panel }].concat(shuffle(mc).slice(0, 2));

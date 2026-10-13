@@ -3938,7 +3938,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   ];
   var ED_DUO = [{ hair: '#16121a', hairStyle: 'pony', top: '#141418', legs: '#141418', shoes: '#141418' }, { hair: '#ecd79a', hairStyle: 'long', top: '#f4f4f6', legs: '#f4f4f6', shoes: '#f4f4f6' }];
   var ED_DUO_AT = {   // per room: where they come in (x), where they stand (two x's), the floor (y), the size, and whether a screen hides them
-    green: { from: 742, at: [655, 712], y: 404, s: .82, screen: true }, club: { from: 880, at: [560, 640], y: 400, s: .9 },
+    green: { from: 742, at: [655, 712], y: 404, s: .82, screen: true }, club: { from: [282, 518], fromY: 420, at: [282, 518], y: 266, s: .85 },
     boud: { from: 344, at: [470, 530], y: 426, s: 1.05, screen: true }, back: { from: -70, at: [140, 200], y: 436, s: .95 }
   };
   function edDuoGuitar(col) { return '<g class="ddgt"><path d="M-30 -52 L22 -82" stroke="#5a3a1a" stroke-width="5" stroke-linecap="round"/><ellipse cx="-22" cy="-48" rx="16" ry="12" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2.4" transform="rotate(-30 -22 -48)"/><circle cx="-22" cy="-48" r="4" fill="' + ED_INK + '"/><rect x="18" y="-90" width="10" height="12" rx="3" fill="#3a2a1a" transform="rotate(-30 23 -84)"/></g>'; }
@@ -3979,15 +3979,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           : r === 'boud' ? edPerson(0, 0, Object.assign({}, base, { glasses: 1, walk: 0, armUp: 1 }))
           : edPerson(0, 0, Object.assign({}, base, { walk: 0 })) + '<g transform="scale(' + P.s + ')">' + edDuoGuitar(k ? '#e0283a' : '#f2b821') + '</g>';
         var st2 = r === 'boud' ? '<g class="ddst2">' + edPerson(0, 0, Object.assign({}, base, { glasses: 1 })) + '</g>' : '';   // (in the Boudoir: the sunglasses stay on until they're out of the room)
-        return '<g class="ddp" style="transform:translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)"><g class="ddin"><g class="ddst">' + st + '</g>' + st2 + '<g class="ddact">' + act + '</g></g></g>';
+        return '<g class="ddp" style="transform:translate(' + (Array.isArray(P.from) ? P.from[k] : P.from + k * 30) + 'px,' + (P.fromY || P.y) + 'px)"><g class="ddin"><g class="ddst">' + st + '</g>' + st2 + '<g class="ddact">' + act + '</g></g></g>';
       }).join('');
-      var scr = P.screen ? svg.querySelector('.edscr') : null, behind = r === 'green' ? svg.querySelector('.edchairs') : scr; if (behind) svg.insertBefore(wrap, behind); else svg.appendChild(wrap);   // (walking: behind the chairs or the screen)
+      var scr = P.screen ? svg.querySelector('.edscr') : null, behind = r === 'green' ? svg.querySelector('.edchairs') : r === 'club' ? svg.querySelector('.edbooth') : scr; if (behind) svg.insertBefore(wrap, behind); else svg.appendChild(wrap);   // (walking: behind the chairs or the screen)
       var ps = wrap.querySelectorAll('.ddp');
       wrap.getBoundingClientRect();
       wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + at[k] + 'px,' + P.y + 'px)'; });   // walking in (3 s)
       later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); if (r === 'boud' || r === 'green') svg.appendChild(wrap); });   // the funny bit (in the Boudoir and the Green Room: in front of the screen)
       if (r === 'boud' || r === 'green') later(16850, function () { if (behind && behind.parentNode) svg.insertBefore(wrap, behind); });   // (and behind it again to leave)
-      later(16900, function () { if (r === 'boud') wrap.classList.add('shades'); wrap.classList.remove('act'); wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)'; }); });   // and off again
+      later(16900, function () { if (r === 'boud') wrap.classList.add('shades'); wrap.classList.remove('act'); wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (Array.isArray(P.from) ? P.from[k] : P.from + k * 30) + 'px,' + (P.fromY || P.y) + 'px)'; }); });   // and off again
       later(20000, function () { wrap.remove(); });
       later(25000, visit);   // (gone for 5 seconds, then the next room)
     };
@@ -4098,7 +4098,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     h += '<g class="edarm"><path d="M436 196 Q460 160 466 118" stroke="' + ED_INK + '" stroke-width="20" fill="none" stroke-linecap="round"/><path d="M436 196 Q460 160 466 118" stroke="' + ED_COL[s.jacket] + '" stroke-width="13" fill="none" stroke-linecap="round"/><circle cx="467" cy="110" r="10" fill="#e0b090" stroke="' + ED_INK + '" stroke-width="2.5"/><rect x="463" y="88" width="7" height="16" rx="3.5" fill="#e0b090" stroke="' + ED_INK + '" stroke-width="2"/></g>' +   /* his arm goes up for 2 seconds before the symbols start */
       '<g class="edbob"><svg x="322" y="96" width="156" height="208" viewBox="0 0 120 160">' + ED_DJ.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace('#c9c9d6', ED_COL[s.jacket]) + '</svg></g>' +
       '<text x="400" y="104" text-anchor="middle" font-size="17" font-weight="900" fill="#fff" letter-spacing="2" style="filter:drop-shadow(0 0 5px #ff6fd8)">DJ OHRMEISTER</text>';
-    h += '<rect x="250" y="226" width="300" height="96" rx="14" fill="#160a26"' + K + ' stroke="#ff6fd8"/>';
+    h += '<g class="edbooth"></g><rect x="250" y="226" width="300" height="96" rx="14" fill="#160a26"' + K + ' stroke="#ff6fd8"/>';   // (the marker: the two stars pop up behind the booth)
     s.tiles.forEach(function (k, i) {
       var x = 262 + i * 47, j = s.panel.indexOf(k);
       h += '<rect x="' + x + '" y="240" width="42" height="66" rx="8" fill="#2a1446" stroke="' + ED_SYMS2[k].c + '" stroke-width="2"/><g class="edsg' + (j >= 0 ? ' lit' : '') + '" style="' + (j >= 0 ? 'animation-delay:' + (2 + j * 1.2) + 's' : '') + '"><g filter="url(#edglow)">' + edSym(k, x + 4, 253, 34) + '</g></g>';
