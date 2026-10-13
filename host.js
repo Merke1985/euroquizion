@@ -4209,7 +4209,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var r = g.rooms[k].cur || '', x, y, cell = r ? ov.querySelector('.edr2.' + r) : null, rc = cell ? cell.getBoundingClientRect() : null;
       if (rc) {   // in a room: on the outside edge of it (above the top rooms, below the bottom ones), at their own spot
         var mates = ks.filter(function (k2) { return (g.rooms[k2].cur || '') === r; }), mi = mates.indexOf(k), step = Math.min(Hh * 0.088, (rc.width * 0.9) / Math.max(1, mates.length));   // (neatly side by side in the room's label)
-        x = rc.left - oc.left + rc.width / 2 + (mi - (mates.length - 1) / 2) * step;
+        var tw0 = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, mates.length * Hh * 0.088 + Hh * 0.03));   // (the label sits at the left of the room's edge)
+        x = (r === 'green' || r === 'back' ? rc.right - oc.left - tw0 / 2 : rc.left - oc.left + tw0 / 2) + (mi - (mates.length - 1) / 2) * step;   // (against the middle line between the rooms)
         y = (r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.07 + Hh * 0.004 : rc.bottom - oc.top + Hh * 0.004;   // (inside the room's own tab)
       } else {   // in the lobby: two columns, at their own spot
         var rowH = Math.min(Hh * 0.105, (lb.height * 0.62) / Math.max(1, Math.ceil(N / 2)));
@@ -4231,7 +4232,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var tab = toks.querySelector('.edtab.' + r); if (!tab) { tab = document.createElement('div'); tab.className = 'edtab ' + r; toks.insertBefore(tab, toks.firstChild); }
       var rc = cell.getBoundingClientRect(), top = r === 'green' || r === 'club', th = Hh * 0.07, cnt = ks.filter(function (k2) { return (g.rooms[k2].cur || '') === r; }).length;
       var tw = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, cnt * Hh * 0.088 + Hh * 0.03));   // (a label a quarter of the room wide, growing only when it's crowded)
-      tab.style.left = (100 * (rc.left - oc.left + (rc.width - tw) / 2) / W).toFixed(2) + '%'; tab.style.width = (100 * tw / W).toFixed(2) + '%'; tab.style.height = (100 * th / Hh).toFixed(2) + '%';
+      tab.style.left = (100 * ((r === 'green' || r === 'back' ? rc.right - tw : rc.left) - oc.left) / W).toFixed(2) + '%'; tab.style.width = (100 * tw / W).toFixed(2) + '%'; tab.style.height = (100 * th / Hh).toFixed(2) + '%';
       tab.style.top = (100 * ((top ? rc.top - th : rc.bottom) - oc.top) / Hh).toFixed(2) + '%'; tab.classList.toggle('top', top);
       var busy = ks.some(function (k) { return (g.rooms[k].cur || '') === r; }); tab.classList.toggle('busy', busy); cell.classList.toggle('dim', g.st === 'rooms' && !busy);   // (nobody in there: the room's lights go down)
     });
