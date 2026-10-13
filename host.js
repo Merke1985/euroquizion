@@ -3664,9 +3664,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var clueTimer = null, clueTick = null;
   // Edgar's own tune loops from the start of his game through the four clue questions. Those questions are only ones
   // without a video, so nothing else plays over it.
-  // The music: the mysterious tune under the story and the briefing; then, once the search starts, one YouTube track from 0:14 until the end of the game (looping; a pause
+  // The music: the mysterious tune under the story and the briefing; then, once the search starts, one YouTube track from 0:05 until the end of the game (looping; a pause
   // anywhere in the game is picked up again within a second).
-  var poeAudio = null, clueYtT = null, clueYtOn = false, CLUE_YT = 'ZMmLeV47Au4', CLUE_YT_AT = 14;
+  var poeAudio = null, clueYtT = null, clueYtOn = false, CLUE_YT = 'ZMmLeV47Au4', CLUE_YT_AT = 5;
   function clueYt(on) {
     if (REMOTE) return;
     clearInterval(clueYtT); clueYtT = null;
