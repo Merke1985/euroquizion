@@ -4418,3 +4418,11 @@ body.hasdock main{padding-bottom:84px}
 .fkpod.guesser .char{box-shadow:0 0 0 4px #ffd23f,0 0 26px #ffd23f}
 .fksong small{display:block;font-size:.55em;font-weight:800;text-transform:uppercase;letter-spacing:.1em;opacity:.7}
 .fkpod.guesser .fktag{top:auto;bottom:-3.2vh;transform:rotate(-4deg);background:#ffd23f;color:#2b1830;font-size:clamp(.6rem,1vw,1rem)}
+/* Edgar, Green Room: each guest sits down in their own chair once every 15 seconds (out from behind the screen, sit ~6 s, back) */
+.edr2 .edsit{animation:edsit15 15s linear infinite backwards!important}
+.edr2 .edsit .edst{animation:edstand15 15s linear infinite backwards!important;animation-delay:inherit!important}
+.edr2 .edsit .edsi{animation:edseat15 15s linear infinite backwards!important;animation-delay:inherit!important}
+.edr2 .edfopen,.edr2 .edfdoor{animation:none!important;opacity:0!important}
+@keyframes edsit15{0%{transform:translateX(var(--from))}22%,68%{transform:translateX(0)}92%,100%{transform:translateX(var(--from))}}
+@keyframes edstand15{0%,22%{opacity:1}23%,67%{opacity:0}68%,100%{opacity:1}}
+@keyframes edseat15{0%,22%{opacity:0}23%,67%{opacity:1}68%,100%{opacity:0}}
