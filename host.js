@@ -5978,8 +5978,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var orFireA = null;
   function orFireSnd(on) {   // the crackling fire, while it burns
     try {
-      if (on) { if (!orFireA) { orFireA = new Audio('sounds/fire.mp3?v=2'); orFireA.loop = true; } orFireA.volume = Math.max(0, Math.min(1, Music.vol ? Math.max(.75, Music.vol.fx) : 1));   /* (loud: the crackling must be heard over the organ) */ if (orFireA.paused) { var p = orFireA.play(); if (p && p.catch) p.catch(function () {}); } }
-      else if (orFireA && !orFireA.paused && !orFireA._off) { orFireA._off = setTimeout(function () { orFireA._off = null; if (!(orBroken() || {}).fire) orFireA.pause(); }, 1200); }   // (the crackling stops once the water has landed)
+      if (on) { if (!orFireA) { orFireA = new Audio('sounds/fire.mp3?v=3'); orFireA.loop = true; } orFireA.volume = Math.max(0, Math.min(1, Music.vol ? Math.max(.75, Music.vol.fx) : 1));   /* (loud: the crackling must be heard over the organ) */ if (orFireA.paused) { var p = orFireA.play(); if (p && p.catch) p.catch(function () {}); } }
+      else if (orFireA && !orFireA.paused && !orFireA._off) { orFireA._off = setTimeout(function () { orFireA._off = null; if (!(orBroken() || {}).fire) orFireA.pause(); }, 2000); }   // (the crackling stops once the water has landed)
     } catch (e) {}
   }
   function orFx() {

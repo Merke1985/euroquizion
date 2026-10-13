@@ -4298,8 +4298,8 @@ body.hasdock main{padding-bottom:84px}
 .orfaces span.ok{box-shadow:0 0 0 2px #3ddc84}
 .orall{display:block;height:1.3vh;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
 .orall i{display:block;height:100%;background:linear-gradient(90deg,#ffd23f,#3ddc84);transition:width .3s}
-.orov.doused .orpfl{opacity:0;transition:opacity .5s ease .9s}
-.orov.doused .orpuppet svg{transition:filter .5s ease .9s}
+.orov.doused .orpfl{opacity:0;transition:opacity .4s ease 1.7s}
+.orov.doused .orpuppet svg{transition:filter .4s ease 1.7s}
 /* the stage invader sings */
 .orpeek .orpm{transform-box:fill-box;transform-origin:50% 0;scale:1 .35}
 .orov.invaded .orpeek .orpm{animation:orsing .32s ease-in-out infinite alternate}
