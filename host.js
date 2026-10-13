@@ -4454,7 +4454,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function tcQuestion(girls, used) {
     var n = girls.length, ALL = n === 1 ? ['color', 'hatyn', 'glassyn', 'shoes'] : ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'];   // (one star alone: no counting, just what they wore)
     var types = ALL.filter(function (t) { return used.indexOf(t) < 0; }); if (!types.length) types = ALL;
-    var fl = girls.filter(function (w) { return w.f; })[0]; if (fl && Math.random() < .5) types = ['flagq'];   // (an act with a flag: often a question about it)
+    var fl = girls.filter(function (w) { return w.f; })[0]; if (fl && used.indexOf('flagq') < 0 && Math.random() < .3) types = ['flagq'];   // (an act with a flag: now and then a question about it, at most once per game)
     var t = pick(types), cnt = function (f) { return girls.filter(f).length; };
     var nums = function (ans) { var hi = Math.max(3, n), lo = Math.max(0, Math.min(ans - Math.floor(Math.random() * 4), hi - 3)); var o = []; for (var i = lo; i < lo + 4; i++) o.push(String(i)); return { opts: o, ans: ans - lo }; };
     var q;
@@ -4621,13 +4621,29 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     // the photographers in front (dark silhouettes), each with a camera that flashes
     var dark = new T.MeshStandardMaterial({ color: '#111018', roughness: 1 }), camM = new T.MeshStandardMaterial({ color: '#2a2c3a' });
-    var cams = [-7.6, -4.4, 4.2, 7.4].map(function (x, i) {
+    var CAMP = [[-7.6, 7.6], [-4.4, 7], [4.2, 7], [7.4, 7.6], [-3.3, 8.5], [-1.5, 8.8], [1.6, 8.7], [3.4, 8.4]];   // (two rows of them on our side)
+    var cams = CAMP.map(function (xz, i) { var x = xz[0];
       var g = new T.Group(), body = new T.Mesh(new T.CapsuleGeometry(.55, .9, 4, 10), dark); body.position.y = .9; g.add(body);
       var head = new T.Mesh(new T.SphereGeometry(.38, 14, 12), dark); head.position.y = 2.05; g.add(head);
       var c = new T.Mesh(new T.BoxGeometry(.5, .34, .3), camM); c.position.set(.12, 2.05, -.42); g.add(c);
       var fl = new T.Mesh(new T.SphereGeometry(.1, 10, 8), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 })); fl.position.set(.25, 2.3, -.5); g.add(fl);
-      g.position.set(x, -.3, 7 + (i % 2) * .6); g.rotation.y = (x > 0 ? 1 : -1) * .35; g.scale.setScalar(.9); sc.add(g); front.push(g); return fl;
+      g.position.set(x, xz[1] > 8 ? -.5 : -.3, xz[1]); g.rotation.y = (x > 0 ? 1 : -1) * (.3 + (i % 3) * .08); g.scale.setScalar(.9); sc.add(g); front.push(g); return fl;
     });
+    // the fans: all along the other side of the carpet, behind the far rope, cheering
+    var fans = [], fanG = new T.Group(), FAN_TOPS = ['#ff5fa8', '#2f6ff0', '#f2b821', '#2fb35a', '#8b4fe0', '#ff8a2a', '#e0283a', '#40e0d0', '#ffffff'];
+    [-3.5, -4.4].forEach(function (z, row) {
+      for (var fx = -21.5 + row * .55; fx <= 21.5; fx += 1.1) {
+        var f = new T.Group(), top = new T.MeshStandardMaterial({ color: FAN_TOPS[Math.floor(Math.random() * FAN_TOPS.length)], roughness: .8 }), skin = new T.MeshStandardMaterial({ color: TC_SKIN[Math.floor(Math.random() * TC_SKIN.length)], roughness: .8 });
+        var bd = new T.Mesh(new T.CapsuleGeometry(.36, .7, 4, 8), top); bd.position.y = .75; f.add(bd);
+        var hd = new T.Mesh(new T.SphereGeometry(.27, 10, 8), skin); hd.position.y = 1.62; f.add(hd);
+        var hair = new T.Mesh(new T.SphereGeometry(.28, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), new T.MeshStandardMaterial({ color: TC_HAIR[Math.floor(Math.random() * TC_HAIR.length)], roughness: .7 })); hair.position.y = 1.66; f.add(hair);
+        var up = Math.random() < .55, arm = new T.Mesh(new T.CylinderGeometry(.08, .08, .75, 6), up ? skin : top); arm.position.set(.36, up ? 1.75 : .85, 0); arm.rotation.z = up ? -.25 : .15; f.add(arm);
+        if (up && Math.random() < .35) { var sign = new T.Mesh(new T.BoxGeometry(.7, .45, .05), new T.MeshStandardMaterial({ color: FAN_TOPS[Math.floor(Math.random() * FAN_TOPS.length)], emissive: '#222', roughness: .6 })); sign.position.set(.42, 2.3, 0); f.add(sign); }
+        var sc0 = .78 + Math.random() * .16; f.scale.setScalar(sc0); f.position.set(fx + (Math.random() - .5) * .3, .05, z + (Math.random() - .5) * .2); f.rotation.y = (Math.random() - .5) * .5;
+        fanG.add(f); fans.push({ g: f, ph: Math.random() * 6.3, sp: 5 + Math.random() * 4, arm: up ? arm : null });
+      }
+    });
+    sc.add(fanG);
     // the front rope and the photographers once more, on a see-through layer over the presenters (they stand behind the rope)
     front.forEach(function (o) { o.traverse(function (c) { c.layers.enable(1); }); });
     sc.traverse(function (o) { if (o.isLight) o.layers.enable(1); });
@@ -4639,6 +4655,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!host.isConnected) { st.alive = false; rn.dispose(); rn2.dispose(); return; }
       var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
       var t = now / 1000; beams[0].rotation.z = Math.sin(t * .5) * .45; beams[1].rotation.z = -Math.sin(t * .43 + 1) * .45;
+      fans.forEach(function (f) { var b = Math.max(0, Math.sin(t * f.sp + f.ph)); f.g.position.y = .05 + b * .12; if (f.arm) f.arm.rotation.z = -.25 + Math.sin(t * f.sp * .7 + f.ph) * .3; });   // (cheering: little jumps and waving)
       if (st.figs && st.figs.length) tc3Pose(st, Date.now() - st.t0);
       var fk = Math.max(0, 1 - (Date.now() - st.flashAt) / 200); flash.intensity = fk * 2.2;
       cams.forEach(function (f) { f.material.opacity = f === st.flashCam ? fk : 0; });
