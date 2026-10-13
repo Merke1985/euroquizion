@@ -1462,7 +1462,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts before the sound system breaks down (10 seconds to one minute). Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet: a solo star first, then groups of two to five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
-    zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Stay in the zone or you fall. The last ones standing win!' },
+    zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music. Stay in the zone or you fall. The last ones standing win!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes and fix the cables. Three phases, each harder than the last. The best repairer wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
@@ -4174,7 +4174,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['her', 'Our Dutch singer is about to perform with it, and she has asked for your help to look after her musical machine.'],
         ['him', 'She has divided three parts among you: the GEARBOX, the ORGAN PIPES and the WIRING. Your phone shows which one you keep an eye on.'],
         ['her', 'If your part breaks down, fix it on your phone as fast as you can!'],
-        ['him', 'Bring the song to a successful end! Points for what you fix and how fast, and the best repairer wins. 🔧']] },
+        ['him', 'Bring the song to a successful end! Points for what you fix and how fast, and the best mechanic wins. 🔧']] },
     rule: { sign: '🪩 We Will Rule the World', theme: 'rule',
       get art() { return '<div class="hsrule"><span class="ruball">🪩</span>' + RU_SINGER + '<div class="hsfloor"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'; },
       lines: [['her', 'Welcome to the disco floor! 🪩 In a moment you all land on it…'],
@@ -4193,7 +4193,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       lines: [['him', 'Welcome to space, Europe! 🌌 Tonight we perform high above the whole planet!'],
         ['her', 'Our singer stands on a very tall pole… and so do you! They sway, harder and harder.'],
         ['him', 'Keep your finger on the glowing zone on your phone: it moves with the music.'],
-        ['her', 'First slow, then faster, then total chaos! Stay in the zone, or you fall into space! 🚀'],
+        ['her', 'Stay in the zone, or you fall into space! 🚀'],
         ['him', 'Whoever is still standing at the end wins! And here she comes… 🌟']] },
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
@@ -5609,7 +5609,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // everyone gets a new station each phase. Personal score per phase: how much of your own task you finished, a bonus
   // for finishing fast, and a team bonus when the whole organ is fixed before the time runs out. Highest total wins.
   var OR_TEAMS = { 2: [1, 1, 0], 3: [1, 1, 1], 4: [2, 1, 1], 5: [2, 2, 1], 6: [2, 2, 2], 7: [3, 2, 2], 8: [3, 3, 2], 9: [3, 3, 3], 10: [4, 3, 3], 11: [4, 4, 3], 12: [4, 4, 4] };
-  var OR_TASK = [26000, 32000, 38000], OR_ST = ['speed', 'pitch', 'fx'], OR_NEED = { speed: [3, 5, 8], pitch: [3, 4, 6], fx: [1, 2, 3] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
+  var OR_TASK = [26000, 32000, 38000], OR_ST = ['speed', 'pitch', 'fx'], OR_NEED = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
   var OR_NAME = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring' };
   var OR_LINES = ['The organ is slowing down! Grab your tools! 🔧', 'Oh no, it’s falling apart even more! 💨', 'Total meltdown! Save the organ, save the song! 🔥'];
   // The barrel organ, big and ornate (an original drawing in the style of a Dutch street organ): a gilded, scalloped
@@ -5787,13 +5787,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'fixed'; push(); if (g.fixed) Music.douze(); else Music.buzz();
     clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd(); }, 5500);
   }
-  function orEnd() {
-    var g = G.organ; if (!g) return;
+  function orSongEnded() {   // the song is over: the game ends right there, whatever was fixed
+    var g = G.organ; if (!g || g.st === 'end' || g.st === 'intro') return;
+    clearInterval(orTick); clearTimeout(orTimer);
+    if (g.st === 'fix') { OR_ST.forEach(function (s2) { if (g.brk && g.brk[s2] && !g.shut[s2]) orShut(s2, false); }); g.last = {}; g.order.forEach(function (k) { g.last[k] = g.phPts[k] || 0; }); }
+    orEnd(true);
+  }
+  function orEnd(over) {
+    var g = G.organ; if (!g || g.st === 'end') return;
     var best = Math.max.apply(null, g.order.map(function (k) { return g.pts[k]; }));
     g.win = best > 0 ? g.order.filter(function (k) { return g.pts[k] === best; }) : [];
     var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
     g.st = 'end'; g.prize = big; push(); Music.douze();
-    setTimeout(function () { if (G.organ === g) orSong(false, true); }, 10000);   // (the song plays on for 10 more seconds, then fades out)
+    if (over) orSong(false); else setTimeout(function () { if (G.organ === g) orSong(false, true); }, 10000);   // (the song plays on for 10 more seconds, then fades out; or it just ended)
     clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.phase === 'organ') { G.organ = null; startRound(); } }, 15500);
   }
   // Sieneke's song, from a sound file (sounds/sjalalie.mp3; the YouTube video if that file isn't there). While a
@@ -5864,13 +5870,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       try { stage = 'organ'; yt.loadVideoById({ videoId: 'HdA2SsM3BLI', startSeconds: 0 }); yt.unMute(); yt.setVolume(55); } catch (e) {}
       orSongT = setInterval(function () {
         if (G.phase !== 'organ' || !G.organ) { clearInterval(orSongT); orSongT = null; return; }
-        try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
+        try { var st = yt.getPlayerState(); if (st === 0) { orSongEnded(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {}
       }, 1500);
     };
     if (orFile === false) useYt();
     else {
       try {
-        if (!orAud) { orAud = new Audio('sounds/sjalalie.mp3?v=1'); orAud.loop = true; orAud.preload = 'auto'; orAud.addEventListener('error', function () { if (orFile !== true && G.organ) { orAud = null; useYt(); } }); }
+        if (!orAud) { orAud = new Audio('sounds/sjalalie.mp3?v=1'); orAud.loop = false; orAud.preload = 'auto'; orAud.addEventListener('ended', function () { if (G.organ) orSongEnded(); }); orAud.addEventListener('error', function () { if (orFile !== true && G.organ) { orAud = null; useYt(); } }); }
         orAud.currentTime = 0; var pr = orAud.play();
         if (pr && pr.then) pr.then(function () { orFile = true; }).catch(function () { if (orFile !== true) { orAud = null; useYt(); } });
         else orFile = true;
@@ -5919,7 +5925,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
       box.classList.toggle('done', !!done); box.classList.toggle('brk', !!brk[s]); box.classList.toggle('empty', !who.length || !g.ph || g.st === 'end');
     });
-    var msg = g.st === 'intro' ? '' : g.st === 'brief' ? OR_LINES[g.ph - 1] + ' Check your phone for your station!' : g.st === 'fix' ? 'Repair your part on your phone! Together you can save the organ! 🔧' : g.st === 'fixed' ? '🎶 Keep going! 🔧' : g.st === 'end' ? (g.win.length ? '🏆 Best repairer: ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + '!' + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var msg = g.st === 'intro' ? '' : g.st === 'brief' ? OR_LINES[g.ph - 1] + ' Check your phone for your station!' : g.st === 'fix' ? 'Repair your part on your phone! Together you can save the organ! 🔧' : g.st === 'fixed' ? '🎶 Keep going! 🔧' : g.st === 'end' ? (g.win.length ? '🏆 Best mechanic: ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + '!' + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.ormsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
     var bd = ov.querySelector('.orboard'), bh = g.st === 'end' ? g.order.slice().sort(function (a, b) { return g.pts[b] - g.pts[a]; }).map(function (k, i) { var p = players[k]; if (!p) return ''; return '<div class="tcrow' + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (g.last && g.last[k] != null && g.st === 'fixed' ? '+' + g.last[k] : '') + '</em><i>' + g.pts[k] + '</i></div>'; }).join('') : '';
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }

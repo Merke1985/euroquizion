@@ -783,8 +783,8 @@
   // ---------- Sja-la-lie Sja-la-Mayhem! ----------
   // Your station's repair job: turn the crank (SPEED), slide the pipes into the dashed lines (PITCH), or unplug the wrong
   // cables and plug them into the socket of their own colour (SOUND EFFECTS). Each phone gets its own puzzle.
-  var orKey = '', orD = 0, orSentD = 0, orPz = null, OR_COLS = ['#e53950', '#2f80ed', '#f2c12e', '#27ae60', '#9b51e0'];
-  var OR_HELP = { speed: 'The gears are jammed! Turn the brass crank: drag the handle round and round.', pitch: 'The pipes slipped out of place! Slide each pipe until its top sits in the dashed band.', fx: 'The wires got mixed up! Tap a wrong plug to unplug it, then drag it to the socket of its own colour.' };
+  var orKey = '', orD = 0, orSentD = 0, orPz = null, OR_COLS = ['#e53950', '#2f80ed', '#f2c12e', '#27ae60', '#9b51e0', '#ff8a2a'];
+  var OR_HELP = { speed: 'The gears are jammed! Turn the brass crank: drag the handle round and round.', pitch: 'The pipes slipped out of place! Slide each pipe until its top sits in the dashed band.', fx: 'Some wires came loose! Drag each loose plug to the socket of its own colour.' };
   var OR_TITLE = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring' };
   function orReport(o) { var g = state && state.organ; if (!net || !g || g.st !== 'fix') return; net.send('organ', { pid: pid, id: g.id, ph: g.ph, bn: (g.bn || {})[g.sta[pid]] || 0, d: orD }); orSentD = orD; }
   function orStep(d) { if (d <= orD) return; orD = d; try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} Music.plop(d); orReport(); var c = $('orui').querySelector('.orcount'); if (c) c.textContent = orD + ' / ' + orPz.of; if (orD >= orPz.of) setTimeout(function () { if (state) orView(state); }, 400); }
@@ -795,7 +795,7 @@
     if (g.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🎡 Get your tools ready…'; $('waitsub').textContent = ''; return; }
     if (g.st === 'end') {
       box.classList.add('hidden'); var w = (g.win || []).indexOf(pid) >= 0;
-      $('waittitle').textContent = w ? '🏆 Best repairer!' : '🎡 The organ is saved!'; $('waitsub').textContent = 'Your repair points: ' + ((g.pts || {})[pid] || 0); return;
+      $('waittitle').textContent = w ? '🏆 Best mechanic!' : '🎡 The organ is saved!'; $('waitsub').textContent = 'Your repair points: ' + ((g.pts || {})[pid] || 0); return;
     }
     if (g.st === 'fixed') { box.classList.add('hidden'); $('waittitle').textContent = '🎶 Keep going!'; $('waitsub').textContent = g.ph < 3 ? 'Next phase coming up… 🔧' : ''; return; }
     var key = g.id + '|' + g.ph + '|' + ((g.bn || {})[sta] || 0);   /* (each breakdown: a fresh task) */
@@ -812,14 +812,14 @@
     if (sta === 'speed') orSpeed(pz); else if (sta === 'pitch') orPitch(pz); else orFx(pz);
   }
   function orMake(sta, ph) {
-    var of = { speed: [3, 5, 8], pitch: [3, 4, 6], fx: [1, 2, 3] }[sta][ph - 1];
+    var of = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4] }[sta][ph - 1];
     if (sta === 'pitch') { var tol = [7, 5, 3.5][ph - 1], pipes = []; for (var i = 0; i < of; i++) { var t = 25 + Math.random() * 55, h; do { h = 12 + Math.random() * 80; } while (Math.abs(h - t) < tol * 2 + 8); pipes.push({ t: t, h: h, ok: false }); } return { of: of, tol: tol, pipes: pipes }; }
     if (sta === 'fx') {
       var m = of + 2, cab = []; for (var c = 0; c < m; c++) cab.push({ col: c, at: -1 });
       var socks = shuffle(cab.map(function (x) { return x.col; }).concat([-1]));   // the sockets (−1: the grey spare)
       var wrong = shuffle(cab.map(function (x, i) { return i; })).slice(0, of);
       cab.forEach(function (x, i) { x.at = socks.indexOf(i); });
-      wrong.forEach(function (w, i) { cab[w].at = i < of - 1 ? socks.indexOf(wrong[i + 1]) : socks.indexOf(-1); });
+      wrong.forEach(function (w) { cab[w].at = -1; });   // (the loose ones are already unplugged: just plug them in)
       return { of: of, cab: cab, socks: socks, base: m - of };
     }
     return { of: of };
@@ -851,7 +851,7 @@
     var z = orPz, m = z.cab.length, ns = z.socks.length;
     pz.innerHTML = '<div class="orfx"><svg class="orwires" viewBox="0 0 300 300" preserveAspectRatio="none"></svg>' + z.cab.map(function (c, i) { return '<span class="orsrc" style="left:' + ((i + 0.5) / m * 100) + '%;--c:' + OR_COLS[c.col] + '"></span>'; }).join('') +
       z.socks.map(function (c, j) { return '<span class="orsock' + (c < 0 ? ' spare' : '') + '" style="left:' + ((j + 0.5) / ns * 100) + '%;--c:' + (c < 0 ? '#666' : OR_COLS[c]) + '"></span>'; }).join('') +
-      z.cab.map(function (c, i) { return '<span class="orplug" data-i="' + i + '" style="--c:' + OR_COLS[c.col] + '"></span>'; }).join('') + '</div><p class="orhint">Tap a wrong plug to unplug it, then drag it home.</p>';
+      z.cab.map(function (c, i) { return '<span class="orplug" data-i="' + i + '" style="--c:' + OR_COLS[c.col] + '"></span>'; }).join('') + '</div><p class="orhint">Drag each loose plug to the socket of its own colour.</p>';
     var box = pz.querySelector('.orfx'), wires = pz.querySelector('.orwires');
     var pos = function (c, i) { if (c.drag) return c.drag; if (c.at >= 0) return [(c.at + 0.5) / ns * 300, 262]; return [(i + 0.5) / m * 300, 160 + (i % 2) * 22]; };
     var draw = function () {
