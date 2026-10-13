@@ -333,8 +333,8 @@
         var fc = m && m.flag && m.flagc ? m.flagc : ''; if (fl.getAttribute('data-cc') !== fc) { fl.setAttribute('data-cc', fc); fl.querySelector('.cloth').style.backgroundImage = fc ? 'url(https://flagcdn.com/w640/' + fc + '.png)' : ''; fl.classList.toggle('cc', !!fc); }
         fl.classList.toggle('on', !!(m && m.flag));
         if (m && m.flag) requestAnimationFrame(flagFit); pl.classList.toggle('on', !!(m && m.half));
-        var cn = $('ccnote'), ck = m && m.cc ? m.cc : ''; if (cn.getAttribute('data-cc') !== ck) { cn.setAttribute('data-cc', ck); cn.innerHTML = ck ? '<img src="https://flagcdn.com/w40/' + ck + '.png" alt=""><span>You get bonus points for answering questions about songs from the country you represent' + (countries[ck] ? ' (' + esc(countries[ck]) + ')' : '') + '!</span>' : ''; }
-        cn.classList.toggle('hidden', !ck);
+        var cn = $('ccnote'), ck = m && m.cc ? m.cc : ''; if (cn.getAttribute('data-cc') !== ck) { cn.setAttribute('data-cc', ck); cn.innerHTML = ck ? '<img src="https://flagcdn.com/w40/' + ck + '.png" alt=""><span>' + (countries[ck] ? esc(countries[ck]) + '! ' : '') + 'This one is about your country: double points! ✨</span>' : ''; }
+        cn.classList.toggle('hidden', !(ck && m.cch)); cn.classList.toggle('cchit', !!(ck && m.cch));   /* (only when the question is about your own country) */
         $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc'); $('flagmsg').classList.toggle('hidden', !(m && m.flag && q.type === 'mc'));   /* the flag hides every answer: only the outlines are left, so you pick blind */
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
@@ -704,6 +704,7 @@
   }
   function zgView(s) {
     var z = s.zg, box = $('zgui'), mine = z.order.indexOf(pid) >= 0;
+    if (z.len) ZG_LEN = z.len;   // (as long as the song)
     show('v-wait');
     if (!zgS || zgS.id !== z.id) { zgStop(); zgS = { id: z.id, seed: z.seed, start: 0, f: 0, inT: 0, tot: 0, outFor: 0, sent: 0, sentAt: 0, fell: false, fin: false, raf: 0, box: null }; }
     var S = zgS, fell = S.fell || (z.out || {})[pid] != null;

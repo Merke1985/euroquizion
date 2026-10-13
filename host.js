@@ -249,7 +249,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, cc: p.cc || '', col: p.col, ccb: G.phase === 'reveal' && p.got ? p.ccb || '' : '', flagc: p.flagc || '', robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, cc: p.cc || '', cch: G.phase === 'guess' && !G.draw && !(G.q && G.q.battle) && ccHit(p), col: p.col, ccb: G.phase === 'reveal' && p.got ? p.ccb || '' : '', flagc: p.flagc || '', robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.frozenLeft != null) s.itemBusy = true;   /* an item is going off: nobody can use one right now */
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
@@ -1624,7 +1624,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (M && M.ov.isConnected && M.hi) {   // the slot machine is still on screen: the votes go on the four games; the most votes wins
         var vs = kinds4.map(function (k, i2) { return tally[i2] || 0; }), top = Math.max.apply(null, vs), tied = kinds4.filter(function (k, i2) { return vs[i2] === top; });
         var cellOf = function (k) { return M.hi.filter(function (c) { return c.getAttribute('data-k') === k; })[0]; };
-        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = (vs[i2] ? vs[i2] + ' 🗳️' : '0') + '<span class="slvv">' + vot[i2].map(function (p) { return '<i>' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ if (tied.indexOf(k) < 0) c.classList.add('out'); } });
+        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = '<span class="slvv">' + vot[i2].map(function (p) { return '<i>' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ if (tied.indexOf(k) < 0) c.classList.add('out'); } });
         M.ov.classList.remove('voting'); M.ov.classList.add('counted'); G.phase = 'pspin'; G.barMs = 0; push();
         var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); }); M.ov.classList.remove('ticking'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
         if (tied.length < 2) { M.ov.querySelector('.slsub').textContent = 'Most votes!'; slotT = setTimeout(land, 1400); return; }
@@ -4062,7 +4062,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ];
     W.forEach(function (w, k) { h += '<g class="edwk2" style="animation-delay:' + (2 + k * 10) + 's"><g class="edbob">' + w + '</g></g>'; });
     // the folding screen (left) and the clothes rack (right), in front of them
-    h += '<g' + K + '>' + [0, 1, 2, 3].map(function (i) { return '<path d="M' + (236 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (272 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (272 + i * 36) + ' 436 L' + (236 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3].map(function (i) { return '<circle cx="' + (254 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
+    h += '<g' + K + '>' + [0, 1, 2, 3].map(function (i) { return '<path d="M' + (272 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (308 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (308 + i * 36) + ' 436 L' + (272 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3].map(function (i) { return '<circle cx="' + (290 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
     h += '<rect x="556" y="96" width="232" height="8" rx="4" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="560" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="778" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/>';
     s.rack.forEach(function (d, i) {
       var x = 590 + i * 44, col = ED_COL[d.c];
@@ -4960,7 +4960,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function zgGo() {
     var g = G.zg; if (!g || G.phase !== 'zg') return;
-    g.st = 'play'; g.t0 = Date.now(); g.ends = g.t0 + ZG_LEN * 1000; g.stage = 0; push(); Music.ding(); zgSong(true);
+    ZG_LEN = ZG_LEN0; g.st = 'play'; g.t0 = Date.now(); g.ends = g.t0 + ZG_LEN * 1000; g.len = ZG_LEN; g.stage = 0; push(); Music.ding(); zgSong(true);
+    if (!REMOTE) { var lenTry = 0, lenT = setInterval(function () { if (G.zg !== g || g.st !== 'play' || ++lenTry > 40) { clearInterval(lenT); return; } var d = 0; try { d = yt.getDuration() || 0; } catch (e) {} if (d > 100) { clearInterval(lenT); ZG_LEN = g.len = Math.max(150, Math.min(260, Math.floor(d - 1))); g.ends = g.t0 + ZG_LEN * 1000; push(); } }, 500); }   // (the game lasts as long as the song: its length, once YouTube knows it)
     clearInterval(zgLoop); zgLoop = setInterval(zgStep, 100);
   }
   // The host doesn't steer anything: the path is fixed (zgPath), every phone checks its own finger and only reports
@@ -5022,7 +5023,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function zgSnap() {
     var g = G.zg;
-    return { id: g.id, seed: g.seed, st: g.st, order: g.order, el: g.st === 'play' ? Date.now() - g.t0 : 0, stage: g.stage || 0, out: g.out, win: g.done ? g.win : null, acc: g.done ? g.acc : null, prize: g.prize || 0, done: !!g.done };
+    return { id: g.id, len: g.len || ZG_LEN, seed: g.seed, st: g.st, order: g.order, el: g.st === 'play' ? Date.now() - g.t0 : 0, stage: g.stage || 0, out: g.out, win: g.done ? g.win : null, acc: g.done ? g.acc : null, prize: g.prize || 0, done: !!g.done };
   }
   // The big screen: space, the singer's pole in the middle, the players' poles around it, swaying together.
   function zgAnnounce(html) {   // a big message in the middle of the screen for a few seconds
@@ -5045,6 +5046,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function zgShow() {
     var g = G.zg; if (!g) return;
+    if (g.len) ZG_LEN = g.len;   // (a second screen: the length from the main one)
     var ov = $('zgov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'zgov'; ov.className = 'zgov enter';
@@ -5895,8 +5897,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         g.bn[s2] = (g.bn[s2] || 0) + 1; g.brk[s2] = Date.now() + offs[i]; g.shut[s2] = false;
         g.order.forEach(function (k) { if (g.sta[k] === s2) { g.prog[k] = { d: 0, of: OR_NEED[s2][g.ph - 1], at: 0 }; g.botGo[k] = 0; } });
       });
-      g.ends = Date.now() + Math.max.apply(null, offs) + OR_TASK[g.ph - 1]; g.gBusy = false; push();
+      g.ends = Date.now() + Math.max.apply(null, offs) + orBudget(g); g.gBusy = false; push();
     }, Math.max(0, at - Date.now()));
+  }
+  function orBudget(g) {   // the repair time: shorter when the song is running ahead (each phase has to fit in its part of the song)
+    var full = OR_TASK[g.ph - 1], sn = orSongNow(); if (!sn) return full;
+    var end = g.ph < 3 ? OR_PH_AT[g.ph] : sn.d - 10, left = Math.max(1, g.groups.length - g.gi);
+    return Math.round(Math.max(7000, Math.min(full, ((end - sn.t) / left) * 1000 - 2500)));
   }
   function orOpen(g, s2) { return !!(g.brk && g.brk[s2] && !g.shut[s2] && Date.now() >= g.brk[s2]); }
   function orDoneSt(g, s2) { return g.order.filter(function (k) { return g.sta[k] === s2; }).every(function (k) { var pr = g.prog[k]; return !pr || pr.d >= pr.of || (players[k] && players[k].off); }); }
@@ -5936,13 +5943,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.fixed = g.allOk; g.last = {};
     g.order.forEach(function (k) { var pts = g.phPts[k] + (g.fixed ? 15 : 0); if (g.fixed) g.pts[k] += 15; g.last[k] = pts; });
     g.st = 'fixed'; push(); if (g.fixed) Music.douze(); else Music.buzz();
-    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd('fade'); }, g.ph < 3 ? 4000 : 10000);   // (after the last phase: the song plays on for 10 seconds, then the end)
+    var sn = orSongNow(), wait = g.ph < 3 ? 4000 : 10000;   // the game fills the song: phase 2 doesn't start before 0:58, phase 3 not before 2:02, and after the last one the song plays to its end
+    if (sn) { if (g.ph < 3) wait = Math.max(wait, (OR_PH_AT[g.ph] - sn.t) * 1000); else wait = Math.max(6000, Math.min(30000, (sn.d - sn.t) * 1000 + 300)); }
+    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd('fade'); }, wait);
   }
   function orSongEnded() {   // the song is over: the game ends right there, whatever was fixed
     var g = G.organ; if (!g || g.st === 'end' || g.st === 'intro') return;
     clearInterval(orTick); clearTimeout(orTimer);
     if (g.st === 'fix') { OR_ST.forEach(function (s2) { if (g.brk && g.brk[s2] && !g.shut[s2]) orShut(s2, false); }); g.last = {}; g.order.forEach(function (k) { g.last[k] = g.phPts[k] || 0; }); }
     orEnd(true);
+  }
+  var OR_PH_AT = [0, 58, 122];   // (song time at which phases 2 and 3 may start, at the earliest)
+  function orSongNow() {   // where the song is: { t: seconds in, d: its length }, or null
+    if (REMOTE) return null;
+    try {
+      if (orFile && orAud && orAud.duration > 0) return { t: orAud.currentTime, d: orAud.duration };
+      var d = yt.getDuration() || 0; if (d > 0 && yt.getPlayerState() === 1) return { t: yt.getCurrentTime() || 0, d: d };
+    } catch (e) {}
+    return null;
   }
   function orEnd(over) {
     var g = G.organ; if (!g || g.st === 'end') return;

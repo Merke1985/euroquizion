@@ -4343,3 +4343,15 @@ body.hasdock main{padding-bottom:84px}
 @keyframes orfist{0%{opacity:1;transform:translateX(-45vw) scale(.6)}25%{opacity:1;transform:translateX(0) scale(1.25)}32%{transform:translateX(-2vw) scale(1.1)}70%{opacity:1;transform:translateX(-1vw) scale(1.1)}100%{opacity:0;transform:translateX(-6vw) scale(.9)}}
 .orov.punched .orpeek{translate:0 -14%!important;rotate:5deg!important;animation:orslam 1.6s ease-in .3s both!important}
 @keyframes orslam{0%{transform:none;opacity:1}12%{transform:translate(12%,-4%) rotate(18deg);opacity:1}100%{transform:translate(260%,-180%) rotate(760deg) scale(.6);opacity:0}}
+/* Edgar, Green Room: the guests never stand still in front of a chair: they walk out, sit down in their own chair (longer), get a drink at the fridge, and only wander about without stopping */
+@keyframes edsit{0%,2%{transform:translateX(var(--from))}6%{transform:translateX(0)}6%,17%{transform:translateX(0)}21.5%,31.5%{transform:translateX(var(--fr))}39.5%,46%{transform:translateX(var(--from))}51%{transform:translateX(var(--mid))}56%,66%{transform:translateX(var(--from))}71%{transform:translateX(var(--mid2))}76%,100%{transform:translateX(var(--from))}}
+@keyframes edstand{0%,6%{opacity:1}6.25%,16.75%{opacity:0}17%,100%{opacity:1}}
+@keyframes edseat{0%,6%{opacity:0}6.25%,16.75%{opacity:1}17%,100%{opacity:0}}
+@keyframes edfopen{0%,21%{opacity:0}21.5%,32%{opacity:1}32.5%,100%{opacity:0}}
+@keyframes edfdoor{0%,20.5%{opacity:0;transform:scaleX(.1)}20.75%{opacity:1;transform:scaleX(.1)}21.5%,31.25%{opacity:1;transform:scaleX(1)}32%{opacity:1;transform:scaleX(.1)}32.25%,100%{opacity:0;transform:scaleX(.1)}}
+.ccnote.cchit{background:linear-gradient(90deg,#ffd23f,#ff9f1c);color:#2b1830;font-weight:900;font-size:.95rem;box-shadow:0 0 20px rgba(255,210,63,.6);animation:cchit 1s ease-in-out infinite alternate}
+@keyframes cchit{to{box-shadow:0 0 34px rgba(255,210,63,.95)}}
+#v-guess .ccnote.cchit{order:-1;margin:10px 0}
+#slotov.counted .slcell .slvv{margin-top:.2vh;gap:.15vh .35vw}
+#slotov.counted .slcell .slvv i{font-size:clamp(.5rem,.7vw,.72rem)}
+#slotov.counted .slcell .slvv .char{width:2.2vh;height:2.2vh}
