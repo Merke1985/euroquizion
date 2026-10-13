@@ -1580,6 +1580,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var target = M.n * (M.REP - 2) + order.indexOf(four[0]), cw = M.st.children[1].offsetLeft - M.st.children[0].offsetLeft;
     M.ov.classList.add('four');   // four golden windows instead of one: that's where the four games will land
     four.forEach(function (k, j) { var w = document.createElement('div'); w.className = 'slwin slw4'; w.style.left = 'calc(50% + ' + ((j - (four.length - 1) / 2) * cw) + 'px)'; M.win.appendChild(w); });
+    M.st.style.transform = 'translateX(' + (M.place(M.n + Math.floor(Math.random() * M.n)) - cw * (four.length - 1) / 2) + 'px)';   // (before the spin, the games already sit neatly in the four windows)
     clearTimeout(slotT); slotT = setTimeout(function () {
       var ov = M.ov, st = M.st; if (!ov.isConnected) return;
       ov.querySelector('.slbtn').classList.add('push'); ov.querySelector('.sllever').classList.add('pull'); Music.blip();
@@ -1677,7 +1678,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var dl = function (now) {
       if (!ov.isConnected) return;
       var dt = Math.min(0.1, (now - last) / 1000), vw = innerWidth / 100, e = ov._spin0 ? (Date.now() - ov._spin0) / 5200 : 1; last = now;
-      var P = ds[0].children[12].offsetLeft - ds[0].children[0].offsetLeft || 1;   // (one round of the twelve symbols)
+      var P = ov._P || (ov._P = ds[0].children[12].offsetLeft - ds[0].children[0].offsetLeft) || 1;   // (one round of the twelve symbols)
       pos = (pos + (1.6 + 30 * Math.pow(Math.max(0, 1 - e), 2.4)) * vw * dt) % P;
       ds[0].style.transform = 'translateX(' + (-pos) + 'px)'; if (ds[1]) ds[1].style.transform = 'translateX(' + (pos - P) + 'px)';
       requestAnimationFrame(dl);
@@ -2740,8 +2741,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
     // what they say: who they are, what we play tonight and how it works, then off we go
     var lines = [['him', 'Good evening, Europe! I’m Felix…'], ['her', '…and I’m Stella! Welcome to EuroQuizion!']].concat(showPlan());
-    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
-    lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', vary('first')]);
+    // Party with the boutique: after the plan, straight to Lynda (she gives everyone a first item), and only then the first trivia
+    var shopNow = G.atype === 'party' && shopOn() && !G.mgTest && !G.itemTest && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2;
+    if (shopNow) lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'But first… let’s pay a visit to Lynda in Woodruff’s Boutique! 🛍️']);
+    else {
+      lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
+      lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', vary('first')]);
+    }
+    if (shopNow) {
+      G.shopFirst = true;
+      lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
+      step(3600, function () {
+        v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive');
+        G.mode = G.lastParty = 'shop'; G.mgBase = null;
+        v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
+        setTimeout(function () { shopVisit(null, 1, function () { backFromShop(2, then, true); }); }, 1400);
+      });
+      return;
+    }
     lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
     step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
@@ -3056,12 +3073,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { hostHold = false; }, 7600 + d);
   }
   // Back in the studio after the boutique: the presenters hope you found something nice, and it's trivia time again.
-  function backFromShop(n, then) {
+  function backFromShop(n, then, first) {
     if (REMOTE) { then(); return; }
     G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
     hostHold = true; clearTimeout(hostT.away);
-    hostSay('him', vary('souvenir') + ' ' + vary('onward'), 3600);
-    setTimeout(function () { hostSay('her', G.mgTest ? 'On to the next party game! 🎉' : vary('trivia'), 3000); }, 3300);   // (testing the party games: there is no trivia in between)
+    hostSay('him', first ? 'Everyone has their first item from Lynda! Grab your phones… ✨' : vary('souvenir') + ' ' + vary('onward'), 3600);   // (the very first visit, right after the opening: now the first trivia)
+    setTimeout(function () { hostSay('her', first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia'), 3000); }, 3300);   // (testing the party games: there is no trivia in between)
     setTimeout(function () { hostHold = false; then(); }, 6400);
   }
   function shopIntro() {
@@ -5267,7 +5284,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // (hold a direction on the phone's D-pad); every tile you step on becomes your colour. Two players moving into the
   // same tile (or swapping places) both bounce back and are stunned for 3 seconds; walking into a player who stands
   // still stuns only you. When the song ends (2:22), whoever owns the most tiles wins. The host runs all moves at once, per tick.
-  var RU_MS = 134000, RU_TICK = 200, RU_STEP = 1000, RU_STUN = 3000, ruLoop = null, ruTimer = null, ruSent = 0;
+  var RU_MS = 68000, RU_TICK = 200, RU_STEP = 1000, RU_STUN = 3000, ruLoop = null, ruTimer = null, ruSent = 0;
   var RU_DIRS = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] };
   var RU_SINGER = '<svg class="rusing" viewBox="0 0 120 160" aria-hidden="true"><defs><linearGradient id="rusuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe066"/><stop offset=".5" stop-color="#f2b821"/><stop offset="1" stop-color="#c47f0a"/></linearGradient></defs>' +
     '<path d="M44 80 L40 150 L56 150 L60 104 L64 150 L80 150 L76 80 Z" fill="url(#rusuit)"/><path d="M38 150 h20 v6 h-22 z M62 150 h20 v6 h-22 z" fill="#fff"/>' +
@@ -5337,7 +5354,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, 5600);
     }, REMOTE ? 1000 : t);
   }
-  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 142000, ruSongT = null;   // (RU_STOP: the game stops at 2:22 in the song)
+  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 76000, ruSongT = null;   // (RU_STOP: the game stops at 1:16 in the song)
   function ruSay(who, txt) {
     var ov = $('ruov'); if (!ov) return;
     [].forEach.call(ov.querySelectorAll('.rubub'), function (x) { x.classList.remove('on'); });
@@ -5389,7 +5406,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var now = Date.now();
     if (now >= g.ends) { ruEnd(); return; }
     ruItemTick(g, now);
-    if (!g.faded && g.ends - now <= 2000) { g.faded = 1; ruSong(false, 2000); }   // (2:20 to 2:22: the song fades out)
+    if (!g.faded && g.ends - now <= 2000) { g.faded = 1; ruSong(false, 2000); }   // (the last two seconds: the song fades out)
     // who moves this tick, and where to
     var mv = {};
     g.order.forEach(function (k) {
@@ -5954,7 +5971,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var orInvA = null;
   function orInvSnd(on) {   // stage invaders: their own song starts blasting while they're on the stage
     try {
-      if (on) { if (!orInvA) { orInvA = new Audio('sounds/invader.mp3'); orInvA.loop = true; } orInvA.volume = Math.max(0, Math.min(1, Music.vol ? Math.max(.6, Music.vol.fx) : 1)); if (orInvA.paused) { orInvA.currentTime = 0; var p = orInvA.play(); if (p && p.catch) p.catch(function () {}); } }
+      if (on) { if (!orInvA) { orInvA = new Audio('sounds/invader.mp3'); orInvA.loop = true; } orInvA.volume = Math.max(0, Math.min(1, .8 * (Music.vol ? Math.max(.6, Music.vol.fx) : 1))); if (orInvA.paused) { orInvA.currentTime = 0; var p = orInvA.play(); if (p && p.catch) p.catch(function () {}); } }
       else if (orInvA && !orInvA.paused) orInvA.pause();
     } catch (e) {}
   }
@@ -5962,7 +5979,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function orFireSnd(on) {   // the crackling fire, while it burns
     try {
       if (on) { if (!orFireA) { orFireA = new Audio('sounds/fire.mp3'); orFireA.loop = true; } orFireA.volume = Math.max(0, Math.min(1, .7 * (Music.vol ? Music.vol.fx : 1))); if (orFireA.paused) { var p = orFireA.play(); if (p && p.catch) p.catch(function () {}); } }
-      else if (orFireA && !orFireA.paused) orFireA.pause();
+      else if (orFireA && !orFireA.paused && !orFireA._off) { orFireA._off = setTimeout(function () { orFireA._off = null; if (!(orBroken() || {}).fire) orFireA.pause(); }, 1200); }   // (the crackling stops once the water has landed)
     } catch (e) {}
   }
   function orFx() {
@@ -5974,7 +5991,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (br.pitch) { orAud.preservesPitch = false; orAud.mozPreservesPitch = false; orAud.webkitPreservesPitch = false; orAud.playbackRate = base * (1 + .06 * Math.sin(t * 5.5) + .03 * Math.sin(t * 13)); }
         else { orAud.preservesPitch = true; orAud.mozPreservesPitch = true; orAud.webkitPreservesPitch = true; orAud.playbackRate = base; }
         var vol = Math.max(0, Math.min(1, .8 * (Music.vol ? Music.vol.music : 1))), k = br.fx ? g.fxk : '', n = orGraph();
-        if (br.sec) vol *= .18;   // (stage invaders: their song blasts over the organ)
+        if (br.sec) vol *= .45;   // (stage invaders: their song blasts over the organ)
         orAud.volume = k === 'cut' && (t % 1.7) < .22 ? vol * .08 : vol;   // cutting out
         if (n) {
           var ty = k === 'under' ? 'lowpass' : k === 'phone' ? 'bandpass' : 'allpass';
@@ -5986,7 +6003,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         }
         if (k === 'skip' && Date.now() - orSkipAt > 380) { orSkipAt = Date.now(); if (Math.random() < .7) orAud.currentTime = Math.max(0, orAud.currentTime - .3); }   // a skipping CD
       } catch (e) {}
-    } else { try { yt.setPlaybackRate(base < 1 ? .75 : 1); yt.setVolume(br.sec ? 12 : 55); } catch (e) {} }
+    } else { try { yt.setPlaybackRate(base < 1 ? .75 : 1); yt.setVolume(br.sec ? 28 : 55); } catch (e) {} }
   }
   function orSong(on, fade) {
     clearInterval(orSongT); orSongT = null; clearInterval(orFxT); orFxT = null;
@@ -6041,7 +6058,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var leds = ''; for (var li = 0; li < 9; li++) leds += '<i style="--i:' + li + '"></i>';
       if (g.st !== 'intro') ov.classList.add('live');
       ov.innerHTML = '<div class="orbg"><div class="orleds l">' + leds + '</div><div class="orleds r">' + leds + '</div><div class="orrig">' + leds + leds + '</div><div class="orbeams"><i></i><i></i><i></i><i></i></div></div><div class="orfloor"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
-        '<div class="ormid">' + '<div class="orpeek"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M40 60 Q30 150 46 236 L154 236 Q170 150 160 60 Q150 18 100 16 Q50 18 40 60 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M58 160 Q100 150 142 160 L150 240 L50 240 Z" fill="#2c2c34" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M78 168 Q100 196 122 168" fill="none" stroke="#cfd3dc" stroke-width="3"/><path d="M84 172 Q100 214 116 172" fill="none" stroke="#cfd3dc" stroke-width="2.4"/><path d="M100 200 L100 226" stroke="#cfd3dc" stroke-width="3"/><path d="M96 226 L100 238 L104 226 Z" fill="#cfd3dc"/><rect x="88" y="128" width="24" height="32" rx="9" fill="#d9a582" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="38" ry="44" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M60 92 Q58 40 100 38 Q142 40 140 92 Q136 74 128 70 L126 84 L118 66 L112 82 L104 64 L98 82 L90 66 L84 84 L76 68 L72 86 Q66 80 60 92 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M62 92 Q56 140 66 176 M138 92 Q146 140 134 176" stroke="#15101a" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M80 98 Q87 94 94 98 M106 98 Q113 94 120 98" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M84 118 Q100 134 116 118 Q100 126 84 118 Z" fill="#fff" stroke="#8a3a3a" stroke-width="2.4"/><ellipse cx="80" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="120" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><circle cx="48" cy="200" r="13" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/></svg></div>' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
+        '<div class="ormid">' + '<div class="orpeek"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M40 60 Q30 150 46 236 L154 236 Q170 150 160 60 Q150 18 100 16 Q50 18 40 60 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M58 160 Q100 150 142 160 L150 240 L50 240 Z" fill="#2c2c34" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M78 168 Q100 196 122 168" fill="none" stroke="#cfd3dc" stroke-width="3"/><path d="M84 172 Q100 214 116 172" fill="none" stroke="#cfd3dc" stroke-width="2.4"/><path d="M100 200 L100 226" stroke="#cfd3dc" stroke-width="3"/><path d="M96 226 L100 238 L104 226 Z" fill="#cfd3dc"/><rect x="88" y="128" width="24" height="32" rx="9" fill="#d9a582" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="38" ry="44" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M60 92 Q58 40 100 38 Q142 40 140 92 Q136 74 128 70 L126 84 L118 66 L112 82 L104 64 L98 82 L90 66 L84 84 L76 68 L72 86 Q66 80 60 92 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M62 92 Q56 140 66 176 M138 92 Q146 140 134 176" stroke="#15101a" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M80 98 Q87 94 94 98 M106 98 Q113 94 120 98" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse class="orpm" cx="100" cy="122" rx="10" ry="8" fill="#7a1430" stroke="#8a3a3a" stroke-width="2.4"/><path class="orpm" d="M92 117 Q100 115 108 117" stroke="#fff" stroke-width="2.4" fill="none"/><ellipse cx="80" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="120" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><circle cx="48" cy="200" r="13" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/></svg></div>' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
         '<div class="orpuppet p1">' + OR_PUPPET1 + '<div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '<div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
         '<div class="orhosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub orbub him"></div><div class="tcbub orbub her"></div>' +
         '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orsta sec"></div><div class="ormsg"></div><div class="orboard"></div>';
@@ -6060,7 +6077,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     OR_ST.forEach(function (s) {
       var box = ov.querySelector('.orsta.' + s), who = g.order.filter(function (k) { return g.sta[k] === s; });
       var done = who.length && orOpen(g, s) && who.every(function (k) { return g.prog[k] && g.prog[k].d >= g.prog[k].of; });
-      var h = g.ph && g.st !== 'end' ? '<div class="orst">' + OR_NAME[s] + (done ? ' ✅ fixed' : brk[s] ? ' <i class="orbad">⚠️ BROKEN!</i>' : ' <i class="orok">👍 OK</i>') + '</div>' + who.map(function (k) { var p = players[k], pr = g.prog[k]; if (!p || !pr) return ''; return '<div class="orpl' + (pr.d >= pr.of ? ' ok' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em><i style="width:' + Math.round(pr.d / pr.of * 100) + '%"></i></em><b>' + pr.d + '/' + pr.of + '</b></div>'; }).join('') : '';
+      var h = g.ph && g.st !== 'end' ? '<div class="orst">' + OR_NAME[s] + (done ? ' ✅ fixed' : brk[s] ? ' <i class="orbad">⚠️ BROKEN!</i>' : ' <i class="orok">👍 OK</i>') + '</div>' + (function () {   // one bar for the whole station: everyone's progress together
+        var d = 0, of = 0; who.forEach(function (k) { var pr = g.prog[k]; if (pr) { d += Math.min(pr.d, pr.of); of += pr.of; } });
+        return '<div class="orfaces">' + who.map(function (k) { var p = players[k]; return p ? '<span' + (g.prog[k] && g.prog[k].d >= g.prog[k].of ? ' class="ok"' : '') + '>' + charSvg(p.char) + '</span>' : ''; }).join('') + '</div><em class="orall"><i style="width:' + (of ? Math.round(d / of * 100) : 0) + '%"></i></em>';
+      })() : '';
       if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
       box.classList.toggle('done', !!done); box.classList.toggle('brk', !!brk[s]); box.classList.toggle('empty', !g.ph || g.st === 'end'); box.classList.toggle('nobody', !who.length);
     });

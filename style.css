@@ -4287,3 +4287,20 @@ body.hasdock main{padding-bottom:84px}
 #slotov.four .slcell.tick,#slotov.four .slcell.won{position:relative;z-index:3}
 #slotov.four .slcell.tick{box-shadow:0 0 0 6px #fff,0 0 50px #fff!important;scale:1.06}
 #slotov.ticking .slcell.hi:not(.tick){filter:brightness(.55)}
+/* Sja-la-lie: compact stations, one bar per station, spread from the far left to the far right */
+.orsta{width:15vw!important;padding:.7vh .7vw!important;gap:.6vh}
+.orsta.fx{left:1vw!important;right:auto!important;top:12vh!important}.orsta.pitch{left:1vw!important;right:auto!important;top:32vh!important}.orsta.fire{left:1vw!important;right:auto!important;top:52vh!important}
+.orsta.sec{right:1vw!important;left:auto!important;top:12vh!important}.orsta.speed{right:1vw!important;left:auto!important;top:32vh!important}
+.orsta .orst{font-size:clamp(.7rem,1.05vw,1rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orfaces{display:flex;flex-wrap:wrap;gap:.3vw;min-height:3.6vh}
+.orfaces span{width:3.6vh;height:3.6vh;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.12);display:block}
+.orfaces span svg{width:100%;height:100%;display:block}
+.orfaces span.ok{box-shadow:0 0 0 2px #3ddc84}
+.orall{display:block;height:1.3vh;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
+.orall i{display:block;height:100%;background:linear-gradient(90deg,#ffd23f,#3ddc84);transition:width .3s}
+.orov.doused .orpfl{opacity:0;transition:opacity .5s ease .9s}
+.orov.doused .orpuppet svg{transition:filter .5s ease .9s}
+/* the stage invader sings */
+.orpeek .orpm{transform-box:fill-box;transform-origin:50% 0;scale:1 .35}
+.orov.invaded .orpeek .orpm{animation:orsing .32s ease-in-out infinite alternate}
+@keyframes orsing{0%{scale:1 .35}60%{scale:1 1.15}100%{scale:1 .7}}
