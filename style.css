@@ -3792,7 +3792,7 @@ body.hasdock main{padding-bottom:84px}
 .edr2 .eddance{animation:eddance .45s ease-in-out infinite alternate}
 @keyframes eddance{to{transform:translateY(-9px) rotate(2deg)}}
 .edr2 .edsg{opacity:.16}
-.edr2 .edsg.lit{animation:edsglit 9s linear infinite backwards}
+.edr2 .edsg.lit{animation:edsglit 9s linear infinite}
 @keyframes edsglit{0%,11%{opacity:1}13%,100%{opacity:.16}}
 .edr2 .edbeam{animation:edbeam 3.9s ease-in-out infinite alternate;transform-origin:50% 0;transform-box:fill-box}
 @keyframes edbeam{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
@@ -3826,3 +3826,19 @@ body.hasdock main{padding-bottom:84px}
 .xefoot{display:flex;align-items:center;gap:8px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.1);padding-top:10px}
 #xemsg{flex:1;font-weight:700;font-size:.9rem}#xemsg.ok{color:#3ddc84}#xemsg.bad{color:#ff6b6b}#xemsg.warn{color:#ffd23f}
 .xerow input.xetime{width:92px;font-variant-numeric:tabular-nums;text-align:center}
+/* Edgar: the green-room guests also pop into the fridge for a drink (and are out of sight for a while) */
+@keyframes edsit{0%,4%{transform:translateX(var(--from));opacity:1}12%,26%{transform:translateX(0);opacity:1}35%{transform:translateX(var(--fr));opacity:1}36.5%,61.5%{transform:translateX(var(--fr));opacity:0}63%{transform:translateX(var(--fr));opacity:1}79%,100%{transform:translateX(var(--from));opacity:1}}
+.edr2 .edfdoor{opacity:0;animation:edfdoor 30s linear infinite backwards}
+@keyframes edfdoor{0%,33.5%{opacity:0}34.5%,37.5%{opacity:1}38.5%,59.5%{opacity:0}60.5%,63.5%{opacity:1}64.5%,100%{opacity:0}}
+/* Euroclub: DJ Konstantin's arm goes up for 2 seconds, then the symbols light up one by one */
+.edr2 .edarm{transform-box:view-box;transform-origin:436px 196px;animation:edarm 9s ease-in-out infinite;transform:rotate(150deg)}
+@keyframes edarm{0%{transform:rotate(150deg)}4%,20%{transform:rotate(0deg)}24%,100%{transform:rotate(150deg)}}
+/* where everyone is */
+.edwho{position:absolute;left:1vw;right:1vw;top:6.5vh;z-index:2;display:flex;flex-wrap:wrap;gap:.5vw;pointer-events:none}
+.edr2.club .edwho,.edr2.boud .edwho{justify-content:flex-end}
+.edwho span{display:flex;flex-direction:column;align-items:center;gap:2px;animation:edwhoin .4s cubic-bezier(.3,1.5,.5,1) both}
+.edwho .char{width:5.2vh;height:5.2vh;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.6)}
+.edwho em{font-style:normal;font-weight:900;font-size:clamp(.55rem,.8vw,.8rem);background:rgba(10,6,24,.8);color:#fff;padding:0 .4em;border-radius:6px;white-space:nowrap}
+.edwho.hall{position:static;justify-content:center;max-width:22vw}
+.edwho.hall .char{width:3.6vh;height:3.6vh}
+@keyframes edwhoin{from{transform:scale(.3);opacity:0}}
