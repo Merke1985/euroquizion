@@ -4937,6 +4937,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><i><em></em></i>'; ov.appendChild(bk); }
     bk.classList.toggle('on', bi >= 0); if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
     ov.style.setProperty('--sw', (px * 9).toFixed(2) + 'deg');
+    var sing = g.st === 'play' && t >= 9 || g.st === 'end'; if (ov.classList.contains('sing') !== sing) ov.classList.toggle('sing', sing);   // (she starts singing at 0:09 in the song)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
       var k = el.getAttribute('data-p'); if (g.out[k] != null) return;
       var want = (g.sgn[k] || 1) * [0, 14, 30, 30][g.lvl[k] || 0]; el._lean = (el._lean || 0) + (want - (el._lean || 0)) * .12;

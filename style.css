@@ -4165,3 +4165,7 @@ body.hasdock main{padding-bottom:84px}
 .zgann.on{animation:zgann 4s ease-out both}
 @keyframes zgann{0%{opacity:0;scale:2}10%{opacity:1;scale:1}85%{opacity:1;scale:1}100%{opacity:0;scale:.9}}
 .zgtrack.brk .zgzone{background:rgba(122,184,255,.35)!important;box-shadow:none!important}
+
+/* Zero Gravity: her mouth stays on her face (closed until 0:09, then singing) */
+.zgov .zgsing .zgmouth,.zgov[data-st="play"] .zgsing .zgmouth{transform-box:fill-box;transform-origin:50% 50%;animation:none;transform:scale(.9,.32)}
+.zgov.sing .zgsing .zgmouth,.zgov.sing[data-st="play"] .zgsing .zgmouth{animation:zgmouth .42s ease-in-out infinite alternate}
