@@ -3929,7 +3929,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // red and white) go from room to room during the search, to distract everyone. They come in from behind a screen or
   // a wall, do something funny for about 20 seconds (sit in the empty chairs in the Green Room, dance to DJ Ohrmeister,
   // put on sunglasses in the Boudoir, play guitar backstage), walk out again, and are gone for about 5 seconds.
-  var ED_DUO = [{ hair: '#16121a', hairStyle: 'long', top: '#141418', legs: '#141418', shoes: '#141418' }, { hair: '#e8cf8a', hairStyle: 'long', top: '#e0283a', legs: '#f4f4f6', shoes: '#f4f4f6' }];
+  // (in the style of the photo: one in a shiny black leather jacket and trousers over a red top, dark hair up; the other in a
+  // white suit with a red bustier, long blonde waves, red gloves)
+  var ED_DUO_LOOK = [
+    function (o) { if (o.sit) return '<path d="M-6 -77 L0 -62 L6 -77 Z" fill="#e0283a"/>'; return '<path d="M-6 -77 L0 -60 L6 -77 Z" fill="#e0283a"/><path d="M-14 -72 L-11 -42 M12 -74 L9 -44" stroke="#8a8aa0" stroke-width="2" opacity=".7"/><path d="M-9 -38 L-9 -6 M6 -38 L6 -6" stroke="#8a8aa0" stroke-width="2" opacity=".6"/>'; },
+    function (o) { var hd = o.armUp ? [28, -106] : [26, -38]; return '<path d="M-9 -78 L9 -78 L8 -50 L-8 -50 Z" fill="#e0283a" stroke="' + ED_INK + '" stroke-width="1.6"/><path d="M-13 -78 L-6 -60 M13 -78 L6 -60" stroke="#d8d8e0" stroke-width="3"/><circle cx="-26" cy="-38" r="6.6" fill="#e0283a" stroke="' + ED_INK + '" stroke-width="2"/><circle cx="' + hd[0] + '" cy="' + hd[1] + '" r="6.6" fill="#e0283a" stroke="' + ED_INK + '" stroke-width="2"/>'; }
+  ];
+  var ED_DUO = [{ hair: '#16121a', hairStyle: 'pony', top: '#141418', legs: '#141418', shoes: '#141418' }, { hair: '#ecd79a', hairStyle: 'long', top: '#f4f4f6', legs: '#f4f4f6', shoes: '#f4f4f6' }];
   var ED_DUO_AT = {   // per room: where they come in (x), where they stand (two x's), the floor (y), the size, and whether a screen hides them
     green: { from: 742, y: 404, s: .82, screen: true }, club: { from: 880, at: [560, 640], y: 400, s: .9 },
     boud: { from: 344, at: [470, 530], y: 426, s: 1.05, screen: true }, back: { from: -70, at: [140, 200], y: 436, s: .95 }
@@ -3970,7 +3976,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }
       var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g'); wrap.setAttribute('class', 'edduo2 r-' + r);
       wrap.innerHTML = ED_DUO.map(function (o, k) {
-        var dd = g.duo, base = Object.assign({ s: P.s, walk: 1 }, o, dd && dd.who === k ? { extra: function (oo) { return ED_DUO_ITEM[dd.item].d(ED_DUO_COL[dd.col][1], oo); } } : {}), st = edPerson(0, 0, base);
+        var dd = g.duo, base = Object.assign({ s: P.s, walk: 1 }, o, { extra: function (oo) { return ED_DUO_LOOK[k](oo) + (dd && dd.who === k ? ED_DUO_ITEM[dd.item].d(ED_DUO_COL[dd.col][1], oo) : ''); } }), st = edPerson(0, 0, base);
         var act = r === 'green' ? edPerson(-6, -4, Object.assign({}, base, { sit: 1, walk: 0 }))
           : r === 'club' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
           : r === 'boud' ? edPerson(0, 0, Object.assign({}, base, { glasses: 1, walk: 0, armUp: 1 }))
@@ -4276,8 +4282,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (rc) {   // in a room: on the outside edge of it (above the top rooms, below the bottom ones), at their own spot
         var mates = ks.filter(function (k2) { return (g.rooms[k2].cur || '') === r; }), mi = mates.indexOf(k), step = Math.min(Hh * 0.088, (rc.width * 0.9) / Math.max(1, mates.length));   // (neatly side by side in the room's label)
         var tw0 = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, N * Hh * 0.088 + Hh * 0.03));   // (the label always has room for everyone)   // (the label sits at the left of the room's edge)
-        x = (r === 'green' || r === 'back' ? rc.right - oc.left - tw0 / 2 : rc.left - oc.left + tw0 / 2) + (mi - (mates.length - 1) / 2) * step;   // (against the middle line between the rooms)
-        y = (r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.07 + Hh * 0.004 : rc.bottom - oc.top + Hh * 0.004;   // (inside the room's own tab)
+        x = (r === 'green' || r === 'back' ? rc.right - oc.left - tw0 : rc.left - oc.left) + Hh * 0.015 + (mi + 0.5) * step;   // (in the label, from left to right)
+        y = ((r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.07 : rc.bottom - oc.top) + Hh * 0.035 - Hh * 0.027;   // (halfway up the label)
       } else {   // in the lobby: two columns, at their own spot
         var rowH = Math.min(Hh * 0.105, (lb.height * 0.62) / Math.max(1, Math.ceil(N / 2)));
         x = lb.left - oc.left + lb.width * (slot % 2 === 0 ? 0.3 : 0.7); y = lb.top - oc.top + lb.height * 0.1 + Math.floor(slot / 2) * rowH;
