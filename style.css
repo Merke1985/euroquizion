@@ -3868,3 +3868,7 @@ body.hasdock main{padding-bottom:84px}
 .edtok.srch .char{animation:none}
 @keyframes edtokbob{to{transform:translateY(-3px)}}
 @keyframes edglass{0%{transform:translate(0,0) rotate(-10deg)}25%{transform:translate(4px,-3px) rotate(8deg)}50%{transform:translate(0,3px) rotate(-4deg)}75%{transform:translate(-4px,-2px) rotate(10deg)}100%{transform:translate(0,0) rotate(-10deg)}}
+/* Edgar: the rooms a little smaller than the screen, with room for the avatars above and below */
+.edov2{display:grid;grid-template-columns:repeat(2,min(calc(40.5vh * 16 / 9),calc(49vw - 3px)));grid-template-rows:repeat(2,min(40.5vh,calc((49vw - 3px) * 9 / 16)));justify-content:center;align-content:center;gap:6px;background:radial-gradient(ellipse at center,#2a1450,#0d0820 70%)}
+.edov2 .edr2{border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.6)}
+.edtok .char{width:5vh;height:5vh}
