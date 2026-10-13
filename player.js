@@ -541,6 +541,7 @@
       var endNew = Date.now() + (c.left || 0); if (!clueAccEnd || clueAccId !== c.id || Math.abs(endNew - clueAccEnd) > 1500) { clueAccEnd = endNew; clueAccId = c.id; }
       clearInterval(clueAccT); clueAccT = setInterval(clueAccTick, 250);
       if (clueSel.id !== c.id) clueSel = { id: c.id };
+      ['who', 'where', 'what'].forEach(function (k) { if (clueSel[k]) return; var open = CLUE_SETS[k].filter(function (x) { return known.indexOf(k + ':' + x.id) < 0; }); if (open.length === 1) clueSel[k] = open[0].id; });   // (only one card left in a row: it's picked for you)
       var key = c.id + '|' + known.join(',') + '|' + clueSel.who + clueSel.where + clueSel.what;
       if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
       var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
