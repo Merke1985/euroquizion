@@ -228,6 +228,38 @@ var Music = (function () {
     } catch (e) {}
   }
 
+  // Floating in space (Zero Gravity's intro): slow shimmering pads, a deep drone and twinkling high notes with a long echo.
+  var spT = null, spOut = null, spStep = 0, spNext = 0, spKeep = null, SP_E = 0.5;
+  var SP_CH = [[45, [57, 64, 69, 71]], [41, [53, 60, 65, 69]], [43, [55, 62, 67, 71]], [40, [52, 59, 64, 67]]];
+  var SP_TW = [81, 88, 83, 86, 79, 84, 88, 91];
+  function spTone(type, f, t, att, len, v, cut, det) {
+    var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = type; o.frequency.value = f; if (det) o.detune.value = det; lp.type = 'lowpass'; lp.frequency.value = cut || 2000;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(lp); lp.connect(g); g.connect(spOut); o.start(t); o.stop(t + len + 0.1);
+  }
+  function spSched(i, t) {
+    var bar = Math.floor(i / 8) % 4, e = i % 8, ch = SP_CH[bar];
+    if (e === 0) { spTone('sine', hz(ch[0]), t, 1.2, 4.2, 0.16, 400); ch[1].forEach(function (n, k) { spTone('sawtooth', hz(n), t, 1.6, 4.4, 0.014, 900 + k * 150, (k % 2 ? 7 : -7)); spTone('sine', hz(n), t, 1.4, 4.2, 0.03, 3000); }); }   // a slow pad and a deep drone
+    if (e % 2 === 1 || Math.random() < 0.3) { var tw = SP_TW[(i * 5 + bar) % SP_TW.length]; spTone('sine', hz(tw), t, 0.01, 1.4, 0.05, 9000); spTone('triangle', hz(tw) * 2, t, 0.01, 0.5, 0.008, 9000); }   // twinkling stars
+  }
+  function space(on, keep) {
+    if (!on) { if (spT) { clearInterval(spT); spT = null; try { var o = spOut; o.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.6); setTimeout(function () { try { o.disconnect(); } catch (e) {} }, 3000); } catch (e) {} spOut = null; } return; }
+    if (spT || !ac()) return;
+    try {
+      spKeep = keep || null;
+      spOut = ctx.createGain(); spOut.gain.value = 0.0001; spOut.gain.setTargetAtTime(Math.max(0.0001, 0.9 * vol.music), ctx.currentTime, 0.6);
+      var dl = ctx.createDelay(1.5), fb = ctx.createGain(), wet = ctx.createGain(); dl.delayTime.value = 0.75; fb.gain.value = 0.45; wet.gain.value = 0.4;   // a long space echo
+      spOut.connect(ctx.destination); spOut.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(ctx.destination);
+      spStep = 0; spNext = ctx.currentTime + 0.1;
+      spT = setInterval(function () {
+        if (spKeep && !spKeep()) { space(false); return; }
+        if (muted) return;
+        while (spNext < ctx.currentTime + 0.4) { spSched(spStep, spNext); spStep++; spNext += SP_E; }
+      }, 100);
+    } catch (e) {}
+  }
+
   // A cheerful fairground-organ loop (Sja-la-lie's intro): oom-pah bass, bright chords, a bouncy glockenspiel tune.
   var chT = null, chOut = null, chStep = 0, chNext = 0, chKeep = null, CH_E = 60 / 132 / 2;
   var CH_BARS = [[48, [64, 67, 72]], [53, [65, 69, 72]], [43, [62, 67, 71]], [48, [64, 67, 72]]];
@@ -484,5 +516,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

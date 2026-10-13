@@ -146,7 +146,7 @@
     hi = function () {
       if (kicked) return;
       var m = me();
-      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, score: m ? m.score : null,
+      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, pk: picking && joinFlow && joinFlow < 3 ? 1 : 0, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
     net.on('_open', function () { hi(); if (want === 'u:' + pid) picSend(); });

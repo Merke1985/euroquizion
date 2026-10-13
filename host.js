@@ -115,6 +115,7 @@
         if (!adopted && m.last && m.last.round > 0) adopt(m.last);
       }
     }
+    p.pk = !!m.pk;   // (still choosing their avatar and country: the hosts wait with their welcome)
     var changed = isNew || p.name !== nm || p.off;
     /* the fan flag: one country per player; none picked (or taken): a random free one */
     var wf = FAN_FLAGS.indexOf(m.cc) >= 0 && !list().some(function (x) { return x.cc === m.cc && x.pid !== m.pid; }) ? m.cc : null;
@@ -506,7 +507,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nowT = Date.now(), fresh = false;
     ps.forEach(function (p) { if (!joinSeen[p.pid]) { joinSeen[p.pid] = nowT > joinQuiet ? nowT : 1; if (nowT > joinQuiet) fresh = true; } });
     if (fresh && G.phase === 'lobby') Music.blip();
-    if (G.phase === 'lobby' && nowT > joinQuiet) ps.forEach(function (p) { if (!greeted[p.pid] && p.cc && !p.bot && String(p.pid).indexOf('bot') !== 0) { greeted[p.pid] = 1; greetQ.push(p.pid); if (greetQ.length > 3) greetQ.shift(); } }); else ps.forEach(function (p) { greeted[p.pid] = 1; });
+    if (G.phase === 'lobby' && nowT > joinQuiet) ps.forEach(function (p) { if (!greeted[p.pid] && p.cc && !p.pk && !p.bot && String(p.pid).indexOf('bot') !== 0) { greeted[p.pid] = 1; greetQ.push(p.pid); if (greetQ.length > 3) greetQ.shift(); } }); else ps.forEach(function (p) { greeted[p.pid] = 1; });
     if (G.phase !== 'lobby') { greetQ = []; var lhx = $('lobhosts'); if (lhx) lhx.remove(); greetBusy = false; }   /* the game started: the hosts in the corner leave at once */
     lobbyGreet();
     $('players').innerHTML = ps.map(function (p) {
@@ -5144,7 +5145,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     order.forEach(function (k) { var g = G.zg; g.lvl[k] = 0; g.sgn[k] = 1; g.acc[k] = 100; g.bot[k] = { skill: 0.6 + Math.random() * 0.4, until: 0 }; });
     G.phase = 'zg'; G.barMs = 0;
     if (REMOTE) { push(); zgReady(); return; }
-    var g = G.zg; g.st = 'intro'; cover(true, '', '', false); masks(true); hostsAway(); push(); Music.want(true); zgShow();
+    var g = G.zg; g.st = 'intro'; cover(true, '', '', false); masks(true); hostsAway(); push(); Music.want(false); Music.space(true, function () { return G.zg === g && g.st === 'intro' && G.phase === 'zg'; }); zgShow();   // (floating space music until the song starts)
     var ov = $('zgov'), at = function (ms, f) { setTimeout(function () { if (G.zg === g && g.st === 'intro' && $('zgov')) f(); }, ms); };
     at(1800, function () { $('zgov').classList.add('hosts'); whooshes([0, 250]); });   // the presenters float in…
     var lines = (SCENES.zg && SCENES.zg.lines) || [], t = 3400;
