@@ -4063,3 +4063,11 @@ body.hasdock main{padding-bottom:84px}
 .mypicprev{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:900}
 .mypicprev img{width:72px;height:72px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 4px var(--yellow)}
 #nopic{font-size:.95rem}
+
+/* Edgar: the guests in the Green Room wander out more often (still sitting down once every 20 seconds) */
+@keyframes edsit{0%,2%{transform:translateX(var(--from))}6%,13%{transform:translateX(0)}17.5%,31.5%{transform:translateX(var(--fr))}39.5%,46%{transform:translateX(var(--from))}51%,57%{transform:translateX(var(--mid))}62%,72%{transform:translateX(var(--from))}76%,83%{transform:translateX(var(--mid2))}87%,100%{transform:translateX(var(--from))}}
+/* Edgar: the countdown before the search */
+.edov2.cd .edbrhosts .ehost{translate:0 60vh;opacity:0}
+.edcd{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(10,4,30,.35)}
+.edcd b{font-size:32vh;font-weight:900;color:#ffd23f;text-shadow:0 0 40px rgba(255,210,63,.8),0 10px 0 #2b1830;animation:edcdpop 1s ease-out both}
+@keyframes edcdpop{0%{transform:scale(2.2);opacity:0}25%{transform:scale(1);opacity:1}80%{opacity:1}100%{transform:scale(.85);opacity:0}}

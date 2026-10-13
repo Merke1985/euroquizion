@@ -3578,8 +3578,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       sol: { who: pick(CLUE_WHO).id, where: pick(CLUE_WHERE).id, what: pick(CLUE_WHAT).id } };
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
-    clueShow(); clueSong();   // Edgar's tune: from the start of the game to the end of the clue questions
-    if (!G.clueSting) clueSting(); G.clueSting = false;   // (no spin landed on it: the sting plays now)
+    clueShow(); if (!REMOTE) Music.want(true);   // the studio music under the story and the briefing; Edgar's tune once the search starts
+    G.clueSting = false;   // (the sting plays right after “abducted!”)
     var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); ov.classList.add('nohosts'); ov.classList.add('noframe'); }
     setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('noframe'); Music.blip(); } }, 2600);   // the framed photo, a little later
     setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('nohosts'); whooshes([0, 200]); } }, 4800);   // then the presenters walk on   // first only the news: the poster big, the presenters close together; the cards come later
@@ -3595,6 +3595,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     lines.forEach(function (l) {
       (function (l, at0) { at(at0, function () {
         clueSay(l[0], l[1]);
+        if (l === lines[0]) setTimeout(function () { if (G.clue && G.clue.st === 'intro') clueSting(); }, Array.from(l[1]).length * TALK_MS + 300);   // “Who the hell…?!” right after the news
         var ov2 = $('clueov'); if (ov2) {
           if (l[2]) { var o3 = ov2; setTimeout(function () { o3.classList.add(l[2]); Music.plop(+l[2][1] + 2); }, 900); }   // the three questions turn up one by one, as they're asked
         }
@@ -3871,7 +3872,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the people: now and then one walks out from behind the big screen, sits in their own chair for a few seconds, and goes back
     s.sitters.forEach(function (p, k) {
       // (one round of 30 s: out from behind the screen, sit down, off to the fridge for a drink (hidden behind its open door for a while), back behind the screen)
-      var x = SX[p.seat], from = 742 - x, fr = 92 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top }, dl = 'animation-delay:' + (3 + k * 20) + 's';
+      var x = SX[p.seat], from = 742 - x, fr = 92 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top }, dl = 'animation-delay:' + (3 + k * 20) + 's;--mid:' + Math.round(from * .55) + 'px;--mid2:' + Math.round(from * .3) + 'px';
       h += '<g class="edsit" style="--from:' + from + 'px;--fr:' + fr + 'px;' + dl + '"><g class="edst">' + edPerson(x, 404, Object.assign({ walk: 1 }, o)) + '</g><g class="edsi">' + edPerson(x - 6, 400, Object.assign({ sit: 1 }, o)) + '</g></g>' +
         '<g class="edfdoor" style="' + dl + '"><path d="M24 124 L84 108 L84 450 L24 428 Z" fill="#eef1f6" stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M32 134 L76 122 L76 436 L32 420 Z" fill="none" stroke="#c9ced8" stroke-width="2"/><rect x="34" y="190" width="30" height="50" rx="6" fill="#3a4050" stroke="' + ED_INK + '" stroke-width="1.5"/><rect x="72" y="196" width="6" height="130" rx="3" fill="#b8bfcc" stroke="' + ED_INK + '" stroke-width="1.5"/></g>';   /* (the left door, open just a little: they lean in, half hidden) */
     });
@@ -3971,7 +3972,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = '';
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong(); edShow();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) Music.want(true); edShow();
     var lines = [
       ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
       ['her', 'The Green Room! Who sits where? The guests only sit down now and then, so keep your eyes open. 🛋️', 'green'],
@@ -3989,13 +3990,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, t0); })(l, t);
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2600);
     });
-    setTimeout(function () { var g3 = G.clue; if (g3 && g3.id === id && g3.st === 'brief') edGo(); }, t);
+    setTimeout(function () {   // 3, 2, 1, 0 in the middle of the screen, then the search starts
+      var g3 = G.clue, ov = $('edov'); if (!g3 || g3.id !== id || g3.st !== 'brief') return;
+      if (!ov) { edGo(); return; }
+      ov.classList.add('cd'); ov.setAttribute('data-lit', 'all'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); });
+      var el = document.createElement('div'); el.className = 'edcd'; ov.appendChild(el); whooshes([0, 300]);
+      [3, 2, 1, 0].forEach(function (n, i) { setTimeout(function () {
+        var g4 = G.clue; if (!g4 || g4.id !== id || g4.st !== 'brief') return;
+        el.innerHTML = '<b>' + n + '</b>'; Music.plop(i * 2 + 2);
+        if (n === 0) setTimeout(function () { el.remove(); edGo(); }, 700);
+      }, 700 + i * 1000); });
+    }, t);
   }
   function edGo() {   // the briefing is over: the hosts step aside, the lights go on, the clock starts
     var g = G.clue; if (!g) return;
     g.st = 'rooms'; g.ends = Date.now() + ED_MS;
     var ov = $('edov'); if (ov) { ov.classList.add('go'); ov.removeAttribute('data-lit'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); }); }
-    push(); Music.ding(); whooshes([0, 300]);
+    push(); Music.ding(); whooshes([0, 300]); if (!REMOTE) Music.want(false); clueSong();   // Edgar's tune: from the search to the end of the clue questions
     // the bots: a room, ~20–32 seconds, a few seconds walking to the next
     bots.forEach(function (b) {
       if (!players[b.pid] || players[b.pid].off) return;
