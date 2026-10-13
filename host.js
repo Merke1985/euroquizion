@@ -3979,7 +3979,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           : r === 'club' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
           : r === 'boud' ? edPerson(0, 0, Object.assign({}, base, { glasses: 1, walk: 0, armUp: 1 }))
           : edPerson(0, 0, Object.assign({}, base, { walk: 0 })) + '<g transform="scale(' + P.s + ')">' + edDuoGuitar(k ? '#e0283a' : '#f2b821') + '</g>';
-        return '<g class="ddp" style="transform:translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)"><g class="ddin"><g class="ddst">' + st + '</g><g class="ddact">' + act + '</g></g></g>';
+        var st2 = r === 'boud' ? '<g class="ddst2">' + edPerson(0, 0, Object.assign({}, base, { glasses: 1 })) + '</g>' : '';   // (in the Boudoir: the sunglasses stay on until they're out of the room)
+        return '<g class="ddp" style="transform:translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)"><g class="ddin"><g class="ddst">' + st + '</g>' + st2 + '<g class="ddact">' + act + '</g></g></g>';
       }).join('');
       var scr = P.screen ? svg.querySelector('.edscr') : null, behind = r === 'green' ? svg.querySelector('.edchairs') : scr; if (behind) svg.insertBefore(wrap, behind); else svg.appendChild(wrap);   // (walking: behind the chairs or the screen)
       var ps = wrap.querySelectorAll('.ddp');
@@ -3987,7 +3988,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + at[k] + 'px,' + P.y + 'px)'; });   // walking in (3 s)
       later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); if (r === 'boud' || r === 'green') svg.appendChild(wrap); });   // the funny bit (in the Boudoir and the Green Room: in front of the screen)
       if (r === 'boud' || r === 'green') later(16850, function () { if (behind && behind.parentNode) svg.insertBefore(wrap, behind); });   // (and behind it again to leave)
-      later(16900, function () { wrap.classList.remove('act'); wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)'; }); });   // and off again
+      later(16900, function () { if (r === 'boud') wrap.classList.add('shades'); wrap.classList.remove('act'); wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)'; }); });   // and off again
       later(20000, function () { wrap.remove(); });
       later(25000, visit);   // (gone for 5 seconds, then the next room)
     };

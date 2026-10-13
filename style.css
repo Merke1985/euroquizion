@@ -4410,3 +4410,4 @@ body.hasdock main{padding-bottom:84px}
 /* Key Change!: the Ready button and the 3-2-1 cover the lyrics completely (no lyrics showing through) */
 .slyover #srecbtn:not(.live),.slyover #srecbtn:not(.live):disabled{opacity:1;background:#e21d7a}
 .slyover #scount.counting:not(.live){background:#1c0f3a;opacity:1;color:#fff;display:flex;align-items:center;justify-content:center}
+.edduo2 .ddst2{display:none}.edduo2.shades:not(.act) .ddst2{display:inline}.edduo2.shades .ddst{display:none}
