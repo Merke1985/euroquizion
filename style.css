@@ -4407,3 +4407,6 @@ body.hasdock main{padding-bottom:84px}
 .zgtrack.pre{opacity:.6}
 .edduoq{display:flex;flex-direction:column;gap:10px}.edduoq p{font-weight:800;font-size:1.05rem;line-height:1.35;margin:0 0 4px}
 .zgrod{transform-origin:50% 100%}.zgp .zgrod{rotate:var(--sw,0deg)}
+/* Key Change!: the Ready button and the 3-2-1 cover the lyrics completely (no lyrics showing through) */
+.slyover #srecbtn:not(.live),.slyover #srecbtn:not(.live):disabled{opacity:1;background:#e21d7a}
+.slyover #scount.counting:not(.live){background:#1c0f3a;opacity:1;color:#fff;display:flex;align-items:center;justify-content:center}
