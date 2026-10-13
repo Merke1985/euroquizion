@@ -5833,6 +5833,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var had = g.had || (g.had = {}), pool = shuffle(OR_ST.slice());
     if (n < OR_ST.length) { var fresh = pool.filter(function (x) { return !g.order.some(function (k) { return (had[k] || []).indexOf(x) >= 0; }); }); pool = fresh.concat(pool.filter(function (x) { return fresh.indexOf(x) < 0; })); slots = pool.slice(0, n); }
     else for (var c1 = 0; c1 < n; c1++) slots.push(pool[c1 % pool.length]);
+    if (g.ph === 1 && n === 3) slots = ['speed', 'pitch', 'sec'];   // (three players: the first phase is always the gearbox, the pipes and security)
     var best = null, bestBad = 1e9;
     for (var tr = 0; tr < 60; tr++) {   // (a few random tries: the one with the fewest repeat jobs)
       var sl = shuffle(slots.slice()), bad = 0; g.order.forEach(function (k, i) { if ((had[k] || []).indexOf(sl[i]) >= 0) bad++; });
@@ -5850,7 +5851,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.organ; if (!g || G.phase !== 'organ') return;
     g.st = 'fix'; g.t0 = Date.now(); g.brk = {}; g.shut = {}; g.bn = g.bn || {}; g.botGo = {}; g.phPts = {}; g.allOk = true; push(); Music.blip();
     g.order.forEach(function (k) { g.phPts[k] = 0; });
-    var used = shuffle(OR_ST.filter(function (s2) { return g.order.some(function (k) { return g.sta[k] === s2; }); })), u = used, n = u.length;
+    var used = shuffle(OR_ST.filter(function (s2) { return g.order.some(function (k) { return g.sta[k] === s2; }); })), u = g.ph === 1 && used.indexOf('sec') >= 0 ? used.filter(function (x) { return x !== 'sec'; }).concat('sec') : used, n = u.length;   // (the first phase: security always breaks last)
     g.groups = g.ph === 1 ? u.map(function (x) { return [x]; })
       : g.ph === 2 ? (n >= 5 ? [[u[0], u[1]], [u[2], u[3], u[4]]] : n >= 4 ? [[u[0], u[1]], [u[2], u[3]]] : n === 3 ? [[u[0], u[1]], [u[2], u[0]], [u[1], u[2]]] : n === 2 ? [[u[0], u[1]], [u[0], u[1]]] : [[u[0]], [u[0]]])
       : [u.slice(), u.slice()];
