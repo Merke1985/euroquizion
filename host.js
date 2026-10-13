@@ -5909,6 +5909,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var brk = orBroken(), broken = OR_ST.some(function (s2) { return brk[s2]; });
     ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.setAttribute('data-ph', g.ph);
     ov.querySelector('.orph').textContent = g.ph ? 'Phase ' + g.ph + ' of 3' : '';
+    var sw = ov.querySelector('.orswap'); if (!sw) { sw = document.createElement('div'); sw.className = 'orswap'; sw.innerHTML = '<b>🔀 Swap!</b><span>Everyone’s tasks have swapped!</span><small>Check your phone for your new station</small>'; ov.appendChild(sw); }   // the break between phases: a big message in front of the organ
+    var swOn = g.st === 'brief' && g.ph >= 2; if (sw.classList.contains('on') !== swOn) { sw.classList.toggle('on', swOn); if (swOn && !REMOTE) Music.ding(); }
     var ck = ov.querySelector('.orclock'), sec = g.st === 'fix' ? String(Math.max(0, Math.ceil((g.ends - Date.now()) / 1000))) : ''; if (ck.textContent !== sec) ck.textContent = sec;
     OR_ST.forEach(function (s) {
       var box = ov.querySelector('.orsta.' + s), who = g.order.filter(function (k) { return g.sta[k] === s; });

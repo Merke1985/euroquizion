@@ -4177,3 +4177,11 @@ body.hasdock main{padding-bottom:84px}
 .zgtrack{height:240px;border-radius:26px}
 .zgzone{top:14px;bottom:14px;border-radius:18px}
 .zgme{width:10px;margin-left:-5px}.zgme::after{width:46px;height:46px;margin-left:-23px;bottom:10px}
+
+/* Sja-la-lie: between the phases, a big "tasks swapped" message in front of the organ */
+.orswap{position:absolute;left:50%;top:44%;translate:-50% -50%;z-index:40;display:flex;flex-direction:column;align-items:center;gap:.8vh;padding:3vh 4vw;border-radius:28px;background:linear-gradient(135deg,#ff5fa8,#ffd23f);color:#2b1830;box-shadow:0 0 0 6px #fff,0 20px 60px rgba(0,0,0,.6);text-align:center;opacity:0;scale:.3;rotate:-8deg;pointer-events:none;transition:opacity .35s,scale .55s cubic-bezier(.3,1.6,.5,1),rotate .55s cubic-bezier(.3,1.6,.5,1)}
+.orswap.on{opacity:1;scale:1;rotate:-2deg;animation:orswapw 1.2s .6s ease-in-out infinite alternate}
+.orswap b{font-size:clamp(3rem,7vw,6rem);font-weight:900;line-height:1}
+.orswap span{font-size:clamp(1.4rem,2.8vw,2.4rem);font-weight:900}
+.orswap small{font-size:clamp(.9rem,1.5vw,1.3rem);font-weight:800;opacity:.8}
+@keyframes orswapw{from{rotate:-2deg;scale:1}to{rotate:2deg;scale:1.04}}
