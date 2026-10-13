@@ -3872,3 +3872,24 @@ body.hasdock main{padding-bottom:84px}
 .edov2{display:grid;grid-template-columns:repeat(2,min(calc(40.5vh * 16 / 9),calc(49vw - 3px)));grid-template-rows:repeat(2,min(40.5vh,calc((49vw - 3px) * 9 / 16)));justify-content:center;align-content:center;gap:6px;background:radial-gradient(ellipse at center,#2a1450,#0d0820 70%)}
 .edov2 .edr2{border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.6)}
 .edtok .char{width:5vh;height:5vh}
+/* Edgar's intro: three face-down cards (WHO? WHERE? INSIDE WHAT?) instead of all the rows; an example clue lands on WHO */
+.clueov .clmyst{display:none}
+.clueov.intro .clmyst{position:absolute;left:50%;top:56vh;transform:translateX(-50%);z-index:3;display:flex;gap:2.4vh}
+.clueov.intro .clmyst>div{position:relative;width:15vh;height:20vh;border-radius:14px;background:repeating-linear-gradient(45deg,#3a1d7a 0 10px,#331a6c 10px 20px);box-shadow:0 0 0 4px #ffd23f,0 10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6vh;animation:clmyst .8s cubic-bezier(.3,1.4,.5,1) both}
+.clueov.intro .clmyst>div:nth-child(2){animation-delay:.15s}.clueov.intro .clmyst>div:nth-child(3){animation-delay:.3s}
+.clueov.intro .clmyst b{font-size:9vh;line-height:1;color:#ffd23f;text-shadow:0 0 18px rgba(255,210,63,.7)}
+.clueov.intro .clmyst span{font-weight:900;font-size:clamp(.7rem,1.2vw,1.2rem);color:#fff;letter-spacing:.06em;text-align:center}
+@keyframes clmyst{from{transform:rotateY(90deg) scale(.6);opacity:0}}
+.clueov.intro.story .clmyst{top:56vh}
+.clueov .clnote{position:absolute;left:50%;bottom:-2.4vh;transform:translateX(-50%) rotate(-6deg);white-space:nowrap;font-style:normal;font-weight:900;font-size:clamp(.65rem,1vw,1rem);background:#ffe86a;color:#2b1830;padding:.5vh .8vw;border-radius:4px;box-shadow:0 6px 14px rgba(0,0,0,.5);opacity:0}
+.clueov.example .clnote{animation:clnote .7s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes clnote{from{opacity:0;transform:translate(-50%,-14vh) rotate(-30deg) scale(1.4)}to{opacity:1;transform:translateX(-50%) rotate(-6deg)}}
+/* Backstage comes alive: sweeping spotlights, blinking sockets, a nodding roadie, a stagehand with a box */
+.edr2 .edsweep{transform-box:view-box;animation:edsweep 5s ease-in-out infinite alternate}
+@keyframes edsweep{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.edr2 .edblink{animation:edblink 1.4s ease-in-out infinite}
+@keyframes edblink{50%{stroke:#b6ffd4;filter:drop-shadow(0 0 6px #3ddc84)}}
+.edr2 .edhead{animation:edhead .6s ease-in-out infinite alternate}
+@keyframes edhead{to{transform:translateY(-3px)}}
+.edr2 .edcarry{animation:edcarry 22s linear infinite;transform:translateX(900px)}
+@keyframes edcarry{0%,40%{transform:translateX(900px)}75%{transform:translateX(-100px)}100%{transform:translateX(-100px)}}

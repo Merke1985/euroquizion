@@ -3581,21 +3581,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = function (ms, f) { clueTimer = setTimeout(function () { if (G.clue && G.clue.st === 'intro' && $('clueov')) f(); }, ms); };
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
-      ['him', 'Breaking news, Europe… Edgar, our beloved mascot, has been abducted! 😱'],
-      ['her', 'Look at these cards. The top row: where he could be hidden…', 'where'],
-      ['him', '…the middle row: what he is hidden inside…', 'what'],
-      ['her', '…and the bottom row: who took him. In every row, one card is the truth.', 'who'],
-      ['him', 'The kidnapper left clues scattered around four areas of the building, and everyone needs to search them!'],
-      ['her', 'Every clue tells you a card that is NOT the answer. Rule out enough cards, and only the truth is left!'],
-      ['him', 'Enter the rooms one by one on your phone, and find the clues on the big screen. Look closely!'],
-      ['her', 'The fastest detective overall wins an extra clue! 🔍']
+      ['him', 'Breaking news! Edgar, our beloved mascot, has been abducted! 😱'],
+      ['her', 'Someone took him, and hid him somewhere in the building, inside something!'],
+      ['him', 'Search the four rooms on your phone. Every clue you find rules out a suspect, a place or a hiding spot.', 'example'],
+      ['her', 'The fastest detective gets an extra clue. Go find Edgar! 🔍']
     ];
     var t = 6600;   // (the poster first, the photo, the presenters walking on: then the story)
     lines.forEach(function (l) {
       (function (l, at0) { at(at0, function () {
         clueSay(l[0], l[1]);
         var ov2 = $('clueov'); if (ov2) {
-          if (l[2]) { if (ov2.classList.contains('story')) whooshes([0, 250]); ov2.classList.remove('story'); }   // on to the clues: the presenters step apart, the rows come in one by one
+          if (l[2] === 'example') { setTimeout(function () { var o3 = $('clueov'); if (o3) { o3.classList.add('example'); Music.plop(4); } }, 2200); }   // an example clue: a note lands on the WHO card
+          else if (l[2]) { if (ov2.classList.contains('story')) whooshes([0, 250]); ov2.classList.remove('story'); }   // on to the clues: the presenters step apart, the rows come in one by one
           [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { var me = !!l[2] && r.getAttribute('data-k') === l[2]; r.classList.toggle('lit', me); if (me) r.classList.add('on'); });
         }
       }); })(l, t);
@@ -3652,7 +3649,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
     cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong();   // (the tune plays on)
-    clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Who took Edgar, where is he hidden, and what is he hidden inside?'); }, 1400);
+    clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Here are all the cards: in every row, one card is the truth.'); }, 1400);
     setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Your clues are the cards that are NOT the answer: rule them out, and pick from what’s left on your phone! 🔍'); }, 5200);
     // bots: a guess among what their clues leave open
     bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off) return; setTimeout(function () {
@@ -3908,12 +3905,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the truss with its spotlights
     h += '<rect x="250" y="12" width="540" height="14" fill="#9aa0ad"/><g stroke="#9aa0ad" stroke-width="2">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(function (i) { return '<line x1="' + (250 + i * 40) + '" y1="12" x2="' + (270 + i * 40) + '" y2="26"/>'; }).join('') + '</g><rect x="760" y="26" width="14" height="300" fill="#6a7080"/>';
     for (var i = 0; i < s.spots; i++) { var x = 270 + (i + .5) * (480 / s.spots); h += '<rect x="' + (x - 3) + '" y="26" width="6" height="10" fill="#555"/><rect x="' + (x - 14) + '" y="34" width="28" height="32" rx="5" fill="#0c0c10"/><circle cx="' + x + '" cy="68" r="10" fill="#ffe27a"/>'; }
+    // the spotlights sweep their beams around (slowly, each its own way)
+    for (i = 0; i < s.spots; i++) { var bx = 270 + (i + .5) * (480 / s.spots); h += '<path class="edsweep" style="transform-origin:' + bx + 'px 80px;animation-delay:' + (-i * 1.1) + 's;animation-duration:' + (4 + (i % 3)) + 's" d="M' + (bx - 8) + ' 80 L' + (bx - 60) + ' 330 L' + (bx + 60) + ' 330 L' + (bx + 8) + ' 80 Z" fill="#fff3a0" opacity=".1"/>'; }
+    // a stagehand carries a big box across the back now and then
+    h += '<g class="edcarry"><g class="edbob">' + edPerson(0, 362, { s: .78, hair: 'red', hairStyle: 'bun', top: 'black', legs: '#1a1a2a', walk: 1, flip: 1 }) + '<rect x="-30" y="-130" width="60" height="44" rx="5" fill="#c8964a" stroke="' + ED_INK + '" stroke-width="2.5" transform="translate(0 362)"/><text x="0" y="257" text-anchor="middle" font-size="11" font-weight="900" fill="#5a3a10">FRAGILE</text></g></g>';
     // the patch panel: six sockets with symbols, four cables plugged in
     h += '<rect x="240" y="88" width="420" height="132" rx="8" fill="#3a3e4a" stroke="#6a7080" stroke-width="4"/>';
     s.socks.forEach(function (k, i) {
       var x = 262 + i * 66, pl = s.plug.filter(function (p) { return p.s === i; })[0];
       h += '<rect x="' + x + '" y="100" width="52" height="52" rx="6" fill="#16181e"/>' + edSock(k, x + 8, 106, 36) +
-        '<circle cx="' + (x + 26) + '" cy="186" r="16" fill="#0c0c10" stroke="' + (pl ? '#3ddc84' : '#555') + '" stroke-width="4"/>';
+        '<circle cx="' + (x + 26) + '" cy="186" r="16" fill="#0c0c10" stroke="' + (pl ? '#3ddc84' : '#555') + '" stroke-width="4"' + (pl ? ' class="edblink" style="animation-delay:' + (-i * .37) + 's"' : '') + '/>';
       if (pl) h += '<circle cx="' + (x + 26) + '" cy="186" r="9" fill="' + ED_COL[pl.c] + '"/><path d="M' + (x + 26) + ' 196 C' + (x + 26) + ' 260 ' + (x + 26 - 40 + i * 10) + ' 300 ' + (x - 20 + i * 18) + ' 360" stroke="' + ED_COL[pl.c] + '" stroke-width="9" fill="none" stroke-linecap="round"/>';
     });
     // amps, guitars, a mic stand, the running order and the roadie
@@ -3923,7 +3924,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<rect x="20" y="66" width="200" height="0"/>';
     h += '<g transform="rotate(-3 700 290)"><rect x="618" y="232" width="150" height="118" rx="4" fill="#f8f8f4"/><rect x="668" y="226" width="50" height="12" rx="3" fill="#9aa0ad"/><text x="693" y="256" text-anchor="middle" font-size="13" font-weight="900" fill="#c0282a">RUNNING ORDER</text>' +
       s.order.map(function (a, i) { return '<text x="628" y="' + (276 + i * 17) + '" font-size="13" font-weight="700" fill="#1a3a8a" font-family="Comic Sans MS, Chalkboard, cursive">' + (i + 1) + '. ' + esc(a) + '</text>'; }).join('') + '</g>';
-    h += edPerson(470, 372, { s: .9, hair: 'black', top: 'black', legs: '#1a1a2a', sit: 1 }) + '<path d="M455 236 Q470 222 486 236" stroke="#111" stroke-width="5" fill="none"/>';
+    h += '<g class="edhead">' + edPerson(470, 372, { s: .9, hair: 'black', top: 'black', legs: '#1a1a2a', sit: 1 }) + '</g>' + '<path d="M455 236 Q470 222 486 236" stroke="#111" stroke-width="5" fill="none"/>';
     // the flight cases with their codes
     s.cases.forEach(function (k, i) {
       var x = 22 + i * 196, y = 362;
@@ -4059,6 +4060,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="grsign clsign">🔍 Where the Hell Is Edgar?</div>' +
         '<div class="clposter"><b>MISSING</b>' + EDGAR + '<small>Have you seen Edgar?</small></div><div class="clframe"><img src="' + commons(EXTRA_PHOTOS[0].file) + '" alt=""><small>With love to Teya &amp; Salena · Austria 2023</small></div><div class="cledgar">' + EDGAR + '</div>' +
         '<div class="clrows">' + row('where', 'Hidden where?') + row('what', 'Hidden inside?') + row('who', 'Who took him?') + '</div>' +
+        '<div class="clmyst"><div><b>?</b><span>WHO?</span><i class="clnote">✗ It wasn’t Felix</i></div><div><b>?</b><span>WHERE?</span></div><div><b>?</b><span>INSIDE WHAT?</span></div></div>' +   /* (the intro: three face-down cards, the full rows only at the accusation) */
         '<div class="clmsg"></div><div class="clplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);

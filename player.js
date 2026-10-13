@@ -806,7 +806,7 @@
 
   // ---------- Where the Hell Is Edgar?: the four rooms on the phone ----------
   var ED_R = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 3 }];
-  var edCur = '', edGame = '', edSeen = '', edT = [], edAc = null;
+  var edNotes = false, edCur = '', edGame = '', edSeen = '', edT = [], edAc = null;
   function edLater(f, ms) { edT.push(setTimeout(f, ms)); }
   function edClear() { edT.forEach(clearTimeout); edT = []; }
   function edTone(i) {   // a short tone for each sound symbol (its own pitch)
@@ -819,9 +819,9 @@
   function edView(s) {
     var c = s.clue, box = $('edui'), me = c.rooms && c.rooms[pid];
     show('v-wait');
-    if (edGame !== c.id) { edGame = c.id; edCur = ''; edSeen = ''; edClear(); }
+    if (edGame !== c.id) { edGame = c.id; edCur = ''; edSeen = ''; edNotes = false; edClear(); }
     if (!me) { box.classList.add('hidden'); $('clueui').classList.add('hidden'); $('waittitle').textContent = '🔍 Searching the building…'; $('waitsub').textContent = 'Watch the big screen!'; return; }
-    if (edCur) return;   // (a room task is running: it draws itself)
+    if (edCur || edNotes) return;   // (a room task is running, or the notes are open: they draw themselves)
     var last = (c.last || {})[pid];
     if (last && edSeen !== last.k) {   // just finished a room: the new clues
       box.classList.add('hidden');
@@ -838,7 +838,13 @@
     box.classList.remove('hidden');
     var key = 'pick|' + me.done.join(',');
     if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
-    box.innerHTML = '<div class="eddoors">' + ED_R.map(function (r) { var d = me.done.indexOf(r.id) >= 0; return '<button type="button" class="eddoor' + (d ? ' done' : '') + '" data-r="' + r.id + '"' + (d ? ' disabled' : '') + '><span>' + r.icon + '</span><b>' + r.name + '</b><small>' + (d ? '✔ ' + (me.score[r.id] || 0) + ' clue' + ((me.score[r.id] || 0) === 1 ? '' : 's') : 'up to ' + r.max + ' clues') + '</small></button>'; }).join('') + '</div>';
+    box.innerHTML = '<button type="button" class="btn alt small ednotes">📋 My notes</button><div class="eddoors">' + ED_R.map(function (r) { var d = me.done.indexOf(r.id) >= 0; return '<button type="button" class="eddoor' + (d ? ' done' : '') + '" data-r="' + r.id + '"' + (d ? ' disabled' : '') + '><span>' + r.icon + '</span><b>' + r.name + '</b><small>' + (d ? '✔ ' + (me.score[r.id] || 0) + ' clue' + ((me.score[r.id] || 0) === 1 ? '' : 's') : 'up to ' + r.max + ' clues') + '</small></button>'; }).join('') + '</div>';
+    box.querySelector('.ednotes').onclick = function () {   // all the cards, with the ones your clues ruled out crossed off
+      edNotes = true; box.classList.add('hidden'); clueNotes({ clue: { id: c.id, n: 'mine', known: c.known, fresh: {} } });
+      $('waittitle').textContent = '📋 My notes'; $('waitsub').textContent = 'Crossed out = ruled out by your clues.';
+      var nb = $('clueui'); if (!nb.querySelector('.ednext')) nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">🚪 Back to the rooms</button>');
+      nb.querySelector('.ednext').onclick = function () { edNotes = false; $('clueui').classList.add('hidden'); box.removeAttribute('data-k'); edView(state); };
+    };
     [].forEach.call(box.querySelectorAll('.eddoor:not([disabled])'), function (b) { b.onclick = function () {
       var r = b.getAttribute('data-r'); edCur = r; box.removeAttribute('data-k');
       if (net) net.send('clue', { pid: pid, id: c.id, room: r, enter: 1 });
