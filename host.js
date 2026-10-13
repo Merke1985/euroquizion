@@ -3896,10 +3896,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     h += '<rect x="22" y="76" width="200" height="156" rx="10" fill="#243034"' + K + ' stroke-width="7" stroke="#a0683a"/><text x="122" y="102" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" letter-spacing="3">SETLIST</text>' +
       s.setlist.map(function (t, i) { return '<text x="36" y="' + (128 + i * 22) + '" font-size="15" font-weight="700" fill="#f4f0d0" font-family="Comic Sans MS, Chalkboard, cursive">' + (i + 1) + '. ' + esc(t) + '</text>'; }).join('');
     h += '<rect x="196" y="160" width="60" height="110" rx="10" fill="#1a1a24"' + K + '/><circle cx="226" cy="190" r="14" fill="#3a3a4a" class="edspk"/><circle cx="226" cy="238" r="20" fill="#3a3a4a" class="edspk"/><rect x="544" y="160" width="60" height="110" rx="10" fill="#1a1a24"' + K + '/><circle cx="574" cy="190" r="14" fill="#3a3a4a" class="edspk"/><circle cx="574" cy="238" r="20" fill="#3a3a4a" class="edspk"/>';
-    // DJ Konstantin, and his booth: six symbols, five of them light up one by one, always in the same order
+    // DJ Ohrmeister, and his booth: six symbols, five of them light up one by one, always in the same order
     h += '<g class="edarm"><path d="M436 196 Q460 160 466 118" stroke="' + ED_INK + '" stroke-width="20" fill="none" stroke-linecap="round"/><path d="M436 196 Q460 160 466 118" stroke="' + ED_COL[s.jacket] + '" stroke-width="13" fill="none" stroke-linecap="round"/><circle cx="467" cy="110" r="10" fill="#e0b090" stroke="' + ED_INK + '" stroke-width="2.5"/><rect x="463" y="88" width="7" height="16" rx="3.5" fill="#e0b090" stroke="' + ED_INK + '" stroke-width="2"/></g>' +   /* his arm goes up for 2 seconds before the symbols start */
       '<g class="edbob"><svg x="322" y="96" width="156" height="208" viewBox="0 0 120 160">' + ED_DJ.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace('#c9c9d6', ED_COL[s.jacket]) + '</svg></g>' +
-      '<text x="400" y="104" text-anchor="middle" font-size="17" font-weight="900" fill="#fff" letter-spacing="2" style="filter:drop-shadow(0 0 5px #ff6fd8)">DJ KONSTANTIN</text>';
+      '<text x="400" y="104" text-anchor="middle" font-size="17" font-weight="900" fill="#fff" letter-spacing="2" style="filter:drop-shadow(0 0 5px #ff6fd8)">DJ OHRMEISTER</text>';
     h += '<rect x="250" y="226" width="300" height="96" rx="14" fill="#160a26"' + K + ' stroke="#ff6fd8"/>';
     s.tiles.forEach(function (k, i) {
       var x = 262 + i * 47, j = s.panel.indexOf(k);
@@ -3982,7 +3982,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lines = [
       ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
       ['her', 'The Green Room! Who sits where? The guests only sit down now and then, so keep your eyes open. 🛋️', 'green'],
-      ['him', 'The Euroclub! DJ Konstantin lights up the symbols in a secret order. Remember it! 🪩', 'club'],
+      ['him', 'The Euroclub! DJ Ohrmeister lights up the symbols in a secret order. Remember it! 🪩', 'club'],
       ['her', 'Backstage! Someone pulled out all the cables. Which one goes where? 🔌', 'back'],
       ['him', 'Woodruff’s Boudoir! Dresses, wigs, and three guests in their finest outfits. 👗', 'boud'],
       ['her', 'Every answer is up here on the big screen. A wrong answer locks you out for 10 seconds! The fastest detective gets an extra clue. Go! 🔍', 'all']
@@ -4934,8 +4934,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function zgPose(ov, g) {   // where the poles and the players lean right now (the levels ease in, not jump)
     var t = g.st === 'play' ? (Date.now() - g.t0) / 1000 : 0, px = g.st === 'play' ? zgPath(g.seed, t) : 0;
     var bi = g.st === 'play' ? zgBreak(t) : -1, bk = ov.querySelector('.zgbrk');   // the break: "Break time" with a bar that fills up
-    if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><i><em></em></i>'; ov.appendChild(bk); }
-    bk.classList.toggle('on', bi >= 0); if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
+    if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><strong></strong><i><em></em></i>'; ov.appendChild(bk); }
+    bk.classList.toggle('on', bi >= 0); var wn = bk.querySelector('strong'), wt = bi === ZG_BRK.length - 1 ? '⚠️ Warning: in the last stage you only have 1 second to get back in the zone!' : ''; if (wn.textContent !== wt) wn.textContent = wt; if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
     ov.style.setProperty('--sw', (px * 9).toFixed(2) + 'deg');
     var sing = g.st === 'play' && t >= 9 || g.st === 'end'; if (ov.classList.contains('sing') !== sing) ov.classList.toggle('sing', sing);   // (she starts singing at 0:09 in the song)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
@@ -5609,7 +5609,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // everyone gets a new station each phase. Personal score per phase: how much of your own task you finished, a bonus
   // for finishing fast, and a team bonus when the whole organ is fixed before the time runs out. Highest total wins.
   var OR_TEAMS = { 2: [1, 1, 0], 3: [1, 1, 1], 4: [2, 1, 1], 5: [2, 2, 1], 6: [2, 2, 2], 7: [3, 2, 2], 8: [3, 3, 2], 9: [3, 3, 3], 10: [4, 3, 3], 11: [4, 4, 3], 12: [4, 4, 4] };
-  var OR_TASK = [26000, 32000, 38000], OR_ST = ['speed', 'pitch', 'fx'], OR_NEED = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
+  var OR_TASK = [16000, 18000, 20000], OR_ST = ['speed', 'pitch', 'fx'], OR_NEED = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
   var OR_NAME = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring' };
   var OR_LINES = ['The organ is slowing down! Grab your tools! 🔧', 'Oh no, it’s falling apart even more! 💨', 'Total meltdown! Save the organ, save the song! 🔥'];
   // The barrel organ, big and ornate (an original drawing in the style of a Dutch street organ): a gilded, scalloped
@@ -5720,7 +5720,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       : g.ph === 2 ? (n >= 3 ? [[u[0], u[1]], [u[2], u[0]], [u[1], u[2]]] : n === 2 ? [[u[0], u[1]], [u[0], u[1]]] : [[u[0]], [u[0]]])
       : [u.slice(), u.slice()];
     g.gi = -1; g.gBusy = false; g.fxk = pick(OR_FXK);
-    orGroup(2500 + Math.random() * 3000);
+    orGroup(2000 + Math.random() * 1500);
     var was = '';
     clearInterval(orTick); orTick = setInterval(function () {
       var g2 = G.organ; if (!g2 || g2.st !== 'fix') { clearInterval(orTick); return; }
@@ -5729,7 +5729,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var cur = g2.groups[g2.gi] || [];
       if (!g2.gBusy && Date.now() >= g2.ends) cur.forEach(function (s2) { if (!g2.shut[s2]) orShut(s2, false); });   // (out of time: what was done counts)
       if (!g2.gBusy && cur.every(function (s2) { return g2.shut[s2]; })) {
-        if (g2.gi < g2.groups.length - 1) orGroup(2500 + Math.random() * 2500);
+        if (g2.gi < g2.groups.length - 1) orGroup(2000 + Math.random() * 1500);
         else { orDone(); return; }
       }
       orShow();
@@ -5785,7 +5785,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.fixed = g.allOk; g.last = {};
     g.order.forEach(function (k) { var pts = g.phPts[k] + (g.fixed ? 15 : 0); if (g.fixed) g.pts[k] += 15; g.last[k] = pts; });
     g.st = 'fixed'; push(); if (g.fixed) Music.douze(); else Music.buzz();
-    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd(); }, 5500);
+    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd(); }, 4000);
   }
   function orSongEnded() {   // the song is over: the game ends right there, whatever was fixed
     var g = G.organ; if (!g || g.st === 'end' || g.st === 'intro') return;

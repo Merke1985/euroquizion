@@ -688,7 +688,7 @@
     var st = zgStage(t), w = zgW(t), tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), inside = brk >= 0 || Math.abs(err) <= w;   // (a break: relax, nothing counts)
     if (t > 1.5 && brk < 0) { S.tot += dt; if (inside) S.inT += dt; }
     S.outFor = inside ? 0 : S.outFor + dt;
-    var fall = ZG_FALL, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
+    var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
     if (t > 3 && S.outFor >= fall) {   // you fall
       S.fell = true; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc() }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
@@ -699,7 +699,7 @@
     B.zone.style.left = ((tg - w + 1) / 2 * 100).toFixed(2) + '%'; B.zone.style.width = (w * 100).toFixed(2) + '%';
     B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%';
     B.track.setAttribute('data-l', lv); B.track.classList.toggle('brk', brk >= 0);
-    var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = brk >= 0 ? '☕ Break time! Relax your fingers… ' + Math.ceil(ZG_BRK[brk][1] - t) + 's' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
+    var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = brk >= 0 ? (brk === ZG_BRK.length - 1 ? '⚠️ Last stage: only 1 second to get back! ' : '☕ Break time! Relax your fingers… ') + Math.ceil(ZG_BRK[brk][1] - t) + 's' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
     if (B.info.textContent !== txt) B.info.textContent = txt;
   }
   function zgView(s) {
@@ -964,7 +964,7 @@
         { q: 'Which song is number ' + (n + 1) + ' on the setlist?', a: s.setlist[n], o: edPickOpts(s.setlist[n], s.setlist) },
         { q: 'What does the neon sign say?', a: s.neon, o: edPickOpts(s.neon, ['DOUZE', 'PARTY', 'ENCORE', 'DANCE', 'GLAM', 'LOVE']) },
         { q: 'How many dancers (in colour) are on the floor?', a: String(s.dancers), o: edNums(s.dancers, 1, 7) },
-        { q: 'What colour is DJ Konstantin’s jacket?', a: s.jacket, o: edPickOpts(s.jacket, ['purple', 'blue', 'green', 'red', 'gold']), col: 1 }
+        { q: 'What colour is DJ Ohrmeister’s jacket?', a: s.jacket, o: edPickOpts(s.jacket, ['purple', 'blue', 'green', 'red', 'gold']), col: 1 }
       ];
       return [{ t: 'syms', q: 'Watch the DJ booth: five symbols light up, one after the other. Tap them in that order!', a: s.panel }].concat(shuffle(mc).slice(0, 2));
     }
