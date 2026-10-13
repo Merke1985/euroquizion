@@ -7897,7 +7897,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, fake: 3 * (1.5 + 0.4 * n), note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 5, organ: 4.5 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, fake: 3 * (1.5 + 0.4 * n), note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 6, organ: 4.5 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
