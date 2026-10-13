@@ -971,7 +971,7 @@
   }
   function edMini(p) {   // a small cartoon guest for the phone: hair colour, hair style and top
     var H = ED_HEX[p.hair] || p.hair, T = ED_HEX[p.top] || p.top, K = ' stroke="#2b1830" stroke-width="2.4" stroke-linejoin="round"', h = '';
-    if (p.st === 'long') h += '<path d="M8 20 Q4 44 12 46 L38 46 Q46 44 42 20 Z" fill="' + H + '"' + K + '/>';
+    if (p.st === 'long') h += '<path d="M10 20 Q1 38 7 51 Q11 47 14 53 Q17 42 15 32 L35 32 Q33 42 36 53 Q39 47 43 51 Q49 38 40 20 Z" fill="' + H + '"' + K + '/>';
     if (p.st === 'pony') h += '<ellipse cx="42" cy="22" rx="5" ry="11" fill="' + H + '"' + K + ' transform="rotate(25 42 22)"/>';
     h += p.dress ? '<path d="M17 44 Q25 41 33 44 L40 70 Q25 74 10 70 Z" fill="' + T + '"' + K + '/>' : '<rect x="14" y="43" width="22" height="27" rx="9" fill="' + T + '"' + K + '/>';
     h += '<circle cx="25" cy="26" r="15" fill="#f6cfb2"' + K + '/>';

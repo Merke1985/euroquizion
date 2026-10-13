@@ -189,6 +189,44 @@ var Music = (function () {
     } catch (e) {}
   }
   // ---- The Final Chase: a nervous heartbeat under everything, eerie wails now and then, and a chomp ----
+
+  // A mysterious loop (Where the Hell Is Edgar?'s story): a slow detective walk in D minor. Plucked bass, a soft pad,
+  // a music-box melody with an echo, and a quiet tick-tock. keep(): checked all the time; once it says no, it fades out.
+  var myT = null, myOut = null, myStep = 0, myNext = 0, myKeep = null;
+  var MY_BARS = [[38, [62, 65, 69]], [34, [62, 65, 70]], [31, [62, 67, 70]], [33, [61, 64, 67]]];
+  var MY_MEL = [74, null, null, 77, null, 76, null, null, 72, null, null, null, 70, null, 69, null, 70, null, 74, null, null, 72, null, null, 73, null, null, null, null, null, 69, null];
+  var MY_E = 60 / 76 / 2;   // (an eighth at 76 bpm)
+  function myTone(type, f, t, len, v, cut, att) {
+    var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = type; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = cut || 2000;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + (att || 0.01)); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(lp); lp.connect(g); g.connect(myOut); o.start(t); o.stop(t + len + 0.05);
+  }
+  function mySched(i, t) {
+    var bar = Math.floor(i / 8) % 4, e = i % 8, ch = MY_BARS[bar], r = ch[0];
+    if (e === 0 || e === 3 || e === 4 || e === 6) myTone('triangle', hz(r + [0, 0, 0, 7, 12, 0, 7, 0][e] + 12), t, 0.32, 0.16, 700);   // the plucked bass
+    if (e === 0) ch[1].forEach(function (n) { myTone('sine', hz(n - 12), t, MY_E * 8.5, 0.03, 900, 0.6); });   // the pad
+    var m = MY_MEL[i % 32]; if (m != null && Math.floor(i / 32) % 2 === 1) { myTone('sine', hz(m), t, 1.4, 0.07, 5000); myTone('sine', hz(m) * 2.01, t, 0.6, 0.015, 6000); }   // the music box (every other time round)
+    if (e % 2 === 0) { if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; }
+      var sn = ctx.createBufferSource(), ng = ctx.createGain(), bf = ctx.createBiquadFilter(); sn.buffer = noiseBuf; bf.type = 'bandpass'; bf.frequency.value = e % 4 === 0 ? 2600 : 1900; bf.Q.value = 8;
+      ng.gain.setValueAtTime(0.09, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.04); sn.connect(bf); bf.connect(ng); ng.connect(myOut); sn.start(t); sn.stop(t + 0.05); }   // tick… tock…
+  }
+  function mystery(on, keep) {
+    if (!on) { if (myT) { clearInterval(myT); myT = null; try { var o = myOut; o.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.4); setTimeout(function () { try { o.disconnect(); } catch (e) {} }, 2500); } catch (e) {} myOut = null; } return; }
+    if (myT || !ac()) return;
+    try {
+      myKeep = keep || null;
+      myOut = ctx.createGain(); myOut.gain.value = 0.0001; myOut.gain.setTargetAtTime(Math.max(0.0001, 0.9 * vol.music), ctx.currentTime, 0.6);
+      var dl = ctx.createDelay(1), fb = ctx.createGain(), wet = ctx.createGain(); dl.delayTime.value = MY_E * 1.5; fb.gain.value = 0.32; wet.gain.value = 0.35;   // an echo, for the mystery
+      myOut.connect(ctx.destination); myOut.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(ctx.destination);
+      myStep = 0; myNext = ctx.currentTime + 0.1;
+      myT = setInterval(function () {
+        if (myKeep && !myKeep()) { mystery(false); return; }
+        if (muted) return;
+        while (myNext < ctx.currentTime + 0.3) { mySched(myStep, myNext); myStep++; myNext += MY_E; }
+      }, 80);
+    } catch (e) {}
+  }
   function ac() {
     if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
     if (ctx.state === 'suspended') ctx.resume();
@@ -403,5 +441,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

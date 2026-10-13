@@ -492,7 +492,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'scene') && $('hsov')) $('hsov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
-    if (G.phase !== 'cluerooms' && $('edov')) { $('edov').remove(); clearInterval(edTick); }
+    if (G.phase !== 'cluerooms' && $('edov') && !$('edov').classList.contains('leaving')) { $('edov').remove(); clearInterval(edTick); }
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
     if (G.phase !== 'fake' && $('fkov')) { $('fkov').remove(); clearInterval(fkTick); }
@@ -3578,7 +3578,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       sol: { who: pick(CLUE_WHO).id, where: pick(CLUE_WHERE).id, what: pick(CLUE_WHAT).id } };
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
-    clueShow(); if (!REMOTE) Music.want(true);   // the studio music under the story and the briefing; Edgar's tune once the search starts
+    clueShow(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); }   // mysterious music under the story and the briefing; Edgar's tune once the search starts
     G.clueSting = false;   // (the sting plays right after “abducted!”)
     var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); ov.classList.add('nohosts'); ov.classList.add('noframe'); }
     setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('noframe'); Music.blip(); } }, 2600);   // the framed photo, a little later
@@ -3604,6 +3604,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     at(t, function () { clueLeave(edStart); });
   }
+  function edMystKeep() { var g = G.clue; return !!g && (g.st === 'intro' || g.st === 'brief') && (G.phase === 'fun' || G.phase === 'cluerooms'); }   // (the mysterious music: only during the story and the briefing)
   function clueSay(who, txt) {
     var ov = $('clueov'); if (!ov) return;
     [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); });
@@ -3808,12 +3809,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (o.boa) h += '<g fill="' + (ED_COL[o.boa] || o.boa) + '" stroke="' + ED_INK + '" stroke-width="1.6">' + [-20, -12, -4, 4, 12, 20].map(function (bx, i) { return '<circle cx="' + bx + '" cy="' + (-76 + Math.abs(bx) * .3 + (i % 2) * 3) + '" r="7"/>'; }).join('') + '<circle cx="-26" cy="-58" r="6"/><circle cx="26" cy="-58" r="6"/><circle cx="-28" cy="-44" r="5"/><circle cx="28" cy="-44" r="5"/></g>';
     // the big head
     var st = o.hairStyle || 'short', hy = -104;
-    if (st === 'long') h += '<path d="M-25 ' + (hy - 4) + ' Q-30 ' + (hy + 30) + ' -20 ' + (hy + 34) + ' L20 ' + (hy + 34) + ' Q30 ' + (hy + 30) + ' 25 ' + (hy - 4) + ' Z" fill="' + H + '"' + K + '/>';
+    if (st === 'long') h += '<path d="M-23 ' + (hy - 6) + ' Q-35 ' + (hy + 18) + ' -29 ' + (hy + 42) + ' Q-24 ' + (hy + 37) + ' -21 ' + (hy + 47) + ' Q-15 ' + (hy + 32) + ' -15 ' + (hy + 12) + ' L15 ' + (hy + 12) + ' Q15 ' + (hy + 32) + ' 21 ' + (hy + 47) + ' Q24 ' + (hy + 37) + ' 29 ' + (hy + 42) + ' Q35 ' + (hy + 18) + ' 23 ' + (hy - 6) + ' Z" fill="' + H + '"' + K + '/>';   /* (long hair falling past the shoulders in locks, not a hood) */
     if (st === 'pony') h += '<ellipse cx="26" cy="' + (hy + 2) + '" rx="8" ry="18" fill="' + H + '"' + K + ' transform="rotate(25 26 ' + hy + ')"/>';
     if (st === 'bun') h += '<circle cx="0" cy="' + (hy - 28) + '" r="10" fill="' + H + '"' + K + '/>';
     h += '<ellipse cx="0" cy="' + hy + '" rx="23" ry="22" fill="' + skin + '"' + K + '/>';
     if (st === 'curly') h += '<g fill="' + H + '"' + K + '>' + [[-18, -14], [-9, -21], [2, -23], [13, -20], [20, -10], [-21, -3]].map(function (c) { return '<circle cx="' + c[0] + '" cy="' + (hy + c[1]) + '" r="9"/>'; }).join('') + '</g>';
     else h += '<path d="M-24 ' + (hy + 2) + ' Q-25 ' + (hy - 25) + ' 0 ' + (hy - 25) + ' Q25 ' + (hy - 25) + ' 24 ' + (hy + 2) + ' Q18 ' + (hy - 10) + ' 4 ' + (hy - 12) + ' Q-6 ' + (hy - 6) + ' -24 ' + (hy + 2) + ' Z" fill="' + H + '"' + K + '/>';
+    if (st === 'long') h += '<path d="M-3 ' + (hy - 24) + ' Q-6 ' + (hy - 16) + ' -14 ' + (hy - 9) + '" stroke="' + ED_INK + '" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".55"/>';   /* (a parting) */
     if (o.glasses) h += '<g fill="#15101c" stroke="' + ED_INK + '" stroke-width="1.5"><rect x="-17" y="' + (hy - 3) + '" width="14" height="10" rx="4"/><rect x="3" y="' + (hy - 3) + '" width="14" height="10" rx="4"/></g><line x1="-3" y1="' + (hy + 1) + '" x2="3" y2="' + (hy + 1) + '" stroke="#15101c" stroke-width="2"/><rect x="-14" y="' + (hy - 1) + '" width="4" height="2" fill="#fff" opacity=".7"/>';
     else h += '<ellipse cx="-8" cy="' + (hy + 2) + '" rx="3.4" ry="4.4" fill="' + ED_INK + '"/><ellipse cx="8" cy="' + (hy + 2) + '" rx="3.4" ry="4.4" fill="' + ED_INK + '"/><circle cx="-7" cy="' + hy + '" r="1.3" fill="#fff"/><circle cx="9" cy="' + hy + '" r="1.3" fill="#fff"/>';
     h += '<ellipse cx="-14" cy="' + (hy + 9) + '" rx="4.5" ry="2.6" fill="#ff8aa8" opacity=".75"/><ellipse cx="14" cy="' + (hy + 9) + '" rx="4.5" ry="2.6" fill="#ff8aa8" opacity=".75"/><path d="M-4 ' + (hy + 11) + ' Q0 ' + (hy + 15) + ' 4 ' + (hy + 11) + '" stroke="' + ED_INK + '" stroke-width="2" fill="none" stroke-linecap="round"/>';
@@ -3874,7 +3876,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // (one round of 30 s: out from behind the screen, sit down, off to the fridge for a drink (hidden behind its open door for a while), back behind the screen)
       var x = SX[p.seat], from = 742 - x, fr = 92 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top }, dl = 'animation-delay:' + (3 + k * 20) + 's;--mid:' + Math.round(from * .55) + 'px;--mid2:' + Math.round(from * .3) + 'px';
       h += '<g class="edsit" style="--from:' + from + 'px;--fr:' + fr + 'px;' + dl + '"><g class="edst">' + edPerson(x, 404, Object.assign({ walk: 1 }, o)) + '</g><g class="edsi">' + edPerson(x - 6, 400, Object.assign({ sit: 1 }, o)) + '</g></g>' +
-        '<g class="edfdoor" style="' + dl + '"><path d="M24 124 L84 108 L84 450 L24 428 Z" fill="#eef1f6" stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M32 134 L76 122 L76 436 L32 420 Z" fill="none" stroke="#c9ced8" stroke-width="2"/><rect x="34" y="190" width="30" height="50" rx="6" fill="#3a4050" stroke="' + ED_INK + '" stroke-width="1.5"/><rect x="72" y="196" width="6" height="130" rx="3" fill="#b8bfcc" stroke="' + ED_INK + '" stroke-width="1.5"/></g>';   /* (the left door, open just a little: they lean in, half hidden) */
+        '<g class="edfdoor" style="' + dl + '"><path d="M24 124 L4 104 L4 452 L24 428 Z" fill="#dfe3ea" stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M20 136 L8 124 L8 438 L20 420 Z" fill="#eef1f6" stroke="#c9ced8" stroke-width="1.5"/>' + [200, 280, 360].map(function (y) { return '<path d="M8 ' + (y - 8) + ' L20 ' + y + ' L20 ' + (y + 12) + ' L8 ' + (y + 6) + ' Z" fill="#bfe8ff" stroke="' + ED_INK + '" stroke-width="1.2"/>'; }).join('') + '</g>';   /* (the left door, swung open to the left on its hinge: the inside of the door with its shelves; they lean into the fridge) */
     });
     // the big folding screen they hide behind, and someone else's legs peeking out under it
     h += '<g' + K + '>' + [0, 1, 2].map(function (i) { return '<rect x="' + (692 + i * 34) + '" y="' + (150 + (i % 2) * 6) + '" width="34" height="250" rx="6" fill="' + ['#f6c8d8', '#fbe0ea', '#f6c8d8'][i] + '"/>'; }).join('') + '</g><g fill="#ff6fb5" opacity=".7">' + [0, 1, 2].map(function (i) { return '<path d="M' + (709 + i * 34) + ' ' + (210 + i * 30) + ' l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z"/>'; }).join('') + '</g>';
@@ -3918,7 +3920,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     s.socks.forEach(function (k, i) {
       var x = 262 + i * 66, pl = s.plug.filter(function (p) { return p.s === i; })[0];
       h += '<rect x="' + x + '" y="100" width="52" height="52" rx="6" fill="#16181e"/>' + edSock(k, x + 8, 106, 36) +
-        '<circle cx="' + (x + 26) + '" cy="186" r="16" fill="#0c0c10" stroke="' + (pl ? '#3ddc84' : '#555') + '" stroke-width="4"' + (pl ? ' class="edblink" style="animation-delay:' + (-i * .37) + 's"' : '') + '/>';
+        '<circle cx="' + (x + 26) + '" cy="186" r="16" fill="#0c0c10" stroke="' + (pl ? ED_COL[pl.c] : '#555') + '" stroke-width="4"' + (pl ? ' class="edblink" style="animation-delay:' + (-i * .37) + 's"' : '') + '/>';
       if (pl) h += '<circle cx="' + (x + 26) + '" cy="186" r="9" fill="' + ED_COL[pl.c] + '"/><path d="M' + (x + 26) + ' 196 C' + (x + 26) + ' 260 ' + (x + 26 - 40 + i * 10) + ' 300 ' + (x - 20 + i * 18) + ' 360" stroke="' + ED_COL[pl.c] + '" stroke-width="9" fill="none" stroke-linecap="round"/>';
     });
     // amps, guitars, a mic stand, the running order and the roadie
@@ -3972,7 +3974,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = '';
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) Music.want(true); edShow();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } edShow();
     var lines = [
       ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
       ['her', 'The Green Room! Who sits where? The guests only sit down now and then, so keep your eyes open. 🛋️', 'green'],
@@ -4006,7 +4008,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.clue; if (!g) return;
     g.st = 'rooms'; g.ends = Date.now() + ED_MS;
     var ov = $('edov'); if (ov) { ov.classList.add('go'); ov.removeAttribute('data-lit'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); }); }
-    push(); Music.ding(); whooshes([0, 300]); if (!REMOTE) Music.want(false); clueSong();   // Edgar's tune: from the search to the end of the clue questions
+    push(); Music.ding(); whooshes([0, 300]); if (!REMOTE) Music.mystery(false); clueSong();   // Edgar's tune: from the search to the end of the clue questions
     // the bots: a room, ~20–32 seconds, a few seconds walking to the next
     bots.forEach(function (b) {
       if (!players[b.pid] || players[b.pid].off) return;
@@ -4046,7 +4048,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.clue; if (!g || g.st !== 'rooms') return;
     clearInterval(edTick); g.st = 'ask'; g.n = CLUE_N;   // (on to the accusation)
     var ov = $('edov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
-    setTimeout(function () { var o = $('edov'); if (o) o.remove(); clueAccuse(); }, 900);
+    clueAccuse();   // (the accusation is built right away, underneath: the rooms fade away on top of it, no screen in between)
+    setTimeout(function () { var o = $('edov'); if (o && o.classList.contains('leaving')) o.remove(); }, 900);
   }
   // The big screen: the four rooms, full screen, the clock in the middle. Every player's avatar walks to the room they
   // are searching (a spyglass wobbling over it) and back to the hallway around the clock in between. Nothing about
