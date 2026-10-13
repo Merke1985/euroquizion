@@ -1460,7 +1460,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Search the four rooms on your phone in two minutes for secret clues, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
     fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
-    note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
+    note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts before the sound system breaks down (10 seconds to one minute). Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet, from one star up to a group of five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Off it for too long and you fall. The last ones standing win!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
@@ -5848,9 +5848,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   net.on('organ', orMsg);
   // ---------- Hold That Note ----------
   // Technical problems: the sound system breaks down in the middle of every high note. A diva rises on stage in an
-  // enormous gown; everyone predicts on their phone how long the note will last (10 to 60 seconds) and, once locked in,
-  // gets the controls (power slider, power boost, cooling fan) until 10 seconds into the note. Everyone steers the same
-  // singer; a hidden random glitch of up to 10 seconds either way is added. The closest prediction wins.
+  // enormous gown; everyone predicts on their phone how long the note will last (10 to 60 seconds), then she sings until
+  // the sound system breaks down (a random moment). The closest prediction wins.
   var DIVA = '<svg class="diva" viewBox="0 0 600 720" aria-hidden="true"><defs><linearGradient id="ntgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f7fb"/><stop offset=".5" stop-color="#bfc2d3"/><stop offset="1" stop-color="#6e7290"/></linearGradient><linearGradient id="nttier" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffb3e1"/></linearGradient><radialGradient id="ntskin" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#f7d2b6"/><stop offset="1" stop-color="#d9a17f"/></radialGradient></defs><path d="M262 250 Q300 238 338 250 L360 330 L240 330 Z" fill="url(#ntgown)"/><path d="M240 320 Q300 300 360 320 Q420 430 470 470 Q300 500 130 470 Q180 430 240 320 Z" fill="url(#ntgown)"/><path d="M130 462 Q300 492 470 462 Q520 540 560 590 Q300 640 40 590 Q80 540 130 462 Z" fill="url(#ntgown)"/><path d="M40 582 Q300 632 560 582 Q590 650 600 720 L0 720 Q10 650 40 582 Z" fill="url(#ntgown)"/><path d="M130 466 Q300 496 470 466" stroke="url(#nttier)" stroke-width="9" fill="none"/><path d="M40 586 Q300 636 560 586" stroke="url(#nttier)" stroke-width="11" fill="none"/><path d="M240 322 Q300 302 360 322" stroke="url(#nttier)" stroke-width="7" fill="none"/><g class="dvfringe" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity=".9"><line x1="245" y1="322" x2="247" y2="344"/><line x1="259" y1="317" x2="261" y2="339"/><line x1="272" y1="313" x2="274" y2="335"/><line x1="286" y1="311" x2="288" y2="333"/><line x1="300" y1="310" x2="302" y2="332"/><line x1="314" y1="311" x2="316" y2="333"/><line x1="328" y1="313" x2="330" y2="335"/><line x1="341" y1="317" x2="343" y2="339"/><line x1="355" y1="322" x2="357" y2="344"/><line x1="135" y1="466" x2="137" y2="496"/><line x1="151" y1="469" x2="153" y2="499"/><line x1="166" y1="471" x2="168" y2="501"/><line x1="182" y1="473" x2="184" y2="503"/><line x1="198" y1="475" x2="200" y2="505"/><line x1="214" y1="477" x2="216" y2="507"/><line x1="229" y1="478" x2="231" y2="508"/><line x1="245" y1="479" x2="247" y2="509"/><line x1="261" y1="480" x2="263" y2="510"/><line x1="276" y1="481" x2="278" y2="511"/><line x1="292" y1="481" x2="294" y2="511"/><line x1="308" y1="481" x2="310" y2="511"/><line x1="324" y1="481" x2="326" y2="511"/><line x1="339" y1="480" x2="341" y2="510"/><line x1="355" y1="479" x2="357" y2="509"/><line x1="371" y1="478" x2="373" y2="508"/><line x1="386" y1="477" x2="388" y2="507"/><line x1="402" y1="475" x2="404" y2="505"/><line x1="418" y1="473" x2="420" y2="503"/><line x1="434" y1="471" x2="436" y2="501"/><line x1="449" y1="469" x2="451" y2="499"/><line x1="465" y1="466" x2="467" y2="496"/><line x1="45" y1="586" x2="47" y2="622"/><line x1="63" y1="589" x2="65" y2="625"/><line x1="80" y1="592" x2="82" y2="628"/><line x1="98" y1="595" x2="100" y2="631"/><line x1="115" y1="598" x2="117" y2="634"/><line x1="133" y1="600" x2="135" y2="636"/><line x1="151" y1="602" x2="153" y2="638"/><line x1="168" y1="604" x2="170" y2="640"/><line x1="186" y1="606" x2="188" y2="642"/><line x1="203" y1="607" x2="205" y2="643"/><line x1="221" y1="609" x2="223" y2="645"/><line x1="238" y1="610" x2="240" y2="646"/><line x1="256" y1="610" x2="258" y2="646"/><line x1="274" y1="611" x2="276" y2="647"/><line x1="291" y1="611" x2="293" y2="647"/><line x1="309" y1="611" x2="311" y2="647"/><line x1="326" y1="611" x2="328" y2="647"/><line x1="344" y1="610" x2="346" y2="646"/><line x1="362" y1="610" x2="364" y2="646"/><line x1="379" y1="609" x2="381" y2="645"/><line x1="397" y1="607" x2="399" y2="643"/><line x1="414" y1="606" x2="416" y2="642"/><line x1="432" y1="604" x2="434" y2="640"/><line x1="449" y1="602" x2="451" y2="638"/><line x1="467" y1="600" x2="469" y2="636"/><line x1="485" y1="598" x2="487" y2="634"/><line x1="502" y1="595" x2="504" y2="631"/><line x1="520" y1="592" x2="522" y2="628"/><line x1="537" y1="589" x2="539" y2="625"/><line x1="555" y1="586" x2="557" y2="622"/></g><g fill="#fff" opacity=".95"><circle cx="200" cy="420" r="3"/><circle cx="380" cy="400" r="3"/><circle cx="300" cy="440" r="2.5"/><circle cx="150" cy="540" r="3"/><circle cx="450" cy="530" r="3"/><circle cx="300" cy="560" r="3.5"/><circle cx="90" cy="650" r="3"/><circle cx="520" cy="660" r="3"/><circle cx="240" cy="670" r="3"/><circle cx="380" cy="690" r="3"/><circle cx="330" cy="360" r="2"/><circle cx="270" cy="380" r="2"/></g><path d="M268 200 Q300 190 332 200 L340 258 Q300 270 260 258 Z" fill="url(#ntgown)"/><g fill="#ffd6f0"><circle cx="285" cy="215" r="2.5"/><circle cx="310" cy="222" r="2.5"/><circle cx="296" cy="238" r="2.5"/><circle cx="320" cy="245" r="2"/><circle cx="278" cy="244" r="2"/></g><g fill="#e9c060"><circle cx="252" cy="80" r="34"/><circle cx="300" cy="52" r="38"/><circle cx="348" cy="80" r="34"/><circle cx="250" cy="126" r="22"/><circle cx="350" cy="126" r="22"/><circle cx="260" cy="160" r="16"/><circle cx="340" cy="160" r="16"/></g><g fill="#f7dc8c"><circle cx="262" cy="70" r="14"/><circle cx="300" cy="40" r="16"/><circle cx="338" cy="70" r="14"/><circle cx="244" cy="118" r="8"/><circle cx="356" cy="118" r="8"/></g><path d="M266 206 Q230 170 214 120" stroke="url(#ntskin)" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M334 206 Q372 180 388 132" stroke="url(#ntskin)" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="213" cy="114" r="11" fill="url(#ntskin)"/><circle cx="389" cy="126" r="11" fill="url(#ntskin)"/><g class="dvmic"><rect x="200" y="96" width="10" height="34" rx="4" fill="#333" transform="rotate(-25 205 113)"/><circle cx="198" cy="94" r="9" fill="#777"/></g><rect x="290" y="168" width="20" height="30" rx="8" fill="url(#ntskin)"/><ellipse cx="300" cy="118" rx="44" ry="52" fill="url(#ntskin)"/><path d="M254 100 Q258 56 300 54 Q342 56 346 100 Q332 76 312 74 Q300 92 270 84 Q262 90 254 100 Z" fill="#e9c060"/><g class="dveyesc"><path d="M276 112 Q284 118 292 112" stroke="#2a1410" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M308 112 Q316 118 324 112" stroke="#2a1410" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M276 112 L272 108 M292 112 L295 107 M308 112 L305 107 M324 112 L328 108" stroke="#2a1410" stroke-width="2"/></g><g class="dveyeso"><ellipse cx="284" cy="111" rx="9" ry="7" fill="#fff"/><ellipse cx="316" cy="111" rx="9" ry="7" fill="#fff"/><circle cx="285" cy="111" r="4.5" fill="#3a6ea8"/><circle cx="317" cy="111" r="4.5" fill="#3a6ea8"/><circle cx="285" cy="111" r="2" fill="#111"/><circle cx="317" cy="111" r="2" fill="#111"/><circle cx="286.5" cy="109.5" r="1.2" fill="#fff"/><circle cx="318.5" cy="109.5" r="1.2" fill="#fff"/><path d="M274 106 Q284 100 294 106 M306 106 Q316 100 326 106" stroke="#2a1410" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M275 106 L271 102 M293 106 L296 101 M307 106 L304 101 M325 106 L329 102" stroke="#2a1410" stroke-width="2"/></g><path d="M273 100 Q284 94 293 100" stroke="#a07a2a" stroke-width="3" fill="none"/><path d="M307 100 Q316 94 327 100" stroke="#a07a2a" stroke-width="3" fill="none"/><ellipse cx="270" cy="132" rx="8" ry="5" fill="#ff8fa3" opacity=".5"/><ellipse cx="330" cy="132" rx="8" ry="5" fill="#ff8fa3" opacity=".5"/><ellipse class="dvmouth" cx="300" cy="146" rx="10" ry="13" fill="#7a1430"/><ellipse class="dvtongue" cx="300" cy="152" rx="6" ry="4" fill="#e05570"/><circle cx="256" cy="130" r="5" fill="#ffd23f"/><circle cx="344" cy="130" r="5" fill="#ffd23f"/></svg>';   // (an original character: big blonde curls, a towering silver fringe gown)
   var NOTE_GUESS_MS = 20000, NOTE_CTL_MS = 12000, NOTE_MIN = 10, NOTE_MAX = 60, NOTE_LEAD = 6, noteTimer = null, noteTick = null;   // (NOTE_LEAD: seconds of the recording before the note itself)
   function noteElapsed(g) {   // seconds of the note so far (negative during the lead-in); the recording's own clock when it plays
@@ -5870,9 +5869,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lines = [
       ['him', 'Oh no, Europe… we have technical problems! 😱 Our sound system breaks down in the middle of every big high note!'],
       ['her', 'How long will the next note last before it all goes wrong? Predict it on your phone: between 10 seconds and one minute.'],
-      ['him', 'Once everyone has locked in, you get the controls: the POWER slider, a POWER BOOST and a COOLING FAN! 🎛️'],
-      ['her', 'More power and the boost make it break down sooner. The fan keeps it going longer. You all control the same singer!'],
-      ['him', 'Only players who locked in a prediction get the controls. And there’s always a little random glitch… 😈'],
       ['her', 'The closest prediction wins! Ladies and gentlemen… our diva! 💃']
     ];
     var t = 1800;
@@ -5911,10 +5907,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var v = Math.round(15 + Math.random() * 40), id = g.id;
       setTimeout(function () { noteMsg({ pid: b.pid, id: id, guess: v }); }, 2000 + Math.random() * 8000);
     });
-    clearTimeout(noteTimer); noteTimer = setTimeout(noteCtl, NOTE_GUESS_MS);
+    clearTimeout(noteTimer); noteTimer = setTimeout(noteGo, NOTE_GUESS_MS);
     clearInterval(noteTick); noteTick = setInterval(function () { if (!G.note || (G.note.st !== 'guess' && G.note.st !== 'ctl')) { clearInterval(noteTick); return; } noteShow(); }, 500);
   }
-  function noteCtl() {   // …then the controls, for everyone who locked in a prediction, before she sings
+  function noteGo() { var g = G.note; if (!g || g.st !== 'guess') return; clearTimeout(noteTimer); g.st = 'ctl'; noteLock(); noteSing(); }   // …then she sings (no controls: just the guess)
+  function noteCtl() {   // (not used any more: the controls were taken out)
     var g = G.note; if (!g || g.st !== 'guess') return;
     g.st = 'ctl'; g.ends = Date.now() + NOTE_CTL_MS; push(); noteShow(); Music.blip();
     bots.forEach(function (b) {
@@ -5932,7 +5929,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (g.st !== 'guess' || g.guess[m.pid] != null) return;
       var v = Math.round(Number(m.guess)); if (!(v >= NOTE_MIN && v <= NOTE_MAX)) return;
       g.guess[m.pid] = v; Music.plop(Object.keys(g.guess).length); push(); noteShow();
-      if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.guess[p.pid] != null; })) { clearTimeout(noteTimer); noteTimer = setTimeout(noteCtl, 1200); }
+      if (list().filter(function (p) { return !p.off; }).every(function (p) { return g.guess[p.pid] != null; })) { clearTimeout(noteTimer); noteTimer = setTimeout(noteGo, 1200); }
       return;
     }
     if (m.ctl && g.st === 'ctl' && g.guess[m.pid] != null) {   // (the controls only work once your prediction is locked in)
@@ -5952,11 +5949,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     };
     noteTick = requestAnimationFrame(tick);
   }
-  function noteLock() {   // the controls close, and how long the note lasts is settled (with a hidden random glitch)
+  function noteLock() {   // how long the note lasts is settled: a random moment
     var g = G.note; if (!g || g.lk) return;
     g.lk = true;
-    var s = notePush(g); g.base = Math.round((50 - 30 * s) * 10) / 10; g.off = Math.round((Math.random() * 20 - 10) * 10) / 10;
-    g.len = Math.max(NOTE_MIN, Math.min(NOTE_MAX, Math.round((g.base + g.off) * 10) / 10));
+    g.len = Math.round((NOTE_MIN + 2 + Math.random() * (NOTE_MAX - NOTE_MIN - 4)) * 10) / 10;   // (a random moment between 0:12 and 0:58)
   }
   function noteCut() {
     var g = G.note; if (!g) return;
@@ -5986,7 +5982,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return { id: g.id, st: g.st, left: g.st === 'guess' || g.st === 'ctl' ? Math.max(0, g.ends - Date.now()) : 0, locked: locked,
       guess: end ? g.guess : null, len: end ? g.len : null, win: g.st === 'done' ? g.win : null, min: NOTE_MIN, max: NOTE_MAX };
   }
-  // The big screen: the stage, the diva (once she is announced), the control desk while the controls are open, a timer,
+  // The big screen: the stage, the diva (once she is announced), a timer,
   // and a line from 0 to 60 seconds with a needle running along it while she sings (everyone's prediction appears at the end).
   function noteShow() {
     var g = G.note; if (!g) return;
@@ -6008,7 +6004,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.setAttribute('data-st', g.st);
     var open = g.st === 'guess';
     ov.classList.toggle('lead', g.st === 'sing' && noteElapsed(g) < 0);   // the lead-in of the recording: her mouth goes quickly open and shut
-    ov.classList.toggle('ctlopen', g.st === 'guess' || g.st === 'ctl');
+    ov.classList.remove('ctlopen');   // (no control desk any more)
     var el = g.st === 'sing' ? Math.max(0, noteElapsed(g)) : g.st === 'cut' || g.st === 'done' ? g.len : 0;
     ov.querySelector('.nttimer').textContent = noteTime(el, true);
     ov.querySelector('.ntneedle').style.left = Math.min(100, el / NOTE_MAX * 100) + '%';
@@ -6025,7 +6021,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     [].forEach.call(pins.querySelectorAll('.ntpin'), function (e) { var k = e.getAttribute('data-pid'); e.classList.toggle('win', g.st === 'done' && g.win.indexOf(k) >= 0); });
     var secs = Math.ceil(Math.max(0, g.ends - Date.now()) / 1000);
-    var msg = g.st === 'intro' ? '' : g.st === 'guess' ? 'How long will the note last? Predict on your phone! ⏱️ ' + secs + 's' : g.st === 'ctl' ? '🎛️ Grab the controls: power, boost or fan! ' + secs + 's' : g.st === 'sing' ? (noteElapsed(g) < 0 ? 'She takes a deep breath… 🌬️' : 'Hold it… hold it…') : g.st === 'cut' ? '💥 Kaboom!' : '';
+    var msg = g.st === 'intro' ? '' : g.st === 'guess' ? 'How long will the note last? Predict on your phone! ⏱️ ' + secs + 's' : g.st === 'ctl' ? 'Here she goes… 🎤' : g.st === 'sing' ? (noteElapsed(g) < 0 ? 'She takes a deep breath… 🌬️' : 'Hold it… hold it…') : g.st === 'cut' ? '💥 Kaboom!' : '';
     var me = ov.querySelector('.ntmsg'); if (me.textContent !== msg) me.textContent = msg;
     var ph = open ? act.map(function (p) { return '<div class="clp">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em class="' + (g.guess[p.pid] != null ? 'ok' : 'wait') + '">' + (g.guess[p.pid] != null ? '🔒' : '…') + '</em></div>'; }).join('') : '';
     var pl = ov.querySelector('.ntplayers'); if (pl.getAttribute('data-h') !== ph) { pl.setAttribute('data-h', ph); pl.innerHTML = ph; }

@@ -1056,8 +1056,7 @@
   }
 
   // ---------- Hold That Note! ----------
-  // First predict how long the note lasts (10 s to 1 min) and lock it in; then, before she sings, everyone who locked in
-  // gets the controls (the power slider and the Power Boost / Cooling Fan toggles).
+  // Predict how long the note lasts (10 s to 1 min) and lock it in. That's all: then watch her sing.
   var noteSent = '', noteMine = null, ntCtl = { p: 0, t: 0 }, ntCtlId = '', ntCtlAt = 0, ntShutEnd = 0, ntShutT = null;
   function ntTime(s, tenths) { var m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + (tenths ? r.toFixed(1) : Math.floor(r)); }
   $('ntrange').addEventListener('input', function () { $('ntv').textContent = ntTime(+this.value); });
@@ -1098,19 +1097,19 @@
     if (n.st === 'intro') { box.classList.add('hidden'); cb.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note!'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
     if (n.st === 'guess' && !mine) {
       cb.classList.add('hidden'); box.classList.remove('hidden');
-      $('waittitle').textContent = '🎤 How long will the note last?'; $('waitsub').textContent = 'Between 10 seconds and one minute. Lock it in to get the controls!';
+      $('waittitle').textContent = '🎤 How long will the note last?'; $('waitsub').textContent = 'Between 10 seconds and one minute. The closest guess wins!';
       return;
     }
     box.classList.add('hidden');
-    if (n.st === 'guess') { cb.classList.add('hidden'); $('waittitle').textContent = '🔒 Locked in: ' + (g != null ? ntTime(g) : ''); $('waitsub').textContent = 'Waiting for the others… then you get the controls! 🎛️'; return; }
-    if (n.st === 'ctl' && mine) {
+    if (n.st === 'guess') { cb.classList.add('hidden'); $('waittitle').textContent = '🔒 Locked in: ' + (g != null ? ntTime(g) : ''); $('waitsub').textContent = 'Waiting for the others… then she sings! 🎤'; return; }
+    if (n.st === 'ctl' && false) {
       cb.classList.remove('hidden');
       $('waittitle').textContent = '🎛️ Your prediction: ' + (g != null ? ntTime(g) : '🔒'); $('waitsub').textContent = 'Steer the singer! More power and the boost break it sooner, the fan keeps it going longer.';
       cd(); ntShutT = setInterval(function () { if (!state || !state.note || state.note.st !== 'ctl') { clearInterval(ntShutT); return; } cd(); if (Date.now() - ntCtlAt > 2500) ntSendCtl(); }, 250);   /* (sent again now and then, in case a message got lost) */
       return;
     }
     cb.classList.add('hidden');
-    if (n.st === 'ctl') { $('waittitle').textContent = '🎛️ The others are at the controls'; $('waitsub').textContent = 'You didn’t lock in a prediction this time. Watch the big screen!'; return; }
+    if (n.st === 'ctl') { $('waittitle').textContent = '🎤 Here she goes…'; $('waitsub').textContent = g != null ? 'Your prediction: ' + ntTime(g) + '.' : 'Watch the big screen!'; return; }
     if (n.st === 'sing') { $('waittitle').textContent = '🎶 Hold it… hold it…'; $('waitsub').textContent = g != null ? 'Your prediction: ' + ntTime(g) + '.' : 'Watch the big screen!'; return; }
     var gg = n.guess && n.guess[pid] != null ? n.guess[pid] : g;
     var won = n.win && n.win.indexOf(pid) >= 0;
