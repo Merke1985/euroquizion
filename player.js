@@ -530,12 +530,17 @@
   }
   function clueView(s) {
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [];
-    box.classList.remove('compact'); box.classList.remove('acc'); $('v-wait').classList.remove('accmode');
+    box.classList.remove('compact'); box.classList.remove('acc'); box.classList.remove('sentacc'); $('v-wait').classList.remove('accmode');
     show('v-wait');
     if (s.phase === 'clueacc') {
-      if (clueSentId === c.id || (c.acc || {})[pid]) {
-        box.classList.add('hidden');
-        $('waittitle').textContent = '🔍 Accusation sent!'; $('waitsub').textContent = 'Waiting for the other detectives…'; return;
+      if (clueSentId === c.id || (c.acc || {})[pid]) {   // sent: your three cards stay on screen
+        $('waittitle').textContent = '🔍 Accusation sent!'; $('waitsub').textContent = 'Waiting for the other detectives…';
+        if (clueSel.id === c.id && clueSel.who && clueSel.where && clueSel.what) {
+          var lab2 = { where: 'Hidden where?', what: 'Hidden inside?', who: 'Who took him?' }, k2 = 'sent|' + c.id + clueSel.who + clueSel.where + clueSel.what;
+          box.classList.remove('hidden'); box.classList.add('sentacc');
+          if (box.getAttribute('data-k') !== k2) { box.setAttribute('data-k', k2); box.innerHTML = '<div class="clsent">' + ['where', 'what', 'who'].map(function (k) { var x = CLUE_SETS[k].filter(function (y) { return y.id === clueSel[k]; })[0]; return x ? '<div class="clsentc"><small>' + lab2[k] + '</small><i>' + x.icon + '</i><b>' + esc(x.name) + '</b></div>' : ''; }).join('') + '</div>'; }
+        } else box.classList.add('hidden');
+        return;
       }
       $('waittitle').textContent = ''; $('waitsub').textContent = ''; $('waitlabel').textContent = '';   // (everything on one screen: the timer bar on top, all the cards, the button)
       box.classList.remove('hidden'); box.classList.add('compact'); box.classList.add('acc'); $('v-wait').classList.add('accmode');
