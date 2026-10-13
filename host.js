@@ -4505,7 +4505,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TC_ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'], TC_POSES = ['hips', 'wave', 'up', 'kneel', 'point', 'lean', 'kneel'];
   function tcGirl() {
     var m = Math.random() < .4 ? 1 : 0;
-    return { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * TC_COLORS.length), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? pick([3, 3, 7, 8, 5]) : pick([0, 1, 2, 4, 5, 6]), d: Math.floor(Math.random() * 3), v: Math.random() < .35 ? 1 : 0 };   // (hair: 0 long, 1 bob, 2 bun, 3 short, 4 high ponytail, 5 afro, 6 long braid, 7 quiff, 8 man bun; d: dress length (knee, mini, gown); v: a suit with a turtleneck)
+    var w = { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * TC_COLORS.length), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? pick([3, 3, 7, 8, 5]) : pick([0, 1, 2, 4, 5, 6]), d: Math.floor(Math.random() * 3), v: Math.random() < .35 ? 1 : 0 };
+    if (w.h && [2, 4, 8].indexOf(w.y) >= 0) w.y = w.m ? 3 : 1;   // (a bun or a ponytail would poke through a hat: short hair or a bob instead)
+    return w;   // (hair: 0 long, 1 bob, 2 bun, 3 short, 4 high ponytail, 5 afro, 6 long braid, 7 quiff, 8 man bun; d: dress length (knee, mini, gown); v: a suit with a turtleneck)
   }
   // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
   // 2 sun hat, 3 beret), g: sunglasses, s: shoes, k: skin, r: hair colour, y: hairstyle (0 long, 1 bob, 2 bun).
@@ -4918,23 +4920,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (w.y === 7) { var top7 = add(head, new T.SphereGeometry(.31, 18, 10, 0, Math.PI * 2, 0, Math.PI * .45), hr, 0, .06, 0); top7.scale.set(1, .9, 1); var qf = add(head, new T.SphereGeometry(.16, 14, 10), hr, 0, .3, .12); qf.scale.set(1.3, .7, 1.1); }   // a quiff
     else if (w.y === 8) { var top8 = add(head, new T.SphereGeometry(.31, 18, 10, 0, Math.PI * 2, 0, Math.PI * .45), hr, 0, .06, 0); top8.scale.set(1, .9, 1); add(head, new T.SphereGeometry(.1, 12, 10), hr, 0, .26, -.26); }   // a man bun
     else { var top = add(head, new T.SphereGeometry(.31, 18, 10, 0, Math.PI * 2, 0, Math.PI * .45), hr, 0, .06, 0); top.scale.set(1, .9, 1); }
-    if (w.h === 1) { add(head, new T.CylinderGeometry(.24, .24, .5, 18), M('#15151c'), 0, .5, 0); add(head, new T.CylinderGeometry(.4, .4, .03, 20), M('#15151c'), 0, .26, 0); add(head, new T.CylinderGeometry(.245, .245, .08, 18), M('#3a3a48'), 0, .32, 0); }
-    else if (w.h === 2) { add(head, new T.CylinderGeometry(.62, .62, .03, 24), M('#efdcab'), 0, .22, 0); add(head, new T.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#efdcab'), 0, .22, 0); add(head, new T.CylinderGeometry(.3, .3, .07, 18), M('#8b5cf6'), 0, .26, 0); }
-    else if (w.h === 3) { var b = add(head, new T.SphereGeometry(.34, 16, 10), M('#6d3cc0'), -.05, .26, 0); b.scale.set(1.1, .38, 1.1); b.rotation.z = .25; }
+    var hatP = head; if (w.h && w.y === 5) { hatP = new T.Group(); head.add(hatP); hatP.scale.setScalar(1.45); hatP.position.set(0, .12, -.12); }   // (a hat over an afro: a bigger hat, sitting on top of it)
+    if (w.h === 1) { add(hatP, new T.CylinderGeometry(.24, .24, .5, 18), M('#15151c'), 0, .5, 0); add(hatP, new T.CylinderGeometry(.4, .4, .03, 20), M('#15151c'), 0, .26, 0); add(hatP, new T.CylinderGeometry(.245, .245, .08, 18), M('#3a3a48'), 0, .32, 0); }
+    else if (w.h === 2) { add(hatP, new T.CylinderGeometry(.62, .62, .03, 24), M('#efdcab'), 0, .22, 0); add(hatP, new T.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#efdcab'), 0, .22, 0); add(hatP, new T.CylinderGeometry(.3, .3, .07, 18), M('#8b5cf6'), 0, .26, 0); }
+    else if (w.h === 3) { var b = add(hatP, new T.SphereGeometry(.34, 16, 10), M('#6d3cc0'), -.05, .26, 0); b.scale.set(1.1, .38, 1.1); b.rotation.z = .25; }
     else if (w.h === 4) {   // a cowboy hat: a wide brim curled up at the sides
-      var cb = M('#a0642c', { roughness: .8 }), br2 = add(head, new T.SphereGeometry(.62, 24, 8, 0, Math.PI * 2, Math.PI * .44, Math.PI * .12), cb, 0, .02, 0); br2.scale.set(1, .5, .8); br2.material.side = T.DoubleSide;
-      var cr = add(head, new T.CylinderGeometry(.22, .28, .3, 18), M('#b8763a', { roughness: .8 }), 0, .4, 0); cr.scale.set(1, 1, .85); add(head, new T.CylinderGeometry(.285, .285, .05, 18), M('#4a2a10'), 0, .3, 0).scale.set(1, 1, .85);
+      var cb = M('#a0642c', { roughness: .8 }), br2 = add(hatP, new T.SphereGeometry(.62, 24, 8, 0, Math.PI * 2, Math.PI * .44, Math.PI * .12), cb, 0, .02, 0); br2.scale.set(1, .5, .8); br2.material.side = T.DoubleSide;
+      var cr = add(hatP, new T.CylinderGeometry(.22, .28, .3, 18), M('#b8763a', { roughness: .8 }), 0, .4, 0); cr.scale.set(1, 1, .85); add(hatP, new T.CylinderGeometry(.285, .285, .05, 18), M('#4a2a10'), 0, .3, 0).scale.set(1, 1, .85);
     }
     else if (w.h === 5) {   // a baseball cap with a peak
-      add(head, new T.SphereGeometry(.325, 20, 10, 0, Math.PI * 2, 0, Math.PI * .5), M('#e0283a'), 0, .1, 0);
-      var pk2 = add(head, new T.CylinderGeometry(.24, .24, .025, 20, 1, false, -Math.PI / 2, Math.PI), M('#a31424'), 0, .12, .24); pk2.scale.set(1, 1, .9);
-      add(head, new T.SphereGeometry(.03, 8, 6), M('#a31424'), 0, .42, 0);
+      add(hatP, new T.SphereGeometry(.325, 20, 10, 0, Math.PI * 2, 0, Math.PI * .5), M('#e0283a'), 0, .1, 0);
+      var pk2 = add(hatP, new T.CylinderGeometry(.24, .24, .025, 20, 1, false, -Math.PI / 2, Math.PI), M('#a31424'), 0, .12, .24); pk2.scale.set(1, 1, .9);
+      add(hatP, new T.SphereGeometry(.03, 8, 6), M('#a31424'), 0, .42, 0);
     }
     else if (w.h === 6) {   // a fedora with a golden band
-      var fb = add(head, new T.CylinderGeometry(.46, .46, .03, 24), M('#3a3a48'), 0, .24, 0); fb.rotation.x = -.08;
-      var fc = add(head, new T.CylinderGeometry(.24, .28, .28, 18), M('#4a4a5a'), 0, .38, 0); fc.scale.set(1, 1, .9);
-      add(head, new T.CylinderGeometry(.285, .285, .06, 18), M('#d9a520', { metalness: .5, roughness: .4 }), 0, .29, 0).scale.set(1, 1, .9);
-      add(head, new T.BoxGeometry(.3, .04, .5), M('#3a3a48'), 0, .52, 0).scale.set(.7, 1, .5);
+      var fb = add(hatP, new T.CylinderGeometry(.46, .46, .03, 24), M('#3a3a48'), 0, .24, 0); fb.rotation.x = -.08;
+      var fc = add(hatP, new T.CylinderGeometry(.24, .28, .28, 18), M('#4a4a5a'), 0, .38, 0); fc.scale.set(1, 1, .9);
+      add(hatP, new T.CylinderGeometry(.285, .285, .06, 18), M('#d9a520', { metalness: .5, roughness: .4 }), 0, .29, 0).scale.set(1, 1, .9);
+      add(hatP, new T.BoxGeometry(.3, .04, .5), M('#3a3a48'), 0, .52, 0).scale.set(.7, 1, .5);
     }
     if (w.f) {   // a flag on a pole, held up at the side
       var pole = add(g, new T.CylinderGeometry(.025, .025, 3.6, 8), M('#d9a520', { metalness: .6, roughness: .3 }), .62, 2.2, .1);
