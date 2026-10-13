@@ -728,6 +728,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // Draw!: a scribbling pencil on everyone who is still drawing, a green ring once they are done
       var pen = dall && !isIn(p) && busyOf.items[p.pid] ? '<i class="pen" aria-hidden="true">✏️</i>' : '';
       if (!dall && G.sing && G.phase === 'srec' && !isIn(p) && !p.off) pen = '<i class="pen" aria-hidden="true">🎤</i>';   // still recording
+      if (pen && G.phase === 'qall') pen = '<i class="typing" aria-hidden="true"><b></b><b></b><b></b></i>';   // Disqualivision: still typing (three dots under the avatar)
       return '<div class="pl' + (isIn(p) ? ' in' : '') + (p.off ? ' off' : '') + (pen ? ' busy' : '') + '">' + charSvg(p.char) + pen + '<span>' + esc(p.name) + '</span></div>';
     }).join('');
   }
@@ -1109,6 +1110,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var picksTimer = null;
   function showPicks() {
     var order = list().filter(function (p) { return p.pick != null && !(G.draw && p.pid === G.draw.pid); }).sort(function (a, b) { return (a.pickMs || 0) - (b.pickMs || 0); });
+    if (G.best && G.best.quip) order.sort(function (a, b) { return (b.pick - a.pick) || ((a.pickMs || 0) - (b.pickMs || 0)); });   // Disqualivision: the votes come in from the right
     stopTimers(); G.revealAt = 0; G.phase = 'picks'; G.shown = []; push();
     var i = 0, step = function () {
       if (G.phase !== 'picks') return;
@@ -6636,7 +6638,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
 */    var person = function (charId, name, i, flag, won, pc) {   // someone on a sofa: body, head, and now and then a flag to wave
       var col = pc != null && PCOLS[pc] ? PCOLS[pc][0] : ['#e8457c', '#f2b134', '#3fb6c9', '#9b6bf2', '#55c27a', '#f07a3a'][i % 6];
       return '<div class="grp' + (Math.random() < 0.45 ? ' hop' : '') + (won ? ' grwin' : '') + '" style="--d:' + (-Math.random() * 3).toFixed(2) + 's">' + (won ? '<span class="grcrown">👑</span>' : '') +
-        (flag ? '<span class="grflag"><img src="https://flagcdn.com/w80/' + flag + '.png" alt=""></span>' : '') +
+        (flag ? '<i class="grarm" style="background:' + col + '"><b></b></i><span class="grflag"><img src="https://flagcdn.com/w80/' + flag + '.png" alt=""></span>' : '') +   /* (an arm up, the hand holding the flagpole) */
         '<span class="grbody" style="background:' + col + '"></span>' + charSvg(charId) + '</div>';
     };
     var sofa = function (people, k, names) { return '<div class="grsofa" style="--c:' + GR_SOFAS[k % GR_SOFAS.length] + '"><div class="grseat">' + people.join('') + '</div><span class="grfront"></span>' + (names ? '<div class="grnames">' + names.map(function (n) { return '<b>' + esc(n) + '</b>'; }).join('') + '</div>' : '') + '</div>'; };
