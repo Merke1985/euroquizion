@@ -4254,7 +4254,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     g.last[m.pid] = { room: m.room, n: n, c: got, b: bonus, k: g.id + ':' + m.room };
     push();   // (quietly: the big screen gives nothing away about who is where)
-    if (Object.keys(g.rooms).every(function (k) { return g.rooms[k].done.length === ED_ROOMS.length || (players[k] && players[k].off); })) setTimeout(edEnd, 2500);
+    // (the search always runs until the clock reaches 0, together with the song: everyone done early just waits)
     return true;
   }
   function edEnd() {
