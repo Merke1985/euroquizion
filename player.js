@@ -1050,7 +1050,7 @@
   }
   function edQuiz(box, room, s) {
     var R = ED_R.filter(function (r) { return r.id === room; })[0], qs = edQs(room, s), qi = 0, right = 0;
-    var score = function () { return R.max === 3 ? right : right === 3 ? 2 : right === 2 ? 1 : 0; };
+    var score = function () { return qs.length <= R.max ? right : right === 3 ? 2 : right === 2 ? 1 : 0; };   // (one clue per right answer when there are as many questions as clues)
     box._score = score;
     $('waittitle').textContent = R.icon + ' ' + R.name;
     var next = function (ok) {   // a wrong answer locks the room for 10 seconds, then you try the same one again
