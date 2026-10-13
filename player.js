@@ -1656,11 +1656,19 @@
       var list2 = FAN_FLAGS.slice().sort(function (a, b) { return String(countries[a] || a).localeCompare(String(countries[b] || b)); });
       $('ccs').innerHTML = list2.map(function (c) { return '<button type="button" data-cc="' + c + '"' + (tcc[c] ? ' disabled title="Taken by ' + esc(tcc[c]) + '"' : '') + (mine === c ? ' class="mine"' : '') + '><img src="https://flagcdn.com/w80/' + c + '.png" alt=""><span>' + esc(countries[c] || c.toUpperCase()) + '</span></button>'; }).join('');
     }
+    var selNow = Date.now() < pickUntil ? want : (m && m.char), usePic = !!myPic && selNow === 'u:' + pid, pv = usePic ? '<img src="' + myPic + '" alt=""><span>✅ This is you!</span>' : '';
+    if ($('mypicprev')._h !== pv) { $('mypicprev')._h = pv; $('mypicprev').innerHTML = pv; } $('mypicprev').classList.toggle('hidden', !usePic);
+    pickAvVis();
     var left = CHARS.filter(function (c) { return !taken[c.id]; }).length;
     $('pickerr').textContent = left ? (want && taken[want] ? 'Too slow, ' + taken[want] + ' just took that one. Pick another!' : '') : 'All other avatars are taken.';
     if (want && taken[want]) want = null;
   }
-  var flagKey = '', myPick = { key: '', i: -1 }, joinFlow = 0, pickMode = '';
+  var flagKey = '', myPick = { key: '', i: -1 }, joinFlow = 0, pickMode = '', avList = false;
+  function pickAvVis() {   // the avatars only after "No photo?" (or when you already have one of them)
+    var on = pickMode === 'avatar' && avList;
+    $('chars').classList.toggle('hidden', !on); $('pickavnote').classList.toggle('hidden', !on); $('nopic').classList.toggle('hidden', on || pickMode !== 'avatar');
+  }
+  $('nopic').addEventListener('click', function () { avList = true; $('pickerr').textContent = ''; pickAvVis(); setTimeout(function () { try { $('chars').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 50); });
   $('ccs').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-cc]');
     if (!b || b.disabled) return;
@@ -1681,7 +1689,8 @@
     $('picktitle').textContent = mode === 'name' ? 'Your name' : mode === 'flag' ? (joinFlow ? 'Step 2 of 2: which country do you represent?' : 'Your fan flag') : (joinFlow ? 'Step 1 of 2: choose your avatar' : 'Your avatar');
     $('pickerr').textContent = '';
     $('pickname').classList.toggle('hidden', mode !== 'name');
-    $('pickavnote').classList.toggle('hidden', mode !== 'avatar'); $('chars').classList.toggle('hidden', mode !== 'avatar'); $('mypicrow').classList.toggle('hidden', mode !== 'avatar'); $('ccwrap').classList.toggle('hidden', mode !== 'flag');
+    var cur0 = me(); avList = mode === 'avatar' && !joinFlow && !!(cur0 && cur0.char && String(cur0.char).indexOf('u:') !== 0);
+    $('mypicrow').classList.toggle('hidden', mode !== 'avatar'); $('ccwrap').classList.toggle('hidden', mode !== 'flag'); pickAvVis();
     if (state) onState(state);
     if (mode === 'name') { try { $('editname').focus(); $('editname').select(); } catch (e) {} }
   }
@@ -1690,7 +1699,7 @@
   $('changename').addEventListener('click', function () { pickOpen('name'); });
   $('pickdone').addEventListener('click', function () {
     var cur = me();
-    if (pickMode === 'avatar' && joinFlow && !want && !(cur && cur.char)) { $('pickerr').textContent = 'Choose an avatar first (or use your own photo!)'; return; }
+    if (pickMode === 'avatar' && joinFlow && !want && !(cur && cur.char)) { $('pickerr').textContent = avList ? 'Choose an avatar first (or use your own photo!)' : 'Take a selfie, or tap “No photo?” to pick an avatar'; return; }
     if (pickMode === 'flag' && joinFlow && !wantCC && !(cur && cur.cc)) { $('pickerr').textContent = 'Choose the country you represent first'; return; }
     if (pickMode === 'avatar' && joinFlow === 1) { joinFlow = 2; hi(); pickOpen('flag'); return; }   /* step 2: the country */
     if (joinFlow) joinFlow = 3;
