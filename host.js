@@ -3558,8 +3558,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="96" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/><ellipse cx="124" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/>' +
     '<circle cx="96" cy="94" r="2.4" fill="#2a1a12"/><circle cx="124" cy="94" r="2.4" fill="#2a1a12"/>' +
     '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
-    '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
-    '<ellipse cx="88" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
+    '<path d="M108 95 Q106 102 102 107 Q99 112 104 113 Q107 115 110 113.5 Q113 115 116 113 Q121 112 118 107 Q114 102 112 95 Z" fill="#e7b294" stroke="#b47e62" stroke-width="1.4" stroke-linejoin="round"/>' +   // (her nose: a proper, generous one)
+    '<path d="M111 98 Q113 104 115 108" stroke="#fff" stroke-width="1.6" fill="none" opacity=".45" stroke-linecap="round"/><ellipse cx="106" cy="111.5" rx="2" ry="1.2" fill="#7a4a36"/><ellipse cx="114" cy="111.5" rx="2" ry="1.2" fill="#7a4a36"/>' +
+    '<path d="M99 117 Q110 127 121 117 Q110 121 99 117 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
+    '<ellipse cx="88" cy="108" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="108" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
     '</svg>';
   // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
   var SHOPTILL = '<svg class="till" viewBox="0 0 300 300" aria-hidden="true">' +
