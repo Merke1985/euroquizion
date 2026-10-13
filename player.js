@@ -629,16 +629,23 @@
     var nm = function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; };
     var card = !mine || f.st === 'end' ? '' : isG ? '<div class="fkcard fake"><b>☝️ You’re guessing!</b><span>Don’t look at the others’ phones… The clues appear on the big screen.</span></div>'
       : !me ? '<div class="fkcard wait">🤫 Getting the secret word…</div>' : '<div class="fkcard"><small>The secret word</small><b>' + esc(me.song.t) + '</b><span>Give ' + esc(nm(f.guesser)) + ' a clue: ONE word</span></div>';
-    var key = f.id + '|' + f.st + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.clues) + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0) + '|' + JSON.stringify(f.judged || {});
+    var key = f.id + '|' + f.st + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.clues) + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0) + '|' + JSON.stringify(f.judged || {}) + '|' + JSON.stringify(me && me.check ? me.check.out : null);
     if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
     var body = '';
     if (!mine) { $('waittitle').textContent = '☝️ Just One!'; $('waitsub').textContent = 'Watch the big screen!'; }
     else if (f.st === 'secret') { $('waittitle').textContent = isG ? '☝️ Your turn to guess!' : '🤫 The secret word'; $('waitsub').textContent = isG ? 'Get ready…' : 'Keep it to yourself!'; }
     else if (f.st === 'clues') {
       if (isG) { $('waittitle').textContent = '⏳ They’re writing clues…'; $('waitsub').textContent = 'The same clues cancel each other out!'; }
-      else if ((f.clues[pid] && f.clues[pid].s) || fkSent[f.id + ':w']) { $('waittitle').textContent = '✅ Clue sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
-      else { $('waittitle').textContent = '✍️ Your clue'; $('waitsub').textContent = 'ONE word. Be different: the same clues cancel each other out!'; body = '<form class="fkform"><input type="text" maxlength="24" placeholder="One word" autocomplete="off" autocapitalize="off"><button type="submit" class="btn">Send</button></form>'; }
-    } else if (f.st === 'check') { $('waittitle').textContent = '🔍 Checking the clues…'; $('waitsub').textContent = 'Watch the big screen!'; }
+      else if (f.clues[pid + '#0'] || fkSent[f.id + ':w']) { $('waittitle').textContent = '✅ Clue sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
+      else { $('waittitle').textContent = '✍️ Your clue'; $('waitsub').textContent = (f.per > 1 ? 'TWO clues, one word each.' : 'ONE word.') + ' Be different: the same clues cancel each other out!'; body = '<form class="fkform' + (f.per > 1 ? ' two' : '') + '">' + (f.per > 1 ? '<input type="text" maxlength="24" placeholder="Clue 1" autocomplete="off" autocapitalize="off"><input type="text" maxlength="24" placeholder="Clue 2" autocomplete="off" autocapitalize="off">' : '<input type="text" maxlength="24" placeholder="One word" autocomplete="off" autocapitalize="off">') + '<button type="submit" class="btn">Send</button></form>'; }
+    } else if (f.st === 'check') {
+      var chk = me && me.check, isC = chk && chk.checker === pid;
+      if (isG || !chk) { $('waittitle').textContent = '🔍 Checking the clues…'; $('waitsub').textContent = isG ? 'No peeking! The clues appear in a moment.' : 'Watch the big screen!'; }
+      else {
+        $('waittitle').textContent = isC ? '🔍 You check the clues!' : '🔍 ' + nm(chk.checker) + ' is checking the clues'; $('waitsub').textContent = isC ? 'The same ones are crossed out already. Tap a clue to cross it out (typos, nearly the same, the word itself…) or to bring it back.' : 'The crossed-out ones won’t be shown.';
+        body = '<div class="fkchk">' + Object.keys(chk.clues).filter(function (k) { return chk.clues[k]; }).map(function (k) { var o = chk.out[k]; return '<button type="button" class="fkck' + (o ? ' out' : '') + '" data-k="' + esc(k) + '"' + (isC ? '' : ' disabled') + '><b>' + esc(chk.clues[k]) + '</b><small>' + esc(nm(k.split('#')[0])) + (o === 'twin' ? ' · the same as another' : o === 'title' ? ' · gives the word away' : o === 'check' ? ' · crossed out' : '') + '</small></button>'; }).join('') + '</div>' + (isC ? '<button type="button" class="btn big fkckdone">✅ Done: show the clues</button>' : '');
+      }
+    }
     else if (f.st === 'guess') {
       if (isG && !fkSent[f.id + ':g']) { $('waittitle').textContent = '🤔 What’s the word?'; $('waitsub').textContent = 'Look at the clues on the big screen. One guess!'; body = '<form class="fkform fkgf"><input type="text" maxlength="40" placeholder="Your guess" autocomplete="off"><button type="submit" class="btn">Guess</button></form>'; }
       else { $('waittitle').textContent = '🤔 ' + nm(f.guesser) + ' is guessing…'; $('waitsub').textContent = 'Fingers crossed!'; }
@@ -649,14 +656,16 @@
     } else if (f.st === 'end') {
       var won = (f.win || []).indexOf(pid) >= 0, pts = (f.res || {})[pid] || 0;
       if (f.done) { $('waittitle').textContent = won ? '🏆 You win Just One!' : '☝️ Just One! is over!'; $('waitsub').textContent = 'Your total: ' + ((f.tot || {})[pid] || 0) + ' points over ' + f.of + ' rounds.'; box.innerHTML = ''; return; }
-      var c = f.clues[pid];
+      var c = f.clues[pid + '#0'] && f.clues[pid + '#0'].x ? f.clues[pid + '#0'] : f.clues[pid + '#1'];
       $('waittitle').textContent = (pts ? '⭐ +' + pts + ' points' : f.right ? '🎉 Right!' : '😅 Not this time') + (f.rnd < f.of ? ' · next round coming up!' : '');
       $('waitsub').textContent = (f.song ? 'The word was: ' + f.song.t + '. ' : '') + (c && c.x === 'twin' ? 'Your clue was cancelled: someone wrote the same!' : c && c.x === 'title' ? 'Your clue gave the word away, so it didn’t count.' : '');
     }
     box.innerHTML = card + body;
     var gf = box.querySelector('.fkgf'); if (gf) { var gi = gf.querySelector('input'); setTimeout(function () { try { gi.focus(); } catch (e) {} }, 50); gf.onsubmit = function (e) { e.preventDefault(); var w = gi.value.trim(); if (!w) return; fkSent[f.id + ':g'] = 1; fkSend({ guess: w }); box.removeAttribute('data-k'); fkView(state); }; }
     [].forEach.call(box.querySelectorAll('.fkj'), function (b) { b.onclick = function () { fkSent[f.id + ':j'] = 1; fkSend({ judge: +b.getAttribute('data-v') }); box.removeAttribute('data-k'); fkView(state); }; });
-    var fm = box.querySelector('.fkform:not(.fkgf)'); if (fm) { var inp = fm.querySelector('input'); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 50); fm.onsubmit = function (e) { e.preventDefault(); var w = inp.value.trim().split(/\s+/)[0]; if (!w) return; fkSent[f.id + ':w'] = 1; fkSend({ word: w }); box.removeAttribute('data-k'); fkView(state); }; }
+    [].forEach.call(box.querySelectorAll('.fkck:not([disabled])'), function (b) { b.onclick = function () { fkSend({ toggle: b.getAttribute('data-k') }); b.classList.toggle('out'); }; });
+    var cd = box.querySelector('.fkckdone'); if (cd) cd.onclick = function () { cd.disabled = true; fkSend({ checked: 1 }); };
+    var fm = box.querySelector('.fkform:not(.fkgf)'); if (fm) { var inp = fm.querySelector('input'); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 50); fm.onsubmit = function (e) { e.preventDefault(); var ws = [].map.call(fm.querySelectorAll('input'), function (x) { return x.value.trim().split(/\s+/)[0]; }); if (ws.some(function (x) { return !x; })) return; fkSent[f.id + ':w'] = 1; fkSend({ words: ws }); box.removeAttribute('data-k'); fkView(state); }; }
   }
 
   // ---------- Zero Gravity ----------
