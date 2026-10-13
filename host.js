@@ -5322,13 +5322,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function fkLast() { var y = 0; (songs || []).forEach(function (s) { if (s[0] > y) y = s[0]; }); return y || 2026; }   // the latest contest in the song list
   function fkSongs() { var y = fkLast(); return (songs || []).filter(function (s) { return s[0] >= y - 4; }); }   // (only the last five contests: known up front, so the fake has a fair chance)
   var FK_ROUNDS = 3, fkSongT = null;
-  function fkSong(on, fade) {   // "Lie To Me" (Czechia 2018), quietly under the whole game
+  function fkSong(on, fade) {   // "Say Na Na Na" (San Marino 2019), quietly under the whole game
     clearInterval(fkSongT); fkSongT = null;
     if (REMOTE) return;
     try {
       if (!on && fade) { var v = 35; fkSongT = setInterval(function () { v -= 2; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fkSongT); fkSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
       if (!on) { yt.pauseVideo(); return; }
-      Music.want(false); stage = 'fake'; yt.loadVideoById({ videoId: 'w0ZUuQe0shk', startSeconds: 0 }); yt.unMute(); yt.setVolume(35);
+      Music.want(false); stage = 'fake'; yt.loadVideoById({ videoId: 'd_iEis_ZRoQ', startSeconds: 0 }); yt.unMute(); yt.setVolume(35);
       fkSongT = setInterval(function () { if (G.phase !== 'fake' || !G.fake) { clearInterval(fkSongT); fkSongT = null; return; } try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {} }, 1000);   /* (round and round until the game is over) */
     } catch (e) {}
   }
