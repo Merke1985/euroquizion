@@ -1461,7 +1461,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
     fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
-    carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five mini-parades on the turquoise carpet! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
+    carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five group photos on the turquoise carpet, from three stars up to seven! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Off it for too long and you fall. The last ones standing win!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. After 3 minutes, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes and fix the cables. Three phases, each harder than the last. The best repairer wins!' },
@@ -4178,10 +4178,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
       lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
-        ['her', 'They walk by one at a time and pose for the photographers. Watch them closely!'],
+        ['her', 'They arrive in groups and pose for a big group photo. Watch them closely!'],
         ['him', 'Hats, sunglasses, dresses, colours, shoes… remember everything you can! 👒🕶️👠'],
         ['her', 'After each parade comes one question on your phone. You have 20 seconds to answer.'],
-        ['him', 'Five parades, five questions, and each parade gets a bit longer!'],
+        ['him', 'Five parades, five questions: three stars in the first group, and more every time!'],
         ['her', 'Most right answers wins. A tie? Then the fastest wins! 📸']] },
     bomb: { sign: '💣 The Unlucky Draw', theme: 'bomb',
       art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
@@ -4299,8 +4299,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b']];
   var TC_SHOES = ['High heels', 'Boots', 'Sneakers', 'Flats'];
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
-  var TC_SIZES = [[2, 3], [3, 4], [4, 5], [5, 6], [6, 7]], TC_Q_MS = 20000, TC_STEP = 9000, tcTimer = null, tcFadeT = null;
-  var TC_ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
+  var TC_SIZES = [[3, 3], [4, 4], [5, 5], [6, 6], [7, 7]], TC_Q_MS = 20000, tcTimer = null, tcFadeT = null;
+  var TC_ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'], TC_POSES = ['hips', 'wave', 'up', 'kneel', 'point', 'lean', 'kneel'];
   function tcGirl() { return { o: pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 3), g: Math.random() < .45 ? 1 : 0, s: Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * TC_HAIR.length), y: Math.floor(Math.random() * 3) }; }
   // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
   // 2 sun hat, 3 beret), g: sunglasses, s: shoes, k: skin, r: hair colour, y: hairstyle (0 long, 1 bob, 2 bun).
@@ -4338,8 +4338,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (t === 'glasses') q = nums(cnt(function (w) { return w.g; })), q.text = 'How many contestants wore sunglasses?';
     else if (t === 'dress') q = nums(cnt(function (w) { return w.o === 'dress'; })), q.text = 'How many contestants wore a dress?';
     else if (t === 'red') q = nums(cnt(function (w) { return w.c === 0; })), q.text = 'How many contestants wore a red outfit?';
-    else if (t === 'color') { var i = Math.floor(Math.random() * n); q = { opts: TC_COLORS.map(function (x) { return x[0]; }), ans: girls[i].c, text: 'What colour was the outfit of the ' + TC_ORD[i] + ' contestant?' }; }
-    else { var j = Math.floor(Math.random() * n); q = { opts: TC_SHOES.slice(), ans: girls[j].s, text: 'Which shoes did the ' + TC_ORD[j] + ' contestant wear?' }; }
+    else if (t === 'color') { var i = Math.floor(Math.random() * n); q = { opts: TC_COLORS.map(function (x) { return x[0]; }), ans: girls[i].c, text: 'What colour was the outfit of the ' + TC_ORD[i] + ' contestant from the left?' }; }
+    else { var j = Math.floor(Math.random() * n); q = { opts: TC_SHOES.slice(), ans: girls[j].s, text: 'Which shoes did the ' + TC_ORD[j] + ' contestant from the left wear?' }; }
     q.type = t; return q;
   }
   function carpetAll() {
@@ -4361,23 +4361,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.carpet; if (!g || G.phase !== 'carpet') return;
     g.sec++; var sz = TC_SIZES[g.sec - 1], n = sz[0] + Math.floor(Math.random() * (sz[1] - sz[0] + 1));
     g.girls = []; for (var i = 0; i < n; i++) g.girls.push(tcGirl());
+    var poses = shuffle(TC_POSES.slice()); g.girls.forEach(function (w, i) { w.p = poses[i % poses.length]; });   // (a group photo: everyone their own pose, some kneeling in front)
     g.st = 'walk'; g.cur = -1; g.q = null; push();
-    var step = function (i) {
+    var step = function () {   // the whole group walks on together, poses, and walks off
       if (G.carpet !== g) return;
-      if (i >= n) { tcTimer = setTimeout(tcAsk, 700); return; }
-      g.cur = i; push();
-      tcTimer = setTimeout(function () { step(i + 1); }, TC_STEP);
+      g.cur = 0; push();
+      tcTimer = setTimeout(tcAsk, TC3_T.outEnd + 900);
     };
     if (g.sec === 1 && !REMOTE) {   // the song is already playing: the first contestant starts walking so that her first photo is at 0:16
       var t0 = Date.now(), wait = function () {
         if (G.carpet !== g) return;
         var ct = -1; try { if (yt.getPlayerState() === 1) ct = yt.getCurrentTime(); } catch (e) {}
-        if (ct >= TC_FIRST - TC3_T.turn1 / 1000 - .1 || Date.now() - t0 > 22000) { step(0); return; }
+        if (ct >= TC_FIRST - TC3_T.turn1 / 1000 - .1 || Date.now() - t0 > 22000) { step(); return; }
         tcTimer = setTimeout(wait, 40);
       };
       wait(); return;
     }
-    tcTimer = setTimeout(function () { step(0); }, 1600);
+    tcTimer = setTimeout(step, 1600);
   }
   function tcAsk() {
     var g = G.carpet; if (!g || G.phase !== 'carpet') return;
@@ -4439,7 +4439,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Outdoors on a summer evening: a venue with lit windows, trees, sweeping searchlights, a raised turquoise carpet with
   // golden posts and red ropes, and photographers in front. Each contestant (built from simple shapes, an original
   // design) walks in from the left, turns to face the cameras, poses while the flashes go off, turns back and walks on.
-  var TC3_T = { inEnd: 3000, turn1: 3600, poseEnd: 6200, turn2: 6700, outEnd: 8800 }, TC_FIRST = 16;   // (TC_FIRST: the first photo of the first contestant, in seconds into the song)   // the timeline of one contestant (ms)
+  var TC3_T = { inEnd: 3400, turn1: 4000, poseEnd: 9200, turn2: 9700, outEnd: 12200 }, TC_FIRST = 16;   // (TC_FIRST: the first photo of the first contestant, in seconds into the song)   // the timeline of one contestant (ms)
   function tc3Init(host) {
     if (!window.THREE) return null;
     var T = THREE, w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
@@ -4507,7 +4507,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!host.isConnected) { st.alive = false; rn.dispose(); rn2.dispose(); return; }
       var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
       var t = now / 1000; beams[0].rotation.z = Math.sin(t * .5) * .45; beams[1].rotation.z = -Math.sin(t * .43 + 1) * .45;
-      if (st.fig) tc3Pose(st, Date.now() - st.t0);
+      if (st.figs && st.figs.length) tc3Pose(st, Date.now() - st.t0);
       var fk = Math.max(0, 1 - (Date.now() - st.flashAt) / 200); flash.intensity = fk * 2.2;
       cams.forEach(function (f) { f.material.opacity = f === st.flashCam ? fk : 0; });
       rn.render(sc, cam);
@@ -4587,31 +4587,39 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // Where the contestant is at time ms of their walk: in from the left, turn to the cameras, pose, turn back, out to the right.
   function tc3Pose(st, ms) {
-    var f = st.fig, u = f.userData, T3 = TC3_T, ease = function (k) { return k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; };
-    var X0 = -16, X1 = 17, walk = 0, x = 0, rot = Math.PI / 2;
-    if (ms < T3.inEnd) { var k = ms / T3.inEnd; x = X0 + (0 - X0) * (1 - Math.pow(1 - k, 1.6)); walk = 1; }
-    else if (ms < T3.turn1) { x = 0; rot = Math.PI / 2 * (1 - ease((ms - T3.inEnd) / (T3.turn1 - T3.inEnd))); }
-    else if (ms < T3.poseEnd) { x = 0; rot = 0; }
-    else if (ms < T3.turn2) { x = 0; rot = Math.PI / 2 * ease((ms - T3.poseEnd) / (T3.turn2 - T3.poseEnd)); }
-    else { var k2 = Math.min(1, (ms - T3.turn2) / (T3.outEnd - T3.turn2)); x = X1 * Math.pow(k2, 1.5); walk = 1; }
-    f.position.x = x; f.rotation.y = rot;
-    var ph = ms / 1000 * 2 * Math.PI * 1.1, sw = walk ? Math.sin(ph) * .5 : 0;
-    u.lh.rotation.x = sw; u.rh.rotation.x = -sw; u.la.rotation.x = -sw * .8; u.ra.rotation.x = sw * .8;
-    f.position.y = .28 + (walk ? Math.abs(Math.sin(ph)) * .05 : 0);
-    var posing = ms >= T3.turn1 - 200 && ms < T3.poseEnd + 100, pk = posing ? Math.min(1, (ms - T3.turn1 + 200) / 400) * Math.min(1, (T3.poseEnd + 100 - ms) / 300) : 0;
-    // the pose: one hand on the hip, the other waving, hips swaying, head tilted
-    u.ra.rotation.z = pk * .9; u.ra.rotation.x = posing ? -pk * .2 : u.ra.rotation.x;
-    u.la.rotation.z = -pk * (2.5 + Math.sin(ms / 160) * .25);
-    u.lh.rotation.z = -pk * .08; u.rh.rotation.z = pk * .16;
-    f.rotation.z = pk * Math.sin(ms / 420) * .06; u.head.rotation.z = pk * .18; u.head.rotation.y = pk * Math.sin(ms / 600) * .2;
+    var T3 = TC3_T, ease = function (k) { return k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; };
+    st.figs.forEach(function (F, n) {
+      var f = F.fig, u = f.userData, walk = 0, x = 0, rot = Math.PI / 2, X = F.x;
+      if (ms < T3.inEnd) { var k = ms / T3.inEnd; x = X - 22 + 22 * (1 - Math.pow(1 - k, 1.6)); walk = 1; }
+      else if (ms < T3.turn1) { x = X; rot = Math.PI / 2 * (1 - ease((ms - T3.inEnd) / (T3.turn1 - T3.inEnd))); }
+      else if (ms < T3.poseEnd) { x = X; rot = 0; }
+      else if (ms < T3.turn2) { x = X; rot = Math.PI / 2 * ease((ms - T3.poseEnd) / (T3.turn2 - T3.poseEnd)); }
+      else { var k2 = Math.min(1, (ms - T3.turn2) / (T3.outEnd - T3.turn2)); x = X + 24 * Math.pow(k2, 1.5); walk = 1; }
+      f.position.x = x; f.rotation.y = rot;
+      var ph = ms / 1000 * 2 * Math.PI * 1.1 + n * .7, sw = walk ? Math.sin(ph) * .5 : 0;
+      u.lh.rotation.set(sw, 0, 0); u.rh.rotation.set(-sw, 0, 0); u.la.rotation.set(-sw * .8, 0, 0); u.ra.rotation.set(sw * .8, 0, 0); u.head.rotation.set(0, 0, 0);
+      var posing = ms >= T3.turn1 - 300 && ms < T3.poseEnd + 150, pk = posing ? Math.min(1, (ms - T3.turn1 + 300) / 500) * Math.min(1, (T3.poseEnd + 150 - ms) / 400) : 0, p = F.pose, kn = p === 'kneel' ? pk : 0;
+      f.position.y = .28 + (walk ? Math.abs(Math.sin(ph)) * .05 : 0) - kn * .92;
+      f.position.z = .2 + (p === 'kneel' ? 1.1 : 0) * Math.min(1, ms < T3.inEnd ? 1 : 1);
+      var wob = Math.sin(ms / 420 + n), wav = Math.sin(ms / 160 + n);
+      if (p === 'hips') { u.la.rotation.z = -pk * .75; u.ra.rotation.z = pk * .75; u.la.rotation.x = pk * .35; u.ra.rotation.x = pk * .35; f.rotation.z = pk * wob * .04; }
+      else if (p === 'wave') { u.ra.rotation.z = pk * .9; u.la.rotation.z = -pk * (2.5 + wav * .25); u.head.rotation.z = pk * .18; f.rotation.z = pk * wob * .06; }
+      else if (p === 'up') { u.la.rotation.z = -pk * (2.7 + wav * .12); u.ra.rotation.z = pk * (2.7 - wav * .12); u.head.rotation.x = -pk * .15; }
+      else if (p === 'kneel') { u.lh.rotation.x = -kn * 1.45; u.rh.rotation.x = kn * .95; u.la.rotation.x = -pk * .9; u.la.rotation.z = -pk * .2; u.ra.rotation.z = pk * (2.4 + wav * .2); u.head.rotation.z = -pk * .15; }
+      else if (p === 'point') { u.ra.rotation.x = -pk * 1.45; u.ra.rotation.z = pk * .15; u.la.rotation.z = -pk * .75; u.la.rotation.x = pk * .35; u.head.rotation.y = pk * .15; }
+      else { u.ra.rotation.z = pk * .8; u.ra.rotation.x = pk * .3; u.la.rotation.z = -pk * .3; u.lh.rotation.z = -pk * .1; u.rh.rotation.z = pk * .2; f.rotation.z = pk * .1; u.head.rotation.z = pk * .25; u.head.rotation.y = pk * Math.sin(ms / 600) * .2; }
+      if (p !== 'hips' && p !== 'wave' && p !== 'lean') f.rotation.z = 0;
+    });
   }
   function tc3Show(st, ov, g) {   // a new contestant on the carpet (or none)
     var key = g.st === 'walk' && g.cur >= 0 ? g.sec + ':' + g.cur : '';
     if (st.key === key) return; st.key = key;
-    if (st.fig) { st.sc.remove(st.fig); st.fig = null; }
+    (st.figs || []).forEach(function (F) { st.sc.remove(F.fig); }); st.figs = [];
     if (!key) return;
-    st.fig = tc3Girl(g.girls[g.cur]); st.fig.position.set(-16, .28, .2); st.sc.add(st.fig); st.t0 = Date.now();
-    var T3 = TC3_T, n = 0, step = (T3.poseEnd - T3.turn1 - 200) / 7;
+    var N = g.girls.length, sp = Math.min(2.3, 15 / N);   // (the whole group, side by side: the 1st from the left is girls[0])
+    g.girls.forEach(function (w, i) { var f = tc3Girl(w); f.position.set(-30, .28, .2); st.sc.add(f); st.figs.push({ fig: f, x: (i - (N - 1) / 2) * sp, pose: w.p || 'wave' }); });
+    st.t0 = Date.now();
+    var T3 = TC3_T, n = 0, step = (T3.poseEnd - T3.turn1 - 200) / 12;
     for (var t = T3.turn1; t < T3.poseEnd - 100; t += step) (function (t, i) { setTimeout(function () { if (st.key !== key || !st.alive) return; st.flashAt = Date.now(); st.flashCam = st.cams[Math.floor(Math.random() * st.cams.length)]; tcFlash(ov, i); }, t); })(n === 0 ? t : t + Math.random() * 120, n++);
   }
   function carpetSnap() {
@@ -4645,7 +4653,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var wk = ov.querySelector('.tcwalk'), key = g.sec + ':' + g.cur;
     if (!ov._3 && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
       wk.setAttribute('data-k', key);
-      wk.innerHTML = '<div class="tcg walking">' + tcSvg(g.girls[g.cur]) + '</div>';
+      wk.innerHTML = '<div class="tcg walking">' + g.girls.map(tcSvg).join('') + '</div>';
       var el = wk.firstChild, at = function (ms, f) { setTimeout(function () { if (el.isConnected) f(); }, ms); };
       at(2200, function () { el.classList.remove('walking'); el.classList.add('posing'); });   // she stops, turns to the cameras and poses…
       [2500, 2900, 3400, 3900, 4400, 4900, 5500, 6000].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
