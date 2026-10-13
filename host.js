@@ -1480,7 +1480,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, fake: fkAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll };
-    G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
+    G.mode = G.lastParty = kind; if (G.tour && G.partyDone && G.partyDone.indexOf(kind) < 0) G.partyDone.push(kind); G.best = null; G.q = null; G.afterParty = true;
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
@@ -1525,8 +1525,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // out. Once all have had their turn, they are all back in.
       var done = G.partyDone || (G.partyDone = []), left = games.filter(function (x) { return done.indexOf(x) < 0; });
       if (!left.length) { done.length = 0; left = games.filter(function (x) { return x !== G.lastParty; }); if (!left.length) left = games.slice(); }
-      var next = pick(left); done.push(next);
       G.tourN = (G.tourN || 0) + 1;
+      if (G.tourMax && left.length > 1) {   // Party Night with a set number of games: spin for four (of the ones not played yet), then vote
+        if (G.tourN >= G.tourMax) G.tourLast = true;
+        partyVote4(left); return;
+      }
+      var next = pick(left); done.push(next);
       if (G.tour && (games.every(function (x) { return done.indexOf(x) >= 0; }) || (G.tourMax && G.tourN >= G.tourMax))) G.tourLast = true;   // the last stop of the tour (all games, or as many as were chosen)
       partySlot(left, next, function () { partyGo(next, 2500); });   /* the slot machine: the played ones are on the reel, greyed out */
       return;
@@ -1563,16 +1567,38 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     four.forEach(function (k) { seen[k] = (seen[k] || 0) + 1; });
     if (four.length < 2) { partyGo(four[0] || games[0]); return; }
     stopTimers(); G.draw = null; G.song = null; G.clip = null;
+    if (!REMOTE && !G.slotVote) { slotFour(four, games, function () { partyVote4go(four); }); return; }   // first the slot machine spins, and lands on four games
+    partyVote4go(four);
+  }
+  // Vote mode: the slot machine spins like in random mode, but stops with four games in its window: those four light up.
+  function slotFour(four, games, then) {
+    G.phase = 'pspin'; G.barMs = 0; G.pspin = null; G.fun = null; autoStop(); stopTimers();
+    try { yt.pauseVideo(); } catch (e) {} cover(true, '🎰', '', false); masks(true); $('cover').classList.add('funcard');
+    var all = PARTY_KINDS.filter(function (k) { return FUN[k]; }), rest = shuffle(all.filter(function (k) { return four.indexOf(k) < 0; })), h2 = Math.floor(rest.length / 2);
+    var order = rest.slice(0, h2).concat(four, rest.slice(h2));   // (the four next to each other on the reel)
+    var M = slotOpen(order, all.filter(function (k) { return games.indexOf(k) < 0 && four.indexOf(k) < 0; }), null, '🎰 Spin for four games!'); push();
+    var target = M.n * (M.REP - 2) + order.indexOf(four[0]), cw = M.st.children[1].offsetLeft - M.st.children[0].offsetLeft;
+    clearTimeout(slotT); slotT = setTimeout(function () {
+      var ov = M.ov, st = M.st; if (!ov.isConnected) return;
+      ov.querySelector('.slbtn').classList.add('push'); ov.querySelector('.sllever').classList.add('pull'); Music.blip();
+      st.getBoundingClientRect(); st.style.transition = 'transform 5.2s cubic-bezier(.12,.62,.08,1)'; st.style.transform = 'translateX(' + (M.place(target) - cw * (four.length - 1) / 2) + 'px)';   // (the middle of the four in the middle of the window)
+      [].forEach.call(ov.querySelectorAll('.sldeco'), function (d, i) { d.classList.add(i ? 'spinr' : 'spinl'); });
+      var t0 = Date.now(), tick = function () { var e = (Date.now() - t0) / 5200; if (e >= 1 || !ov.isConnected) return; Music.plop(Math.floor(e * 12)); slotT = setTimeout(tick, 60 + Math.pow(e, 2.2) * 600); }; tick();
+      slotT = setTimeout(function () {
+        if (!ov.isConnected) return;
+        [].forEach.call(ov.querySelectorAll('.sldeco'), function (d) { d.classList.remove('spinl', 'spinr'); });
+        M.hi = four.map(function (k, j) { return st.children[target + j]; });
+        [].forEach.call(st.children, function (c) { if (M.hi.indexOf(c) < 0) c.classList.add('out'); });
+        M.hi.forEach(function (c, j) { setTimeout(function () { c.classList.add('hi'); Music.plop(j * 2 + 3); }, j * 180); });
+        ov.querySelector('.slsign').textContent = '🗳️ Which game shall we play?'; ov.classList.add('voting', 'four'); Music.ding();
+        G.slotVote = M; slotT = setTimeout(then, 1000);
+      }, 5400);
+    }, 1500);
+  }
+  function partyVote4go(four) {
     G.best = { pick: true, four: true, kinds: four, subs: four.map(function (k) { return FUN[k].sub; }), pids: four.map(function () { return null; }), only: null, id: 'pick' + G.round, tally: null, wins: null };
     G.q = { subject: 'pick', type: 'mc', text: 'Which game shall we play? Vote on your phone!', hint: '', options: four.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), correct: -1, answer: '', noclip: true };
-    if (!REMOTE) {
-      cover(true, '🗳️', 'Which game shall we play?', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo');
-      var all = PARTY_KINDS.filter(function (k) { return FUN[k]; }), rest = all.filter(function (k) { return four.indexOf(k) < 0; }), h2 = Math.floor(rest.length / 2);
-      var order = rest.slice(0, h2).concat(four, rest.slice(h2));   // (the four next to each other on the reel, in the middle of the window)
-      var M = G.slotVote = slotOpen(order, all.filter(function (k) { return four.indexOf(k) < 0; }), null, '🗳️ Which game shall we play?', four);
-      var mid = M.n * 4 + order.indexOf(four[0]); M.st.style.transform = 'translateX(' + (M.place(mid) - (M.st.children[mid + 1].offsetLeft - M.st.children[mid].offsetLeft) * 1.5) + 'px)';
-      M.ov.classList.add('voting');
-    }
+    if (!REMOTE) { cover(true, '🗳️', 'Which game shall we play?', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); }
     G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push(); slotVoteTick();
     endTimer = setTimeout(reveal, PICK_MS);
   }
@@ -1593,11 +1619,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var ch = voted[j];
       clearTimeout(picksTimer); stopTimers(); list().forEach(function (p) { p.pick = null; }); G.best = null; G.q = null;
       var M = G.slotVote; G.slotVote = null;
-      if (M && M.ov.isConnected) {   // the slot machine is still on screen: the votes on the four, then the spin decides among them
-        [].forEach.call(M.ov.querySelectorAll('.slcell.hi'), function (c) { var k = c.getAttribute('data-k'), v = tally[kinds4.indexOf(k)] || 0; c.querySelector('.slv').textContent = v ? v + ' 🗳️' : ''; if (!v && voted.indexOf(k) < 0) c.classList.add('out'); });
-        M.ov.classList.remove('voting'); M.ov.querySelector('.slsub').textContent = voted.length > 1 ? 'More votes, more chance… 🎰' : '';
-        G.phase = 'pspin'; G.barMs = 0; push();
-        slotT = setTimeout(function () { slotSpin(M, ch, function () { partyGo(ch, 2500); }); }, 1800);
+      if (M && M.ov.isConnected && M.hi) {   // the slot machine is still on screen: the votes go on the four games; the most votes wins
+        var vs = kinds4.map(function (k, i2) { return tally[i2] || 0; }), top = Math.max.apply(null, vs), tied = kinds4.filter(function (k, i2) { return vs[i2] === top; });
+        var cellOf = function (k) { return M.hi.filter(function (c) { return c.getAttribute('data-k') === k; })[0]; };
+        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').textContent = vs[i2] ? vs[i2] + ' 🗳️' : '0'; if (tied.indexOf(k) < 0) c.classList.add('out'); } });
+        M.ov.classList.remove('voting'); G.phase = 'pspin'; G.barMs = 0; push();
+        var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); }); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
+        if (tied.length < 2) { M.ov.querySelector('.slsub').textContent = 'Most votes!'; slotT = setTimeout(land, 1400); return; }
+        M.ov.querySelector('.slsub').textContent = 'A tie! 🎲'; var hops = 12 + Math.floor(Math.random() * tied.length), st0 = (tied.indexOf(win) - hops % tied.length + tied.length * 8) % tied.length, hn = 0;
+        var hop = function () {   // the light ticks from one tied game to the next, slower and slower, and stops on the winner
+          M.hi.forEach(function (x) { x.classList.remove('tick'); }); var c = cellOf(tied[(st0 + hn) % tied.length]); if (c) c.classList.add('tick'); Music.plop(hn);
+          if (hn >= hops) { slotT = setTimeout(land, LAND); return; }
+          hn++; slotT = setTimeout(hop, 90 + Math.pow(hn / hops, 2.4) * 520);
+        };
+        slotT = setTimeout(hop, 1400);
         return;
       }
       if (voted.length > 1) partySpin(voted, ch, function () { partyGo(ch, 3000); }, voted); else partyGo(ch);

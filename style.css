@@ -4279,3 +4279,7 @@ body.hasdock main{padding-bottom:84px}
 .orpeek{right:-2%;top:16%;width:22%;translate:-70% 0;rotate:0deg;-webkit-mask-image:linear-gradient(to bottom,#000 62%,transparent 92%);mask-image:linear-gradient(to bottom,#000 62%,transparent 92%)}
 .orov.invaded .orpeek{translate:30% 0;rotate:18deg;animation:orpeek2 1.4s ease-in-out .5s infinite alternate}
 @keyframes orpeek2{from{rotate:18deg}to{rotate:10deg}}
+
+.slcell.tick{box-shadow:0 0 0 6px #ffd23f,0 0 50px #ffd23f!important;scale:1.04}
+.slcell .slv{display:block}
+#slotov.four .slwin{opacity:0;transition:opacity .4s}
