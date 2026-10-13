@@ -3938,7 +3938,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   ];
   var ED_DUO = [{ hair: '#16121a', hairStyle: 'pony', top: '#141418', legs: '#141418', shoes: '#141418' }, { hair: '#ecd79a', hairStyle: 'long', top: '#f4f4f6', legs: '#f4f4f6', shoes: '#f4f4f6' }];
   var ED_DUO_AT = {   // per room: where they come in (x), where they stand (two x's), the floor (y), the size, and whether a screen hides them
-    green: { from: 742, at: [190, 245], y: 404, s: .82, screen: true }, club: { from: 880, at: [560, 640], y: 400, s: .9 },
+    green: { from: 742, at: [655, 712], y: 404, s: .82, screen: true }, club: { from: 880, at: [560, 640], y: 400, s: .9 },
     boud: { from: 344, at: [470, 530], y: 426, s: 1.05, screen: true }, back: { from: -70, at: [140, 200], y: 436, s: .95 }
   };
   function edDuoGuitar(col) { return '<g class="ddgt"><path d="M-30 -52 L22 -82" stroke="#5a3a1a" stroke-width="5" stroke-linecap="round"/><ellipse cx="-22" cy="-48" rx="16" ry="12" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2.4" transform="rotate(-30 -22 -48)"/><circle cx="-22" cy="-48" r="4" fill="' + ED_INK + '"/><rect x="18" y="-90" width="10" height="12" rx="3" fill="#3a2a1a" transform="rotate(-30 23 -84)"/></g>'; }
@@ -3981,12 +3981,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           : edPerson(0, 0, Object.assign({}, base, { walk: 0 })) + '<g transform="scale(' + P.s + ')">' + edDuoGuitar(k ? '#e0283a' : '#f2b821') + '</g>';
         return '<g class="ddp" style="transform:translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)"><g class="ddin"><g class="ddst">' + st + '</g><g class="ddact">' + act + '</g></g></g>';
       }).join('');
-      var scr = P.screen ? svg.querySelector('.edscr') : null; if (scr) svg.insertBefore(wrap, scr); else svg.appendChild(wrap);
+      var scr = P.screen ? svg.querySelector('.edscr') : null, behind = r === 'green' ? svg.querySelector('.edchairs') : scr; if (behind) svg.insertBefore(wrap, behind); else svg.appendChild(wrap);   // (walking: behind the chairs or the screen)
       var ps = wrap.querySelectorAll('.ddp');
       wrap.getBoundingClientRect();
       wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + at[k] + 'px,' + P.y + 'px)'; });   // walking in (3 s)
-      later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); if (r === 'boud') svg.appendChild(wrap); });   // the funny bit (in the Boudoir: in front of the screen)
-      if (r === 'boud') later(16850, function () { if (scr && scr.parentNode) svg.insertBefore(wrap, scr); });   // (and behind it again to leave)
+      later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); if (r === 'boud' || r === 'green') svg.appendChild(wrap); });   // the funny bit (in the Boudoir and the Green Room: in front of the screen)
+      if (r === 'boud' || r === 'green') later(16850, function () { if (behind && behind.parentNode) svg.insertBefore(wrap, behind); });   // (and behind it again to leave)
       later(16900, function () { wrap.classList.remove('act'); wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)'; }); });   // and off again
       later(20000, function () { wrap.remove(); });
       later(25000, visit);   // (gone for 5 seconds, then the next room)
@@ -4058,6 +4058,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<g stroke="' + ED_INK + '" stroke-width="1.5"><rect x="84" y="166" width="16" height="32" rx="4" fill="#ff6fb5"/><rect x="88" y="250" width="16" height="28" rx="4" fill="#3ddc84"/><rect x="86" y="330" width="18" height="28" rx="4" fill="#ffd23f"/></g><rect x="24" y="124" width="84" height="304" rx="6" fill="#bfe8ff" opacity=".35"/></g>';
     });
     // the chairs (five colours)
+    h += '<g class="edchairs"></g>';   // (a marker: the strolling duo walks behind the chairs)
     var SX = [214, 318, 422, 526, 630];
     s.seats.forEach(function (c, i) {
       var x = SX[i], col = ED_COL[c];
