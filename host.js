@@ -4301,7 +4301,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
   var TC_SIZES = [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]], TC_Q_MS = 20000, tcTimer = null, tcFadeT = null;
   var TC_ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'], TC_POSES = ['hips', 'wave', 'up', 'kneel', 'point', 'lean', 'kneel'];
-  function tcGirl() { return { o: pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 3), g: Math.random() < .45 ? 1 : 0, s: Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * TC_HAIR.length), y: Math.floor(Math.random() * 3) }; }
+  function tcGirl() {
+    var m = Math.random() < .4 ? 1 : 0;
+    return { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 3) : Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? 3 : Math.floor(Math.random() * 3) };
+  }
   // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
   // 2 sun hat, 3 beret), g: sunglasses, s: shoes, k: skin, r: hair colour, y: hairstyle (0 long, 1 bob, 2 bun).
   function tcSvg(w) {
@@ -4325,7 +4328,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       (w.g ? '<path d="M104 86 L118 84" stroke="#111" stroke-width="3"/><path d="M118 80 L144 80 Q146 92 138 95 L124 95 Q118 92 118 80 Z" fill="#111"/><path d="M122 83 L130 83" stroke="#5a6a8a" stroke-width="2"/>' : '<circle cx="129" cy="87" r="3.2" fill="#2a1a10"/><path d="M124 81 Q129 78 134 81" stroke="#2a1a10" stroke-width="2" fill="none"/>');
     var hat = w.h === 1 ? '<rect x="92" y="18" width="42" height="44" rx="3" fill="#15151c"/><rect x="92" y="48" width="42" height="7" fill="#3a3a48"/><ellipse cx="113" cy="62" rx="34" ry="6" fill="#15151c"/>'
       : w.h === 2 ? '<ellipse cx="112" cy="64" rx="56" ry="10" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M88 64 Q90 34 112 34 Q136 34 138 64 Z" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M89 58 Q112 52 137 58" stroke="#8b5cf6" stroke-width="6" fill="none"/>'
-      : w.h === 3 ? '<ellipse cx="104" cy="60" rx="36" ry="14" fill="#6d3cc0" transform="rotate(-10 104 60)"/><circle cx="104" cy="45" r="4" fill="#6d3cc0"/>' : '';
+      : w.h === 3 ? '<ellipse cx="104" cy="60" rx="36" ry="14" fill="#6d3cc0" transform="rotate(-10 104 60)"/><circle cx="104" cy="45" r="4" fill="#6d3cc0"/>'
+      : w.h === 4 ? '<path d="M54 62 Q112 80 170 58 Q150 70 112 70 Q74 70 54 62 Z" fill="#a0642c"/><path d="M86 64 Q88 30 104 36 Q112 42 120 36 Q136 30 138 64 Z" fill="#b8763a"/>'
+      : w.h === 5 ? '<path d="M86 66 Q86 36 112 36 Q138 36 138 66 Z" fill="#e0283a"/><path d="M130 64 L170 66 Q168 72 132 70 Z" fill="#a31424"/>'
+      : w.h === 6 ? '<ellipse cx="112" cy="62" rx="40" ry="7" fill="#3a3a48"/><path d="M90 62 Q92 34 112 32 Q132 34 134 62 Z" fill="#4a4a5a"/><rect x="90" y="52" width="44" height="6" fill="#d9a520"/>' : '';
     return '<svg class="tcgirl" viewBox="0 0 200 490" aria-hidden="true">' + hairBack + leg('b', legD) + arm('b', sleeveD) + leg('f', legC) + body + face + hairFront + hat + arm('f', sleeve) + '</svg>';
   }
   function tcQuestion(girls, used) {
@@ -4355,8 +4361,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) { tcTimer = setTimeout(tcParade, 2600); return; }
     // the presenters, standing on the carpet, welcome everyone and explain the game; then they step aside
     var g = G.carpet, lines = (SCENES.carpet && SCENES.carpet.lines) || [], t = 2200;
-    lines.forEach(function (l) { (function (l, t0) { tcTimer = setTimeout(function () { if (G.carpet === g && g.st === 'intro') tcSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
-    setTimeout(function () { if (G.carpet !== g || g.st !== 'intro') return; tcSay(''); g.st = 'ready'; push(); whooshes([0, 300]); tcSong(true); tcTimer = setTimeout(tcParade, 1800); }, t);
+    var tLast = t;
+    lines.forEach(function (l) { tLast = t; (function (l, t0) { tcTimer = setTimeout(function () { if (G.carpet === g && g.st === 'intro') tcSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
+    setTimeout(function () { if (G.carpet === g && g.st === 'intro') tcSong(true); }, tLast + 1200);   // (the music starts under the last line: no silence when they step aside)
+    setTimeout(function () { if (G.carpet !== g || g.st !== 'intro') return; tcSay(''); g.st = 'ready'; push(); whooshes([0, 300]); tcTimer = setTimeout(tcParade, 400); }, t - 1200);
   }
   function tcParade() {
     var g = G.carpet; if (!g || G.phase !== 'carpet') return;
@@ -4533,18 +4541,39 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var hip = new T.Group(); hip.position.set(sx * .17, 1.62, 0); g.add(hip);
       add(hip, new T.CylinderGeometry(w.o === 'dress' ? .1 : .14, w.o === 'dress' ? .08 : .13, 1.5, 12), leg, 0, -.75, 0);
       if (w.s === 1) add(hip, new T.CylinderGeometry(.12, .11, .62, 12), shoeMat, 0, -1.28, 0);
-      var sh = w.s === 0 ? add(hip, new T.BoxGeometry(.16, .1, .34), shoeMat, 0, -1.52, .08) : w.s === 2 ? add(hip, new T.BoxGeometry(.22, .18, .4), shoeMat, 0, -1.54, .07) : w.s === 1 ? add(hip, new T.BoxGeometry(.2, .14, .36), shoeMat, 0, -1.55, .07) : add(hip, new T.BoxGeometry(.17, .08, .32), shoeMat, 0, -1.56, .07);
-      if (w.s === 0) add(hip, new T.CylinderGeometry(.025, .02, .2, 6), shoeMat, 0, -1.6, -.07);
+      var foot = function (r, len, h, y, z) { var f = add(hip, new T.SphereGeometry(r, 16, 12), shoeMat, 0, y, z); f.scale.set(1, h, len); return f; };
+      if (w.s === 0) {   // high heels: a pointed pump, a thin heel, a strap
+        foot(.075, 2.4, .7, -1.55, .1); add(hip, new T.BoxGeometry(.13, .05, .14), shoeMat, 0, -1.52, -.04);
+        add(hip, new T.CylinderGeometry(.028, .012, .2, 8), shoeMat, 0, -1.62, -.09);
+        var stp = add(hip, new T.TorusGeometry(.085, .012, 6, 16), shoeMat, 0, -1.49, .0); stp.rotation.x = Math.PI / 2;
+      } else if (w.s === 1) {   // boots: the shaft, a rounded toe and a dark sole with a heel
+        foot(.1, 1.9, .75, -1.55, .07); add(hip, new T.BoxGeometry(.19, .04, .38), M('#2a160a'), 0, -1.62, .05); add(hip, new T.BoxGeometry(.16, .07, .1), M('#2a160a'), 0, -1.6, -.09);
+        add(hip, new T.TorusGeometry(.12, .015, 6, 16), M('#c89a4a', { metalness: .6, roughness: .3 }), 0, -1.06, 0).rotation.x = Math.PI / 2;
+      } else if (w.s === 2) {   // sneakers: a chunky white shoe, a coloured stripe, a thick sole, laces
+        foot(.11, 1.9, .8, -1.53, .07); add(hip, new T.BoxGeometry(.22, .07, .42), M('#e8e8ee'), 0, -1.61, .06);
+        add(hip, new T.BoxGeometry(.225, .025, .3), M('#ff5a8a'), 0, -1.55, .05);
+        [0, 1, 2].forEach(function (k) { add(hip, new T.BoxGeometry(.1, .012, .015), M('#ff5a8a'), 0, -1.46 - k * .01, .08 + k * .05); });
+      } else {   // flats: a low slipper with a little bow
+        foot(.08, 2.2, .5, -1.58, .08); add(hip, new T.BoxGeometry(.15, .025, .34), M('#0e0e14'), 0, -1.615, .07);
+        [-1, 1].forEach(function (e) { var bw = add(hip, new T.SphereGeometry(.03, 8, 6), M('#d9a520', { metalness: .6, roughness: .3 }), e * .03, -1.53, .2); bw.scale.set(1.3, .7, .6); });
+      }
       return hip;
     };
     var lh = mkLeg(-1), rh = mkLeg(1);
     // body
-    add(g, new T.CylinderGeometry(.3, .26, .95, 16), cl, 0, 2.15, 0);
-    if (w.o === 'dress') { add(g, new T.CylinderGeometry(.28, .82, 1.2, 20, 1, true), M(TC_COLORS[w.c][1], { roughness: .45, side: T.DoubleSide }), 0, 1.25, 0); add(g, new T.TorusGeometry(.27, .05, 8, 20), cd, 0, 1.86, 0).rotation.x = Math.PI / 2; }
+    var V = function (a) { return a.map(function (p) { return new T.Vector2(p[0], p[1]); }); };
+    if (w.m) { add(g, new T.CylinderGeometry(.34, .29, .95, 16), cl, 0, 2.15, 0); add(g, new T.CylinderGeometry(.14, .17, .1, 12), cl, 0, 2.66, 0); }
+    else if (w.o === 'dress') {   // a fitted bodice with a sweetheart neckline: bare shoulders above it
+      add(g, new T.LatheGeometry(V([[.2, 1.84], [.205, 1.95], [.24, 2.12], [.285, 2.3], [.29, 2.4], [.27, 2.47], [.0, 2.48]]), 24), cl);
+      add(g, new T.LatheGeometry(V([[.27, 2.46], [.3, 2.56], [.26, 2.62], [.14, 2.66], [.0, 2.67]]), 24), sk);
+      [-1, 1].forEach(function (e) { var b = add(g, new T.SphereGeometry(.13, 14, 10), cl, e * .1, 2.36, .17); b.scale.set(1, .8, .7); });
+    } else add(g, new T.LatheGeometry(V([[.21, 1.84], [.22, 1.98], [.26, 2.15], [.3, 2.36], [.3, 2.5], [.22, 2.62], [.0, 2.64]]), 24), cl);
+    if (w.o === 'dress') { add(g, new T.LatheGeometry(V([[.2, 1.86], [.28, 1.7], [.42, 1.4], [.62, 1.0], [.8, .7], [.84, .64]]), 28), M(TC_COLORS[w.c][1], { roughness: .45, side: T.DoubleSide })); add(g, new T.TorusGeometry(.205, .045, 8, 24), cd, 0, 1.86, 0).rotation.x = Math.PI / 2; add(g, new T.SphereGeometry(.06, 10, 8), cd, .12, 1.86, .17); }
     else if (w.o === 'jumpsuit') { add(g, new T.CylinderGeometry(.28, .32, .5, 16), cl, 0, 1.6, 0); add(g, new T.TorusGeometry(.29, .06, 8, 20), cd, 0, 1.82, 0).rotation.x = Math.PI / 2; }
-    else { add(g, new T.CylinderGeometry(.31, .34, .7, 16), cl, 0, 1.55, 0); add(g, new T.BoxGeometry(.18, .5, .05), M('#ffffff'), 0, 2.38, .27); add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 2.0, .3); add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 1.75, .32); }
+    else { add(g, new T.CylinderGeometry(w.m ? .3 : .26, w.m ? .33 : .31, .7, 16), cl, 0, 1.55, 0); add(g, new T.BoxGeometry(.18, .5, .05), M('#ffffff'), 0, 2.38, w.m ? .3 : .27);
+      if (w.m) { add(g, new T.BoxGeometry(.07, .38, .03), cd, 0, 2.3, .325); add(g, new T.BoxGeometry(.1, .06, .04), cd, 0, 2.55, .32); [-1, 1].forEach(function (e) { var lp = add(g, new T.BoxGeometry(.1, .45, .03), cd, e * .14, 2.3, .29); lp.rotation.z = e * .3; }); } add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 2.0, .3); add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 1.75, .32); }
     var mkArm = function (sx) {
-      var sh = new T.Group(); sh.position.set(sx * .36, 2.52, 0); g.add(sh);
+      var sh = new T.Group(); sh.position.set(sx * (w.m ? .4 : .34), 2.52, 0); g.add(sh);
       add(sh, new T.SphereGeometry(.1, 10, 8), sleeve, 0, 0, 0);
       add(sh, new T.CylinderGeometry(.075, .065, .95, 10), sleeve, 0, -.48, 0);
       var hand = add(sh, new T.SphereGeometry(.085, 12, 10), sk, 0, -1.02, .01); hand.scale.set(.75, 1.25, .5);   // a hand, with a thumb
@@ -4565,8 +4594,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var ck = add(head, new T.SphereGeometry(.045, 10, 8), M('#ff8fa3', { transparent: true, opacity: .45 }), e * .15, -.04, .23); ck.scale.set(1, .6, .4);
     });
     var nose = add(head, new T.ConeGeometry(.03, .085, 10), sk, 0, -.02, .29); nose.rotation.x = Math.PI / 2.6;
-    var lu = add(head, new T.CapsuleGeometry(.018, .06, 4, 8), M('#c0303a', { roughness: .35 }), 0, -.115, .262); lu.rotation.z = Math.PI / 2;
-    var ll = add(head, new T.CapsuleGeometry(.021, .05, 4, 8), M('#b02634', { roughness: .35 }), 0, -.142, .255); ll.rotation.z = Math.PI / 2;
+    var lip = w.m ? M('#a8665a', { roughness: .5 }) : M('#c0303a', { roughness: .35 });
+    var lu = add(head, new T.CapsuleGeometry(w.m ? .012 : .018, .06, 4, 8), lip, 0, -.115, .262); lu.rotation.z = Math.PI / 2;
+    if (!w.m) { var ll = add(head, new T.CapsuleGeometry(.021, .05, 4, 8), M('#b02634', { roughness: .35 }), 0, -.142, .255); ll.rotation.z = Math.PI / 2;
+      [-1, 1].forEach(function (e) { [0, 1, 2].forEach(function (k) { var la2 = add(head, new T.BoxGeometry(.008, .035, .008), M('#1a1010'), e * (.07 + k * .025), .095, .27); la2.rotation.z = e * (-.5 + k * .35); }); }); }
     if (w.g) {   // real sunglasses: two dark lenses, a bridge, and the arms back to the ears
       var lens = M('#0b0b12', { metalness: .9, roughness: .08 }), frame = M('#1c1c22', { metalness: .6, roughness: .3 });
       [-1, 1].forEach(function (e) {
@@ -4581,10 +4612,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var fr = add(head, new T.SphereGeometry(.31, 18, 8, 0, Math.PI, 0, Math.PI * .22), hr, 0, .05, .02); fr.rotation.x = .15;   // a soft fringe at the top of the forehead
     if (w.y === 0) { var lng = add(head, new T.CylinderGeometry(.3, .36, .95, 20, 1, true, Math.PI * .55, Math.PI * .9), hr, 0, -.38, -.02); lng.material.side = T.DoubleSide; }
     else if (w.y === 1) { var bob = add(head, new T.CylinderGeometry(.315, .345, .42, 20, 1, true, Math.PI * .5, Math.PI), hr, 0, -.1, 0); bob.material.side = T.DoubleSide; }
-    else add(head, new T.SphereGeometry(.15, 14, 12), hr, 0, .22, -.3);
+    else if (w.y === 2) add(head, new T.SphereGeometry(.15, 14, 12), hr, 0, .22, -.3);
+    else { var top = add(head, new T.SphereGeometry(.31, 18, 10, 0, Math.PI * 2, 0, Math.PI * .45), hr, 0, .06, 0); top.scale.set(1, .9, 1); }
     if (w.h === 1) { add(head, new T.CylinderGeometry(.24, .24, .5, 18), M('#15151c'), 0, .5, 0); add(head, new T.CylinderGeometry(.4, .4, .03, 20), M('#15151c'), 0, .26, 0); add(head, new T.CylinderGeometry(.245, .245, .08, 18), M('#3a3a48'), 0, .32, 0); }
     else if (w.h === 2) { add(head, new T.CylinderGeometry(.62, .62, .03, 24), M('#efdcab'), 0, .22, 0); add(head, new T.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#efdcab'), 0, .22, 0); add(head, new T.CylinderGeometry(.3, .3, .07, 18), M('#8b5cf6'), 0, .26, 0); }
     else if (w.h === 3) { var b = add(head, new T.SphereGeometry(.34, 16, 10), M('#6d3cc0'), -.05, .26, 0); b.scale.set(1.1, .38, 1.1); b.rotation.z = .25; }
+    else if (w.h === 4) {   // a cowboy hat: a wide brim curled up at the sides
+      var cb = M('#a0642c', { roughness: .8 }), br2 = add(head, new T.SphereGeometry(.62, 24, 8, 0, Math.PI * 2, Math.PI * .44, Math.PI * .12), cb, 0, .02, 0); br2.scale.set(1, .5, .8); br2.material.side = T.DoubleSide;
+      var cr = add(head, new T.CylinderGeometry(.22, .28, .3, 18), M('#b8763a', { roughness: .8 }), 0, .4, 0); cr.scale.set(1, 1, .85); add(head, new T.CylinderGeometry(.285, .285, .05, 18), M('#4a2a10'), 0, .3, 0).scale.set(1, 1, .85);
+    }
+    else if (w.h === 5) {   // a baseball cap with a peak
+      add(head, new T.SphereGeometry(.325, 20, 10, 0, Math.PI * 2, 0, Math.PI * .5), M('#e0283a'), 0, .1, 0);
+      var pk2 = add(head, new T.CylinderGeometry(.24, .24, .025, 20, 1, false, -Math.PI / 2, Math.PI), M('#a31424'), 0, .12, .24); pk2.scale.set(1, 1, .9);
+      add(head, new T.SphereGeometry(.03, 8, 6), M('#a31424'), 0, .42, 0);
+    }
+    else if (w.h === 6) {   // a fedora with a golden band
+      var fb = add(head, new T.CylinderGeometry(.46, .46, .03, 24), M('#3a3a48'), 0, .24, 0); fb.rotation.x = -.08;
+      var fc = add(head, new T.CylinderGeometry(.24, .28, .28, 18), M('#4a4a5a'), 0, .38, 0); fc.scale.set(1, 1, .9);
+      add(head, new T.CylinderGeometry(.285, .285, .06, 18), M('#d9a520', { metalness: .5, roughness: .4 }), 0, .29, 0).scale.set(1, 1, .9);
+      add(head, new T.BoxGeometry(.3, .04, .5), M('#3a3a48'), 0, .52, 0).scale.set(.7, 1, .5);
+    }
     g.userData = { lh: lh, rh: rh, la: la, ra: ra, head: head };
     return g;
   }
