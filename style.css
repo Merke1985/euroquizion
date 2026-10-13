@@ -4173,3 +4173,7 @@ body.hasdock main{padding-bottom:84px}
 
 /* Zero Gravity: a gentler singing mouth */
 @keyframes zgmouth{from{transform:scale(.85,.4)}to{transform:scale(1,.85)}}
+/* Zero Gravity: a twice-as-big control area on the phone */
+.zgtrack{height:240px;border-radius:26px}
+.zgzone{top:14px;bottom:14px;border-radius:18px}
+.zgme{width:10px;margin-left:-5px}.zgme::after{width:46px;height:46px;margin-left:-23px;bottom:10px}
