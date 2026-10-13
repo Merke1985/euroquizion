@@ -4214,6 +4214,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'rooms'; g.ends = Date.now() + ED_MS;
     var ov = $('edov'); if (ov) { ov.classList.add('go'); ov.removeAttribute('data-lit'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); }); }
     push(); Music.ding(); whooshes([0, 300]); if (!REMOTE) Music.mystery(false); clueSong();   // Edgar's tune: from the search to the end of the clue questions
+    if (!REMOTE) { var t0e = Date.now(), dTry = 0, dT = setInterval(function () {   // the search lasts as long as the song (from 0:14 to its end), once YouTube knows its length
+      if (G.clue !== g || g.st !== 'rooms' || ++dTry > 30) { clearInterval(dT); return; }
+      var d = 0; try { d = yt.getDuration() || 0; } catch (e) {}
+      if (d > 60) { clearInterval(dT); g.ends = t0e + Math.max(ED_MS, Math.min(300000, (d - CLUE_YT_AT - 1) * 1000)); push(); }
+    }, 500); }
     // the bots: a room, ~20–32 seconds, a few seconds walking to the next
     bots.forEach(function (b) {
       if (!players[b.pid] || players[b.pid].off) return;
