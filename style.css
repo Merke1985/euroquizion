@@ -3378,24 +3378,24 @@ body.hasdock main{padding-bottom:84px}
 .orclock{position:absolute;top:2vh;right:3vw;font-weight:900;font-size:clamp(2rem,4.5vw,4rem);color:#fff;text-shadow:0 0 16px #ff7a1a,0 3px 0 #6b2a12;font-variant-numeric:tabular-nums;z-index:3}
 .ormid{position:absolute;left:50%;bottom:6vh;width:min(62vw,98vh);transform:translateX(-50%);z-index:2}
 .orsvg{width:100%;height:auto;display:block;filter:drop-shadow(0 16px 20px rgba(0,0,0,.35))}
-.orov.broken .orsvg{animation:orrattle .18s linear infinite}
+.orov.brk-speed .orsvg,.orov.brk-pitch .orsvg{animation:orrattle .18s linear infinite}
 @keyframes orrattle{0%,100%{translate:0 0;rotate:0deg}25%{translate:-3px 1px;rotate:-.4deg}75%{translate:3px -1px;rotate:.4deg}}
-.orov.broken .orpipe{animation:orpipe .4s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.13s);transform-box:fill-box;transform-origin:50% 100%}
+.orov.brk-pitch .orpipe{animation:orpipe .4s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.13s);transform-box:fill-box;transform-origin:50% 100%}
 @keyframes orpipe{from{rotate:-6deg}to{rotate:7deg;translate:0 -4px}}
-.orov:not(.broken)[data-st="fixed"] .orpipe,.orov[data-st="end"] .orpipe{animation:orplay .45s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.09s);transform-box:fill-box;transform-origin:50% 100%}
+.orov:not(.brk-pitch)[data-st="fixed"] .orpipe,.orov[data-st="end"] .orpipe{animation:orplay .45s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.09s);transform-box:fill-box;transform-origin:50% 100%}
 @keyframes orplay{to{scale:1 1.06}}
 .orwheel{transform-box:fill-box;transform-origin:50% 50%;animation:ruspin 3s linear infinite}
-.orov.broken .orwheel{animation-duration:9s;animation-direction:reverse}
-.orov.broken .orfig{animation:orwob 1.2s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 50%}
+.orov.brk-speed .orwheel{animation-duration:9s;animation-direction:reverse}
+.orov.brk-speed .orfig{animation:orwob 1.2s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 50%}
 @keyframes orwob{to{rotate:-10deg;scale:.94}}
 .orsmoke{position:absolute;left:30%;right:30%;top:-4%;height:30%;pointer-events:none;display:none}
-.orov.broken .orsmoke{display:block}
+.orov.brk-speed .orsmoke{display:block}
 .orsmoke i{position:absolute;bottom:0;width:7vh;height:7vh;border-radius:50%;background:radial-gradient(circle,rgba(110,110,110,.75),rgba(110,110,110,0) 70%);animation:orsm 2.4s ease-out infinite}
 .orsmoke i:nth-child(1){left:10%}.orsmoke i:nth-child(2){left:45%;animation-delay:-.8s}.orsmoke i:nth-child(3){left:80%;animation-delay:-1.6s}
 @keyframes orsm{0%{translate:0 0;scale:.5;opacity:.9}100%{translate:-2vw -22vh;scale:2.4;opacity:0}}
 .orsparks{position:absolute;left:4%;top:44%;font-size:5vh;display:none;animation:benvshake .15s linear infinite}
-.orov.broken .orsparks{display:block}
-.orov[data-ph="3"].broken .orsvg{filter:drop-shadow(0 0 30px rgba(255,80,20,.7))}
+.orov.brk-fx .orsparks{display:block}
+
 .orsta{position:absolute;width:22vw;padding:1vh 1vw;border-radius:16px;background:rgba(30,15,5,.82);box-shadow:0 0 0 3px #ff4d4d,0 10px 24px rgba(0,0,0,.35);z-index:4;display:flex;flex-direction:column;gap:.5vh;transition:box-shadow .4s}
 .orsta.speed{right:1.5vw;top:20vh}.orsta.pitch{left:50%;top:15vh;transform:translateX(-50%);width:26vw}.orsta.fx{left:1.5vw;top:20vh}
 .orsta.done{box-shadow:0 0 0 3px #3ddc84,0 0 26px rgba(61,220,132,.6)}
@@ -3483,19 +3483,19 @@ body.hasdock main{padding-bottom:84px}
 .orfloor::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,180,90,.3),transparent 60%)}
 .ormid{left:50%;bottom:14vh;width:min(78vw,128vh);transform:translateX(-50%)}
 .orsvg .orbulb{fill:#fff3b0;animation:orled .7s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.11s)}
-.orov.broken .orsvg .orbulb{animation:orflick .23s steps(2) infinite}
+
 @keyframes orflick{0%{fill:#fff3b0}50%{fill:#3a2a10}}
 .orsvg .ormill{transform-box:fill-box;transform-origin:50% 25%;animation:ruspin 6s linear infinite}
-.orov.broken .orsvg .orpipe{animation:orpipe .4s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.13s);transform-box:fill-box;transform-origin:50% 100%}
-.orov:not(.broken) .orsvg .orpipe{animation:orplay .45s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.09s);transform-box:fill-box;transform-origin:50% 100%}
-.orov.broken .orsvg{animation:orrattle .2s linear infinite}
+.orov.brk-pitch .orsvg .orpipe{animation:orpipe .4s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.13s);transform-box:fill-box;transform-origin:50% 100%}
+.orov:not(.brk-pitch) .orsvg .orpipe{animation:orplay .45s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.09s);transform-box:fill-box;transform-origin:50% 100%}
+.orov.brk-speed .orsvg,.orov.brk-pitch .orsvg{animation:orrattle .2s linear infinite}
 .orsvg .orfig1,.orsvg .orfig2{transform-box:fill-box;transform-origin:50% 100%;animation:orwob 1s steps(2) infinite alternate}
 .orsinger{position:absolute;left:50%;bottom:3vh;height:52vh;transform:translateX(-50%);z-index:3;filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
 .orsinger svg{height:100%;width:auto;display:block}
 .orov[data-st="fix"] .orsinger svg,.orov[data-st="fixed"] .orsinger svg,.orov[data-st="end"] .orsinger svg{animation:orsway 1.4s ease-in-out infinite alternate;transform-origin:50% 100%}
 @keyframes orsway{from{rotate:-3deg}to{rotate:3deg}}
 .orsing .orsmouth{transform-box:fill-box;transform-origin:50% 50%;animation:nthold .4s ease-in-out infinite alternate}
-.orov.broken .orsing .orsmouth{animation:ntchat .2s steps(2) infinite alternate}
+
 .orpuppet{position:absolute;bottom:4vh;height:56vh;z-index:3;filter:drop-shadow(0 10px 16px rgba(0,0,0,.6))}
 .orpuppet.p1{left:16vw}.orpuppet.p2{right:16vw}
 .orpuppet svg{height:100%;width:auto;display:block;overflow:visible}
@@ -3510,8 +3510,8 @@ body.hasdock main{padding-bottom:84px}
 @keyframes orrobB{0%{rotate:0deg}25%{rotate:-90deg}50%{rotate:-30deg}75%{rotate:-120deg}}
 @keyframes orrobL{0%{rotate:0deg}25%{rotate:-25deg}50%{rotate:0deg}75%{rotate:0deg}}
 @keyframes orbob{0%{translate:0 0;rotate:0deg}25%{translate:0 -1.2vh;rotate:-4deg}50%{translate:0 0;rotate:0deg}75%{translate:0 -1.2vh;rotate:4deg}}
-.orov.broken .orpuppet svg{animation-duration:3.6s}
-.orov.broken .orpup .parm,.orov.broken .orpup .pleg{animation-duration:3.6s}
+.orov.brk-fire .orpuppet svg{animation-duration:1.2s}
+.orov.brk-fire .orpup .parm,.orov.brk-fire .orpup .pleg{animation-duration:1.2s}
 .orsta{top:15vh!important;bottom:auto;width:25vw!important;transform:none!important;background:rgba(20,8,4,.86)}
 .orsta.fx{left:1.5vw!important;right:auto}.orsta.pitch{left:37.5vw!important}.orsta.speed{right:1.5vw!important;left:auto}
 .orph{color:#ffe0b0;text-shadow:0 2px 8px #000}
@@ -4304,3 +4304,26 @@ body.hasdock main{padding-bottom:84px}
 .orpeek .orpm{transform-box:fill-box;transform-origin:50% 0;scale:1 .35}
 .orov.invaded .orpeek .orpm{animation:orsing .32s ease-in-out infinite alternate}
 @keyframes orsing{0%{scale:1 .35}60%{scale:1 1.15}100%{scale:1 .7}}
+.orov.brk-fx .orcab{animation:orcabsw .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 0}
+@keyframes orcabsw{from{rotate:-14deg}to{rotate:14deg}}
+/* each breakdown only does its own thing: wiring, an electric field round the cable box */
+.orov.brk-fx .orpanel{filter:drop-shadow(0 0 4px #9ef) drop-shadow(0 0 12px #39f) drop-shadow(0 0 22px #36f);animation:orzap .22s steps(2) infinite}
+@keyframes orzap{50%{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 18px #6cf) drop-shadow(0 0 34px #39f)}}
+/* the stations: small, the names of who's on it, one bar */
+.orsta{width:7.6vw!important;min-width:110px;padding:.6vh .5vw!important;gap:.4vh;border-radius:12px}
+.orsta .orst{font-size:clamp(.62rem,.9vw,.9rem)}
+.ornames{display:flex;flex-direction:column;gap:.1vh;font-size:clamp(.6rem,.85vw,.85rem);font-weight:700;color:#fff;line-height:1.15}
+.ornames span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.9}
+.ornames span.ok{color:#3ddc84}
+.orall{height:1vh}
+/* the stage invader: a bit further left, just left of the puppet strings, rising from behind the organ */
+.orpeek{right:17%!important;top:-12%!important;width:17%!important;translate:0 75%!important;rotate:0deg!important}
+.orov.invaded .orpeek{translate:0 -14%!important;rotate:5deg!important}
+.orclock{display:none!important}
+.slcell .slvv{display:flex;flex-wrap:wrap;justify-content:center;gap:.2vw .5vw;margin-top:.4vh;padding:0 .4vw}
+.slcell .slvv i{display:flex;align-items:center;gap:.25vw;font-style:normal;font-size:clamp(.55rem,.8vw,.8rem);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.slcell .slvv .char{width:3vh;height:3vh}.slcell .slvv .chflag{display:none}.slcell .slvv .chin img{width:100%;height:100%;object-fit:cover;display:block}
+.slcell .slvv u{text-decoration:none;max-width:6vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#slotov.counted .slcell.hi .sli{font-size:4.4vh}
+#slotov.counted .slcell.hi b{font-size:clamp(.75rem,1.15vw,1.1rem)}
+#slotov.counted .slcell.hi{gap:.4vh;justify-content:flex-start;padding-top:2.2vh}

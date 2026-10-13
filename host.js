@@ -1183,7 +1183,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.best.bpick) { battleBets(); return; }   // Song Battle: the bets are in, on to the first battle
       if (G.best.funny) { funnyPicked(tops); return; }
       if (G.best.eraPick) { eraPicked(tops); return; }
-      if (G.best.pick) { partyPicked(tops); return; }   // not a question: the choice of the next party round
+      if (G.best.pick) { G.best.tally = tally; partyPicked(tops); return; }   // not a question: the choice of the next party round
       G.best.tally = tally; G.best.wins = tops; G.q.correct = tops.length ? tops[0] : -1;
       if (G.best.bluff) {
         // Bluff!: 12 points for finding the real meaning, 4 for every player who falls for your fake.
@@ -1615,7 +1615,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The votes are in: the one with the most plays; a tie (or no votes at all) is settled by the spin.
   function partyPicked(tops) {
     if (G.best && G.best.four) {   /* four cards: a draw among the voted games, weighted by the votes (no votes: all four, equal) */
-      var kinds4 = G.best.kinds, tally = G.best.tally || [], voted = kinds4.filter(function (k, i) { return tally[i] > 0; }), wts = voted.map(function (k) { return tally[kinds4.indexOf(k)]; });
+      var kinds4 = G.best.kinds, tally = G.best.tally || [], vot = kinds4.map(function (k, i) { return list().filter(function (p) { return !p.off && p.pick === i; }); }), voted = kinds4.filter(function (k, i) { return tally[i] > 0; }), wts = voted.map(function (k) { return tally[kinds4.indexOf(k)]; });
       if (!voted.length) { voted = kinds4.slice(); wts = voted.map(function () { return 1; }); }
       var tw = wts.reduce(function (a, b) { return a + b; }, 0), rr = Math.random() * tw, j = 0; while (j < voted.length - 1 && rr >= wts[j]) { rr -= wts[j]; j++; }
       var ch = voted[j];
@@ -1624,8 +1624,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (M && M.ov.isConnected && M.hi) {   // the slot machine is still on screen: the votes go on the four games; the most votes wins
         var vs = kinds4.map(function (k, i2) { return tally[i2] || 0; }), top = Math.max.apply(null, vs), tied = kinds4.filter(function (k, i2) { return vs[i2] === top; });
         var cellOf = function (k) { return M.hi.filter(function (c) { return c.getAttribute('data-k') === k; })[0]; };
-        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').textContent = vs[i2] ? vs[i2] + ' 🗳️' : '0'; if (tied.indexOf(k) < 0) c.classList.add('out'); } });
-        M.ov.classList.remove('voting'); G.phase = 'pspin'; G.barMs = 0; push();
+        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = (vs[i2] ? vs[i2] + ' 🗳️' : '0') + '<span class="slvv">' + vot[i2].map(function (p) { return '<i>' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ if (tied.indexOf(k) < 0) c.classList.add('out'); } });
+        M.ov.classList.remove('voting'); M.ov.classList.add('counted'); G.phase = 'pspin'; G.barMs = 0; push();
         var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); }); M.ov.classList.remove('ticking'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
         if (tied.length < 2) { M.ov.querySelector('.slsub').textContent = 'Most votes!'; slotT = setTimeout(land, 1400); return; }
         M.ov.querySelector('.slsub').textContent = 'A tie! 🎲'; var hops = 12 + Math.floor(Math.random() * tied.length), st0 = (tied.indexOf(win) - hops % tied.length + tied.length * 8) % tied.length, hn = 0;
@@ -5853,8 +5853,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.order.forEach(function (k) { g.phPts[k] = 0; });
     var used = shuffle(OR_ST.filter(function (s2) { return g.order.some(function (k) { return g.sta[k] === s2; }); })), u = g.ph === 1 && used.indexOf('sec') >= 0 ? used.filter(function (x) { return x !== 'sec'; }).concat('sec') : used, n = u.length;   // (the first phase: security always breaks last)
     g.groups = g.ph === 1 ? u.map(function (x) { return [x]; })
-      : g.ph === 2 ? (n >= 5 ? [[u[0], u[1]], [u[2], u[3], u[4]]] : n >= 4 ? [[u[0], u[1]], [u[2], u[3]]] : n === 3 ? [[u[0], u[1]], [u[2], u[0]], [u[1], u[2]]] : n === 2 ? [[u[0], u[1]], [u[0], u[1]]] : [[u[0]], [u[0]]])
-      : [u.slice(), u.slice()];
+      : g.ph === 2 ? orPairs(u)   // phase 2: two at a time, until every part has broken down twice
+      : [u.slice()];   // phase 3: everything, one after the other in quick succession (all within 10 seconds)
     g.gi = -1; g.gBusy = false; g.fxk = pick(OR_FXK);
     orGroup(2000 + Math.random() * 1500);
     var was = '';
@@ -5871,16 +5871,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       orShow();
     }, 250);
   }
+  function orPairs(u) {
+    if (u.length < 2) return [[u[0]], [u[0]]];
+    for (var tr = 0; tr < 50; tr++) {
+      var L = shuffle(u.slice()).concat(shuffle(u.slice())), P = [];
+      for (var i = 0; i < L.length; i += 2) P.push(L.slice(i, i + 2));
+      if (P.every(function (p) { return p.length < 2 || p[0] !== p[1]; })) return P;
+    }
+    return P;
+  }
   function orGroup(delay) {   // the next part(s) break down after a little while: a fresh task, and its own repair time
     var g = G.organ; if (!g) return;
     g.gi++; g.gBusy = true; var at = Date.now() + Math.round(delay), grp = g.groups[g.gi] || [];
     setTimeout(function () {
       if (G.organ !== g || g.st !== 'fix') return;
-      grp.forEach(function (s2) {
-        g.bn[s2] = (g.bn[s2] || 0) + 1; g.brk[s2] = Date.now(); g.shut[s2] = false;
+      var offs = grp.map(function (x, i) { return g.ph === 3 && grp.length > 1 ? Math.round(i * 10000 / (grp.length - 1) * (0.75 + Math.random() * 0.25)) : 0; });   // (phase 3: spread over 10 seconds)
+      grp.forEach(function (s2, i) {
+        g.bn[s2] = (g.bn[s2] || 0) + 1; g.brk[s2] = Date.now() + offs[i]; g.shut[s2] = false;
         g.order.forEach(function (k) { if (g.sta[k] === s2) { g.prog[k] = { d: 0, of: OR_NEED[s2][g.ph - 1], at: 0 }; g.botGo[k] = 0; } });
       });
-      g.ends = Date.now() + OR_TASK[g.ph - 1]; g.gBusy = false; push();
+      g.ends = Date.now() + Math.max.apply(null, offs) + OR_TASK[g.ph - 1]; g.gBusy = false; push();
     }, Math.max(0, at - Date.now()));
   }
   function orOpen(g, s2) { return !!(g.brk && g.brk[s2] && !g.shut[s2] && Date.now() >= g.brk[s2]); }
@@ -5921,7 +5931,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.fixed = g.allOk; g.last = {};
     g.order.forEach(function (k) { var pts = g.phPts[k] + (g.fixed ? 15 : 0); if (g.fixed) g.pts[k] += 15; g.last[k] = pts; });
     g.st = 'fixed'; push(); if (g.fixed) Music.douze(); else Music.buzz();
-    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd(); }, 4000);
+    clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.organ !== g) return; if (g.ph < 3) orPhase(); else orEnd('fade'); }, g.ph < 3 ? 4000 : 10000);   // (after the last phase: the song plays on for 10 seconds, then the end)
   }
   function orSongEnded() {   // the song is over: the game ends right there, whatever was fixed
     var g = G.organ; if (!g || g.st === 'end' || g.st === 'intro') return;
@@ -5936,7 +5946,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.win = best > 0 ? g.order.filter(function (k) { return g.pts[k] === best; }) : [];
     var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
     g.st = 'end'; g.prize = big; push(); Music.douze();
-    if (over) orSong(false); else setTimeout(function () { if (G.organ === g) orSong(false, true); }, 10000);   // (the song plays on for 10 more seconds, then fades out; or it just ended)
+    if (over === 'fade') orSong(false, true); else if (over) orSong(false); else setTimeout(function () { if (G.organ === g) orSong(false, true); }, 10000);   // (the song plays on for 10 more seconds, then fades out; or it just ended)
     clearTimeout(orTimer); orTimer = setTimeout(function () { if (G.phase === 'organ') { G.organ = null; startRound(); } }, 15500);
   }
   // Sieneke's song, from a sound file (sounds/sjalalie.mp3; the YouTube video if that file isn't there). While a
@@ -6067,7 +6077,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var brk = orBroken(), broken = OR_ST.some(function (s2) { return brk[s2]; });
     if (ov._fire && !brk.fire) { ov.classList.add('doused'); clearTimeout(ov._dT); ov._dT = setTimeout(function () { ov.classList.remove('doused'); }, 2600); }   // (the fire is out: a splash of water)
     ov._fire = !!brk.fire;
-    ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.classList.toggle('onfire', !!brk.fire); ov.classList.toggle('invaded', !!brk.sec); ov.setAttribute('data-ph', g.ph);
+    ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.classList.toggle('onfire', !!brk.fire); ov.classList.toggle('invaded', !!brk.sec); OR_ST.forEach(function (s3) { ov.classList.toggle('brk-' + s3, !!brk[s3]); });   /* (each breakdown has its own effect on the organ) */ ov.setAttribute('data-ph', g.ph);
     orFireSnd(!!brk.fire && !REMOTE); orInvSnd(!!brk.sec && !REMOTE);
     ov.querySelector('.orph').textContent = g.ph ? 'Phase ' + g.ph + ' of 3' : '';
     var sw = ov.querySelector('.orswap'); if (!sw) { sw = document.createElement('div'); sw.className = 'orswap'; sw.innerHTML = '<b>🔀 Swap!</b><span>Everyone’s tasks have swapped!</span><small>Check your phone for your new station</small>'; ov.appendChild(sw); }   // the break between phases: a big message in front of the organ
@@ -6076,9 +6086,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     OR_ST.forEach(function (s) {
       var box = ov.querySelector('.orsta.' + s), who = g.order.filter(function (k) { return g.sta[k] === s; });
       var done = who.length && orOpen(g, s) && who.every(function (k) { return g.prog[k] && g.prog[k].d >= g.prog[k].of; });
-      var h = g.ph && g.st !== 'end' ? '<div class="orst">' + OR_NAME[s] + (done ? ' ✅ fixed' : brk[s] ? ' <i class="orbad">⚠️ BROKEN!</i>' : ' <i class="orok">👍 OK</i>') + '</div>' + (function () {   // one bar for the whole station: everyone's progress together
+      var h = g.ph && g.st !== 'end' ? '<div class="orst">' + OR_NAME[s] + (done ? ' ✅' : brk[s] ? ' <i class="orbad">⚠️</i>' : '') + '</div>' + (function () {   // the job, who's on it, and one bar for everyone together
         var d = 0, of = 0; who.forEach(function (k) { var pr = g.prog[k]; if (pr) { d += Math.min(pr.d, pr.of); of += pr.of; } });
-        return '<div class="orfaces">' + who.map(function (k) { var p = players[k]; return p ? '<span' + (g.prog[k] && g.prog[k].d >= g.prog[k].of ? ' class="ok"' : '') + '>' + charSvg(p.char) + '</span>' : ''; }).join('') + '</div><em class="orall"><i style="width:' + (of ? Math.round(d / of * 100) : 0) + '%"></i></em>';
+        return '<div class="ornames">' + who.map(function (k) { var p = players[k]; return p ? '<span' + (g.prog[k] && g.prog[k].d >= g.prog[k].of ? ' class="ok"' : '') + '>' + esc(p.name) + '</span>' : ''; }).join('') + '</div><em class="orall"><i style="width:' + (of ? Math.round(d / of * 100) : 0) + '%"></i></em>';
       })() : '';
       if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
       box.classList.toggle('done', !!done); box.classList.toggle('brk', !!brk[s]); box.classList.toggle('empty', !g.ph || g.st === 'end'); box.classList.toggle('nobody', !who.length);
