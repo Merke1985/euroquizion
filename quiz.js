@@ -919,8 +919,8 @@ function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y 
 // 2:05–2:15, then the maximum sway to the end. Off the zone: 2 seconds to get back, always; the zone slowly gets smaller.
 // In a break the poles come back to the middle and nobody can fall.
 // x goes from -1 (far left) to 1 (far right).
-var ZG_GO = 9, ZG_LEN0 = 175, ZG_LEN = ZG_LEN0, ZG_ST = [72, 135], ZG_BRK = [[62, 72], [125, 135]], ZG_FALL = [2, 2, 1], zgPar = {};
-function zgW(t) { return 0.24 - 0.12 * Math.max(0, Math.min(1, t / ZG_LEN)); }   // (the zone: half its size by the end)
+var ZG_GO = 9, ZG_LEN0 = 182, ZG_LEN = ZG_LEN0, ZG_ST = [72, 135], ZG_BRK = [[62, 72], [125, 135]], ZG_FALL = [2, 2, 1], zgPar = {};
+function zgW(t) { return [0.46, 0.23, 0.115][zgStage(t)]; }   // (the zone: big in stage 1, half of that in stage 2, half again in stage 3)
 function zgNext(t) { var n = ZG_LEN; ZG_BRK.forEach(function (b) { if (b[0] > t && b[0] < n) n = b[0]; if (t >= b[0] && t < b[1] && b[1] < n) n = b[1]; }); return n; }   // (the end of the current stage, or break)
 function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
 function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -936,6 +936,7 @@ function zgPath(seed, t) {   // the same on every device; seed is kept for older
     x = 0.88 * Math.sin(2 * Math.PI * ph);
   }
   var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 3) : t > b[1] ? sm((t - b[1]) / 2) : 0;   /* (gliding back to the middle over the last 3 seconds before a break; after it, off again from the middle) */ });   // (the breaks: back to the middle)
+  if (t > ZG_LEN - 3) env *= sm((ZG_LEN - t) / 3);   // (the last 3 seconds: slowly back to the middle, and it ends at 3:02)
   return env * x;
 }
 function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }

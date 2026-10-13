@@ -5162,7 +5162,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function zgGo() {
     var g = G.zg; if (!g || G.phase !== 'zg') return;
     ZG_LEN = ZG_LEN0; g.st = 'play'; g.t0 = Date.now(); g.ends = g.t0 + ZG_LEN * 1000; g.len = ZG_LEN; g.stage = 0; push(); Music.ding(); zgSong(true);
-    if (!REMOTE) { var lenTry = 0, lenT = setInterval(function () { if (G.zg !== g || g.st !== 'play' || ++lenTry > 40) { clearInterval(lenT); return; } var d = 0; try { d = yt.getDuration() || 0; } catch (e) {} if (d > 100) { clearInterval(lenT); ZG_LEN = g.len = Math.max(150, Math.min(260, Math.floor(d - 1))); g.ends = g.t0 + ZG_LEN * 1000; push(); } }, 500); }   // (the game lasts as long as the song: its length, once YouTube knows it)
+    // (the game ends at 3:02 in the video)
     clearInterval(zgLoop); zgLoop = setInterval(zgStep, 100);
     [ZG_GO - 3, ZG_GO - 2, ZG_GO - 1, ZG_GO].forEach(function (sx) { setTimeout(function () { if (G.zg === g) zgShow(); }, sx * 1000 + 30); });   // (the 3-2-1 on the big screen)
   }
@@ -5238,7 +5238,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var bi = g.st === 'play' ? zgBreak(t) : -1, bk = ov.querySelector('.zgbrk');   // the break: "Break time" with a bar that fills up
     if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><strong></strong><i><em></em></i>'; ov.appendChild(bk); }
     bk.classList.toggle('on', bi >= 0); var wn = bk.querySelector('strong'), wt = bi === ZG_BRK.length - 1 ? '⚠️ Warning: in the last stage you only have 1 second to get back in the zone!' : ''; if (wn.textContent !== wt) wn.textContent = wt; if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
-    ov.style.setProperty('--sw', (px * 9).toFixed(2) + 'deg');
+    ov.style.setProperty('--sw', (px * [9, 15, 26][g.st === 'play' ? zgStage((Date.now() - g.t0) / 1000) : 0]).toFixed(2) + 'deg');   // (the sway grows: bigger in stage 2, much bigger in stage 3)
     var sing = g.st === 'play' && t >= 9 || g.st === 'end'; if (ov.classList.contains('sing') !== sing) ov.classList.toggle('sing', sing);   // (she starts singing at 0:09 in the song)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
       var k = el.getAttribute('data-p'); if (g.out[k] != null) return;
