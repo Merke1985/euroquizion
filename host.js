@@ -4348,13 +4348,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return '<svg class="tcgirl" viewBox="0 0 200 490" aria-hidden="true">' + hairBack + leg('b', legD) + arm('b', sleeveD) + leg('f', legC) + body + face + hairFront + hat + arm('f', sleeve) + '</svg>';
   }
   function tcQuestion(girls, used) {
-    var n = girls.length, types = ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'].filter(function (t) { return used.indexOf(t) < 0; });
-    if (!types.length) types = ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'];
+    var n = girls.length, ALL = n === 1 ? ['color', 'hatyn', 'glassyn', 'shoes'] : ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'];   // (one star alone: no counting, just what they wore)
+    var types = ALL.filter(function (t) { return used.indexOf(t) < 0; }); if (!types.length) types = ALL;
     var t = pick(types), cnt = function (f) { return girls.filter(f).length; };
     var nums = function (ans) { var hi = Math.max(3, n), lo = Math.max(0, Math.min(ans - Math.floor(Math.random() * 4), hi - 3)); var o = []; for (var i = lo; i < lo + 4; i++) o.push(String(i)); return { opts: o, ans: ans - lo }; };
     var q;
     var who = function (w) { var inRow = girls.filter(function (x) { return x.row === w.row; }).length; return girls.length === 1 ? 'the contestant' : w.row ? (inRow === 1 ? 'the contestant in the ' + w.row + ' row' : 'the ' + TC_ORD[w.col] + ' contestant from the left in the ' + w.row + ' row') : 'the ' + TC_ORD[girls.indexOf(w)] + ' contestant from the left'; };
-    if (t === 'hat') q = nums(cnt(function (w) { return w.h > 0; })), q.text = 'How many contestants wore a hat?';
+    if (t === 'hatyn') q = { opts: ['Yes', 'No'], ans: girls[0].h > 0 ? 0 : 1, text: 'Was the contestant wearing a hat?' };
+    else if (t === 'glassyn') q = { opts: ['Yes', 'No'], ans: girls[0].g ? 0 : 1, text: 'Was the contestant wearing sunglasses?' };
+    else if (t === 'hat') q = nums(cnt(function (w) { return w.h > 0; })), q.text = 'How many contestants wore a hat?';
     else if (t === 'glasses') q = nums(cnt(function (w) { return w.g; })), q.text = 'How many contestants wore sunglasses?';
     else if (t === 'dress') q = nums(cnt(function (w) { return w.o === 'dress'; })), q.text = 'How many contestants wore a dress?';
     else if (t === 'red') q = nums(cnt(function (w) { return w.c === 0; })), q.text = 'How many contestants wore a red outfit?';
@@ -4410,7 +4412,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var qid = g.qid;
     list().forEach(function (p) {
       if (!p.bot || p.off) return;
-      var a = Math.random() < .65 ? g.q.ans : Math.floor(Math.random() * 4);
+      var a = Math.random() < .65 ? g.q.ans : Math.floor(Math.random() * g.q.opts.length);
       setTimeout(function () { tcMsg({ pid: p.pid, qid: qid, a: a }); }, 2500 + Math.random() * 11000);
     });
     clearTimeout(tcTimer); tcTimer = setTimeout(tcReveal, TC_Q_MS);
