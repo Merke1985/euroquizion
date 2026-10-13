@@ -6937,11 +6937,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     clearTimeout(singTimer); G.revealAt = 0;
     var c = G.sing.options.map(function () { return 0; }), pid, top = [];
     for (pid in G.sing.votes) c[G.sing.votes[pid]]++;
-    // Every song that got a vote is in the draw, and every vote is a ticket: more votes, more chance.
-    var tickets = [];
-    c.forEach(function (n, i) { if (n > 0) { top.push(i); for (var k = 0; k < n; k++) tickets.push(i); } });
-    if (!top.length) { G.sing.options.forEach(function (o, i) { top.push(i); tickets.push(i); }); }   // nobody voted: all four
-    var chosen = pick(tickets);
+    // The song with the most votes wins. A tie: a spin between the tied songs only (nobody voted: all four).
+    var most = Math.max.apply(null, c);
+    c.forEach(function (n, i) { if (n === most) top.push(i); });
+    var chosen = pick(top);
     var go = function () {
       if (!G.sing) return;
       G.sing.chosen = chosen; G.sing.tried[chosen] = 1; G.sing.roll = null;
@@ -6949,7 +6948,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       loadSong(G.sing.options[chosen]);
     };
     if (top.length < 2) {
-      // Everyone voted for the same song: no spin needed, but it lights up green for a moment before the game moves on.
+      // One song has the most votes: no spin needed, but it lights up green for a moment before the game moves on.
       G.phase = 'sroll'; G.sing.in = {}; G.sing.tied = top; G.barMs = 0; G.sing.roll = chosen; G.sing.rollDone = true;
       Music.ding(); push(); singTimer = setTimeout(go, 1800); return;
     }

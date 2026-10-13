@@ -1341,9 +1341,10 @@
     if (sg.song && $('slyrics').getAttribute('data-id') !== sg.song.id) {
       $('slyrics').setAttribute('data-id', sg.song.id || '');
       var ly = LYRICS[sg.song.id];
-      $('slyrics').innerHTML = '<b class="slyt">' + esc(sg.song.title) + '</b><small class="slya">' + esc(sg.song.artist) + '</small>' + (ly ? String(ly).split('\n').map(function (l) { return '<p>' + (esc(l) || '&nbsp;') + '</p>'; }).join('') : '<p class="slynone">🎶 No lyrics for this one yet: sing along with what you remember!</p>');
+      $('slyrics').innerHTML = (ly ? String(ly).split('\n').map(function (l) { return '<p>' + (esc(l) || '&nbsp;') + '</p>'; }).join('') : '<p class="slynone">🎶 No lyrics for this one yet: sing along with what you remember!</p>');
     }
     $('slywrap').classList.toggle('dim', s.phase === 'srec' && !(rec && rec.state === 'recording'));
+    ['sround', 'stitle', 'ssub'].forEach(function (id) { $(id).classList.toggle('hidden', lyOn); });   // (with the lyrics on screen: only the lyrics)
     var recArea = $('srec'); if (lyOn && s.phase === 'srec' && recArea.parentNode !== $('slyover')) $('slyover').appendChild($('srecbtn')), $('slyover').appendChild($('scount'));
     if (!(lyOn && s.phase === 'srec') && $('srecbtn').parentNode !== recArea) { recArea.insertBefore($('srecbtn'), recArea.firstChild); recArea.insertBefore($('scount'), recArea.firstChild); }
     if (sg.rec_ms >= 5000) REC_MAX = sg.rec_ms;   // as long as the clip that was played
