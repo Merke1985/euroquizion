@@ -3965,3 +3965,4 @@ body.hasdock main{padding-bottom:84px}
 .fkvote .opt span{flex:1;font-weight:900}
 .fkvote .opt small{opacity:.7;font-weight:700}
 .fkvote .opt.picked{box-shadow:0 0 0 3px #ffd23f}
+.fksign small{display:block;text-align:center;font-size:.45em;color:#ffd23f;font-weight:800;margin-top:-.1em}

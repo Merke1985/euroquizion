@@ -612,7 +612,7 @@
     var card = !mine ? '' : !me ? '<div class="fkcard wait">🤫 Getting your card…</div>' : me.role === 'fake'
       ? '<div class="fkcard fake"><b>🤫 You’re the FAKE FAN!</b><span>You don’t know the song. Blend in: listen to the others’ words, and don’t get caught!</span></div>'
       : '<div class="fkcard"><small>The secret song</small><b>' + esc(me.song.t) + '</b><span>' + esc(me.song.a) + ' · ' + esc(me.song.c) + ' ' + me.song.y + '</span></div>';
-    var key = f.id + '|' + f.st + '|' + f.turn + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.words) + '|' + JSON.stringify(f.voted) + '|' + f.fake + '|' + (f.guess || '');
+    var key = f.id + '|' + f.st + '|' + f.turn + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.words) + '|' + JSON.stringify(f.voted) + '|' + f.fake + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0);
     if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
     var body = '';
     if (!mine) { $('waittitle').textContent = '🤫 The Fake Fan'; $('waitsub').textContent = 'Watch the big screen!'; }
@@ -636,7 +636,8 @@
       else { $('waittitle').textContent = '🎵 ' + nm(f.fake) + ' is guessing the song…'; $('waitsub').textContent = ''; }
     } else if (f.st === 'end') {
       var won = (f.win || []).indexOf(pid) >= 0, pts = (f.res || {})[pid] || 0;
-      $('waittitle').textContent = won ? '🏆 You win The Fake Fan!' : pts ? '⭐ +' + pts + ' points' : 'The end!';
+      if (f.done) { $('waittitle').textContent = won ? '🏆 You win The Fake Fan!' : '🤫 The Fake Fan is over!'; $('waitsub').textContent = 'Your total: ' + ((f.tot || {})[pid] || 0) + ' points over ' + f.of + ' rounds.'; box.innerHTML = ''; return; }
+      $('waittitle').textContent = (pts ? '⭐ +' + pts + ' points' : 'Round ' + f.rnd + ' done') + (f.rnd < f.of ? ' · next round coming up!' : '');
       $('waitsub').textContent = f.fake === pid ? (f.caught ? (f.right ? 'You knew the song after all! 😎' : 'You didn’t know the song… 🙈') : 'Nobody caught you! 😈') : (f.caught ? (f.right ? 'Caught, but the fake knew the song!' : 'The real fans win!') : 'The fake fan got away…');
     }
     box.innerHTML = card + body;
