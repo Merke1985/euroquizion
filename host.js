@@ -3872,8 +3872,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The four rooms on the big screen are full of details (randomised every game): the phones ask about them, so you
   // have to look up and search the room. The scene goes to the phones too (they check the answers themselves).
   var ED_COL = { red: '#e53950', blue: '#2f80ed', yellow: '#f2c12e', green: '#27ae60', purple: '#9b51e0', orange: '#f2994a', pink: '#ff6fb5', white: '#f4f4f8', black: '#26262e', brown: '#7a4a2a', blonde: '#f0d070', silver: '#c9ccd6', gold: '#d9a520', teal: '#1fc8c8' };
-  var ED_SONGS = ['Glitter Storm', 'Moonlight Express', 'Paper Crown', 'Neon Heartbeat', 'Volcano Love', 'Disco Dynasty', 'Midnight Tango', 'Silver Waves', 'Cosmic Kiss', 'Thunder Polka', 'Sugar Rocket', 'Velvet Rain'];
-  var ED_ACTS = ['The Velvet Foxes', 'Mira Moon', 'Captain Sequin', 'DJ Paprika', 'Nordic Thunder', 'Lola Lightning', 'The Disco Owls', 'Sir Glitterbeard', 'Bubble Brigade', 'Madame Mambo'];
+  // (the setlist and the running order: real Eurovision 2026 songs and acts, from the Grand Final in Vienna)
+  var ED_SONGS = ['Fire', 'Michelle', 'Dancing on the Ice', 'Eclipse', 'Bella', 'Crossroads', 'Bangaranga', 'Andromeda', 'Eins, Zwei, Drei', 'Regarde !', 'Viva, Moldova!', 'Pray', 'My System', 'Jalla', 'Ya Ya Ya', 'Tanzschein'];
+  var ED_ACTS = ['Sarah Engels', 'Noam Bettan', 'Essyla', 'Delta Goodrem', 'Aidan', 'Daniel Zizka', 'Dara', 'Lelek', 'Monroe', 'Satoshi', 'Alicja', 'Felicia', 'Antigoni', 'Jonas Lovv', 'Cosmó', 'Akylas'];
   function edRnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
   function edScene() {
     var code = ''; for (var i = 0; i < 4; i++) code += edRnd(i ? 0 : 1, 9);
