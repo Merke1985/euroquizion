@@ -216,7 +216,7 @@ var Music = (function () {
     if (myT || !ac()) return;
     try {
       myKeep = keep || null;
-      myOut = ctx.createGain(); myOut.gain.value = 0.0001; myOut.gain.setTargetAtTime(Math.max(0.0001, 0.9 * vol.music), ctx.currentTime, 0.6);
+      myOut = ctx.createGain(); myOut.gain.value = 0.0001; myOut.gain.setTargetAtTime(Math.max(0.0001, 0.9 * vol.music), ctx.currentTime, 0.15);
       var dl = ctx.createDelay(1), fb = ctx.createGain(), wet = ctx.createGain(); dl.delayTime.value = MY_E * 1.5; fb.gain.value = 0.32; wet.gain.value = 0.35;   // an echo, for the mystery
       myOut.connect(ctx.destination); myOut.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(ctx.destination);
       myStep = 0; myNext = ctx.currentTime + 0.1;

@@ -4100,3 +4100,31 @@ body.hasdock main{padding-bottom:84px}
 .clacbar b{position:absolute;right:1vw;top:50%;translate:0 -50%;font-weight:900;font-size:1.8vh;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .clueov[data-st="acc"] .grbub{top:auto;bottom:13vh;max-width:28vw}
 .clueov[data-st="acc"] .grbub.him{left:13vw}.clueov[data-st="acc"] .grbub.her{right:13vw}
+/* Zero Gravity in space: a purple nebula, the planet's curve at the bottom with a glowing edge */
+.zgov .zgplanet{display:none}
+.zgneb{position:absolute;inset:0;background:radial-gradient(ellipse 55% 45% at 22% 40%,rgba(200,90,255,.55),transparent 70%),radial-gradient(ellipse 40% 35% at 35% 28%,rgba(255,120,220,.35),transparent 70%),radial-gradient(ellipse 45% 40% at 70% 30%,rgba(120,80,255,.35),transparent 70%),radial-gradient(ellipse 30% 25% at 80% 55%,rgba(80,160,255,.25),transparent 70%);filter:blur(8px);animation:zgneb 18s ease-in-out infinite alternate}
+@keyframes zgneb{to{transform:scale(1.08) translate(1.5vw,-1vh);opacity:.85}}
+.zgearth{position:absolute;left:-45vw;right:-45vw;top:74vh;height:190vw;border-radius:50%;z-index:4;pointer-events:none;
+  background:radial-gradient(ellipse 18% 6% at 40% 3%,rgba(255,255,255,.7),transparent 70%),radial-gradient(ellipse 12% 4% at 62% 5%,rgba(255,255,255,.55),transparent 70%),radial-gradient(ellipse 10% 3% at 28% 7%,rgba(90,170,90,.8),transparent 70%),radial-gradient(ellipse 14% 4% at 55% 9%,rgba(80,150,80,.7),transparent 70%),radial-gradient(ellipse 60% 20% at 50% 0%,#3f8be0,#1d4fa8 40%,#0b2050 70%);
+  box-shadow:0 -6px 18px 4px rgba(150,230,255,.9),0 -24px 60px 18px rgba(140,90,255,.65),0 -50px 120px 40px rgba(200,100,255,.35)}
+.zgatmo{position:absolute;left:0;right:0;top:-3vh;height:12vh;border-radius:50% 50% 0 0/100% 100% 0 0;background:radial-gradient(ellipse 50% 100% at 50% 100%,rgba(190,140,255,.0) 60%,rgba(190,140,255,.45) 80%,transparent 100%);filter:blur(10px);animation:zgatmo 5s ease-in-out infinite alternate}
+@keyframes zgatmo{to{opacity:.6;transform:scaleY(1.2)}}
+/* the singer and the players rise from behind the planet */
+.zgov .zgmid,.zgov .zgp{transition:translate 3.2s cubic-bezier(.2,.8,.3,1)}
+.zgov.intro .zgmid{translate:0 70vh}.zgov.intro .zgp{translate:0 70vh}
+.zgov.intro.rise .zgmid{translate:0 0}
+.zgov.intro.rise2 .zgp{translate:0 0}
+.zgov.intro.rise2 .zgp:nth-child(odd){transition-delay:.25s}.zgov.intro.rise2 .zgp:nth-child(3n){transition-delay:.5s}
+/* the astronaut presenters */
+.zghosts{position:absolute;inset:0;z-index:6;pointer-events:none}
+.zgastro{position:absolute;bottom:14vh;height:52vh;width:auto;filter:drop-shadow(0 10px 30px rgba(120,60,255,.5));opacity:0;transition:translate 1.6s cubic-bezier(.2,.8,.3,1),opacity 1s}
+.zgastro.him{left:6vw;translate:-40vw 10vh;rotate:-8deg}.zgastro.her{right:6vw;translate:40vw -10vh;rotate:8deg}
+.zgov.hosts .zgastro{opacity:1;translate:0 0;animation:zgfloat 4.5s ease-in-out infinite alternate}.zgov.hosts .zgastro.her{animation-delay:-2.2s}
+.zgov.hostsoff .zgastro{opacity:0;translate:0 -80vh;transition:translate 2.4s ease-in,opacity 2.4s}
+@keyframes zgfloat{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-3vh) rotate(4deg)}}
+.zgbub{position:absolute;top:12vh;max-width:30vw;z-index:7;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(1rem,1.7vw,1.4rem);line-height:1.25;padding:.65em 1em;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:scale(.6);transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.zgbub.him{left:12vw;border-bottom-left-radius:4px;transform-origin:0 100%}.zgbub.her{right:12vw;border-bottom-right-radius:4px;transform-origin:100% 100%}
+.zgbub.on{opacity:1;transform:none}.zgbub .unsaid{visibility:hidden}
+.zgov.hostsoff .zgbub{opacity:0!important}
+.zgov[data-st="intro"] .zgclock{display:none}
+.zgov .zgmsg,.zgov .zgboard,.zgov .zgclock{z-index:8}

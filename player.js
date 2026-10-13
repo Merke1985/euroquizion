@@ -711,6 +711,7 @@
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     if (fell) { zgStop(); box.classList.add('hidden'); $('waittitle').textContent = '🚀 You fell into space!'; $('waitsub').textContent = 'You followed the zone ' + zgAcc() + '% of the time. Watch the others wobble…'; return; }
+    if (z.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Listen to the astronauts on the big screen… 👩‍🚀'; return; }
     $('waittitle').textContent = z.st === 'ready' ? '🌌 Get ready…' : '🌌 Keep your balance!';
     $('waitsub').textContent = 'Keep your finger on the glowing zone. It moves with the music: slow, faster, then chaos! Off it for too long and you fall.';
     box.classList.remove('hidden');
