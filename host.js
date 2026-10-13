@@ -4018,8 +4018,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('edov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
-      ov.innerHTML = ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') +
-        '<div class="edmid"><span>🔍 Where the Hell<br>Is Edgar?</span><div class="edclock"></div></div><div class="edtoks"></div>';
+      ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg></div></div>' +
+        ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '<div class="edtoks"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 1600);
     }
@@ -4029,17 +4029,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ks.forEach(function (k) { var r = g.rooms[k].cur || ''; (by[r] = by[r] || []).push(k); });
     ks.forEach(function (k) {
       var el = toks.querySelector('.edtok[data-p="' + k.replace(/"/g, '') + '"]'), p = players[k];
-      if (!el) { el = document.createElement('div'); el.className = 'edtok'; el.setAttribute('data-p', k); el.innerHTML = '<i class="edglass">🔍</i>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>'; el.style.left = '50%'; el.style.top = '64%'; toks.appendChild(el); }
+      if (!el) { el = document.createElement('div'); el.className = 'edtok'; el.setAttribute('data-p', k); el.innerHTML = '<i class="edglass">🔍</i>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>'; el.classList.add('fresh'); toks.appendChild(el); }
       var r = g.rooms[k].cur || '', grp = by[r], i = grp.indexOf(k), n = grp.length, W = ov.clientWidth || 1, Hh = ov.clientHeight || 1, x, y;
       var cell = r ? ov.querySelector('.edr2.' + r) : null, rc = cell ? cell.getBoundingClientRect() : null, oc = ov.getBoundingClientRect();
       if (rc) {   // in a room: lined up on the outside edge of it (above the top rooms, below the bottom ones)
         var step = Math.min(W * 0.055, rc.width / Math.max(1, n));
         x = rc.left - oc.left + rc.width / 2 + (i - (n - 1) / 2) * step;
         y = (r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.088 : rc.bottom - oc.top + Hh * 0.006;
-      } else {   // in between rooms: the hallway, around the clock
-        x = W / 2 + (i - (n - 1) / 2) * Math.min(W * 0.05, W * 0.4 / Math.max(1, n)); y = Hh / 2 + Hh * 0.08;
+      } else {   // at the start, in between rooms and when done: in the lobby (two columns)
+        var lb = ov.querySelector('.edlobroom').getBoundingClientRect(), cols = 2, rowH = Math.min(Hh * 0.105, (lb.height * 0.62) / Math.max(1, Math.ceil(n / cols)));
+        x = lb.left - oc.left + lb.width * (i % cols === 0 ? 0.3 : 0.7); y = lb.top - oc.top + lb.height * 0.1 + Math.floor(i / cols) * rowH;
       }
       el.style.left = (100 * x / W).toFixed(2) + '%'; el.style.top = (100 * y / Hh).toFixed(2) + '%'; el.classList.toggle('srch', !!r);
+      if (el.classList.contains('fresh')) { void el.offsetWidth; el.classList.remove('fresh'); }   /* (the first time: straight there, no walk)*/
     });
     [].forEach.call(toks.querySelectorAll('.edtok'), function (el) { if (ks.indexOf(el.getAttribute('data-p')) < 0) el.remove(); });
   }

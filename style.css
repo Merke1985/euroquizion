@@ -3893,3 +3893,14 @@ body.hasdock main{padding-bottom:84px}
 @keyframes edhead{to{transform:translateY(-3px)}}
 .edr2 .edcarry{animation:edcarry 22s linear infinite;transform:translateX(900px)}
 @keyframes edcarry{0%,40%{transform:translateX(900px)}75%{transform:translateX(-100px)}100%{transform:translateX(-100px)}}
+/* Edgar: the lobby next to the four rooms (with the clock): everyone starts there, goes back there between rooms and when done */
+.edov2{grid-template-columns:15vw repeat(2,min(calc(40.5vh * 16 / 9),calc(41vw - 3px)));grid-template-rows:repeat(2,min(40.5vh,calc((41vw - 3px) * 9 / 16)))}
+.edlob{grid-row:1 / span 2;grid-column:1;display:flex;flex-direction:column;gap:6px;min-height:0}
+.edlobhd{display:flex;flex-direction:column;align-items:center;gap:.3vh;padding:.8vh .5vw;border-radius:12px;background:#1a0a30;box-shadow:0 0 0 4px #ffd23f,0 8px 24px rgba(0,0,0,.6)}
+.edlobhd span{font-weight:900;font-size:clamp(.6rem,.95vw,1rem);color:#ffd23f;text-align:center;line-height:1.1}
+.edlobhd .edclock{box-shadow:none;padding:0;background:none;font-size:clamp(1.3rem,2.6vw,2.6rem)}
+.edlobroom{position:relative;flex:1;border-radius:10px;overflow:hidden;background:repeating-linear-gradient(90deg,#7a3a5a 0 18px,#6e3352 18px 36px);box-shadow:0 6px 24px rgba(0,0,0,.6),inset 0 -26% 0 #4a1f34}
+.edlobroom::after{content:'';position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(#b0306a,#7a1f48);opacity:.55}
+.edlobroom>b{position:absolute;left:50%;top:1vh;transform:translateX(-50%);z-index:1;white-space:nowrap;font-weight:900;font-size:clamp(.6rem,.95vw,1rem);letter-spacing:.1em;color:#ffd8a8;background:rgba(10,6,24,.8);padding:.2vh .7vw;border-radius:8px;box-shadow:0 0 0 2px #ffd8a8}
+.edlobart{position:absolute;left:0;right:0;bottom:0;width:100%;height:24%;z-index:1}
+.edtok.fresh{transition:none}
