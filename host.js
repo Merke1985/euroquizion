@@ -6651,6 +6651,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var a = norm(title).match(/[a-z]+/g) || [], b = norm(en).match(/[a-z]+/g) || [];
     if (norm(title).trim() === norm(en).trim()) return true;
     if (b.some(function (w) { return w.length >= 2 && a.indexOf(w) >= 0; })) return true;   // the same word in both (Amor = Love is fine, Love Me Tonight = Love Me Tonight is not)
+    var one = function (x, y) {   // the same word but one letter different (Sola / Solo, Mama / Mamma, Lejla / Leila)
+      if (x.length < 3 || y.length < 3 || Math.abs(x.length - y.length) > 1) return false;
+      var i = 0, j = 0, d = 0;
+      while (i < x.length && j < y.length) { if (x[i] === y[j]) { i++; j++; continue; } if (++d > 1) return false; if (x.length > y.length) i++; else if (y.length > x.length) j++; else { i++; j++; } }
+      return d + (x.length - i) + (y.length - j) <= 1;
+    };
+    if (b.some(function (w) { return a.some(function (v) { return one(v, w); }); })) return true;
     return b.some(function (w) { return w.length >= 4 && a.some(function (v) { return v.length >= 4 && v.slice(0, 4) === w.slice(0, 4); }); });
   }
   // Lost in Translation: every answer is shown the same way (a capital first, the rest small, no quotes or
@@ -6686,8 +6693,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     payTimer = setTimeout(G.pay.length ? payTick : function () { G.payNow = -1; if (G.phase === 'reveal') payMark(); }, 650);
   }
   function bluffAll() {
-    var can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !G.used[s[4]] && !BAD_VIDEOS[s[4]]; });
-    if (!can.length) can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !BAD_VIDEOS[s[4]]; });
+    var can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !G.used[s[4]] && !BAD_VIDEOS[s[4]] && !lookAlike(s[3], TITLE_EN[s[4]]); });   // (never a title with the same word, or almost the same word, in the translation)
+    if (!can.length) can = G.pool.filter(function (s) { return TITLE_EN[s[4]] && !BAD_VIDEOS[s[4]] && !lookAlike(s[3], TITLE_EN[s[4]]); });
     if (!can.length) { quipAll(); return; }   // nothing to translate in this selection: a Quip! instead
     // Always a hard one: not in a language most people half know (French, Spanish, …), and not a title that gives itself
     // away because it looks like the English (Foi Magia = It Was Magic, Moja Generacija = My Generation).
