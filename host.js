@@ -1644,7 +1644,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = '<span class="slvv">' + vot[i2].map(function (p) { return '<i style="--d:' + (pop++) + '">' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ if (top > 0 && !vs[i2]) setTimeout(function () { c.classList.add('out'); }, 400); } });   /* (the games nobody voted for go dark straight away; the rest keep their look until the winner is known) */
         for (var pq = 0; pq < pop; pq++) (function (pq) { setTimeout(function () { Music.plop(pq + 2); }, pq * 350 + 120); })(pq);
         M.ov.classList.add('counted'); G.phase = 'pspin'; G.barMs = 0; push();
-        var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); if (x !== c) x.classList.add('out'); }); M.ov.classList.remove('ticking', 'voting'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
+        var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); if (x !== c) x.classList.add('out'); }); M.ov.classList.remove('ticking', 'voting'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
         if (tied.length < 2) { M.ov.querySelector('.slsub').textContent = 'Most votes!'; slotT = setTimeout(land, 1400 + pop * 350); return; }
         M.ov.querySelector('.slsub').textContent = 'A tie! 🎲'; var hops = 12 + Math.floor(Math.random() * tied.length), st0 = (tied.indexOf(win) - hops % tied.length + tied.length * 8) % tied.length, hn = 0;
         var hop = function () { M.ov.classList.add('ticking');   // the light ticks from one tied game to the next, slower and slower, and stops on the winner
@@ -1713,7 +1713,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t0 = Date.now(), tick = function () { var e = (Date.now() - t0) / 5200; if (e >= 1 || !ov.isConnected) return; Music.plop(Math.floor(e * 12)); slotT = setTimeout(tick, 60 + Math.pow(e, 2.2) * 600); }; tick();
     slotT = setTimeout(function () {
       if (!ov.isConnected) return;
-      st.children[target].classList.add('won'); ov.classList.add('done'); Music.ding(); if (chosen === 'clue') { clueSting(); G.clueSting = true; }
+      st.children[target].classList.add('won'); ov.classList.add('done'); Music.ding();
             slotT = setTimeout(function () { ov.classList.add('leaving'); setTimeout(function () { ov.remove(); G.slot = null; then(); }, 600); }, 2600);
     }, 5400);
   }
@@ -1728,7 +1728,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hop = function () {
       if (G.phase !== 'pspin') return;
       G.pspin.roll = idx(games[(start + k) % games.length]); if (!REMOTE) Music.plop(k); render();
-      if (k >= hops) { funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin.done = true; if (!REMOTE) Music.ding(); if (chosen === 'clue') { clueSting(); G.clueSting = true; } push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); }, LAND); return; }   // the light lands on the winner first, then that tile turns green
+      if (k >= hops) { funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin.done = true; if (!REMOTE) Music.ding(); push(); funTimer = setTimeout(function () { if (G.phase !== 'pspin') return; G.pspin = null; then(); }, 1300); }, LAND); return; }   // the light lands on the winner first, then that tile turns green
       k++; funTimer = setTimeout(hop, 70 + Math.pow(k / hops, 2.4) * 520);
     };
     push(); clearTimeout(funTimer); funTimer = setTimeout(hop, 2200);   // a moment to take in the cards before the light starts running
