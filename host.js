@@ -4308,13 +4308,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // question (on the phones, 4 options, 20 seconds). Most right answers wins; a tie goes to the fastest (only the
   // time of right answers counts). "Because of You" plays from the first step to the winner.
   var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b']];
-  var TC_SHOES = ['High heels', 'Boots', 'Sneakers', 'Flats'];
+  var TC_SHOES = ['High heels', 'Boots', 'Flats'];
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
   var TC_SIZES = [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]], TC_Q_MS = 20000, tcTimer = null, tcFadeT = null;
   var TC_ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'], TC_POSES = ['hips', 'wave', 'up', 'kneel', 'point', 'lean', 'kneel'];
   function tcGirl() {
     var m = Math.random() < .4 ? 1 : 0;
-    return { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 3) : Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? 3 : Math.floor(Math.random() * 3) };
+    return { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * 4), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? 3 : Math.floor(Math.random() * 3) };
   }
   // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
   // 2 sun hat, 3 beret), g: sunglasses, s: shoes, k: skin, r: hair colour, y: hairstyle (0 long, 1 bob, 2 bun).
@@ -4323,7 +4323,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var shoe = function () {
       if (w.s === 0) return '<path d="M98 452 L128 458 Q140 462 140 470 L112 470 L104 466 L102 482 L98 482 Z" fill="#d9dce6" stroke="#8a8fa0" stroke-width="2"/>';
       if (w.s === 1) return '<path d="M96 396 L120 396 L122 452 Q142 456 144 470 L96 470 Z" fill="#6b3b1f" stroke="#3b1f0f" stroke-width="2"/>';
-      if (w.s === 2) return '<path d="M96 446 L122 446 Q146 452 148 466 L148 474 L96 474 Z" fill="#fafafa" stroke="#9aa0ad" stroke-width="2"/><path d="M96 468 L148 468" stroke="#ff5a8a" stroke-width="4"/>';
       return '<path d="M98 456 L126 456 Q140 460 140 468 L98 468 Z" fill="#1d1d24"/>';
     };
     var leg = function (cls, col) { return '<g class="tcleg ' + cls + '"><rect x="' + (w.o === 'dress' ? 97 : 94) + '" y="246" width="' + (w.o === 'dress' ? 22 : 28) + '" height="212" rx="10" fill="' + col + '"/>' + shoe() + '</g>'; };
@@ -4374,8 +4373,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.carpet, lines = (SCENES.carpet && SCENES.carpet.lines) || [], t = 2200;
     var tLast = t;
     lines.forEach(function (l) { tLast = t; (function (l, t0) { tcTimer = setTimeout(function () { if (G.carpet === g && g.st === 'intro') tcSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
-    setTimeout(function () { if (G.carpet === g && g.st === 'intro') tcSong(true); }, tLast + 1200);   // (the music starts under the last line: no silence when they step aside)
-    setTimeout(function () { if (G.carpet !== g || g.st !== 'intro') return; tcSay(''); g.st = 'ready'; push(); whooshes([0, 300]); tcTimer = setTimeout(tcParade, 400); }, t - 1200);
+    setTimeout(function () { if (G.carpet !== g || g.st !== 'intro') return; tcSay(''); g.st = 'ready'; push(); whooshes([0, 300]); tcSong(true); tcTimer = setTimeout(tcParade, 1800); }, t - 1200);
   }
   function tcParade() {
     var g = G.carpet; if (!g || G.phase !== 'carpet') return;
@@ -4545,35 +4543,42 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function tc3Girl(w) {
     var T = THREE, g = new T.Group(), M = function (c, o) { var m = new T.MeshStandardMaterial(Object.assign({ color: c, roughness: .6 }, o || {})); return m; };
     var sk = M(TC_SKIN[w.k]), hr = M(TC_HAIR[w.r], { roughness: .5 }), cl = M(TC_COLORS[w.c][1], { roughness: .45 }), cd = M(TC_COLORS[w.c][2], { roughness: .5 });
-    var leg = w.o === 'dress' ? sk : cl, sleeve = w.o === 'suit' ? cl : sk;
+    var leg = w.o === 'dress' ? sk : w.o === 'suit' ? cd : cl, sleeve = w.o === 'suit' ? cl : sk;
     var add = function (par, geo, mat, x, y, z) { var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
-    var shoeMat = M(['#d9dce6', '#6b3b1f', '#fafafa', '#1d1d24'][w.s], w.s === 0 ? { metalness: .7, roughness: .25 } : {});
+    var shoeMat = M(['#ffd23f', '#7a4220', '#14141c'][w.s], w.s === 0 ? { metalness: .75, roughness: .2, emissive: '#5a3a00', emissiveIntensity: .25 } : {});
     var mkLeg = function (sx) {
       var hip = new T.Group(); hip.position.set(sx * .17, 1.62, 0); g.add(hip);
       add(hip, new T.CylinderGeometry(w.o === 'dress' ? .1 : .14, w.o === 'dress' ? .08 : .13, 1.5, 12), leg, 0, -.75, 0);
-      if (w.s === 1) add(hip, new T.CylinderGeometry(.12, .11, .62, 12), shoeMat, 0, -1.28, 0);
       var foot = function (r, len, h, y, z) { var f = add(hip, new T.SphereGeometry(r, 16, 12), shoeMat, 0, y, z); f.scale.set(1, h, len); return f; };
-      if (w.s === 0) {   // high heels: a pointed pump, a thin heel, a strap
-        foot(.075, 2.4, .7, -1.55, .1); add(hip, new T.BoxGeometry(.13, .05, .14), shoeMat, 0, -1.52, -.04);
-        add(hip, new T.CylinderGeometry(.028, .012, .2, 8), shoeMat, 0, -1.62, -.09);
-        var stp = add(hip, new T.TorusGeometry(.085, .012, 6, 16), shoeMat, 0, -1.49, .0); stp.rotation.x = Math.PI / 2;
-      } else if (w.s === 1) {   // boots: the shaft, a rounded toe and a dark sole with a heel
-        foot(.1, 1.9, .75, -1.55, .07); add(hip, new T.BoxGeometry(.19, .04, .38), M('#2a160a'), 0, -1.62, .05); add(hip, new T.BoxGeometry(.16, .07, .1), M('#2a160a'), 0, -1.6, -.09);
-        add(hip, new T.TorusGeometry(.12, .015, 6, 16), M('#c89a4a', { metalness: .6, roughness: .3 }), 0, -1.06, 0).rotation.x = Math.PI / 2;
-      } else if (w.s === 2) {   // sneakers: a chunky white shoe, a coloured stripe, a thick sole, laces
-        foot(.11, 1.9, .8, -1.53, .07); add(hip, new T.BoxGeometry(.22, .07, .42), M('#e8e8ee'), 0, -1.61, .06);
-        add(hip, new T.BoxGeometry(.225, .025, .3), M('#ff5a8a'), 0, -1.55, .05);
-        [0, 1, 2].forEach(function (k) { add(hip, new T.BoxGeometry(.1, .012, .015), M('#ff5a8a'), 0, -1.46 - k * .01, .08 + k * .05); });
-      } else {   // flats: a low slipper with a little bow
-        foot(.08, 2.2, .5, -1.58, .08); add(hip, new T.BoxGeometry(.15, .025, .34), M('#0e0e14'), 0, -1.615, .07);
-        [-1, 1].forEach(function (e) { var bw = add(hip, new T.SphereGeometry(.03, 8, 6), M('#d9a520', { metalness: .6, roughness: .3 }), e * .03, -1.53, .2); bw.scale.set(1.3, .7, .6); });
+      if (w.s === 0) {   // high heels: shiny gold, the foot tipped up on a tall thin heel, a pointed toe
+        var hp = new T.Group(); hp.position.set(0, -1.5, 0); hp.rotation.x = .38; hip.add(hp);
+        var toe = add(hp, new T.SphereGeometry(.075, 16, 12), shoeMat, 0, -.03, .13); toe.scale.set(1, .6, 2.3);
+        add(hp, new T.BoxGeometry(.14, .07, .16), shoeMat, 0, -.02, -.04);
+        add(hip, new T.CylinderGeometry(.03, .015, .26, 8), shoeMat, 0, -1.62, -.1);
+      } else if (w.s === 1) {   // boots: brown, up to the knee, with a turned-down cuff and a chunky sole
+        add(hip, new T.CylinderGeometry(.16, .13, .78, 14), shoeMat, 0, -1.17, 0);
+        add(hip, new T.CylinderGeometry(.175, .175, .1, 14), M('#a0602c'), 0, -.8, 0);
+        foot(.12, 1.8, .8, -1.55, .08); add(hip, new T.BoxGeometry(.24, .07, .42), M('#2a160a'), 0, -1.62, .06);
+      } else {   // flats: very low black ballet flats, the top of the foot showing, a little bow
+        var fl2 = foot(.075, 2.3, .38, -1.6, .09); add(hip, new T.BoxGeometry(.15, .02, .36), M('#05050a'), 0, -1.625, .08);
+        var bw2 = add(hip, new T.TorusGeometry(.03, .012, 6, 12), M('#ffffff'), 0, -1.565, .2); bw2.rotation.y = Math.PI / 2;
       }
       return hip;
     };
     var lh = mkLeg(-1), rh = mkLeg(1);
     // body
     var V = function (a) { return a.map(function (p) { return new T.Vector2(p[0], p[1]); }); };
-    if (w.m) { add(g, new T.CylinderGeometry(.34, .29, .95, 16), cl, 0, 2.15, 0); add(g, new T.CylinderGeometry(.14, .17, .1, 12), cl, 0, 2.66, 0); }
+    if (w.o === 'suit') {
+      var mw = w.m ? 1 : .9, jk = new T.Mesh(new T.LatheGeometry(V([[.29 * mw, 1.36], [.3 * mw, 1.5], [.28 * mw, 1.75], [.26 * mw, 1.95], [.3 * mw, 2.18], [.36 * mw, 2.4], [.37 * mw, 2.5], [.3 * mw, 2.6], [.15, 2.66], [.0, 2.67]]), 28), cl);
+      jk.scale.set(1, 1, .78); jk.castShadow = true; g.add(jk);
+      add(g, new T.CylinderGeometry(.24 * mw, .27 * mw, .3, 16), cd, 0, 1.48, 0).scale.set(1, 1, .8);   // (the trousers at the hips)
+      var sh2 = add(g, new T.ConeGeometry(.13, .42, 3), M('#ffffff'), 0, 2.42, .2); sh2.rotation.x = Math.PI; sh2.scale.set(1, 1, .3);   // the shirt in the V of the jacket
+      [-1, 1].forEach(function (e) { var col = add(g, new T.BoxGeometry(.07, .05, .04), M('#ffffff'), e * .06, 2.62, .14); col.rotation.z = e * .6; });
+      [-1, 1].forEach(function (e) { var lp = add(g, new T.BoxGeometry(.06, .42, .025), cd, e * .1, 2.36, .25); lp.rotation.z = e * .35; lp.rotation.x = -.15; });
+      [1.86, 1.68].forEach(function (y) { add(g, new T.SphereGeometry(.028, 8, 6), cd, 0, y, .225); });
+      add(g, new T.BoxGeometry(.12, .02, .02), M('#ffffff'), -.17 * mw, 2.3, .24).rotation.z = .1;   // a pocket square
+      if (w.m) { add(g, new T.BoxGeometry(.05, .3, .02), cd, 0, 2.38, .235); add(g, new T.BoxGeometry(.07, .05, .03), cd, 0, 2.56, .2); }   // the tie
+    }
     else if (w.o === 'dress') {   // a fitted bodice with a sweetheart neckline: bare shoulders above it
       add(g, new T.LatheGeometry(V([[.2, 1.84], [.205, 1.95], [.24, 2.12], [.285, 2.3], [.29, 2.4], [.27, 2.47], [.0, 2.48]]), 24), cl);
       add(g, new T.LatheGeometry(V([[.27, 2.46], [.3, 2.56], [.26, 2.62], [.14, 2.66], [.0, 2.67]]), 24), sk);
@@ -4581,8 +4586,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     } else add(g, new T.LatheGeometry(V([[.21, 1.84], [.22, 1.98], [.26, 2.15], [.3, 2.36], [.3, 2.5], [.22, 2.62], [.0, 2.64]]), 24), cl);
     if (w.o === 'dress') { add(g, new T.LatheGeometry(V([[.2, 1.86], [.28, 1.7], [.42, 1.4], [.62, 1.0], [.8, .7], [.84, .64]]), 28), M(TC_COLORS[w.c][1], { roughness: .45, side: T.DoubleSide })); add(g, new T.TorusGeometry(.205, .045, 8, 24), cd, 0, 1.86, 0).rotation.x = Math.PI / 2; add(g, new T.SphereGeometry(.06, 10, 8), cd, .12, 1.86, .17); }
     else if (w.o === 'jumpsuit') { add(g, new T.CylinderGeometry(.28, .32, .5, 16), cl, 0, 1.6, 0); add(g, new T.TorusGeometry(.29, .06, 8, 20), cd, 0, 1.82, 0).rotation.x = Math.PI / 2; }
-    else { add(g, new T.CylinderGeometry(w.m ? .3 : .26, w.m ? .33 : .31, .7, 16), cl, 0, 1.55, 0); add(g, new T.BoxGeometry(.18, .5, .05), M('#ffffff'), 0, 2.38, w.m ? .3 : .27);
-      if (w.m) { add(g, new T.BoxGeometry(.07, .38, .03), cd, 0, 2.3, .325); add(g, new T.BoxGeometry(.1, .06, .04), cd, 0, 2.55, .32); [-1, 1].forEach(function (e) { var lp = add(g, new T.BoxGeometry(.1, .45, .03), cd, e * .14, 2.3, .29); lp.rotation.z = e * .3; }); } add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 2.0, .3); add(g, new T.SphereGeometry(.035, 8, 6), cd, 0, 1.75, .32); }
     var mkArm = function (sx) {
       var sh = new T.Group(); sh.position.set(sx * (w.m ? .4 : .34), 2.52, 0); g.add(sh);
       add(sh, new T.SphereGeometry(.1, 10, 8), sleeve, 0, 0, 0);
