@@ -1,8 +1,8 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Avatar check</title><link rel="stylesheet" href="style.css?v=804">
+<!doctype html><html><head><meta charset="utf-8"><title>Avatar check</title><link rel="stylesheet" href="style.css?v=805">
 <style>body{background:#1a1030;color:#fff;font-family:sans-serif;margin:10px}.row{display:inline-flex;gap:8px;margin:6px;align-items:center;background:#2a2050;padding:6px;border-radius:8px}
 .sq{position:relative;width:200px;height:200px;overflow:hidden}.sq img{width:100%;height:100%;object-fit:cover}
 .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,0,0,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,0,.5) 1px,transparent 1px);background-size:10% 10%}
 .av .char{width:100px;height:100px}.nm{width:90px;font-size:12px}</style></head><body><div id="o"></div>
-<script src="chars.js?v=804"></script><script>
+<script src="chars.js?v=805"></script><script>
 document.getElementById('o').innerHTML = CHARS.map(function (c) { return '<div class="row"><div class="nm">' + c.id + '</div><div class="sq"><img src="' + commons(c.file) + '" style="object-position:' + (c.pos || '50% 20%') + '"><div class="grid"></div></div><div class="av">' + charSvg(c.id) + '</div></div>'; }).join('');
 </script></body></html>
