@@ -4362,3 +4362,5 @@ body.hasdock main{padding-bottom:84px}
 .boutique .bqtill .till{width:100%;height:auto;display:block}
 .boutique.enter .bqtill{animation:inLeft .9s .2s cubic-bezier(.2,.9,.3,1.08) both}
 .boutique.leaving .bqtill{animation:outLeft .7s .05s cubic-bezier(.6,0,.8,.4) forwards}
+.tcpaps{position:absolute;left:0;right:0;bottom:-8.6vw;height:22.5vw;pointer-events:none}
+.tcpaps svg{width:100%;height:100%;display:block}

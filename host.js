@@ -4627,12 +4627,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var head = new T.Mesh(new T.SphereGeometry(.38, 14, 12), dark); head.position.y = 2.05; g.add(head);
       var c = new T.Mesh(new T.BoxGeometry(.5, .34, .3), camM); c.position.set(.12, 2.05, -.42); g.add(c);
       var fl = new T.Mesh(new T.SphereGeometry(.1, 10, 8), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 })); fl.position.set(.25, 2.3, -.5); g.add(fl);
-      g.position.set(x, xz[1] > 8 ? -.5 : -.3, xz[1]); g.rotation.y = (x > 0 ? 1 : -1) * (.3 + (i % 3) * .08); g.scale.setScalar(.9); sc.add(g); front.push(g); return fl;
+      g.position.set(x, xz[1] > 8 ? -.5 : -.3, xz[1]); g.rotation.y = (x > 0 ? 1 : -1) * (.3 + (i % 3) * .08); g.scale.setScalar(.9); return fl;   /* (not in the scene any more: the photographers are drawn, seen from behind, in front of us) */
     });
     // the fans: all along the other side of the carpet, behind the far rope, cheering. Flat, drawn people (not 3D):
     // a dozen different ones, each in two poses (arms down / arms up), on cut-outs that bounce and wave.
     var fans = [], fanG = new T.Group(), fanTex = [];
-    for (var fv = 0; fv < 14; fv++) fanTex.push([0, 1].map(function (fr) { var tx = new T.Texture(); tx.encoding = T.sRGBEncoding; var im = new Image(); im.onload = function () { tx.image = im; tx.needsUpdate = true; }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tcFanSvg(fv, fr)); return tx; }));
+    for (var fv = 0; fv < 20; fv++) fanTex.push([0, 1].map(function (fr) { var tx = new T.Texture(); tx.encoding = T.sRGBEncoding; var im = new Image(); im.onload = function () { tx.image = im; tx.needsUpdate = true; }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tcFanSvg(fv, fr)); return tx; }));
     [-3.4, -4.3].forEach(function (z, row) {
       for (var fx = -21.5 + row * .5; fx <= 21.5; fx += .95) {
         var v = Math.floor(Math.random() * fanTex.length), mats = fanTex[v].map(function (tx) { return new T.MeshBasicMaterial({ map: tx, transparent: true, alphaTest: .15, color: row ? '#b8b8cc' : '#d8d8e6', depthWrite: true }); });
@@ -4647,8 +4647,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     sc.traverse(function (o) { if (o.isLight) o.layers.enable(1); });
     var rn2 = new T.WebGLRenderer({ antialias: true, alpha: true }); rn2.setPixelRatio(rn.getPixelRatio()); rn2.setSize(w, h); rn2.setClearColor(0x000000, 0); rn2.outputEncoding = T.sRGBEncoding; rn2.toneMapping = T.NoToneMapping;
     var over = document.createElement('div'); over.className = 'tc3front'; over.appendChild(rn2.domElement); host.parentNode.appendChild(over);
+    var paps = document.createElement('div'); paps.className = 'tcpaps'; paps.innerHTML = tcPapsSvg(); over.appendChild(paps);
     var cam2 = cam.clone(); cam2.layers.set(1);
-    var st = { alive: true, rn: rn, sc: sc, cam: cam, flash: flash, cams: cams, fig: null, key: '', t0: 0, flashAt: 0, flashCam: null };
+    var st = { alive: true, rn: rn, sc: sc, cam: cam, flash: flash, cams: cams, paps: [].slice.call(paps.querySelectorAll('.pf')), fig: null, key: '', t0: 0, flashAt: 0, flashCam: null };
     function frame(now) {
       if (!host.isConnected) { st.alive = false; rn.dispose(); rn2.dispose(); return; }
       var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
@@ -4656,7 +4657,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       fans.forEach(function (f) { var b = Math.max(0, Math.sin(t * f.sp + f.ph)), fr = Math.sin(t * f.sp * .5 + f.ph) > .1 ? 1 : 0; f.g.position.y = f.y0 + b * .1; f.g.rotation.z = Math.sin(t * f.sp * .35 + f.ph) * .04; if (fr !== f.f) { f.f = fr; f.g.material = f.mats[fr]; } });   // (cheering: little jumps, swaying, arms up and down)
       if (st.figs && st.figs.length) tc3Pose(st, Date.now() - st.t0);
       var fk = Math.max(0, 1 - (Date.now() - st.flashAt) / 200); flash.intensity = fk * 2.2;
-      cams.forEach(function (f) { f.material.opacity = f === st.flashCam ? fk : 0; });
+      var fi = cams.indexOf(st.flashCam); st.paps.forEach(function (e, i) { var o = fk > 0 && i === fi % st.paps.length ? Math.round(fk * 100) / 100 : 0; if (e._o !== o) { e._o = o; e.style.opacity = o; } });   // (one of the photographers in front of us flashes)
       rn.render(sc, cam);
       if (w2 && (w2 !== rn2.domElement.width / rn2.getPixelRatio() || h2 !== rn2.domElement.height / rn2.getPixelRatio())) rn2.setSize(w2, h2);
       cam2.aspect = cam.aspect; cam2.updateProjectionMatrix();
@@ -4666,16 +4667,48 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     requestAnimationFrame(frame);
     return st;
   }
+  // The row of photographers we are standing in, seen from behind: backs of heads and shoulders, cameras held up
+  // (some with a long lens), each with a flash that goes off. The middle stays free: that's our spot.
+  function tcPapsSvg() {
+    var P = [[-80, 'cap', '#1d1d24', '#3a5a8a', 1], [160, 'short', '#5a3420', '#2b2b30', 0], [400, 'pony', '#e3c27a', '#6b2a2a', 1], [1200, 'beanie', '#2a1b12', '#2f4a32', 0], [1440, 'bald', '#c48a60', '#20202a', 1], [1680, 'curly', '#1b1b1f', '#4a3a6a', 0]];
+    var h = '<svg viewBox="-200 -40 2000 450" preserveAspectRatio="xMidYMin meet" aria-hidden="true">';
+    P.forEach(function (p, i) {
+      var x = p[0], hx = x + (i % 2 ? 8 : -8), skin = p[2] === '#c48a60' ? '#c48a60' : '#d9a585', hair = p[2], coat = p[3], long = p[4];
+      // shoulders and back
+      h += '<path d="M' + (x - 150) + ' 360 Q' + (x - 140) + ' 236 ' + (x - 60) + ' 222 L' + (x + 60) + ' 222 Q' + (x + 140) + ' 236 ' + (x + 150) + ' 360 Z" fill="' + coat + '"/><path d="M' + (x - 30) + ' 226 Q' + x + ' 240 ' + (x + 30) + ' 226" stroke="#00000044" stroke-width="6" fill="none"/>';
+      // arms up to the camera
+      h += '<path d="M' + (x - 70) + ' 240 Q' + (x - 90) + ' 170 ' + (x - 40) + ' 120" stroke="' + coat + '" stroke-width="34" fill="none" stroke-linecap="round"/><path d="M' + (x + 70) + ' 240 Q' + (x + 90) + ' 170 ' + (x + 40) + ' 120" stroke="' + coat + '" stroke-width="34" fill="none" stroke-linecap="round"/>';
+      // the neck and the back of the head
+      h += '<rect x="' + (hx - 22) + '" y="176" width="44" height="50" rx="16" fill="' + skin + '"/>';
+      var head = '<ellipse cx="' + hx + '" cy="150" rx="52" ry="58" fill="' + (p[1] === 'bald' ? skin : hair) + '"/>';
+      if (p[1] === 'cap') head += '<path d="M' + (hx - 55) + ' 142 Q' + (hx - 52) + ' 88 ' + hx + ' 88 Q' + (hx + 52) + ' 88 ' + (hx + 55) + ' 142 Z" fill="#c8102e"/><path d="M' + (hx - 14) + ' 142 Q' + hx + ' 128 ' + (hx + 14) + ' 142" stroke="' + hair + '" stroke-width="8" fill="none"/>';
+      if (p[1] === 'beanie') head += '<path d="M' + (hx - 54) + ' 146 Q' + (hx - 50) + ' 84 ' + hx + ' 84 Q' + (hx + 50) + ' 84 ' + (hx + 54) + ' 146 Z" fill="#ff8a2a"/><rect x="' + (hx - 56) + '" y="136" width="112" height="18" rx="8" fill="#e06a10"/><circle cx="' + hx + '" cy="82" r="12" fill="#ffd23f"/>';
+      if (p[1] === 'pony') head += '<path d="M' + (hx - 6) + ' 170 Q' + (hx + 10) + ' 220 ' + (hx - 4) + ' 250" stroke="' + hair + '" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="' + hx + '" cy="168" r="9" fill="#ff5fa8"/>';
+      if (p[1] === 'curly') head += [[-34, 112], [0, 98], [34, 112], [-44, 146], [44, 146], [-30, 176], [30, 176]].map(function (c) { return '<circle cx="' + (hx + c[0]) + '" cy="' + c[1] + '" r="22" fill="' + hair + '"/>'; }).join('');
+      if (p[1] === 'bald') head += '<path d="M' + (hx - 50) + ' 168 Q' + hx + ' 196 ' + (hx + 50) + ' 168" stroke="#5a3420" stroke-width="12" fill="none"/>';
+      h += head + '<ellipse cx="' + (hx - 52) + '" cy="152" rx="8" ry="14" fill="' + skin + '"/><ellipse cx="' + (hx + 52) + '" cy="152" rx="8" ry="14" fill="' + skin + '"/>';
+      // the camera, held above the head (we see its back and screen), with the flash on top
+      var cy = 70, cx = x;
+      if (long) h += '<rect x="' + (cx - 26) + '" y="' + (cy - 30) + '" width="52" height="30" rx="8" fill="#2a2a30"/>';
+      h += '<rect x="' + (cx - 62) + '" y="' + (cy - 4) + '" width="124" height="74" rx="12" fill="#1a1a20" stroke="#000" stroke-width="3"/><rect x="' + (cx - 44) + '" y="' + (cy + 10) + '" width="70" height="46" rx="5" fill="#3d6fa8"/><rect x="' + (cx - 40) + '" y="' + (cy + 14) + '" width="62" height="38" rx="3" fill="#7fb8e8" opacity=".7"/><circle cx="' + (cx + 44) + '" cy="' + (cy + 22) + '" r="7" fill="#444"/><circle cx="' + (cx + 44) + '" cy="' + (cy + 46) + '" r="9" fill="#333"/>';
+      h += '<rect x="' + (cx - 22) + '" y="' + (cy - 40) + '" width="44" height="34" rx="5" fill="#222" stroke="#000" stroke-width="3"/><rect x="' + (cx - 16) + '" y="' + (cy - 36) + '" width="32" height="14" rx="3" fill="#ddd"/>';
+      h += '<circle class="pf" cx="' + cx + '" cy="' + (cy - 29) + '" r="70" fill="url(#pfg)" style="opacity:0"/>';
+      // hands on the camera
+      h += '<ellipse cx="' + (cx - 64) + '" cy="' + (cy + 40) + '" rx="16" ry="20" fill="' + skin + '"/><ellipse cx="' + (cx + 64) + '" cy="' + (cy + 40) + '" rx="16" ry="20" fill="' + skin + '"/>';
+    });
+    return h.replace('<svg viewBox="-200 -40 2000 450" preserveAspectRatio="xMidYMin meet" aria-hidden="true">', '<svg viewBox="-200 -40 2000 450" preserveAspectRatio="xMidYMin meet" aria-hidden="true"><defs><radialGradient id="pfg"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#ffffffdd"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>') + '</svg>';
+  }
   // A fan behind the rope, drawn flat (120 × 240): a real-looking person in everyday clothes, arms down (fr 0) or up
   // (fr 1), some with a phone or a sign. v picks the person.
   function tcFanSvg(v, fr) {
     var R = function (n) { v = (v * 9301 + 49297) % 233280; return Math.floor(v / 233280 * n); }, seed = v; v = v * 7 + 3;
     var skin = ['#f3d0b5', '#e2b48e', '#c48a60', '#8d5a3b', '#5e3a26', '#f6dcc8'][R(6)], hair = ['#2a1b12', '#5a3420', '#a8743a', '#e3c27a', '#1b1b1f', '#7a2e1c', '#cfcfd4'][R(7)];
     var top = ['#e0283a', '#2f6ff0', '#f2b821', '#2fb35a', '#8b4fe0', '#ff8a2a', '#1d2a44', '#ffffff', '#ff5fa8', '#40e0d0', '#333'][R(11)], jeans = ['#2d4a7a', '#1f2a3a', '#3a3a40', '#6b5a48'][R(4)];
-    var long = R(3) === 0, bun = !long && R(4) === 0, glasses = R(5) === 0, hold = R(3), sign = ['#ffffff', '#ffd23f', '#ff8fc8', '#bfe8ff'][R(4)], K = ' stroke="#00000033" stroke-width="1.5"';
+    var hs = R(8), long = hs === 1, bun = hs === 2, glasses = R(5) === 0, hold = R(3), sign = ['#ffffff', '#ffd23f', '#ff8fc8', '#bfe8ff'][R(4)], K = ' stroke="#00000033" stroke-width="1.5"', fit = R(5);   // (hair: short, long, bun, afro, bob, braids, buzz cut, ponytail; outfit: T-shirt, hoodie, dress, stripes, jacket)
     var h = '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="240" viewBox="0 0 120 240">';
     // legs and shoes
-    h += '<path d="M44 150 L42 228 L56 228 L60 160 L64 228 L78 228 L76 150 Z" fill="' + jeans + '"' + K + '/><ellipse cx="49" cy="231" rx="10" ry="5" fill="#222"/><ellipse cx="71" cy="231" rx="10" ry="5" fill="#222"/>';
+    if (fit === 2) h += '<path d="M47 150 L45 226 L53 226 L56 170 M73 150 L75 226 L67 226 L64 170" fill="' + skin + '"/><path d="M48 160 L48 226 M72 160 L72 226" stroke="' + skin + '" stroke-width="9" stroke-linecap="round"/><ellipse cx="48" cy="230" rx="8" ry="4" fill="#c8102e"/><ellipse cx="72" cy="230" rx="8" ry="4" fill="#c8102e"/>';   // (a dress: bare legs and red shoes)
+    else h += '<path d="M44 150 L42 228 L56 228 L60 160 L64 228 L78 228 L76 150 Z" fill="' + jeans + '"' + K + '/><ellipse cx="49" cy="231" rx="10" ry="5" fill="#222"/><ellipse cx="71" cy="231" rx="10" ry="5" fill="#222"/>';
     // arms (behind the body when down)
     var armL = fr ? 'M40 82 Q26 60 30 26' : 'M40 84 Q30 110 34 138', armR = fr ? 'M80 82 Q96 58 88 22' : (hold ? 'M80 84 Q96 100 84 116' : 'M80 84 Q90 110 86 138');
     h += '<path d="' + armL + '" stroke="' + top + '" stroke-width="13" fill="none" stroke-linecap="round"/><path d="' + armR + '" stroke="' + top + '" stroke-width="13" fill="none" stroke-linecap="round"/>';
@@ -4684,13 +4717,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (hold === 1) h += '<rect x="' + (hr[0] - 6) + '" y="' + (hr[1] - 16) + '" width="12" height="20" rx="2.5" fill="#15151c" stroke="#555" stroke-width="1.2"/><rect x="' + (hr[0] - 4) + '" y="' + (hr[1] - 14) + '" width="8" height="14" rx="1" fill="#9fd8ff"/>';   // a phone, filming
     if (hold === 2 && fr) h += '<rect x="' + (hr[0] - 26) + '" y="' + (hr[1] - 34) + '" width="52" height="30" rx="3" fill="' + sign + '" stroke="#888" stroke-width="1.5"/><path d="M' + (hr[0] - 16) + ' ' + (hr[1] - 19) + ' q8 -9 16 0 q8 -9 16 0 l-16 14 z" fill="#e0283a"/>';   // a sign with a heart
     // body
-    h += '<path d="M40 78 Q60 70 80 78 L84 152 Q60 158 36 152 Z" fill="' + top + '"' + K + '/>';
-    if (R(3) === 0) h += '<path d="M44 100 L76 100" stroke="#ffffff66" stroke-width="5"/>';
+    if (fit === 2) h += '<path d="M42 78 Q60 70 78 78 L80 120 L92 176 Q60 184 28 176 L40 120 Z" fill="' + top + '"' + K + '/>';
+    else h += '<path d="M40 78 Q60 70 80 78 L84 152 Q60 158 36 152 Z" fill="' + top + '"' + K + '/>';
+    if (fit === 1) h += '<path d="M46 76 Q60 92 74 76 Q72 70 60 70 Q48 70 46 76 Z" fill="#00000033"/><path d="M48 124 L72 124 L70 142 L50 142 Z" fill="#00000022"/><path d="M56 82 L54 104 M64 82 L66 104" stroke="#ffffffaa" stroke-width="2"/>';   // (a hoodie: hood, pocket, strings)
+    if (fit === 3) h += [92, 106, 120, 134].map(function (y) { return '<path d="M39 ' + y + ' L81 ' + y + '" stroke="#ffffffaa" stroke-width="6"/>'; }).join('');   // (stripes)
+    if (fit === 4) h += '<path d="M40 78 Q50 74 54 78 L56 152 L36 152 Z M80 78 Q70 74 66 78 L64 152 L84 152 Z" fill="' + ['#3a5a8a', '#6b4a2a', '#1d1d24', '#9a9aa4'][R(4)] + '"' + K + '/>';   // (an open jacket over the top)
     // neck, head, hair, face
     if (long) h += '<path d="M43 36 Q34 62 40 86 Q46 90 52 84 Q47 66 49 48 Z M77 36 Q86 62 80 86 Q74 90 68 84 Q73 66 71 48 Z" fill="' + hair + '"/>';   // (two long locks, the neck free: not a hood)
+    if (hs === 5) h += '<path d="M44 44 Q40 70 44 92 M76 44 Q80 70 76 92" stroke="' + hair + '" stroke-width="7" fill="none" stroke-dasharray="6 3" stroke-linecap="round"/>';   // (braids)
+    if (hs === 4) h += '<path d="M41 36 Q38 56 42 64 L52 64 Q46 52 48 40 Z M79 36 Q82 56 78 64 L68 64 Q74 52 72 40 Z" fill="' + hair + '"/>';   // (a bob)
+    if (hs === 7) h += '<path d="M76 34 Q92 48 84 74" stroke="' + hair + '" stroke-width="10" fill="none" stroke-linecap="round"/>';   // (a ponytail)
     h += '<rect x="54" y="60" width="12" height="18" rx="5" fill="' + skin + '"/>';
     h += '<ellipse cx="60" cy="44" rx="17" ry="20" fill="' + skin + '"' + K + '/>';
-    h += '<path d="M42 42 Q42 20 60 20 Q78 20 78 42 Q72 30 60 30 Q50 30 42 42 Z" fill="' + hair + '"/>';
+    if (hs === 3) h += [[-12, 22], [0, 16], [12, 22], [-19, 33], [19, 33], [-21, 46], [21, 46]].map(function (c) { return '<circle cx="' + (60 + c[0]) + '" cy="' + c[1] + '" r="10" fill="' + hair + '"/>'; }).join('');   // (an afro)
+    else if (hs === 6) h += '<path d="M44 38 Q46 24 60 24 Q74 24 76 38 Q68 31 60 31 Q52 31 44 38 Z" fill="' + hair + '" opacity=".75"/>';   // (a buzz cut)
+    else h += '<path d="M42 42 Q42 20 60 20 Q78 20 78 42 Q72 30 60 30 Q50 30 42 42 Z" fill="' + hair + '"/>';
     if (bun) h += '<circle cx="60" cy="18" r="8" fill="' + hair + '"/>';
     h += '<ellipse cx="53" cy="45" rx="2.2" ry="2.6" fill="#2a1b12"/><ellipse cx="67" cy="45" rx="2.2" ry="2.6" fill="#2a1b12"/><path d="M49 39 Q53 37 57 39 M63 39 Q67 37 71 39" stroke="' + hair + '" stroke-width="1.6" fill="none"/>';
     if (glasses) h += '<circle cx="53" cy="45" r="5.5" fill="none" stroke="#222" stroke-width="1.6"/><circle cx="67" cy="45" r="5.5" fill="none" stroke="#222" stroke-width="1.6"/><path d="M58.5 45 L61.5 45" stroke="#222" stroke-width="1.6"/>';
