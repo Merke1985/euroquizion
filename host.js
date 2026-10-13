@@ -1318,10 +1318,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.atype === 'party' && G.afterParty && G.quipRun) {   /* Disqualivision / United by Nonsense: three rounds */
       var qr = G.quipRun;
       if (qr.n < 3) { qr.n++; G.mode = qr.kind; if (qr.kind === 'bluff') bluffAll(); else quipAll(); return; }
-      if (qr.kind === 'quip' && !qr.shown && !REMOTE) {
+      if ((qr.kind === 'quip' || qr.kind === 'bluff') && !qr.shown && !REMOTE) {
         qr.shown = true; var gain = {}, best = -1; list().forEach(function (p) { if (p.off) return; gain[p.pid] = p.score - ((qr.base || {})[p.pid] || 0); if (gain[p.pid] > best) best = gain[p.pid]; });
         var wins = Object.keys(gain).filter(function (k) { return best > 0 && gain[k] === best; });
-        greenRoom(startRound2, wins); return;
+        greenRoom(startRound2, wins, qr.kind); return;
       }
       G.quipRun = null;
     }
@@ -1484,6 +1484,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
+    if (kind === 'bluff' && !REMOTE) { greenRoom(bluffAll, null, 'bluff'); return; }   // (United by Nonsense starts in the Green Room too)
     if (kind === 'clue') { if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
     if (kind === 'queue') {   // Sofia needs some air first, and takes everyone outside, to Verona
@@ -6947,9 +6948,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The Green Room: the presenters take everyone to the green room, where the stars sit waiting on their sofas
   // (the players on the front sofa). They explain the game, then the performance starts and the question comes.
   var GR_SOFAS = ['#8e1b3a', '#1d6b6b', '#5b2a86', '#a8641a', '#25507f'];
-  function greenRoom(then, winners) {
+  function greenRoom(then, winners, kind) {
+    var nb = kind === 'bluff';   // (United by Nonsense; otherwise Disqualivision)
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
-    G.fun = { kind: 'groom', icon: FUN.quip.icon, title: FUN.quip.title, sub: FUN.quip.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
+    G.fun = { kind: 'groom', icon: FUN[nb ? 'bluff' : 'quip'].icon, title: FUN[nb ? 'bluff' : 'quip'].title, sub: FUN[nb ? 'bluff' : 'quip'].sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); push();
     hostsAway();
     var old = $('grov'); if (old) old.remove();
@@ -6981,10 +6983,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.classList.add('reveal');
       var wn = winners.map(function (k) { return players[k] ? players[k].name : '?'; }), wtxt = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
       at(1500, function () { Music.ding(); say('him', 'Welcome back to the Green Room! The jury has seen enough… 😵'); });
-      at(5300, function () { say('her', 'Three performances, three roasts. And the winner of Disqualivision is…'); try { Music.dread && Music.dread(true); } catch (e) {} });
-      at(9300, function () { try { Music.dread && Music.dread(false); } catch (e) {} ov.classList.add('crowned'); Music.ding(); say('him', wn.length ? wtxt + '! 🏆 Douze points for the sharpest tongue' + (wn.length > 1 ? 's' : '') + '!' : 'Nobody! Not a single vote… the jury is speechless. 🙊'); });
+      at(5300, function () { say('her', nb ? 'Three titles, three bluffs. And the winner of United by Nonsense is…' : 'Three performances, three roasts. And the winner of Disqualivision is…'); try { Music.dread && Music.dread(true); } catch (e) {} });
+      at(9300, function () { try { Music.dread && Music.dread(false); } catch (e) {} ov.classList.add('crowned'); Music.ding(); say('him', wn.length ? wtxt + '! 🏆 Douze points for the ' + (nb ? 'best bluffer' : 'sharpest tongue') + (wn.length > 1 ? 's' : '') + '!' : nb ? 'Nobody! Not a single point… what a lot of nonsense. 🙊' : 'Nobody! Not a single vote… the jury is speechless. 🙊'); });
       at(14300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
       at(15300, function () { ov.remove(); then(); });
+      return;
+    }
+    if (nb) {
+      at(1500, function () { Music.ding(); say('him', 'Welcome to United by Nonsense! Here in the Green Room, the stars are waiting for their results… 🛋️'); });
+      at(5300, function () { say('her', 'Three song titles in another language, and nobody here speaks it…'); });
+      at(9100, function () { say('him', 'Make up a fake translation on your phone that fools the others…'); });
+      at(12300, function () { say('her', '…and then find the real one. Most points after three rounds wins! 🗣️'); });
+      at(16300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
+      at(17300, function () { ov.remove(); then(); });
       return;
     }
     at(1500, function () { Music.ding(); say('him', 'Welcome to Disqualivision! Here in the Green Room, the stars are waiting for their results… 🛋️'); });
