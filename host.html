@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=768">
+<link rel="stylesheet" href="style.css?v=769">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -55,7 +55,7 @@
     <div class="card">
       <p class="note hidden" id="note"></p>
       <h3>Game settings</h3>
-      <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><b>🎉 Party Night</b><small>Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>4 rounds of 5 questions, a new era each round, then the Big Five</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
+      <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><span class="pcount" id="pcount"><i data-n="0" class="on">All</i><i data-n="3">3</i><i data-n="5">5</i><i data-n="8">8</i></span><b>🎉 Party Night</b><small id="partysub">Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>4 rounds of 5 questions, a new era each round, then the Big Five</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
       <p class="gamelen" id="gamelen"></p>
       <div class="settings" id="setform">
         <div><label for="s-atype">Game type</label><select id="s-atype">
@@ -363,16 +363,16 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=768"></script>
-<script src="vendor/qrcode.js?v=768"></script>
-<script src="config.js?v=768"></script>
-<script src="net.js?v=768"></script>
-<script src="music.js?v=768"></script>
-<script src="chars.js?v=768"></script>
-<script src="match.js?v=768"></script>
-<script src="shapes.js?v=768"></script>
-<script src="quiz.js?v=768"></script>
-<script src="host.js?v=768"></script>
-  <script src="editor.js?v=768"></script>
+<script src="vendor/supabase.js?v=769"></script>
+<script src="vendor/qrcode.js?v=769"></script>
+<script src="config.js?v=769"></script>
+<script src="net.js?v=769"></script>
+<script src="music.js?v=769"></script>
+<script src="chars.js?v=769"></script>
+<script src="match.js?v=769"></script>
+<script src="shapes.js?v=769"></script>
+<script src="quiz.js?v=769"></script>
+<script src="host.js?v=769"></script>
+  <script src="editor.js?v=769"></script>
 </body>
 </html>

@@ -1526,7 +1526,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var done = G.partyDone || (G.partyDone = []), left = games.filter(function (x) { return done.indexOf(x) < 0; });
       if (!left.length) { done.length = 0; left = games.filter(function (x) { return x !== G.lastParty; }); if (!left.length) left = games.slice(); }
       var next = pick(left); done.push(next);
-      if (G.tour && games.every(function (x) { return done.indexOf(x) >= 0; })) G.tourLast = true;   // the last stop of the tour
+      G.tourN = (G.tourN || 0) + 1;
+      if (G.tour && (games.every(function (x) { return done.indexOf(x) >= 0; }) || (G.tourMax && G.tourN >= G.tourMax))) G.tourLast = true;   // the last stop of the tour (all games, or as many as were chosen)
       partySlot(left, next, function () { partyGo(next, 2500); });   /* the slot machine: the played ones are on the reel, greyed out */
       return;
     }
@@ -7841,7 +7842,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.fake = null; clearTimeout(fkTimer); clearInterval(fkTick); clearInterval(fkPrivT); G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
-    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
+    G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourN = 0; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS; G.tourMax = G.tour && PRESET === 'party' && PCOUNT ? PCOUNT : 0;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
     G.block = G.tour ? Math.max(1, G.per) : 3;
@@ -8058,7 +8059,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('setform').classList.toggle('hidden', k !== 'custom');
     gameLen();
   }
-  $('presets').addEventListener('click', function (e) { var b = e.target.closest('.preset'); if (b) presetApply(b.getAttribute('data-preset'), true); });
+  $('presets').addEventListener('click', function (e) {
+    var c = e.target.closest('#pcount i'); if (c) { PCOUNT = +c.getAttribute('data-n') || 0; try { localStorage.setItem('esc-pcount', PCOUNT); } catch (x) {} pcountShow(); }   // (the number of party games: part of the Party Night card)
+    var b = e.target.closest('.preset'); if (b) presetApply(b.getAttribute('data-preset'), true);
+  });
+  var PCOUNT = 0; try { PCOUNT = +localStorage.getItem('esc-pcount') || 0; } catch (x) {}
+  function pcountShow() {
+    [].forEach.call(document.querySelectorAll('#pcount i'), function (x) { x.classList.toggle('on', (+x.getAttribute('data-n') || 0) === PCOUNT); });
+    var sub = $('partysub'); if (sub) sub.textContent = 'Trivia, ' + (PCOUNT ? PCOUNT + ' party games' : 'all party games') + ', the boutique and the Grand Final';
+    gameLen();
+  }
+  setTimeout(pcountShow, 0);
   /* How long the game will take, roughly (from the timings of a real game) */
   function gameLen() {
     var el = $('gamelen'); if (!el) return;
@@ -8069,6 +8080,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
+      if (PRESET === 'party' && PCOUNT && on.length > PCOUNT) on = on.slice(0, PCOUNT);   // (a shorter Party Night: that many games)
       min += (on.length + 1) * per * perQ / 60;
       on.forEach(function (g) { min += GAME[g] * 0.65 + 1; });   /* (+ the announcement and the boutique after it; calibrated on a real game: 4 players, 3 questions a block, all games ≈ 1 hour) */
     } else min += (+$('s-parts').value || 1) * per * perQ * 0.8 / 60;   /* (a plain quiz moves faster: no party-game breaks to settle in) */
