@@ -5908,7 +5908,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var orInvA = null;
   function orInvSnd(on) {   // stage invaders: their own song starts blasting while they're on the stage
     try {
-      if (on) { if (!orInvA) { orInvA = new Audio('sounds/invader.mp3'); orInvA.loop = true; } orInvA.volume = Math.max(0, Math.min(1, .75 * (Music.vol ? Music.vol.fx : 1))); if (orInvA.paused) { orInvA.currentTime = 0; var p = orInvA.play(); if (p && p.catch) p.catch(function () {}); } }
+      if (on) { if (!orInvA) { orInvA = new Audio('sounds/invader.mp3'); orInvA.loop = true; } orInvA.volume = Math.max(0, Math.min(1, Music.vol ? Math.max(.6, Music.vol.fx) : 1)); if (orInvA.paused) { orInvA.currentTime = 0; var p = orInvA.play(); if (p && p.catch) p.catch(function () {}); } }
       else if (orInvA && !orInvA.paused) orInvA.pause();
     } catch (e) {}
   }
@@ -5928,6 +5928,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (br.pitch) { orAud.preservesPitch = false; orAud.mozPreservesPitch = false; orAud.webkitPreservesPitch = false; orAud.playbackRate = base * (1 + .06 * Math.sin(t * 5.5) + .03 * Math.sin(t * 13)); }
         else { orAud.preservesPitch = true; orAud.mozPreservesPitch = true; orAud.webkitPreservesPitch = true; orAud.playbackRate = base; }
         var vol = Math.max(0, Math.min(1, .8 * (Music.vol ? Music.vol.music : 1))), k = br.fx ? g.fxk : '', n = orGraph();
+        if (br.sec) vol *= .18;   // (stage invaders: their song blasts over the organ)
         orAud.volume = k === 'cut' && (t % 1.7) < .22 ? vol * .08 : vol;   // cutting out
         if (n) {
           var ty = k === 'under' ? 'lowpass' : k === 'phone' ? 'bandpass' : 'allpass';
@@ -5939,7 +5940,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         }
         if (k === 'skip' && Date.now() - orSkipAt > 380) { orSkipAt = Date.now(); if (Math.random() < .7) orAud.currentTime = Math.max(0, orAud.currentTime - .3); }   // a skipping CD
       } catch (e) {}
-    } else { try { yt.setPlaybackRate(base < 1 ? .75 : 1); } catch (e) {} }
+    } else { try { yt.setPlaybackRate(base < 1 ? .75 : 1); yt.setVolume(br.sec ? 12 : 55); } catch (e) {} }
   }
   function orSong(on, fade) {
     clearInterval(orSongT); orSongT = null; clearInterval(orFxT); orFxT = null;
@@ -5995,13 +5996,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (g.st !== 'intro') ov.classList.add('live');
       ov.innerHTML = '<div class="orbg"><div class="orleds l">' + leds + '</div><div class="orleds r">' + leds + '</div><div class="orrig">' + leds + leds + '</div><div class="orbeams"><i></i><i></i><i></i><i></i></div></div><div class="orfloor"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
         '<div class="ormid">' + '<div class="orpeek"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M40 60 Q30 150 46 236 L154 236 Q170 150 160 60 Q150 18 100 16 Q50 18 40 60 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M58 160 Q100 150 142 160 L150 240 L50 240 Z" fill="#2c2c34" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M78 168 Q100 196 122 168" fill="none" stroke="#cfd3dc" stroke-width="3"/><path d="M84 172 Q100 214 116 172" fill="none" stroke="#cfd3dc" stroke-width="2.4"/><path d="M100 200 L100 226" stroke="#cfd3dc" stroke-width="3"/><path d="M96 226 L100 238 L104 226 Z" fill="#cfd3dc"/><rect x="88" y="128" width="24" height="32" rx="9" fill="#d9a582" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="38" ry="44" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M60 92 Q58 40 100 38 Q142 40 140 92 Q136 74 128 70 L126 84 L118 66 L112 82 L104 64 L98 82 L90 66 L84 84 L76 68 L72 86 Q66 80 60 92 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M62 92 Q56 140 66 176 M138 92 Q146 140 134 176" stroke="#15101a" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M80 98 Q87 94 94 98 M106 98 Q113 94 120 98" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M84 118 Q100 134 116 118 Q100 126 84 118 Z" fill="#fff" stroke="#8a3a3a" stroke-width="2.4"/><ellipse cx="80" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="120" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><circle cx="48" cy="200" r="13" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/></svg></div>' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
-        '<div class="orpuppet p1">' + OR_PUPPET1 + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
+        '<div class="orpuppet p1">' + OR_PUPPET1 + '<div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '<div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
         '<div class="orhosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub orbub him"></div><div class="tcbub orbub her"></div>' +
-        '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orsta sec"></div><div class="orfire"><i></i><i></i><i></i><i></i><i></i></div><div class="ormsg"></div><div class="orboard"></div>';
+        '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orsta sec"></div><div class="ormsg"></div><div class="orboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
     var brk = orBroken(), broken = OR_ST.some(function (s2) { return brk[s2]; });
+    if (ov._fire && !brk.fire) { ov.classList.add('doused'); clearTimeout(ov._dT); ov._dT = setTimeout(function () { ov.classList.remove('doused'); }, 2600); }   // (the fire is out: a splash of water)
+    ov._fire = !!brk.fire;
     ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.classList.toggle('onfire', !!brk.fire); ov.classList.toggle('invaded', !!brk.sec); ov.setAttribute('data-ph', g.ph);
     orFireSnd(!!brk.fire && !REMOTE); orInvSnd(!!brk.sec && !REMOTE);
     ov.querySelector('.orph').textContent = g.ph ? 'Phase ' + g.ph + ' of 3' : '';
@@ -6013,7 +6016,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var done = who.length && orOpen(g, s) && who.every(function (k) { return g.prog[k] && g.prog[k].d >= g.prog[k].of; });
       var h = g.ph && g.st !== 'end' ? '<div class="orst">' + OR_NAME[s] + (done ? ' ✅ fixed' : brk[s] ? ' <i class="orbad">⚠️ BROKEN!</i>' : ' <i class="orok">👍 OK</i>') + '</div>' + who.map(function (k) { var p = players[k], pr = g.prog[k]; if (!p || !pr) return ''; return '<div class="orpl' + (pr.d >= pr.of ? ' ok' : '') + '">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em><i style="width:' + Math.round(pr.d / pr.of * 100) + '%"></i></em><b>' + pr.d + '/' + pr.of + '</b></div>'; }).join('') : '';
       if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
-      box.classList.toggle('done', !!done); box.classList.toggle('brk', !!brk[s]); box.classList.toggle('empty', !who.length || !g.ph || g.st === 'end');
+      box.classList.toggle('done', !!done); box.classList.toggle('brk', !!brk[s]); box.classList.toggle('empty', !g.ph || g.st === 'end'); box.classList.toggle('nobody', !who.length);
     });
     var msg = g.st === 'intro' ? '' : g.st === 'brief' ? OR_LINES[g.ph - 1] + ' Check your phone for your station!' : g.st === 'fix' ? 'Repair your part on your phone! Together you can save the organ! 🔧' : g.st === 'fixed' ? '🎶 Keep going! 🔧' : g.st === 'end' ? (g.win.length ? '🏆 Best mechanic: ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + '!' + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.ormsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
