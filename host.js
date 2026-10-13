@@ -1471,7 +1471,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
     bluff: { icon: '🗣️', title: 'United by Nonsense', sub: 'Three song titles in another language. Make up a fake translation that fools the others, then find the real one. Most points wins.' },
-    final: { icon: '✨', title: 'Grand Final', sub: 'The last three questions: every point counts double! The scores stay hidden until the final reveal.' },
+    final: { icon: '✨', title: 'Grand Final', sub: 'The last questions: every point counts double! The scores stay hidden until the final reveal.' },
     quiz: { icon: '🎧', title: 'Trivia', sub: 'Trivia time: three questions coming up.' },
     sing: { icon: '🎤', title: 'Key Change!', sub: 'Vote for a song, sing along with the lyrics on your phone, and record yourself singing it. Then everyone votes for the best performance.' }
   };
@@ -1624,17 +1624,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (M && M.ov.isConnected && M.hi) {   // the slot machine is still on screen: the votes go on the four games; the most votes wins
         var vs = kinds4.map(function (k, i2) { return tally[i2] || 0; }), top = Math.max.apply(null, vs), tied = kinds4.filter(function (k, i2) { return vs[i2] === top; });
         var cellOf = function (k) { return M.hi.filter(function (c) { return c.getAttribute('data-k') === k; })[0]; };
-        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = '<span class="slvv">' + vot[i2].map(function (p) { return '<i>' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ if (tied.indexOf(k) < 0) c.classList.add('out'); } });
-        M.ov.classList.remove('voting'); M.ov.classList.add('counted'); G.phase = 'pspin'; G.barMs = 0; push();
-        var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); }); M.ov.classList.remove('ticking'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
-        if (tied.length < 2) { M.ov.querySelector('.slsub').textContent = 'Most votes!'; slotT = setTimeout(land, 1400); return; }
+        var pop = 0;   /* (the voters pop in one by one) */
+        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = '<span class="slvv">' + vot[i2].map(function (p) { return '<i style="--d:' + (pop++) + '">' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ } });   /* (the tiles keep their look until the winner is known) */
+        for (var pq = 0; pq < pop; pq++) (function (pq) { setTimeout(function () { Music.plop(pq + 2); }, pq * 350 + 120); })(pq);
+        M.ov.classList.add('counted'); G.phase = 'pspin'; G.barMs = 0; push();
+        var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); if (x !== c) x.classList.add('out'); }); M.ov.classList.remove('ticking', 'voting'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
+        if (tied.length < 2) { M.ov.querySelector('.slsub').textContent = 'Most votes!'; slotT = setTimeout(land, 1400 + pop * 350); return; }
         M.ov.querySelector('.slsub').textContent = 'A tie! 🎲'; var hops = 12 + Math.floor(Math.random() * tied.length), st0 = (tied.indexOf(win) - hops % tied.length + tied.length * 8) % tied.length, hn = 0;
-        M.ov.classList.add('ticking'); var hop = function () {   // the light ticks from one tied game to the next, slower and slower, and stops on the winner
+        var hop = function () { M.ov.classList.add('ticking');   // the light ticks from one tied game to the next, slower and slower, and stops on the winner
           M.hi.forEach(function (x) { x.classList.remove('tick'); }); var c = cellOf(tied[(st0 + hn) % tied.length]); if (c) c.classList.add('tick'); Music.plop(hn);
           if (hn >= hops) { slotT = setTimeout(land, LAND); return; }
           hn++; slotT = setTimeout(hop, 90 + Math.pow(hn / hops, 2.4) * 520);
         };
-        slotT = setTimeout(hop, 1400);
+        slotT = setTimeout(hop, 1400 + pop * 350);
         return;
       }
       if (voted.length > 1) partySpin(voted, ch, function () { partyGo(ch, 3000); }, voted); else partyGo(ch);
@@ -2742,7 +2744,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // what they say: who they are, what we play tonight and how it works, then off we go
     var lines = [['him', 'Good evening, Europe! I’m Oliver Lindström…'], ['her', '…and I’m Sofia Lindberg! Welcome to EuroQuizion!']].concat(showPlan());
     // Party with the boutique: after the plan, straight to Lynda (she gives everyone a first item), and only then the first trivia
-    var shopNow = G.atype === 'party' && shopOn() && !G.mgTest && !G.itemTest && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2;
+    var shopNow = G.atype === 'party' && shopOn() && !G.mgTest && !G.itemTest && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 1;
     if (shopNow) lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'But first… let’s pay a visit to Lynda in Woodruff’s Boutique! 🛍️']);
     else {
       lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
@@ -2791,7 +2793,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (G.scoring === 'speed') say('Be quick: the first right answer gets 12 points, the next 10, then 8, and so on.');
     else if (G.scoring === 'random') say('Every question is worth a surprise number of points: keep an eye on the screen!');
     else say('A right answer is worth 12 points, douze points!');
-    if (!lad) { say('And look at the little flag your avatar is holding: that’s the country you represent tonight!'); say('Get a question about your country right, and you get double points! ✨'); }
     if (party && shopOn()) say('Win a party game and you get to go shopping in Woodruff’s Boutique! 🛍️');
     if (multi && !lad) { say('Every round starts from zero, and the winner of a round wears a crown in the next one. 👑'); say('After the last round, all your rounds add up!'); }
     // 4. The final game
@@ -7977,7 +7978,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourN = 0; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS; G.tourMax = G.tour && PRESET === 'party' && PCOUNT ? PCOUNT : 0;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
-    G.block = G.tour ? Math.max(1, G.per) : 3;
+    G.block = G.tour ? Math.max(1, G.per) : 5;
     G.quizRun = 0; G.quipSlot = 0; G.lastSpecial = '';
     G.brief = briefInfo(); introStart();
     return true;
@@ -8186,7 +8187,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (k !== 'custom') setDefaults();   /* (Custom starts from what the last card set) */
     PRESET = k;
     [].forEach.call(document.querySelectorAll('#presets .preset'), function (b) { b.classList.toggle('on', b.getAttribute('data-preset') === k); });
-    if (k === 'party') { setVal('s-atype', 'party'); setVal('s-partypick', 'order'); setVal('s-final', 'chase'); setVal('s-qmode', 'standard'); setVal('s-rounds', '3'); }
+    if (k === 'party') { setVal('s-atype', 'party'); setVal('s-partypick', 'order'); setVal('s-final', 'chase'); setVal('s-qmode', 'standard'); setVal('s-rounds', '5'); }
     if (k === 'quick') { setVal('s-atype', 'mc'); setVal('s-parts', '4'); setVal('s-rounds', '5'); setVal('s-qmode', 'random'); setVal('s-final', 'double'); }   /* 4 rounds of 5, an era spun for each, then the Big Five over all eras */
     $('setform').classList.toggle('hidden', k !== 'custom');
     gameLen();
@@ -8195,7 +8196,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var c = e.target.closest('#pcount i'); if (c) { PCOUNT = +c.getAttribute('data-n') || 0; try { localStorage.setItem('esc-pcount', PCOUNT); } catch (x) {} pcountShow(); }   // (the number of party games: part of the Party Night card)
     var b = e.target.closest('.preset'); if (b) presetApply(b.getAttribute('data-preset'), true);
   });
-  var PCOUNT = 0; try { PCOUNT = +localStorage.getItem('esc-pcount') || 0; } catch (x) {}
+  var PCOUNT = 5; try { var pc0 = localStorage.getItem('esc-pcount'); if (pc0 != null && [0, 5, 10].indexOf(+pc0) >= 0) PCOUNT = +pc0; } catch (x) {}   // (5, 10 or all of them; 5 to start with)
   function pcountShow() {
     [].forEach.call(document.querySelectorAll('#pcount i'), function (x) { x.classList.toggle('on', (+x.getAttribute('data-n') || 0) === PCOUNT); });
     var sub = $('partysub'); if (sub) sub.textContent = 'Trivia, ' + (PCOUNT ? PCOUNT + ' party games' : 'all party games') + ', the boutique and the Grand Final';

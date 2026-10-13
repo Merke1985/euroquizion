@@ -4324,9 +4324,6 @@ body.hasdock main{padding-bottom:84px}
 .slcell .slvv i{display:flex;align-items:center;gap:.25vw;font-style:normal;font-size:clamp(.55rem,.8vw,.8rem);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7)}
 .slcell .slvv .char{width:3vh;height:3vh}.slcell .slvv .chflag{display:none}.slcell .slvv .chin img{width:100%;height:100%;object-fit:cover;display:block}
 .slcell .slvv u{text-decoration:none;max-width:6vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#slotov.counted .slcell.hi .sli{font-size:4.4vh}
-#slotov.counted .slcell.hi b{font-size:clamp(.75rem,1.15vw,1.1rem)}
-#slotov.counted .slcell.hi{gap:.4vh;justify-content:flex-start;padding-top:2.2vh}
 /* wiring: the dolls crackle with electricity too */
 .orov.brk-fx .orpuppet{animation:orzapP .24s steps(2) infinite}
 @keyframes orzapP{0%{filter:drop-shadow(0 0 6px #9ef) drop-shadow(0 0 16px #39f) drop-shadow(0 10px 16px rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 26px #6cf) drop-shadow(0 10px 16px rgba(0,0,0,.6))}}
@@ -4355,3 +4352,8 @@ body.hasdock main{padding-bottom:84px}
 #slotov.counted .slcell .slvv{margin-top:.2vh;gap:.15vh .35vw}
 #slotov.counted .slcell .slvv i{font-size:clamp(.5rem,.7vw,.72rem)}
 #slotov.counted .slcell .slvv .char{width:2.2vh;height:2.2vh}
+/* the vote slot: the tiles keep their look; the voters pop in, small, along the bottom */
+#slotov .slcell{position:relative}
+#slotov .slcell .slv{position:absolute;left:0;right:0;bottom:.8vh;margin:0}
+#slotov .slcell .slvv i{opacity:0;animation:slvpop .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--d) * .35s)}
+@keyframes slvpop{0%{opacity:0;transform:scale(.2) translateY(1vh)}100%{opacity:1;transform:none}}
