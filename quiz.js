@@ -837,10 +837,10 @@ var SHOP_ITEMS = [
   { id: 'hack', tier: 3, icon: '📲', name: 'Televote Hacking Device', desc: 'During a question: steal 12 points from another player', kind: 'steal', amount: 12 },
   { id: 'power', tier: 1, icon: '🔋', name: 'Marc’s Powerbank', desc: 'During a question: throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
-  { id: 'umbrella', tier: 3, stock: 1, icon: '☂️', name: 'Eurovision Umbrella', desc: 'No negative effects can touch you. But everyone will know you have it… and it can be stolen!', kind: 'shield' },
+  { id: 'golden', tier: 3, stock: 1, icon: '🌟', name: 'Golden Ticket', desc: 'Use it during the trivia: you choose the next party game from the full selection. No vote, no luck: the slot machine lands on your pick!', kind: 'golden' },
   { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'During a question: wave it in front of another player: for 3 questions (starting with this one) they can’t read the question or the answers on their phone, and the answers are scrambled', kind: 'flag', amount: 3 },
   { id: 'bribe', tier: 3, stock: 1, icon: '✉️', name: 'Envelope Addressed to the EBU', desc: 'A little something for the EBU. It will help you later in the game… Send it ASAP, before you lose it!', kind: 'bribe' },
-  { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: pick a player, sneak into the Euroclub after them and leave with a random item from their bag (even their umbrella)', kind: 'thief' },
+  { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: pick a player, sneak into the Euroclub after them and leave with a random item from their bag', kind: 'thief' },
   { id: 'mic', tier: 1, icon: '🎤', name: 'Broken Mic', desc: 'Use it during a question: someone gets no points for it, even with the right answer', kind: 'sit' },
   { id: 'heel', tier: 3, stock: 1, icon: '👠', name: 'Broken Heel', desc: 'Keep it in your bag (it can be stolen!): at the start of the Grand Final, once everyone is on the runway, you pick who gets a broken heel. They can’t move on the first question (unless they’re on ice skates)', kind: 'heel', final: true },
   { id: 'champagne', tier: 2, icon: '🍾', name: 'Overpriced Euroclub Champagne', desc: 'During a question: pop the bubbly in the Euroclub, and everyone except you pays 12 points for the bottle', kind: 'tab', amount: 12 },
@@ -864,6 +864,7 @@ function itemMode(it) {
   if (k === 'shield' || k === 'skates') return { id: 'self', icon: '🛡️', label: 'Works by itself: keep it in your bag' };
   if (k === 'bribe') return { id: 'secret', icon: '🤫', label: 'Secret: send it any time, it pays out before the Grand Final' };
   if (k === 'heel') return { id: 'self', icon: '👠', label: 'Keep it: at the Grand Final you pick who gets it' };
+  if (k === 'golden') return { id: 'self', icon: '🌟', label: 'Any time during the trivia: you pick the next party game' };
   if (k === 'smoke') return { id: 'delivery', icon: '📦', label: 'Delivery: use it any time, it lands before the next trivia question' };
   return { id: 'instant', icon: '⚡', label: 'Instant: only while a question is open' };
 }

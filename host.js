@@ -260,6 +260,7 @@
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.rule && G.phase === 'rule') s.rule = ruSnap();
     if (G.organ && G.phase === 'organ') s.organ = orSnap();
+    if (G.atype === 'party' && list().some(function (p) { return (p.inv || []).indexOf('golden') >= 0; })) s.pgames = partyGames().map(function (k) { return { k: k, icon: FUN[k].icon, title: FUN[k].title }; });   // (for the Golden Ticket's choice)
     if (G.qj && G.phase === 'qj') s.qj = qjSnap();
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
@@ -1521,6 +1522,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var how = games.length < 2 ? 'single' : (G.partyPick || 'order');
     if (how === 'single' && G.tour) G.tourLast = true;   // a tour of one minigame ends with it
     if (how === 'single') { partyGo(games[0]); return; }
+    if (G.goldPick && FUN[G.goldPick.kind]) {   // a Golden Ticket was used: no vote, no luck: one golden window, and the slot lands on the chosen game
+      var gp = G.goldPick, gch = gp.kind, gwho = players[gp.pid] ? players[gp.pid].name : ''; G.goldPick = null;
+      var dn = G.partyDone || (G.partyDone = []); if (dn.indexOf(gch) < 0) dn.push(gch);
+      if (G.tour) { G.tourN = (G.tourN || 0) + 1; if (games.every(function (x) { return dn.indexOf(x) >= 0; }) || (G.tourMax && G.tourN >= G.tourMax)) G.tourLast = true; }
+      partySlot(games.indexOf(gch) >= 0 ? games : games.concat(gch), gch, function () { partyGo(gch, 2500); }, '🌟 ' + (gwho ? gwho + '’s ' : '') + 'Golden Ticket!');
+      return;
+    }
     if (how === 'order') {
       // Grand tour: the spin picks among the minigames that have not been played yet; the played ones are greyed
       // out. Once all have had their turn, they are all back in.
@@ -1653,12 +1661,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* The slot machine: every party game on the reel (the ones already played greyed out, they never come up);
      it spins, slows down and stops on the chosen one in the middle. */
   var slotT = null;
-  function partySlot(games, chosen, then) {
+  function partySlot(games, chosen, then, sign) {
     G.phase = 'pspin'; G.barMs = 0; G.pspin = null;
     G.fun = null; autoStop(); stopTimers();
     if (REMOTE) { push(); setTimeout(then, 1500); return; }
     try { yt.pauseVideo(); } catch (e) {} cover(true, '🎰', '', false); masks(true); $('cover').classList.add('funcard');
-    var M = slotOpen(PARTY_KINDS.filter(function (k) { return FUN[k]; }), PARTY_KINDS.filter(function (k) { return games.indexOf(k) < 0; }), chosen, '🎰 Pick a game!');
+    var M = slotOpen(PARTY_KINDS.filter(function (k) { return FUN[k]; }), PARTY_KINDS.filter(function (k) { return games.indexOf(k) < 0; }), chosen, sign || '🎰 Pick a game!');
     push();
     clearTimeout(slotT); slotT = setTimeout(function () { slotSpin(M, chosen, then); }, 1800);
   }
@@ -3218,7 +3226,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       p.useKey = m.key;   // (the phone sends twice, to be sure)
       var inv = p.inv || [], k = inv.indexOf(m.use), t = players[m.target];
       var it0 = shopItem(m.use); if (it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab' || it0.kind === 'skip')) t = p;   // (no target: it is the user's own smoke)
-      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab' || it0.kind === 'skip')))) return;
+      if (it0 && it0.kind === 'golden') t = p;
+      if (k < 0 || !t || (t === p && !(it0 && (it0.kind === 'smoke' || it0.kind === 'bribe' || it0.kind === 'fan' || it0.kind === 'tab' || it0.kind === 'skip' || it0.kind === 'golden')))) return;
       var it = shopItem(m.use); if (!it || it.kind === 'shield' || it.kind === 'skates' || it.kind === 'heel') return;   // (the umbrella works by itself; the heel and the skates wait for the Grand Final)
       if (t !== p && it.kind !== 'heel' && it.kind !== 'thief' && shielded(t)) return;   // under an umbrella: out of reach (but the wristband goes after the bag itself)
       if (G.mgLive && !shopLater(it)) return;   // not during a party game: items are for the trivia (only what works at the Grand Final can go any time)
@@ -3233,6 +3242,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         G.fanQ.map[p.pid] = wrong.slice(0, Math.min(wrong.length - 1, Math.round(wrong.length / 2)));   // (half, rounded: three wrong answers lose two; one always stays)
         useOne(p, 'fan'); Music.blip(); push();
         shopFlash('🪭 ' + p.name + ' waves the Eurovision Fan!'); return;
+      }
+      if (it.kind === 'golden') {   // the Golden Ticket: the player chooses the next party game (secretly); the item alert goes off at once
+        var gk = m.game, ok = partyGames().indexOf(gk) >= 0;
+        if (!ok || G.goldPick || G.mgLive || G.frozenLeft != null) return;
+        inv.splice(k, 1); G.goldPick = { pid: p.pid, kind: gk };
+        var gtxt = '🌟 ' + p.name + ' used the Golden Ticket and has chosen a party game to play!';
+        shopLast = { icon: '🌟', deltas: [{ pid: p.pid, tag: '🌟' }] };
+        if (open) shopFreeze(7800 + ALARM_MS, function () { itemAlarm(function () { shopHit(gtxt, 7600); push(); }); });
+        else itemAlarm(function () { shopHit(gtxt, 6000); push(); });
+        push(); return;
       }
       if (it.kind === 'skip') {   // the CD player: skip! A different question straight away, nobody scores this one
         if (!open || G.clue || G.frozenLeft != null || REMOTE) return;

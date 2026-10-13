@@ -1325,12 +1325,21 @@
           if (net) { net.send('shop', cm); setTimeout(function () { net.send('shop', cm); }, 1200); }
           ptoast('🍾 Pop! The champagne is on everyone else…'); bagOpen = false; bagUpdate(state); return;
         }
+        if ((shopItem(id) || {}).kind === 'golden') { bagItem = id; bagUpdate(state); return; }   // (the Golden Ticket: pick a game first)
         if ((shopItem(id) || {}).kind === 'smoke') {   // no one to pick: it is for the next question
           var msg = { pid: pid, use: id, target: pid, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', msg); setTimeout(function () { net.send('shop', msg); }, 1200); }
           ptoast('🌫️ The smoke goes up before the next question. Only you will see its answers!'); bagOpen = false; bagUpdate(state); return;
         }
         bagItem = id; bagUpdate(state);
+      }; });
+    } else if ((shopItem(bagItem) || {}).kind === 'golden') {   /* the Golden Ticket: choose the next party game */
+      var gl = s.pgames || [];
+      p.innerHTML = '<h3>🌟 Golden Ticket</h3><p class="mute" style="margin:0 0 12px">Choose the next party game. Nobody votes: it will be your pick!</p>' + gl.map(function (x) { return '<button type="button" class="shopbtn who gold" data-k="' + esc(x.k) + '"><span class="si">' + x.icon + '</span><span><b>' + esc(x.title) + '</b></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose" style="width:100%;margin-top:10px">Back</button>';
+      [].forEach.call(p.querySelectorAll('.shopbtn.gold'), function (b) { b.onclick = function () {
+        var gm = { pid: pid, use: bagItem, target: pid, game: b.getAttribute('data-k'), key: Math.random().toString(36).slice(2, 9) };
+        if (net) { net.send('shop', gm); setTimeout(function () { net.send('shop', gm); }, 1200); }
+        ptoast('🌟 Your pick is in! The next party game is yours.'); bagOpen = false; bagItem = null; bagUpdate(state);
       }; });
     } else if ((shopItem(bagItem) || {}).kind === 'skip') {   /* the CD player: are you sure? Skip or cancel */
       var cdi = shopItem(bagItem);
