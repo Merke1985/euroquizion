@@ -227,6 +227,36 @@ var Music = (function () {
       }, 80);
     } catch (e) {}
   }
+
+  // A cheerful fairground-organ loop (Sja-la-lie's intro): oom-pah bass, bright chords, a bouncy glockenspiel tune.
+  var chT = null, chOut = null, chStep = 0, chNext = 0, chKeep = null, CH_E = 60 / 132 / 2;
+  var CH_BARS = [[48, [64, 67, 72]], [53, [65, 69, 72]], [43, [62, 67, 71]], [48, [64, 67, 72]]];
+  var CH_MEL = [76, 79, 81, 79, 76, null, 72, null, 77, 81, 84, 81, 77, null, 74, null, 74, 77, 79, 77, 74, 71, 67, null, 72, 76, 79, 76, 72, null, null, null];
+  function chTone(type, f, t, len, v, cut) {
+    var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = type; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = cut || 3000;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(lp); lp.connect(g); g.connect(chOut); o.start(t); o.stop(t + len + 0.05);
+  }
+  function chSched(i, t) {
+    var bar = Math.floor(i / 8) % 4, e = i % 8, ch = CH_BARS[bar];
+    if (e % 2 === 0) chTone('triangle', hz(ch[0] + (e % 4 === 0 ? 0 : 7)), t, 0.22, 0.2, 900);   // oom…
+    else ch[1].forEach(function (n) { chTone('square', hz(n), t, 0.12, 0.028, 2200); });   // …pah
+    var m = CH_MEL[i % 32]; if (m != null) { chTone('sine', hz(m), t, 0.35, 0.09, 6000); chTone('sine', hz(m) * 3, t, 0.12, 0.012, 8000); }   // the glockenspiel
+  }
+  function cheer(on, keep) {
+    if (!on) { if (chT) { clearInterval(chT); chT = null; try { var o = chOut; o.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); setTimeout(function () { try { o.disconnect(); } catch (e) {} }, 1500); } catch (e) {} chOut = null; } return; }
+    if (chT || !ac()) return;
+    try {
+      chKeep = keep || null; chOut = ctx.createGain(); chOut.gain.value = 0.0001; chOut.gain.setTargetAtTime(Math.max(0.0001, 0.8 * vol.music), ctx.currentTime, 0.1); chOut.connect(ctx.destination);
+      chStep = 0; chNext = ctx.currentTime + 0.08;
+      chT = setInterval(function () {
+        if (chKeep && !chKeep()) { cheer(false); return; }
+        if (muted) return;
+        while (chNext < ctx.currentTime + 0.3) { chSched(chStep, chNext); chStep++; chNext += CH_E; }
+      }, 80);
+    } catch (e) {}
+  }
   function ac() {
     if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination); }
     if (ctx.state === 'suspended') ctx.resume();
@@ -441,5 +471,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
 })();

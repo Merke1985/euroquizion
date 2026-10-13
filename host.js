@@ -5687,6 +5687,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     order.forEach(function (k) { pts[k] = 0; });
     G.organ = { id: 'or' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', ph: 0, order: order, sta: {}, prog: {}, pts: pts, last: {}, ends: 0, win: [], fixed: false };
     G.phase = 'organ'; G.barMs = 0; push();
+    if (!REMOTE) { Music.want(false); var gg = G.organ; Music.cheer(true, function () { return G.organ === gg && G.phase === 'organ' && gg.st === 'intro'; }); }   // cheerful fairground music right away, until the song starts
     clearTimeout(orTimer);
     if (REMOTE) { orTimer = setTimeout(orPhase, 1500); return; }
     // the presenters, in front of the organ and the singer, explain the game; then they step aside
@@ -5857,7 +5858,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       try { if (fade) { var v2 = 55; orSongT = setInterval(function () { v2 -= 3; try { yt.setVolume(Math.max(0, v2)); } catch (e) {} if (v2 <= 0) { clearInterval(orSongT); orSongT = null; try { yt.pauseVideo(); yt.setPlaybackRate(1); } catch (e) {} } }, 200); } else { yt.pauseVideo(); yt.setPlaybackRate(1); } } catch (e) {}
       return;
     }
-    Music.want(false);
+    Music.want(false); Music.cheer(false);
     var useYt = function () {
       orFile = false;
       try { stage = 'organ'; yt.loadVideoById({ videoId: 'HdA2SsM3BLI', startSeconds: 0 }); yt.unMute(); yt.setVolume(55); } catch (e) {}
