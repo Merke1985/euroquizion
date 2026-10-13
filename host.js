@@ -498,7 +498,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'cluerooms' && $('edov') && !$('edov').classList.contains('leaving')) { $('edov').remove(); clearInterval(edTick); }
     if (!G.clue && G.mode !== 'clue' && clueYtOn) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
-    if (G.phase !== 'fake' && $('fkov')) { $('fkov').remove(); clearInterval(fkTick); }
+    if (G.phase !== 'fake' && !(G.phase === 'fun' && G.fun && G.fun.jo) && $('fkov')) { $('fkov').remove(); clearInterval(fkTick); }
     if (G.phase !== 'organ' && $('orov')) { $('orov').remove(); clearInterval(orTick); if (orSongT || orFxT || (orAud && !orAud.paused)) orSong(false); }
     if (G.phase !== 'rule' && $('ruov')) { $('ruov').remove(); clearInterval(ruLoop); if (ruSongT) ruSong(false); }
     if (G.phase !== 'zg' && $('zgov')) { $('zgov').remove(); clearInterval(zgLoop); if (zgSongT) zgSong(false); }
@@ -1506,7 +1506,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (kind === 'carpet' && !REMOTE) { carpetAll(); return; }
     if (kind === 'organ' && !REMOTE) { orAll(); return; }
     if (kind === 'rule' && !REMOTE) { ruAll(); return; }
-    if (kind === 'zg' && !REMOTE) { zgAll(); return; }   // (the presenters explain it in space, above the planet)   // (the presenters explain it in front of the organ itself)   // (the presenters welcome everyone on the carpet itself)
+    if (kind === 'zg' && !REMOTE) { zgAll(); return; }
+    if (kind === 'fake' && !REMOTE) { fkIntro(starts[kind]); return; }   // (the presenters explain it in the press room itself)   // (the presenters explain it in space, above the planet)   // (the presenters explain it in front of the organ itself)   // (the presenters welcome everyone on the carpet itself)
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
   }
@@ -5367,6 +5368,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.fake; if (!g || !net) return;
     g.order.forEach(function (k) { var giv = k !== g.guesser; net.send('fake', { to: k, id: g.id, role: giv ? 'clue' : 'guess', song: giv ? fkCard(g.song) : null, check: giv && g.st === 'check' ? { checker: g.checker, clues: g.clues, out: g.out } : null }); });
   }
+  function fkCap(w) { return w ? w.charAt(0).toLocaleUpperCase() + w.slice(1) : w; }   // (every clue and guess starts with a capital)
   function fkWho(key) { return String(key).split('#')[0]; }   // (a clue's key is 'player#n': with 3 or 4 players everyone gives two)
   function fkGivers(g) { return g.order.filter(function (k) { return k !== g.guesser && players[k] && !players[k].off; }); }
   function fkCheck() {   // the clues are in: the same ones (and the ones that give the title away) cancel each other out
@@ -5399,7 +5401,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function fkGuessed(txt) {   // the guess: right straight away if it matches; otherwise the others decide
     var g = G.fake; if (!g || g.st !== 'guess') return;
-    clearTimeout(fkTimer); g.guess = String(txt || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    clearTimeout(fkTimer); g.guess = fkCap(String(txt || '').replace(/\s+/g, ' ').trim().slice(0, 60));
     if (!g.guess) { g.right = false; fkEnd(); return; }
     if (fkMatch(g.guess, g.song[0]) || fkMatch(g.guess.replace(/^(a|an|the) /i, ''), g.song[0])) { g.right = true; fkEnd(); return; }
     g.st = 'judge'; g.judge = {}; g.ends = Date.now() + FK_JUDGE; push(); fkShow(); Music.ding(); fkTimer = setTimeout(fkJudged, FK_JUDGE);
@@ -5409,7 +5411,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (m.ask) { fkPriv(); return; }   // (a phone asks for its card again)
     if ((m.word != null || m.words) && g.st === 'clues' && m.pid !== g.guesser && g.clues[m.pid + '#0'] == null) {
       var ws = m.words || [m.word];
-      for (var wi = 0; wi < g.per; wi++) g.clues[m.pid + '#' + wi] = String(ws[wi] || '').replace(/\s+/g, ' ').trim().split(' ')[0].slice(0, 24);
+      for (var wi = 0; wi < g.per; wi++) g.clues[m.pid + '#' + wi] = fkCap(String(ws[wi] || '').replace(/\s+/g, ' ').trim().split(' ')[0].slice(0, 24));
       Music.plop(Object.keys(g.clues).length); push(); fkShow();
       if (fkGivers(g).every(function (k) { return g.clues[k + '#0'] != null; })) { clearTimeout(fkTimer); fkTimer = setTimeout(fkCheck, 1200); }
       return;
@@ -5456,7 +5458,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.fake; if (!g) return;
     var best = Math.max.apply(null, [0].concat(Object.keys(g.tot).map(function (k) { return g.tot[k]; })));
     g.win = Object.keys(g.tot).filter(function (k) { return g.tot[k] === best && best > 0; }); g.done = true; g.st = 'end'; push(); fkShow(); Music.douze(); fkSong(false, true);
-    fkTimer = setTimeout(function () { if (G.fake !== g) return; var ov = $('fkov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); } setTimeout(function () { if (G.fake !== g) return; G.fake = null; startRound(); }, 900); }, 8000);
+    fkTimer = setTimeout(function () { if (G.fake !== g) return; G.fake = null; startRound(); }, 8000);   // (straight on: no fade, which would show the presenters' studio for a moment before the boutique)
   }
   function fkSnap() {   // the shared state: the clues stay secret until they've been checked, the song until the end
     var g = G.fake, cl = {};
@@ -5473,17 +5475,39 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The big screen: a Eurovision press conference. The guesser sits up on the stage at the long table; the clue givers
   // are the journalists, each at their own desk with a laptop, a microphone, a name card and a glass of water; their
   // clue cards go up above their desks once they've been checked (crossed out: a big red cross).
+  function fkBuild() {   // the press room (built once: the presenters explain the game in it, then the game is played in it)
+    var ov = $('fkov'); if (ov) return ov;
+    ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov jcov enter';
+      ov.innerHTML = '<div class="jcbg"><div class="jcwall"><div class="jcban">PRESS CONFERENCE</div><div class="jclogo">☝️ JUST ONE!</div><div class="jcflags">' + ['se', 'fr', 'it', 'ua', 'nl', 'gb', 'de', 'es', 'no', 'fi'].map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div></div><div class="jcfloor"></div><i class="jcspot a"></i><i class="jcspot b"></i></div>' +
+      '<div class="jcstage"><div class="jcguest"></div><div class="jclong"><i class="jcmic m1"></i><i class="jcmic m2"></i><i class="jcmic m3"></i><i class="jcmic m4"></i><b class="jcnamecard"></b></div></div>' +
+      '<div class="fksign">☝️ Just One!<small class="fkrnd"></small></div><div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div><div class="jcflash"></div>';
+    ov.innerHTML += '<div class="jchosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub jcbub2 him"></div><div class="grbub jcbub2 her"></div>';
+    document.body.appendChild(ov); whooshes([0, 350]);
+    setTimeout(function () { ov.classList.remove('enter'); }, 1600);
+    return ov;
+  }
+  function fkIntro(then) {   // Oliver and Sofia stand in front of the main desk and explain; then the journalists pop up behind their desks
+    stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    var f = FUN.fake;
+    G.fun = { kind: 'scene', jo: true, icon: f.icon, title: f.title, sub: f.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
+    cover(true, '', '', false); masks(true); hostsAway(); push();
+    var old = $('fkov'); if (old) old.remove();
+    var ov = fkBuild(); ov.classList.add('intro'); ov.setAttribute('data-st', 'intro'); Music.ding();
+    var two = list().filter(function (p) { return !p.off; }).length <= 4;
+    var lines = [['him', 'Welcome to the Just One! press conference! ☝️ Every round, one of you takes a seat up here and guesses a secret word.'],
+      ['her', 'Everyone else is a journalist: you see the word on your phone and write ONE word as a clue.' + (two ? ' With so few of you, you each write two!' : '')],
+      ['him', 'But careful: clues that are the same cancel each other out! One journalist checks all the clues first. So be clever… and different.'],
+      ['her', 'A right guess: 12 points for the guesser, and 6 for every clue that survived. Everyone gets a turn on stage! Journalists, take your seats! 🎤']];
+    var say = function (who, txt) { [].forEach.call(ov.querySelectorAll('.jcbub2'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.jcbub2.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); };
+    var at = function (ms, fn) { setTimeout(function () { if (ov.isConnected && G.phase === 'fun' && G.fun && G.fun.jo) fn(); }, ms); };
+    var t = 1800;
+    lines.forEach(function (l) { (function (l, t0) { at(t0, function () { say(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2500); });
+    at(t, function () { [].forEach.call(ov.querySelectorAll('.jcbub2'), function (x) { x.classList.remove('on'); }); ov.classList.add('hostsout'); whooshes([0, 300]); });
+    at(t + 1100, function () { ov.classList.remove('intro', 'hostsout'); ov.classList.add('rise'); setTimeout(function () { ov.classList.remove('rise'); }, 3200); then(); });
+  }
   function fkShow() {
     var g = G.fake; if (!g) return;
-    var ov = $('fkov');
-    if (!ov) {
-      ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov jcov enter';
-      ov.innerHTML = '<div class="jcbg"><div class="jcwall"><div class="jcban">PRESS CONFERENCE</div><div class="jclogo">☝️ JUST ONE!</div><div class="jcflags">' + ['se', 'fr', 'it', 'ua', 'nl', 'gb', 'de', 'es', 'no', 'fi'].map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div></div><div class="jcfloor"></div><i class="jcspot a"></i><i class="jcspot b"></i></div>' +
-        '<div class="jcstage"><div class="jcguest"></div><div class="jclong"><i class="jcmic m1"></i><i class="jcmic m2"></i><i class="jcmic m3"></i><i class="jcmic m4"></i><b class="jcnamecard"></b></div></div>' +
-        '<div class="fksign">☝️ Just One!<small class="fkrnd"></small></div><div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div><div class="jcflash"></div>';
-      document.body.appendChild(ov); whooshes([0, 350]);
-      setTimeout(function () { ov.classList.remove('enter'); }, 1600);
-    }
+    var ov = fkBuild();
     ov.setAttribute('data-st', g.st);
     var rl = 'Round ' + g.rnd + ' / ' + g.of, re = ov.querySelector('.fkrnd'); if (re.textContent !== rl) re.textContent = rl;
     var nm = function (k) { return players[k] ? esc(players[k].name) : ''; }, gv = fkGivers(g), sent = Object.keys(g.clues).length;
