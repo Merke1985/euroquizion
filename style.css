@@ -4080,3 +4080,23 @@ body.hasdock main{padding-bottom:84px}
 /* Edgar's story: the speech balloons close to the presenters */
 .clueov.intro .grbub{top:auto;bottom:50vh}
 .clueov.story .grbub.him{left:21vw}.clueov.story .grbub.her{right:21vw}
+
+/* Edgar's accusation on the phone: a timer bar on top, every card on one screen */
+.clueui.acc{gap:5px;margin-top:0}
+.clacctop{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 12px;border-radius:12px;background:rgba(255,255,255,.08);font-weight:900}
+.clacctop span{font-size:.95rem}.clacct{font-size:1.3rem;color:var(--yellow);font-variant-numeric:tabular-nums}.clacct.hot{color:#ff6b6b}
+.claccbar{position:absolute;left:10px;right:10px;bottom:4px;height:5px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden}
+.claccbar em{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff5fa8,#ffd23f);transition:width .25s linear}
+.clueui.acc .clset>div{grid-template-columns:repeat(3,1fr);gap:4px}
+.clueui.acc .clbtn{flex-direction:column;justify-content:center;text-align:center;gap:1px;padding:4px 3px;font-size:.72rem;line-height:1.1;min-height:44px}
+.clueui.acc .clbtn i{font-size:1.05rem}
+.clueui.acc #clueaccuse{padding:.55em 1em;margin-top:2px}
+
+/* Edgar's accusation: the timer bar under the cards (after "Time for you to solve it!") */
+.clacbar{position:relative;height:2.6vh;border-radius:99px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 2px rgba(255,210,63,.4);overflow:hidden;opacity:0;transform:scaleX(.2);transition:opacity .5s,transform .6s cubic-bezier(.3,1.4,.5,1);margin-top:.6vh}
+.clacbar.on{opacity:1;transform:none}
+.clacbar em{position:absolute;left:0;top:0;bottom:0;width:100%;background:linear-gradient(90deg,#ff5fa8,#ffd23f);transition:width 1s linear}
+.clacbar.hot em{background:linear-gradient(90deg,#ff3b3b,#ff8a2a)}
+.clacbar b{position:absolute;right:1vw;top:50%;translate:0 -50%;font-weight:900;font-size:1.8vh;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.clueov[data-st="acc"] .grbub{top:auto;bottom:13vh;max-width:28vw}
+.clueov[data-st="acc"] .grbub.him{left:13vw}.clueov[data-st="acc"] .grbub.her{right:13vw}

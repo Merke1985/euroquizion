@@ -519,24 +519,35 @@
       setTimeout(function () { var el = box.querySelector('[data-c="' + id + '"]'); if (!el || box.getAttribute('data-k') !== key) return; el.classList.remove('new'); el.classList.add('out'); }, 700 + i * 650 + 500);
     });
   }
+  var clueAccEnd = 0, clueAccId = '', clueAccT = null;
+  function clueAccTick() {   // the timer bar above the cards
+    var t = document.querySelector('#clueui .clacct'), bar = document.querySelector('#clueui .claccbar em');
+    if (!t || !state || state.phase !== 'clueacc') { clearInterval(clueAccT); return; }
+    var left = Math.max(0, clueAccEnd - Date.now()), sec = Math.ceil(left / 1000);
+    t.textContent = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2); t.classList.toggle('hot', sec <= 10);
+    bar.style.width = (100 * left / CLUE_ACC_MS).toFixed(1) + '%';
+  }
   function clueView(s) {
     var c = s.clue, box = $('clueui'), known = (c.known || {})[pid] || [];
-    box.classList.remove('compact');
+    box.classList.remove('compact'); box.classList.remove('acc');
     show('v-wait');
     if (s.phase === 'clueacc') {
       if (clueSentId === c.id || (c.acc || {})[pid]) {
         box.classList.add('hidden');
         $('waittitle').textContent = '🔍 Accusation sent!'; $('waitsub').textContent = 'Waiting for the other detectives…'; return;
       }
-      $('waittitle').textContent = '🔍 Find Edgar'; $('waitsub').textContent = 'Who took him, where is he hidden, and what is he hidden inside? What your clues ruled out is crossed off. You have ' + Math.round(CLUE_ACC_MS / 1000) + ' seconds.';
-      box.classList.remove('hidden');
+      $('waittitle').textContent = ''; $('waitsub').textContent = ''; $('waitlabel').textContent = '';   // (everything on one screen: the timer bar on top, all the cards, the button)
+      box.classList.remove('hidden'); box.classList.add('compact'); box.classList.add('acc');
+      var endNew = Date.now() + (c.left || 0); if (!clueAccEnd || clueAccId !== c.id || Math.abs(endNew - clueAccEnd) > 1500) { clueAccEnd = endNew; clueAccId = c.id; }
+      clearInterval(clueAccT); clueAccT = setInterval(clueAccTick, 250);
       if (clueSel.id !== c.id) clueSel = { id: c.id };
       var key = c.id + '|' + known.join(',') + '|' + clueSel.who + clueSel.where + clueSel.what;
       if (box.getAttribute('data-k') === key && box.innerHTML) return; box.setAttribute('data-k', key);
       var lab = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
-      box.innerHTML = ['where', 'what', 'who'].map(function (k) {   // (the place on top, who did it at the bottom, like the big screen)
+      box.innerHTML = '<div class="clacctop"><span>🔍 Who? Where? Inside what?</span><b class="clacct"></b><i class="claccbar"><em></em></i></div>' + ['where', 'what', 'who'].map(function (k) {   // (the place on top, who did it at the bottom, like the big screen)
         return '<div class="clset"><span>' + lab[k] + '</span><div>' + CLUE_SETS[k].map(function (x) { var out = known.indexOf(k + ':' + x.id) >= 0; return '<button type="button" class="clbtn' + (out ? ' out' : '') + (clueSel[k] === x.id ? ' sel' : '') + '" data-k="' + k + '" data-id="' + x.id + '"><i>' + x.icon + '</i>' + esc(x.name) + '</button>'; }).join('') + '</div></div>';
       }).join('') + '<button type="button" class="btn big" id="clueaccuse"' + (clueSel.who && clueSel.where && clueSel.what ? '' : ' disabled') + '>🔍 Accuse!</button>';
+      clueAccTick();
       [].forEach.call(box.querySelectorAll('.clbtn'), function (b) { b.onclick = function () { clueSel[b.getAttribute('data-k')] = b.getAttribute('data-id'); clueView(state); }; });
       $('clueaccuse').onclick = function () {
         if (!net || !(clueSel.who && clueSel.where && clueSel.what)) return;

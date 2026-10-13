@@ -3654,7 +3654,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.clue; stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     g.st = 'acc'; g.acc = {}; g.fresh = {}; G.phase = 'clueacc'; G.q = null; G.song = null; G.clip = null; G.barMs = 0; g.ends = Date.now() + CLUE_ACC_MS;
     cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong();   // (the tune plays on)
-    clueTimer = setTimeout(function () { clueSay('him', 'Time to accuse! Here are all the cards: in every row, one card is the truth.'); }, 1400);
+    g.barOn = false;
+    clueTimer = setTimeout(function () { clueSay('him', 'Time for you to solve it! 🔍'); }, 1400);
+    setTimeout(function () { if (G.clue && G.clue.st === 'acc') { g.barOn = true; clueShow(); Music.blip(); } }, 3200);   // (then the timer bar appears under the cards)
     setTimeout(function () { if (G.clue && G.clue.st === 'acc') clueSay('her', 'Your clues are the cards that are NOT the answer: rule them out, and pick from what’s left on your phone! 🔍'); }, 5200);
     // bots: a guess among what their clues leave open
     bots.forEach(function (b) { if (!players[b.pid] || players[b.pid].off) return; setTimeout(function () {
@@ -4124,7 +4126,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       [].forEach.call(ov.querySelectorAll('.clrow[data-k="' + k + '"] .clcard'), function (el) { var hit = shown && el.getAttribute('data-id') === g.sol[k]; el.classList.toggle('hit', hit); el.classList.toggle('dim', (shown && !hit) || !!(g.dimmed && g.dimmed[k + ':' + el.getAttribute('data-id')])); });
     });
     ov.classList.toggle('found', g.st === 'reveal' && g.step >= 4);
-    var msg = g.st === 'intro' ? 'Edgar, the EuroQuizion mascot, is missing!' : g.st === 'acc' ? (g.allIn ? 'Everyone has made their accusation… 🎶' : Date.now() > g.ends ? 'Time’s up! 🎶' : 'Accuse on your phone: who, where, and with what? ⏱️ ' + Math.ceil(Math.max(0, g.ends - Date.now()) / 1000) + 's') : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar is back! 🎉' : 'Edgar found his own way back… 😅') : g.st === 'reveal' ? 'Who took Edgar…?' : '';
+    var rows = ov.querySelector('.clrows'), tb = rows && rows.querySelector('.clacbar'); if (rows && !tb) { tb = document.createElement('div'); tb.className = 'clacbar'; tb.innerHTML = '<em></em><b></b>'; rows.appendChild(tb); }   // the timer bar, under the cards
+    if (tb) { var on = g.st === 'acc' && g.barOn && !g.allIn, lft = Math.max(0, g.ends - Date.now()); tb.classList.toggle('on', on); tb.querySelector('em').style.width = (100 * Math.max(0, lft - 1000) / CLUE_ACC_MS).toFixed(1) + '%'; tb.querySelector('b').textContent = on ? Math.ceil(lft / 1000) + 's' : ''; tb.classList.toggle('hot', lft <= 10000); }
+    var msg = g.st === 'intro' ? 'Edgar, the EuroQuizion mascot, is missing!' : g.st === 'acc' ? (g.allIn ? 'Everyone has made their accusation… 🎶' : Date.now() > g.ends ? 'Time’s up! 🎶' : 'Accuse on your phone: who, where, and with what? 🔍') : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar is back! 🎉' : 'Edgar found his own way back… 😅') : g.st === 'reveal' ? 'Who took Edgar…?' : '';
     var me = ov.querySelector('.clmsg'); if (me.textContent !== msg) me.textContent = msg;
     var act = list().filter(function (p) { return !p.off; });
     var html = act.map(function (p) {
