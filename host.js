@@ -1463,7 +1463,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet, from one star up to a group of five! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Off it for too long and you fall. The last ones standing win!' },
-    rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. After 3 minutes, most tiles wins!' },
+    rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes and fix the cables. Three phases, each harder than the last. The best repairer wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
@@ -4172,7 +4172,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'Every tile you step on lights up in your colour!'],
         ['her', 'Hold a direction on your phone to keep dancing: one tile per second. You can steal tiles from others too.'],
         ['him', 'But watch out: bump into someone and you’re stunned for 3 seconds! 💫'],
-        ['her', 'After three minutes, whoever owns the most tiles rules the world! 👑']] },
+        ['her', 'When the song ends, whoever owns the most tiles rules the world! 👑']] },
     fake: { sign: '🤫 The Fake Fan', theme: 'fake',
       get art() { return '<div class="hsfake">' + FK_ART + '</div>'; },
       lines: [['him', 'Shhh… 🤫 There’s a fake fan among you! Three rounds, a new fake every time.'],
@@ -5088,8 +5088,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // A disco floor of tiles, with the singer on an unclaimable stage in the middle. Everyone moves one tile per second
   // (hold a direction on the phone's D-pad); every tile you step on becomes your colour. Two players moving into the
   // same tile (or swapping places) both bounce back and are stunned for 3 seconds; walking into a player who stands
-  // still stuns only you. After 3 minutes, whoever owns the most tiles wins. The host runs all moves at once, per tick.
-  var RU_MS = 180000, RU_TICK = 200, RU_STEP = 1000, RU_STUN = 3000, ruLoop = null, ruTimer = null, ruSent = 0;
+  // still stuns only you. When the song ends (2:22), whoever owns the most tiles wins. The host runs all moves at once, per tick.
+  var RU_MS = 134000, RU_TICK = 200, RU_STEP = 1000, RU_STUN = 3000, ruLoop = null, ruTimer = null, ruSent = 0;
   var RU_DIRS = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] };
   var RU_SINGER = '<svg class="rusing" viewBox="0 0 120 160" aria-hidden="true"><defs><linearGradient id="rusuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe066"/><stop offset=".5" stop-color="#f2b821"/><stop offset="1" stop-color="#c47f0a"/></linearGradient></defs>' +
     '<path d="M44 80 L40 150 L56 150 L60 104 L64 150 L80 150 L76 80 Z" fill="url(#rusuit)"/><path d="M38 150 h20 v6 h-22 z M62 150 h20 v6 h-22 z" fill="#fff"/>' +
@@ -5143,7 +5143,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, 5600);
     }, REMOTE ? 1000 : t);
   }
-  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 76000, ruSongT = null;   // (RU_STOP: the game stops at 1:16 in the song)
+  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 142000, ruSongT = null;   // (RU_STOP: the game stops at 2:22 in the song)
   function ruSay(who, txt) {
     var ov = $('ruov'); if (!ov) return;
     [].forEach.call(ov.querySelectorAll('.rubub'), function (x) { x.classList.remove('on'); });
@@ -5176,7 +5176,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
-    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP : g.t0 + RU_MS; push(); Music.ding();   // (the game ends so that the count is done at 2:55 in the song)
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP : g.t0 + RU_MS; push(); Music.ding();   // (the game ends at 2:22 in the song)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
   function ruBot(g, k) {   // a bot: walks in straight lines for a while, preferring tiles that aren't its own
@@ -5194,7 +5194,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.rule; if (!g || G.phase !== 'rule' || g.st !== 'play') { clearInterval(ruLoop); return; }
     var now = Date.now();
     if (now >= g.ends) { ruEnd(); return; }
-    if (!g.faded && g.ends - now <= 2000) { g.faded = 1; ruSong(false, 2000); }   // (1:14 to 1:16: the song fades out)
+    if (!g.faded && g.ends - now <= 2000) { g.faded = 1; ruSong(false, 2000); }   // (2:20 to 2:22: the song fades out)
     // who moves this tick, and where to
     var mv = {};
     g.order.forEach(function (k) {
@@ -5239,7 +5239,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function ruEnd() {
     var g = G.rule; if (!g || g.st !== 'play') return;
-    clearInterval(ruLoop); g.cnt = ruCount(g); ruBeat(); ruSong(false);   // (the song stops right there, at 1:16)
+    clearInterval(ruLoop); g.cnt = ruCount(g); ruBeat(); ruSong(false);   // (the song stops right there, at 2:22)
     var best = Math.max.apply(null, g.order.map(function (k) { return g.cnt[k] || 0; }));
     // the count: everyone's tiles counted at the same time, one by one, until the winner is the only one still counting
     // (the count takes about 10 seconds, so the winner is revealed at 2:55 in the song)
