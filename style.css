@@ -4071,3 +4071,6 @@ body.hasdock main{padding-bottom:84px}
 .edcd{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(10,4,30,.35)}
 .edcd b{font-size:32vh;font-weight:900;color:#ffd23f;text-shadow:0 0 40px rgba(255,210,63,.8),0 10px 0 #2b1830;animation:edcdpop 1s ease-out both}
 @keyframes edcdpop{0%{transform:scale(2.2);opacity:0}25%{transform:scale(1);opacity:1}80%{opacity:1}100%{transform:scale(.85);opacity:0}}
+/* We Will Rule the World, stunned: the pad greys out but still works; your chosen arrow stays lit (in grey) and you set off again by yourself when the stun ends */
+.rupad.stun .rub{opacity:1;filter:grayscale(1) brightness(.6)}
+.rupad.stun .rub.on{filter:grayscale(1) brightness(1.05);animation:none;box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 0 5px #d0d0d8,0 0 18px 6px rgba(220,220,230,.6)}

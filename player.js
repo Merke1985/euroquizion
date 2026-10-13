@@ -720,7 +720,7 @@
   // ---------- We Will Rule the World ----------
   // A cross-shaped D-pad: tap a direction and you keep dancing that way, hop after hop, until you tap another one
   // (tap the same one again to stand still).
-  // The chosen arrow glows. Stunned: the pad dims, 3-2-1 in the middle.
+  // The chosen arrow glows. Stunned: the pad turns grey, 3-2-1 in the middle; you can still pick (or stop) a direction, and off you go when it ends.
   var ruLive = null, ruD = '', ruDT = null, ruStunEnd = 0, ruStunT = null;
   function ruSendD() { var r = state && state.rule; if (!net || !r || r.st !== 'play') return; (net.toHost || net.send)('rule', { pid: pid, id: r.id, d: ruD }); }
   function ruSet(d) { if (d === ruD) return; ruD = d; ruSendD(); clearInterval(ruDT); if (d) ruDT = setInterval(ruSendD, 2500); }
