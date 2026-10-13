@@ -5232,18 +5232,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path d="M42 22 Q40 2 60 4 Q82 4 78 24 Q74 12 60 14 Q48 14 42 22 Z" fill="#2a1a10"/><circle cx="44" cy="18" r="9" fill="#2a1a10"/><circle cx="76" cy="18" r="9" fill="#2a1a10"/>' +
     '<circle cx="55" cy="24" r="2" fill="#1a1010"/><circle cx="65" cy="24" r="2" fill="#1a1010"/><path d="M54 31 Q60 36 66 31" stroke="#8a1a30" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';   // (an original character: a disco singer in a golden suit)
   function ruSize(n) { return n <= 3 ? [9, 3] : n === 4 ? [11, 3] : n <= 8 ? [15, 5] : [17, 5]; }
-  function ruRegion(g, r) { var c = r % 4, w = g.n / 4, h = g.n / 2, rw = Math.floor(r / 4); return { x0: Math.round(c * w), x1: Math.round((c + 1) * w), y0: Math.round(rw * h), y1: Math.round((rw + 1) * h), cx: (c + .5) * w - .5, cy: (rw + .5) * h - .5 }; }   // (the floor in 8 parts, 4 by 2: a disco ball above each)
-  function ruBallFall() {   // two disco balls come crashing down: their part of the floor is wiped clean
-    var g = G.rule; if (!g || g.st !== 'play' || g.fallEv) return;
-    var idx = shuffle([0, 1, 2, 3, 4, 5, 6, 7]).slice(0, 2), at = Date.now(); g.fallEv = { at: at, idx: idx }; push();
-    if (!REMOTE) { try { var w = new Audio('sounds/ru_whistle.mp3'); w.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
-    setTimeout(function () {
-      if (G.rule !== g || g.st !== 'play') return;
-      idx.forEach(function (r) { var R = ruRegion(g, r); for (var y = R.y0; y < R.y1; y++) for (var x = R.x0; x < R.x1; x++) g.own[y * g.n + x] = null; });
-      g.order.forEach(function (k) { var c = g.pos[k]; if (idx.some(function (r) { var R = ruRegion(g, r); return c[0] >= R.x0 && c[0] < R.x1 && c[1] >= R.y0 && c[1] < R.y1; })) ruClaim(g, k, c[0], c[1]); });   // (whoever stands there keeps their own tile)
-      g.cnt = ruCount(g); g.wiped = Date.now(); push(); ruShow(); ruBeat();
-      if (!REMOTE) { try { var im = new Audio('sounds/ru_impact.mp3'); im.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var p2 = im.play(); if (p2 && p2.catch) p2.catch(function () {}); } catch (e) {} Music.buzz(); }
-    }, 1100);
+  function ruItemTick(g, now) {   // a laser item on a free tile, every 20–30 seconds
+    if (g.item || now < (g.itemAt || Infinity)) return;
+    var occ = {}; g.order.forEach(function (k) { occ[g.pos[k][0] + ',' + g.pos[k][1]] = 1; });
+    var free = []; for (var y = 0; y < g.n; y++) for (var x = 0; x < g.n; x++) if (!ruStage(g, x, y) && !occ[x + ',' + y]) free.push([x, y]);
+    if (!free.length) return; g.item = pick(free); push(); if (!REMOTE) Music.blip();
+  }
+  function ruItemTake(g, k) {   // stepped on it: the laser fires up, down, left and right, and every tile in those lines is yours
+    var c = g.pos[k], dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    dirs.forEach(function (d) { for (var x = c[0] + d[0], y = c[1] + d[1]; x >= 0 && y >= 0 && x < g.n && y < g.n; x += d[0], y += d[1]) if (!ruStage(g, x, y)) g.own[y * g.n + x] = k; });
+    g.laser = { x: c[0], y: c[1], k: k, at: Date.now() }; g.item = null; g.itemAt = Date.now() + 20000 + Math.random() * 10000;
+    if (!REMOTE) Music.laser();
   }
   function ruStage(g, x, y) { var a = (g.n - g.s) / 2; return x >= a && x < a + g.s && y >= a && y < a + g.s; }
   function ruAll() {
@@ -5273,10 +5272,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     ruTimer = setTimeout(function () {   // first, over 5 seconds, the dancers land on the floor
       if (G.rule !== g) return; ruSay(''); g.st = 'drop'; g.dropAt = Date.now();
-      if (!REMOTE) g.order.forEach(function (k, i) {   // a whistle as each dancer falls, a thud as they land
+      if (!REMOTE) g.order.forEach(function (k, i) {   // a whistle as each dancer falls
         var d = Math.round(i * 4400 / Math.max(1, g.order.length - 1)), fx = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)), w = null;
         setTimeout(function () { if (G.rule !== g) return; try { w = new Audio('sounds/ru_whistle.mp3'); w.volume = fx * .7; var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }, d);
-        setTimeout(function () { if (G.rule !== g) return; try { if (w) w.pause(); var im = new Audio('sounds/ru_impact.mp3'); im.volume = fx; var p2 = im.play(); if (p2 && p2.catch) p2.catch(function () {}); } catch (e) {} }, d + 820);
       });
       g.order.forEach(function (k) { var c = g.pos[k]; ruClaim(g, k, c[0], c[1]); }); g.cnt = ruCount(g); push();
       ruTimer = setTimeout(function () {   // then the song starts, and the stage with the singer rises: up by the 8th second
@@ -5326,7 +5324,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
-    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP : g.t0 + RU_MS; g.fallSong = 60000 + Math.random() * 20000; push(); Music.ding();   // (two disco balls fall at a random moment between 1:00 and 1:20 in the song)   // (the game ends at 2:22 in the song)
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP : g.t0 + RU_MS; g.itemAt = Date.now() + 20000 + Math.random() * 10000; g.item = null; push(); Music.ding();   // (the first laser item turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
   function ruBot(g, k) {   // a bot: walks in straight lines for a while, preferring tiles that aren't its own
@@ -5341,10 +5339,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     b.d = best[0] || ''; b.left = 2 + Math.floor(Math.random() * 5); return b.d;
   }
   function ruTick() {
-    var gF = G.rule; if (gF && gF.st === 'play' && !gF.fallEv && gF.fallSong && (REMOTE ? gF.t0 + gF.fallSong - 8000 : gF.riseAt + gF.fallSong) <= Date.now()) ruBallFall();
     var g = G.rule; if (!g || G.phase !== 'rule' || g.st !== 'play') { clearInterval(ruLoop); return; }
     var now = Date.now();
     if (now >= g.ends) { ruEnd(); return; }
+    ruItemTick(g, now);
     if (!g.faded && g.ends - now <= 2000) { g.faded = 1; ruSong(false, 2000); }   // (2:20 to 2:22: the song fades out)
     // who moves this tick, and where to
     var mv = {};
@@ -5373,6 +5371,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       g.next[k] = now + RU_STEP;
       if (bump[k]) { g.stun[k] = now + RU_STUN; hit = true; return; }
       g.pos[k] = mv[k]; ruClaim(g, k, mv[k][0], mv[k][1]);
+      if (g.item && g.item[0] === mv[k][0] && g.item[1] === mv[k][1]) ruItemTake(g, k);
     });
     if (hit && !REMOTE) { try { var sn = new Audio('sounds/ru_stun.mp3'); sn.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var sp = sn.play(); if (sp && sp.catch) sp.catch(function () {}); } catch (e) { Music.buzz(); } }   // (the stunned sound)
     g.cnt = ruCount(g); ruShow();
@@ -5523,12 +5522,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     sc.traverse(function (o) { if (o.isLight) o.layers.enable(1); });
     // six big disco balls overhead, slowly turning
     var ballM = new T.MeshStandardMaterial({ color: '#dfe3ff', metalness: 1, roughness: .18, flatShading: true, emissive: '#6a5aa0', emissiveIntensity: .35 });
-    var balls = [], bpar = new T.Group(); bpar.rotation.y = RU_TURN; sc.add(bpar);
-    for (var b = 0; b < 8; b++) {   // eight disco balls, one above each part of the floor (4 by 2)
-      var R0 = ruRegion(g, b), bg = new T.Group(), by = n * (.2 + (b % 3) * .025);
-      var ball = new T.Mesh(new T.IcosahedronGeometry(.3 + n * .028, 2), ballM); bg.add(ball);
+    var ipar = new T.Group(); ipar.rotation.y = RU_TURN; sc.add(ipar);
+    var item = new T.Mesh(new T.OctahedronGeometry(.55, 0), new T.MeshStandardMaterial({ color: '#ff3fd0', emissive: '#ff3fd0', emissiveIntensity: .9, metalness: .3, roughness: .2 })); item.visible = false; ipar.add(item);
+    var beams = [0, 1, 2, 3].map(function () { var m = new T.Mesh(new T.BoxGeometry(1, .12, .18), new T.MeshBasicMaterial({ color: '#ff5fe0', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false })); m.visible = false; ipar.add(m); return m; });
+    var balls = []; for (var b = 0; b < 6; b++) {
+      var a = b / 6 * Math.PI * 2 + .3, r = n * .42, bg = new T.Group();
+      var ball = new T.Mesh(new T.IcosahedronGeometry(.4 + n * .04, 2), ballM); bg.add(ball);
       var cord = new T.Mesh(new T.CylinderGeometry(.02, .02, n * 2, 4), new T.MeshBasicMaterial({ color: '#555' })); cord.position.y = n; bg.add(cord);
-      bg.position.set(R0.cx - n / 2 + .5, by, R0.cy - n / 2 + .5); bg.userData = { y0: by, cord: cord }; bpar.add(bg); balls.push(ball);
+      bg.position.set(-n * .3 + b * n * .21, n * .26 + (b % 2) * n * .05, -n * .3 - (b % 2) * n * .08); sc.add(bg); balls.push(ball);
     }
     // purple spotlights sweeping over the floor, with visible beams
     var beamGeo = new T.CylinderGeometry(.05, 1, 1, 20, 1, true); beamGeo.translate(0, -.5, 0);
@@ -5556,10 +5557,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       u.la.rotation.z = -(.15 + dance * (.25 + Math.max(0, Math.sin(t * 2.1)) * .5)); u.ra.rotation.z = .15 + dance * (.2 + Math.max(0, Math.cos(t * 1.05)) * 2.3); u.la.rotation.x = -dance * (.3 + Math.sin(t * 4.2) * .2);
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; u.fr.rotation.y = Math.sin(t * 8) * .15; u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
-      var gR = G.rule, fe = gR && gR.fallEv; if (fe) fe.idx.forEach(function (r) {   // two of them crash down
-        var bg = balls[r].parent, kf = Math.min(1, (Date.now() - fe.at) / 1100), ud = bg.userData;
-        bg.position.y = ud.y0 - (ud.y0 - .4) * kf * kf; ud.cord.visible = false;
-        var sp = kf >= 1 ? Math.max(0, 1 - (Date.now() - fe.at - 1100) / 400) : 1; bg.scale.setScalar(sp); if (kf >= 1) balls[r].rotation.x += .3;
+      var gI = G.rule;   // the laser item, and its beams when someone takes it
+      if (gI && gI.item && gI.st === 'play') { item.visible = true; item.position.set(gI.item[0] - n / 2 + .5, .75 + Math.sin(t * 3) * .12, gI.item[1] - n / 2 + .5); item.rotation.y = t * 2.4; } else item.visible = false;
+      var lz = gI && gI.laser, lk = lz ? (Date.now() - lz.at) / 700 : 2;
+      beams.forEach(function (bm, i) {
+        if (lk >= 1) { bm.visible = false; return; }
+        var d = [[1, 0], [-1, 0], [0, 1], [0, -1]][i], len = d[0] ? (d[0] > 0 ? n - 1 - lz.x : lz.x) : (d[1] > 0 ? n - 1 - lz.y : lz.y);
+        bm.visible = len > 0; bm.scale.set(Math.max(.01, len), 1, 1); bm.rotation.y = d[1] ? Math.PI / 2 : 0;
+        bm.position.set(lz.x - n / 2 + .5 + d[0] * len / 2, .35, lz.y - n / 2 + .5 + d[1] * len / 2); bm.material.color.set(ruCol(lz.k)); bm.material.opacity = .9 * (1 - lk);
       });
       spots.forEach(function (sp, i) {
         var tx = Math.cos(t * .5 + sp.ph) * n * .38, tz = Math.sin(t * .63 + sp.ph * 1.3) * n * .38; sp.L.target.position.set(tx, 0, tz);
@@ -5633,6 +5638,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (g.st !== 'drop' && g.st !== 'intro') o.el.classList.remove('drop', 'pre');
       });
     } else {
+      var itI = g.item && g.st === 'play' ? g.item[1] * g.n + g.item[0] : -1;   // (the laser item on the flat board)
+      Object.keys(ov._cells).forEach(function (i) { ov._cells[i].classList.toggle('ruitem', +i === itI); });
       g.own.forEach(function (k, i) { var c = ov._cells[i]; if (!c) return; var v = (k ? k : '') + (tr[i] ? '*' : ''); if (c._v === v) return; c._v = v; c.style.background = k ? ruCol(k) : ''; c.className = k ? (tr[i] ? 'own trail' : 'own') : ''; });
       [].forEach.call(ov.querySelectorAll('.rutok'), function (el) {
         var k = el.getAttribute('data-p'), p = g.pos[k]; if (!p) return;
@@ -5659,7 +5666,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (g.st === 'count' && k0 > 0 && k0 <= best && lb._k !== k0) { lb._k = k0; Music.plop(k0, .8); }   // (a sound for every square counted)
       ov.classList.add('counting');
     } else { if (lb.innerHTML) { lb.innerHTML = ''; lb.removeAttribute('data-id'); } ov.classList.remove('counting'); }
-    var msg = g.st === 'play' && g.fallEv && Date.now() - g.fallEv.at < 6000 ? (g.wiped ? '💥 Crash! Those tiles are up for grabs again!' : '😱 Watch out! The disco balls are falling!') : g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here she comes… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var msg = g.st === 'play' && g.laser && Date.now() - g.laser.at < 3000 ? '⚡ ' + (players[g.laser.k] ? esc(players[g.laser.k].name) : '') + ' fires the laser! 4 lines claimed!' : g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here she comes… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.rumsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('rule', ruMsg);
@@ -5760,10 +5767,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.organ; if (!g || G.phase !== 'organ') return;
     g.ph++; g.fixed = false;
     var n = g.order.length, slots = [];
-    if (n < OR_ST.length) { for (var c0 = 0; c0 < n; c0++) slots.push(OR_ST[(c0 + g.ph - 1) % OR_ST.length]); }   // (fewer players than stations: a different set each phase)
-    else for (var c1 = 0; c1 < n; c1++) slots.push(OR_ST[c1 % OR_ST.length]);   // everyone divided equally over the four stations
-    var shift = (g.ph - 1) * Math.max(1, Math.round(n / 4));
-    g.order.forEach(function (k, i) { var s = slots[(i + shift) % n]; g.sta[k] = s; g.prog[k] = { d: 0, of: OR_NEED[s][g.ph - 1], at: 0 }; });
+    // Random jobs, spread equally over the stations (fewer players than stations: a random set of them). After a swap
+    // everyone gets a job they haven't had yet, where that's possible.
+    var had = g.had || (g.had = {}), pool = shuffle(OR_ST.slice());
+    if (n < OR_ST.length) { var fresh = pool.filter(function (x) { return !g.order.some(function (k) { return (had[k] || []).indexOf(x) >= 0; }); }); pool = fresh.concat(pool.filter(function (x) { return fresh.indexOf(x) < 0; })); slots = pool.slice(0, n); }
+    else for (var c1 = 0; c1 < n; c1++) slots.push(pool[c1 % pool.length]);
+    var best = null, bestBad = 1e9;
+    for (var tr = 0; tr < 60; tr++) {   // (a few random tries: the one with the fewest repeat jobs)
+      var sl = shuffle(slots.slice()), bad = 0; g.order.forEach(function (k, i) { if ((had[k] || []).indexOf(sl[i]) >= 0) bad++; });
+      if (bad < bestBad) { bestBad = bad; best = sl; } if (!bad) break;
+    }
+    g.order.forEach(function (k, i) { var s = best[i]; g.sta[k] = s; (had[k] = had[k] || []).push(s); g.prog[k] = { d: 0, of: OR_NEED[s][g.ph - 1], at: 0 }; });
     g.st = 'brief'; g.ends = 0; g.brk = {}; push(); Music.woosh();
     clearTimeout(orTimer); orTimer = setTimeout(orFix, 4500);
   }
@@ -5983,7 +5997,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="ormid">' + '<div class="orpeek"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M40 60 Q30 150 46 236 L154 236 Q170 150 160 60 Q150 18 100 16 Q50 18 40 60 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M58 160 Q100 150 142 160 L150 240 L50 240 Z" fill="#2c2c34" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M78 168 Q100 196 122 168" fill="none" stroke="#cfd3dc" stroke-width="3"/><path d="M84 172 Q100 214 116 172" fill="none" stroke="#cfd3dc" stroke-width="2.4"/><path d="M100 200 L100 226" stroke="#cfd3dc" stroke-width="3"/><path d="M96 226 L100 238 L104 226 Z" fill="#cfd3dc"/><rect x="88" y="128" width="24" height="32" rx="9" fill="#d9a582" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="38" ry="44" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M60 92 Q58 40 100 38 Q142 40 140 92 Q136 74 128 70 L126 84 L118 66 L112 82 L104 64 L98 82 L90 66 L84 84 L76 68 L72 86 Q66 80 60 92 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M62 92 Q56 140 66 176 M138 92 Q146 140 134 176" stroke="#15101a" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M80 98 Q87 94 94 98 M106 98 Q113 94 120 98" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M84 118 Q100 134 116 118 Q100 126 84 118 Z" fill="#fff" stroke="#8a3a3a" stroke-width="2.4"/><ellipse cx="80" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="120" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><circle cx="48" cy="200" r="13" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/></svg></div>' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
         '<div class="orpuppet p1">' + OR_PUPPET1 + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
         '<div class="orhosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub orbub him"></div><div class="tcbub orbub her"></div>' +
-        '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orsta sec"></div><div class="orinv"><i>🕺</i><i>💃</i><i>🕺</i></div><div class="orfire"><i></i><i></i><i></i><i></i><i></i></div><div class="ormsg"></div><div class="orboard"></div>';
+        '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orsta sec"></div><div class="orfire"><i></i><i></i><i></i><i></i><i></i></div><div class="ormsg"></div><div class="orboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }

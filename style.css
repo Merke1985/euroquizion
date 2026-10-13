@@ -4255,3 +4255,4 @@ body.hasdock main{padding-bottom:84px}
 .orpeek svg{width:100%;display:block}
 .orov.invaded .orpeek{translate:26% 4%;rotate:16deg;animation:orpeek 1.6s ease-in-out .5s infinite alternate}
 @keyframes orpeek{from{rotate:14deg}to{rotate:6deg}}
+.rugrid > i.ruitem::after{content:'⚡';display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:2.4vh;font-style:normal;animation:uthot .4s ease-in-out infinite alternate}
