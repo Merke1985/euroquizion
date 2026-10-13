@@ -1563,10 +1563,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (four.length < 2) { partyGo(four[0] || games[0]); return; }
     stopTimers(); G.draw = null; G.song = null; G.clip = null;
     G.best = { pick: true, four: true, kinds: four, subs: four.map(function (k) { return FUN[k].sub; }), pids: four.map(function () { return null; }), only: null, id: 'pick' + G.round, tally: null, wins: null };
-    G.q = { subject: 'pick', type: 'mc', text: 'Which game shall we play? Vote on your phone!', hint: '', options: four.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), shots: four.map(function (k) { return 'images/games/' + k + '.jpg'; }), correct: -1, answer: '', noclip: true };
-    if (!REMOTE) { cover(true, '🗳️', 'Which game shall we play?', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); }
-    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push();
+    G.q = { subject: 'pick', type: 'mc', text: 'Which game shall we play? Vote on your phone!', hint: '', options: four.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), correct: -1, answer: '', noclip: true };
+    if (!REMOTE) {
+      cover(true, '🗳️', 'Which game shall we play?', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo');
+      var all = PARTY_KINDS.filter(function (k) { return FUN[k]; }), rest = all.filter(function (k) { return four.indexOf(k) < 0; }), h2 = Math.floor(rest.length / 2);
+      var order = rest.slice(0, h2).concat(four, rest.slice(h2));   // (the four next to each other on the reel, in the middle of the window)
+      var M = G.slotVote = slotOpen(order, all.filter(function (k) { return four.indexOf(k) < 0; }), null, '🗳️ Which game shall we play?', four);
+      var mid = M.n * 4 + order.indexOf(four[0]); M.st.style.transform = 'translateX(' + (M.place(mid) - (M.st.children[mid + 1].offsetLeft - M.st.children[mid].offsetLeft) * 1.5) + 'px)';
+      M.ov.classList.add('voting');
+    }
+    G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push(); slotVoteTick();
     endTimer = setTimeout(reveal, PICK_MS);
+  }
+  function slotVoteTick() {   // while the phones vote: the time left and how many have voted, under the slot machine
+    var M = G.slotVote; if (!M || !M.ov.isConnected) return;
+    if (G.phase === 'guess' && G.best && G.best.four) {
+      var act = list().filter(function (p) { return !p.off; }), n = act.filter(function (p) { return p.pick != null; }).length, sec = Math.max(0, Math.ceil((G.endsAt - Date.now()) / 1000));
+      M.ov.querySelector('.slsub').textContent = 'Vote on your phone! ⏱️ ' + sec + 's · ' + n + ' / ' + act.length + ' voted';
+      setTimeout(slotVoteTick, 400);
+    }
   }
   // The votes are in: the one with the most plays; a tie (or no votes at all) is settled by the spin.
   function partyPicked(tops) {
@@ -1576,6 +1591,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var tw = wts.reduce(function (a, b) { return a + b; }, 0), rr = Math.random() * tw, j = 0; while (j < voted.length - 1 && rr >= wts[j]) { rr -= wts[j]; j++; }
       var ch = voted[j];
       clearTimeout(picksTimer); stopTimers(); list().forEach(function (p) { p.pick = null; }); G.best = null; G.q = null;
+      var M = G.slotVote; G.slotVote = null;
+      if (M && M.ov.isConnected) {   // the slot machine is still on screen: the votes on the four, then the spin decides among them
+        [].forEach.call(M.ov.querySelectorAll('.slcell.hi'), function (c) { var k = c.getAttribute('data-k'), v = tally[kinds4.indexOf(k)] || 0; c.querySelector('.slv').textContent = v ? v + ' 🗳️' : ''; if (!v && voted.indexOf(k) < 0) c.classList.add('out'); });
+        M.ov.classList.remove('voting'); M.ov.querySelector('.slsub').textContent = voted.length > 1 ? 'More votes, more chance… 🎰' : '';
+        G.phase = 'pspin'; G.barMs = 0; push();
+        slotT = setTimeout(function () { slotSpin(M, ch, function () { partyGo(ch, 2500); }); }, 1800);
+        return;
+      }
       if (voted.length > 1) partySpin(voted, ch, function () { partyGo(ch, 3000); }, voted); else partyGo(ch);
       return;
     }
@@ -1594,32 +1617,39 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.fun = null; autoStop(); stopTimers();
     if (REMOTE) { push(); setTimeout(then, 1500); return; }
     try { yt.pauseVideo(); } catch (e) {} cover(true, '🎰', '', false); masks(true); $('cover').classList.add('funcard');
-    G.slot = { kinds: PARTY_KINDS.filter(function (k) { return FUN[k]; }), out: PARTY_KINDS.filter(function (k) { return games.indexOf(k) < 0; }), chosen: chosen };
+    var M = slotOpen(PARTY_KINDS.filter(function (k) { return FUN[k]; }), PARTY_KINDS.filter(function (k) { return games.indexOf(k) < 0; }), chosen, '🎰 Pick a game!');
     push();
+    clearTimeout(slotT); slotT = setTimeout(function () { slotSpin(M, chosen, then); }, 1800);
+  }
+  // The slot machine itself: the reel (every party game, nine times over), the window, the lever and the button.
+  function slotOpen(kinds, out, chosen, title, hi) {
+    G.slot = { kinds: kinds, out: out, chosen: chosen };
     var old = $('slotov'); if (old) old.remove();
-    var ks = G.slot.kinds, n = ks.length, REP = 9, deco = ['🪩', '🎤', '💖', '🏆', '✨', '🎶', '🌟', '💃', '🕺', '🎉', '🌈', '👑'];
-    var cell = function (k) { return '<div class="slcell' + (G.slot.out.indexOf(k) >= 0 ? ' out' : '') + '" data-k="' + k + '"><span class="sli">' + FUN[k].icon + '</span><b>' + esc(FUN[k].title) + '</b></div>'; };
+    var ks = kinds, n = ks.length, REP = 9, deco = ['🪩', '🎤', '💖', '🏆', '✨', '🎶', '🌟', '💃', '🕺', '🎉', '🌈', '👑'];
+    var cell = function (k) { return '<div class="slcell' + (out.indexOf(k) >= 0 ? ' out' : '') + (hi && hi.indexOf(k) >= 0 ? ' hi' : '') + '" data-k="' + k + '"><span class="sli">' + FUN[k].icon + '</span><b>' + esc(FUN[k].title) + '</b><em class="slv"></em></div>'; };
     var strip = ''; for (var r = 0; r < REP; r++) ks.forEach(function (k) { strip += cell(k); });
     var drow = function () { var h = ''; for (var i = 0; i < 40; i++) h += '<i>' + deco[i % deco.length] + '</i>'; return h; };
     var ov = document.createElement('div'); ov.id = 'slotov'; ov.className = 'slotov';
-    ov.innerHTML = '<div class="slsign">🎰 Pick a game!</div><div class="slmachine"><div class="slrow deco top"><div class="sldeco">' + drow() + '</div></div><div class="slrow main"><div class="slstrip">' + strip + '</div><div class="slwin"></div></div><div class="slrow deco bot"><div class="sldeco">' + drow() + '</div></div><i class="sllever"></i></div><div class="slbtn">SPIN</div>';
+    ov.innerHTML = '<div class="slsign">' + title + '</div><div class="slmachine"><div class="slrow deco top"><div class="sldeco">' + drow() + '</div></div><div class="slrow main"><div class="slstrip">' + strip + '</div><div class="slwin"></div></div><div class="slrow deco bot"><div class="sldeco">' + drow() + '</div></div><i class="sllever"></i></div><div class="slbtn">SPIN</div><div class="slsub"></div>';
     document.body.appendChild(ov);
-    var target = n * (REP - 2) + ks.indexOf(chosen), st = ov.querySelector('.slstrip'), win = ov.querySelector('.slrow.main');
-    var place = function (i) { var c = st.children[i]; return -(c.offsetLeft + c.offsetWidth / 2 - win.clientWidth / 2); };
-    st.style.transition = 'none'; st.style.transform = 'translateX(' + place(Math.floor(Math.random() * n) + n) + 'px)';
-    clearTimeout(slotT); slotT = setTimeout(function () {
+    var st = ov.querySelector('.slstrip'), win = ov.querySelector('.slrow.main');
+    var M = { ov: ov, st: st, win: win, ks: ks, n: n, REP: REP, place: function (i, off) { var c = st.children[i]; return -(c.offsetLeft + c.offsetWidth / 2 - win.clientWidth / 2) + (off || 0); } };
+    st.style.transition = 'none'; st.style.transform = 'translateX(' + M.place(Math.floor(Math.random() * n) + n) + 'px)';
+    return M;
+  }
+  function slotSpin(M, chosen, then) {   // pull the lever: the reel spins, slows down and stops on the chosen game
+    var ov = M.ov, st = M.st; if (!ov.isConnected) return;
+    var target = M.n * (M.REP - 2) + M.ks.indexOf(chosen);
+    ov.querySelector('.slbtn').classList.add('push'); ov.querySelector('.sllever').classList.add('pull'); Music.blip();
+    st.getBoundingClientRect(); st.style.transition = 'transform 5.2s cubic-bezier(.12,.62,.08,1)'; st.style.transform = 'translateX(' + M.place(target) + 'px)';
+    [].forEach.call(ov.querySelectorAll('.sldeco'), function (d, i) { d.classList.add(i ? 'spinr' : 'spinl'); });
+    var t0 = Date.now(), tick = function () { var e = (Date.now() - t0) / 5200; if (e >= 1 || !ov.isConnected) return; Music.plop(Math.floor(e * 12)); slotT = setTimeout(tick, 60 + Math.pow(e, 2.2) * 600); }; tick();
+    slotT = setTimeout(function () {
       if (!ov.isConnected) return;
-      ov.querySelector('.slbtn').classList.add('push'); ov.querySelector('.sllever').classList.add('pull'); Music.blip();
-      st.getBoundingClientRect(); st.style.transition = 'transform 5.2s cubic-bezier(.12,.62,.08,1)'; st.style.transform = 'translateX(' + place(target) + 'px)';
-      [].forEach.call(ov.querySelectorAll('.sldeco'), function (d, i) { d.classList.add(i ? 'spinr' : 'spinl'); });
-      var t0 = Date.now(), tick = function () { var e = (Date.now() - t0) / 5200; if (e >= 1 || !ov.isConnected) return; Music.plop(Math.floor(e * 12)); slotT = setTimeout(tick, 60 + Math.pow(e, 2.2) * 600); }; tick();
-      slotT = setTimeout(function () {
-        if (!ov.isConnected) return;
-        st.children[target].classList.add('won'); ov.classList.add('done'); Music.ding(); if (chosen === 'clue') { clueSting(); G.clueSting = true; }
-        [].forEach.call(ov.querySelectorAll('.sldeco'), function (d) { d.classList.remove('spinl', 'spinr'); });
-        slotT = setTimeout(function () { ov.classList.add('leaving'); setTimeout(function () { ov.remove(); G.slot = null; then(); }, 600); }, 2600);
-      }, 5400);
-    }, 1800);
+      st.children[target].classList.add('won'); ov.classList.add('done'); Music.ding(); if (chosen === 'clue') { clueSting(); G.clueSting = true; }
+      [].forEach.call(ov.querySelectorAll('.sldeco'), function (d) { d.classList.remove('spinl', 'spinr'); });
+      slotT = setTimeout(function () { ov.classList.add('leaving'); setTimeout(function () { ov.remove(); G.slot = null; then(); }, 600); }, 2600);
+    }, 5400);
   }
   // More than one party round to choose from: a spin decides, like a party-game minigame picker.
   var LAND = 700;   // a spin: how long the light rests on the winner before that tile turns green
@@ -5343,7 +5373,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (bump[k]) { g.stun[k] = now + RU_STUN; hit = true; return; }
       g.pos[k] = mv[k]; ruClaim(g, k, mv[k][0], mv[k][1]);
     });
-    if (hit && !REMOTE) Music.buzz();
+    if (hit && !REMOTE) { try { var sn = new Audio('sounds/ru_stun.mp3'); sn.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var sp = sn.play(); if (sp && sp.catch) sp.catch(function () {}); } catch (e) { Music.buzz(); } }   // (the stunned sound)
     g.cnt = ruCount(g); ruShow();
     if (now - ruSent >= 900 || hit) ruBeat();
   }
