@@ -1351,16 +1351,16 @@
     } else if ((shopItem(bagItem) || {}).kind === 'golden') {   /* the Golden Ticket: choose a party game, then confirm it */
       var gl = s.pgames || [], gsel = goldSel && gl.filter(function (x) { return x.k === goldSel; })[0];
       if (gsel) {
-        p.innerHTML = '<h3>🌟 Golden Ticket</h3><div class="goldsure"><span class="si">' + gsel.icon + '</span><b>' + esc(gsel.title) + '</b></div><p class="mute" style="margin:0 0 12px;text-align:center">Play this one now? The trivia stops straight away, and everyone plays it. Your ticket is used up.</p>' +
-          '<button type="button" class="btn" id="goldyes" style="width:100%">✅ Yes, play it now!</button><button type="button" class="btn alt" id="goldno" style="width:100%;margin-top:10px">↩️ Choose another</button>';
+        p.innerHTML = '<h3>🌟 Golden Ticket</h3><div class="goldsure"><span class="si">' + gsel.icon + '</span><b>' + esc(gsel.title) + '</b></div><p class="mute" style="margin:0 0 12px;text-align:center">Make this the next party game? Nobody will know until the slot machine spins. Your ticket is used up.</p>' +
+          '<button type="button" class="btn" id="goldyes" style="width:100%">✅ Yes, this one!</button><button type="button" class="btn alt" id="goldno" style="width:100%;margin-top:10px">↩️ Choose another</button>';
         $('goldyes').onclick = function () {
           var gm = { pid: pid, use: bagItem, target: pid, game: gsel.k, key: Math.random().toString(36).slice(2, 9) };
           if (net) { net.send('shop', gm); setTimeout(function () { net.send('shop', gm); }, 1200); }
-          ptoast('🌟 Golden Ticket used! Here comes ' + gsel.title + '!'); goldSel = null; bagOpen = false; bagItem = null; p.removeAttribute('data-k'); bagUpdate(state);
+          ptoast('🌟 Done! ' + gsel.title + ' is the next party game… but shh, nobody knows yet. 🤫'); goldSel = null; bagOpen = false; bagItem = null; p.removeAttribute('data-k'); bagUpdate(state);
         };
         $('goldno').onclick = function () { goldSel = null; p.removeAttribute('data-k'); bagUpdate(state); };
       } else {
-        p.innerHTML = '<h3>🌟 Golden Ticket</h3><p class="mute" style="margin:0 0 12px">An EXTRA party game, right now! The trivia stops, and everyone plays the game you choose.</p>' + gl.map(function (x) { return '<button type="button" class="shopbtn who gold" data-k="' + esc(x.k) + '"><span class="si">' + x.icon + '</span><span><b>' + esc(x.title) + '</b></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose" style="width:100%;margin-top:10px">Back</button>';
+        p.innerHTML = '<h3>🌟 Golden Ticket</h3><p class="mute" style="margin:0 0 12px">Choose the next party game. It stays a secret until the slot machine spins!</p>' + gl.map(function (x) { return '<button type="button" class="shopbtn who gold" data-k="' + esc(x.k) + '"><span class="si">' + x.icon + '</span><span><b>' + esc(x.title) + '</b></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose" style="width:100%;margin-top:10px">Back</button>';
         [].forEach.call(p.querySelectorAll('.shopbtn.gold'), function (b) { b.onclick = function () { goldSel = b.getAttribute('data-k'); p.removeAttribute('data-k'); bagUpdate(state); }; });
       }
     } else if ((shopItem(bagItem) || {}).kind === 'skip') {   /* the CD player: are you sure? Skip or cancel */

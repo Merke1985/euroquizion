@@ -1530,7 +1530,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var gp = G.goldPick, gch = gp.kind, gwho = players[gp.pid] ? players[gp.pid].name : ''; G.goldPick = null;
       var dn = G.partyDone || (G.partyDone = []); if (dn.indexOf(gch) < 0) dn.push(gch);
       if (G.tour) { G.tourN = (G.tourN || 0) + 1; if (games.every(function (x) { return dn.indexOf(x) >= 0; }) || (G.tourMax && G.tourN >= G.tourMax)) G.tourLast = true; }
-      partySlot(games.indexOf(gch) >= 0 ? games : games.concat(gch), gch, function () { partyGo(gch, 2500); }, '🌟 ' + (gwho ? gwho + '’s ' : '') + 'Golden Ticket!');
+      var gspin = function () { partySlot(games.indexOf(gch) >= 0 ? games : games.concat(gch), gch, function () { partyGo(gch, 2500); }, '🌟 ' + (gwho ? gwho + '’s ' : '') + 'Golden Ticket!'); };
+      if (REMOTE) { gspin(); return; }
+      stopTimers(); G.phase = 'loading'; G.q = null; cover(true, '', '', false); shopLast = { icon: '🌟', deltas: [{ pid: gp.pid, tag: '🌟' }] }; push();   // (only now does anyone find out: the item alarm, then the spin lands on the chosen game)
+      itemAlarm(function () { shopHit('🌟 ' + gwho + ' used the Golden Ticket and has chosen this party game!', 5200); push(); setTimeout(gspin, 5400); });
       return;
     }
     if (how === 'order') {
@@ -3249,10 +3252,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         useOne(p, 'fan'); Music.blip(); push();
         shopFlash('🪭 ' + p.name + ' waves the Eurovision Fan!'); return;
       }
-      if (it.kind === 'golden') {   // the Golden Ticket: an EXTRA party game, right now: the trivia question stops at once
+      if (it.kind === 'golden') {   // the Golden Ticket: a secret delivery: nothing is said until the next party spin, which then lands on the chosen game
         var gk = m.game, ok = partyGames().indexOf(gk) >= 0;
-        if (!ok || G.goldNow || G.mgLive || G.tourFinal || ['shop', 'pspin', 'fun', 'final', 'chase'].indexOf(G.phase) >= 0 || G.shop || G.clue || REMOTE) return;
-        inv.splice(k, 1); goldExtra(p, gk, open); return;
+        if (!ok || G.goldPick || G.tourFinal || REMOTE) return;
+        inv.splice(k, 1); G.goldPick = { pid: p.pid, kind: gk }; push(); return;
       }
       if (it.kind === 'skip') {   // the CD player: skip! A different question straight away, nobody scores this one
         if (!open || G.clue || G.frozenLeft != null || REMOTE) return;
@@ -3472,23 +3475,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   /* The Eurovision Song Contest CD Player: skip. The question stops, points already given for it are taken back,
      and after the announcement a different question is loaded (the same question number: nobody scores the skipped one). */
-  function goldExtra(p, kind, open) {   // the Golden Ticket: the question is called off (nobody scores it) and the chosen party game starts: an extra one, on top of the plan
-    G.goldNow = { pid: p.pid, kind: kind };
-    stopTimers(); clearTimeout(endTimer); clearTimeout(picksTimer); clearTimeout(freezeT); G.frozenLeft = null; G.revealPending = false; G.revealAt = 0; peelStop();
-    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} try { yt2.pause(); } catch (e) {} stageEl().classList.remove('second'); pairTag(''); }
-    if (open || (G.phase === 'guess' && G.q)) { list().forEach(function (x) { if (x.got && x.pts) x.score -= x.pts; x.got = false; x.done = false; x.pick = null; x.pts = 0; x.ranks = null; x.ccb = ''; x.sitNow = ''; }); if (G.quizRun) G.quizRun--; }   // (the question doesn't count: it comes back later)
-    G.phase = 'loading'; G.q = null; cover(true, '🌟', 'Golden Ticket!', false);
-    shopLast = { icon: '🌟', deltas: [{ pid: p.pid, tag: '🌟' }] };
-    push();
-    itemAlarm(function () {
-      shopHit('🌟 ' + p.name + ' used the Golden Ticket! The trivia stops: an EXTRA party game, right now!', 5200); push();
-      setTimeout(function () {
-        var gs = partyGames(); if (gs.indexOf(kind) < 0) gs = gs.concat(kind);
-        G.extraNow = true; G.goldNow = null;
-        partySlot(gs, kind, function () { partyGo(kind, 2500); }, '🌟 ' + p.name + '’s Golden Ticket!');
-      }, 5400);
-    });
-  }
   function cdSkip(p) {
     stopTimers(); clearTimeout(endTimer); clearTimeout(picksTimer); clearTimeout(freezeT); G.frozenLeft = null; G.revealPending = false; G.revealAt = 0; peelStop();
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} try { yt2.pause(); } catch (e) {} stageEl().classList.remove('second'); pairTag(''); }
@@ -3558,10 +3544,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="96" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/><ellipse cx="124" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/>' +
     '<circle cx="96" cy="94" r="2.4" fill="#2a1a12"/><circle cx="124" cy="94" r="2.4" fill="#2a1a12"/>' +
     '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
-    '<path d="M108 95 Q106 102 102 107 Q99 112 104 113 Q107 115 110 113.5 Q113 115 116 113 Q121 112 118 107 Q114 102 112 95 Z" fill="#e7b294" stroke="#b47e62" stroke-width="1.4" stroke-linejoin="round"/>' +   // (her nose: a proper, generous one)
-    '<path d="M111 98 Q113 104 115 108" stroke="#fff" stroke-width="1.6" fill="none" opacity=".45" stroke-linecap="round"/><ellipse cx="106" cy="111.5" rx="2" ry="1.2" fill="#7a4a36"/><ellipse cx="114" cy="111.5" rx="2" ry="1.2" fill="#7a4a36"/>' +
-    '<path d="M99 117 Q110 127 121 117 Q110 121 99 117 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
-    '<ellipse cx="88" cy="108" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="108" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
+    '<path d="M109.5 97 Q107.5 101.5 108 103.5 Q110 105 112.5 103.5" stroke="#c08a6c" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".75"/>' +   // (a small, ordinary nose)
+    '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
+    '<ellipse cx="88" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
     '</svg>';
   // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
   var SHOPTILL = '<svg class="till" viewBox="0 0 300 300" aria-hidden="true">' +
@@ -3586,7 +3571,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="bqfloor"><span>🛍️</span><span>🎁</span><span>🛍️</span><span>🎈</span><span>🎁</span></div>' +
         (function () {   // the merchandise on the shelves at the back, with its name (what you can get is on your phone)
           var shelf = function (items) { return items.map(function (it) { var so = soldOut(it.id); return '<span class="bqi' + (so ? ' sold' : '') + '" data-id="' + esc(it.id) + '"><span class="si">' + it.icon + '</span><b>' + esc(it.name) + '</b><i class="bqp">' + shopPrice(it) + ' pts</i><i class="bqstock' + (it.stock ? ' one' : '') + '">' + (so ? 'Sold out' : it.stock ? 'Only ' + it.stock + ' in stock' : '∞ in stock') + '</i></span>'; }).join(''); }, av = SHOP_ITEMS.filter(function (it) { return !it.final || G.finalMode === 'chase'; });   /* (sold out: still on the shelf, crossed out) */
-          return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '<div class="bqcasenote">⚡ Instant items: during a question · 📦 Deliveries: any time, they land before the next question</div></div>';
+          return '<div class="bqcase">' + [3, 2, 1].map(function (t) { var tr = SHOP_TIERS[t]; return '<div class="bqshelf t' + t + '"><span class="bqtier">' + tr.icon + ' ' + tr.name + ' <em>' + shopPrice({ tier: t }) + ' pts</em></span>' + shelf(av.filter(function (it) { return (it.tier || 2) === t; })) + '</div>'; }).join('') + '</div>';
         })() +
         '<div class="bqkeeper">' + SHOPKEEPER + '</div><div class="bqtill">' + SHOPTILL + '</div><div class="bqbubble"></div><div class="shoppers"></div><div class="bqtimer"></div>';
       document.body.appendChild(ov);
@@ -5494,7 +5479,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('fkov'); if (ov) return ov;
     ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov jcov enter';
       ov.innerHTML = '<div class="jcbg"><div class="jcwall"><div class="jcban">PRESS CONFERENCE</div><div class="jclogo">☝️ JUST ONE!</div><div class="jcflags">' + ['se', 'fr', 'it', 'ua', 'nl', 'gb', 'de', 'es', 'no', 'fi'].map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div></div><div class="jcfloor"></div><i class="jcspot a"></i><i class="jcspot b"></i></div>' +
-      '<div class="jcstage"><div class="jcguest"></div><div class="jclong"><i class="jcmic m1"></i><i class="jcmic m2"></i><i class="jcmic m3"></i><i class="jcmic m4"></i><b class="jcnamecard"></b></div></div>' +
+      '<div class="jcstage"><div class="jcguest"></div><div class="jclong"><i class="jcmic m1"></i><i class="jcmic m2"></i><i class="jcmic m3"></i><i class="jcmic m4"></i><b class="jcnamecard"></b><b class="jcgscore"></b></div></div>' +
       '<div class="fksign">☝️ Just One!<small class="fkrnd"></small></div><div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div><div class="jcflash"></div>';
     ov.innerHTML += '<div class="jchosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub jcbub2 him"></div><div class="grbub jcbub2 her"></div>';
     document.body.appendChild(ov); whooshes([0, 350]);
@@ -5544,6 +5529,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var gs = ov.querySelector('.jcguest'); if (gs.getAttribute('data-k') !== gk) { gs.setAttribute('data-k', gk);
       gs.innerHTML = g.done || !gp ? '' : '<div class="jcbub">' + (g.st === 'guess' ? '🤔' : g.st === 'end' ? (g.right ? '🎉' : '😅') : '❓') + '</div><span class="lbod" style="' + bodyOutfit(g.guesser) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca"></i><i class="ct"></i></span>' + charSvg(gp.char);
       ov.querySelector('.jcnamecard').textContent = gp && !g.done ? gp.name : ''; }
+    var gsc = ov.querySelector('.jcgscore'), gst = gp && !g.done ? String(g.tot[g.guesser] || 0) : ''; if (gsc.textContent !== gst) gsc.textContent = gst;   // (the guesser's Just One score, on the front of the big desk)
     // the journalists at their desks
     var desks = g.done ? g.order : gv, n = desks.length, perRow = n > 6 ? Math.ceil(n / 2) : n;
     var h = desks.map(function (k, i) {
@@ -5563,7 +5549,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var cls = 'jcdesk' + (k === g.checker && g.st === 'check' ? ' checker' : '') + (g.done && g.win.indexOf(k) >= 0 ? ' win' : '');
       return '<div class="' + cls + '" style="--i:' + i + ';left:' + px.toFixed(1) + 'vw;top:' + py + 'vh;--s:' + sc + ';z-index:' + (row ? 20 : 10) + '">' + card +
         '<div class="jcperson"><span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '</div>' +
-        '<div class="jctable"><i class="jclap"></i><i class="jcdmic"></i><i class="jcglass"></i><b class="jcname">' + esc(p.name) + '</b></div>' +
+        '<div class="jctable"><i class="jclap"></i><i class="jcdmic"></i><i class="jcglass"></i><b class="jcscore">' + (g.tot[k] || 0) + '</b><b class="jcname">' + esc(p.name) + '</b></div>' +
         (k === g.checker && g.st === 'check' ? '<b class="jctag">🔍 CHECKING</b>' : '') + (g.done ? '<b class="fkpts">' + (g.tot[k] || 0) + '</b>' : g.st === 'end' && g.res[k] ? '<b class="fkpts">+' + g.res[k] + '</b>' : '') + '</div>';
     }).join('');
     if (g.st === 'end' && !g.done && g.res[g.guesser]) h += '<b class="fkpts jcgpts">+' + g.res[g.guesser] + '</b>';
