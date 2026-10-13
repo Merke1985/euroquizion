@@ -3883,7 +3883,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // task on the phone. Doing it well earns secret clues (cards that are NOT the answer): Green Room 2, Euroclub 3,
   // Backstage 2, Woodruff's Boudoir 3. The first to finish all four rooms gets 2 bonus clues, the second 1.
   // Twelve clues are exactly the twelve wrong cards, so a perfect detective knows the answer for sure.
-  var ED_ROOMS = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 3 }];
+  var ED_ROOMS = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 2 }];
   var ED_MS = 150000, edTick = null;
   function edRoom(id) { for (var i = 0; i < ED_ROOMS.length; i++) if (ED_ROOMS[i].id === id) return ED_ROOMS[i]; return null; }
   function edClues(pid, n) {   // n smart clues for this player (from the row where they still have the most cards open)
@@ -3945,18 +3945,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Every game one of the two wears one striking thing (big earrings, gloves, a beret, a necklace, a belt) in a colour
   // of the game's choosing: the first detective through all four rooms is asked about it for their bonus clue.
   var ED_DUO_COL = [['gold', '#f2c12e'], ['silver', '#c9ced8'], ['pink', '#ff5fa8'], ['green', '#2fb35a'], ['blue', '#2f6ff0'], ['purple', '#8b4fe0'], ['orange', '#ff8a2a']];
-  var ED_DUO_ITEM = {   // one of the two carries something big and obvious all game; the question: what was it?
-    balloon: { q: 'a red balloon', d: function () { return '<path d="M-26 -38 Q-36 -80 -30 -116" stroke="#666" stroke-width="1.6" fill="none"/><ellipse cx="-30" cy="-133" rx="15" ry="18" fill="#e0283a" stroke=' + ED_INK + '" stroke-width="2.2"/><path d="M-33 -114 L-27 -114 L-30 -118 Z" fill="#e0283a"/><ellipse cx="-35" cy="-139" rx="4" ry="6" fill="#fff" opacity=".5"/>'; } },
-    flowers: { q: 'a bunch of flowers', d: function () { return '<path d="M-26 -38 L-32 -66 M-26 -38 L-24 -70 M-26 -38 L-16 -64" stroke="#2fb35a" stroke-width="3"/>' + [[-33, -70, '#ff5fa8'], [-23, -75, '#f2c12e'], [-14, -67, '#e0283a'], [-28, -61, '#8b4fe0']].map(function (f) { return '<circle cx="' + f[0] + '" cy="' + f[1] + '" r="6.5" fill="' + f[2] + '" stroke=' + ED_INK + '" stroke-width="1.6"/><circle cx="' + f[0] + '" cy="' + f[1] + '" r="2" fill="#fff6a0"/>'; }).join(''); } },
-    trophy: { q: 'a golden trophy', d: function () { return '<path d="M-42 -74 L-12 -74 L-16 -54 Q-27 -44 -38 -54 Z" fill="#f2c12e" stroke=' + ED_INK + '" stroke-width="2"/><path d="M-42 -70 Q-50 -66 -42 -58 M-12 -70 Q-4 -66 -12 -58" stroke="#f2c12e" stroke-width="3" fill="none"/><rect x="-30" y="-48" width="6" height="8" fill="#d9a520"/><rect x="-36" y="-41" width="18" height="6" rx="2" fill="#f2c12e" stroke=' + ED_INK + '" stroke-width="1.6"/>'; } },
-    teddy: { q: 'a teddy bear', d: function () { return '<circle cx="-34" cy="-32" r="11" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="2"/><circle cx="-34" cy="-52" r="9" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="2"/><circle cx="-41" cy="-59" r="3.5" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="1.5"/><circle cx="-27" cy="-59" r="3.5" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="1.5"/><circle cx="-34" cy="-50" r="2.6" fill="#e8c49a"/><circle cx="-37" cy="-54" r="1.2" fill="#222"/><circle cx="-31" cy="-54" r="1.2" fill="#222"/>'; } },
-    dog: { q: 'a little dog', d: function () { return '<path d="M-26 -38 Q-40 -20 -46 -14" stroke="#e0283a" stroke-width="1.6" fill="none"/><ellipse cx="-56" cy="-8" rx="12" ry="7" fill="#f4f0e8" stroke=' + ED_INK + '" stroke-width="2"/><circle cx="-46" cy="-16" r="6.5" fill="#f4f0e8" stroke=' + ED_INK + '" stroke-width="2"/><ellipse cx="-50" cy="-19" rx="2.6" ry="5" fill="#c9a37a"/><circle cx="-43" cy="-17" r="1.2" fill="#222"/><path d="M-64 -4 L-64 0 M-50 -4 L-50 0" stroke=' + ED_INK + '" stroke-width="2.4"/><path d="M-68 -10 Q-74 -16 -70 -20" stroke="#f4f0e8" stroke-width="3" fill="none"/>'; } },
-    suitcase: { q: 'a suitcase', d: function () { return '<rect x="-44" y="-36" width="28" height="22" rx="4" fill="#2f6ff0" stroke=' + ED_INK + '" stroke-width="2"/><path d="M-34 -36 L-34 -41 L-26 -41 L-26 -36" stroke=' + ED_INK + '" stroke-width="2.4" fill="none"/><path d="M-44 -26 L-16 -26" stroke="#f2c12e" stroke-width="2"/>'; } }
+  var ED_DUO_ITEM = {
+    ear: { q: 'big earrings', d: function (c) { return '<g fill="none"><g stroke="' + ED_INK + '" stroke-width="6"><circle cx="-25" cy="-88" r="9"/><circle cx="25" cy="-88" r="9"/></g><g stroke="' + c + '" stroke-width="3.6"><circle cx="-25" cy="-88" r="9"/><circle cx="25" cy="-88" r="9"/></g></g>'; } },
+    glove: { q: 'gloves', d: function (c, o) { var r = o.armUp ? [28, -106] : [26, -38]; return '<circle cx="-26" cy="-38" r="6.8" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2"/><circle cx="' + r[0] + '" cy="' + r[1] + '" r="6.8" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2"/>'; } },
+    beret: { q: 'beret', d: function (c) { return '<ellipse cx="-3" cy="-126" rx="24" ry="9" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2.2" transform="rotate(-10 -3 -126)"/><circle cx="-3" cy="-134" r="3" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.6"/>'; } },
+    neck: { q: 'necklace', d: function (c) { return '<path d="M-13 -79 Q0 -62 13 -79" stroke="' + ED_INK + '" stroke-width="6" fill="none"/><path d="M-13 -79 Q0 -62 13 -79" stroke="' + c + '" stroke-width="3.6" fill="none"/><circle cx="0" cy="-64" r="6.5" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.8"/>'; } },
+    belt: { q: 'belt', d: function (c, o) { return o.sit ? '' : '<rect x="-17" y="-44" width="34" height="6" rx="2" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.6"/><rect x="-4" y="-45" width="8" height="8" rx="1.5" fill="#f2c12e" stroke="' + ED_INK + '" stroke-width="1.4"/>'; } }
   };
-  function edDuoPick() { var items = Object.keys(ED_DUO_ITEM); return { item: pick(items), who: Math.random() < .5 ? 0 : 1, col: 0 }; }
-  function edDuoQ(d) {   // the question: what was one of the two stars carrying? Four things, one right
-    var right = ED_DUO_ITEM[d.item].q, opts = shuffle([right].concat(shuffle(Object.keys(ED_DUO_ITEM).filter(function (k) { return k !== d.item; })).slice(0, 3).map(function (k) { return ED_DUO_ITEM[k].q; })));
-    return { text: 'The two stars walking through the building: what was one of them carrying?', opts: opts, ans: opts.indexOf(right) };
+  function edDuoPick() { var items = Object.keys(ED_DUO_ITEM); return { item: pick(items), who: Math.random() < .5 ? 0 : 1, col: Math.floor(Math.random() * ED_DUO_COL.length) }; }
+  function edDuoQ(d) {   // the question about it: four colours, one right
+    var it = ED_DUO_ITEM[d.item], right = ED_DUO_COL[d.col][0], opts = shuffle([right].concat(shuffle(ED_DUO_COL.map(function (c) { return c[0]; }).filter(function (c) { return c !== right; })).slice(0, 3)));
+    return { text: 'The two stars walking through the building: what colour was the ' + it.q + ' the ' + (d.who ? 'blonde' : 'dark-haired') + ' one wore?', opts: opts, ans: opts.indexOf(right) };
   }
   function edDuo(ov, g) {
     var D = ov._duo || (ov._duo = { on: false, spent: { green: 0, club: 0, boud: 0, back: 0 }, last: '', t: [] });
@@ -3974,7 +3973,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var at = P.at;
       var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g'); wrap.setAttribute('class', 'edduo2 r-' + r);
       wrap.innerHTML = ED_DUO.map(function (o, k) {
-        var dd = g.duo, base = Object.assign({ s: P.s, walk: 1 }, o, { extra: function (oo) { return ED_DUO_LOOK[k](oo) + (dd && dd.who === k && ED_DUO_ITEM[dd.item] ? ED_DUO_ITEM[dd.item].d() : ''); } }), st = edPerson(0, 0, base);
+        var dd = g.duo, base = Object.assign({ s: P.s, walk: 1 }, o, { extra: function (oo) { return ED_DUO_LOOK[k](oo) + (dd && dd.who === k && ED_DUO_ITEM[dd.item] ? ED_DUO_ITEM[dd.item].d(ED_DUO_COL[dd.col][1], oo) : ''); } }), st = edPerson(0, 0, base);
         var act = r === 'green' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
           : r === 'club' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
           : r === 'boud' ? edPerson(0, 0, Object.assign({}, base, { glasses: 1, walk: 0, armUp: 1 }))

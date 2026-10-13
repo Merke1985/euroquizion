@@ -905,7 +905,7 @@
   }
 
   // ---------- Where the Hell Is Edgar?: the four rooms on the phone ----------
-  var ED_R = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 3 }];
+  var ED_R = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 2 }];
   var edNotes = false, edCur = '', edGame = '', edSeen = '', edT = [], edAc = null;
   function edLater(f, ms) { edT.push(setTimeout(f, ms)); }
   function edClear() { edT.forEach(clearTimeout); edT = []; }
@@ -1028,7 +1028,16 @@
       { q: 'How many perfume bottles are on the dressing table?', a: String(s.perfume), o: edNums(s.perfume, 1, 8) },
       { q: 'What colour is the woman’s feather boa?', a: s.woman.boa, o: edPickOpts(s.woman.boa, ['pink', 'white', 'teal', 'yellow']), col: 1 }
     ];
-    return [{ t: 'rack', q: 'Hang the dresses back on the rack in the same order, from left to right!', a: s.rack.map(function (x) { return x.c; }) }, { t: 'looks', q: 'Dress them up! Give all three the right hair and outfit, just like on the big screen.', a: s }].concat(shuffle(mc).slice(0, 1));
+    var OUTS = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'], HAIRS = ['black', 'brown', 'blonde', 'red', 'orange'];
+    var ppl = [   // the three guests: one simple question about them
+      { q: 'What colour is the dress of the woman with the boa?', a: s.woman.dress, o: edPickOpts(s.woman.dress, OUTS), col: 1 },
+      { q: 'What colour is the suit of the man with the glasses?', a: s.man.suit, o: edPickOpts(s.man.suit, OUTS), col: 1 },
+      { q: 'What colour is the little girl’s dress?', a: s.child.dress, o: edPickOpts(s.child.dress, OUTS), col: 1 },
+      { q: 'What colour is the hair of the woman with the boa?', a: s.woman.hair, o: edPickOpts(s.woman.hair, HAIRS), col: 1 },
+      { q: 'What colour is the hair of the man with the glasses?', a: s.man.hair, o: edPickOpts(s.man.hair, HAIRS), col: 1 },
+      { q: 'What colour is the little girl’s hair?', a: s.child.hair, o: edPickOpts(s.child.hair, HAIRS), col: 1 }
+    ];
+    return [mc[2]].concat(shuffle(ppl).slice(0, 1));   // (two simple questions: the word on the mirror, and one about the three guests)
   }
   function edMini(p) {   // a small cartoon guest for the phone: hair colour, hair style and top
     var H = ED_HEX[p.hair] || p.hair, T = ED_HEX[p.top] || p.top, K = ' stroke="#2b1830" stroke-width="2.4" stroke-linejoin="round"', h = '';
@@ -1050,14 +1059,14 @@
       var n = 10, tick = function () {
         if (!edCur) return;
         if (n <= 0) { ask(); return; }
-        box.innerHTML = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / 3</div><div class="edlock"><span>🔒</span><b>Wrong!</b><small>Locked… try again in</small><em>' + n + '</em></div>';
+        box.innerHTML = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / ' + qs.length + '</div><div class="edlock"><span>🔒</span><b>Wrong!</b><small>Locked… try again in</small><em>' + n + '</em></div>';
         n--; edLater(tick, 1000);
       };
       tick();
     };
     var ask = function () {
       if (qi >= qs.length) { edFinish(room, score()); return; }
-      var q = qs[qi], head = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / 3</div><div class="edq">' + q.q + '</div>';
+      var q = qs[qi], head = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / ' + qs.length + '</div><div class="edq">' + q.q + '</div>';
       $('waitsub').textContent = '';
       if (q.t === 'code') {
         var got = '';
