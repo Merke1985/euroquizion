@@ -140,7 +140,7 @@
       if (!d || !d.batch || !state || !state.draw || d.pid !== state.draw.pid) return; if (d.first) drawClear($('pdraw')); d.batch.forEach(function (m) { drawPaint($('pdraw'), m); }); });
     net.on('result', onResult);
     net.on('bomb', udOnMap);
-    net.on('zg', zgOnLive);
+    net.on('zg', zgOnLive); net.on('fake', fkOnPriv);
     net.on('rule', ruOnLive);
     // Each hello carries what this phone last knew, so a host that reconnects can restore the game.
     hi = function () {
@@ -191,6 +191,7 @@
     if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
+    if (s.phase !== 'fake' || !s.fake) $('fkui').classList.add('hidden');
     if (s.phase !== 'clueacc' && s.phase !== 'cluerooms' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (s.phase !== 'cluerooms') { $('edui').classList.add('hidden'); if (edCur) { edCur = ''; edClear(); } }
     if (!(s.phase === 'note' && s.note && (s.note.st === 'guess' || s.note.st === 'ctl'))) { $('noteui').classList.add('hidden'); if ($('ntctl')) $('ntctl').classList.add('hidden'); }
@@ -203,7 +204,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' && s.phase !== 'organ' && s.phase !== 'cluerooms' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'fake' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' && s.phase !== 'organ' && s.phase !== 'cluerooms' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -293,6 +294,7 @@
     else if (s.phase === 'note' && s.note) noteView(s);
     else if (s.phase === 'carpet' && s.carpet) carpetView(s);
     else if (s.phase === 'zg' && s.zg) zgView(s);
+    else if (s.phase === 'fake' && s.fake) fkView(s);
     else if (s.phase === 'rule' && s.rule) ruView(s);
     else if (s.phase === 'organ' && s.organ) orView(s);
     else if (s.phase === 'qj' && s.qj) qjView(s);
@@ -594,6 +596,53 @@
       }; });
     }
     if (c.st === 'ask') { var tick = function () { var e = box.querySelector('.tccount'); if (!e) return; var sec = Math.max(0, Math.ceil((tcEnd - Date.now()) / 1000)); e.textContent = sec; e.classList.toggle('hot', sec <= 5); }; tick(); tcTimerT = setInterval(function () { if (!state || state.phase !== 'carpet') { clearInterval(tcTimerT); return; } tick(); }, 250); }
+  }
+
+  // ---------- The Fake Fan ----------
+  // My card comes privately: the song, or "you're the fake". Then: my word when it's my turn, my vote, and (if I'm the
+  // caught fake) my guess.
+  var fkMe = null, fkAsked = '', fkSent = {};
+  function fkOnPriv(m) { if (!m || m.to !== pid || !m.id) return; fkMe = m; if (state && state.phase === 'fake') fkView(state); }
+  function fkSend(o) { var f = state && state.fake; if (!net || !f) return; o.pid = pid; o.id = f.id; net.send('fake', o); }
+  function fkView(s) {
+    var f = s.fake, box = $('fkui'), mine = f.order.indexOf(pid) >= 0, me = fkMe && fkMe.id === f.id ? fkMe : null;
+    show('v-wait'); box.classList.remove('hidden');
+    if (mine && !me && fkAsked !== f.id) { fkAsked = f.id; fkSend({ ask: 1 }); }
+    var nm = function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; };
+    var card = !mine ? '' : !me ? '<div class="fkcard wait">🤫 Getting your card…</div>' : me.role === 'fake'
+      ? '<div class="fkcard fake"><b>🤫 You’re the FAKE FAN!</b><span>You don’t know the song. Blend in: listen to the others’ words, and don’t get caught!</span></div>'
+      : '<div class="fkcard"><small>The secret song</small><b>' + esc(me.song.t) + '</b><span>' + esc(me.song.a) + ' · ' + esc(me.song.c) + ' ' + me.song.y + '</span></div>';
+    var key = f.id + '|' + f.st + '|' + f.turn + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.words) + '|' + JSON.stringify(f.voted) + '|' + f.fake + '|' + (f.guess || '');
+    if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
+    var body = '';
+    if (!mine) { $('waittitle').textContent = '🤫 The Fake Fan'; $('waitsub').textContent = 'Watch the big screen!'; }
+    else if (f.st === 'secret') { $('waittitle').textContent = '🤫 Your card'; $('waitsub').textContent = 'Keep it to yourself!'; }
+    else if (f.st === 'words') {
+      var cur = f.order[f.turn];
+      if (cur === pid && f.words[pid] == null && fkSent[f.id + ':w'] !== 1) {
+        $('waittitle').textContent = '✍️ Your turn!'; $('waitsub').textContent = me && me.role === 'fake' ? 'Give one word that fits… any Eurovision song? 😅' : 'One word about the song. Not too obvious!';
+        body = '<form class="fkform"><input type="text" maxlength="24" placeholder="One word" autocomplete="off" autocapitalize="off"><button type="submit" class="btn">Send</button></form>';
+      } else { $('waittitle').textContent = cur === pid ? '✅ Sent!' : '⏳ ' + nm(cur) + '’s turn'; $('waitsub').textContent = 'The words appear on the big screen.'; }
+    } else if (f.st === 'talk') { $('waittitle').textContent = '🗣️ Talk it over!'; $('waitsub').textContent = 'Who is the fake fan? Voting starts in a moment.'; }
+    else if (f.st === 'vote') {
+      if (f.voted[pid]) { $('waittitle').textContent = '🗳️ Vote sent'; $('waitsub').textContent = 'Waiting for the others…'; }
+      else {
+        $('waittitle').textContent = '🗳️ Who is the fake?'; $('waitsub').textContent = me && me.role === 'fake' ? 'Vote for someone else… act natural! 😇' : 'Tap the player you suspect.';
+        body = '<div class="fkvote">' + f.order.filter(function (k) { return k !== pid; }).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return '<button type="button" class="opt fkv" data-k="' + esc(k) + '">' + (p ? charSvg(p.char) : '') + '<span>' + esc(nm(k)) + '</span><small>' + esc(f.words[k] || '🤐') + '</small></button>'; }).join('') + '</div>';
+      }
+    } else if (f.st === 'reveal') { $('waittitle').textContent = f.fake ? (f.fake === pid ? (f.caught ? '😱 They caught you!' : '😈 You got away!') : (f.caught ? '🎯 Caught: ' + nm(f.fake) + '!' : '🤫 It was ' + nm(f.fake) + '!')) : '🥁 And the fake fan is…'; $('waitsub').textContent = 'Watch the big screen!'; }
+    else if (f.st === 'guess') {
+      if (f.fake === pid && !fkSent[f.id + ':g']) { $('waittitle').textContent = '🎵 Last chance!'; $('waitsub').textContent = 'Which song was it? Guess right and you still score!'; body = '<div class="fkvote">' + (f.opts || []).map(function (o) { return '<button type="button" class="opt fkg" data-id="' + esc(o.id) + '"><span>' + esc(o.t) + '</span><small>' + esc(o.a) + '</small></button>'; }).join('') + '</div>'; }
+      else { $('waittitle').textContent = '🎵 ' + nm(f.fake) + ' is guessing the song…'; $('waitsub').textContent = ''; }
+    } else if (f.st === 'end') {
+      var won = (f.win || []).indexOf(pid) >= 0, pts = (f.res || {})[pid] || 0;
+      $('waittitle').textContent = won ? '🏆 You win The Fake Fan!' : pts ? '⭐ +' + pts + ' points' : 'The end!';
+      $('waitsub').textContent = f.fake === pid ? (f.caught ? (f.right ? 'You knew the song after all! 😎' : 'You didn’t know the song… 🙈') : 'Nobody caught you! 😈') : (f.caught ? (f.right ? 'Caught, but the fake knew the song!' : 'The real fans win!') : 'The fake fan got away…');
+    }
+    box.innerHTML = card + body;
+    var fm = box.querySelector('.fkform'); if (fm) { var inp = fm.querySelector('input'); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 50); fm.onsubmit = function (e) { e.preventDefault(); var w = inp.value.trim(); if (!w) return; fkSent[f.id + ':w'] = 1; fkSend({ word: w }); box.removeAttribute('data-k'); fkView(state); }; }
+    [].forEach.call(box.querySelectorAll('.fkv'), function (b) { b.onclick = function () { fkSend({ vote: b.getAttribute('data-k') }); box.querySelectorAll('.fkv').forEach(function (x) { x.disabled = true; }); b.classList.add('picked'); }; });
+    [].forEach.call(box.querySelectorAll('.fkg'), function (b) { b.onclick = function () { fkSent[f.id + ':g'] = 1; fkSend({ guess: b.getAttribute('data-id') }); box.querySelectorAll('.fkg').forEach(function (x) { x.disabled = true; }); b.classList.add('picked'); }; });
   }
 
   // ---------- Zero Gravity ----------

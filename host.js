@@ -255,6 +255,7 @@
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
     if (G.clue) s.clue = clueSnap();
     if (G.note && G.phase === 'note') s.note = noteSnap();
+    if (G.fake && G.phase === 'fake') s.fake = fkSnap();
     if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.rule && G.phase === 'rule') s.rule = ruSnap();
@@ -494,6 +495,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'cluerooms' && $('edov')) { $('edov').remove(); clearInterval(edTick); }
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
+    if (G.phase !== 'fake' && $('fkov')) { $('fkov').remove(); clearInterval(fkTick); }
     if (G.phase !== 'organ' && $('orov')) { $('orov').remove(); clearInterval(orTick); if (orSongT || orFxT || (orAud && !orAud.paused)) orSong(false); }
     if (G.phase !== 'rule' && $('ruov')) { $('ruov').remove(); clearInterval(ruLoop); if (ruSongT) ruSong(false); }
     if (G.phase !== 'zg' && $('zgov')) { $('zgov').remove(); clearInterval(zgLoop); if (zgSongT) zgSong(false); }
@@ -583,6 +585,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); edShow();
     } else if (G.phase === 'clueacc' || G.phase === 'cluerev') {
       show('v-game'); clueShow();
+    } else if (G.phase === 'fake') {
+      show('v-game'); fkShow();
     } else if (G.phase === 'note') {
       show('v-game'); noteShow();
     } else if (G.phase === 'carpet') {
@@ -1446,7 +1450,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'note', 'queue', 'carpet', 'zg', 'rule', 'organ'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'bomb', 'fake', 'note', 'queue', 'carpet', 'zg', 'rule', 'organ'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
@@ -1455,6 +1459,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Search the four rooms on your phone in two minutes for secret clues, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
+    fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five mini-parades on the turquoise carpet! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Off it for too long and you fall. The last ones standing win!' },
@@ -1472,7 +1477,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, fake: fkAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll };
     G.mode = G.lastParty = kind; G.best = null; G.q = null; G.afterParty = true;
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
@@ -1502,7 +1507,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The party games that can be played now: switched on, and possible with this group (most need two players or more).
   function partyGames(pOn, two) {
     pOn = pOn || G.partyOn || {}; if (two == null) two = list().filter(function (p) { return !p.off; }).length >= 2;
-    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule' && x !== 'organ')); });
+    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'fake' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule' && x !== 'organ')); });
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
@@ -2195,7 +2200,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', fake: '🤫 The Fake Fan', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -4126,6 +4131,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['her', 'Hold a direction on your phone to keep dancing: one tile per second. You can steal tiles from others too.'],
         ['him', 'But watch out: bump into someone and you’re stunned for 3 seconds! 💫'],
         ['her', 'After three minutes, whoever owns the most tiles rules the world! 👑']] },
+    fake: { sign: '🤫 The Fake Fan', theme: 'fake',
+      get art() { return '<div class="hsfake">' + FK_ART + '</div>'; },
+      lines: [['him', 'Shhh… 🤫 There’s a fake fan among you!'],
+        ['her', 'Everyone gets the same secret Eurovision song on their phone. Everyone… except the fake fan.'],
+        ['him', 'One by one, give one word about the song. Not too obvious, or the fake will know it too!'],
+        ['her', 'Then vote: who is the fake? Caught, the fake can still win by guessing the song. Escaped? Douze points! 😈']] },
     zg: { sign: '🌌 Zero Gravity', theme: 'zg',
       get art() { return '<div class="hszg">' + ZG_SINGER + '<span class="hspole"></span></div>'; },
       lines: [['him', 'Welcome to space! 🌌 Tonight our singer performs on top of a very tall pole…'],
@@ -4769,6 +4780,149 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
   }
   net.on('zg', zgMsg);
+  // ---------- The Fake Fan ----------
+  // Everyone's phone shows the same secret Eurovision song, except one player: the fake fan, who sees "You're the
+  // fake!". One by one everyone types one word about the song (the fake never goes first), then everyone votes for
+  // the fake. Caught: the fake can still win by guessing the song from four options. Escaped: the fake wins big.
+  // Who the fake is and what the song is go to each phone privately (never in the shared state) until the reveal.
+  var FK_TURN = 20000, FK_TALK = 12000, FK_VOTE = 20000, FK_GUESS = 15000, fkTimer = null, fkTick = null, fkPrivT = null;
+  var FK_ART = '<svg class="fkart" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="70" fill="#ffd23f" stroke="#2b1830" stroke-width="5"/><ellipse cx="74" cy="88" rx="9" ry="12" fill="#2b1830"/><ellipse cx="126" cy="88" rx="9" ry="12" fill="#2b1830"/><circle cx="77" cy="84" r="3" fill="#fff"/><circle cx="129" cy="84" r="3" fill="#fff"/><path d="M70 128 Q100 146 130 128" stroke="#2b1830" stroke-width="6" fill="none" stroke-linecap="round"/><rect x="84" y="108" width="12" height="44" rx="6" fill="#f6cfb2" stroke="#2b1830" stroke-width="4" transform="rotate(-8 90 130)"/><ellipse cx="60" cy="112" rx="10" ry="6" fill="#ff8aa8" opacity=".7"/><ellipse cx="140" cy="112" rx="10" ry="6" fill="#ff8aa8" opacity=".7"/></svg>';   // (shh! an original smiley)
+  function fkSongs() { return (songs || []).filter(function (s) { return s[0] >= 1985 && (s[5] === 2 || (s[6] != null && s[6] <= 10 && s[8] == null)); }); }
+  function fkAll() {
+    var act = list().filter(function (p) { return !p.off; });
+    if (act.length < 3) { quipAll(); return; }   // (it needs at least three)
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
+    var pool = fkSongs(); if (pool.length < 4) pool = songs.slice();
+    var song = pick(pool), fake = pick(act).pid, order = shuffle(act.map(function (p) { return p.pid; }));
+    if (order[0] === fake) { order.push(order.shift()); }   // (the fake never goes first)
+    var others = shuffle(pool.filter(function (s) { return s[4] !== song[4] && s[3] !== song[3]; })).slice(0, 3);
+    G.fake = { id: 'fk' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'secret', order: order, fake: fake, song: song, opts: shuffle([song].concat(others)).map(function (s) { return s[4]; }),
+      words: {}, turn: -1, turnEnds: 0, votes: {}, accused: '', caught: false, guess: '', ends: 0, res: {}, win: [] };
+    G.phase = 'fake'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push(); fkShow(); fkPriv(); Music.ding();
+    clearInterval(fkPrivT); fkPrivT = setInterval(function () { var g = G.fake; if (!g || g.st === 'reveal' || g.st === 'guess' || g.st === 'end') { clearInterval(fkPrivT); return; } fkPriv(); }, 6000);   // (again now and then: for phones that came back)
+    clearTimeout(fkTimer); fkTimer = setTimeout(fkNext, 7000);   // (time to read the phone)
+    clearInterval(fkTick); fkTick = setInterval(function () { if (!G.fake) { clearInterval(fkTick); return; } fkShow(); fkBots(); }, 500);
+  }
+  function fkCard(s) { return { t: s[3], a: s[2], c: countries[s[1]] || s[1], y: s[0] }; }
+  function fkPriv() {   // to each phone on its own: the song, or "you're the fake"
+    var g = G.fake; if (!g || !net) return;
+    g.order.forEach(function (k) { net.send('fake', { to: k, id: g.id, role: k === g.fake ? 'fake' : 'fan', song: k === g.fake ? null : fkCard(g.song) }); });
+  }
+  function fkNext() {   // the next player's turn to give a word; after the last one: talk, then vote
+    var g = G.fake; if (!g || G.phase !== 'fake') return;
+    if (g.st === 'secret' || g.st === 'words') {
+      g.st = 'words'; g.turn++;
+      while (g.turn < g.order.length && (!players[g.order[g.turn]] || players[g.order[g.turn]].off)) g.turn++;
+      if (g.turn < g.order.length) { g.turnEnds = Date.now() + FK_TURN; push(); fkShow(); Music.blip(); clearTimeout(fkTimer); fkTimer = setTimeout(function () { if (G.fake === g && g.st === 'words') { if (g.words[g.order[g.turn]] == null) g.words[g.order[g.turn]] = ''; fkNext(); } }, FK_TURN); return; }
+      g.st = 'talk'; g.ends = Date.now() + FK_TALK; push(); fkShow(); Music.douze();
+      clearTimeout(fkTimer); fkTimer = setTimeout(fkNext, FK_TALK); return;
+    }
+    if (g.st === 'talk') { g.st = 'vote'; g.ends = Date.now() + FK_VOTE; push(); fkShow(); Music.ding(); clearTimeout(fkTimer); fkTimer = setTimeout(fkReveal, FK_VOTE); }
+  }
+  function fkMsg(m) {
+    var g = G.fake; if (!g || G.phase !== 'fake' || !m || m.id !== g.id || !m.pid || g.order.indexOf(m.pid) < 0) return;
+    if (m.ask) { fkPriv(); return; }   // (a phone asks for its card again)
+    if (m.word != null && g.st === 'words' && g.order[g.turn] === m.pid && g.words[m.pid] == null) {
+      g.words[m.pid] = String(m.word).replace(/\s+/g, ' ').trim().slice(0, 24); g.lastWord = m.pid; g.lastAt = Date.now(); Music.plop(g.turn + 2); push(); fkShow();
+      clearTimeout(fkTimer); fkTimer = setTimeout(fkNext, 1600); return;
+    }
+    if (m.vote && g.st === 'vote' && m.vote !== m.pid && g.order.indexOf(m.vote) >= 0) {
+      g.votes[m.pid] = m.vote; Music.plop(Object.keys(g.votes).length); push(); fkShow();
+      if (g.order.every(function (k) { return g.votes[k] || !players[k] || players[k].off; })) { clearTimeout(fkTimer); fkTimer = setTimeout(fkReveal, 1200); }
+      return;
+    }
+    if (m.guess && g.st === 'guess' && m.pid === g.fake && !g.guess && g.opts.indexOf(m.guess) >= 0) { g.guess = m.guess; clearTimeout(fkTimer); fkTimer = setTimeout(fkEnd, 600); }
+  }
+  function fkBots() {   // the bots give a word when it's their turn, and vote
+    var g = G.fake; if (!g) return;
+    var b = g.order[g.turn];
+    if (g.st === 'words' && b && players[b] && players[b].bot && g.words[b] == null && !g.botAt) {
+      g.botAt = Date.now() + 2000 + Math.random() * 3000;
+    }
+    if (g.st === 'words' && g.botAt && Date.now() >= g.botAt) {
+      g.botAt = 0; var s = g.song, c = countries[s[1]] || '', w = b === g.fake ? pick(['glitter', 'stage', 'love', 'catchy', 'emotional', 'wind machine', 'sparkly', 'big voice', 'dancing'])
+        : pick([c, Math.floor(s[0] / 10) * 10 + 's', s[5] === 2 ? 'winner' : 'final', 'ballad', 'party', 'glitter', String(s[2]).split(' ')[0]]);
+      fkMsg({ pid: b, id: g.id, word: w });
+    }
+    if (g.st === 'vote') g.order.forEach(function (k) {
+      var p = players[k]; if (!p || !p.bot || g.votes[k] || Math.random() > 0.15) return;
+      var opts = g.order.filter(function (x) { return x !== k; }), v = k !== g.fake && Math.random() < 0.35 ? g.fake : pick(opts);
+      fkMsg({ pid: k, id: g.id, vote: v });
+    });
+    if (g.st === 'guess' && players[g.fake] && players[g.fake].bot && !g.guess && Date.now() > g.ends - FK_GUESS + 4000) fkMsg({ pid: g.fake, id: g.id, guess: Math.random() < 0.4 ? g.song[4] : pick(g.opts) });
+  }
+  function fkReveal() {   // who got the most votes? A tie, or nobody: the fake slips away
+    var g = G.fake; if (!g || g.st !== 'vote') return;
+    clearTimeout(fkTimer); clearInterval(fkPrivT);
+    var tally = {}; Object.keys(g.votes).forEach(function (k) { tally[g.votes[k]] = (tally[g.votes[k]] || 0) + 1; });
+    var top = Math.max.apply(null, [0].concat(Object.keys(tally).map(function (k) { return tally[k]; }))), most = Object.keys(tally).filter(function (k) { return tally[k] === top; });
+    g.tally = tally; g.accused = most.length === 1 ? most[0] : ''; g.st = 'reveal'; g.shown = false; push(); fkShow(); Music.dread(true);
+    var at = function (ms, f) { setTimeout(function () { if (G.fake === g) f(); }, ms); };
+    at(3500, function () {   // the truth
+      Music.dread(false); g.shown = true; g.caught = !!g.accused && g.accused === g.fake; push(); fkShow(); Music.douze();
+      if (g.caught) at(3500, function () { g.st = 'guess'; g.ends = Date.now() + FK_GUESS; push(); fkShow(); fkTimer = setTimeout(fkEnd, FK_GUESS); });
+      else at(4500, fkEnd);
+    });
+  }
+  function fkEnd() {
+    var g = G.fake; if (!g || g.st === 'end') return;
+    clearTimeout(fkTimer); g.st = 'end';
+    var add = function (k, n) { var p = players[k]; if (!p || !n) return; p.score += n; p.pts = (p.pts || 0) + n; p.got = true; g.res[k] = (g.res[k] || 0) + n; };
+    g.right = g.caught && g.guess === g.song[4];
+    if (!g.caught) add(g.fake, 12);   // the fake got away
+    else if (g.right) add(g.fake, 8);   // caught, but knew the song after all
+    else g.order.forEach(function (k) { if (k !== g.fake) add(k, g.votes[k] === g.fake ? 12 : 6); });   // caught and lost: the real fans win
+    var best = Math.max.apply(null, [0].concat(Object.keys(g.res).map(function (k) { return g.res[k]; })));
+    g.win = Object.keys(g.res).filter(function (k) { return g.res[k] === best && best > 0; });
+    push(); fkShow(); if (g.caught && !g.right) Music.douze(); else Music.scream();
+    fkTimer = setTimeout(function () { if (G.fake !== g) return; var ov = $('fkov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); } setTimeout(function () { if (G.fake !== g) return; G.fake = null; startRound(); }, 900); }, 9000);
+  }
+  function fkSnap() {   // the shared state: no fake, no song until the reveal
+    var g = G.fake, open = g.st === 'reveal' && g.shown || g.st === 'guess' || g.st === 'end', voted = {};
+    Object.keys(g.votes).forEach(function (k) { voted[k] = 1; });
+    return { id: g.id, st: g.st, order: g.order, words: g.words, turn: g.turn, turnLeft: g.st === 'words' ? Math.max(0, g.turnEnds - Date.now()) : 0, left: g.st === 'talk' || g.st === 'vote' || g.st === 'guess' ? Math.max(0, g.ends - Date.now()) : 0,
+      voted: voted, votes: g.st === 'reveal' || g.st === 'guess' || g.st === 'end' ? g.votes : null, accused: g.st === 'vote' ? '' : g.accused, fake: open ? g.fake : '', caught: open ? g.caught : null,
+      song: open ? fkCard(g.song) : null, songId: g.st === 'end' ? g.song[4] : '', opts: g.st === 'guess' || g.st === 'end' ? g.opts.map(function (id) { var s = songs.filter(function (x) { return x[4] === id; })[0]; return { id: id, t: s ? s[3] : id, a: s ? s[2] : '' }; }) : null,
+      guess: g.st === 'end' ? g.guess : '', right: g.st === 'end' ? !!g.right : null, res: g.st === 'end' ? g.res : null, win: g.st === 'end' ? g.win : null };
+  }
+  // The big screen: a row of podiums with everyone's word, the turn, the votes, the reveal.
+  function fkShow() {
+    var g = G.fake; if (!g) return;
+    var ov = $('fkov');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov enter';
+      ov.innerHTML = '<div class="fkbg"></div><div class="fksign">🤫 The Fake Fan</div><div class="fkmid">' + FK_ART + '<div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div>';
+      document.body.appendChild(ov); whooshes([0, 350]);
+      setTimeout(function () { ov.classList.remove('enter'); }, 1600);
+    }
+    ov.setAttribute('data-st', g.st);
+    var nm = function (k) { return players[k] ? esc(players[k].name) : ''; }, cur = g.st === 'words' ? g.order[g.turn] : '';
+    var msg = g.st === 'secret' ? 'Check your phone! Everyone sees the same song… except one of you. 🤫'
+      : g.st === 'words' ? '✍️ <b>' + nm(cur) + '</b>, give one word about the song!'
+      : g.st === 'talk' ? '🗣️ Talk it over: who is the fake fan?'
+      : g.st === 'vote' ? '🗳️ Vote on your phone: who is the fake? (' + Object.keys(g.votes).length + ' / ' + g.order.length + ')'
+      : g.st === 'reveal' && !g.shown ? (g.accused ? 'The room points at… <b>' + nm(g.accused) + '</b>! 😱' : 'A tie! Nobody gets caught…')
+      : g.st === 'reveal' ? (g.caught ? '🎯 Caught! <b>' + nm(g.fake) + '</b> was the fake fan!' : '🤫 Wrong! The fake fan was <b>' + nm(g.fake) + '</b>!')
+      : g.st === 'guess' ? '🎵 Last chance, <b>' + nm(g.fake) + '</b>: which song was it?'
+      : !g.caught ? '🤫 <b>' + nm(g.fake) + '</b> got away with it! +12' : g.right ? '😎 Caught, but <b>' + nm(g.fake) + '</b> knew the song! +8' : '🎉 The real fans win! (+12 for spotting the fake, +6 for the rest)';
+    var me = ov.querySelector('.fkmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
+    var open = (g.st === 'reveal' && g.shown) || g.st === 'guess' || g.st === 'end';
+    var sh = open ? '<b>' + esc(g.song[3]) + '</b><span>' + esc(g.song[2]) + ' · ' + esc(countries[g.song[1]] || '') + ' ' + g.song[0] + '</span>' : '';
+    var se = ov.querySelector('.fksong'); if (se.getAttribute('data-h') !== sh) { se.setAttribute('data-h', sh); se.innerHTML = sh; se.classList.toggle('on', !!sh); }
+    var left = g.st === 'words' ? g.turnEnds - Date.now() : (g.st === 'talk' || g.st === 'vote' || g.st === 'guess') ? g.ends - Date.now() : 0, sec = left > 0 ? Math.ceil(left / 1000) : '';
+    var ck = ov.querySelector('.fkclock'); if (ck.textContent !== String(sec)) ck.textContent = sec; ck.classList.toggle('hot', sec !== '' && sec <= 5);
+    var tally = g.tally || {};
+    var h = g.order.map(function (k, i) {
+      var p = players[k]; if (!p) return '';
+      var w = g.words[k], cls = 'fkpod' + (k === cur ? ' now' : '') + (open && k === g.fake ? ' fake' : '') + (g.st !== 'vote' && g.accused === k ? ' accused' : '') + (g.st === 'vote' && g.votes[k] ? ' voted' : '') + (g.st === 'end' && g.win.indexOf(k) >= 0 ? ' win' : '');
+      var bub = w != null ? '<div class="fkword' + (k === g.lastWord && Date.now() - g.lastAt < 1200 ? ' pop' : '') + '">' + (w ? esc(w) : '🤐') + '</div>' : (k === cur ? '<div class="fkword typing">…</div>' : '<div class="fkword empty"></div>');
+      var vt = (g.st === 'reveal' || g.st === 'guess' || g.st === 'end') && tally[k] ? '<i class="fkvotes">' + tally[k] + ' 🗳️</i>' : '';
+      return '<div class="' + cls + '" data-p="' + esc(k) + '" style="--i:' + i + '">' + bub + '<span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>' + vt + (open && k === g.fake ? '<b class="fktag">🤫 FAKE</b>' : '') + (g.st === 'end' && g.res[k] ? '<b class="fkpts">+' + g.res[k] + '</b>' : '') + '</div>';
+    }).join('');
+    var row = ov.querySelector('.fkrow'); if (row.getAttribute('data-h') !== h) { row.setAttribute('data-h', h); row.innerHTML = h; }
+  }
+  net.on('fake', fkMsg);
   // ---------- We Will Rule the World ----------
   // A disco floor of tiles, with the singer on an unclaimable stage in the middle. Everyone moves one tile per second
   // (hold a direction on the phone's D-pad); every tile you step on becomes your colour. Two players moving into the
@@ -7358,7 +7512,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
-    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
+    list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.fake = null; clearTimeout(fkTimer); clearInterval(fkTick); clearInterval(fkPrivT); G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS;   // Grand tour: three questions and a minigame, until every minigame has been played
     // Trivia between the party games: three questions a block; on a Grand Tour the number set is the number of
     // questions in each round between the party games (and in the last round before the end).
@@ -7583,7 +7737,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 5, organ: 4.5 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, fake: 3 + 0.4 * n, note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 5, organ: 4.5 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
