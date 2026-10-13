@@ -5244,12 +5244,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var bi = g.st === 'play' ? zgBreak(t) : -1, bk = ov.querySelector('.zgbrk');   // the break: "Break time" with a bar that fills up
     if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><strong></strong><i><em></em></i>'; ov.appendChild(bk); }
     bk.classList.toggle('on', bi >= 0); var wn = bk.querySelector('strong'), wt = bi === ZG_BRK.length - 1 ? '⚠️ Warning: in the last stage you only have 1 second to get back in the zone!' : ''; if (wn.textContent !== wt) wn.textContent = wt; if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
-    ov.style.setProperty('--sw', (px * [9, 15, 26][g.st === 'play' ? zgStage((Date.now() - g.t0) / 1000) : 0]).toFixed(2) + 'deg');   // (the sway grows: bigger in stage 2, much bigger in stage 3)
+    ov.style.setProperty('--sw', (px * [14, 30, 52][g.st === 'play' ? zgStage((Date.now() - g.t0) / 1000) : 0]).toFixed(2) + 'deg');   // (the swing reaches further each stage: wider in stage 2, much wider in stage 3)
     var sing = g.st === 'play' && t >= 9 || g.st === 'end'; if (ov.classList.contains('sing') !== sing) ov.classList.toggle('sing', sing);   // (she starts singing at 0:09 in the song)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
       var k = el.getAttribute('data-p'); if (g.out[k] != null) return;
       var want = (g.sgn[k] || 1) * [0, 14, 30, 30][g.lvl[k] || 0]; el._lean = (el._lean || 0) + (want - (el._lean || 0)) * .12;
-      el.querySelector('.zgfig').style.rotate = (px * 40 + el._lean).toFixed(2) + 'deg';
+      el.querySelector('.zgfig').style.rotate = (px * [40, 55, 70][g.st === 'play' ? zgStage(t) : 0] + el._lean).toFixed(2) + 'deg';
     });
   }
   function zgShow() {
