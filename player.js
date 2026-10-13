@@ -685,10 +685,10 @@
     if (S.fell || z.st !== 'play') return;
     var now = Date.now(), t = (now - S.start) / 1000, dt = Math.min(0.1, (now - (S.last || now)) / 1000); S.last = now;
     if (t >= ZG_LEN) return;
-    var st = zgStage(t), w = ZG_W[st], tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), inside = brk >= 0 || Math.abs(err) <= w;   // (a break: relax, nothing counts)
+    var st = zgStage(t), w = zgW(t), tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), inside = brk >= 0 || Math.abs(err) <= w;   // (a break: relax, nothing counts)
     if (t > 1.5 && brk < 0) { S.tot += dt; if (inside) S.inT += dt; }
     S.outFor = inside ? 0 : S.outFor + dt;
-    var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 3 seconds to get back in stage 1, 2 in stage 2, just 1 in stage 3)
+    var fall = ZG_FALL, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
     if (t > 3 && S.outFor >= fall) {   // you fall
       S.fell = true; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc() }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
@@ -731,7 +731,7 @@
       tr.addEventListener('pointerdown', function (e) { try { tr.setPointerCapture(e.pointerId); } catch (x) {} mv(e); });
       tr.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') mv(e); });
       tr.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-      S.box.zone.style.left = ((zgPath(S.seed, 0) - ZG_W[0] + 1) / 2 * 100) + '%'; S.box.zone.style.width = (ZG_W[0] * 100) + '%'; S.box.me.style.left = '50%';
+      S.box.zone.style.left = ((zgPath(S.seed, 0) - zgW(0) + 1) / 2 * 100) + '%'; S.box.zone.style.width = (zgW(0) * 100) + '%'; S.box.me.style.left = '50%';
     }
     if (z.st === 'play' && !S.raf) { S.last = Date.now(); S.raf = requestAnimationFrame(zgFrame); }
   }

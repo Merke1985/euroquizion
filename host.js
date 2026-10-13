@@ -4872,7 +4872,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.zg; if (!g || G.phase !== 'zg' || g.st !== 'play') { clearInterval(zgLoop); return; }
     var now = Date.now(), t = (now - g.t0) / 1000, st = zgStage(t);
     g.t = t;
-    if (st !== g.stage) { g.stage = st; push(); Music.douze(); var ov = $('zgov'); if (ov) { ov.classList.remove('stagefx'); void ov.offsetWidth; ov.classList.add('stagefx'); zgAnnounce(st === 1 ? 'Now you only have <b>2 seconds</b> to correct! ⚡' : 'Maximum sway! Now only <b>1 second</b> to correct! 🌪️'); } }
+    if (st !== g.stage) { g.stage = st; push(); Music.douze(); var ov = $('zgov'); if (ov) { ov.classList.remove('stagefx'); void ov.offsetWidth; ov.classList.add('stagefx'); zgAnnounce(st === 1 ? 'Faster! And the zone gets <b>smaller</b>… ⚡' : '<b>Maximum sway!</b> Hold on tight! 🌪️'); } }
     var brk = zgBreak(t); if (brk !== (g.brk == null ? -1 : g.brk)) { g.brk = brk; if (brk >= 0) { Music.ding(); zgAnnounce(''); } }
     g.order.forEach(function (k) {
       var p = players[k]; if (g.out[k] != null || !p || !p.bot) return;

@@ -914,10 +914,12 @@ function edSym(id, x, y, sz) { var s = ED_SYMS2[id]; return '<g transform="trans
 function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')">' + ED_SOCKS[id] + '</g>'; }
 
 // Zero Gravity: the path the poles follow, the same on every device (from one seed), timed to the song. Three stages:
-// 0:00–1:07 slow sway (3 s to get back to the zone), a break 1:07–1:12, 1:12–2:05 faster (2 s), a break 2:05–2:10, then
-// 2:10 to the end the maximum sway (1 s). In a break the poles come back to the middle and nobody can fall.
+// 0:00–1:02 a slow steady swing, a 10-second break 1:02–1:12, 1:12–2:05 a faster steady swing, a 10-second break
+// 2:05–2:15, then the maximum sway to the end. Off the zone: 2 seconds to get back, always; the zone slowly gets smaller.
+// In a break the poles come back to the middle and nobody can fall.
 // x goes from -1 (far left) to 1 (far right).
-var ZG_LEN = 175, ZG_ST = [72, 130], ZG_BRK = [[67, 72], [125, 130]], ZG_W = [0.2, 0.18, 0.16], ZG_FALL = [3, 2, 1], zgPar = {};
+var ZG_LEN = 175, ZG_ST = [72, 135], ZG_BRK = [[62, 72], [125, 135]], ZG_FALL = 2, zgPar = {};
+function zgW(t) { return 0.24 - 0.12 * Math.max(0, Math.min(1, t / ZG_LEN)); }   // (the zone: half its size by the end)
 function zgNext(t) { var n = ZG_LEN; ZG_BRK.forEach(function (b) { if (b[0] > t && b[0] < n) n = b[0]; if (t >= b[0] && t < b[1] && b[1] < n) n = b[1]; }); return n; }   // (the end of the current stage, or break)
 function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
 function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

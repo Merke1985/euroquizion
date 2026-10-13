@@ -4170,3 +4170,6 @@ body.hasdock main{padding-bottom:84px}
 .zgov .zgsing .zgmouth,.zgov[data-st="play"] .zgsing .zgmouth{transform-box:fill-box;transform-origin:50% 50%;animation:none;transform:scale(.9,.32)}
 .zgov.sing .zgsing .zgmouth,.zgov.sing[data-st="play"] .zgsing .zgmouth{animation:zgmouth .42s ease-in-out infinite alternate}
 .zgbrk,.zgann{top:50vh}
+
+/* Zero Gravity: a gentler singing mouth */
+@keyframes zgmouth{from{transform:scale(.85,.4)}to{transform:scale(1,.85)}}
