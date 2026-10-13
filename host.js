@@ -3511,12 +3511,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<rect x="102" y="114" width="16" height="26" fill="#dba98a"/>' +
     '<path d="M84 132 Q110 150 136 132 L142 152 Q122 172 116 238 Q110 244 102 238 Q98 172 78 152 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/>' +
     '<path d="M86 134 Q110 156 134 134 Q130 146 110 150 Q90 146 86 134 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/>' +
-    '<path d="M72 88 Q64 44 110 36 Q156 44 148 88 Q160 112 150 136 Q146 146 136 142 Q144 118 136 96 L84 96 Q76 118 84 142 Q74 146 70 136 Q60 112 72 88 Z" fill="url(#kphair)"/>' +
-    '<g fill="url(#kphair)"><circle cx="76" cy="134" r="10"/><circle cx="144" cy="134" r="10"/><circle cx="70" cy="114" r="9"/><circle cx="150" cy="114" r="9"/></g>' +
+    '<path d="M64 92 Q54 58 82 40 Q110 24 140 40 Q166 58 156 92 Q168 112 154 128 Q164 146 146 154 Q132 158 130 144 Q140 124 134 104 L86 104 Q80 124 90 144 Q88 158 74 154 Q56 146 66 128 Q52 112 64 92 Z" fill="url(#kphair)"/>' +
+    '<path d="M70 96 Q62 112 72 126 Q64 138 74 148 M150 96 Q158 112 148 126 Q156 138 146 148" stroke="#b0603a" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".8"/>' +
     '<ellipse cx="110" cy="92" rx="26" ry="31" fill="url(#kpskin)"/>' +
-    '<path d="M82 82 Q86 52 116 52 Q140 56 140 84 Q132 66 116 64 Q102 66 96 74 Q90 70 82 82 Z" fill="url(#kphair)"/>' +
-    '<path d="M100 60 Q112 56 124 62" stroke="#a65a30" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+    '<path d="M82 84 Q78 50 112 46 Q142 48 140 82 Q134 64 118 62 Q100 60 92 72 Q86 74 82 84 Z" fill="url(#kphair)"/>' +
+    '<path d="M92 64 Q108 54 128 58 M118 52 Q134 56 138 70" stroke="#b0603a" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
     '<path d="M90 86 Q96 83 102 86 M118 86 Q124 83 130 86" stroke="#5e2a14" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="96" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/><ellipse cx="124" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/>' +
     '<circle cx="96" cy="94" r="2.4" fill="#2a1a12"/><circle cx="124" cy="94" r="2.4" fill="#2a1a12"/>' +
     '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
     '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
@@ -4184,7 +4185,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (rc) {   // in a room: on the outside edge of it (above the top rooms, below the bottom ones), at their own spot
         var step = Math.min(W * 0.055, rc.width / Math.max(1, N));
         x = rc.left - oc.left + rc.width / 2 + (slot - (N - 1) / 2) * step;
-        y = (r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.088 : rc.bottom - oc.top + Hh * 0.006;
+        y = (r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.07 + Hh * 0.004 : rc.bottom - oc.top + Hh * 0.004;   // (inside the room's own tab)
       } else {   // in the lobby: two columns, at their own spot
         var rowH = Math.min(Hh * 0.105, (lb.height * 0.62) / Math.max(1, Math.ceil(N / 2)));
         x = lb.left - oc.left + lb.width * (slot % 2 === 0 ? 0.3 : 0.7); y = lb.top - oc.top + lb.height * 0.1 + Math.floor(slot / 2) * rowH;
@@ -4198,6 +4199,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       } else if (!el.classList.contains('out')) { el.style.left = L; el.style.top = T; }
     });
     [].forEach.call(toks.querySelectorAll('.edtok'), function (el) { if (ks.indexOf(el.getAttribute('data-p')) < 0) el.remove(); });
+    // every room has a tab on its outer edge, in its own colour, where the avatars of the searchers sit
+    ['green', 'club', 'back', 'boud'].forEach(function (r) {
+      var cell = ov.querySelector('.edr2.' + r); if (!cell) return;
+      var tab = toks.querySelector('.edtab.' + r); if (!tab) { tab = document.createElement('div'); tab.className = 'edtab ' + r; toks.insertBefore(tab, toks.firstChild); }
+      var rc = cell.getBoundingClientRect(), top = r === 'green' || r === 'club', th = Hh * 0.07;
+      tab.style.left = (100 * (rc.left - oc.left) / W).toFixed(2) + '%'; tab.style.width = (100 * rc.width / W).toFixed(2) + '%'; tab.style.height = (100 * th / Hh).toFixed(2) + '%';
+      tab.style.top = (100 * ((top ? rc.top - th : rc.bottom) - oc.top) / Hh).toFixed(2) + '%'; tab.classList.toggle('top', top);
+      tab.classList.toggle('busy', ks.some(function (k) { return (g.rooms[k].cur || '') === r; }));
+    });
   }
   function clueSnap() {
     var g = G.clue, acc = {};
