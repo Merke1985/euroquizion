@@ -1461,7 +1461,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
     fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts before the sound system breaks down (10 seconds to one minute). Closest prediction wins!' },
-    carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet, from one star up to a group of five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
+    carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet: a solo star first, then groups of two to five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Stay in the zone or you fall. The last ones standing win!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes and fix the cables. Three phases, each harder than the last. The best repairer wins!' },
@@ -4198,10 +4198,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
       lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
-        ['her', 'They pose for the photographers: first alone, then in bigger and bigger groups. Watch them closely!'],
+        ['her', 'They pose for the photographers: first alone, then in groups. Watch them closely!'],
         ['him', 'Hats, sunglasses, dresses, colours, shoes… remember everything you can! 👒🕶️👠'],
         ['her', 'After each act comes one question on your phone. You have 20 seconds to answer.'],
-        ['him', 'Five Eurovision acts, five questions: one star first, then two, and one more every time! Some acts even bring their country’s flag. 🚩'],
+        ['him', 'Five Eurovision acts, five questions: one solo star first, then groups of two to five! Some acts even bring their country’s flag. 🚩'],
         ['her', 'Most right answers wins. A tie? Then the fastest wins! 📸']] },
     bomb: { sign: '💣 The Unlucky Draw', theme: 'bomb',
       art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
@@ -4319,7 +4319,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b'], ['Pink', '#ff5fa8', '#c2347a'], ['Purple', '#8b4fe0', '#5a2aa8'], ['Orange', '#ff8a2a', '#c25a10'], ['Silver', '#c8ccd8', '#8a90a0'], ['Black', '#121218', '#050508']];
   var TC_SHOES = ['High heels', 'Boots', 'Flats'];
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
-  var TC_SIZES = [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]], TC_Q_MS = 20000, tcTimer = null, tcFadeT = null;
+  var TC_SIZES = [[1, 1], [2, 5], [2, 5], [2, 5], [2, 5]], TC_Q_MS = 20000, tcTimer = null, tcFadeT = null;
   var TC_ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'], TC_POSES = ['hips', 'wave', 'up', 'kneel', 'point', 'lean', 'kneel'];
   function tcGirl() {
     var m = Math.random() < .4 ? 1 : 0;
