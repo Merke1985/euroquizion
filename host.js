@@ -3778,6 +3778,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function clueMsg(m) {
     if (m && m.room) { edMsg(m); return; }
+    if (m && m.duo != null) {   // the answer to the question about the two stars: right is a bonus clue
+      var gq = G.clue, q = gq && gq.duoQ; if (!q || m.id !== gq.id || m.pid !== q.pid || q.st !== 'ask') return;
+      q.st = +m.duo === q.ans ? 'right' : 'wrong'; q.got = q.st === 'right' ? edClues(m.pid, 1) : [];
+      if (gq.last[m.pid]) gq.last[m.pid].b = q.got;
+      push(); return;
+    }
     var g = G.clue; if (!g || G.phase !== 'clueacc' || g.st !== 'acc' || !m || m.id !== g.id || !players[m.pid] || g.acc[m.pid]) return;
     var ok = ['who', 'where', 'what'].every(function (k) { return CLUE_SETS[k].some(function (c) { return c.id === m[k]; }); }); if (!ok) return;
     g.acc[m.pid] = { who: m.who, where: m.where, what: m.what }; Music.plop(Object.keys(g.acc).length); push();
@@ -3909,6 +3915,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     boud: { from: 344, at: [470, 530], y: 426, s: 1.05, screen: true }, back: { from: -70, at: [140, 200], y: 436, s: .95 }
   };
   function edDuoGuitar(col) { return '<g class="ddgt"><path d="M-30 -52 L22 -82" stroke="#5a3a1a" stroke-width="5" stroke-linecap="round"/><ellipse cx="-22" cy="-48" rx="16" ry="12" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2.4" transform="rotate(-30 -22 -48)"/><circle cx="-22" cy="-48" r="4" fill="' + ED_INK + '"/><rect x="18" y="-90" width="10" height="12" rx="3" fill="#3a2a1a" transform="rotate(-30 23 -84)"/></g>'; }
+  // Every game one of the two wears one striking thing (big earrings, gloves, a beret, a necklace, a belt) in a colour
+  // of the game's choosing: the first detective through all four rooms is asked about it for their bonus clue.
+  var ED_DUO_COL = [['gold', '#f2c12e'], ['silver', '#c9ced8'], ['pink', '#ff5fa8'], ['green', '#2fb35a'], ['blue', '#2f6ff0'], ['purple', '#8b4fe0'], ['orange', '#ff8a2a']];
+  var ED_DUO_ITEM = {
+    ear: { q: 'big earrings', d: function (c) { return '<g fill="none"><g stroke="' + ED_INK + '" stroke-width="6"><circle cx="-25" cy="-88" r="9"/><circle cx="25" cy="-88" r="9"/></g><g stroke="' + c + '" stroke-width="3.6"><circle cx="-25" cy="-88" r="9"/><circle cx="25" cy="-88" r="9"/></g></g>'; } },
+    glove: { q: 'gloves', d: function (c, o) { var r = o.armUp ? [28, -106] : [26, -38]; return '<circle cx="-26" cy="-38" r="6.8" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2"/><circle cx="' + r[0] + '" cy="' + r[1] + '" r="6.8" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2"/>'; } },
+    beret: { q: 'beret', d: function (c) { return '<ellipse cx="-3" cy="-126" rx="24" ry="9" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2.2" transform="rotate(-10 -3 -126)"/><circle cx="-3" cy="-134" r="3" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.6"/>'; } },
+    neck: { q: 'necklace', d: function (c) { return '<path d="M-13 -79 Q0 -62 13 -79" stroke="' + ED_INK + '" stroke-width="6" fill="none"/><path d="M-13 -79 Q0 -62 13 -79" stroke="' + c + '" stroke-width="3.6" fill="none"/><circle cx="0" cy="-64" r="6.5" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.8"/>'; } },
+    belt: { q: 'belt', d: function (c, o) { return o.sit ? '' : '<rect x="-17" y="-44" width="34" height="6" rx="2" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.6"/><rect x="-4" y="-45" width="8" height="8" rx="1.5" fill="#f2c12e" stroke="' + ED_INK + '" stroke-width="1.4"/>'; } }
+  };
+  function edDuoPick() { var items = Object.keys(ED_DUO_ITEM); return { item: pick(items), who: Math.random() < .5 ? 0 : 1, col: Math.floor(Math.random() * ED_DUO_COL.length) }; }
+  function edDuoQ(d) {   // the question about it: four colours, one right
+    var it = ED_DUO_ITEM[d.item], right = ED_DUO_COL[d.col][0], opts = shuffle([right].concat(shuffle(ED_DUO_COL.map(function (c) { return c[0]; }).filter(function (c) { return c !== right; })).slice(0, 3)));
+    return { text: 'The two stars walking through the building: what colour was the ' + it.q + ' the ' + (d.who ? 'blonde' : 'dark-haired') + ' one wore?', opts: opts, ans: opts.indexOf(right) };
+  }
   function edDuo(ov, g) {
     var D = ov._duo || (ov._duo = { on: false, spent: { green: 0, club: 0, boud: 0, back: 0 }, last: '', t: [] });
     var on = g.st === 'rooms';
@@ -3929,7 +3950,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }
       var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g'); wrap.setAttribute('class', 'edduo2 r-' + r);
       wrap.innerHTML = ED_DUO.map(function (o, k) {
-        var base = Object.assign({ s: P.s, walk: 1 }, o), st = edPerson(0, 0, base);
+        var dd = g.duo, base = Object.assign({ s: P.s, walk: 1 }, o, dd && dd.who === k ? { extra: function (oo) { return ED_DUO_ITEM[dd.item].d(ED_DUO_COL[dd.col][1], oo); } } : {}), st = edPerson(0, 0, base);
         var act = r === 'green' ? edPerson(-6, -4, Object.assign({}, base, { sit: 1, walk: 0 }))
           : r === 'club' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
           : r === 'boud' ? edPerson(0, 0, Object.assign({}, base, { glasses: 1, walk: 0, armUp: 1 }))
@@ -3973,6 +3994,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (o.glasses) h += '<g fill="#15101c" stroke="' + ED_INK + '" stroke-width="1.5"><rect x="-17" y="' + (hy - 3) + '" width="14" height="10" rx="4"/><rect x="3" y="' + (hy - 3) + '" width="14" height="10" rx="4"/></g><line x1="-3" y1="' + (hy + 1) + '" x2="3" y2="' + (hy + 1) + '" stroke="#15101c" stroke-width="2"/><rect x="-14" y="' + (hy - 1) + '" width="4" height="2" fill="#fff" opacity=".7"/>';
     else h += '<ellipse cx="-8" cy="' + (hy + 2) + '" rx="3.4" ry="4.4" fill="' + ED_INK + '"/><ellipse cx="8" cy="' + (hy + 2) + '" rx="3.4" ry="4.4" fill="' + ED_INK + '"/><circle cx="-7" cy="' + hy + '" r="1.3" fill="#fff"/><circle cx="9" cy="' + hy + '" r="1.3" fill="#fff"/>';
     h += '<ellipse cx="-14" cy="' + (hy + 9) + '" rx="4.5" ry="2.6" fill="#ff8aa8" opacity=".75"/><ellipse cx="14" cy="' + (hy + 9) + '" rx="4.5" ry="2.6" fill="#ff8aa8" opacity=".75"/><path d="M-4 ' + (hy + 11) + ' Q0 ' + (hy + 15) + ' 4 ' + (hy + 11) + '" stroke="' + ED_INK + '" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    if (o.extra) h += typeof o.extra === 'function' ? o.extra(o) : o.extra;   // (something extra on top: earrings, gloves, a hat…)
     return '<g transform="translate(' + x + ' ' + y + ') scale(' + (o.flip ? -s : s) + ' ' + s + ')">' + h + '</g>';
   }
   function edLabel(txt, x, col) {   // a neon room sign, like the ones above the rooms
@@ -4125,7 +4147,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var ED_SVG = { green: edGreenSvg, club: edClubSvg, back: edBackSvg, boud: edBoudSvg };
   function edStart() {
     var g = G.clue; if (!g) return;
-    g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = '';
+    g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = ''; g.duo = edDuoPick(); g.duoQ = null;
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } edShow();
@@ -4191,7 +4213,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     r.done.push(m.room); r.cur = ''; r.score[m.room] = n;
     var got = edClues(m.pid, n), bonus = [];
     if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: the fastest detective gets an extra clue
-      g.fin.push(m.pid); if (g.fin.length === 1) bonus = edClues(m.pid, 1);
+      g.fin.push(m.pid); if (g.fin.length === 1) { if (g.duo) { g.duoQ = Object.assign({ pid: m.pid, st: 'ask', ends: Date.now() + 20000 }, edDuoQ(g.duo)); var dq = g.duoQ; setTimeout(function () { if (G.clue === g && dq.st === 'ask') { dq.st = 'wrong'; push(); } }, 20500); if (players[m.pid] && players[m.pid].bot) setTimeout(function () { clueMsg({ pid: m.pid, id: g.id, duo: Math.random() < .6 ? dq.ans : Math.floor(Math.random() * 4) }); }, 4000 + Math.random() * 6000); } else bonus = edClues(m.pid, 1); }   // (the fastest detective first answers a question about the two stars)
     }
     g.last[m.pid] = { room: m.room, n: n, c: got, b: bonus, k: g.id + ':' + m.room };
     push();   // (quietly: the big screen gives nothing away about who is where)
@@ -4264,7 +4286,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueSnap() {
     var g = G.clue, acc = {};
     Object.keys(g.acc).forEach(function (k) { acc[k] = 1; });
-    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' || g.st === 'rooms' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step, rooms: g.st === 'rooms' ? g.rooms : null, scene: g.st === 'rooms' ? g.scene : null, last: g.st === 'rooms' ? g.last : null, fin: g.fin || [],
+    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' || g.st === 'rooms' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step, rooms: g.st === 'rooms' ? g.rooms : null, scene: g.st === 'rooms' ? g.scene : null, last: g.st === 'rooms' ? g.last : null, fin: g.fin || [], duoQ: g.st === 'rooms' && g.duoQ ? { pid: g.duoQ.pid, st: g.duoQ.st, text: g.duoQ.text, opts: g.duoQ.opts, ans: g.duoQ.st === 'ask' ? -1 : g.duoQ.ans, got: g.duoQ.got || [], left: Math.max(0, g.duoQ.ends - Date.now()) } : null,
       sol: g.st === 'reveal' ? { where: g.step >= 1 ? g.sol.where : '', what: g.step >= 2 ? g.sol.what : '', who: g.step >= 3 ? g.sol.who : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
   }
   // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.

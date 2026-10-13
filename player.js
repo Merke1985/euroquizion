@@ -922,6 +922,23 @@
     if (edGame !== c.id) { edGame = c.id; edCur = ''; edSeen = ''; edNotes = false; edClear(); }
     if (!me || c.st === 'brief') { box.classList.add('hidden'); $('clueui').classList.add('hidden'); $('waittitle').textContent = c.st === 'brief' ? '🔍 Listen closely…' : '🔍 Searching the building…'; $('waitsub').textContent = c.st === 'brief' ? 'The hosts explain the four rooms. Get ready!' : 'Watch the big screen!'; return; }
     if (edCur || edNotes) return;   // (a room task is running, or the notes are open: they draw themselves)
+    var dq = c.duoQ;
+    if (dq && dq.pid === pid && dq.st === 'ask') {   // first through all four rooms: a question about the two stars, for a bonus clue
+      $('clueui').classList.add('hidden'); box.classList.remove('hidden');
+      $('waittitle').textContent = '🏃 First through all four rooms!'; $('waitsub').textContent = 'Answer this for a bonus clue (' + Math.ceil(dq.left / 1000) + 's)';
+      var kq = 'duo|' + dq.text; if (box.getAttribute('data-k') === kq) return; box.setAttribute('data-k', kq);
+      box.innerHTML = '<div class="edduoq"><p>' + esc(dq.text) + '</p>' + dq.opts.map(function (o, i) { return '<button type="button" class="opt eddq" data-i="' + i + '">' + esc(o.charAt(0).toUpperCase() + o.slice(1)) + '</button>'; }).join('') + '</div>';
+      [].forEach.call(box.querySelectorAll('.eddq'), function (b) { b.onclick = function () { [].forEach.call(box.querySelectorAll('.eddq'), function (x) { x.disabled = true; }); b.classList.add('picked'); if (net) net.send('clue', { pid: pid, id: c.id, duo: +b.getAttribute('data-i') }); }; });
+      return;
+    }
+    if (dq && dq.pid === pid && dq.st !== 'ask' && edSeen !== 'duo' + dq.st) {   // the answer
+      box.classList.remove('hidden'); $('clueui').classList.add('hidden'); box.removeAttribute('data-k');
+      $('waittitle').textContent = dq.st === 'right' ? '🎯 Right! A bonus clue' : '❌ Not quite…'; $('waitsub').textContent = dq.st === 'right' ? '' : 'It was ' + (dq.opts[dq.ans] || '?') + '. No bonus clue this time.';
+      if (dq.st === 'right' && dq.got.length) clueNotes({ clue: { id: c.id, n: 'duo', known: c.known, fresh: (function () { var o = {}; o[pid] = dq.got; return o; })() } });
+      box.innerHTML = '<button type="button" class="btn big ednext2">OK</button>';
+      box.querySelector('.ednext2').onclick = function () { edSeen = 'duo' + dq.st; box.innerHTML = ''; edView(state); };
+      return;
+    }
     var last = (c.last || {})[pid];
     if (last && edSeen !== last.k) {   // just finished a room: the new clues
       box.classList.add('hidden');
