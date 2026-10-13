@@ -3965,12 +3965,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ];
     W.forEach(function (w, k) { h += '<g class="edwk2" style="animation-delay:' + (2 + k * 10) + 's"><g class="edbob">' + w + '</g></g>'; });
     // the folding screen (left) and the clothes rack (right), in front of them
-    h += '<g' + K + '>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<path d="M' + (236 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (272 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (272 + i * 36) + ' 436 L' + (236 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<circle cx="' + (254 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
+    h += '<g' + K + '>' + [0, 1, 2, 3].map(function (i) { return '<path d="M' + (236 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (272 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (272 + i * 36) + ' 436 L' + (236 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3].map(function (i) { return '<circle cx="' + (254 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
     h += '<rect x="556" y="96" width="232" height="8" rx="4" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="560" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="778" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/>';
     s.rack.forEach(function (d, i) {
       var x = 590 + i * 44, col = ED_COL[d.c];
-      h += '<path d="M' + x + ' 108 L' + x + ' 100" stroke="#999" stroke-width="2"/><path d="M' + (x - 10) + ' 108 L' + (x + 10) + ' 108 L' + (x + 14) + ' 140 L' + (x + 24) + ' 330 L' + (x - 24) + ' 330 L' + (x - 14) + ' 140 Z" fill="' + col + '"' + K + ' stroke-width="2.4"/>' +
-        '<rect x="' + (x - 21) + '" y="336" width="42" height="22" rx="6" fill="#fff"' + K + ' stroke-width="1.8"/><text x="' + x + '" y="352" text-anchor="middle" font-size="14" font-weight="900" fill="' + ED_INK + '">€' + d.p + '</text>';
+      h += '<path d="M' + x + ' 108 L' + x + ' 100" stroke="#999" stroke-width="2"/><path d="M' + (x - 10) + ' 108 L' + (x + 10) + ' 108 L' + (x + 14) + ' 140 L' + (x + 26) + ' 382 L' + (x - 26) + ' 382 L' + (x - 14) + ' 140 Z" fill="' + col + '"' + K + ' stroke-width="2.4"/>' +
+        '<rect x="' + (x - 21) + '" y="388" width="42" height="22" rx="6" fill="#fff"' + K + ' stroke-width="1.8"/><text x="' + x + '" y="404" text-anchor="middle" font-size="14" font-weight="900" fill="' + ED_INK + '">€' + d.p + '</text>';
     });
     return h + edPlant(112, 448, 2.5) + edLabel('WOODRUFF’S BOUDOIR', 800 - (18 * 17 + 46) - 14, '#ff6fd8');
   }
