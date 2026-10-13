@@ -3773,7 +3773,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var code = ''; for (var i = 0; i < 4; i++) code += edRnd(i ? 0 : 1, 9);
     var L = 'ABCDEFGHJKLMNPRSTUVWXYZ', cc = function () { return L[edRnd(0, L.length - 1)] + L[edRnd(0, L.length - 1)] + '-' + edRnd(10, 99); };
     var prices = shuffle([49, 79, 99, 129, 149, 179, 199, 249, 299, 349]).slice(0, 5);
-    var cans = []; for (i = edRnd(3, 9); i > 0; i--) cans.push(pick(['red', 'blue', 'yellow', 'green']));
+    var cans = []; for (i = edRnd(3, 7); i > 0; i--) cans.push(pick(['red', 'blue', 'yellow', 'green']));
     var seats = shuffle(['green', 'pink', 'yellow', 'red', 'blue']), hairs = shuffle(['blonde', 'pink', 'black', 'red', 'blue', 'brown']);
     var sitters = shuffle([0, 1, 2, 3, 4]).slice(0, edRnd(2, 3)).map(function (k, i) { return { seat: k, hair: hairs[i], top: pick(['purple', 'orange', 'teal', 'white', 'black']) }; });
     var socks = shuffle(Object.keys(ED_SOCKS)), cables = shuffle(['red', 'blue', 'green', 'yellow']), plugged = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 4);
@@ -3840,9 +3840,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     h += '<rect x="574" y="60" width="130" height="146" rx="10" fill="#f2c14e"' + K + '/><rect x="586" y="72" width="106" height="122" rx="6" fill="#cdeefa"' + K + ' stroke-width="2"/><path d="M596 84 L624 76 L606 120 Z" fill="#fff" opacity=".6"/>';
     for (var b = 0; b < 4; b++) h += '<circle cx="' + (590 + b * 33) + '" cy="64" r="6" fill="#fff6c2"' + K + ' stroke-width="1.5"/><circle cx="' + (590 + b * 33) + '" cy="202" r="6" fill="#fff6c2"' + K + ' stroke-width="1.5"/>';
     h += '<g transform="rotate(-6 640 146)"><rect x="600" y="112" width="80" height="66" rx="3" fill="#ffe86a"' + K + ' stroke-width="2"/><text x="640" y="132" text-anchor="middle" font-size="11" font-weight="800" fill="#7a5c00">SECRET CODE</text><text x="640" y="166" text-anchor="middle" font-size="28" font-weight="900" fill="' + ED_INK + '" font-family="Comic Sans MS, Chalkboard, cursive">' + s.code + '</text></g>';
-    // the fridge (glass door, cans on shelves)
-    h += '<ellipse cx="93" cy="432" rx="74" ry="8" fill="rgba(0,0,0,.25)"/><rect x="26" y="130" width="134" height="300" rx="16" fill="#eef1f6"' + K + '/><rect x="40" y="144" width="106" height="262" rx="8" fill="#d6f3ff"' + K + ' stroke-width="2"/><line x1="40" y1="236" x2="146" y2="236" stroke="#8ab" stroke-width="4"/><line x1="40" y1="330" x2="146" y2="330" stroke="#8ab" stroke-width="4"/><rect x="146" y="220" width="8" height="54" rx="4" fill="#b8bfcc"' + K + ' stroke-width="1.5"/><rect x="36" y="424" width="16" height="10" rx="3" fill="#9aa0ad"/><rect x="134" y="424" width="16" height="10" rx="3" fill="#9aa0ad"/>';
-    s.cans.forEach(function (c, i) { var row = i < 4 ? 0 : i < 8 ? 1 : 2, k = i % 4, x = 48 + k * 24, y = [204, 298, 372][row]; h += '<rect x="' + x + '" y="' + y + '" width="19" height="30" rx="5" fill="' + ED_COL[c] + '" stroke="' + ED_INK + '" stroke-width="1.8"/><rect x="' + (x + 2) + '" y="' + (y + 1) + '" width="15" height="5" rx="2" fill="#dde"/>'; });
+    // a big American fridge (two doors, an ice dispenser), with the cans on top of it
+    h += '<ellipse cx="110" cy="434" rx="100" ry="9" fill="rgba(0,0,0,.25)"/><rect x="20" y="120" width="180" height="312" rx="14" fill="#dfe3ea"' + K + '/>' +
+      '<rect x="24" y="124" width="84" height="304" rx="10" fill="#eef1f6" stroke="' + ED_INK + '" stroke-width="2"/><rect x="112" y="124" width="84" height="304" rx="10" fill="#eef1f6" stroke="' + ED_INK + '" stroke-width="2"/>' +
+      '<rect x="96" y="196" width="7" height="140" rx="3.5" fill="#b8bfcc"' + K + ' stroke-width="1.5"/><rect x="117" y="196" width="7" height="140" rx="3.5" fill="#b8bfcc"' + K + ' stroke-width="1.5"/>' +
+      '<rect x="38" y="180" width="46" height="62" rx="8" fill="#3a4050"' + K + ' stroke-width="2"/><rect x="52" y="200" width="18" height="26" rx="4" fill="#1a1e28"/><circle cx="61" cy="190" r="3" fill="#3fd6ff"/>' +
+      '<rect x="30" y="424" width="16" height="10" rx="3" fill="#9aa0ad"/><rect x="174" y="424" width="16" height="10" rx="3" fill="#9aa0ad"/>' +
+      '<g fill="#ffd23f" stroke="' + ED_INK + '" stroke-width="1.5"><circle cx="150" cy="160" r="7"/></g><rect x="138" y="270" width="26" height="18" rx="3" fill="#ff8fc8" stroke="' + ED_INK + '" stroke-width="1.5" transform="rotate(-8 151 279)"/>';
+    s.cans.forEach(function (c, i) { var x = 26 + i * 24, y = 89; h += '<rect x="' + x + '" y="' + y + '" width="19" height="30" rx="5" fill="' + ED_COL[c] + '" stroke="' + ED_INK + '" stroke-width="1.8"/><rect x="' + (x + 2) + '" y="' + (y + 1) + '" width="15" height="5" rx="2" fill="#dde"/>'; });
+    // the inside of the fridge, seen when someone has the right door open (one per guest, timed with them)
+    s.sitters.forEach(function (p, k) {
+      h += '<g class="edfopen" style="animation-delay:' + (3 + k * 10) + 's"><rect x="112" y="124" width="84" height="304" rx="6" fill="#f4fbff" stroke="' + ED_INK + '" stroke-width="2"/><g stroke="#9ab" stroke-width="3">' + [190, 260, 330, 390].map(function (y) { return '<line x1="114" y1="' + y + '" x2="194" y2="' + y + '"/>'; }).join('') + '</g>' +
+        '<g stroke="' + ED_INK + '" stroke-width="1.5"><rect x="122" y="160" width="16" height="28" rx="4" fill="#ff6fb5"/><rect x="144" y="166" width="22" height="22" rx="4" fill="#ffd23f"/><rect x="170" y="152" width="14" height="36" rx="4" fill="#3ddc84"/><ellipse cx="135" cy="250" rx="14" ry="9" fill="#ff9f1c"/><rect x="156" y="232" width="28" height="26" rx="4" fill="#fff"/><rect x="124" y="304" width="20" height="24" rx="4" fill="#3fb6ff"/><rect x="152" y="300" width="30" height="28" rx="6" fill="#c58bff"/></g></g>';
+    });
     // the chairs (five colours)
     var SX = [214, 318, 422, 526, 630];
     s.seats.forEach(function (c, i) {
@@ -3860,10 +3870,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     // the people: now and then one walks out from behind the big screen, sits in their own chair for a few seconds, and goes back
     s.sitters.forEach(function (p, k) {
-      // (one round of 30 s: out from behind the screen, sit down, off to the fridge for a drink, disappear into it for a while, back behind the screen)
-      var x = SX[p.seat], from = 742 - x, fr = 93 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top }, dl = 'animation-delay:' + (3 + k * 10) + 's';
+      // (one round of 30 s: out from behind the screen, sit down, off to the fridge for a drink (hidden behind its open door for a while), back behind the screen)
+      var x = SX[p.seat], from = 742 - x, fr = 240 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top }, dl = 'animation-delay:' + (3 + k * 10) + 's';
       h += '<g class="edsit" style="--from:' + from + 'px;--fr:' + fr + 'px;' + dl + '"><g class="edst">' + edPerson(x, 404, Object.assign({ walk: 1 }, o)) + '</g><g class="edsi">' + edPerson(x - 6, 400, Object.assign({ sit: 1 }, o)) + '</g></g>' +
-        '<g class="edfdoor" style="' + dl + '"><path d="M160 130 L214 150 L214 412 L160 430 Z" fill="#e2e6ee" stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M168 150 L206 164 L206 396 L168 410 Z" fill="#c6e8f6"/></g>';
+        '<g class="edfdoor" style="' + dl + '"><path d="M198 122 L278 100 L278 456 L198 432 Z" fill="#eef1f6" stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M206 132 L270 114 L270 442 L206 424 Z" fill="none" stroke="#c9ced8" stroke-width="2"/><rect x="262" y="200" width="6" height="130" rx="3" fill="#b8bfcc" stroke="' + ED_INK + '" stroke-width="1.5"/></g>';
     });
     // the big folding screen they hide behind, and someone else's legs peeking out under it
     h += '<g' + K + '>' + [0, 1, 2].map(function (i) { return '<rect x="' + (692 + i * 34) + '" y="' + (150 + (i % 2) * 6) + '" width="34" height="250" rx="6" fill="' + ['#f6c8d8', '#fbe0ea', '#f6c8d8'][i] + '"/>'; }).join('') + '</g><g fill="#ff6fb5" opacity=".7">' + [0, 1, 2].map(function (i) { return '<path d="M' + (709 + i * 34) + ' ' + (210 + i * 30) + ' l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z"/>'; }).join('') + '</g>';
@@ -3940,7 +3950,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       edPerson(505, 416, { s: 1.12, hair: s.man.hair, top: s.man.suit, legs: s.man.suit, glasses: 1, tie: 1, walk: 1 }),
       edPerson(505, 424, { s: .75, hair: s.child.hair, hairStyle: 'curly', top: s.child.dress, dress: 1, shoes: '#fff' })
     ];
-    W.forEach(function (w, k) { h += '<g class="edwk2" style="animation-delay:' + (2 + k * 8) + 's"><g class="edbob">' + w + '</g></g>'; });
+    W.forEach(function (w, k) { h += '<g class="edwk2" style="animation-delay:' + (2 + k * 10) + 's"><g class="edbob">' + w + '</g></g>'; });
     // the folding screen (left) and the clothes rack (right), in front of them
     h += '<g' + K + '>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<path d="M' + (236 + i * 36) + ' ' + (170 + (i % 2) * 8) + ' L' + (272 + i * 36) + ' ' + (170 + ((i + 1) % 2) * 8) + ' L' + (272 + i * 36) + ' 436 L' + (236 + i * 36) + ' 436 Z" fill="' + (i % 2 ? '#f6d2a8' : '#eab886') + '"/>'; }).join('') + '</g><g fill="#c0406a" opacity=".55">' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<circle cx="' + (254 + i * 36) + '" cy="' + (250 + (i % 3) * 50) + '" r="9"/>'; }).join('') + '</g>';
     h += '<rect x="556" y="96" width="232" height="8" rx="4" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="560" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/><rect x="778" y="96" width="8" height="340" rx="3" fill="#d8dce6"' + K + ' stroke-width="2"/>';
@@ -3949,7 +3959,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       h += '<path d="M' + x + ' 108 L' + x + ' 100" stroke="#999" stroke-width="2"/><path d="M' + (x - 10) + ' 108 L' + (x + 10) + ' 108 L' + (x + 14) + ' 140 L' + (x + 24) + ' 330 L' + (x - 24) + ' 330 L' + (x - 14) + ' 140 Z" fill="' + col + '"' + K + ' stroke-width="2.4"/>' +
         '<rect x="' + (x - 21) + '" y="336" width="42" height="22" rx="6" fill="#fff"' + K + ' stroke-width="1.8"/><text x="' + x + '" y="352" text-anchor="middle" font-size="14" font-weight="900" fill="' + ED_INK + '">€' + d.p + '</text>';
     });
-    return h + edPlant(150, 440, 1.1) + edLabel('WOODRUFF’S BOUDOIR', 800 - (18 * 17 + 46) - 14, '#ff6fd8');
+    return h + edPlant(112, 448, 2.5) + edLabel('WOODRUFF’S BOUDOIR', 800 - (18 * 17 + 46) - 14, '#ff6fd8');
   }
   var ED_SVG = { green: edGreenSvg, club: edClubSvg, back: edBackSvg, boud: edBoudSvg };
   function edStart() {
@@ -3999,27 +4009,32 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('edov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
     setTimeout(function () { var o = $('edov'); if (o) o.remove(); clueAccuse(); }, 900);
   }
-  // The big screen: the four rooms on the left; on the right the clock, every player with where they are right now
-  // (a spyglass moving over the room they're searching; nothing about how many rooms they did), and the three rows of cards.
+  // The big screen: the four rooms, full screen, the clock in the middle. Every player's avatar walks to the room they
+  // are searching (a spyglass wobbling over it) and back to the hallway around the clock in between. Nothing about
+  // how many rooms they did.
+  var ED_SPOT = { green: [25, 1.5], club: [75, 1.5], back: [25, 51.5], boud: [75, 51.5], '': [50, 64] };
   function edShow() {
     var g = G.clue; if (!g || g.st !== 'rooms' || !g.scene) return;
     var ov = $('edov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
-      var row = function (k, label) { return '<div class="edcrow"><b>' + label + '</b><div>' + CLUE_SETS[k].map(function (c) { return '<span><i>' + c.icon + '</i><em>' + esc(c.name) + '</em></span>'; }).join('') + '</div></div>'; };
-      ov.innerHTML = '<div class="edgrid">' + ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '</div>' +
-        '<aside class="edside"><div class="edstop"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edpl"></div>' +
-        '<div class="edclues">' + row('where', 'Hidden where?') + row('what', 'Hidden inside?') + row('who', 'Who took him?') + '</div></aside>';
+      ov.innerHTML = ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') +
+        '<div class="edmid"><span>🔍 Where the Hell<br>Is Edgar?</span><div class="edclock"></div></div><div class="edtoks"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 1600);
     }
     var ck = ov.querySelector('.edclock'), sec = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)), txt = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
     if (ck.textContent !== txt) ck.textContent = txt; ck.classList.toggle('hot', sec <= 15);
-    var h = Object.keys(g.rooms).filter(function (k) { return players[k] && !players[k].off; }).map(function (k) {
-      var p = players[k], r = edRoom(g.rooms[k].cur || '');
-      return '<div class="edprow' + (r ? ' in ' + r.id : '') + '">' + charSvg(p.char) + '<span class="ednm">' + esc(p.name) + '</span>' + (r ? '<span class="edwhere"><i class="edglass">🔍</i>' + r.icon + ' ' + r.name + '</span>' : '<span class="edwhere idle">🚶 in the hallway</span>') + '</div>';
-    }).join('');
-    var pl = ov.querySelector('.edpl'); if (pl.getAttribute('data-h') !== h) { pl.setAttribute('data-h', h); pl.innerHTML = h; }
+    var toks = ov.querySelector('.edtoks'), ks = Object.keys(g.rooms).filter(function (k) { return players[k] && !players[k].off; }), by = {};
+    ks.forEach(function (k) { var r = g.rooms[k].cur || ''; (by[r] = by[r] || []).push(k); });
+    ks.forEach(function (k) {
+      var el = toks.querySelector('.edtok[data-p="' + k.replace(/"/g, '') + '"]'), p = players[k];
+      if (!el) { el = document.createElement('div'); el.className = 'edtok'; el.setAttribute('data-p', k); el.innerHTML = '<i class="edglass">🔍</i>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>'; el.style.left = '50%'; el.style.top = '64%'; toks.appendChild(el); }
+      var r = g.rooms[k].cur || '', grp = by[r], i = grp.indexOf(k), n = grp.length, sp = ED_SPOT[r] || ED_SPOT[''];
+      var x = r ? sp[0] + (i - (n - 1) / 2) * Math.min(6, 40 / n) : sp[0] + (i - (n - 1) / 2) * Math.min(5.5, 44 / n);
+      el.style.left = x.toFixed(2) + '%'; el.style.top = sp[1] + '%'; el.classList.toggle('srch', !!r);
+    });
+    [].forEach.call(toks.querySelectorAll('.edtok'), function (el) { if (ks.indexOf(el.getAttribute('data-p')) < 0) el.remove(); });
   }
   function clueSnap() {
     var g = G.clue, acc = {};

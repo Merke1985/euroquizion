@@ -3842,36 +3842,29 @@ body.hasdock main{padding-bottom:84px}
 .edwho.hall{position:static;justify-content:center;max-width:22vw}
 .edwho.hall .char{width:3.6vh;height:3.6vh}
 @keyframes edwhoin{from{transform:scale(.3);opacity:0}}
-/* Edgar: the rooms on the left, the players and the cards on the right */
-.edov2{display:flex;gap:0;grid-template-columns:none;grid-template-rows:none;background:#0d0820}
-.edov2 .edgrid{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;align-self:center;aspect-ratio:16/9;max-height:100vh}
-.edov2 .edr2>svg{background:#140a2a}
-.edside{width:23vw;flex:none;display:flex;flex-direction:column;gap:1.2vh;padding:1.4vh 1vw;background:linear-gradient(#1c0f3c,#120a28);box-shadow:-6px 0 24px rgba(0,0,0,.5);overflow:hidden}
-.edstop{display:flex;align-items:center;justify-content:space-between;gap:.6vw}
-.edstop span{font-weight:900;font-size:clamp(.7rem,1.05vw,1.1rem);color:#ffd23f;line-height:1.1}
-.edstop .edclock{font-size:clamp(1.2rem,2.4vw,2.4rem)}
-.edpl{display:flex;flex-direction:column;gap:.6vh;min-height:0;overflow:hidden}
-.edprow{display:flex;align-items:center;gap:.6vw;padding:.5vh .6vw;border-radius:12px;background:rgba(255,255,255,.06)}
-.edprow .char{width:4.4vh;height:4.4vh;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.7)}
-.edprow .ednm{flex:1;min-width:0;font-weight:900;font-size:clamp(.65rem,.95vw,1rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.edwhere{font-weight:800;font-size:clamp(.55rem,.8vw,.85rem);white-space:nowrap;display:flex;align-items:center;gap:.3vw;padding:.2vh .5vw;border-radius:999px;background:rgba(255,210,63,.18);color:#ffd23f}
-.edwhere.idle{background:none;color:var(--mute);font-weight:600}
-.edprow.in.green .edwhere{background:rgba(61,220,132,.2);color:#3ddc84}.edprow.in.club .edwhere{background:rgba(217,123,255,.2);color:#e0a4ff}
-.edprow.in.back .edwhere{background:rgba(63,182,255,.2);color:#7fd0ff}.edprow.in.boud .edwhere{background:rgba(255,111,216,.2);color:#ff9fe4}
-.edglass{font-style:normal;display:inline-block;animation:edglass 1.6s ease-in-out infinite}
-@keyframes edglass{0%{transform:translate(0,0) rotate(-10deg)}25%{transform:translate(3px,-2px) rotate(8deg)}50%{transform:translate(0,2px) rotate(-4deg)}75%{transform:translate(-3px,-1px) rotate(10deg)}100%{transform:translate(0,0) rotate(-10deg)}}
-.edclues{margin-top:auto;display:flex;flex-direction:column;gap:.8vh}
-.edcrow b{display:block;font-size:clamp(.55rem,.75vw,.8rem);font-weight:900;color:#9dffcf;margin-bottom:.3vh}
-.edcrow>div{display:grid;grid-template-columns:repeat(5,1fr);gap:.3vw}
-.edcrow span{display:flex;flex-direction:column;align-items:center;gap:1px;padding:.4vh .2vw;border-radius:8px;background:linear-gradient(#fdf7e6,#e9dfc2);color:#2a1a00;min-width:0}
-.edcrow i{font-style:normal;font-size:2.4vh;line-height:1}
-.edcrow em{font-style:normal;font-size:clamp(.45rem,.58vw,.62rem);font-weight:800;line-height:1.05;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.edov2.enter .edside{animation:inRight .7s .3s cubic-bezier(.2,.9,.3,1.08) both}
 /* the intro: the rows of cards much smaller, at the bottom */
 .clueov.intro .clrows{left:35vw;right:27vw;top:37vh;bottom:auto;gap:.7vh}
 .clueov.intro .clcard{height:5.2vh;border-radius:7px}
 .clueov.intro .clcard span{font-size:2.2vh}
 .clueov.intro .clcard b{font-size:clamp(.45rem,.62vw,.62rem)}
 .clueov.intro .cllab{width:6vw;font-size:clamp(.55rem,.75vw,.75rem)}
-.edstop{margin-right:56px}
 #qopts.gamecards .gsub{display:none}
+
+/* Edgar: the guests hide behind the open fridge door; the boudoir visitors walk behind the screen, the rack and the big plant */
+@keyframes edsit{0%,4%{transform:translateX(var(--from))}12%,26%{transform:translateX(0)}35%,63%{transform:translateX(var(--fr))}79%,100%{transform:translateX(var(--from))}}
+.edr2 .edfopen{opacity:0;animation:edfopen 30s linear infinite backwards}
+@keyframes edfopen{0%,33%{opacity:0}34%,64%{opacity:1}65%,100%{opacity:0}}
+.edr2 .edfdoor{transform-box:view-box;transform-origin:198px 270px;animation:edfdoor 30s linear infinite backwards}
+@keyframes edfdoor{0%,33%{opacity:0;transform:scaleX(.1)}33.5%{opacity:1;transform:scaleX(.1)}35%,62.5%{opacity:1;transform:scaleX(1)}64%{opacity:1;transform:scaleX(.1)}64.5%,100%{opacity:0;transform:scaleX(.1)}}
+.edr2 .edwk2{opacity:1;animation:edwk3 30s linear infinite backwards}
+@keyframes edwk3{0%{transform:translateX(175px)}8%,16%{transform:translateX(0)}24%,32%{transform:translateX(-160px)}40%,55%{transform:translateX(-395px)}63%,68%{transform:translateX(-160px)}76%{transform:translateX(0)}84%,100%{transform:translateX(175px)}}
+/* the players' avatars walking from room to room */
+.edtoks{position:absolute;inset:0;z-index:4;pointer-events:none}
+.edtok{position:absolute;transform:translate(-50%,0);display:flex;flex-direction:column;align-items:center;gap:2px;transition:left 1.8s ease-in-out,top 1.8s ease-in-out}
+.edtok .char{width:5.4vh;height:5.4vh;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.6);animation:edtokbob .5s ease-in-out infinite alternate}
+.edtok em{font-style:normal;font-weight:900;font-size:clamp(.55rem,.8vw,.8rem);background:rgba(10,6,24,.82);color:#fff;padding:0 .45em;border-radius:6px;white-space:nowrap}
+.edtok .edglass{position:absolute;right:-1.4vh;top:-1.2vh;font-size:2.8vh;opacity:0;transition:opacity .4s;z-index:2}
+.edtok.srch .edglass{opacity:1;animation:edglass 1.6s ease-in-out infinite}
+.edtok.srch .char{animation:none}
+@keyframes edtokbob{to{transform:translateY(-3px)}}
+@keyframes edglass{0%{transform:translate(0,0) rotate(-10deg)}25%{transform:translate(4px,-3px) rotate(8deg)}50%{transform:translate(0,3px) rotate(-4deg)}75%{transform:translate(-4px,-2px) rotate(10deg)}100%{transform:translate(0,0) rotate(-10deg)}}

@@ -869,7 +869,7 @@
     if (room === 'green') {
       var tm = function (h, m) { return h + ':' + (m < 10 ? '0' : '') + m; }, t0 = tm(s.clock[0], s.clock[1]), sit = pick(s.sitters);
       mc = [
-        { q: 'How many cans are in the fridge?', a: String(s.cans.length), o: edNums(s.cans.length, 1, 12) },
+        { q: 'How many cans are on top of the fridge?', a: String(s.cans.length), o: edNums(s.cans.length, 1, 9) },
         { q: 'What time does the clock say?', a: t0, o: edPickOpts(t0, [tm(s.clock[0] % 12 + 1, s.clock[1]), tm(s.clock[0], (s.clock[1] + 15) % 60), tm((s.clock[0] + 5) % 12 + 1, s.clock[1]), tm(s.clock[1] / 5 || 12, s.clock[0] * 5 % 60)]) },
         { q: 'How many slices of pizza are left?', a: String(s.pizza), o: edNums(s.pizza, 1, 8) },
         { q: 'What hair colour has the person in the ' + s.seats[sit.seat] + ' chair?', a: sit.hair, o: edPickOpts(sit.hair, ['blonde', 'pink', 'black', 'red', 'blue', 'brown']), col: 1 },
