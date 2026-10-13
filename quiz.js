@@ -920,7 +920,7 @@ function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y 
 // In a break the poles come back to the middle and nobody can fall.
 // x goes from -1 (far left) to 1 (far right).
 var ZG_GO = 9, ZG_LEN0 = 182, ZG_LEN = ZG_LEN0, ZG_ST = [72, 135], ZG_BRK = [[62, 72], [125, 135]], ZG_FALL = [2, 2, 1], zgPar = {};
-function zgW(t) { return [0.46, 0.23, 0.115][zgStage(t)]; }   // (the zone: big in stage 1, half of that in stage 2, half again in stage 3)
+function zgW(t) { return [0.24, 0.18, 0.135][zgStage(t)]; }   // (the zone: each stage 25% smaller than the one before)
 function zgNext(t) { var n = ZG_LEN; ZG_BRK.forEach(function (b) { if (b[0] > t && b[0] < n) n = b[0]; if (t >= b[0] && t < b[1] && b[1] < n) n = b[1]; }); return n; }   // (the end of the current stage, or break)
 function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
 function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
