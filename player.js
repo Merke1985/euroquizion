@@ -876,7 +876,7 @@
     var c = s.clue, box = $('edui'), me = c.rooms && c.rooms[pid];
     show('v-wait');
     if (edGame !== c.id) { edGame = c.id; edCur = ''; edSeen = ''; edNotes = false; edClear(); }
-    if (!me) { box.classList.add('hidden'); $('clueui').classList.add('hidden'); $('waittitle').textContent = '🔍 Searching the building…'; $('waitsub').textContent = 'Watch the big screen!'; return; }
+    if (!me || c.st === 'brief') { box.classList.add('hidden'); $('clueui').classList.add('hidden'); $('waittitle').textContent = c.st === 'brief' ? '🔍 Listen closely…' : '🔍 Searching the building…'; $('waitsub').textContent = c.st === 'brief' ? 'The hosts explain the four rooms. Get ready!' : 'Watch the big screen!'; return; }
     if (edCur || edNotes) return;   // (a room task is running, or the notes are open: they draw themselves)
     var last = (c.last || {})[pid];
     if (last && edSeen !== last.k) {   // just finished a room: the new clues
@@ -934,11 +934,9 @@
         { q: 'How many cans are on top of the fridge?', a: String(s.cans.length), o: edNums(s.cans.length, 1, 9) },
         { q: 'What time does the clock say?', a: t0, o: edPickOpts(t0, [tm(s.clock[0] % 12 + 1, s.clock[1]), tm(s.clock[0], (s.clock[1] + 15) % 60), tm((s.clock[0] + 5) % 12 + 1, s.clock[1]), tm(s.clock[1] / 5 || 12, s.clock[0] * 5 % 60)]) },
         { q: 'How many slices of pizza are left?', a: String(s.pizza), o: edNums(s.pizza, 1, 8) },
-        { q: 'What hair colour has the person in the ' + s.seats[sit.seat] + ' chair?', a: sit.hair, o: edPickOpts(sit.hair, ['blonde', 'pink', 'black', 'red', 'blue', 'brown']), col: 1 },
-        { q: 'How many gold records hang on the wall?', a: String(s.records), o: edNums(s.records, 1, 6) },
-        { q: 'How many people are sitting down?', a: String(s.sitters.length), o: edNums(s.sitters.length, 1, 5) }
+        { q: 'How many gold records hang on the wall?', a: String(s.records), o: edNums(s.records, 1, 6) }
       ];
-      return [{ t: 'code', q: 'Edgar’s suitcase is locked! Type the code from the sticky note on the mirror.', a: s.code }].concat(shuffle(mc).slice(0, 2));
+      return [{ t: 'code', q: 'Edgar’s suitcase is locked! Type the code from the sticky note on the mirror.', a: s.code }, { q: 'Where does the guest with the ' + ED_NAME[sit.hair] + ' hair sit down? (They only sit down now and then: keep watching!)', a: s.seats[sit.seat], o: edPickOpts(s.seats[sit.seat], s.seats), col: 1 }].concat(shuffle(mc).slice(0, 1));
     }
     if (room === 'club') {
       var n = Math.floor(Math.random() * 5);
@@ -967,19 +965,35 @@
       { q: 'What colour is the ' + ED_ORD[w] + ' wig from the left?', a: s.wigs[w], o: edPickOpts(s.wigs[w], s.wigs), col: 1 },
       { q: 'What is written in lipstick on the mirror?', a: s.word, o: edPickOpts(s.word, ['KISS', 'DIVA', 'FAB', 'WOW', 'GLAM', 'ICON']) },
       { q: 'How many perfume bottles are on the dressing table?', a: String(s.perfume), o: edNums(s.perfume, 1, 8) },
-      { q: 'What colour is the woman’s dress?', a: s.woman.dress, o: edPickOpts(s.woman.dress, ['red', 'blue', 'green', 'yellow', 'purple', 'orange']), col: 1 },
-      { q: 'What colour is the man’s suit?', a: s.man.suit, o: edPickOpts(s.man.suit, ['red', 'blue', 'green', 'yellow', 'purple', 'orange']), col: 1 },
-      { q: 'What colour is the child’s hair?', a: s.child.hair, o: edPickOpts(s.child.hair, ['orange', 'blonde', 'brown', 'black']), col: 1 },
       { q: 'What colour is the woman’s feather boa?', a: s.woman.boa, o: edPickOpts(s.woman.boa, ['pink', 'white', 'teal', 'yellow']), col: 1 }
     ];
-    return [{ t: 'rack', q: 'Hang the dresses back on the rack in the same order, from left to right!', a: s.rack.map(function (x) { return x.c; }) }].concat(shuffle(mc).slice(0, 2));
+    return [{ t: 'rack', q: 'Hang the dresses back on the rack in the same order, from left to right!', a: s.rack.map(function (x) { return x.c; }) }, { t: 'looks', q: 'Dress them up! Give all three the right hair and outfit, just like on the big screen.', a: s }].concat(shuffle(mc).slice(0, 1));
+  }
+  function edMini(p) {   // a small cartoon guest for the phone: hair colour, hair style and top
+    var H = ED_HEX[p.hair] || p.hair, T = ED_HEX[p.top] || p.top, K = ' stroke="#2b1830" stroke-width="2.4" stroke-linejoin="round"', h = '';
+    if (p.st === 'long') h += '<path d="M8 20 Q4 44 12 46 L38 46 Q46 44 42 20 Z" fill="' + H + '"' + K + '/>';
+    if (p.st === 'pony') h += '<ellipse cx="42" cy="22" rx="5" ry="11" fill="' + H + '"' + K + ' transform="rotate(25 42 22)"/>';
+    h += p.dress ? '<path d="M17 44 Q25 41 33 44 L40 70 Q25 74 10 70 Z" fill="' + T + '"' + K + '/>' : '<rect x="14" y="43" width="22" height="27" rx="9" fill="' + T + '"' + K + '/>';
+    h += '<circle cx="25" cy="26" r="15" fill="#f6cfb2"' + K + '/>';
+    h += p.st === 'curly' ? '<g fill="' + H + '"' + K + '>' + [[13, 18], [20, 12], [29, 12], [37, 18], [11, 26], [39, 26]].map(function (c) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="6"/>'; }).join('') + '</g>' : '<path d="M10 26 Q10 10 25 10 Q40 10 40 26 Q34 17 25 18 Q16 17 10 26 Z" fill="' + H + '"' + K + '/>';
+    return '<svg viewBox="0 0 50 74" class="edmini">' + h + '<circle cx="20" cy="28" r="2" fill="#2b1830"/><circle cx="30" cy="28" r="2" fill="#2b1830"/></svg>';
   }
   function edQuiz(box, room, s) {
     var R = ED_R.filter(function (r) { return r.id === room; })[0], qs = edQs(room, s), qi = 0, right = 0;
     var score = function () { return R.max === 3 ? right : right === 3 ? 2 : right === 2 ? 1 : 0; };
     box._score = score;
     $('waittitle').textContent = R.icon + ' ' + R.name;
-    var next = function (ok) { if (ok) right++; qi++; try { navigator.vibrate && navigator.vibrate(15); } catch (e) {} ask(); };
+    var next = function (ok) {   // a wrong answer locks the room for 5 seconds, then you try the same one again
+      if (ok) { right++; qi++; try { navigator.vibrate && navigator.vibrate(15); } catch (e) {} ask(); return; }
+      try { navigator.vibrate && navigator.vibrate([60, 40, 160]); } catch (e) {}
+      var n = 5, tick = function () {
+        if (!edCur) return;
+        if (n <= 0) { ask(); return; }
+        box.innerHTML = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / 3</div><div class="edlock"><span>🔒</span><b>Wrong!</b><small>Locked… try again in</small><em>' + n + '</em></div>';
+        n--; edLater(tick, 1000);
+      };
+      tick();
+    };
     var ask = function () {
       if (qi >= qs.length) { edFinish(room, score()); return; }
       var q = qs[qi], head = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / 3</div><div class="edq">' + q.q + '</div>';
@@ -1012,6 +1026,17 @@
         };
         drawP(); return;
       }
+      if (q.t === 'looks') {   // hair and outfit for the three people in the boudoir
+        var S3 = q.a, who3 = [{ id: 'woman', n: 'The one with the boa', o: S3.woman.dress, h: S3.woman.hair, st: 'long', dress: 1 }, { id: 'man', n: 'The one with glasses', o: S3.man.suit, h: S3.man.hair, st: 'short' }, { id: 'child', n: 'The little one', o: S3.child.dress, h: S3.child.hair, st: 'curly', dress: 1 }];
+        var HAIRS = ['black', 'brown', 'blonde', 'red', 'orange'], OUTS = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'], ch = {};
+        var drawL = function () {
+          box.innerHTML = head + '<div class="edlooks">' + who3.map(function (w) { var c = ch[w.id] || {}; return '<div class="edlk"><div class="edlkf">' + edMini({ hair: c.h || '#bbb', top: c.o || '#bbb', st: w.st, dress: w.dress }) + '<small>' + w.n + '</small></div><div class="edlkc"><div>' + HAIRS.map(function (x) { return '<button type="button" class="edsw hair' + (c.h === x ? ' on' : '') + '" data-w="' + w.id + '" data-h="' + x + '" style="background:' + ED_HEX[x] + '" aria-label="' + x + ' hair"></button>'; }).join('') + '</div><div>' + OUTS.map(function (x) { return '<button type="button" class="edsw' + (c.o === x ? ' on' : '') + '" data-w="' + w.id + '" data-o="' + x + '" style="background:' + ED_HEX[x] + '" aria-label="' + x + ' outfit"></button>'; }).join('') + '</div></div></div>'; }).join('') + '</div>' +
+            '<button type="button" class="btn big eddone"' + (who3.every(function (w) { return ch[w.id] && ch[w.id].h && ch[w.id].o; }) ? '' : ' disabled') + '>✅ Done</button>';
+          [].forEach.call(box.querySelectorAll('.edsw'), function (b) { b.onclick = function () { var w = b.getAttribute('data-w'), c = ch[w] = ch[w] || {}; if (b.hasAttribute('data-h')) c.h = b.getAttribute('data-h'); else c.o = b.getAttribute('data-o'); drawL(); }; });
+          box.querySelector('.eddone').onclick = function () { next(who3.every(function (w) { return ch[w.id].h === w.h && ch[w.id].o === w.o; })); };
+        };
+        drawL(); return;
+      }
       if (q.t === 'rack') {
         var cols = shuffle(q.a.concat([['red', 'blue', 'yellow', 'green', 'purple', 'black'].filter(function (c) { return q.a.indexOf(c) < 0; })[0]])), seq = [];
         var drawR = function () {
@@ -1022,6 +1047,7 @@
         };
         drawR(); return;
       }
+      q.o = shuffle(q.o.slice());   /* (a new order after a wrong answer) */
       box.innerHTML = head + '<div class="edopts">' + q.o.map(function (o) { return '<button type="button" class="edopt" data-o="' + esc(o) + '">' + (q.col ? '<i style="background:' + (ED_HEX[o] || '#888') + '"></i>' + (ED_NAME[o] || o) : esc(o)) + '</button>'; }).join('') + '</div>';
       [].forEach.call(box.querySelectorAll('.edopt'), function (b) { b.onclick = function () { next(b.getAttribute('data-o') === q.a); }; });
     };

@@ -4012,3 +4012,45 @@ body.hasdock main{padding-bottom:84px}
 .fkchair{position:absolute;left:50%;bottom:-6vh;width:15vh;height:25vh;margin-left:-7.5vh;z-index:0;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 1vh 1.5vh rgba(0,0,0,.6))}
 .fkchair::before{display:none}
 .fkpaint{position:absolute;left:19vw;top:15vh;width:15vh;height:auto;transform:rotate(-2deg);filter:drop-shadow(0 1.2vh 2vh rgba(0,0,0,.7));z-index:1}
+
+/* Edgar: wrong answer lock, who-sits-where, dress them up */
+.edlock{display:flex;flex-direction:column;align-items:center;gap:4px;padding:24px 16px;border-radius:18px;background:#4a1630;box-shadow:0 0 0 3px #ff4d6d;width:100%;animation:edshake .4s}
+.edlock span{font-size:2.6rem}.edlock b{font-size:1.5rem;font-weight:900;color:#ff8fa3}.edlock small{opacity:.8;font-weight:700}.edlock em{font-style:normal;font-size:3rem;font-weight:900}
+@keyframes edshake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.edmini{width:100%;height:100%;display:block}
+.edchairs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%}
+.edch{position:relative;height:96px;border:0;border-radius:12px;background:#2a2050;cursor:pointer;padding:4px}
+.edch>i{position:absolute;left:12%;right:12%;bottom:8px;height:44px;border-radius:14px 14px 6px 6px;box-shadow:0 0 0 2px #fff}
+.edch .edmini{position:absolute;left:10%;width:80%;height:76px;bottom:16px}
+.edguests{display:flex;justify-content:center;gap:10px;width:100%}
+.edgu{width:70px;height:96px;border:0;border-radius:14px;background:#2a2050;padding:6px;cursor:pointer}
+.edgu.sel{box-shadow:0 0 0 4px #b06bff}.edgu.used{opacity:.3}
+.edlooks{display:flex;flex-direction:column;gap:8px;width:100%}
+.edlk{display:flex;gap:10px;align-items:center;background:#2a2050;border-radius:14px;padding:8px}
+.edlkf{width:68px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px}.edlkf .edmini{height:74px}.edlkf small{font-size:.62rem;font-weight:800;text-align:center;opacity:.85;line-height:1.1}
+.edlkc{display:flex;flex-direction:column;gap:8px;flex:1}.edlkc>div{display:flex;flex-wrap:wrap;gap:6px}
+.edsw{width:30px;height:30px;border:0;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.5);cursor:pointer}
+.edsw:not(.hair){border-radius:6px}.edsw.on{box-shadow:0 0 0 3px #fff,0 0 0 6px #b06bff}
+/* Edgar intro: the three questions turn up one by one */
+.clueov.intro .clmyst>div{display:none;animation-delay:0s}
+.clueov.intro.m1 .clmyst>div:nth-child(1),.clueov.intro.m2 .clmyst>div:nth-child(2),.clueov.intro.m3 .clmyst>div:nth-child(3){display:flex}
+/* Edgar briefing: the four rooms dark, the hosts in front, one room lit at a time */
+.edov2 .edbrhosts,.edov2 .edbrbub{display:none}
+.edov2.edbrief .edbrhosts{display:block;position:absolute;inset:0;z-index:30;pointer-events:none}
+.edov2.edbrief .edbrhosts .ehost{position:absolute;bottom:0;height:52vh;width:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.8));animation:ehbob 3.2s ease-in-out infinite alternate;transition:translate .9s cubic-bezier(.5,0,.7,.4),opacity .9s}
+.edov2.edbrief .edbrhosts .him{left:3vw}.edov2.edbrief .edbrhosts .her{right:3vw;animation-delay:-1.6s}
+.edov2.edbrief .edbrbub{display:block;position:absolute;bottom:50vh;max-width:30vw;z-index:31;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(1rem,1.7vw,1.4rem);line-height:1.25;padding:.65em 1em;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.6);opacity:0;transform:scale(.6);transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.edov2.edbrief .edbrbub.him{left:6vw;border-bottom-left-radius:4px;transform-origin:0 100%}.edov2.edbrief .edbrbub.her{right:6vw;border-bottom-right-radius:4px;transform-origin:100% 100%}
+.edov2.edbrief .edbrbub.on{opacity:1;transform:none}.edov2 .edbrbub .unsaid{visibility:hidden}
+.edov2.edbrief .edr2{transition:filter .6s,transform .6s,box-shadow .6s;filter:brightness(.18) saturate(.4)}
+.edov2.edbrief[data-lit="green"] .edr2.green,.edov2.edbrief[data-lit="club"] .edr2.club,.edov2.edbrief[data-lit="back"] .edr2.back,.edov2.edbrief[data-lit="boud"] .edr2.boud{filter:none;transform:scale(1.04);z-index:5;box-shadow:0 0 0 4px #ffd23f,0 0 40px rgba(255,210,63,.6)}
+.edov2.edbrief[data-lit="all"] .edr2,.edov2.go .edr2{filter:none}
+.edov2.go .edbrhosts .ehost{translate:0 60vh;opacity:0}.edov2.go .edbrbub{opacity:0!important}
+/* Green Room: one guest sits down every 20 seconds (a 60 s round for the three of them) */
+.edr2 .edsit{animation-duration:60s!important}.edr2 .edsit .edst,.edr2 .edsit .edsi{animation-duration:60s!important}
+.edr2 .edfopen,.edr2 .edfdoor{animation-duration:60s!important}
+@keyframes edsit{0%,2%{transform:translateX(var(--from))}6%,13%{transform:translateX(0)}17.5%,31.5%{transform:translateX(var(--fr))}39.5%,100%{transform:translateX(var(--from))}}
+@keyframes edstand{0%,6%{opacity:1}6.25%,12.75%{opacity:0}13%,100%{opacity:1}}
+@keyframes edseat{0%,6%{opacity:0}6.25%,12.75%{opacity:1}13%,100%{opacity:0}}
+@keyframes edfopen{0%,16.5%{opacity:0}17%,32%{opacity:1}32.5%,100%{opacity:0}}
+@keyframes edfdoor{0%,16.5%{opacity:0;transform:scaleX(.1)}16.75%{opacity:1;transform:scaleX(.1)}17.5%,31.25%{opacity:1;transform:scaleX(1)}32%{opacity:1;transform:scaleX(.1)}32.25%,100%{opacity:0;transform:scaleX(.1)}}

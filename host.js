@@ -3587,18 +3587,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
       ['him', 'Breaking news! Edgar, our beloved mascot, has been abducted! 😱'],
-      ['her', 'Someone took him, and hid him somewhere in the building, inside something!'],
-      ['him', 'Search the four rooms on your phone. Every clue you find rules out a suspect, a place or a hiding spot.', 'example'],
-      ['her', 'The fastest detective gets an extra clue. Go find Edgar! 🔍']
+      ['her', 'So, who took him? 🕵️', 'm1'],
+      ['him', 'Where in the building is he hidden?', 'm2'],
+      ['her', 'And what is he hidden inside? 📦 That’s for you to find out!', 'm3']
     ];
     var t = 6600;   // (the poster first, the photo, the presenters walking on: then the story)
     lines.forEach(function (l) {
       (function (l, at0) { at(at0, function () {
         clueSay(l[0], l[1]);
         var ov2 = $('clueov'); if (ov2) {
-          if (l[2] === 'example') { setTimeout(function () { var o3 = $('clueov'); if (o3) { o3.classList.add('example'); Music.plop(4); } }, 2200); }   // an example clue: a note lands on the WHO card
-          else if (l[2]) { if (ov2.classList.contains('story')) whooshes([0, 250]); ov2.classList.remove('story'); }   // on to the clues: the presenters step apart, the rows come in one by one
-          [].forEach.call(ov2.querySelectorAll('.clrow'), function (r) { var me = !!l[2] && r.getAttribute('data-k') === l[2]; r.classList.toggle('lit', me); if (me) r.classList.add('on'); });
+          if (l[2]) { var o3 = ov2; setTimeout(function () { o3.classList.add(l[2]); Music.plop(+l[2][1] + 2); }, 900); }   // the three questions turn up one by one, as they're asked
         }
       }); })(l, t);
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
@@ -3777,7 +3775,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var prices = shuffle([49, 79, 99, 129, 149, 179, 199, 249, 299, 349]).slice(0, 5);
     var cans = []; for (i = edRnd(3, 7); i > 0; i--) cans.push(pick(['red', 'blue', 'yellow', 'green']));
     var seats = shuffle(['green', 'pink', 'yellow', 'red', 'blue']), hairs = shuffle(['blonde', 'pink', 'black', 'red', 'blue', 'brown']);
-    var sitters = shuffle([0, 1, 2, 3, 4]).slice(0, edRnd(2, 3)).map(function (k, i) { return { seat: k, hair: hairs[i], top: pick(['purple', 'orange', 'teal', 'white', 'black']) }; });
+    var sitters = shuffle([0, 1, 2, 3, 4]).slice(0, 3).map(function (k, i) { return { seat: k, hair: hairs[i], top: pick(['purple', 'orange', 'teal', 'white', 'black']) }; });
     var socks = shuffle(Object.keys(ED_SOCKS)), cables = shuffle(['red', 'blue', 'green', 'yellow']), plugged = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 4);
     var outs = shuffle(['red', 'blue', 'green', 'yellow', 'purple', 'orange']);
     var R0 = {
@@ -3852,7 +3850,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     s.cans.forEach(function (c, i) { var x = 26 + i * 24, y = 89; h += '<rect x="' + x + '" y="' + y + '" width="19" height="30" rx="5" fill="' + ED_COL[c] + '" stroke="' + ED_INK + '" stroke-width="1.8"/><rect x="' + (x + 2) + '" y="' + (y + 1) + '" width="15" height="5" rx="2" fill="#dde"/>'; });
     // the inside of the fridge (left side), seen when someone has the left door open a little (one per guest, timed with them)
     s.sitters.forEach(function (p, k) {
-      h += '<g class="edfopen" style="animation-delay:' + (3 + k * 10) + 's"><rect x="24" y="124" width="84" height="304" rx="6" fill="#e8f7ff" stroke="' + ED_INK + '" stroke-width="2"/><g stroke="#9ab" stroke-width="3">' + [200, 280, 360].map(function (y) { return '<line x1="26" y1="' + y + '" x2="106" y2="' + y + '"/>'; }).join('') + '</g>' +
+      h += '<g class="edfopen" style="animation-delay:' + (3 + k * 20) + 's"><rect x="24" y="124" width="84" height="304" rx="6" fill="#e8f7ff" stroke="' + ED_INK + '" stroke-width="2"/><g stroke="#9ab" stroke-width="3">' + [200, 280, 360].map(function (y) { return '<line x1="26" y1="' + y + '" x2="106" y2="' + y + '"/>'; }).join('') + '</g>' +
         '<g stroke="' + ED_INK + '" stroke-width="1.5"><rect x="84" y="166" width="16" height="32" rx="4" fill="#ff6fb5"/><rect x="88" y="250" width="16" height="28" rx="4" fill="#3ddc84"/><rect x="86" y="330" width="18" height="28" rx="4" fill="#ffd23f"/></g><rect x="24" y="124" width="84" height="304" rx="6" fill="#bfe8ff" opacity=".35"/></g>';
     });
     // the chairs (five colours)
@@ -3873,7 +3871,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the people: now and then one walks out from behind the big screen, sits in their own chair for a few seconds, and goes back
     s.sitters.forEach(function (p, k) {
       // (one round of 30 s: out from behind the screen, sit down, off to the fridge for a drink (hidden behind its open door for a while), back behind the screen)
-      var x = SX[p.seat], from = 742 - x, fr = 92 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top }, dl = 'animation-delay:' + (3 + k * 10) + 's';
+      var x = SX[p.seat], from = 742 - x, fr = 92 - x, o = { s: .82, hair: p.hair, hairStyle: ['long', 'curly', 'pony'][k % 3], top: p.top }, dl = 'animation-delay:' + (3 + k * 20) + 's';
       h += '<g class="edsit" style="--from:' + from + 'px;--fr:' + fr + 'px;' + dl + '"><g class="edst">' + edPerson(x, 404, Object.assign({ walk: 1 }, o)) + '</g><g class="edsi">' + edPerson(x - 6, 400, Object.assign({ sit: 1 }, o)) + '</g></g>' +
         '<g class="edfdoor" style="' + dl + '"><path d="M24 124 L84 108 L84 450 L24 428 Z" fill="#eef1f6" stroke="' + ED_INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M32 134 L76 122 L76 436 L32 420 Z" fill="none" stroke="#c9ced8" stroke-width="2"/><rect x="34" y="190" width="30" height="50" rx="6" fill="#3a4050" stroke="' + ED_INK + '" stroke-width="1.5"/><rect x="72" y="196" width="6" height="130" rx="3" fill="#b8bfcc" stroke="' + ED_INK + '" stroke-width="1.5"/></g>';   /* (the left door, open just a little: they lean in, half hidden) */
     });
@@ -3970,10 +3968,34 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var ED_SVG = { green: edGreenSvg, club: edClubSvg, back: edBackSvg, boud: edBoudSvg };
   function edStart() {
     var g = G.clue; if (!g) return;
-    g.st = 'rooms'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene();
+    g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = '';
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong(); Music.ding();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); clueSong(); edShow();
+    var lines = [
+      ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
+      ['her', 'The Green Room! Who sits where? The guests only sit down now and then, so keep your eyes open. 🛋️', 'green'],
+      ['him', 'The Euroclub! DJ Konstantin lights up the symbols in a secret order. Remember it! 🪩', 'club'],
+      ['her', 'Backstage! Someone pulled out all the cables. Which one goes where? 🔌', 'back'],
+      ['him', 'Woodruff’s Boudoir! Dresses, wigs, and three guests in their finest outfits. 👗', 'boud'],
+      ['her', 'Every answer is up here on the big screen. A wrong answer locks you out for 5 seconds! The fastest detective gets an extra clue. Go! 🔍', 'all']
+    ], t = 1800, id = g.id;
+    lines.forEach(function (l) {
+      (function (l, t0) { clueTimer = setTimeout(function () {
+        var g3 = G.clue, ov = $('edov'); if (!g3 || g3.id !== id || g3.st !== 'brief' || !ov) return;
+        g3.lit = l[2]; ov.setAttribute('data-lit', l[2]); if (l[2]) Music.plop(3);
+        [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); });
+        var b = ov.querySelector('.edbrbub.' + l[0]); if (b) { b._said = ''; b.classList.add('on'); typeSay(b, l[1], l[0]); }
+      }, t0); })(l, t);
+      t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2600);
+    });
+    setTimeout(function () { var g3 = G.clue; if (g3 && g3.id === id && g3.st === 'brief') edGo(); }, t);
+  }
+  function edGo() {   // the briefing is over: the hosts step aside, the lights go on, the clock starts
+    var g = G.clue; if (!g) return;
+    g.st = 'rooms'; g.ends = Date.now() + ED_MS;
+    var ov = $('edov'); if (ov) { ov.classList.add('go'); ov.removeAttribute('data-lit'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); }); }
+    push(); Music.ding(); whooshes([0, 300]);
     // the bots: a room, ~20–32 seconds, a few seconds walking to the next
     bots.forEach(function (b) {
       if (!players[b.pid] || players[b.pid].off) return;
@@ -4019,15 +4041,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // are searching (a spyglass wobbling over it) and back to the hallway around the clock in between. Nothing about
   // how many rooms they did.
   function edShow() {
-    var g = G.clue; if (!g || g.st !== 'rooms' || !g.scene) return;
+    var g = G.clue; if (!g || (g.st !== 'rooms' && g.st !== 'brief') || !g.scene) return;
     var ov = $('edov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
       ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg></div></div>' +
-        ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '<div class="edtoks"></div>';
+        ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '<div class="edtoks"></div>' +
+        '<div class="edbrhosts">' + HOST_HIM + HOST_HER + '</div><div class="edbrbub him"></div><div class="edbrbub her"></div>';
+      if (g.st === 'brief') ov.classList.add('edbrief');
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 1600);
     }
+    if (g.st === 'brief') return;   // (the players stay in the lobby, the clock waits)
     var ck = ov.querySelector('.edclock'), sec = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)), txt = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
     if (ck.textContent !== txt) ck.textContent = txt; ck.classList.toggle('hot', sec <= 15);
     var toks = ov.querySelector('.edtoks'), ks = Object.keys(g.rooms).filter(function (k) { return players[k] && !players[k].off; }), by = {};
@@ -4073,7 +4098,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         '<div class="grsign clsign">🔍 Where the Hell Is Edgar?</div>' +
         '<div class="clposter"><b>MISSING</b>' + EDGAR + '<small>Have you seen Edgar?</small></div><div class="clframe"><img src="' + commons(EXTRA_PHOTOS[0].file) + '" alt=""><small>With love to Teya &amp; Salena · Austria 2023</small></div><div class="cledgar">' + EDGAR + '</div>' +
         '<div class="clrows">' + row('where', 'Hidden where?') + row('what', 'Hidden inside?') + row('who', 'Who took him?') + '</div>' +
-        '<div class="clmyst"><div><b>?</b><span>WHO?</span><i class="clnote">✗ It wasn’t Felix</i></div><div><b>?</b><span>WHERE?</span></div><div><b>?</b><span>INSIDE WHAT?</span></div></div>' +   /* (the intro: three face-down cards, the full rows only at the accusation) */
+        '<div class="clmyst"><div><b>?</b><span>WHO?</span></div><div><b>?</b><span>WHERE?</span></div><div><b>?</b><span>INSIDE WHAT?</span></div></div>' +   /* (the intro: three face-down cards, the full rows only at the accusation) */
         '<div class="clmsg"></div><div class="clplayers"></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
