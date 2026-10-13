@@ -4219,7 +4219,6 @@ body.hasdock main{padding-bottom:84px}
 .orfire i{position:absolute;bottom:0;width:9vh;height:13vh;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(ellipse at 50% 80%,#fff6a0 0%,#ffcf3a 25%,#ff7a1a 55%,rgba(255,60,0,0) 75%);filter:blur(1px);transform-origin:50% 100%;animation:orflame .5s ease-in-out infinite alternate}
 .orfire i:nth-child(1){left:2%;bottom:6%}.orfire i:nth-child(2){left:24%;bottom:30%;animation-delay:-.2s;scale:1.3}.orfire i:nth-child(3){left:33%;bottom:52%;animation-delay:-.35s;scale:1.1}.orfire i:nth-child(4){left:68%;bottom:34%;animation-delay:-.1s}.orfire i:nth-child(5){left:88%;bottom:8%;animation-delay:-.4s;scale:1.2}
 @keyframes orflame{from{transform:scaleY(.85) skewX(-4deg)}to{transform:scaleY(1.15) skewX(5deg)}}
-.orov.onfire .ormid{animation:benvshake .3s linear infinite}
 /* the phone: tap out the flames */
 .orfirepz{position:relative;width:100%;height:46vh;max-height:360px;border-radius:18px;background:radial-gradient(ellipse at 50% 100%,#5a1a08,#1a0804 70%);overflow:hidden;touch-action:none}
 .orfl{position:absolute;translate:-50% -50%;width:74px;height:74px;border:0;border-radius:50%;background:radial-gradient(circle,rgba(255,140,40,.35),transparent 70%);cursor:pointer;touch-action:none;--k:1}
@@ -4282,4 +4281,9 @@ body.hasdock main{padding-bottom:84px}
 
 .slcell.tick{box-shadow:0 0 0 6px #ffd23f,0 0 50px #ffd23f!important;scale:1.04}
 .slcell .slv{display:block}
-#slotov.four .slwin{opacity:0;transition:opacity .4s}
+#slotov.four .slwin:not(.slw4){display:none}
+#slotov.four .slcell.hi:not(.won):not(.tick){box-shadow:none}
+.slwin.slw4{z-index:2}
+#slotov.four .slcell.tick,#slotov.four .slcell.won{position:relative;z-index:3}
+#slotov.four .slcell.tick{box-shadow:0 0 0 6px #fff,0 0 50px #fff!important;scale:1.06}
+#slotov.ticking .slcell.hi:not(.tick){filter:brightness(.55)}

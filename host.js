@@ -1578,19 +1578,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var order = rest.slice(0, h2).concat(four, rest.slice(h2));   // (the four next to each other on the reel)
     var M = slotOpen(order, all.filter(function (k) { return games.indexOf(k) < 0 && four.indexOf(k) < 0; }), null, '🎰 Spin for four games!'); push();
     var target = M.n * (M.REP - 2) + order.indexOf(four[0]), cw = M.st.children[1].offsetLeft - M.st.children[0].offsetLeft;
+    M.ov.classList.add('four');   // four golden windows instead of one: that's where the four games will land
+    four.forEach(function (k, j) { var w = document.createElement('div'); w.className = 'slwin slw4'; w.style.left = 'calc(50% + ' + ((j - (four.length - 1) / 2) * cw) + 'px)'; M.win.appendChild(w); });
     clearTimeout(slotT); slotT = setTimeout(function () {
       var ov = M.ov, st = M.st; if (!ov.isConnected) return;
       ov.querySelector('.slbtn').classList.add('push'); ov.querySelector('.sllever').classList.add('pull'); Music.blip();
       st.getBoundingClientRect(); st.style.transition = 'transform 5.2s cubic-bezier(.12,.62,.08,1)'; st.style.transform = 'translateX(' + (M.place(target) - cw * (four.length - 1) / 2) + 'px)';   // (the middle of the four in the middle of the window)
-      [].forEach.call(ov.querySelectorAll('.sldeco'), function (d, i) { d.classList.add(i ? 'spinr' : 'spinl'); });
+      ov._spin0 = Date.now();
       var t0 = Date.now(), tick = function () { var e = (Date.now() - t0) / 5200; if (e >= 1 || !ov.isConnected) return; Music.plop(Math.floor(e * 12)); slotT = setTimeout(tick, 60 + Math.pow(e, 2.2) * 600); }; tick();
       slotT = setTimeout(function () {
         if (!ov.isConnected) return;
-        [].forEach.call(ov.querySelectorAll('.sldeco'), function (d) { d.classList.remove('spinl', 'spinr'); });
-        M.hi = four.map(function (k, j) { return st.children[target + j]; });
+                M.hi = four.map(function (k, j) { return st.children[target + j]; });
         [].forEach.call(st.children, function (c) { if (M.hi.indexOf(c) < 0) c.classList.add('out'); });
         M.hi.forEach(function (c, j) { setTimeout(function () { c.classList.add('hi'); Music.plop(j * 2 + 3); }, j * 180); });
-        ov.querySelector('.slsign').textContent = '🗳️ Which game shall we play?'; ov.classList.add('voting', 'four'); Music.ding();
+        ov.querySelector('.slsign').textContent = '🗳️ Which game shall we play?'; ov.classList.add('voting'); Music.ding();
         G.slotVote = M; slotT = setTimeout(then, 1000);
       }, 5400);
     }, 1500);
@@ -1624,10 +1625,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var cellOf = function (k) { return M.hi.filter(function (c) { return c.getAttribute('data-k') === k; })[0]; };
         kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').textContent = vs[i2] ? vs[i2] + ' 🗳️' : '0'; if (tied.indexOf(k) < 0) c.classList.add('out'); } });
         M.ov.classList.remove('voting'); G.phase = 'pspin'; G.barMs = 0; push();
-        var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); }); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
+        var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); }); M.ov.classList.remove('ticking'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
         if (tied.length < 2) { M.ov.querySelector('.slsub').textContent = 'Most votes!'; slotT = setTimeout(land, 1400); return; }
         M.ov.querySelector('.slsub').textContent = 'A tie! 🎲'; var hops = 12 + Math.floor(Math.random() * tied.length), st0 = (tied.indexOf(win) - hops % tied.length + tied.length * 8) % tied.length, hn = 0;
-        var hop = function () {   // the light ticks from one tied game to the next, slower and slower, and stops on the winner
+        M.ov.classList.add('ticking'); var hop = function () {   // the light ticks from one tied game to the next, slower and slower, and stops on the winner
           M.hi.forEach(function (x) { x.classList.remove('tick'); }); var c = cellOf(tied[(st0 + hn) % tied.length]); if (c) c.classList.add('tick'); Music.plop(hn);
           if (hn >= hops) { slotT = setTimeout(land, LAND); return; }
           hn++; slotT = setTimeout(hop, 90 + Math.pow(hn / hops, 2.4) * 520);
@@ -1671,6 +1672,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var st = ov.querySelector('.slstrip'), win = ov.querySelector('.slrow.main');
     var M = { ov: ov, st: st, win: win, ks: ks, n: n, REP: REP, place: function (i, off) { var c = st.children[i]; return -(c.offsetLeft + c.offsetWidth / 2 - win.clientWidth / 2) + (off || 0); } };
     st.style.transition = 'none'; st.style.transform = 'translateX(' + M.place(Math.floor(Math.random() * n) + n) + 'px)';
+    // the symbols above and below always drift; a pull of the lever speeds them up, and they slow down together with the reel (no jump at the end)
+    var ds = ov.querySelectorAll('.sldeco'), pos = 0, last = performance.now();
+    var dl = function (now) {
+      if (!ov.isConnected) return;
+      var dt = Math.min(0.1, (now - last) / 1000), vw = innerWidth / 100, e = ov._spin0 ? (Date.now() - ov._spin0) / 5200 : 1; last = now;
+      var P = ds[0].children[12].offsetLeft - ds[0].children[0].offsetLeft || 1;   // (one round of the twelve symbols)
+      pos = (pos + (1.6 + 30 * Math.pow(Math.max(0, 1 - e), 2.4)) * vw * dt) % P;
+      ds[0].style.transform = 'translateX(' + (-pos) + 'px)'; if (ds[1]) ds[1].style.transform = 'translateX(' + (pos - P) + 'px)';
+      requestAnimationFrame(dl);
+    };
+    requestAnimationFrame(dl);
     return M;
   }
   function slotSpin(M, chosen, then) {   // pull the lever: the reel spins, slows down and stops on the chosen game
@@ -1678,13 +1690,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var target = M.n * (M.REP - 2) + M.ks.indexOf(chosen);
     ov.querySelector('.slbtn').classList.add('push'); ov.querySelector('.sllever').classList.add('pull'); Music.blip();
     st.getBoundingClientRect(); st.style.transition = 'transform 5.2s cubic-bezier(.12,.62,.08,1)'; st.style.transform = 'translateX(' + M.place(target) + 'px)';
-    [].forEach.call(ov.querySelectorAll('.sldeco'), function (d, i) { d.classList.add(i ? 'spinr' : 'spinl'); });
+    ov._spin0 = Date.now();
     var t0 = Date.now(), tick = function () { var e = (Date.now() - t0) / 5200; if (e >= 1 || !ov.isConnected) return; Music.plop(Math.floor(e * 12)); slotT = setTimeout(tick, 60 + Math.pow(e, 2.2) * 600); }; tick();
     slotT = setTimeout(function () {
       if (!ov.isConnected) return;
       st.children[target].classList.add('won'); ov.classList.add('done'); Music.ding(); if (chosen === 'clue') { clueSting(); G.clueSting = true; }
-      [].forEach.call(ov.querySelectorAll('.sldeco'), function (d) { d.classList.remove('spinl', 'spinr'); });
-      slotT = setTimeout(function () { ov.classList.add('leaving'); setTimeout(function () { ov.remove(); G.slot = null; then(); }, 600); }, 2600);
+            slotT = setTimeout(function () { ov.classList.add('leaving'); setTimeout(function () { ov.remove(); G.slot = null; then(); }, 600); }, 2600);
     }, 5400);
   }
   // More than one party round to choose from: a spin decides, like a party-game minigame picker.
