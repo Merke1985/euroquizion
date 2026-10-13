@@ -3978,7 +3978,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['him', 'The Euroclub! DJ Konstantin lights up the symbols in a secret order. Remember it! 🪩', 'club'],
       ['her', 'Backstage! Someone pulled out all the cables. Which one goes where? 🔌', 'back'],
       ['him', 'Woodruff’s Boudoir! Dresses, wigs, and three guests in their finest outfits. 👗', 'boud'],
-      ['her', 'Every answer is up here on the big screen. A wrong answer locks you out for 5 seconds! The fastest detective gets an extra clue. Go! 🔍', 'all']
+      ['her', 'Every answer is up here on the big screen. A wrong answer locks you out for 10 seconds! The fastest detective gets an extra clue. Go! 🔍', 'all']
     ], t = 1800, id = g.id;
     lines.forEach(function (l) {
       (function (l, t0) { clueTimer = setTimeout(function () {

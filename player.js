@@ -983,10 +983,10 @@
     var score = function () { return R.max === 3 ? right : right === 3 ? 2 : right === 2 ? 1 : 0; };
     box._score = score;
     $('waittitle').textContent = R.icon + ' ' + R.name;
-    var next = function (ok) {   // a wrong answer locks the room for 5 seconds, then you try the same one again
+    var next = function (ok) {   // a wrong answer locks the room for 10 seconds, then you try the same one again
       if (ok) { right++; qi++; try { navigator.vibrate && navigator.vibrate(15); } catch (e) {} ask(); return; }
       try { navigator.vibrate && navigator.vibrate([60, 40, 160]); } catch (e) {}
-      var n = 5, tick = function () {
+      var n = 10, tick = function () {
         if (!edCur) return;
         if (n <= 0) { ask(); return; }
         box.innerHTML = '<div class="edlook">👀 Look at the <b>' + R.icon + ' ' + R.name + '</b> on the big screen · ' + (qi + 1) + ' / 3</div><div class="edlock"><span>🔒</span><b>Wrong!</b><small>Locked… try again in</small><em>' + n + '</em></div>';
