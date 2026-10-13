@@ -1464,7 +1464,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Search the four rooms on your phone in two minutes for secret clues, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
-    fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
+    fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song from the last five contests on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts before the sound system breaks down (10 seconds to one minute). Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet: a solo star first, then groups of two to five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Keep your balance in space! Follow the glowing zone on your phone with your finger as it moves with the music. Stay in the zone: whoever keeps their balance until the end wins!' },
@@ -2784,7 +2784,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       : 'No final game tonight: whoever has the most points after the last question wins!';
     // 1. What we play tonight
     if (party) {
+      if (G.tourMax) say('Tonight it’s Party Night with ' + (['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][G.tourMax] || G.tourMax) + ' party games, and you vote for each one! 🗳️'); else
       say({ order: 'Tonight it’s Party mode: the Grand Tour! 🎉', random: 'Tonight it’s Party mode, and the wheel decides! 🎡', vote: 'Tonight it’s Party mode, and you vote! 🗳️', one: 'Tonight it’s Party mode, and you take turns to choose!' }[G.partyPick] || 'Tonight it’s Party mode! 🎉');
+      if (G.tourMax) say('First ' + (['', 'one trivia question', 'two trivia questions', 'three trivia questions', 'four trivia questions', 'five trivia questions', 'six trivia questions'][G.block || 5] || (G.block + ' trivia questions')) + ', then a party game, and so on, until all ' + G.tourMax + ' party games have been played.'); else
       say({ order: 'First ' + (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')).toLowerCase() + ', then a party game, and so on, until every party game has had its turn.', random: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then the wheel picks a party game, and so on.', vote: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then you vote for the next party game, and so on.', one: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then one of you picks the next party game, and so on.' }[G.partyPick] || (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then a party game, and so on.');
     } else if (lad) say(G.parts > 1 ? 'Tonight we play the Ladder, in ' + G.parts + ' rounds! 🪜' : 'Tonight we play the Ladder! 🪜');
     else say(multi ? 'Tonight it’s a quiz in ' + G.parts + ' rounds, of ' + G.per + ' questions each! 🎤' : 'Tonight it’s a quiz: ' + G.per + ' questions about Eurovision songs! 🎤');
@@ -4394,7 +4396,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       get art() { return '<div class="hsfake">' + FK_ART + '</div>'; },
       lines: [['him', 'Shhh… 🤫 There’s a fake fan among you! Three rounds, a new fake every time.'],
         ['her', 'Everyone gets the same secret Eurovision song on their phone. Everyone… except the fake fan.'],
-        ['him', 'One by one, give one word about the song. Not too obvious, or the fake will know it too!'],
+        ['him', 'The secret song is always from the last five contests. One by one, give one word about it. Not too obvious, or the fake will know it too!'],
         ['her', 'Then vote: who is the fake? Caught, the fake can still win by guessing the song. Escaped? Douze points! 😈']] },
     zg: { sign: '🌌 Zero Gravity', theme: 'zg',
       get art() { return '<div class="hszg">' + ZG_SINGER + '</div>'; },
@@ -5307,7 +5309,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var FK_CHAIR = '<svg class="fkchair" viewBox="0 0 120 200" aria-hidden="true"><path d="M18 96 Q14 30 30 16 Q60 -4 90 16 Q106 30 102 96 Z" fill="#c8963a" stroke="#5a3a10" stroke-width="3"/><path d="M28 92 Q26 38 38 28 Q60 14 82 28 Q94 38 92 92 Z" fill="#7a1430"/><path d="M60 24 l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z" fill="#e8b84a"/>' +
     '<rect x="10" y="96" width="100" height="18" rx="7" fill="#8a1a38" stroke="#5a3a10" stroke-width="3"/><rect x="6" y="80" width="14" height="40" rx="5" fill="#c8963a" stroke="#5a3a10" stroke-width="2.5"/><rect x="100" y="80" width="14" height="40" rx="5" fill="#c8963a" stroke="#5a3a10" stroke-width="2.5"/>' +
     '<path d="M18 114 L14 196 M102 114 L106 196 M40 114 L38 188 M80 114 L82 188" stroke="#7a5420" stroke-width="7" stroke-linecap="round"/></svg>';   // (a high-backed throne chair: carved gold frame, red velvet, a star)
-  function fkSongs() { return (songs || []).filter(function (s) { return s[0] >= 1985 && (s[5] === 2 || (s[6] != null && s[6] <= 10 && s[8] == null)); }); }
+  function fkLast() { var y = 0; (songs || []).forEach(function (s) { if (s[0] > y) y = s[0]; }); return y || 2026; }   // the latest contest in the song list
+  function fkSongs() { var y = fkLast(); return (songs || []).filter(function (s) { return s[0] >= y - 4; }); }   // (only the last five contests: known up front, so the fake has a fair chance)
   var FK_ROUNDS = 3, fkSongT = null;
   function fkSong(on, fade) {   // "Lie To Me" (Czechia 2018), quietly under the whole game
     clearInterval(fkSongT); fkSongT = null;
@@ -5332,7 +5335,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function fkRound() {   // a new round: a new song, a new fake (someone who hasn't been it yet), a new order
     var g = G.fake; if (!g) return;
     var act = list().filter(function (p) { return !p.off; }).map(function (p) { return p.pid; });
-    var pool = fkSongs().filter(function (s) { return g.used.indexOf(s[4]) < 0; }); if (pool.length < 4) pool = songs.slice();
+    var pool = fkSongs().filter(function (s) { return g.used.indexOf(s[4]) < 0; }); if (pool.length < 4) pool = fkSongs();
     var song = pick(pool), fresh = act.filter(function (k) { return g.fakes.indexOf(k) < 0; }), fake = pick(fresh.length ? fresh : act), order = shuffle(act.slice());
     if (order[0] === fake) { order.push(order.shift()); }   // (the fake never goes first)
     var others = shuffle(pool.filter(function (s) { return s[4] !== song[4] && s[3] !== song[3]; })).slice(0, 3);

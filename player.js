@@ -628,7 +628,7 @@
     if (mine && !me && fkAsked !== f.id) { fkAsked = f.id; fkSend({ ask: 1 }); }
     var nm = function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; };
     var card = !mine ? '' : !me ? '<div class="fkcard wait">🤫 Getting your card…</div>' : me.role === 'fake'
-      ? '<div class="fkcard fake"><b>🤫 You’re the FAKE FAN!</b><span>You don’t know the song. Blend in: listen to the others’ words, and don’t get caught!</span></div>'
+      ? '<div class="fkcard fake"><b>🤫 You’re the FAKE FAN!</b><span>You don’t know the song, but it’s from the last five contests. Blend in: listen to the others’ words, and don’t get caught!</span></div>'
       : '<div class="fkcard"><small>The secret song</small><b>' + esc(me.song.t) + '</b><span>' + esc(me.song.a) + ' · ' + esc(me.song.c) + ' ' + me.song.y + '</span></div>';
     var key = f.id + '|' + f.st + '|' + f.turn + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.words) + '|' + JSON.stringify(f.voted) + '|' + f.fake + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0) + '|' + JSON.stringify(f.judged || {});
     if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
