@@ -493,7 +493,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'scene') && $('hsov')) $('hsov').remove();
     if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov') && !$('clueov').classList.contains('leaving')) $('clueov').remove();
     if (G.phase !== 'cluerooms' && $('edov') && !$('edov').classList.contains('leaving')) { $('edov').remove(); clearInterval(edTick); }
-    if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
+    if (!G.clue && G.mode !== 'clue' && clueYtOn) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
     if (G.phase !== 'fake' && $('fkov')) { $('fkov').remove(); clearInterval(fkTick); }
     if (G.phase !== 'organ' && $('orov')) { $('orov').remove(); clearInterval(orTick); if (orSongT || orFxT || (orAud && !orAud.paused)) orSong(false); }
@@ -1484,7 +1484,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
-    if (kind === 'clue') { if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
+    if (kind === 'clue') { if (!REMOTE) { Music.want(false); clueYt(true); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
     if (kind === 'queue') {   // Sofia needs some air first, and takes everyone outside, to Verona
       if (REMOTE) { qjAll(); return; }
@@ -3623,51 +3623,34 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var clueTimer = null, clueTick = null;
   // Edgar's own tune loops from the start of his game through the four clue questions. Those questions are only ones
   // without a video, so nothing else plays over it.
-  var poeAudio = null;
-  function clueSong() {
+  // The music: one YouTube track from 0:14, from the moment Edgar is chosen until the end of the game (looping; a pause
+  // anywhere in the game is picked up again within a second).
+  var poeAudio = null, clueYtT = null, clueYtOn = false, CLUE_YT = 'ZMmLeV47Au4', CLUE_YT_AT = 14;
+  function clueYt(on) {
     if (REMOTE) return;
+    clearInterval(clueYtT); clueYtT = null;
+    if (!on) { if (clueYtOn) { clueYtOn = false; try { if (stage === 'clue') yt.pauseVideo(); } catch (e) {} } return; }
     try {
-      if (!poeAudio) poeAudio = new Audio('sounds/poe.mp3');
-      clearInterval(poeFade); poeAudio.loop = true; if (poeWatch && poeAudio.paused) { poeAudio.removeEventListener('timeupdate', poeWatch); poeWatch = null; }
-      poeAudio.volume = Math.max(0, Math.min(1, 0.6 * (Music.vol ? Music.vol.music : 1)));
-      if (poeAudio.paused) { poeAudio.currentTime = 0; var pr = poeAudio.play(); if (pr && pr.catch) pr.catch(function () {}); }
+      if (!clueYtOn || stage !== 'clue') { stage = 'clue'; yt.loadVideoById({ videoId: CLUE_YT, startSeconds: CLUE_YT_AT }); }
+      yt.unMute(); yt.setVolume(45); clueYtOn = true;
     } catch (e) {}
+    clueYtT = setInterval(function () {
+      if (!clueYtOn || stage !== 'clue' || (!G.clue && G.mode !== 'clue')) { if (!G.clue && G.mode !== 'clue') clueYt(false); return; }
+      try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(CLUE_YT_AT, true); yt.playVideo(); } else if (st === 2 || st === 5 || st === -1) yt.playVideo(); } catch (e) {}
+    }, 1000);
   }
-  // The last clue question: no more loops, the tune plays its current round to the end (it ends near the answer);
-  // if anything is still playing when the accusation starts, it fades out instead of stopping dead.
-  var poeFade = null, poeWatch = null;
-  // If the round that is playing would end soon (within 15 seconds: too early, in the middle of the question),
-  // it goes round once more and only that next round is the last.
-  // When the tune's current round is over, then(): it stops looping, and the reveal waits for its last note
-  // (with a safety net in case the sound never ends, e.g. blocked by the browser).
-  function poeThen(then) {
-    var a = poeAudio, done = false, go = function () { if (done) return; done = true; a && a.removeEventListener('ended', go); then(); };
-    if (REMOTE || !a || a.paused || a.ended) { then(); return; }
-    a.loop = false; a.addEventListener('ended', go);
-    setTimeout(go, Math.max(1, ((a.duration || 26) - (a.currentTime || 0))) * 1000 + 1500);
-  }
-  function clueSongLast() {
-    var a = poeAudio; if (!a || a.paused) return;
-    var left = (a.duration || 26) - (a.currentTime || 0);
-    if (left >= 15) { a.loop = false; return; }
-    var last = a.currentTime;
-    if (poeWatch) a.removeEventListener('timeupdate', poeWatch);
-    var watch = poeWatch = function () { if (a.currentTime < last) { a.loop = false; a.removeEventListener('timeupdate', watch); } else last = a.currentTime; };   // (it just wrapped round: this round is the last)
-    a.addEventListener('timeupdate', watch);
-  }
-  function clueSongFade() {
-    if (!poeAudio || poeAudio.paused) return;
-    var a = poeAudio, v0 = a.volume, n = 0; clearInterval(poeFade);
-    poeFade = setInterval(function () { n++; a.volume = Math.max(0, v0 * (1 - n / 15)); if (n >= 15) { clearInterval(poeFade); try { a.pause(); } catch (e) {} a.volume = v0; } }, 100);
+  function clueSong() { clueYt(true); }
+  function poeThen(then) { then(); }
+  function clueSongLast() {}
+  function clueSongFade() {   // (the end: the music fades out)
+    if (REMOTE || !clueYtOn) return; clearInterval(clueYtT); clueYtT = null; clueYtOn = false;
+    var v = 45, t = setInterval(function () { v -= 3; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(t); try { if (stage === 'clue') yt.pauseVideo(); } catch (e) {} } }, 150);
   }
   // "Who the hell…?!": when the spin lands on this game (or as it starts, when it was not spun)
   function clueSting() { if (REMOTE) return; try { var w = new Audio('sounds/who_the_hell.mp3'); w.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
-  function clueSongStop() { if (poeAudio) try { poeAudio.pause(); } catch (e) {} if (egghAudio) try { egghAudio.pause(); } catch (e) {} }
+  function clueSongStop() { clueYt(false); }
   var egghAudio = null;
-  clueReveal.music = function () {   // the reveal's own track (once, not looped)
-    if (REMOTE) return;
-    try { if (!egghAudio) egghAudio = new Audio('sounds/egghh.mp3'); egghAudio.volume = Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.music : 1))); egghAudio.currentTime = 0; var pr = egghAudio.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
-  };
+  clueReveal.music = function () {};   // (no separate track for the reveal: the game's music plays on)
   var CLUE_TYPES = ['trivia', 'flag', 'host', 'odd', 'lost'];   // question types without a video
   // Edgar, the show's mascot: a big-headed cartoon inspired by Edgar Allan Poe, with his little raven on his shoulder.
   var EDGAR = '<svg class="edgar" viewBox="0 0 200 300" aria-hidden="true"><defs><radialGradient id="edskin" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#fff4e8"/><stop offset="1" stop-color="#e9d2bd"/></radialGradient><linearGradient id="edcoat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3466"/><stop offset="1" stop-color="#1d1a3c"/></linearGradient></defs><ellipse cx="100" cy="292" rx="58" ry="7" fill="rgba(0,0,0,.35)"/><rect x="70" y="250" width="22" height="34" rx="8" fill="#1d1a3c"/><rect x="108" y="250" width="22" height="34" rx="8" fill="#1d1a3c"/><ellipse cx="78" cy="286" rx="18" ry="8" fill="#111"/><ellipse cx="122" cy="286" rx="18" ry="8" fill="#111"/><path d="M44 190 Q46 150 100 148 Q154 150 156 190 L162 258 Q100 274 38 258 Z" fill="url(#edcoat)"/><path d="M100 150 L84 150 L100 210 L116 150 Z" fill="#fff"/><path d="M100 166 L82 156 L82 176 Z M100 166 L118 156 L118 176 Z" fill="#111"/><circle cx="100" cy="166" r="5" fill="#222"/><circle cx="100" cy="222" r="4" fill="#d9b44a"/><circle cx="100" cy="240" r="4" fill="#d9b44a"/><path d="M46 178 Q22 196 24 226" stroke="url(#edcoat)" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="24" cy="230" r="12" fill="#fff"/><path d="M154 178 Q182 160 182 132" stroke="url(#edcoat)" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="182" cy="126" r="12" fill="#fff"/><ellipse cx="100" cy="92" rx="66" ry="70" fill="url(#edskin)"/><ellipse cx="38" cy="98" rx="10" ry="16" fill="#e9d2bd"/><ellipse cx="162" cy="98" rx="10" ry="16" fill="#e9d2bd"/><path d="M34 92 Q26 40 70 24 Q104 10 140 26 Q176 44 168 96 Q160 70 148 62 Q150 44 126 40 Q130 52 116 50 Q96 44 84 52 Q62 58 54 74 Q42 80 34 92 Z" fill="#1a1420"/><path d="M34 92 Q30 112 40 128 Q38 108 46 96 Z M168 96 Q172 116 160 130 Q162 110 154 98 Z" fill="#1a1420"/><path d="M64 80 Q76 72 88 80" stroke="#1a1420" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M112 80 Q124 72 136 80" stroke="#1a1420" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="78" cy="96" rx="11" ry="13" fill="#fff"/><ellipse cx="122" cy="96" rx="11" ry="13" fill="#fff"/><circle cx="80" cy="98" r="7" fill="#2a1c3a"/><circle cx="124" cy="98" r="7" fill="#2a1c3a"/><circle cx="82" cy="95" r="2.5" fill="#fff"/><circle cx="126" cy="95" r="2.5" fill="#fff"/><ellipse cx="66" cy="116" rx="9" ry="5" fill="#f2a7a7" opacity=".55"/><ellipse cx="134" cy="116" rx="9" ry="5" fill="#f2a7a7" opacity=".55"/><path d="M100 104 Q96 116 102 118" stroke="#cfa98a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M100 124 Q86 118 72 128 Q84 130 100 128 Q116 130 128 128 Q114 118 100 124 Z" fill="#1a1420"/><path d="M88 136 Q100 144 112 136" stroke="#7a3b3b" stroke-width="3" fill="none" stroke-linecap="round"/><g class="edraven"><path d="M136 160 Q140 140 158 138 Q172 138 176 150 Q182 158 176 168 Q160 176 140 170 Z" fill="#15121c"/><path d="M146 166 L132 178 L150 172 Z" fill="#15121c"/><circle cx="164" cy="148" r="3.2" fill="#fff"/><circle cx="165" cy="148" r="1.6" fill="#111"/><path d="M174 150 L188 154 L174 157 Z" fill="#f2b134"/></g></svg>';
@@ -3679,7 +3662,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       sol: { who: pick(CLUE_WHO).id, where: pick(CLUE_WHERE).id, what: pick(CLUE_WHAT).id } };
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
-    clueShow(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); }   // mysterious music under the story and the briefing; Edgar's tune once the search starts
+    clueShow(); if (!REMOTE) { Music.want(false); clueYt(true); }   // mysterious music under the story and the briefing; Edgar's tune once the search starts
     G.clueSting = false;   // (the sting plays right after “abducted!”)
     var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); ov.classList.add('nohosts'); ov.classList.add('noframe'); }
     setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('noframe'); Music.blip(); } }, 2600);   // the framed photo, a little later
@@ -3790,7 +3773,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = function (ms, f) { setTimeout(function () { if (G.clue && G.clue.st === 'reveal') f(); }, ms); };
     // The reveal, row by row (top row first, the culprit last): a question, then the wrong cards drop out one by one
     // until only the right one is left, which lights up. Its own music plays underneath.
-    clueSongFade(); clueReveal.music();
+    clueReveal.music();
     g.dimmed = {};
     var lines = {
       where: ['Where was Edgar hidden?', where.icon + ' ' + where.in.charAt(0).toUpperCase() + where.in.slice(1) + '!'],
@@ -4079,7 +4062,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = '';
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } edShow();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); clueYt(true); } edShow();
     var lines = [
       ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
       ['her', 'The Green Room! Who sits where? The guests only sit down now and then, so keep your eyes open. 🛋️', 'green'],
