@@ -918,14 +918,15 @@ function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y 
 // 2:10 to the end the maximum sway (1 s). In a break the poles come back to the middle and nobody can fall.
 // x goes from -1 (far left) to 1 (far right).
 var ZG_LEN = 175, ZG_ST = [72, 130], ZG_BRK = [[67, 72], [125, 130]], ZG_W = [0.2, 0.18, 0.16], ZG_FALL = [3, 2, 1], zgPar = {};
+function zgNext(t) { var n = ZG_LEN; ZG_BRK.forEach(function (b) { if (b[0] > t && b[0] < n) n = b[0]; if (t >= b[0] && t < b[1] && b[1] < n) n = b[1]; }); return n; }   // (the end of the current stage, or break)
 function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
 function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function zgPath(seed, t) {
   var p = zgPar[seed]; if (!p) { var r = zgRnd(seed); p = zgPar[seed] = []; for (var i = 0; i < 9; i++) p.push(r() * 6.283); }
   var sm = function (v) { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
   var w3 = sm((t - ZG_ST[1] + 1) / 2), w2 = sm((t - ZG_ST[0] + 1) / 2) - w3, w1 = 1 - w2 - w3;
-  var a = 0.6 * Math.sin(0.45 * t + p[0]) + 0.15 * Math.sin(0.9 * t + p[1]);
-  var b = 0.5 * Math.sin(0.8 * t + p[3]) + 0.25 * Math.sin(1.7 * t + p[4]);
+  var a = 0.62 * Math.sin(2 * Math.PI * t / 8);     // stage 1: a slow, steady swing (left and right every 8 seconds): predictable
+  var b = 0.72 * Math.sin(2 * Math.PI * t / 4.5);   // stage 2: the same steady swing, faster and wider (every 4.5 seconds)
   var c = 0.55 * Math.tanh(3 * Math.sin(1.1 * t + p[6])) + 0.3 * Math.sin(2.5 * t + p[7]) + 0.12 * Math.sin(3.9 * t + p[8]);   // (the last stage: maximum sway)
   var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 1.5) : t > b[1] ? sm((t - b[1]) / 1.5) : 0; });   // (the breaks: back to the middle, and calm)
   return Math.max(-0.88, Math.min(0.88, env * (w1 * a + w2 * b + w3 * c)));
@@ -969,3 +970,18 @@ function escSave(key, data, pass) {   // -> a promise: true, or an error message
   }, function (e) { return String(e && e.message || e); });
 }
 if (typeof document !== 'undefined') escLoad();
+
+// An old copy of the page (left open, or cached by a TV's browser) checks once when it opens whether there is a newer
+// version, and reloads itself if so: the big screen and the phones must run the same game.
+(function () {
+  try {
+    var me = document.querySelector('script[src*="quiz.js?v="]'), v = me && +(me.getAttribute('src').match(/v=(\d+)/) || [])[1];
+    if (!v) return;
+    var page = location.pathname.split('/').pop() || 'index.html';
+    fetch(page + (page.indexOf('?') < 0 ? '?' : '&') + 'fresh=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+      var m = t.match(/quiz\.js\?v=(\d+)/); if (!m || +m[1] <= v) return;
+      var k = 'esc-fresh-' + m[1]; try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); } catch (e) {}
+      location.reload();
+    }).catch(function () {});
+  } catch (e) {}
+})();
