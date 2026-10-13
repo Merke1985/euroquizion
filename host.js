@@ -1461,7 +1461,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
     fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! First predict how long the diva’s note lasts (10 seconds to one minute). Then, before she sings, grab the controls: more power and the boost break it sooner, the cooling fan keeps it going. Closest prediction wins!' },
-    carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet, from one star up to a group of five! Watch every contestant closely: after each parade comes one memory question. Most right answers wins; a tie goes to the fastest.' },
+    carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet, from one star up to a group of five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Off it for too long and you fall. The last ones standing win!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes and fix the cables. Three phases, each harder than the last. The best repairer wins!' },
@@ -4194,8 +4194,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
         ['her', 'They pose for the photographers: first alone, then in bigger and bigger groups. Watch them closely!'],
         ['him', 'Hats, sunglasses, dresses, colours, shoes… remember everything you can! 👒🕶️👠'],
-        ['her', 'After each parade comes one question on your phone. You have 20 seconds to answer.'],
-        ['him', 'Five parades, five questions: one star first, then two, and one more every time!'],
+        ['her', 'After each act comes one question on your phone. You have 20 seconds to answer.'],
+        ['him', 'Five Eurovision acts, five questions: one star first, then two, and one more every time! Some acts even bring their country’s flag. 🚩'],
         ['her', 'Most right answers wins. A tie? Then the fastest wins! 📸']] },
     bomb: { sign: '💣 The Unlucky Draw', theme: 'bomb',
       art: '<div class="hsbomb"><span class="hsenv" style="--r:-12deg;--x:-20vh">✉️</span><span class="hsenv" style="--r:6deg;--x:-6vh">✉️</span><span class="hsenv hsboom" style="--r:-4deg;--x:8vh">✉️</span><span class="hsenv" style="--r:14deg;--x:22vh">✉️</span><span class="hsfuse">💣</span></div>',
@@ -4350,11 +4350,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function tcQuestion(girls, used) {
     var n = girls.length, ALL = n === 1 ? ['color', 'hatyn', 'glassyn', 'shoes'] : ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'];   // (one star alone: no counting, just what they wore)
     var types = ALL.filter(function (t) { return used.indexOf(t) < 0; }); if (!types.length) types = ALL;
+    var fl = girls.filter(function (w) { return w.f; })[0]; if (fl && Math.random() < .5) types = ['flagq'];   // (an act with a flag: often a question about it)
     var t = pick(types), cnt = function (f) { return girls.filter(f).length; };
     var nums = function (ans) { var hi = Math.max(3, n), lo = Math.max(0, Math.min(ans - Math.floor(Math.random() * 4), hi - 3)); var o = []; for (var i = lo; i < lo + 4; i++) o.push(String(i)); return { opts: o, ans: ans - lo }; };
     var q;
     var who = function (w) { var inRow = girls.filter(function (x) { return x.row === w.row; }).length; return girls.length === 1 ? 'the contestant' : w.row ? (inRow === 1 ? 'the contestant in the ' + w.row + ' row' : 'the ' + TC_ORD[w.col] + ' contestant from the left in the ' + w.row + ' row') : 'the ' + TC_ORD[girls.indexOf(w)] + ' contestant from the left'; };
-    if (t === 'hatyn') q = { opts: ['Yes', 'No'], ans: girls[0].h > 0 ? 0 : 1, text: 'Was the contestant wearing a hat?' };
+    if (t === 'flagq') { var fo = shuffle([fl.f].concat(shuffle(FAN_FLAGS.filter(function (c) { return c !== fl.f; })).slice(0, 3))); q = { opts: fo.map(function (c) { return countries[c] || c.toUpperCase(); }), ans: fo.indexOf(fl.f), text: 'Which country’s flag did this act carry?' }; }
+    else if (t === 'hatyn') q = { opts: ['Yes', 'No'], ans: girls[0].h > 0 ? 0 : 1, text: 'Was the contestant wearing a hat?' };
     else if (t === 'glassyn') q = { opts: ['Yes', 'No'], ans: girls[0].g ? 0 : 1, text: 'Was the contestant wearing sunglasses?' };
     else if (t === 'hat') q = nums(cnt(function (w) { return w.h > 0; })), q.text = 'How many contestants wore a hat?';
     else if (t === 'glasses') q = nums(cnt(function (w) { return w.g; })), q.text = 'How many contestants wore sunglasses?';
@@ -4387,6 +4389,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // a group photo in two rows: the bigger half standing at the back, the rest in front (kneeling or standing, at random)
     var nb = Math.ceil(n / 2), STAND = ['hips', 'wave', 'up', 'point', 'lean'];
     g.girls.forEach(function (w, i) { var back = i < nb; w.row = back ? 'back' : 'front'; w.col = back ? i : i - nb; w.p = back || Math.random() < .5 ? pick(STAND) : 'kneel'; });
+    if (g.sec >= 2 && Math.random() < .55) { var fb = g.girls[Math.floor(Math.random() * nb)]; fb.f = pick(FAN_FLAGS); fb.p = 'flag'; }   // (some acts bring their country's flag)
     g.st = 'walk'; g.cur = -1; g.q = null; push();
     var step = function () {   // the whole group walks on together, poses, and walks off
       if (G.carpet !== g) return;
@@ -4651,7 +4654,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       add(head, new T.CylinderGeometry(.285, .285, .06, 18), M('#d9a520', { metalness: .5, roughness: .4 }), 0, .29, 0).scale.set(1, 1, .9);
       add(head, new T.BoxGeometry(.3, .04, .5), M('#3a3a48'), 0, .52, 0).scale.set(.7, 1, .5);
     }
-    g.userData = { lh: lh, rh: rh, la: la, ra: ra, head: head };
+    if (w.f) {   // a flag on a pole, held up at the side
+      var pole = add(g, new T.CylinderGeometry(.025, .025, 3.6, 8), M('#d9a520', { metalness: .6, roughness: .3 }), .62, 2.2, .1);
+      add(g, new T.SphereGeometry(.06, 10, 8), M('#d9a520', { metalness: .6, roughness: .3 }), .62, 4.02, .1);
+      var tx = new T.TextureLoader(); tx.setCrossOrigin('anonymous');
+      var ft = tx.load('https://flagcdn.com/w320/' + w.f + '.png'); ft.encoding = T.sRGBEncoding;
+      var piv = new T.Group(); piv.position.set(.62, 3.52, .1); g.add(piv);   // (the flag turns on the pole: towards the cameras, trailing behind while walking)
+      var flag = add(piv, new T.PlaneGeometry(1.2, .8, 12, 4), new T.MeshStandardMaterial({ map: ft, side: T.DoubleSide, roughness: .8 }), .61, 0, 0);
+      g.userData.flag = flag; g.userData.fpiv = piv; g.userData.flagPos = flag.geometry.attributes.position.array.slice();
+    }
+    g.userData = Object.assign(g.userData || {}, { lh: lh, rh: rh, la: la, ra: ra, head: head });
     return g;
   }
   // Where the contestant is at time ms of their walk: in from the left, turn to the cameras, pose, turn back, out to the right.
@@ -4676,8 +4688,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       else if (p === 'up') { u.la.rotation.z = -pk * (2.7 + wav * .12); u.ra.rotation.z = pk * (2.7 - wav * .12); u.head.rotation.x = -pk * .15; }
       else if (p === 'kneel') { u.lh.rotation.x = -kn * 1.45; u.rh.rotation.x = kn * .95; u.la.rotation.x = -pk * .9; u.la.rotation.z = -pk * .2; u.ra.rotation.z = pk * (2.4 + wav * .2); u.head.rotation.z = -pk * .15; }
       else if (p === 'point') { u.ra.rotation.x = -pk * 1.45; u.ra.rotation.z = pk * .15; u.la.rotation.z = -pk * .75; u.la.rotation.x = pk * .35; u.head.rotation.y = pk * .15; }
+      else if (p === 'flag') { u.ra.rotation.z = .55; u.ra.rotation.x = -.15; u.la.rotation.z = -pk * (2.5 + wav * .25); u.head.rotation.z = -pk * .12; }
       else { u.ra.rotation.z = pk * .8; u.ra.rotation.x = pk * .3; u.la.rotation.z = -pk * .3; u.lh.rotation.z = -pk * .1; u.rh.rotation.z = pk * .2; f.rotation.z = pk * .1; u.head.rotation.z = pk * .25; u.head.rotation.y = pk * Math.sin(ms / 600) * .2; }
       if (p !== 'hips' && p !== 'wave' && p !== 'lean') f.rotation.z = 0;
+      if (u.fpiv) u.fpiv.rotation.y = -rot + rot / (Math.PI / 2) * Math.PI;
+      if (u.flag) { var pa = u.flag.geometry.attributes.position, o0 = u.flagPos; for (var vi = 0; vi < pa.count; vi++) { var vx = o0[vi * 3]; pa.array[vi * 3 + 2] = o0[vi * 3 + 2] + Math.sin(vx * 4 - ms / 180) * .08 * (vx + .6); } pa.needsUpdate = true; }   // (the flag waves)
     });
   }
   function tc3Show(st, ov, g) {   // a new contestant on the carpet (or none)
@@ -4720,7 +4735,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov._3 && window.THREE && !REMOTE) { ov._3 = tc3Init(ov.querySelector('.tc3d')); if (ov._3) ov.classList.add('is3d'); }
     if (ov._3) tc3Show(ov._3, ov, g);
     ov.setAttribute('data-st', g.st);
-    ov.querySelector('.tcsec').innerHTML = g.sec ? 'Parade ' + g.sec + ' of 5' : g.st === 'intro' ? '' : 'Get ready…';
+    ov.querySelector('.tcsec').innerHTML = g.sec ? 'Eurovision act ' + g.sec + ' of 5' : g.st === 'intro' ? '' : 'Get ready…';
     // the contestant of the moment: walks on, poses for the flashes, walks off
     var wk = ov.querySelector('.tcwalk'), key = g.sec + ':' + g.cur;
     if (!ov._3 && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {

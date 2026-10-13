@@ -557,16 +557,16 @@
   }
 
   // ---------- Turquoise Carpet ----------
-  // Watch the runway; after each parade, the question with four answers (20 seconds).
+  // Watch the runway; after each act, the question with four answers (20 seconds).
   var tcSent = {}, tcTimerT = null, tcEnd = 0;
   function carpetView(s) {
     var c = s.carpet, box = $('carpetui');
-    show('v-wait'); $('waitlabel').textContent = c.sec ? 'Parade ' + c.sec + ' of 5' : '';
+    show('v-wait'); $('waitlabel').textContent = c.sec ? 'Eurovision act ' + c.sec + ' of 5' : '';
     var mineT = (c.tot || {})[pid] || { n: 0 }, score = '⭐ ' + mineT.n + ' right so far';
     clearInterval(tcTimerT);
     if (c.st === 'ready' || c.st === 'walk') {
       box.classList.add('hidden'); box.innerHTML = ''; box.removeAttribute('data-k');
-      $('waittitle').textContent = '👀 Watch the runway!'; $('waitsub').textContent = (c.st === 'walk' && c.n ? c.n + ' contestants in this parade. ' : '') + 'Remember hats, sunglasses, outfits, colours and shoes!' + (c.sec > 1 ? ' ' + score : '');
+      $('waittitle').textContent = '👀 Watch the runway!'; $('waitsub').textContent = (c.st === 'walk' && c.n ? (c.n > 1 ? c.n + ' contestants in this act. ' : 'A solo act! ') : '') + 'Remember hats, sunglasses, outfits, colours, shoes and flags!' + (c.sec > 1 ? ' ' + score : '');
       return;
     }
     if (c.st === 'win') {
