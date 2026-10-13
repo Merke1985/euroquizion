@@ -4411,3 +4411,10 @@ body.hasdock main{padding-bottom:84px}
 .slyover #srecbtn:not(.live),.slyover #srecbtn:not(.live):disabled{opacity:1;background:#e21d7a}
 .slyover #scount.counting:not(.live){background:#1c0f3a;opacity:1;color:#fff;display:flex;align-items:center;justify-content:center}
 .edduo2 .ddst2{display:none}.edduo2.shades:not(.act) .ddst2{display:inline}.edduo2.shades .ddst{display:none}
+/* Just One!: the clue cards */
+.fkword.ask{background:#ffd23f;color:#2b1830}
+.fkword.in{background:#3ddc84;color:#0a2a18}
+.fkword.out{background:#5a5a6a;color:#ddd;text-decoration:line-through;opacity:.85}
+.fkpod.guesser .char{box-shadow:0 0 0 4px #ffd23f,0 0 26px #ffd23f}
+.fksong small{display:block;font-size:.55em;font-weight:800;text-transform:uppercase;letter-spacing:.1em;opacity:.7}
+.fkpod.guesser .fktag{top:auto;bottom:-3.2vh;transform:rotate(-4deg);background:#ffd23f;color:#2b1830;font-size:clamp(.6rem,1vw,1rem)}
