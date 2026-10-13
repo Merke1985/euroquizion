@@ -1342,6 +1342,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!G.tourFinal && !G.itemTest && (G.quizRun || 0) >= (G.block || 3) && shopOn() && !G.shopFirst && list().filter(function (p) { return !p.off; }).length >= 2) { G.shopFirst = true; G.quizRun = 0; shopIntro(); return; }   // the first break: everyone visits the boutique
       if (!G.tourFinal && !G.tourDone && !G.itemTest && (G.quizRun || 0) >= (G.block || 3) && games.length) { G.quizRun = 0; if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} } partyTime(games); return; }
       // Back from a minigame: a card says so, before the questions start again.
+      if (G.afterParty && G.extraNow) { G.afterParty = false; G.extraNow = false; var nl = Math.max(1, (G.block || 3) - (G.quizRun || 0)); FUN.quiz.sub = 'Back to the trivia: ' + (nl === 1 ? 'one more question' : (['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][nl] || nl) + ' more questions') + ', then the next party game.'; funIntro('quiz', startRound2, 4200); return; }   // (after the Golden Ticket's extra game: the trivia picks up where it stopped)
       if (G.afterParty) { G.afterParty = false; var nb = G.block || 3; FUN.quiz.sub = 'Trivia time: ' + (nb === 1 ? 'one question' : (['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][nb] || nb) + ' questions') + ' coming up.'; funIntro('quiz', startRound2, 4200); return; }
       if (G.eraSpin && !(G.quizRun || 0) && G.eraBlock !== G.round) { G.eraBlock = G.round; partIntro(); return; }   // Random or Voted rounds: each block of trivia gets its decade
       G.quizRun = (G.quizRun || 0) + 1;
@@ -1483,7 +1484,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
     var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, fake: fkAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll };
-    G.mode = G.lastParty = kind; if (G.tour && G.partyDone && G.partyDone.indexOf(kind) < 0) G.partyDone.push(kind); G.best = null; G.q = null; G.afterParty = true;
+    G.mode = G.lastParty = kind; if (G.tour && !G.extraNow && G.partyDone && G.partyDone.indexOf(kind) < 0) G.partyDone.push(kind); G.best = null; G.q = null; G.afterParty = true;   // (an extra game from a Golden Ticket doesn't use up its turn)
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
@@ -3248,15 +3249,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         useOne(p, 'fan'); Music.blip(); push();
         shopFlash('🪭 ' + p.name + ' waves the Eurovision Fan!'); return;
       }
-      if (it.kind === 'golden') {   // the Golden Ticket: the player chooses the next party game (secretly); the item alert goes off at once
+      if (it.kind === 'golden') {   // the Golden Ticket: an EXTRA party game, right now: the trivia question stops at once
         var gk = m.game, ok = partyGames().indexOf(gk) >= 0;
-        if (!ok || G.goldPick || G.mgLive || G.frozenLeft != null) return;
-        inv.splice(k, 1); G.goldPick = { pid: p.pid, kind: gk };
-        var gtxt = '🌟 ' + p.name + ' used the Golden Ticket and has chosen a party game to play!';
-        shopLast = { icon: '🌟', deltas: [{ pid: p.pid, tag: '🌟' }] };
-        if (open) shopFreeze(7800 + ALARM_MS, function () { itemAlarm(function () { shopHit(gtxt, 7600); push(); }); });
-        else itemAlarm(function () { shopHit(gtxt, 6000); push(); });
-        push(); return;
+        if (!ok || G.goldNow || G.mgLive || G.tourFinal || ['shop', 'pspin', 'fun', 'final', 'chase'].indexOf(G.phase) >= 0 || G.shop || G.clue || REMOTE) return;
+        inv.splice(k, 1); goldExtra(p, gk, open); return;
       }
       if (it.kind === 'skip') {   // the CD player: skip! A different question straight away, nobody scores this one
         if (!open || G.clue || G.frozenLeft != null || REMOTE) return;
@@ -3476,6 +3472,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   /* The Eurovision Song Contest CD Player: skip. The question stops, points already given for it are taken back,
      and after the announcement a different question is loaded (the same question number: nobody scores the skipped one). */
+  function goldExtra(p, kind, open) {   // the Golden Ticket: the question is called off (nobody scores it) and the chosen party game starts: an extra one, on top of the plan
+    G.goldNow = { pid: p.pid, kind: kind };
+    stopTimers(); clearTimeout(endTimer); clearTimeout(picksTimer); clearTimeout(freezeT); G.frozenLeft = null; G.revealPending = false; G.revealAt = 0; peelStop();
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} try { yt2.pause(); } catch (e) {} stageEl().classList.remove('second'); pairTag(''); }
+    if (open || (G.phase === 'guess' && G.q)) { list().forEach(function (x) { if (x.got && x.pts) x.score -= x.pts; x.got = false; x.done = false; x.pick = null; x.pts = 0; x.ranks = null; x.ccb = ''; x.sitNow = ''; }); if (G.quizRun) G.quizRun--; }   // (the question doesn't count: it comes back later)
+    G.phase = 'loading'; G.q = null; cover(true, '🌟', 'Golden Ticket!', false);
+    shopLast = { icon: '🌟', deltas: [{ pid: p.pid, tag: '🌟' }] };
+    push();
+    itemAlarm(function () {
+      shopHit('🌟 ' + p.name + ' used the Golden Ticket! The trivia stops: an EXTRA party game, right now!', 5200); push();
+      setTimeout(function () {
+        var gs = partyGames(); if (gs.indexOf(kind) < 0) gs = gs.concat(kind);
+        G.extraNow = true; G.goldNow = null;
+        partySlot(gs, kind, function () { partyGo(kind, 2500); }, '🌟 ' + p.name + '’s Golden Ticket!');
+      }, 5400);
+    });
+  }
   function cdSkip(p) {
     stopTimers(); clearTimeout(endTimer); clearTimeout(picksTimer); clearTimeout(freezeT); G.frozenLeft = null; G.revealPending = false; G.revealAt = 0; peelStop();
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} try { yt2.pause(); } catch (e) {} stageEl().classList.remove('second'); pairTag(''); }
@@ -3526,19 +3539,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<linearGradient id="kphair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a4424"/><stop offset="1" stop-color="#5e2a14"/></linearGradient>' +
     '<pattern id="kpflow" width="26" height="26" patternUnits="userSpaceOnUse"><rect width="26" height="26" fill="#17141a"/><ellipse cx="7" cy="8" rx="6" ry="3.4" fill="#ff7a2a" transform="rotate(-30 7 8)"/><ellipse cx="18" cy="17" rx="6" ry="3.4" fill="#e23a3a" transform="rotate(40 18 17)"/><ellipse cx="19" cy="5" rx="4" ry="2.4" fill="#f4dcb0" transform="rotate(20 19 5)"/><ellipse cx="6" cy="20" rx="4.4" ry="2.6" fill="#f2b821" transform="rotate(-50 6 20)"/><circle cx="13" cy="12" r="1.6" fill="#7a3a1e"/></pattern></defs>' +
     '<ellipse cx="110" cy="410" rx="64" ry="9" fill="rgba(0,0,0,.45)"/>' +
-    '<path d="M82 258 L78 402 L104 402 L110 300 L116 402 L142 402 L138 258 Z" fill="#17171d"/>' +
-    '<path d="M72 400 h34 l-2 10 h-34 z M114 400 h34 l2 10 h-34 z" fill="#0c0c10"/>' +
-    '<path d="M66 148 Q110 134 154 148 L150 266 Q110 274 70 266 Z" fill="url(#kpsuit)"/>' +
+    '<path d="M74 258 L72 402 L104 402 L110 300 L116 402 L148 402 L146 258 Z" fill="#17171d"/>' +
+    '<path d="M66 400 h38 l-2 10 h-38 z M114 400 h38 l2 10 h-38 z" fill="#0c0c10"/>' +
+    '<path d="M56 150 Q110 132 164 150 Q172 210 156 266 Q110 278 64 266 Q48 210 56 150 Z" fill="url(#kpsuit)"/>' +
     '<path d="M88 140 L104 200 L96 150 Z M132 140 L116 200 L124 150 Z" fill="#3a3a46"/>' +
-    '<path d="M66 150 Q50 196 58 238 L72 238 Q68 200 80 166 Z" fill="url(#kpsuit)"/><circle cx="64" cy="244" r="9" fill="url(#kpskin)"/>' +
-    '<g class="kbag"><path d="M152 152 Q176 186 170 212 L158 214 Q160 190 140 166 Z" fill="url(#kpsuit)"/>' +
+    '<path d="M58 152 Q38 196 48 240 L66 240 Q62 200 74 168 Z" fill="url(#kpsuit)"/><circle cx="57" cy="246" r="10.5" fill="url(#kpskin)"/>' +
+    '<g class="kbag" transform="translate(8 0)"><path d="M152 152 Q176 186 170 212 L158 214 Q160 190 140 166 Z" fill="url(#kpsuit)"/>' +
     '<rect x="154" y="206" width="20" height="18" rx="7" fill="url(#kpskin)" stroke="#b9876a" stroke-width="1.2"/><rect x="167" y="192" width="7" height="18" rx="3.5" fill="url(#kpskin)" stroke="#b9876a" stroke-width="1.2"/></g>' +
-    '<rect x="102" y="114" width="16" height="26" fill="#dba98a"/>' +
-    '<path d="M84 132 Q110 150 136 132 L142 152 Q122 172 116 238 Q110 244 102 238 Q98 172 78 152 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/>' +
-    '<path d="M86 134 Q110 156 134 134 Q130 146 110 150 Q90 146 86 134 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/>' +
+    '<path d="M94 112 L126 112 Q128 130 136 142 L84 142 Q92 130 94 112 Z" fill="#dba98a"/><path d="M96 118 Q110 128 124 118" stroke="#c48f72" stroke-width="2" fill="none" opacity=".7"/>' +
+    '<g transform="translate(110 0) scale(1.18 1) translate(-110 0)"><path d="M84 132 Q110 150 136 132 L142 152 Q122 172 116 238 Q110 244 102 238 Q98 172 78 152 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/>' +
+    '<path d="M86 134 Q110 156 134 134 Q130 146 110 150 Q90 146 86 134 Z" fill="url(#kpflow)" stroke="#0e0c10" stroke-width="1.5"/></g>' +
     '<path d="M64 92 Q54 58 82 40 Q110 24 140 40 Q166 58 156 92 Q168 112 154 128 Q164 146 146 154 Q132 158 130 144 Q140 124 134 104 L86 104 Q80 124 90 144 Q88 158 74 154 Q56 146 66 128 Q52 112 64 92 Z" fill="url(#kphair)"/>' +
     '<path d="M70 96 Q62 112 72 126 Q64 138 74 148 M150 96 Q158 112 148 126 Q156 138 146 148" stroke="#b0603a" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".8"/>' +
-    '<ellipse cx="110" cy="92" rx="26" ry="31" fill="url(#kpskin)"/>' +
+    '<path d="M80 88 Q80 60 110 60 Q140 60 140 88 Q140 116 124 124 Q110 130 96 124 Q80 116 80 88 Z" fill="url(#kpskin)"/><path d="M96 121 Q110 129 124 121" stroke="#c48f72" stroke-width="1.6" fill="none" opacity=".6"/>' +
     '<path d="M82 84 Q78 50 112 46 Q142 48 140 82 Q134 64 118 62 Q100 60 92 72 Q86 74 82 84 Z" fill="url(#kphair)"/>' +
     '<path d="M92 64 Q108 54 128 58 M118 52 Q134 56 138 70" stroke="#b0603a" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
     '<path d="M90 86 Q96 83 102 86 M118 86 Q124 83 130 86" stroke="#5e2a14" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +

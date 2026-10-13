@@ -1271,7 +1271,7 @@
   // ---------- Eurofan Shop ----------
   // Shopping: pick the free items (the same one twice is fine). Afterwards the bag button in the corner holds
   // them: pick an item, then who gets it; it lands just before the next question.
-  var shopKey = '', shopSel = [], bagOpen = false, bagItem = null;
+  var shopKey = '', shopSel = [], bagOpen = false, bagItem = null; var goldSel = null;   // (the Golden Ticket's game, waiting for a yes)
   function shopName(id) { var it = (typeof shopItem === 'function') && shopItem(id); return it ? it.icon + ' ' + it.name : id; }
   function shopView(s) {
     var sh = s.shop, mine = sh.done[pid], box = $('shopui');
@@ -1289,7 +1289,7 @@
     box.setAttribute('data-k', drawKey);
     box.innerHTML = '<p id="shoptime" class="shoptime" data-free="' + (free ? 1 : 0) + '"></p><p class="shoppts">💰 You have <b>' + myPts + '</b> points</p>' + sh.items.filter(function (it) { return !mineOffer || mineOffer.indexOf(it.id) >= 0; }).map(function (it) {
       var n = shopSel.filter(function (x) { return x === it.id; }).length, pr = it.price || 0, gone = (sh.sold || []).indexOf(it.id) >= 0, poor = gone || (!free && pr > myPts);
-      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + (gone ? ' sold' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (gone ? ' <em class="price sold">Sold out</em>' : free ? ' <em class="price free"><s>' + pr + ' pts</s> free</em>' : ' <em class="price">' + pr + ' pts</em>') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(gone ? 'Sold out! Someone was quicker' : poor ? 'Not enough points for this one' : it.desc) + '</small></span></button>';
+      return '<button type="button" class="shopbtn' + (n ? ' on' : '') + (poor ? ' poor' : '') + (gone ? ' sold' : '') + '" data-id="' + it.id + '"' + (poor ? ' disabled' : '') + '><span class="si">' + it.icon + '</span><span><b>' + esc(it.name) + (n > 1 ? ' ×' + n : '') + (gone ? ' <em class="price sold">Sold out</em>' : free ? ' <em class="price free"><s>' + pr + ' pts</s> free</em>' : ' <em class="price">' + pr + ' pts</em>') + '</b><small class="imode m-' + itemMode(it).id + '">' + itemMode(it).icon + ' ' + esc(itemMode(it).label) + '</small><small>' + esc(it.desc) + '</small>' + (gone || poor ? '<small class="shopno">' + (gone ? '❌ Sold out! Someone was quicker' : '💸 Not enough points for this one') + '</small>' : '') + '</span></button>';   // (what it does is always explained, even when you can't have it)
     }).join('') + (free ? '<button type="button" class="btn big" id="shopbuy"' + (shopSel.length < sh.n ? ' disabled' : '') + '>' + (shopSel.length < sh.n ? 'Pick ' + (sh.n - shopSel.length) + ' more' : 'Take ' + (sh.n > 1 ? 'them' : 'it') + '!') + '</button>'
       : '<button type="button" class="btn big" id="shopbuy"' + (!shopSel.length ? ' disabled' : '') + '>' + (!shopSel.length ? 'Pick one to buy' : 'Buy for ' + ((sh.items.filter(function (it) { return it.id === shopSel[0]; })[0] || {}).price || 0) + ' points') + '</button><button type="button" class="btn alt" id="shopskip">No thanks</button>');
     [].forEach.call(box.querySelectorAll('.shopbtn'), function (b) { b.onclick = function () {
@@ -1312,7 +1312,7 @@
     var m = me(), inv = (m && m.inv) || [], ok = s.cfg && s.cfg.atype === 'party' && inv.length && ['lobby', 'end', 'brief', 'intro', 'chase', 'shop'].indexOf(s.phase) < 0;
     $('bagbtn').classList.toggle('hidden', !ok); $('bagn').textContent = inv.length || '';
     document.body.classList.toggle('hasdock', !!ok);   /* (room at the bottom, so nothing hides behind the bag button) */
-    if (!ok) { bagOpen = false; bagItem = null; }
+    if (!ok) { bagOpen = false; bagItem = null; goldSel = null; }
     $('bagpanel').classList.toggle('hidden', !bagOpen);
     if (!bagOpen) return;
     var p = $('bagpanel'), bagKey = inv.join(',') + '|' + (bagItem || '') + '|' + (s.phase === 'guess') + '|' + !!s.itemBusy + '|' + !!s.mg + '|' + JSON.stringify((m && m.uses) || {}) + '|' + (s.q && s.q.options ? s.q.options.length : 0) + '|' + s.players.map(function (x) { return x.pid + (x.off ? 0 : 1) + (x.sit ? 's' : '') + (s.hide ? '' : x.score); }).join(',');
@@ -1348,14 +1348,21 @@
         }
         bagItem = id; bagUpdate(state);
       }; });
-    } else if ((shopItem(bagItem) || {}).kind === 'golden') {   /* the Golden Ticket: choose the next party game */
-      var gl = s.pgames || [];
-      p.innerHTML = '<h3>🌟 Golden Ticket</h3><p class="mute" style="margin:0 0 12px">Choose the next party game. Nobody votes: it will be your pick!</p>' + gl.map(function (x) { return '<button type="button" class="shopbtn who gold" data-k="' + esc(x.k) + '"><span class="si">' + x.icon + '</span><span><b>' + esc(x.title) + '</b></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose" style="width:100%;margin-top:10px">Back</button>';
-      [].forEach.call(p.querySelectorAll('.shopbtn.gold'), function (b) { b.onclick = function () {
-        var gm = { pid: pid, use: bagItem, target: pid, game: b.getAttribute('data-k'), key: Math.random().toString(36).slice(2, 9) };
-        if (net) { net.send('shop', gm); setTimeout(function () { net.send('shop', gm); }, 1200); }
-        ptoast('🌟 Your pick is in! The next party game is yours.'); bagOpen = false; bagItem = null; bagUpdate(state);
-      }; });
+    } else if ((shopItem(bagItem) || {}).kind === 'golden') {   /* the Golden Ticket: choose a party game, then confirm it */
+      var gl = s.pgames || [], gsel = goldSel && gl.filter(function (x) { return x.k === goldSel; })[0];
+      if (gsel) {
+        p.innerHTML = '<h3>🌟 Golden Ticket</h3><div class="goldsure"><span class="si">' + gsel.icon + '</span><b>' + esc(gsel.title) + '</b></div><p class="mute" style="margin:0 0 12px;text-align:center">Play this one now? The trivia stops straight away, and everyone plays it. Your ticket is used up.</p>' +
+          '<button type="button" class="btn" id="goldyes" style="width:100%">✅ Yes, play it now!</button><button type="button" class="btn alt" id="goldno" style="width:100%;margin-top:10px">↩️ Choose another</button>';
+        $('goldyes').onclick = function () {
+          var gm = { pid: pid, use: bagItem, target: pid, game: gsel.k, key: Math.random().toString(36).slice(2, 9) };
+          if (net) { net.send('shop', gm); setTimeout(function () { net.send('shop', gm); }, 1200); }
+          ptoast('🌟 Golden Ticket used! Here comes ' + gsel.title + '!'); goldSel = null; bagOpen = false; bagItem = null; p.removeAttribute('data-k'); bagUpdate(state);
+        };
+        $('goldno').onclick = function () { goldSel = null; p.removeAttribute('data-k'); bagUpdate(state); };
+      } else {
+        p.innerHTML = '<h3>🌟 Golden Ticket</h3><p class="mute" style="margin:0 0 12px">An EXTRA party game, right now! The trivia stops, and everyone plays the game you choose.</p>' + gl.map(function (x) { return '<button type="button" class="shopbtn who gold" data-k="' + esc(x.k) + '"><span class="si">' + x.icon + '</span><span><b>' + esc(x.title) + '</b></span></button>'; }).join('') + '<button type="button" class="btn alt" id="bagclose" style="width:100%;margin-top:10px">Back</button>';
+        [].forEach.call(p.querySelectorAll('.shopbtn.gold'), function (b) { b.onclick = function () { goldSel = b.getAttribute('data-k'); p.removeAttribute('data-k'); bagUpdate(state); }; });
+      }
     } else if ((shopItem(bagItem) || {}).kind === 'skip') {   /* the CD player: are you sure? Skip or cancel */
       var cdi = shopItem(bagItem);
       p.innerHTML = '<h3>' + cdi.icon + ' ' + esc(cdi.name) + '</h3><p class="mute" style="margin:0 0 12px">Skip this question? Nobody scores it, and a different one comes up straight away.</p><button type="button" class="btn big" id="cdskip" style="width:100%">⏭️ Skip</button><button type="button" class="btn alt" id="bagclose">Cancel</button>';
@@ -1375,7 +1382,7 @@
         bagOpen = false; bagItem = null; bagUpdate(state);
       }; });
     }
-    $('bagclose').onclick = function () { if (bagItem) bagItem = null; else bagOpen = false; bagUpdate(state); };
+    if ($('bagclose')) $('bagclose').onclick = function () { if (bagItem) bagItem = null; else bagOpen = false; bagUpdate(state); };
   }
   $('bagbtn').addEventListener('click', function () { bagOpen = !bagOpen; bagItem = null; if (state) bagUpdate(state); });
   var ptoastT = null;

@@ -837,7 +837,7 @@ var SHOP_ITEMS = [
   { id: 'hack', tier: 3, icon: '📲', name: 'Televote Hacking Device', desc: 'During a question: steal 12 points from another player', kind: 'steal', amount: 12 },
   { id: 'power', tier: 1, icon: '🔋', name: 'Marc’s Powerbank', desc: 'During a question: throw it at another player to knock 12 points off', kind: 'lose', amount: 12 },
   { id: 'smoke', tier: 1, icon: '🌫️', name: 'Smoke Machine', desc: 'Use it before a question: its answers are hidden in smoke for everyone but you', kind: 'smoke' },
-  { id: 'golden', tier: 3, stock: 1, icon: '🌟', name: 'Golden Ticket', desc: 'Use it during the trivia: you choose the next party game from the full selection. No vote, no luck: the slot machine lands on your pick!', kind: 'golden' },
+  { id: 'golden', tier: 3, stock: 1, icon: '🌟', name: 'Golden Ticket', desc: 'An EXTRA party game, right now! Use it during the trivia: the question stops at once, and you choose which party game everyone plays. No vote, no luck: the slot machine lands on your pick!', kind: 'golden' },
   { id: 'flag', tier: 2, icon: '🚩', name: 'Giant Eurovision Flag', desc: 'During a question: wave it in front of another player: for 3 questions (starting with this one) they can’t read the question or the answers on their phone, and the answers are scrambled', kind: 'flag', amount: 3 },
   { id: 'bribe', tier: 3, stock: 1, icon: '✉️', name: 'Envelope Addressed to the EBU', desc: 'A little something for the EBU. It will help you later in the game… Send it ASAP, before you lose it!', kind: 'bribe' },
   { id: 'pass', tier: 2, icon: '🎟️', name: 'Euroclub Wristband', desc: 'During a question: pick a player, sneak into the Euroclub after them and leave with a random item from their bag', kind: 'thief' },
@@ -864,7 +864,7 @@ function itemMode(it) {
   if (k === 'shield' || k === 'skates') return { id: 'self', icon: '🛡️', label: 'Works by itself: keep it in your bag' };
   if (k === 'bribe') return { id: 'secret', icon: '🤫', label: 'Secret: send it any time, it pays out before the Grand Final' };
   if (k === 'heel') return { id: 'self', icon: '👠', label: 'Keep it: at the Grand Final you pick who gets it' };
-  if (k === 'golden') return { id: 'self', icon: '🌟', label: 'Any time during the trivia: you pick the next party game' };
+  if (k === 'golden') return { id: 'self', icon: '🌟', label: 'Any time during the trivia: an EXTRA party game of your choice, right now!' };
   if (k === 'smoke') return { id: 'delivery', icon: '📦', label: 'Delivery: use it any time, it lands before the next trivia question' };
   return { id: 'instant', icon: '⚡', label: 'Instant: only while a question is open' };
 }
