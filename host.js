@@ -115,7 +115,8 @@
         if (!adopted && m.last && m.last.round > 0) adopt(m.last);
       }
     }
-    p.pk = !!m.pk;   // (still choosing their avatar and country: the hosts wait with their welcome)
+    p.pk = !!m.pk;
+    if (isNew && !p.bot && String(m.pid).indexOf('bot') !== 0 && (G.mgTest || G.itemTest)) { p.inv = p.inv || []; if (p.inv.indexOf('golden') < 0) p.inv.push('golden'); }   // (joining a test: a Golden Ticket too)   // (still choosing their avatar and country: the hosts wait with their welcome)
     var changed = isNew || p.name !== nm || p.off;
     /* the fan flag: one country per player; none picked (or taken): a random free one */
     var wf = FAN_FLAGS.indexOf(m.cc) >= 0 && !list().some(function (x) { return x.cc === m.cc && x.pid !== m.pid; }) ? m.cc : null;
@@ -1164,7 +1165,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
   function reveal() {
     if (G.frozenLeft != null && G.phase === 'guess') { G.revealPending = true; return; }   // an item is landing: the answer waits
-    if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }
+    if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && !(G.best && G.best.four && G.slotVote) && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }   // (the vote on the slot machine shows its own voters: no second round of plops)
     if (G.phase !== 'guess' && G.phase !== 'picks') return;
     clearTimeout(picksTimer);
     stopTimers(); G.phase = 'reveal'; stage = 'reveal'; G.revealAt = 0;
@@ -2337,7 +2338,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
   });
   // Testing: every human player gets an envelope for the EBU in their bag (to try it out)
-  function testBribes() { list().forEach(function (p) { if (p.bot) return; p.inv = p.inv || []; if (p.inv.indexOf('bribe') < 0) p.inv.push('bribe'); }); push(); }
+  function testBribes() { list().forEach(function (p) { if (p.bot) return; p.inv = p.inv || []; if (p.inv.indexOf('golden') < 0) p.inv.push('golden'); }); push(); }   // (testing: every human player gets a Golden Ticket)
   // Testing the Grand Final with human players: they have already sent their envelope, so first the presenters show
   // the scores and the courier comes in, then the chase.
   function testStandings(then) {
@@ -3937,24 +3938,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   ];
   var ED_DUO = [{ hair: '#16121a', hairStyle: 'pony', top: '#141418', legs: '#141418', shoes: '#141418' }, { hair: '#ecd79a', hairStyle: 'long', top: '#f4f4f6', legs: '#f4f4f6', shoes: '#f4f4f6' }];
   var ED_DUO_AT = {   // per room: where they come in (x), where they stand (two x's), the floor (y), the size, and whether a screen hides them
-    green: { from: 742, y: 404, s: .82, screen: true }, club: { from: 880, at: [560, 640], y: 400, s: .9 },
+    green: { from: 742, at: [190, 245], y: 404, s: .82, screen: true }, club: { from: 880, at: [560, 640], y: 400, s: .9 },
     boud: { from: 344, at: [470, 530], y: 426, s: 1.05, screen: true }, back: { from: -70, at: [140, 200], y: 436, s: .95 }
   };
   function edDuoGuitar(col) { return '<g class="ddgt"><path d="M-30 -52 L22 -82" stroke="#5a3a1a" stroke-width="5" stroke-linecap="round"/><ellipse cx="-22" cy="-48" rx="16" ry="12" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2.4" transform="rotate(-30 -22 -48)"/><circle cx="-22" cy="-48" r="4" fill="' + ED_INK + '"/><rect x="18" y="-90" width="10" height="12" rx="3" fill="#3a2a1a" transform="rotate(-30 23 -84)"/></g>'; }
   // Every game one of the two wears one striking thing (big earrings, gloves, a beret, a necklace, a belt) in a colour
   // of the game's choosing: the first detective through all four rooms is asked about it for their bonus clue.
   var ED_DUO_COL = [['gold', '#f2c12e'], ['silver', '#c9ced8'], ['pink', '#ff5fa8'], ['green', '#2fb35a'], ['blue', '#2f6ff0'], ['purple', '#8b4fe0'], ['orange', '#ff8a2a']];
-  var ED_DUO_ITEM = {
-    ear: { q: 'big earrings', d: function (c) { return '<g fill="none"><g stroke="' + ED_INK + '" stroke-width="6"><circle cx="-25" cy="-88" r="9"/><circle cx="25" cy="-88" r="9"/></g><g stroke="' + c + '" stroke-width="3.6"><circle cx="-25" cy="-88" r="9"/><circle cx="25" cy="-88" r="9"/></g></g>'; } },
-    glove: { q: 'gloves', d: function (c, o) { var r = o.armUp ? [28, -106] : [26, -38]; return '<circle cx="-26" cy="-38" r="6.8" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2"/><circle cx="' + r[0] + '" cy="' + r[1] + '" r="6.8" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2"/>'; } },
-    beret: { q: 'beret', d: function (c) { return '<ellipse cx="-3" cy="-126" rx="24" ry="9" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="2.2" transform="rotate(-10 -3 -126)"/><circle cx="-3" cy="-134" r="3" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.6"/>'; } },
-    neck: { q: 'necklace', d: function (c) { return '<path d="M-13 -79 Q0 -62 13 -79" stroke="' + ED_INK + '" stroke-width="6" fill="none"/><path d="M-13 -79 Q0 -62 13 -79" stroke="' + c + '" stroke-width="3.6" fill="none"/><circle cx="0" cy="-64" r="6.5" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.8"/>'; } },
-    belt: { q: 'belt', d: function (c, o) { return o.sit ? '' : '<rect x="-17" y="-44" width="34" height="6" rx="2" fill="' + c + '" stroke="' + ED_INK + '" stroke-width="1.6"/><rect x="-4" y="-45" width="8" height="8" rx="1.5" fill="#f2c12e" stroke="' + ED_INK + '" stroke-width="1.4"/>'; } }
+  var ED_DUO_ITEM = {   // one of the two carries something big and obvious all game; the question: what was it?
+    balloon: { q: 'a red balloon', d: function () { return '<path d="M-26 -38 Q-36 -80 -30 -116" stroke="#666" stroke-width="1.6" fill="none"/><ellipse cx="-30" cy="-133" rx="15" ry="18" fill="#e0283a" stroke=' + ED_INK + '" stroke-width="2.2"/><path d="M-33 -114 L-27 -114 L-30 -118 Z" fill="#e0283a"/><ellipse cx="-35" cy="-139" rx="4" ry="6" fill="#fff" opacity=".5"/>'; } },
+    flowers: { q: 'a bunch of flowers', d: function () { return '<path d="M-26 -38 L-32 -66 M-26 -38 L-24 -70 M-26 -38 L-16 -64" stroke="#2fb35a" stroke-width="3"/>' + [[-33, -70, '#ff5fa8'], [-23, -75, '#f2c12e'], [-14, -67, '#e0283a'], [-28, -61, '#8b4fe0']].map(function (f) { return '<circle cx="' + f[0] + '" cy="' + f[1] + '" r="6.5" fill="' + f[2] + '" stroke=' + ED_INK + '" stroke-width="1.6"/><circle cx="' + f[0] + '" cy="' + f[1] + '" r="2" fill="#fff6a0"/>'; }).join(''); } },
+    trophy: { q: 'a golden trophy', d: function () { return '<path d="M-42 -74 L-12 -74 L-16 -54 Q-27 -44 -38 -54 Z" fill="#f2c12e" stroke=' + ED_INK + '" stroke-width="2"/><path d="M-42 -70 Q-50 -66 -42 -58 M-12 -70 Q-4 -66 -12 -58" stroke="#f2c12e" stroke-width="3" fill="none"/><rect x="-30" y="-48" width="6" height="8" fill="#d9a520"/><rect x="-36" y="-41" width="18" height="6" rx="2" fill="#f2c12e" stroke=' + ED_INK + '" stroke-width="1.6"/>'; } },
+    teddy: { q: 'a teddy bear', d: function () { return '<circle cx="-34" cy="-32" r="11" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="2"/><circle cx="-34" cy="-52" r="9" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="2"/><circle cx="-41" cy="-59" r="3.5" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="1.5"/><circle cx="-27" cy="-59" r="3.5" fill="#a0642c" stroke=' + ED_INK + '" stroke-width="1.5"/><circle cx="-34" cy="-50" r="2.6" fill="#e8c49a"/><circle cx="-37" cy="-54" r="1.2" fill="#222"/><circle cx="-31" cy="-54" r="1.2" fill="#222"/>'; } },
+    dog: { q: 'a little dog', d: function () { return '<path d="M-26 -38 Q-40 -20 -46 -14" stroke="#e0283a" stroke-width="1.6" fill="none"/><ellipse cx="-56" cy="-8" rx="12" ry="7" fill="#f4f0e8" stroke=' + ED_INK + '" stroke-width="2"/><circle cx="-46" cy="-16" r="6.5" fill="#f4f0e8" stroke=' + ED_INK + '" stroke-width="2"/><ellipse cx="-50" cy="-19" rx="2.6" ry="5" fill="#c9a37a"/><circle cx="-43" cy="-17" r="1.2" fill="#222"/><path d="M-64 -4 L-64 0 M-50 -4 L-50 0" stroke=' + ED_INK + '" stroke-width="2.4"/><path d="M-68 -10 Q-74 -16 -70 -20" stroke="#f4f0e8" stroke-width="3" fill="none"/>'; } },
+    suitcase: { q: 'a suitcase', d: function () { return '<rect x="-44" y="-36" width="28" height="22" rx="4" fill="#2f6ff0" stroke=' + ED_INK + '" stroke-width="2"/><path d="M-34 -36 L-34 -41 L-26 -41 L-26 -36" stroke=' + ED_INK + '" stroke-width="2.4" fill="none"/><path d="M-44 -26 L-16 -26" stroke="#f2c12e" stroke-width="2"/>'; } }
   };
-  function edDuoPick() { var items = Object.keys(ED_DUO_ITEM); return { item: pick(items), who: Math.random() < .5 ? 0 : 1, col: Math.floor(Math.random() * ED_DUO_COL.length) }; }
-  function edDuoQ(d) {   // the question about it: four colours, one right
-    var it = ED_DUO_ITEM[d.item], right = ED_DUO_COL[d.col][0], opts = shuffle([right].concat(shuffle(ED_DUO_COL.map(function (c) { return c[0]; }).filter(function (c) { return c !== right; })).slice(0, 3)));
-    return { text: 'The two stars walking through the building: what colour was the ' + it.q + ' the ' + (d.who ? 'blonde' : 'dark-haired') + ' one wore?', opts: opts, ans: opts.indexOf(right) };
+  function edDuoPick() { var items = Object.keys(ED_DUO_ITEM); return { item: pick(items), who: Math.random() < .5 ? 0 : 1, col: 0 }; }
+  function edDuoQ(d) {   // the question: what was one of the two stars carrying? Four things, one right
+    var right = ED_DUO_ITEM[d.item].q, opts = shuffle([right].concat(shuffle(Object.keys(ED_DUO_ITEM).filter(function (k) { return k !== d.item; })).slice(0, 3).map(function (k) { return ED_DUO_ITEM[k].q; })));
+    return { text: 'The two stars walking through the building: what was one of them carrying?', opts: opts, ans: opts.indexOf(right) };
   }
   function edDuo(ov, g) {
     var D = ov._duo || (ov._duo = { on: false, spent: { green: 0, club: 0, boud: 0, back: 0 }, last: '', t: [] });
@@ -3970,14 +3972,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var r = pick(pool.filter(function (x) { return D.spent[x] === least; })), P = ED_DUO_AT[r], svg = ov.querySelector('.edr2.' + r + ' svg'); if (!svg) { later(1000, visit); return; }
       D.spent[r] += 20; D.last = r;
       var at = P.at;
-      if (r === 'green') {   // two of the empty chairs (the guests' own chairs stay free)
-        var SXg = [214, 318, 422, 526, 630], used = ((g.scene.green || {}).sitters || []).map(function (p) { return p.seat; }), free = SXg.map(function (x, k) { return k; }).filter(function (k) { return used.indexOf(k) < 0; });
-        var two = free.length >= 2 ? free.slice(-2) : [0, 1]; at = [SXg[two[0]], SXg[two[1]]];
-      }
       var wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g'); wrap.setAttribute('class', 'edduo2 r-' + r);
       wrap.innerHTML = ED_DUO.map(function (o, k) {
-        var dd = g.duo, base = Object.assign({ s: P.s, walk: 1 }, o, { extra: function (oo) { return ED_DUO_LOOK[k](oo) + (dd && dd.who === k ? ED_DUO_ITEM[dd.item].d(ED_DUO_COL[dd.col][1], oo) : ''); } }), st = edPerson(0, 0, base);
-        var act = r === 'green' ? edPerson(-6, -4, Object.assign({}, base, { sit: 1, walk: 0 }))
+        var dd = g.duo, base = Object.assign({ s: P.s, walk: 1 }, o, { extra: function (oo) { return ED_DUO_LOOK[k](oo) + (dd && dd.who === k && ED_DUO_ITEM[dd.item] ? ED_DUO_ITEM[dd.item].d() : ''); } }), st = edPerson(0, 0, base);
+        var act = r === 'green' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
           : r === 'club' ? edPerson(0, 0, Object.assign({}, base, { armUp: 1, walk: 0 }))
           : r === 'boud' ? edPerson(0, 0, Object.assign({}, base, { glasses: 1, walk: 0, armUp: 1 }))
           : edPerson(0, 0, Object.assign({}, base, { walk: 0 })) + '<g transform="scale(' + P.s + ')">' + edDuoGuitar(k ? '#e0283a' : '#f2b821') + '</g>';
@@ -3987,7 +3985,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var ps = wrap.querySelectorAll('.ddp');
       wrap.getBoundingClientRect();
       wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + at[k] + 'px,' + P.y + 'px)'; });   // walking in (3 s)
-      later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); });   // the funny bit
+      later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); if (r === 'boud') svg.appendChild(wrap); });   // the funny bit (in the Boudoir: in front of the screen)
+      if (r === 'boud') later(16850, function () { if (scr && scr.parentNode) svg.insertBefore(wrap, scr); });   // (and behind it again to leave)
       later(16900, function () { wrap.classList.remove('act'); wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (P.from + k * 30) + 'px,' + P.y + 'px)'; }); });   // and off again
       later(20000, function () { wrap.remove(); });
       later(25000, visit);   // (gone for 5 seconds, then the next room)
@@ -4179,10 +4178,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } edShow();
     var lines = [
       ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
-      ['her', 'The Green Room! Who sits where? The guests only sit down now and then, so keep your eyes open. 🛋️', 'green'],
-      ['him', 'The Euroclub! DJ Ohrmeister lights up the symbols in a secret order. Remember it! 🪩', 'club'],
-      ['her', 'Backstage! Someone pulled out all the cables. Which one goes where? 🔌', 'back'],
-      ['him', 'Woodruff’s Boudoir! Dresses, wigs, and three guests in their finest outfits. 👗', 'boud'],
+      ['her', 'The Green Room, where the artists wait for their turn. 🛋️', 'green'],
+      ['him', 'The Euroclub, with DJ Ohrmeister behind the decks. 🪩', 'club'],
+      ['her', 'Backstage, full of cables, amps and guitars. 🎸', 'back'],
+      ['him', 'And Woodruff’s Boudoir, with the dresses and the wigs. 👗', 'boud'],
       ['her', 'Every answer is up here on the big screen. A wrong answer locks you out for 10 seconds! The fastest detective gets an extra clue. Go! 🔍', 'all']
     ], t = 1800, id = g.id;
     lines.forEach(function (l) {
