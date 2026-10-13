@@ -116,7 +116,7 @@
       }
     }
     p.pk = !!m.pk;
-    if (isNew && !p.bot && String(m.pid).indexOf('bot') !== 0 && (G.mgTest || G.itemTest)) { p.inv = p.inv || []; if (p.inv.indexOf('golden') < 0) p.inv.push('golden'); }   // (joining a test: a Golden Ticket too)   // (still choosing their avatar and country: the hosts wait with their welcome)
+    if (isNew && !p.bot && String(m.pid).indexOf('bot') !== 0 && (G.mgTest || G.itemTest || G.goldTest)) { p.inv = p.inv || []; if (p.inv.indexOf('golden') < 0) p.inv.push('golden'); }   // (joining a test: a Golden Ticket too)   // (still choosing their avatar and country: the hosts wait with their welcome)
     var changed = isNew || p.name !== nm || p.off;
     /* the fan flag: one country per player; none picked (or taken): a random free one */
     var wf = FAN_FLAGS.indexOf(m.cc) >= 0 && !list().some(function (x) { return x.cc === m.cc && x.pid !== m.pid; }) ? m.cc : null;
@@ -2305,7 +2305,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
     $('editbtn').addEventListener('click', function () { $('testov').classList.add('hidden'); if (window.escEditorOpen) window.escEditorOpen(); });
     $('testov').addEventListener('click', function (e) { if (e.target === $('testov')) $('testov').classList.add('hidden'); });
-    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #itemtest, #chasetest, #chasetest2, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
+    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #itemtest, #goldtest, #chasetest, #chasetest2, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
     $('onegame').addEventListener('click', function (e) {
       var b = e.target.closest('[data-one]'); if (!b || REMOTE || G.phase !== 'lobby') return;
       var k = b.getAttribute('data-one'), nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
@@ -2316,6 +2316,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.phase === 'intro') introEnd();
     });
   })();
+  $('goldtest').addEventListener('click', function () {   // testing the Golden Ticket: straight into the trivia, at the last question before a party game
+    if (REMOTE || G.phase !== 'lobby') return;
+    var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
+    $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
+    if (beginGame() === false) return;
+    G.goldTest = true; G.skipOpening = true; G.shopFirst = true; G.quizRun = Math.max(0, (G.block || 5) - 1); testBribes();   // (one question, then the party spin: use your ticket during that question)
+    if (G.phase === 'intro') introEnd();
+  });
   $('mgtest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
@@ -8258,7 +8266,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.round = 0; G.used = {}; fails = 0; note('');
     // a fresh game: nothing left over from a test run (test settings, test envelopes and heels, items underway)
     readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
-    G.quipSongsUsed = []; G.quipUsed = []; G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
+    G.quipSongsUsed = []; G.quipUsed = []; G.goldTest = false; G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.fake = null; clearTimeout(fkTimer); clearInterval(fkTick); clearInterval(fkPrivT); G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourN = 0; G.tourFinal = false; G.tourDone = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS; G.tourMax = G.tour && PRESET === 'party' && PCOUNT ? PCOUNT : 0;   // Grand tour: three questions and a minigame, until every minigame has been played
