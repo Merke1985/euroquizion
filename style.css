@@ -3973,3 +3973,38 @@ body.hasdock main{padding-bottom:84px}
 @keyframes edtokin{from{transform:translate(-50%,0) scale(.2);opacity:0}}
 .fkguess{font-size:1.6rem;font-weight:900;text-align:center;padding:14px;border-radius:14px;background:#2a2050;width:100%;max-width:360px}
 .fkjudge{display:flex;gap:10px;width:100%;max-width:360px}.fkjudge .btn{flex:1}
+/* The Fake Fan: a round table in a dark velvet hall, Eurovision style */
+.fkbg{background:radial-gradient(ellipse at 50% 35%,#3a1050 0%,#1a0628 55%,#08020f 100%)}
+.fkbg::before{display:none}
+.fkdrape{position:absolute;top:0;bottom:0;width:16vw;background:repeating-linear-gradient(90deg,#5a0f2e 0 3vw,#3e0820 3vw 6vw);box-shadow:inset -20px 0 40px rgba(0,0,0,.6)}
+.fkdrape.l{left:0;border-radius:0 0 60% 0}.fkdrape.r{right:0;transform:scaleX(-1);border-radius:0 0 60% 0}
+.fkheart{position:absolute;left:50%;top:5vh;width:34vh;height:30vh;margin-left:-17vh;background:none;filter:drop-shadow(0 0 18px #ff3fa8) drop-shadow(0 0 40px #ff3fa8);opacity:.55;animation:fkhb 2.4s ease-in-out infinite}
+.fkheart::before{content:'';position:absolute;inset:0;background:conic-gradient(from 0deg,transparent 0 0);-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><path d='M50 86 C10 58 4 38 4 26 C4 12 15 4 27 4 C37 4 45 10 50 18 C55 10 63 4 73 4 C85 4 96 12 96 26 C96 38 90 58 50 86 Z' fill='none' stroke='black' stroke-width='5'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><path d='M50 86 C10 58 4 38 4 26 C4 12 15 4 27 4 C37 4 45 10 50 18 C55 10 63 4 73 4 C85 4 96 12 96 26 C96 38 90 58 50 86 Z' fill='none' stroke='black' stroke-width='5'/></svg>") center/contain no-repeat;background:#ff6fd8}
+@keyframes fkhb{50%{opacity:.85;transform:scale(1.04)}}
+.fkbeam{position:absolute;top:-10vh;width:22vw;height:110vh;background:linear-gradient(rgba(255,111,216,.18),transparent 70%);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:fkbeam 6s ease-in-out infinite alternate;transform-origin:50% 0}
+.fkbeam.a{left:18vw}.fkbeam.b{right:18vw;animation-delay:-3s;background:linear-gradient(rgba(120,90,255,.18),transparent 70%)}
+@keyframes fkbeam{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+.fktable{position:absolute;left:50%;top:63vh;width:82vw;height:34vh;margin-left:-41vw;z-index:15}
+.fktop{position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,#7a1a3e,#4a0c24 60%,#2a0614);box-shadow:0 0 0 1.2vh #c8963a,0 0 0 1.6vh #6a4a1a,0 3vh 6vh rgba(0,0,0,.8),inset 0 0 6vh rgba(0,0,0,.6)}
+.fkemb{position:absolute;left:50%;top:50%;width:14vh;height:14vh;transform:translate(-50%,-50%);filter:drop-shadow(0 0 20px rgba(255,210,63,.6))}
+.fkemb .fkart{width:100%;height:100%}
+.fkov[data-st=reveal] .fkemb,.fkov[data-st=judge] .fkemb,.fkov[data-st=end] .fkemb{opacity:.35}
+.fkcandle{position:absolute;width:1.4vh;height:4vh;border-radius:3px;background:linear-gradient(#fff4e0,#e8d2b0);box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.fkcandle b{position:absolute;left:50%;top:-2.6vh;width:1.6vh;height:2.6vh;margin-left:-.8vh;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:radial-gradient(ellipse at 50% 70%,#fff8c0,#ffb030 50%,#ff4d6d 80%,transparent 82%);filter:drop-shadow(0 0 8px #ffb030);animation:fkflame .3s ease-in-out infinite alternate}
+@keyframes fkflame{to{transform:scale(.9,1.1) rotate(4deg)}}
+.fkcandle.c0{left:16%;top:42%}.fkcandle.c1{left:28%;top:20%}.fkcandle.c2{left:70%;top:20%}.fkcandle.c3{left:82%;top:42%}.fkcandle.c4{left:30%;top:66%}.fkcandle.c5{left:68%;top:66%}
+/* the players around the far side of the table, each in a high-backed chair */
+.fkrow{position:absolute;inset:0;display:block;z-index:10}
+.fkpod{position:absolute;width:12vh;max-width:none;transform:translate(-50%,-100%) scale(var(--s,1));transform-origin:50% 100%}
+.fkpod.now{transform:translate(-50%,-100%) scale(var(--s,1)) translateY(-1.5vh)}
+.fkpod.accused{transform:translate(-50%,-100%) scale(calc(var(--s,1) * 1.08)) translateY(-2vh)}
+.fkchair{position:absolute;left:50%;bottom:-1vh;width:13vh;height:22vh;margin-left:-6.5vh;z-index:0;border-radius:6vh 6vh 1vh 1vh;background:linear-gradient(#4a0c24,#2a0614);box-shadow:inset 0 0 0 .6vh #c8963a,0 1vh 2vh rgba(0,0,0,.6)}
+.fkchair::before{content:'';position:absolute;left:50%;top:1.2vh;width:3vh;height:3vh;margin-left:-1.5vh;background:#c8963a;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.fkpod .char,.fkpod .lbod,.fkpod em,.fkword{z-index:2}
+.fkpod em{margin-top:6vh}
+.fkmid{top:16vh;z-index:30}
+.fkmsg{top:auto;bottom:4vh;z-index:30;width:86vw}
+.fksign{z-index:31}
+.fkclock{z-index:31}
+.fkov.enter .fkpod{animation:fkpod2 .6s calc(var(--i) * .08s) cubic-bezier(.3,1.4,.5,1) both}
+@keyframes fkpod2{from{opacity:0;transform:translate(-50%,-100%) scale(var(--s,1)) translateY(6vh)}}

@@ -4866,7 +4866,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (g.st === 'words' && g.botAt && Date.now() >= g.botAt) {
       g.botAt = 0; var s = g.song, c = countries[s[1]] || '', w = b === g.fake ? pick(['glitter', 'stage', 'love', 'catchy', 'emotional', 'wind machine', 'sparkly', 'big voice', 'dancing'])
-        : pick([c, Math.floor(s[0] / 10) * 10 + 's', s[5] === 2 ? 'winner' : 'final', 'ballad', 'party', 'glitter', String(s[2]).split(' ')[0]]);
+        : pick([c, Math.floor(s[0] / 10) * 10 + 's', s[5] === 2 ? 'winner' : 'final', 'ballad', 'party', 'glitter', 'stage']);
       fkMsg({ pid: b, id: g.id, word: w });
     }
     if (g.st === 'vote') g.order.forEach(function (k) {
@@ -4927,7 +4927,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('fkov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov enter';
-      ov.innerHTML = '<div class="fkbg"></div><div class="fksign">🤫 The Fake Fan<small class="fkrnd"></small></div><div class="fkmid">' + FK_ART + '<div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div>';
+      // a round table in a dark hall, Eurovision style: velvet drapes, a big neon heart, candles, a glowing heart on the table
+      ov.innerHTML = '<div class="fkbg"><i class="fkdrape l"></i><i class="fkdrape r"></i><i class="fkheart"></i><i class="fkbeam a"></i><i class="fkbeam b"></i></div><div class="fksign">🤫 The Fake Fan<small class="fkrnd"></small></div>' +
+        '<div class="fktable"><i class="fktop"></i><i class="fkemb">' + FK_ART + '</i>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<i class="fkcandle c' + i + '"><b></b></i>'; }).join('') + '</div>' +
+        '<div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div>';
       document.body.appendChild(ov); whooshes([0, 350]);
       setTimeout(function () { ov.classList.remove('enter'); }, 1600);
     }
@@ -4956,7 +4959,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var w = g.words[k], cls = 'fkpod' + (k === cur ? ' now' : '') + (open && k === g.fake ? ' fake' : '') + (g.st !== 'vote' && g.accused === k ? ' accused' : '') + (g.st === 'vote' && g.votes[k] ? ' voted' : '') + (g.done && g.win.indexOf(k) >= 0 ? ' win' : '');
       var bub = w != null ? '<div class="fkword' + (k === g.lastWord && Date.now() - g.lastAt < 1200 ? ' pop' : '') + '">' + (w ? esc(w) : '🤐') + '</div>' : (k === cur ? '<div class="fkword typing">…</div>' : '<div class="fkword empty"></div>');
       var vt = (g.st === 'reveal' || g.st === 'guess' || g.st === 'judge' || g.st === 'end') && tally[k] ? '<i class="fkvotes">' + tally[k] + ' 🗳️</i>' : '';
-      return '<div class="' + cls + '" data-p="' + esc(k) + '" style="--i:' + i + '">' + bub + '<span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>' + vt + (open && k === g.fake ? '<b class="fktag">🤫 FAKE</b>' : '') + (g.done ? '<b class="fkpts">' + (g.tot[k] || 0) + '</b>' : g.st === 'end' && g.res[k] ? '<b class="fkpts">+' + g.res[k] + '</b>' : '') + '</div>';
+      var n = g.order.length, a = Math.PI * (1.08 + 0.84 * (n > 1 ? i / (n - 1) : 0.5)), px = 50 + 39 * Math.cos(a), py = 67 + 12 * Math.sin(a), sc = 0.78 + 0.3 * Math.abs(Math.cos(a));   /* (round the far side of the table: the ones on the sides closer, so bigger) */
+      return '<div class="' + cls + '" data-p="' + esc(k) + '" style="--i:' + i + ';left:' + px.toFixed(1) + 'vw;top:' + py.toFixed(1) + 'vh;--s:' + sc.toFixed(2) + ';z-index:' + Math.round(10 + sc * 10) + '"><i class="fkchair"></i>' + bub + '<span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>' + vt + (open && k === g.fake ? '<b class="fktag">🤫 FAKE</b>' : '') + (g.done ? '<b class="fkpts">' + (g.tot[k] || 0) + '</b>' : g.st === 'end' && g.res[k] ? '<b class="fkpts">+' + g.res[k] + '</b>' : '') + '</div>';
     }).join('');
     var row = ov.querySelector('.fkrow'); if (row.getAttribute('data-h') !== h) { row.setAttribute('data-h', h); row.innerHTML = h; }
   }
