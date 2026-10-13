@@ -5853,7 +5853,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.order.forEach(function (k) { g.phPts[k] = 0; });
     var used = shuffle(OR_ST.filter(function (s2) { return g.order.some(function (k) { return g.sta[k] === s2; }); })), u = g.ph === 1 && used.indexOf('sec') >= 0 ? used.filter(function (x) { return x !== 'sec'; }).concat('sec') : used, n = u.length;   // (the first phase: security always breaks last)
     g.groups = g.ph === 1 ? u.map(function (x) { return [x]; })
-      : g.ph === 2 ? orPairs(u)   // phase 2: two at a time, until every part has broken down twice
+      : g.ph === 2 ? (n >= 5 ? orFive(u) : orPairs(u))   // phase 2: two at a time, until every part has broken down twice (all five stations manned: each once, overlapping)
       : [u.slice()];   // phase 3: everything, one after the other in quick succession (all within 10 seconds)
     g.gi = -1; g.gBusy = false; g.fxk = pick(OR_FXK);
     orGroup(2000 + Math.random() * 1500);
@@ -5871,21 +5871,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       orShow();
     }, 250);
   }
+  function orClash(grp) { return grp.indexOf('fire') >= 0 && grp.indexOf('fx') >= 0; }   // (phase 2: the fire and the wiring never at the same time)
+  function orFive(u) { for (var tr = 0; tr < 50; tr++) { var v = shuffle(u.slice()), P = [v.slice(0, 3), v.slice(3)]; if (!orClash(P[0]) && !orClash(P[1])) return P; } return [u.slice(0, 3), u.slice(3)]; }
   function orPairs(u) {
     if (u.length < 2) return [[u[0]], [u[0]]];
-    for (var tr = 0; tr < 50; tr++) {
-      var L = shuffle(u.slice()).concat(shuffle(u.slice())), P = [];
+    var ok = function (p) { return p.length < 2 || (p[0] !== p[1] && !orClash(p)); }, P;
+    for (var tr = 0; tr < 80; tr++) {
+      var L = shuffle(u.slice()).concat(shuffle(u.slice())); P = [];
       for (var i = 0; i < L.length; i += 2) P.push(L.slice(i, i + 2));
-      if (P.every(function (p) { return p.length < 2 || p[0] !== p[1]; })) return P;
+      if (P.every(ok)) return P;
     }
-    return P;
+    var R = []; P.forEach(function (p) { if (ok(p)) R.push(p); else p.forEach(function (x) { R.push([x]); }); }); return R;   // (no way round it: those two one after the other)
   }
   function orGroup(delay) {   // the next part(s) break down after a little while: a fresh task, and its own repair time
     var g = G.organ; if (!g) return;
     g.gi++; g.gBusy = true; var at = Date.now() + Math.round(delay), grp = g.groups[g.gi] || [];
     setTimeout(function () {
       if (G.organ !== g || g.st !== 'fix') return;
-      var offs = grp.map(function (x, i) { return g.ph === 3 && grp.length > 1 ? Math.round(i * 10000 / (grp.length - 1) * (0.75 + Math.random() * 0.25)) : 0; });   // (phase 3: spread over 10 seconds)
+      var offs = grp.map(function (x, i) { return g.ph === 3 && grp.length > 1 ? Math.round(i * 10000 / (grp.length - 1) * (0.75 + Math.random() * 0.25)) : g.ph === 2 && grp.length > 2 ? i * 4000 : g.ph === 2 && g.groups.length === 2 && grp.length === 2 ? i * 4000 : 0; });   // (phase 3: spread over 10 seconds)
       grp.forEach(function (s2, i) {
         g.bn[s2] = (g.bn[s2] || 0) + 1; g.brk[s2] = Date.now() + offs[i]; g.shut[s2] = false;
         g.order.forEach(function (k) { if (g.sta[k] === s2) { g.prog[k] = { d: 0, of: OR_NEED[s2][g.ph - 1], at: 0 }; g.botGo[k] = 0; } });
@@ -6067,16 +6070,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var leds = ''; for (var li = 0; li < 9; li++) leds += '<i style="--i:' + li + '"></i>';
       if (g.st !== 'intro') ov.classList.add('live');
       ov.innerHTML = '<div class="orbg"><div class="orleds l">' + leds + '</div><div class="orleds r">' + leds + '</div><div class="orrig">' + leds + leds + '</div><div class="orbeams"><i></i><i></i><i></i><i></i></div></div><div class="orfloor"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
-        '<div class="ormid">' + '<div class="orpeek"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M40 60 Q30 150 46 236 L154 236 Q170 150 160 60 Q150 18 100 16 Q50 18 40 60 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M58 160 Q100 150 142 160 L150 240 L50 240 Z" fill="#2c2c34" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M78 168 Q100 196 122 168" fill="none" stroke="#cfd3dc" stroke-width="3"/><path d="M84 172 Q100 214 116 172" fill="none" stroke="#cfd3dc" stroke-width="2.4"/><path d="M100 200 L100 226" stroke="#cfd3dc" stroke-width="3"/><path d="M96 226 L100 238 L104 226 Z" fill="#cfd3dc"/><rect x="88" y="128" width="24" height="32" rx="9" fill="#d9a582" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="38" ry="44" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M60 92 Q58 40 100 38 Q142 40 140 92 Q136 74 128 70 L126 84 L118 66 L112 82 L104 64 L98 82 L90 66 L84 84 L76 68 L72 86 Q66 80 60 92 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M62 92 Q56 140 66 176 M138 92 Q146 140 134 176" stroke="#15101a" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M80 98 Q87 94 94 98 M106 98 Q113 94 120 98" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse class="orpm" cx="100" cy="122" rx="10" ry="8" fill="#7a1430" stroke="#8a3a3a" stroke-width="2.4"/><path class="orpm" d="M92 117 Q100 115 108 117" stroke="#fff" stroke-width="2.4" fill="none"/><ellipse cx="80" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="120" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><circle cx="48" cy="200" r="13" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/></svg></div>' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
-        '<div class="orpuppet p1">' + OR_PUPPET1 + '<div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '<div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
+        '<div class="ormid">' + '<div class="orpeek"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M40 60 Q30 150 46 236 L154 236 Q170 150 160 60 Q150 18 100 16 Q50 18 40 60 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M58 160 Q100 150 142 160 L150 240 L50 240 Z" fill="#2c2c34" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M78 168 Q100 196 122 168" fill="none" stroke="#cfd3dc" stroke-width="3"/><path d="M84 172 Q100 214 116 172" fill="none" stroke="#cfd3dc" stroke-width="2.4"/><path d="M100 200 L100 226" stroke="#cfd3dc" stroke-width="3"/><path d="M96 226 L100 238 L104 226 Z" fill="#cfd3dc"/><rect x="88" y="128" width="24" height="32" rx="9" fill="#d9a582" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="38" ry="44" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M60 92 Q58 40 100 38 Q142 40 140 92 Q136 74 128 70 L126 84 L118 66 L112 82 L104 64 L98 82 L90 66 L84 84 L76 68 L72 86 Q66 80 60 92 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M62 92 Q56 140 66 176 M138 92 Q146 140 134 176" stroke="#15101a" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M80 98 Q87 94 94 98 M106 98 Q113 94 120 98" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse class="orpm" cx="100" cy="122" rx="10" ry="8" fill="#7a1430" stroke="#8a3a3a" stroke-width="2.4"/><path class="orpm" d="M92 117 Q100 115 108 117" stroke="#fff" stroke-width="2.4" fill="none"/><ellipse cx="80" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="120" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><circle cx="48" cy="200" r="13" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/></svg></div>' + ORGAN + '<div class="orfist">👊</div><div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
+        '<div class="orpuppet p1">' + OR_PUPPET1 + '<div class="orpsmk"><i></i><i></i><i></i><i></i><i></i></div><div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '<div class="orpsmk"><i></i><i></i><i></i><i></i><i></i></div><div class="orpfl"><i></i><i></i><i></i><i></i></div><div class="orpwet"><b></b><b></b><b></b><b></b><b></b><b></b></div>' + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
         '<div class="orhosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub orbub him"></div><div class="tcbub orbub her"></div>' +
         '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orsta sec"></div><div class="ormsg"></div><div class="orboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
     var brk = orBroken(), broken = OR_ST.some(function (s2) { return brk[s2]; });
-    if (ov._fire && !brk.fire) { ov.classList.add('doused'); clearTimeout(ov._dT); ov._dT = setTimeout(function () { ov.classList.remove('doused'); }, 2600); }   // (the fire is out: a splash of water)
+    if (ov._fire && !brk.fire) { ov.classList.add('doused'); clearTimeout(ov._dT); ov._dT = setTimeout(function () { ov.classList.remove('doused'); }, 5200); }   // (the fire is out: a splash of water)
     ov._fire = !!brk.fire;
+    if (ov._sec && !brk.sec && g.st !== 'end') { ov.classList.add('punched'); clearTimeout(ov._pT); ov._pT = setTimeout(function () { ov.classList.remove('punched'); }, 2400); if (!REMOTE) setTimeout(function () { try { var a = new Audio('sounds/ru_impact.mp3'); a.volume = Math.max(0, Math.min(1, Music.vol ? Math.max(.6, Music.vol.fx) : 1)); var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }, 330); }   // (security got rid of her: a big fist, and she's slammed off the stage)
+    ov._sec = !!brk.sec;
     ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.classList.toggle('onfire', !!brk.fire); ov.classList.toggle('invaded', !!brk.sec); OR_ST.forEach(function (s3) { ov.classList.toggle('brk-' + s3, !!brk[s3]); });   /* (each breakdown has its own effect on the organ) */ ov.setAttribute('data-ph', g.ph);
     orFireSnd(!!brk.fire && !REMOTE); orInvSnd(!!brk.sec && !REMOTE);
     ov.querySelector('.orph').textContent = g.ph ? 'Phase ' + g.ph + ' of 3' : '';
