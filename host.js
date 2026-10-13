@@ -4334,12 +4334,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t = pick(types), cnt = function (f) { return girls.filter(f).length; };
     var nums = function (ans) { var hi = Math.max(3, n), lo = Math.max(0, Math.min(ans - Math.floor(Math.random() * 4), hi - 3)); var o = []; for (var i = lo; i < lo + 4; i++) o.push(String(i)); return { opts: o, ans: ans - lo }; };
     var q;
+    var who = function (w) { var inRow = girls.filter(function (x) { return x.row === w.row; }).length; return w.row ? (inRow === 1 ? 'the contestant in the front row' : 'the ' + TC_ORD[w.col] + ' contestant from the left in the ' + w.row + ' row') : 'the ' + TC_ORD[girls.indexOf(w)] + ' contestant from the left'; };
     if (t === 'hat') q = nums(cnt(function (w) { return w.h > 0; })), q.text = 'How many contestants wore a hat?';
     else if (t === 'glasses') q = nums(cnt(function (w) { return w.g; })), q.text = 'How many contestants wore sunglasses?';
     else if (t === 'dress') q = nums(cnt(function (w) { return w.o === 'dress'; })), q.text = 'How many contestants wore a dress?';
     else if (t === 'red') q = nums(cnt(function (w) { return w.c === 0; })), q.text = 'How many contestants wore a red outfit?';
-    else if (t === 'color') { var i = Math.floor(Math.random() * n); q = { opts: TC_COLORS.map(function (x) { return x[0]; }), ans: girls[i].c, text: 'What colour was the outfit of the ' + TC_ORD[i] + ' contestant from the left?' }; }
-    else { var j = Math.floor(Math.random() * n); q = { opts: TC_SHOES.slice(), ans: girls[j].s, text: 'Which shoes did the ' + TC_ORD[j] + ' contestant from the left wear?' }; }
+    else if (t === 'color') { var i = Math.floor(Math.random() * n); q = { opts: TC_COLORS.map(function (x) { return x[0]; }), ans: girls[i].c, text: 'What colour was the outfit of ' + who(girls[i]) + '?' }; }
+    else { var j = Math.floor(Math.random() * n); q = { opts: TC_SHOES.slice(), ans: girls[j].s, text: 'Which shoes did ' + who(girls[j]) + ' wear?' }; }
     q.type = t; return q;
   }
   function carpetAll() {
@@ -4361,7 +4362,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.carpet; if (!g || G.phase !== 'carpet') return;
     g.sec++; var sz = TC_SIZES[g.sec - 1], n = sz[0] + Math.floor(Math.random() * (sz[1] - sz[0] + 1));
     g.girls = []; for (var i = 0; i < n; i++) g.girls.push(tcGirl());
-    var poses = shuffle(TC_POSES.slice()); g.girls.forEach(function (w, i) { w.p = poses[i % poses.length]; });   // (a group photo: everyone their own pose, some kneeling in front)
+    // a group photo in two rows: the bigger half standing at the back, the rest in front (kneeling or standing, at random)
+    var nb = Math.ceil(n / 2), STAND = ['hips', 'wave', 'up', 'point', 'lean'];
+    g.girls.forEach(function (w, i) { var back = i < nb; w.row = back ? 'back' : 'front'; w.col = back ? i : i - nb; w.p = back || Math.random() < .5 ? pick(STAND) : 'kneel'; });
     g.st = 'walk'; g.cur = -1; g.q = null; push();
     var step = function () {   // the whole group walks on together, poses, and walks off
       if (G.carpet !== g) return;
@@ -4600,7 +4603,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       u.lh.rotation.set(sw, 0, 0); u.rh.rotation.set(-sw, 0, 0); u.la.rotation.set(-sw * .8, 0, 0); u.ra.rotation.set(sw * .8, 0, 0); u.head.rotation.set(0, 0, 0);
       var posing = ms >= T3.turn1 - 300 && ms < T3.poseEnd + 150, pk = posing ? Math.min(1, (ms - T3.turn1 + 300) / 500) * Math.min(1, (T3.poseEnd + 150 - ms) / 400) : 0, p = F.pose, kn = p === 'kneel' ? pk : 0;
       f.position.y = .28 + (walk ? Math.abs(Math.sin(ph)) * .05 : 0) - kn * .92;
-      f.position.z = .2 + (p === 'kneel' ? 1.1 : 0) * Math.min(1, ms < T3.inEnd ? 1 : 1);
+      f.position.z = F.z != null ? F.z : .2;
       var wob = Math.sin(ms / 420 + n), wav = Math.sin(ms / 160 + n);
       if (p === 'hips') { u.la.rotation.z = -pk * .75; u.ra.rotation.z = pk * .75; u.la.rotation.x = pk * .35; u.ra.rotation.x = pk * .35; f.rotation.z = pk * wob * .04; }
       else if (p === 'wave') { u.ra.rotation.z = pk * .9; u.la.rotation.z = -pk * (2.5 + wav * .25); u.head.rotation.z = pk * .18; f.rotation.z = pk * wob * .06; }
@@ -4616,8 +4619,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (st.key === key) return; st.key = key;
     (st.figs || []).forEach(function (F) { st.sc.remove(F.fig); }); st.figs = [];
     if (!key) return;
-    var N = g.girls.length, sp = Math.min(2.3, 15 / N);   // (the whole group, side by side: the 1st from the left is girls[0])
-    g.girls.forEach(function (w, i) { var f = tc3Girl(w); f.position.set(-30, .28, .2); st.sc.add(f); st.figs.push({ fig: f, x: (i - (N - 1) / 2) * sp, pose: w.p || 'wave' }); });
+    var N = g.girls.length, nb = Math.ceil(N / 2), nf = N - nb, sp = Math.min(2.6, 15 / nb);   // (two rows: the back row standing, the front row in the gaps)
+    g.girls.forEach(function (w, i) {
+      var f = tc3Girl(w), back = w.row !== 'front', c = w.row ? w.col : i, cnt = back ? nb : nf, x = (c - (cnt - 1) / 2) * sp + (!back && nf === nb ? sp / 2 : 0);
+      f.position.set(-30, .28, .2); st.sc.add(f); st.figs.push({ fig: f, x: x, z: back ? -.7 : 1.3, pose: w.p || 'wave' });
+    });
     st.t0 = Date.now();
     var T3 = TC3_T, n = 0, step = (T3.poseEnd - T3.turn1 - 200) / 12;
     for (var t = T3.turn1; t < T3.poseEnd - 100; t += step) (function (t, i) { setTimeout(function () { if (st.key !== key || !st.alive) return; st.flashAt = Date.now(); st.flashCam = st.cams[Math.floor(Math.random() * st.cams.length)]; tcFlash(ov, i); }, t); })(n === 0 ? t : t + Math.random() * 120, n++);
