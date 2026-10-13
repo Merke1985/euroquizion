@@ -928,7 +928,12 @@ function zgPath(seed, t) {   // the same on every device; seed is kept for older
   if (t < 9) x = 0;   // still until she starts singing (0:09)…
   else if (t < ZG_ST[0]) x = 0.29 * sm((t - 9) / 12) * Math.sin(2 * Math.PI * (t - 9) / 8);   // …then slowly, a third of the way (every 8 s)
   else if (t < ZG_ST[1]) x = 0.59 * Math.sin(2 * Math.PI * (t - ZG_ST[0]) / 4.5);   // stage 2: two thirds of the way, faster
-  else { var u = t - ZG_ST[1], L = Math.max(1, ZG_LEN - ZG_ST[1]), f0 = 1 / 3.4, f1 = 1 / 1.5; x = 0.88 * Math.sin(2 * Math.PI * (f0 * u + (f1 - f0) * u * u / (2 * L))); }   // stage 3: all the way, faster and faster
+  else {   // stage 3: all the way, faster and faster… and in the last 10 seconds faster still
+    var u = t - ZG_ST[1], A = Math.max(1, ZG_LEN - ZG_ST[1] - 10), f0 = 1 / 3.4, fa = 1 / 1.6, f2 = 1 / 0.7, ph;
+    if (u <= A) ph = f0 * u + (fa - f0) * u * u / (2 * A);
+    else { var v = u - A; ph = f0 * A + (fa - f0) * A / 2 + fa * v + (f2 - fa) * v * v / 20; }
+    x = 0.88 * Math.sin(2 * Math.PI * ph);
+  }
   var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 3) : t > b[1] ? sm((t - b[1]) / 2) : 0;   /* (gliding back to the middle over the last 3 seconds before a break; after it, off again from the middle) */ });   // (the breaks: back to the middle)
   return env * x;
 }
