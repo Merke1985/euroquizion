@@ -913,9 +913,12 @@ var ED_SOCKS = {
 function edSym(id, x, y, sz) { var s = ED_SYMS2[id]; return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')"><path d="' + s.d + '" fill="' + s.c + '"/></g>'; }
 function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')">' + ED_SOCKS[id] + '</g>'; }
 
-// Zero Gravity: the path the poles follow, the same on every device (from one seed). 60 seconds in three stages
-// (0–20 s slow sway, 20–40 s faster, 40–60 s chaos, blending over two seconds). x goes from -1 (far left) to 1 (far right).
-var ZG_LEN = 60, ZG_ST = [20, 40], ZG_W = [0.2, 0.18, 0.16], ZG_FALL = [3, 2, 1], zgPar = {};
+// Zero Gravity: the path the poles follow, the same on every device (from one seed), timed to the song. Three stages:
+// 0:00–1:07 slow sway (3 s to get back to the zone), a break 1:07–1:12, 1:12–2:05 faster (2 s), a break 2:05–2:10, then
+// 2:10 to the end the maximum sway (1 s). In a break the poles come back to the middle and nobody can fall.
+// x goes from -1 (far left) to 1 (far right).
+var ZG_LEN = 175, ZG_ST = [72, 130], ZG_BRK = [[67, 72], [125, 130]], ZG_W = [0.2, 0.18, 0.16], ZG_FALL = [3, 2, 1], zgPar = {};
+function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
 function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function zgPath(seed, t) {
   var p = zgPar[seed]; if (!p) { var r = zgRnd(seed); p = zgPar[seed] = []; for (var i = 0; i < 9; i++) p.push(r() * 6.283); }
@@ -923,8 +926,9 @@ function zgPath(seed, t) {
   var w3 = sm((t - ZG_ST[1] + 1) / 2), w2 = sm((t - ZG_ST[0] + 1) / 2) - w3, w1 = 1 - w2 - w3;
   var a = 0.6 * Math.sin(0.45 * t + p[0]) + 0.15 * Math.sin(0.9 * t + p[1]);
   var b = 0.5 * Math.sin(0.8 * t + p[3]) + 0.25 * Math.sin(1.7 * t + p[4]);
-  var c = 0.45 * Math.tanh(3 * Math.sin(1.0 * t + p[6])) + 0.25 * Math.sin(2.3 * t + p[7]) + 0.1 * Math.sin(3.7 * t + p[8]);
-  return Math.max(-0.85, Math.min(0.85, w1 * a + w2 * b + w3 * c));
+  var c = 0.55 * Math.tanh(3 * Math.sin(1.1 * t + p[6])) + 0.3 * Math.sin(2.5 * t + p[7]) + 0.12 * Math.sin(3.9 * t + p[8]);   // (the last stage: maximum sway)
+  var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 1.5) : t > b[1] ? sm((t - b[1]) / 1.5) : 0; });   // (the breaks: back to the middle, and calm)
+  return Math.max(-0.88, Math.min(0.88, env * (w1 * a + w2 * b + w3 * c)));
 }
 function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }
 

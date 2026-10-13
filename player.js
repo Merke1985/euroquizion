@@ -685,8 +685,8 @@
     if (S.fell || z.st !== 'play') return;
     var now = Date.now(), t = (now - S.start) / 1000, dt = Math.min(0.1, (now - (S.last || now)) / 1000); S.last = now;
     if (t >= ZG_LEN) return;
-    var st = zgStage(t), w = ZG_W[st], tg = zgPath(S.seed, t), err = S.f - tg, inside = Math.abs(err) <= w;
-    if (t > 1.5) { S.tot += dt; if (inside) S.inT += dt; }
+    var st = zgStage(t), w = ZG_W[st], tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), inside = brk >= 0 || Math.abs(err) <= w;   // (a break: relax, nothing counts)
+    if (t > 1.5 && brk < 0) { S.tot += dt; if (inside) S.inT += dt; }
     S.outFor = inside ? 0 : S.outFor + dt;
     var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 3 seconds to get back in stage 1, 2 in stage 2, just 1 in stage 3)
     if (t > 3 && S.outFor >= fall) {   // you fall
@@ -698,8 +698,8 @@
     var B = S.box; if (!B) return;
     B.zone.style.left = ((tg - w + 1) / 2 * 100).toFixed(2) + '%'; B.zone.style.width = (w * 100).toFixed(2) + '%';
     B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%';
-    B.track.setAttribute('data-l', lv);
-    var sec = Math.max(0, Math.ceil(ZG_LEN - t)), txt = !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
+    B.track.setAttribute('data-l', lv); B.track.classList.toggle('brk', brk >= 0);
+    var sec = Math.max(0, Math.ceil(ZG_LEN - t)), txt = brk >= 0 ? '☕ Break time! Relax your fingers… ' + Math.ceil(ZG_BRK[brk][1] - t) + 's' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
     if (B.info.textContent !== txt) B.info.textContent = txt;
   }
   function zgView(s) {

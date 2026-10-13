@@ -4791,16 +4791,22 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // too far and you fall (and float off into space). After a minute, the highest score among those still standing wins
   // (if everyone fell: the highest score overall). The host runs the physics; the phones get a small update 4× a second.
   var zgLoop = null, zgTimer = null, zgSongT = null;
-  var ZG_SINGER = '<svg class="zgsing" viewBox="0 0 200 380" aria-hidden="true"><defs><linearGradient id="zggown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2a8f"/><stop offset=".5" stop-color="#1d1660"/><stop offset="1" stop-color="#0b0a2e" stop-opacity=".2"/></linearGradient><radialGradient id="zgskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f6d6c0"/><stop offset="1" stop-color="#dba98a"/></radialGradient></defs>' +
-    '<path class="zgtrain" d="M78 130 Q100 120 122 130 Q150 230 196 380 L4 380 Q50 230 78 130 Z" fill="url(#zggown)"/>' +
-    '<g fill="#fff"><circle cx="70" cy="250" r="2"/><circle cx="120" cy="210" r="1.6"/><circle cx="140" cy="300" r="2.2"/><circle cx="90" cy="330" r="1.8"/><circle cx="56" cy="320" r="1.5"/><circle cx="104" cy="270" r="1.4"/><circle cx="160" cy="350" r="2"/><circle cx="36" cy="360" r="1.6"/></g>' +
-    '<path d="M80 128 Q100 116 120 128 L118 168 Q100 176 82 168 Z" fill="#4a36b0"/>' +
-    '<g class="zgarm l"><path d="M82 132 Q56 108 38 66" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/><path class="zgsleeve" d="M82 132 Q50 120 26 150 Q50 150 70 160 Z" fill="#6b58e0" opacity=".55"/></g>' +
-    '<g class="zgarm r"><path d="M118 132 Q146 116 164 84" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/><path class="zgsleeve" d="M118 132 Q150 126 178 156 Q152 156 130 162 Z" fill="#6b58e0" opacity=".55"/></g>' +
-    '<rect x="93" y="94" width="14" height="22" rx="6" fill="url(#zgskin)"/><ellipse cx="100" cy="74" rx="22" ry="26" fill="url(#zgskin)"/>' +
-    '<path d="M76 74 Q72 40 100 40 Q130 40 126 76 Q132 120 118 140 Q122 100 114 84 Q100 64 86 84 Q78 100 82 140 Q68 120 76 74 Z" fill="#e8ecf6"/>' +
-    '<circle cx="92" cy="76" r="2.6" fill="#2a1a40"/><circle cx="108" cy="76" r="2.6" fill="#2a1a40"/><ellipse class="zgmouth" cx="100" cy="88" rx="4.5" ry="5.5" fill="#8a1a40"/>' +
-    '<g fill="#ffd23f"><path d="M88 38 l3 6 l6 1 l-5 4 l1 6 l-5 -3 l-5 3 l1 -6 l-5 -4 l6 -1 z"/><path d="M112 34 l2.4 5 l5 .8 l-4 3.4 l1 5 l-4.4 -2.6 l-4.4 2.6 l1 -5 l-4 -3.4 l5 -.8 z"/></g></svg>';   // (an original character: a singer in a starry gown that flows down her pole)
+  var ZG_SINGER = '<svg class="zgsing" viewBox="0 0 200 380" aria-hidden="true"><defs><linearGradient id="zggown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#e2e6f8"/><stop offset=".8" stop-color="#b9c2ec" stop-opacity=".7"/><stop offset="1" stop-color="#9aa6e0" stop-opacity=".15"/></linearGradient><linearGradient id="zgbod" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d4daf2"/></linearGradient><radialGradient id="zgskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f8dccb"/><stop offset="1" stop-color="#e2b49a"/></radialGradient></defs>' +
+    '<g class="zgcrown" stroke="#eef2ff" stroke-width="1.8" stroke-linecap="round" opacity=".95"><line x1="86.1" y1="49.0" x2="46.3" y2="46.6"/><path d="M61.3 43.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="86.7" y1="46.9" x2="58.2" y2="39.1"/><line x1="87.9" y1="45.0" x2="53.2" y2="26.3"/><path d="M66.3 29.0 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="89.6" y1="43.3" x2="67.3" y2="24.0"/><line x1="91.8" y1="41.9" x2="68.3" y2="10.5"/><path d="M77.1 17.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="94.3" y1="40.9" x2="82.1" y2="13.8"/><line x1="97.1" y1="40.2" x2="88.8" y2="1.8"/><path d="M91.9 11.4 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="100.0" y1="40.0" x2="100.0" y2="10.2"/><line x1="102.9" y1="40.2" x2="111.2" y2="1.8"/><path d="M108.1 11.4 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="105.7" y1="40.9" x2="117.9" y2="13.8"/><line x1="108.2" y1="41.9" x2="131.7" y2="10.5"/><path d="M122.9 17.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="110.4" y1="43.3" x2="132.7" y2="24.0"/><line x1="112.1" y1="45.0" x2="146.8" y2="26.3"/><path d="M133.7 29.0 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="113.3" y1="46.9" x2="141.8" y2="39.1"/><line x1="113.9" y1="49.0" x2="153.7" y2="46.6"/><path d="M138.7 43.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/></g>' +   /* a halo crown of silver rays and stars */
+    '<path class="zgtrain" d="M84 168 Q100 162 116 168 Q172 250 198 380 L2 380 Q28 250 84 168 Z" fill="url(#zggown)"/>' +   /* a full white skirt that flows down the pole */
+    '<g fill="#fff" opacity=".9"><circle cx="60" cy="250" r="2.0"/><circle cx="120" cy="215" r="1.6"/><circle cx="140" cy="300" r="2.2"/><circle cx="90" cy="330" r="1.8"/><circle cx="56" cy="320" r="1.5"/><circle cx="104" cy="270" r="1.4"/><circle cx="160" cy="350" r="2.0"/><circle cx="36" cy="360" r="1.6"/><circle cx="96" cy="150" r="1.2"/><circle cx="108" cy="160" r="1.1"/><circle cx="88" cy="140" r="1.0"/><circle cx="130" cy="240" r="1.5"/><circle cx="75" cy="290" r="1.4"/><circle cx="118" cy="345" r="1.7"/></g>' +
+    '<path d="M74 66 Q66 104 76 126 Q82 118 88 124 Q84 100 86 84 Z M126 66 Q134 104 124 126 Q118 118 112 124 Q116 100 114 84 Z" fill="#f2d27a"/>' +   /* blonde waves behind */
+    '<path d="M82 126 Q100 118 118 126 L116 170 Q100 176 84 170 Z" fill="url(#zgbod)"/><path d="M92 124 L100 146 L108 124 Z" fill="url(#zgskin)"/>' +   /* a sparkly bodice with a V neckline */
+    '<g class="zgarm l"><path d="M80 132 Q62 146 42 150" stroke="url(#zgbod)" stroke-width="11" fill="none" stroke-linecap="round"/><circle cx="38" cy="150" r="5.5" fill="url(#zgskin)"/></g>' +   /* one arm reaching out */
+    '<ellipse cx="78" cy="128" rx="13" ry="11" fill="url(#zgbod)"/><ellipse cx="122" cy="128" rx="13" ry="11" fill="url(#zgbod)"/>' +   /* big puffed shoulders */
+    '<rect x="93" y="94" width="14" height="22" rx="6" fill="url(#zgskin)"/><ellipse cx="100" cy="74" rx="21" ry="25" fill="url(#zgskin)"/>' +
+    '<path d="M78 76 Q74 46 100 46 Q128 46 122 78 Q118 62 104 60 Q96 70 82 70 Z" fill="#f2d27a"/><path d="M78 76 Q76 92 80 100 M122 76 Q124 92 120 100" stroke="#e8c260" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+    '<path d="M86 50 L90 42 L95 49 L100 40 L105 49 L110 42 L114 50 Z" fill="#f4f6ff" stroke="#c9cfe6" stroke-width="1"/>' +   /* the crown's base */
+    '<path d="M88 70 Q92 68 96 70 M104 70 Q108 68 112 70" stroke="#7a5a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="92" cy="75" r="2.4" fill="#2a1a40"/><circle cx="108" cy="75" r="2.4" fill="#2a1a40"/><circle cx="92.8" cy="74.2" r=".8" fill="#fff"/><circle cx="108.8" cy="74.2" r=".8" fill="#fff"/>' +
+    '<ellipse cx="87" cy="83" rx="3.5" ry="2.2" fill="#ff8fa3" opacity=".55"/><ellipse cx="113" cy="83" rx="3.5" ry="2.2" fill="#ff8fa3" opacity=".55"/>' +
+    '<ellipse class="zgmouth" cx="100" cy="88" rx="4.5" ry="5" fill="#7a1430" stroke="#d0283a" stroke-width="1.6"/>' +
+    '<path d="M122 134 Q140 124 120 110" stroke="url(#zgbod)" stroke-width="11" fill="none" stroke-linecap="round"/><rect x="111" y="92" width="7" height="22" rx="3" fill="#1c1c24" transform="rotate(-24 114 103)"/><circle cx="110" cy="93" r="5.5" fill="#2a2a34"/><circle cx="117" cy="110" r="5.5" fill="url(#zgskin)"/>' +   /* the other one holds the microphone, close to her mouth */
+    '</svg>';   // (an original character in the style of a space princess: a silver halo crown, blonde waves, a sparkly white gown with puffed shoulders)
   function zgAstro(who) {
     var her = who === 'her', ac = her ? '#ff5fa8' : '#e53950', K = ' stroke="#2b1830" stroke-width="3" stroke-linejoin="round"', hair = her ? '#6b3a1e' : '#2a1a10';
     return '<svg class="zgastro ' + who + '" viewBox="0 0 200 380" aria-hidden="true"><defs><radialGradient id="zgglass' + who + '" cx="38%" cy="30%" r="70%"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset=".35" stop-color="#bfe6ff" stop-opacity=".18"/><stop offset="1" stop-color="#7ab8ff" stop-opacity=".28"/></radialGradient></defs>' +
@@ -4866,10 +4872,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.zg; if (!g || G.phase !== 'zg' || g.st !== 'play') { clearInterval(zgLoop); return; }
     var now = Date.now(), t = (now - g.t0) / 1000, st = zgStage(t);
     g.t = t;
-    if (st !== g.stage) { g.stage = st; push(); Music.douze(); var ov = $('zgov'); if (ov) { ov.classList.remove('stagefx'); void ov.offsetWidth; ov.classList.add('stagefx'); } }
+    if (st !== g.stage) { g.stage = st; push(); Music.douze(); var ov = $('zgov'); if (ov) { ov.classList.remove('stagefx'); void ov.offsetWidth; ov.classList.add('stagefx'); zgAnnounce(st === 1 ? 'Now you only have <b>2 seconds</b> to correct! ⚡' : 'Maximum sway! Now only <b>1 second</b> to correct! 🌪️'); } }
+    var brk = zgBreak(t); if (brk !== (g.brk == null ? -1 : g.brk)) { g.brk = brk; if (brk >= 0) { Music.ding(); zgAnnounce(''); } }
     g.order.forEach(function (k) {
       var p = players[k]; if (g.out[k] != null || !p || !p.bot) return;
       var b = g.bot[k];
+      if (zgBreak(t) >= 0) { if (g.lvl[k]) g.lvl[k] = 0; return; }   // (a break: everyone relaxes)
       if (now < b.until) return;
       var risk = [0.03, 0.06, 0.11][st] * (1.3 - b.skill), r = Math.random();
       if (g.lvl[k] === 2 && r < 0.35 * (1.2 - b.skill)) { zgMsg({ pid: k, id: g.id, out: Math.round(t * 10) / 10, acc: Math.round(60 + b.skill * 35) }); return; }
@@ -4918,8 +4926,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return { id: g.id, seed: g.seed, st: g.st, order: g.order, el: g.st === 'play' ? Date.now() - g.t0 : 0, stage: g.stage || 0, out: g.out, win: g.done ? g.win : null, acc: g.done ? g.acc : null, prize: g.prize || 0, done: !!g.done };
   }
   // The big screen: space, the singer's pole in the middle, the players' poles around it, swaying together.
+  function zgAnnounce(html) {   // a big message in the middle of the screen for a few seconds
+    var ov = $('zgov'); if (!ov) return; var a = ov.querySelector('.zgann'); if (!a) { a = document.createElement('div'); a.className = 'zgann'; ov.appendChild(a); }
+    clearTimeout(a._t); if (!html) { a.classList.remove('on'); return; }
+    a.innerHTML = html; a.classList.remove('on'); void a.offsetWidth; a.classList.add('on'); a._t = setTimeout(function () { a.classList.remove('on'); }, 4000);
+  }
   function zgPose(ov, g) {   // where the poles and the players lean right now (the levels ease in, not jump)
     var t = g.st === 'play' ? (Date.now() - g.t0) / 1000 : 0, px = g.st === 'play' ? zgPath(g.seed, t) : 0;
+    var bi = g.st === 'play' ? zgBreak(t) : -1, bk = ov.querySelector('.zgbrk');   // the break: "Break time" with a bar that fills up
+    if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><i><em></em></i>'; ov.appendChild(bk); }
+    bk.classList.toggle('on', bi >= 0); if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
     ov.style.setProperty('--sw', (px * 9).toFixed(2) + 'deg');
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
       var k = el.getAttribute('data-p'); if (g.out[k] != null) return;
@@ -4959,7 +4975,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ck.textContent !== String(sec)) ck.textContent = sec;
     var up = g.order.filter(function (k) { return g.out[k] == null; }).length;
     if (g.st !== 'intro') { ov.classList.add('rise'); ov.classList.add('rise2'); ov.classList.add('hostsoff'); }
-    var msg = g.st === 'intro' ? '' : g.st === 'ready' ? 'Hold on tight… keep your finger on the glowing zone on your phone! 🌌' : g.st === 'play' ? ('Stage ' + ((g.stage || 0) + 1) + ' of 3 · ' + up + ' of ' + g.order.length + ' still standing') : !g.done ? 'And… stop! 🌌' : g.win.length ? '🏆 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' win!' : ' wins!') + (shopOn() ? '' : ' +' + g.prize) : 'Everyone fell into space… 🌌';
+    var msg = g.st === 'intro' ? '' : g.st === 'ready' ? 'Hold on tight… keep your finger on the glowing zone on your phone! 🌌' : g.st === 'play' ? (zgBreak((Date.now() - g.t0) / 1000) >= 0 ? '☕ Break time' : 'Stage ' + ((g.stage || 0) + 1) + ' of 3 · ' + up + ' of ' + g.order.length + ' still standing') : !g.done ? 'And… stop! 🌌' : g.win.length ? '🏆 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' win!' : ' wins!') + (shopOn() ? '' : ' +' + g.prize) : 'Everyone fell into space… 🌌';
     var me = ov.querySelector('.zgmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
     var bd = ov.querySelector('.zgboard'), bh = g.done ? zgRank(g).map(function (x, i) { var p = players[x.pid]; if (!p) return ''; return '<div class="tcrow' + (g.win.indexOf(x.pid) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (x.up ? '🧍 standing' : '🌌 fell at ' + Math.floor(x.at) + 's') + '</em><i>' + x.acc + '%</i></div>'; }).join('') : '';
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }

@@ -4154,3 +4154,14 @@ body.hasdock main{padding-bottom:84px}
 @keyframes zgwave{from{transform:rotate(-12deg)}to{transform:rotate(14deg)}}
 .zgov[data-st="play"] .zgmouth{animation:zgmouth .4s ease-in-out infinite alternate}
 .zgp .chflag{display:none}
+
+/* Zero Gravity: the breaks and the announcements */
+.zgbrk{position:absolute;left:50%;top:30vh;translate:-50% 0;z-index:9;display:flex;flex-direction:column;align-items:center;gap:1vh;padding:2.4vh 3vw;border-radius:24px;background:rgba(20,10,50,.82);box-shadow:0 0 0 3px #b06bff,0 0 50px rgba(176,107,255,.6);opacity:0;scale:.6;transition:opacity .4s,scale .5s cubic-bezier(.3,1.5,.5,1);pointer-events:none}
+.zgbrk.on{opacity:1;scale:1}
+.zgbrk b{font-size:clamp(2rem,4.5vw,4rem);font-weight:900;color:#fff}.zgbrk small{font-weight:800;font-size:clamp(.9rem,1.5vw,1.3rem);color:#d9c8ff}
+.zgbrk i{display:block;width:30vw;height:2.4vh;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}.zgbrk em{display:block;height:100%;width:0;background:linear-gradient(90deg,#7ab8ff,#b06bff,#ff5fa8)}
+.zgann{position:absolute;left:50%;top:30vh;translate:-50% 0;z-index:9;max-width:70vw;text-align:center;font-weight:900;font-size:clamp(1.6rem,3.6vw,3.2rem);color:#fff;text-shadow:0 0 24px #b06bff,0 4px 0 #2b1830;opacity:0;pointer-events:none}
+.zgann b{color:#ffd23f}
+.zgann.on{animation:zgann 4s ease-out both}
+@keyframes zgann{0%{opacity:0;scale:2}10%{opacity:1;scale:1}85%{opacity:1;scale:1}100%{opacity:0;scale:.9}}
+.zgtrack.brk .zgzone{background:rgba(122,184,255,.35)!important;box-shadow:none!important}
