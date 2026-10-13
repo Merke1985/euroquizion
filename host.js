@@ -4613,18 +4613,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var fl = new T.Mesh(new T.SphereGeometry(.1, 10, 8), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 })); fl.position.set(.25, 2.3, -.5); g.add(fl);
       g.position.set(x, xz[1] > 8 ? -.5 : -.3, xz[1]); g.rotation.y = (x > 0 ? 1 : -1) * (.3 + (i % 3) * .08); g.scale.setScalar(.9); sc.add(g); front.push(g); return fl;
     });
-    // the fans: all along the other side of the carpet, behind the far rope, cheering
-    var fans = [], fanG = new T.Group(), FAN_TOPS = ['#ff5fa8', '#2f6ff0', '#f2b821', '#2fb35a', '#8b4fe0', '#ff8a2a', '#e0283a', '#40e0d0', '#ffffff'];
-    [-3.5, -4.4].forEach(function (z, row) {
-      for (var fx = -21.5 + row * .55; fx <= 21.5; fx += 1.1) {
-        var f = new T.Group(), top = new T.MeshStandardMaterial({ color: FAN_TOPS[Math.floor(Math.random() * FAN_TOPS.length)], roughness: .8 }), skin = new T.MeshStandardMaterial({ color: TC_SKIN[Math.floor(Math.random() * TC_SKIN.length)], roughness: .8 });
-        var bd = new T.Mesh(new T.CapsuleGeometry(.36, .7, 4, 8), top); bd.position.y = .75; f.add(bd);
-        var hd = new T.Mesh(new T.SphereGeometry(.27, 10, 8), skin); hd.position.y = 1.62; f.add(hd);
-        var hair = new T.Mesh(new T.SphereGeometry(.28, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), new T.MeshStandardMaterial({ color: TC_HAIR[Math.floor(Math.random() * TC_HAIR.length)], roughness: .7 })); hair.position.y = 1.66; f.add(hair);
-        var up = Math.random() < .55, arm = new T.Mesh(new T.CylinderGeometry(.08, .08, .75, 6), up ? skin : top); arm.position.set(.36, up ? 1.75 : .85, 0); arm.rotation.z = up ? -.25 : .15; f.add(arm);
-        if (up && Math.random() < .35) { var sign = new T.Mesh(new T.BoxGeometry(.7, .45, .05), new T.MeshStandardMaterial({ color: FAN_TOPS[Math.floor(Math.random() * FAN_TOPS.length)], emissive: '#222', roughness: .6 })); sign.position.set(.42, 2.3, 0); f.add(sign); }
-        var sc0 = .78 + Math.random() * .16; f.scale.setScalar(sc0); f.position.set(fx + (Math.random() - .5) * .3, .05, z + (Math.random() - .5) * .2); f.rotation.y = (Math.random() - .5) * .5;
-        fanG.add(f); fans.push({ g: f, ph: Math.random() * 6.3, sp: 5 + Math.random() * 4, arm: up ? arm : null });
+    // the fans: all along the other side of the carpet, behind the far rope, cheering. Flat, drawn people (not 3D):
+    // a dozen different ones, each in two poses (arms down / arms up), on cut-outs that bounce and wave.
+    var fans = [], fanG = new T.Group(), fanTex = [];
+    for (var fv = 0; fv < 14; fv++) fanTex.push([0, 1].map(function (fr) { var tx = new T.Texture(); tx.encoding = T.sRGBEncoding; var im = new Image(); im.onload = function () { tx.image = im; tx.needsUpdate = true; }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tcFanSvg(fv, fr)); return tx; }));
+    [-3.4, -4.3].forEach(function (z, row) {
+      for (var fx = -21.5 + row * .5; fx <= 21.5; fx += .95) {
+        var v = Math.floor(Math.random() * fanTex.length), mats = fanTex[v].map(function (tx) { return new T.MeshBasicMaterial({ map: tx, transparent: true, alphaTest: .15, color: row ? '#b8b8cc' : '#d8d8e6', depthWrite: true }); });
+        var m = new T.Mesh(new T.PlaneGeometry(1.2, 2.4), mats[0]), sc0 = .82 + Math.random() * .16;
+        m.scale.setScalar(sc0); m.position.set(fx + (Math.random() - .5) * .3, 1.2 * sc0, z + (Math.random() - .5) * .15); fanG.add(m);
+        fans.push({ g: m, y0: 1.2 * sc0, mats: mats, ph: Math.random() * 6.3, sp: 4 + Math.random() * 4, f: 0 });
       }
     });
     sc.add(fanG);
@@ -4639,7 +4637,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!host.isConnected) { st.alive = false; rn.dispose(); rn2.dispose(); return; }
       var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
       var t = now / 1000; beams[0].rotation.z = Math.sin(t * .5) * .45; beams[1].rotation.z = -Math.sin(t * .43 + 1) * .45;
-      fans.forEach(function (f) { var b = Math.max(0, Math.sin(t * f.sp + f.ph)); f.g.position.y = .05 + b * .12; if (f.arm) f.arm.rotation.z = -.25 + Math.sin(t * f.sp * .7 + f.ph) * .3; });   // (cheering: little jumps and waving)
+      fans.forEach(function (f) { var b = Math.max(0, Math.sin(t * f.sp + f.ph)), fr = Math.sin(t * f.sp * .5 + f.ph) > .1 ? 1 : 0; f.g.position.y = f.y0 + b * .1; f.g.rotation.z = Math.sin(t * f.sp * .35 + f.ph) * .04; if (fr !== f.f) { f.f = fr; f.g.material = f.mats[fr]; } });   // (cheering: little jumps, swaying, arms up and down)
       if (st.figs && st.figs.length) tc3Pose(st, Date.now() - st.t0);
       var fk = Math.max(0, 1 - (Date.now() - st.flashAt) / 200); flash.intensity = fk * 2.2;
       cams.forEach(function (f) { f.material.opacity = f === st.flashCam ? fk : 0; });
@@ -4651,6 +4649,38 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     requestAnimationFrame(frame);
     return st;
+  }
+  // A fan behind the rope, drawn flat (120 × 240): a real-looking person in everyday clothes, arms down (fr 0) or up
+  // (fr 1), some with a phone or a sign. v picks the person.
+  function tcFanSvg(v, fr) {
+    var R = function (n) { v = (v * 9301 + 49297) % 233280; return Math.floor(v / 233280 * n); }, seed = v; v = v * 7 + 3;
+    var skin = ['#f3d0b5', '#e2b48e', '#c48a60', '#8d5a3b', '#5e3a26', '#f6dcc8'][R(6)], hair = ['#2a1b12', '#5a3420', '#a8743a', '#e3c27a', '#1b1b1f', '#7a2e1c', '#cfcfd4'][R(7)];
+    var top = ['#e0283a', '#2f6ff0', '#f2b821', '#2fb35a', '#8b4fe0', '#ff8a2a', '#1d2a44', '#ffffff', '#ff5fa8', '#40e0d0', '#333'][R(11)], jeans = ['#2d4a7a', '#1f2a3a', '#3a3a40', '#6b5a48'][R(4)];
+    var long = R(3) === 0, bun = !long && R(4) === 0, glasses = R(5) === 0, hold = R(3), sign = ['#ffffff', '#ffd23f', '#ff8fc8', '#bfe8ff'][R(4)], K = ' stroke="#00000033" stroke-width="1.5"';
+    var h = '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="240" viewBox="0 0 120 240">';
+    // legs and shoes
+    h += '<path d="M44 150 L42 228 L56 228 L60 160 L64 228 L78 228 L76 150 Z" fill="' + jeans + '"' + K + '/><ellipse cx="49" cy="231" rx="10" ry="5" fill="#222"/><ellipse cx="71" cy="231" rx="10" ry="5" fill="#222"/>';
+    // arms (behind the body when down)
+    var armL = fr ? 'M40 82 Q26 60 30 26' : 'M40 84 Q30 110 34 138', armR = fr ? 'M80 82 Q96 58 88 22' : (hold ? 'M80 84 Q96 100 84 116' : 'M80 84 Q90 110 86 138');
+    h += '<path d="' + armL + '" stroke="' + top + '" stroke-width="13" fill="none" stroke-linecap="round"/><path d="' + armR + '" stroke="' + top + '" stroke-width="13" fill="none" stroke-linecap="round"/>';
+    var hl = fr ? [30, 22] : [34, 140], hr = fr ? [88, 18] : (hold ? [82, 118] : [86, 140]);
+    h += '<circle cx="' + hl[0] + '" cy="' + hl[1] + '" r="6.5" fill="' + skin + '"/><circle cx="' + hr[0] + '" cy="' + hr[1] + '" r="6.5" fill="' + skin + '"/>';
+    if (hold === 1) h += '<rect x="' + (hr[0] - 6) + '" y="' + (hr[1] - 16) + '" width="12" height="20" rx="2.5" fill="#15151c" stroke="#555" stroke-width="1.2"/><rect x="' + (hr[0] - 4) + '" y="' + (hr[1] - 14) + '" width="8" height="14" rx="1" fill="#9fd8ff"/>';   // a phone, filming
+    if (hold === 2 && fr) h += '<rect x="' + (hr[0] - 26) + '" y="' + (hr[1] - 34) + '" width="52" height="30" rx="3" fill="' + sign + '" stroke="#888" stroke-width="1.5"/><path d="M' + (hr[0] - 16) + ' ' + (hr[1] - 19) + ' q8 -9 16 0 q8 -9 16 0 l-16 14 z" fill="#e0283a"/>';   // a sign with a heart
+    // body
+    h += '<path d="M40 78 Q60 70 80 78 L84 152 Q60 158 36 152 Z" fill="' + top + '"' + K + '/>';
+    if (R(3) === 0) h += '<path d="M44 100 L76 100" stroke="#ffffff66" stroke-width="5"/>';
+    // neck, head, hair, face
+    if (long) h += '<path d="M43 36 Q34 62 40 86 Q46 90 52 84 Q47 66 49 48 Z M77 36 Q86 62 80 86 Q74 90 68 84 Q73 66 71 48 Z" fill="' + hair + '"/>';   // (two long locks, the neck free: not a hood)
+    h += '<rect x="54" y="60" width="12" height="18" rx="5" fill="' + skin + '"/>';
+    h += '<ellipse cx="60" cy="44" rx="17" ry="20" fill="' + skin + '"' + K + '/>';
+    h += '<path d="M42 42 Q42 20 60 20 Q78 20 78 42 Q72 30 60 30 Q50 30 42 42 Z" fill="' + hair + '"/>';
+    if (bun) h += '<circle cx="60" cy="18" r="8" fill="' + hair + '"/>';
+    h += '<ellipse cx="53" cy="45" rx="2.2" ry="2.6" fill="#2a1b12"/><ellipse cx="67" cy="45" rx="2.2" ry="2.6" fill="#2a1b12"/><path d="M49 39 Q53 37 57 39 M63 39 Q67 37 71 39" stroke="' + hair + '" stroke-width="1.6" fill="none"/>';
+    if (glasses) h += '<circle cx="53" cy="45" r="5.5" fill="none" stroke="#222" stroke-width="1.6"/><circle cx="67" cy="45" r="5.5" fill="none" stroke="#222" stroke-width="1.6"/><path d="M58.5 45 L61.5 45" stroke="#222" stroke-width="1.6"/>';
+    h += fr ? '<ellipse cx="60" cy="55" rx="5" ry="4" fill="#7a2030"/>' : '<path d="M54 54 Q60 59 66 54" stroke="#7a2030" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    h += '<ellipse cx="50" cy="51" rx="3.5" ry="2" fill="#ff8fa3" opacity=".35"/><ellipse cx="70" cy="51" rx="3.5" ry="2" fill="#ff8fa3" opacity=".35"/>';
+    return h + '</svg>';
   }
   // A contestant out of simple shapes, facing +z (towards the audience) when not rotated.
   function tc3Girl(w) {
