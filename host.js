@@ -491,7 +491,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase !== 'bomb' && $('bombov')) { $('bombov').remove(); clearInterval(udTickT); if (udSongT) udSong(false); }
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'groom') && $('grov')) $('grov').remove();
     if (!(G.phase === 'fun' && G.fun && G.fun.kind === 'scene') && $('hsov')) $('hsov').remove();
-    if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov')) $('clueov').remove();
+    if (!((G.phase === 'fun' && G.fun && G.fun.kind === 'clue') || G.phase === 'clueacc' || G.phase === 'cluerev') && $('clueov') && !$('clueov').classList.contains('leaving')) $('clueov').remove();
     if (G.phase !== 'cluerooms' && $('edov') && !$('edov').classList.contains('leaving')) { $('edov').remove(); clearInterval(edTick); }
     if (!G.clue && ((poeAudio && !poeAudio.paused) || (egghAudio && !egghAudio.paused))) clueSongStop();
     if (G.phase !== 'note' && $('noteov')) { $('noteov').remove(); noteAudio(false); }
@@ -3616,6 +3616,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('clueov'); if (!ov) { then(); return; }
     [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); });
     ov.classList.add('leaving'); whooshes([0, 300]);
+    if (then === edStart) { then(); setTimeout(function () { if (ov.parentNode) ov.remove(); }, 1000); return; }   // (the rooms are built right away, underneath: the story fades away on top of them, nothing in between)
     clueTimer = setTimeout(function () { if (ov.parentNode) ov.remove(); then(); }, 1000);
   }
   // The next clue question; after the last one, the accusation. False: this game is over.

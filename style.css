@@ -4134,3 +4134,5 @@ body.hasdock main{padding-bottom:84px}
 #v-wait.accmode #waitlabel,#v-wait.accmode #waittitle,#v-wait.accmode #waitsub{display:none}
 .clueui.acc .clbtn{min-height:56px;font-size:.8rem}.clueui.acc .clbtn i{font-size:1.25rem}
 .clueui.acc .clacctop{padding:10px 12px 14px}
+
+.clueov.leaving{z-index:57}
