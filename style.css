@@ -4400,3 +4400,6 @@ body.hasdock main{padding-bottom:84px}
 .edtab{transition:box-shadow .4s,opacity .4s,filter .4s}
 .edtab:not(.busy){opacity:.45;filter:saturate(.4) brightness(.7)}
 .edtab.busy{box-shadow:0 0 22px var(--tc),inset 0 0 14px var(--tb)}
+.edov2 .edr2{transition:filter .6s,box-shadow .4s}
+.edov2 .edr2.green{--tc:#3ddc84}.edov2 .edr2.club{--tc:#d97bff}.edov2 .edr2.back{--tc:#3fb6ff}.edov2 .edr2.boud{--tc:#ff6fd8}
+.edov2 .edr2.lit{box-shadow:0 0 0 3px var(--tc),0 0 26px var(--tc),inset 0 0 18px color-mix(in srgb,var(--tc) 35%,transparent)}

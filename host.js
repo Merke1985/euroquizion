@@ -3910,13 +3910,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   };
   function edDuoGuitar(col) { return '<g class="ddgt"><path d="M-30 -52 L22 -82" stroke="#5a3a1a" stroke-width="5" stroke-linecap="round"/><ellipse cx="-22" cy="-48" rx="16" ry="12" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2.4" transform="rotate(-30 -22 -48)"/><circle cx="-22" cy="-48" r="4" fill="' + ED_INK + '"/><rect x="18" y="-90" width="10" height="12" rx="3" fill="#3a2a1a" transform="rotate(-30 23 -84)"/></g>'; }
   function edDuo(ov, g) {
-    var D = ov._duo || (ov._duo = { on: false, i: 0, order: shuffle(['green', 'club', 'boud', 'back']), t: [] });
+    var D = ov._duo || (ov._duo = { on: false, spent: { green: 0, club: 0, boud: 0, back: 0 }, last: '', t: [] });
     var on = g.st === 'rooms';
     if (!on) { D.t.forEach(clearTimeout); D.t = []; D.on = false; [].forEach.call(ov.querySelectorAll('.edduo2'), function (x) { x.remove(); }); return; }
     if (D.on) return; D.on = true;
     var later = function (ms, f) { D.t.push(setTimeout(function () { if (ov.isConnected && G.clue && G.clue.st === 'rooms') f(); }, ms)); };
     var visit = function () {
-      var r = D.order[D.i++ % D.order.length], P = ED_DUO_AT[r], svg = ov.querySelector('.edr2.' + r + ' svg'); if (!svg) { later(1000, visit); return; }
+      // only a room with players in it; of those, the one they've spent the least time in (not the same one twice in a row, if there's a choice)
+      var gc = G.clue, busy = ['green', 'club', 'boud', 'back'].filter(function (x) { return Object.keys(gc.rooms || {}).some(function (k) { return players[k] && !players[k].off && (gc.rooms[k].cur || '') === x; }); });
+      if (!busy.length) { later(1000, visit); return; }
+      var pool = busy.length > 1 ? busy.filter(function (x) { return x !== D.last; }) : busy, least = Math.min.apply(null, pool.map(function (x) { return D.spent[x]; }));
+      var r = pick(pool.filter(function (x) { return D.spent[x] === least; })), P = ED_DUO_AT[r], svg = ov.querySelector('.edr2.' + r + ' svg'); if (!svg) { later(1000, visit); return; }
+      D.spent[r] += 20; D.last = r;
       var at = P.at;
       if (r === 'green') {   // two of the empty chairs (the guests' own chairs stay free)
         var SXg = [214, 318, 422, 526, 630], used = ((g.scene.green || {}).sitters || []).map(function (p) { return p.seat; }), free = SXg.map(function (x, k) { return k; }).filter(function (k) { return used.indexOf(k) < 0; });
@@ -4253,7 +4258,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var tw = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, ks.length * Hh * 0.088 + Hh * 0.03));   // (always the same size; it lights up when someone is inside)   // (a label a quarter of the room wide, growing only when it's crowded)
       tab.style.left = (100 * ((r === 'green' || r === 'back' ? rc.right - tw : rc.left) - oc.left) / W).toFixed(2) + '%'; tab.style.width = (100 * tw / W).toFixed(2) + '%'; tab.style.height = (100 * th / Hh).toFixed(2) + '%';
       tab.style.top = (100 * ((top ? rc.top - th : rc.bottom) - oc.top) / Hh).toFixed(2) + '%'; tab.classList.toggle('top', top);
-      var busy = ks.some(function (k) { return (g.rooms[k].cur || '') === r; }); tab.classList.toggle('busy', busy); cell.classList.toggle('dim', g.st === 'rooms' && !busy);   // (nobody in there: the room's lights go down)
+      var busy = ks.some(function (k) { return (g.rooms[k].cur || '') === r; }); tab.classList.toggle('busy', busy); cell.classList.toggle('dim', g.st === 'rooms' && !busy); cell.classList.toggle('lit', busy);   // (someone inside: a neon edge round the whole room, like its label)   // (nobody in there: the room's lights go down)
     });
   }
   function clueSnap() {
