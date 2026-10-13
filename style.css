@@ -4358,7 +4358,7 @@ body.hasdock main{padding-bottom:84px}
 #slotov .slcell .slvv i{opacity:0;animation:slvpop .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--d) * .35s)}
 @keyframes slvpop{0%{opacity:0;transform:scale(.2) translateY(1vh)}100%{opacity:1;transform:none}}
 /* Lynda behind her till */
-.boutique .bqtill{position:absolute;left:1vw;bottom:2vh;width:34vh;z-index:2;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
+.boutique .bqtill{position:absolute;left:1vw;bottom:1vh;width:34vh;z-index:2;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
 .boutique .bqtill .till{width:100%;height:auto;display:block}
 .boutique.enter .bqtill{animation:inLeft .9s .2s cubic-bezier(.2,.9,.3,1.08) both}
 .boutique.leaving .bqtill{animation:outLeft .7s .05s cubic-bezier(.6,0,.8,.4) forwards}
@@ -4372,3 +4372,16 @@ body.hasdock main{padding-bottom:84px}
 .edtok .char{width:3.6vh!important;height:3.6vh!important;box-shadow:0 0 0 2px #fff,0 3px 8px rgba(0,0,0,.6)!important}
 .edtok em{font-size:clamp(.48rem,.68vw,.7rem)!important;padding:0 .35em!important}
 .edtok .edglass{font-size:2vh!important;right:-1vh!important;top:-.9vh!important}
+.edov2 .edr2{transition:filter .6s}
+.edov2 .edr2.dim{filter:brightness(.38) saturate(.6)}
+.edtab{transition:box-shadow .3s,left .3s,width .3s}
+.edtok em{max-width:5.4vw;overflow:hidden;text-overflow:ellipsis}
+/* Edgar: the two strolling stars */
+.edduo{position:absolute;left:50%;top:60%;z-index:3;display:flex;gap:.2vh;transform:translate(-50%,-100%);opacity:0;pointer-events:none;transition:left 3s ease-in-out,top 3s ease-in-out,opacity .6s}
+.edduo.on{opacity:1}
+.edduo span{display:block;height:15vh;width:8vh}
+.edduo svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.edduo.flip{flex-direction:row-reverse}.edduo.flip svg{transform:scaleX(-1)}
+.edduo.walking span{animation:edduowalk .32s ease-in-out infinite alternate}
+.edduo.walking span:nth-child(2){animation-delay:-.16s}
+@keyframes edduowalk{from{translate:0 0}to{translate:0 -.8vh}}

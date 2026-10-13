@@ -1625,7 +1625,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var vs = kinds4.map(function (k, i2) { return tally[i2] || 0; }), top = Math.max.apply(null, vs), tied = kinds4.filter(function (k, i2) { return vs[i2] === top; });
         var cellOf = function (k) { return M.hi.filter(function (c) { return c.getAttribute('data-k') === k; })[0]; };
         var pop = 0;   /* (the voters pop in one by one) */
-        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = '<span class="slvv">' + vot[i2].map(function (p) { return '<i style="--d:' + (pop++) + '">' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ } });   /* (the tiles keep their look until the winner is known) */
+        kinds4.forEach(function (k, i2) { var c = cellOf(k); if (c) { c.querySelector('.slv').innerHTML = '<span class="slvv">' + vot[i2].map(function (p) { return '<i style="--d:' + (pop++) + '">' + charSvg(p.char) + '<u>' + esc(p.name) + '</u></i>'; }).join('') + '</span>';   /* (who voted for it, small, at the bottom of the tile) */ if (top > 0 && !vs[i2]) setTimeout(function () { c.classList.add('out'); }, 400); } });   /* (the games nobody voted for go dark straight away; the rest keep their look until the winner is known) */
         for (var pq = 0; pq < pop; pq++) (function (pq) { setTimeout(function () { Music.plop(pq + 2); }, pq * 350 + 120); })(pq);
         M.ov.classList.add('counted'); G.phase = 'pspin'; G.barMs = 0; push();
         var win = pick(tied), land = function () { var c = cellOf(win); M.hi.forEach(function (x) { x.classList.remove('tick'); if (x !== c) x.classList.add('out'); }); M.ov.classList.remove('ticking', 'voting'); if (c) c.classList.add('won'); M.ov.classList.add('done'); Music.ding(); if (win === 'clue') { clueSting(); G.clueSting = true; } slotT = setTimeout(function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(win, 2500); }, 600); }, 2600); };
@@ -3524,9 +3524,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="88" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
     '</svg>';
   // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
-  var SHOPTILL = '<svg class="till" viewBox="0 0 300 190" aria-hidden="true">' +
-    '<rect x="6" y="92" width="288" height="92" rx="8" fill="#c48a3a" stroke="#6b4518" stroke-width="4"/><rect x="0" y="84" width="300" height="16" rx="6" fill="#e0b060" stroke="#6b4518" stroke-width="4"/>' +
-    '<path d="M24 112 h252 M24 140 h252 M24 168 h252" stroke="#a8702c" stroke-width="3"/><g fill="#ffd23f"><circle cx="150" cy="140" r="12"/><text x="150" y="146" font-size="16" font-weight="900" text-anchor="middle" fill="#6b4518">€</text></g>' +
+  var SHOPTILL = '<svg class="till" viewBox="0 0 300 300" aria-hidden="true">' +
+    '<rect x="6" y="92" width="288" height="202" rx="8" fill="#c48a3a" stroke="#6b4518" stroke-width="4"/><rect x="0" y="84" width="300" height="16" rx="6" fill="#e0b060" stroke="#6b4518" stroke-width="4"/>' +
+    '<path d="M24 120 h252 M24 160 h252 M24 200 h252 M24 240 h252" stroke="#a8702c" stroke-width="3"/><g fill="#ffd23f"><circle cx="150" cy="180" r="14"/><text x="150" y="187" font-size="18" font-weight="900" text-anchor="middle" fill="#6b4518">€</text></g>' +
     '<path d="M150 84 L156 34 Q158 22 170 22 L262 22 Q274 22 276 34 L282 84 Z" fill="#ff5fa8" stroke="#7a1e4a" stroke-width="4" stroke-linejoin="round"/>' +
     '<rect x="186" y="4" width="62" height="24" rx="4" fill="#1d2a44" stroke="#7a1e4a" stroke-width="3"/><text x="217" y="22" font-size="15" font-weight="900" text-anchor="middle" fill="#7dffb0" font-family="monospace" class="tilln">0.00</text>' +
     '<g fill="#fff" stroke="#7a1e4a" stroke-width="2">' + [0, 1, 2].map(function (r) { return [0, 1, 2, 3].map(function (c) { return '<rect x="' + (174 + c * 22) + '" y="' + (38 + r * 14) + '" width="17" height="10" rx="3"/>'; }).join(''); }).join('') + '</g>' +
@@ -3653,7 +3653,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     } catch (e) {}
     clueYtT = setInterval(function () {
       if (!clueYtOn || stage !== 'clue' || (!G.clue && G.mode !== 'clue')) { if (!G.clue && G.mode !== 'clue') clueYt(false); return; }
-      try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(CLUE_YT_AT, true); yt.playVideo(); } else if (st === 2 || st === 5 || st === -1) yt.playVideo(); } catch (e) {}
+      try { var st = yt.getPlayerState(); if (st === 0) { clueYtOn = false; clearInterval(clueYtT); clueYtT = null; } else if (st === 2 || st === 5 || st === -1) yt.playVideo(); } catch (e) {}   // (it plays once: no repeat)
     }, 1000);
   }
   function clueSong() { clueYt(true); }
@@ -3898,6 +3898,30 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // A little cartoon person (big head, round body, outlines): feet at (x, y). o: hair, hairStyle (short / long / curly /
   // pony / bun), top, legs, dress, sit, glasses, boa, tie, walk, armUp, shoes, s (scale), flip
   var ED_INK = '#2b1830';
+  // Two stars (original characters, in the style of a famous duo: one all in shiny black with dark hair, one blonde in
+  // white) stroll from room to room together during the search, saluting, to distract everyone.
+  function edDuo(ov, g) {
+    var d = ov.querySelector('.edduo');
+    if (!d) {
+      var one = function (o) { return '<svg viewBox="-40 -150 80 156" aria-hidden="true">' + edPerson(0, 0, o) + '</svg>'; };
+      d = document.createElement('div'); d.className = 'edduo';
+      d.innerHTML = '<span>' + one({ s: 1, hair: '#16121a', hairStyle: 'long', top: '#141418', legs: '#141418', shoes: '#141418', armUp: 1, walk: 1 }) + '</span><span>' + one({ s: 1, hair: '#e8cf8a', hairStyle: 'long', top: '#e0283a', legs: '#f4f4f6', shoes: '#f4f4f6', armUp: 1, walk: 1 }) + '</span>';
+      ov.appendChild(d);
+    }
+    var on = g.st === 'rooms'; d.classList.toggle('on', on);
+    if (!on) { clearTimeout(d._t); d._go = false; return; }
+    if (d._go) return; d._go = true;
+    var hop = function () {
+      if (!d.isConnected || !G.clue || G.clue.st !== 'rooms') { d._go = false; return; }
+      var rooms = ['green', 'club', 'back', 'boud'].filter(function (r) { return r !== d._r; }), r = rooms[Math.floor(Math.random() * rooms.length)], cell = ov.querySelector('.edr2.' + r); if (!cell) return;
+      var oc = ov.getBoundingClientRect(), rc = cell.getBoundingClientRect(), x = rc.left - oc.left + rc.width * (.25 + Math.random() * .5), y = rc.bottom - oc.top - rc.height * .04;
+      var px = parseFloat(d.style.left) || x; d.classList.toggle('flip', x < px); d.classList.add('walking');
+      d.style.left = x + 'px'; d.style.top = y + 'px'; d._r = r;
+      clearTimeout(d._w); d._w = setTimeout(function () { d.classList.remove('walking'); }, 3200);
+      d._t = setTimeout(hop, 9000 + Math.random() * 5000);
+    };
+    d._t = setTimeout(hop, 1500);
+  }
   function edPerson(x, y, o) {
     var s = o.s || 1, skin = o.skin || '#f6cfb2', H = ED_COL[o.hair] || o.hair || '#333', T = ED_COL[o.top] || o.top || '#888', Lg = ED_COL[o.legs] || o.legs || '#3a3a5a', K = ' stroke="' + ED_INK + '" stroke-width="2.6" stroke-linejoin="round"', h = '';
     var shoe = o.shoes || '#3a2a3a';
@@ -4183,8 +4207,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!el) { el = document.createElement('div'); el.className = 'edtok'; el.setAttribute('data-p', k); el.innerHTML = '<i class="edglass">🔍</i>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>'; toks.appendChild(el); }
       var r = g.rooms[k].cur || '', x, y, cell = r ? ov.querySelector('.edr2.' + r) : null, rc = cell ? cell.getBoundingClientRect() : null;
       if (rc) {   // in a room: on the outside edge of it (above the top rooms, below the bottom ones), at their own spot
-        var step = Math.min(W * 0.055, rc.width / Math.max(1, N));
-        x = rc.left - oc.left + rc.width / 2 + (slot - (N - 1) / 2) * step;
+        var mates = ks.filter(function (k2) { return (g.rooms[k2].cur || '') === r; }), mi = mates.indexOf(k), step = Math.min(Hh * 0.088, (rc.width * 0.9) / Math.max(1, mates.length));   // (neatly side by side in the room's label)
+        x = rc.left - oc.left + rc.width / 2 + (mi - (mates.length - 1) / 2) * step;
         y = (r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.07 + Hh * 0.004 : rc.bottom - oc.top + Hh * 0.004;   // (inside the room's own tab)
       } else {   // in the lobby: two columns, at their own spot
         var rowH = Math.min(Hh * 0.105, (lb.height * 0.62) / Math.max(1, Math.ceil(N / 2)));
@@ -4199,14 +4223,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       } else if (!el.classList.contains('out')) { el.style.left = L; el.style.top = T; }
     });
     [].forEach.call(toks.querySelectorAll('.edtok'), function (el) { if (ks.indexOf(el.getAttribute('data-p')) < 0) el.remove(); });
+    edDuo(ov, g);
     // every room has a tab on its outer edge, in its own colour, where the avatars of the searchers sit
     ['green', 'club', 'back', 'boud'].forEach(function (r) {
       var cell = ov.querySelector('.edr2.' + r); if (!cell) return;
       var tab = toks.querySelector('.edtab.' + r); if (!tab) { tab = document.createElement('div'); tab.className = 'edtab ' + r; toks.insertBefore(tab, toks.firstChild); }
-      var rc = cell.getBoundingClientRect(), top = r === 'green' || r === 'club', th = Hh * 0.07;
-      tab.style.left = (100 * (rc.left - oc.left) / W).toFixed(2) + '%'; tab.style.width = (100 * rc.width / W).toFixed(2) + '%'; tab.style.height = (100 * th / Hh).toFixed(2) + '%';
+      var rc = cell.getBoundingClientRect(), top = r === 'green' || r === 'club', th = Hh * 0.07, cnt = ks.filter(function (k2) { return (g.rooms[k2].cur || '') === r; }).length;
+      var tw = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, cnt * Hh * 0.088 + Hh * 0.03));   // (a label a quarter of the room wide, growing only when it's crowded)
+      tab.style.left = (100 * (rc.left - oc.left + (rc.width - tw) / 2) / W).toFixed(2) + '%'; tab.style.width = (100 * tw / W).toFixed(2) + '%'; tab.style.height = (100 * th / Hh).toFixed(2) + '%';
       tab.style.top = (100 * ((top ? rc.top - th : rc.bottom) - oc.top) / Hh).toFixed(2) + '%'; tab.classList.toggle('top', top);
-      tab.classList.toggle('busy', ks.some(function (k) { return (g.rooms[k].cur || '') === r; }));
+      var busy = ks.some(function (k) { return (g.rooms[k].cur || '') === r; }); tab.classList.toggle('busy', busy); cell.classList.toggle('dim', g.st === 'rooms' && !busy);   // (nobody in there: the room's lights go down)
     });
   }
   function clueSnap() {
