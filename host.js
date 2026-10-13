@@ -3999,24 +3999,27 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('edov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
     setTimeout(function () { var o = $('edov'); if (o) o.remove(); clueAccuse(); }, 900);
   }
-  // The big screen: the four rooms, full screen, with the timer in the middle. Nothing about who is where or how far.
+  // The big screen: the four rooms on the left; on the right the clock, every player with where they are right now
+  // (a spyglass moving over the room they're searching; nothing about how many rooms they did), and the three rows of cards.
   function edShow() {
     var g = G.clue; if (!g || g.st !== 'rooms' || !g.scene) return;
     var ov = $('edov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
-      ov.innerHTML = ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg><div class="edwho" data-r="' + r.id + '"></div></div>'; }).join('') +
-        '<div class="edmid"><span>🔍 Where the Hell<br>Is Edgar?</span><div class="edclock"></div><div class="edwho hall" data-r=""></div></div>';
+      var row = function (k, label) { return '<div class="edcrow"><b>' + label + '</b><div>' + CLUE_SETS[k].map(function (c) { return '<span><i>' + c.icon + '</i><em>' + esc(c.name) + '</em></span>'; }).join('') + '</div></div>'; };
+      ov.innerHTML = '<div class="edgrid">' + ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '</div>' +
+        '<aside class="edside"><div class="edstop"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edpl"></div>' +
+        '<div class="edclues">' + row('where', 'Hidden where?') + row('what', 'Hidden inside?') + row('who', 'Who took him?') + '</div></aside>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 1600);
     }
     var ck = ov.querySelector('.edclock'), sec = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)), txt = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
     if (ck.textContent !== txt) ck.textContent = txt; ck.classList.toggle('hot', sec <= 15);
-    // everyone's avatar in the room they are in right now (in between rooms: under the clock). Nothing about how many they did.
-    [].forEach.call(ov.querySelectorAll('.edwho'), function (box) {
-      var rid = box.getAttribute('data-r'), h = Object.keys(g.rooms).filter(function (k) { return players[k] && !players[k].off && (g.rooms[k].cur || '') === rid; }).map(function (k) { return '<span title="' + esc(players[k].name) + '">' + charSvg(players[k].char) + '<em>' + esc(players[k].name) + '</em></span>'; }).join('');
-      if (box.getAttribute('data-h') !== h) { box.setAttribute('data-h', h); box.innerHTML = h; }
-    });
+    var h = Object.keys(g.rooms).filter(function (k) { return players[k] && !players[k].off; }).map(function (k) {
+      var p = players[k], r = edRoom(g.rooms[k].cur || '');
+      return '<div class="edprow' + (r ? ' in ' + r.id : '') + '">' + charSvg(p.char) + '<span class="ednm">' + esc(p.name) + '</span>' + (r ? '<span class="edwhere"><i class="edglass">🔍</i>' + r.icon + ' ' + r.name + '</span>' : '<span class="edwhere idle">🚶 in the hallway</span>') + '</div>';
+    }).join('');
+    var pl = ov.querySelector('.edpl'); if (pl.getAttribute('data-h') !== h) { pl.setAttribute('data-h', h); pl.innerHTML = h; }
   }
   function clueSnap() {
     var g = G.clue, acc = {};
