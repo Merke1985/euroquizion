@@ -4793,8 +4793,27 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Who the fake is and what the song is go to each phone privately (never in the shared state) until the reveal.
   var FK_TURN = 20000, FK_TALK = 12000, FK_VOTE = 20000, FK_GUESS = 30000, FK_JUDGE = 15000, fkTimer = null, fkTick = null, fkPrivT = null;
   var FK_ART = '<svg class="fkart" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="70" fill="#ffd23f" stroke="#2b1830" stroke-width="5"/><ellipse cx="74" cy="88" rx="9" ry="12" fill="#2b1830"/><ellipse cx="126" cy="88" rx="9" ry="12" fill="#2b1830"/><circle cx="77" cy="84" r="3" fill="#fff"/><circle cx="129" cy="84" r="3" fill="#fff"/><path d="M70 128 Q100 146 130 128" stroke="#2b1830" stroke-width="6" fill="none" stroke-linecap="round"/><rect x="84" y="108" width="12" height="44" rx="6" fill="#f6cfb2" stroke="#2b1830" stroke-width="4" transform="rotate(-8 90 130)"/><ellipse cx="60" cy="112" rx="10" ry="6" fill="#ff8aa8" opacity=".7"/><ellipse cx="140" cy="112" rx="10" ry="6" fill="#ff8aa8" opacity=".7"/></svg>';   // (shh! an original smiley)
+  var FK_PAINT = '<svg class="fkpaint" viewBox="0 0 160 210" aria-hidden="true"><defs><linearGradient id="fkpsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2050"/><stop offset="1" stop-color="#3a2a5a"/></linearGradient><radialGradient id="fkpmoon"><stop offset="0" stop-color="#fffbe0"/><stop offset=".6" stop-color="#f4e8b0"/><stop offset="1" stop-color="#f4e8b0" stop-opacity="0"/></radialGradient></defs>' +
+    '<rect x="0" y="0" width="160" height="210" rx="6" fill="#b8862e"/><rect x="6" y="6" width="148" height="198" rx="3" fill="#e0b050"/><rect x="12" y="12" width="136" height="186" fill="url(#fkpsky)"/>' +
+    '<circle cx="112" cy="46" r="26" fill="url(#fkpmoon)"/><circle cx="112" cy="46" r="15" fill="#fffbe0"/>' +
+    '<path d="M12 150 L24 150 L24 120 L32 112 L40 120 L40 104 L48 96 L56 104 L56 132 L70 132 L70 116 L78 108 L86 116 L86 150 L148 150 L148 198 L12 198 Z" fill="#141028"/><g fill="#ffd27a"><rect x="44" y="108" width="5" height="7"/><rect x="74" y="122" width="5" height="7"/></g>' +
+    '<path d="M92 198 Q90 150 104 132 Q100 118 110 110 Q120 104 128 112 Q136 120 132 134 Q146 152 144 198 Z" fill="#1e3a24" stroke="#0a1a0e" stroke-width="2"/><path d="M106 128 Q118 116 130 128 Q124 138 118 140 Q112 138 106 128 Z" fill="#05040a"/>' +
+    '<rect x="12" y="186" width="136" height="12" fill="#2a2018" opacity=".6"/><rect x="0" y="0" width="160" height="210" rx="6" fill="none" stroke="#6a4a1a" stroke-width="3"/></svg>';   // (an original painting: a hooded figure in a cloak, a castle, the moon)
+  var FK_CHAIR = '<svg class="fkchair" viewBox="0 0 120 200" aria-hidden="true"><path d="M18 96 Q14 30 30 16 Q60 -4 90 16 Q106 30 102 96 Z" fill="#c8963a" stroke="#5a3a10" stroke-width="3"/><path d="M28 92 Q26 38 38 28 Q60 14 82 28 Q94 38 92 92 Z" fill="#7a1430"/><path d="M60 24 l4 9 l10 1 l-7 7 l2 10 l-9 -5 l-9 5 l2 -10 l-7 -7 l10 -1 z" fill="#e8b84a"/>' +
+    '<rect x="10" y="96" width="100" height="18" rx="7" fill="#8a1a38" stroke="#5a3a10" stroke-width="3"/><rect x="6" y="80" width="14" height="40" rx="5" fill="#c8963a" stroke="#5a3a10" stroke-width="2.5"/><rect x="100" y="80" width="14" height="40" rx="5" fill="#c8963a" stroke="#5a3a10" stroke-width="2.5"/>' +
+    '<path d="M18 114 L14 196 M102 114 L106 196 M40 114 L38 188 M80 114 L82 188" stroke="#7a5420" stroke-width="7" stroke-linecap="round"/></svg>';   // (a high-backed throne chair: carved gold frame, red velvet, a star)
   function fkSongs() { return (songs || []).filter(function (s) { return s[0] >= 1985 && (s[5] === 2 || (s[6] != null && s[6] <= 10 && s[8] == null)); }); }
-  var FK_ROUNDS = 3;
+  var FK_ROUNDS = 3, fkSongT = null;
+  function fkSong(on, fade) {   // "Lie To Me" (Czechia 2018), quietly under the whole game
+    clearInterval(fkSongT); fkSongT = null;
+    if (REMOTE) return;
+    try {
+      if (!on && fade) { var v = 35; fkSongT = setInterval(function () { v -= 2; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fkSongT); fkSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
+      if (!on) { yt.pauseVideo(); return; }
+      Music.want(false); stage = 'fake'; yt.loadVideoById({ videoId: 'w0ZUuQe0shk', startSeconds: 0 }); yt.unMute(); yt.setVolume(35);
+      fkSongT = setInterval(function () { if (G.phase !== 'fake' || !G.fake) { clearInterval(fkSongT); fkSongT = null; return; } try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {} }, 1000);   /* (round and round until the game is over) */
+    } catch (e) {}
+  }
   function fkAll() {
     var act = list().filter(function (p) { return !p.off; });
     if (act.length < 3) { quipAll(); return; }   // (it needs at least three)
@@ -4802,7 +4821,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} }
     G.fake = { base: 'fk' + G.round + '-' + Math.random().toString(36).slice(2, 6), rnd: 0, tot: {}, fakes: [], used: [], win: [] };
     G.phase = 'fake'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway();
-    fkRound();
+    fkRound(); fkSong(true);
     clearInterval(fkTick); fkTick = setInterval(function () { if (!G.fake) { clearInterval(fkTick); return; } fkShow(); fkBots(); }, 500);
   }
   function fkRound() {   // a new round: a new song, a new fake (someone who hasn't been it yet), a new order
@@ -4909,7 +4928,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.fake !== g) return;
       if (g.rnd < FK_ROUNDS) { whooshes([0, 300]); fkRound(); return; }   // the next round
       var best = Math.max.apply(null, [0].concat(Object.keys(g.tot).map(function (k) { return g.tot[k]; })));   // after the last round: most points over all rounds wins
-      g.win = Object.keys(g.tot).filter(function (k) { return g.tot[k] === best && best > 0; }); g.done = true; push(); fkShow(); Music.douze();
+      g.win = Object.keys(g.tot).filter(function (k) { return g.tot[k] === best && best > 0; }); g.done = true; push(); fkShow(); Music.douze(); fkSong(false, true);
       fkTimer = setTimeout(function () { if (G.fake !== g) return; var ov = $('fkov'); if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); } setTimeout(function () { if (G.fake !== g) return; G.fake = null; startRound(); }, 900); }, 8000);
     }, 8500);
   }
@@ -4928,7 +4947,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov enter';
       // a round table in a dark hall, Eurovision style: velvet drapes, a big neon heart, candles, a glowing heart on the table
-      ov.innerHTML = '<div class="fkbg"><i class="fkdrape l"></i><i class="fkdrape r"></i><i class="fkheart"></i><i class="fkbeam a"></i><i class="fkbeam b"></i></div><div class="fksign">🤫 The Fake Fan<small class="fkrnd"></small></div>' +
+      ov.innerHTML = '<div class="fkbg"><i class="fkdrape l"></i><i class="fkdrape r"></i><i class="fkheart"></i><i class="fkbeam a"></i><i class="fkbeam b"></i>' + FK_PAINT + '</div><div class="fksign">🤫 The Fake Fan<small class="fkrnd"></small></div>' +
         '<div class="fktable"><i class="fktop"></i><i class="fkemb">' + FK_ART + '</i>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<i class="fkcandle c' + i + '"><b></b></i>'; }).join('') + '</div>' +
         '<div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div>';
       document.body.appendChild(ov); whooshes([0, 350]);
@@ -4960,7 +4979,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var bub = w != null ? '<div class="fkword' + (k === g.lastWord && Date.now() - g.lastAt < 1200 ? ' pop' : '') + '">' + (w ? esc(w) : '🤐') + '</div>' : (k === cur ? '<div class="fkword typing">…</div>' : '<div class="fkword empty"></div>');
       var vt = (g.st === 'reveal' || g.st === 'guess' || g.st === 'judge' || g.st === 'end') && tally[k] ? '<i class="fkvotes">' + tally[k] + ' 🗳️</i>' : '';
       var n = g.order.length, a = Math.PI * (1.08 + 0.84 * (n > 1 ? i / (n - 1) : 0.5)), px = 50 + 39 * Math.cos(a), py = 67 + 12 * Math.sin(a), sc = 0.78 + 0.3 * Math.abs(Math.cos(a));   /* (round the far side of the table: the ones on the sides closer, so bigger) */
-      return '<div class="' + cls + '" data-p="' + esc(k) + '" style="--i:' + i + ';left:' + px.toFixed(1) + 'vw;top:' + py.toFixed(1) + 'vh;--s:' + sc.toFixed(2) + ';z-index:' + Math.round(10 + sc * 10) + '"><i class="fkchair"></i>' + bub + '<span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>' + vt + (open && k === g.fake ? '<b class="fktag">🤫 FAKE</b>' : '') + (g.done ? '<b class="fkpts">' + (g.tot[k] || 0) + '</b>' : g.st === 'end' && g.res[k] ? '<b class="fkpts">+' + g.res[k] + '</b>' : '') + '</div>';
+      return '<div class="' + cls + '" data-p="' + esc(k) + '" style="--i:' + i + ';left:' + px.toFixed(1) + 'vw;top:' + py.toFixed(1) + 'vh;--s:' + sc.toFixed(2) + ';z-index:' + Math.round(10 + sc * 10) + '">' + FK_CHAIR + bub + '<span class="lbod" style="' + bodyOutfit(k) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' + charSvg(p.char) + '<em>' + esc(p.name) + '</em>' + vt + (open && k === g.fake ? '<b class="fktag">🤫 FAKE</b>' : '') + (g.done ? '<b class="fkpts">' + (g.tot[k] || 0) + '</b>' : g.st === 'end' && g.res[k] ? '<b class="fkpts">+' + g.res[k] + '</b>' : '') + '</div>';
     }).join('');
     var row = ov.querySelector('.fkrow'); if (row.getAttribute('data-h') !== h) { row.setAttribute('data-h', h); row.innerHTML = h; }
   }

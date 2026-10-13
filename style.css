@@ -4008,3 +4008,7 @@ body.hasdock main{padding-bottom:84px}
 .fkclock{z-index:31}
 .fkov.enter .fkpod{animation:fkpod2 .6s calc(var(--i) * .08s) cubic-bezier(.3,1.4,.5,1) both}
 @keyframes fkpod2{from{opacity:0;transform:translate(-50%,-100%) scale(var(--s,1)) translateY(6vh)}}
+/* The Fake Fan: real chairs, and a painting on the wall */
+.fkchair{position:absolute;left:50%;bottom:-6vh;width:15vh;height:25vh;margin-left:-7.5vh;z-index:0;border-radius:0;background:none;box-shadow:none;filter:drop-shadow(0 1vh 1.5vh rgba(0,0,0,.6))}
+.fkchair::before{display:none}
+.fkpaint{position:absolute;left:19vw;top:15vh;width:15vh;height:auto;transform:rotate(-2deg);filter:drop-shadow(0 1.2vh 2vh rgba(0,0,0,.7));z-index:1}
