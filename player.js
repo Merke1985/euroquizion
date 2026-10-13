@@ -688,8 +688,8 @@
     var st = zgStage(t), w = ZG_W[st], tg = zgPath(S.seed, t), err = S.f - tg, inside = Math.abs(err) <= w;
     if (t > 1.5) { S.tot += dt; if (inside) S.inT += dt; }
     S.outFor = inside ? 0 : S.outFor + dt;
-    var lv = inside ? 0 : (S.outFor < 0.3 && Math.abs(err) < 2 * w) ? 1 : 2;
-    if (t > 3 && S.outFor >= ZG_FALL) {   // you fall
+    var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 3 seconds to get back in stage 1, 2 in stage 2, just 1 in stage 3)
+    if (t > 3 && S.outFor >= fall) {   // you fall
       S.fell = true; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc() }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
     }
@@ -699,7 +699,7 @@
     B.zone.style.left = ((tg - w + 1) / 2 * 100).toFixed(2) + '%'; B.zone.style.width = (w * 100).toFixed(2) + '%';
     B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%';
     B.track.setAttribute('data-l', lv);
-    var sec = Math.max(0, Math.ceil(ZG_LEN - t)), txt = 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
+    var sec = Math.max(0, Math.ceil(ZG_LEN - t)), txt = !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
     if (B.info.textContent !== txt) B.info.textContent = txt;
   }
   function zgView(s) {
@@ -720,7 +720,7 @@
     if (fell) { zgStop(); box.classList.add('hidden'); $('waittitle').textContent = '🚀 You fell into space!'; $('waitsub').textContent = 'You followed the zone ' + zgAcc() + '% of the time. Watch the others wobble…'; return; }
     if (z.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Listen to the astronauts on the big screen… 👩‍🚀'; return; }
     $('waittitle').textContent = z.st === 'ready' ? '🌌 Get ready…' : '🌌 Keep your balance!';
-    $('waitsub').textContent = 'Keep your finger on the glowing zone. It moves with the music: slow, faster, then chaos! Off it for too long and you fall.';
+    $('waitsub').textContent = 'Keep your finger on the glowing zone: it moves with the music. Off it? Get back within 3 seconds (stage 2: 2 seconds, stage 3: just 1) or you fall!';
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id || !S.box) {
       box.setAttribute('data-id', z.id);

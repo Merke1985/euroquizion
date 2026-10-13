@@ -1462,7 +1462,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     fake: { icon: '🤫', title: 'The Fake Fan', sub: 'Three rounds. Everyone gets the same secret Eurovision song on their phone… except the fake fan. One by one, give one word about the song, then vote: who is the fake? Caught, the fake can still win by guessing the song!' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts before the sound system breaks down (10 seconds to one minute). Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet, from one star up to a group of five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
-    zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Off it for too long and you fall. The last ones standing win!' },
+    zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music: slow, faster, then chaos. Off it? You have 3 seconds to get back, then 2, then just 1… or you fall. The last ones standing win!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes and fix the cables. Three phases, each harder than the last. The best repairer wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
@@ -4193,7 +4193,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       lines: [['him', 'Welcome to space, Europe! 🌌 Tonight we perform high above the whole planet!'],
         ['her', 'Our singer stands on a very tall pole… and so do you! They sway, harder and harder.'],
         ['him', 'Keep your finger on the glowing zone on your phone: it moves with the music.'],
-        ['her', 'First slow, then faster, and at the end… total chaos! Off the zone for too long and you fall into space. 🚀'],
+        ['her', 'First slow, then faster, then total chaos! Off the zone? Get back within 3 seconds, then 2, and in the last stage just 1… or you fall into space! 🚀'],
         ['him', 'Whoever is still standing at the end wins! And here she comes… 🌟']] },
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
@@ -4795,8 +4795,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path class="zgtrain" d="M78 130 Q100 120 122 130 Q150 230 196 380 L4 380 Q50 230 78 130 Z" fill="url(#zggown)"/>' +
     '<g fill="#fff"><circle cx="70" cy="250" r="2"/><circle cx="120" cy="210" r="1.6"/><circle cx="140" cy="300" r="2.2"/><circle cx="90" cy="330" r="1.8"/><circle cx="56" cy="320" r="1.5"/><circle cx="104" cy="270" r="1.4"/><circle cx="160" cy="350" r="2"/><circle cx="36" cy="360" r="1.6"/></g>' +
     '<path d="M80 128 Q100 116 120 128 L118 168 Q100 176 82 168 Z" fill="#4a36b0"/>' +
-    '<path d="M82 132 Q56 108 38 66" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M118 132 Q146 116 164 84" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/>' +
-    '<path class="zgsleeve" d="M82 132 Q50 120 26 150 Q50 150 70 160 Z M118 132 Q150 126 178 156 Q152 156 130 162 Z" fill="#6b58e0" opacity=".55"/>' +
+    '<g class="zgarm l"><path d="M82 132 Q56 108 38 66" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/><path class="zgsleeve" d="M82 132 Q50 120 26 150 Q50 150 70 160 Z" fill="#6b58e0" opacity=".55"/></g>' +
+    '<g class="zgarm r"><path d="M118 132 Q146 116 164 84" stroke="url(#zgskin)" stroke-width="10" fill="none" stroke-linecap="round"/><path class="zgsleeve" d="M118 132 Q150 126 178 156 Q152 156 130 162 Z" fill="#6b58e0" opacity=".55"/></g>' +
     '<rect x="93" y="94" width="14" height="22" rx="6" fill="url(#zgskin)"/><ellipse cx="100" cy="74" rx="22" ry="26" fill="url(#zgskin)"/>' +
     '<path d="M76 74 Q72 40 100 40 Q130 40 126 76 Q132 120 118 140 Q122 100 114 84 Q100 64 86 84 Q78 100 82 140 Q68 120 76 74 Z" fill="#e8ecf6"/>' +
     '<circle cx="92" cy="76" r="2.6" fill="#2a1a40"/><circle cx="108" cy="76" r="2.6" fill="#2a1a40"/><ellipse class="zgmouth" cx="100" cy="88" rx="4.5" ry="5.5" fill="#8a1a40"/>' +
@@ -4918,6 +4918,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return { id: g.id, seed: g.seed, st: g.st, order: g.order, el: g.st === 'play' ? Date.now() - g.t0 : 0, stage: g.stage || 0, out: g.out, win: g.done ? g.win : null, acc: g.done ? g.acc : null, prize: g.prize || 0, done: !!g.done };
   }
   // The big screen: space, the singer's pole in the middle, the players' poles around it, swaying together.
+  function zgPose(ov, g) {   // where the poles and the players lean right now (the levels ease in, not jump)
+    var t = g.st === 'play' ? (Date.now() - g.t0) / 1000 : 0, px = g.st === 'play' ? zgPath(g.seed, t) : 0;
+    ov.style.setProperty('--sw', (px * 9).toFixed(2) + 'deg');
+    [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
+      var k = el.getAttribute('data-p'); if (g.out[k] != null) return;
+      var want = (g.sgn[k] || 1) * [0, 14, 30, 30][g.lvl[k] || 0]; el._lean = (el._lean || 0) + (want - (el._lean || 0)) * .12;
+      el.querySelector('.zgfig').style.rotate = (px * 40 + el._lean).toFixed(2) + 'deg';
+    });
+  }
   function zgShow() {
     var g = G.zg; if (!g) return;
     var ov = $('zgov');
@@ -4937,11 +4946,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
     ov.setAttribute('data-st', g.st);
-    var t = g.st === 'play' ? (Date.now() - g.t0) / 1000 : 0, px = g.st === 'play' ? zgPath(g.seed, t) : 0;
-    ov.style.setProperty('--sw', (px * 9).toFixed(2) + 'deg'); ov.setAttribute('data-stage', g.stage || 0);
+    zgPose(ov, g); ov.setAttribute('data-stage', g.stage || 0);
+    if (g.st === 'play' && !ov._raf) { var loop = function () { var g2 = G.zg, o2 = $('zgov'); if (!g2 || !o2 || g2.st !== 'play') { if (o2) o2._raf = 0; return; } zgPose(o2, g2); o2._raf = requestAnimationFrame(loop); }; ov._raf = requestAnimationFrame(loop); }   // (every frame: smooth swaying)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
-      var k = el.getAttribute('data-p'), lv = g.lvl[k] || 0, o = g.out[k] != null, x = px * 40 + (g.sgn[k] || 1) * [0, 14, 30, 30][lv];
-      if (!o) el.querySelector('.zgfig').style.rotate = x.toFixed(1) + 'deg';
+      var k = el.getAttribute('data-p'), lv = g.lvl[k] || 0, o = g.out[k] != null;
       if (o && !el.classList.contains('out')) { el.classList.add('out'); el.style.setProperty('--dir', (g.sgn[k] || 1)); }
       el.classList.toggle('wobbly', !o && lv === 1); el.classList.toggle('risky', !o && lv === 2);
       var lb = el.querySelector('.zglab i'), sc = g.done ? (g.acc[k] || 0) + '%' : ''; if (lb.textContent !== sc) lb.textContent = sc;
