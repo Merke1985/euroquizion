@@ -4229,3 +4229,29 @@ body.hasdock main{padding-bottom:84px}
 @keyframes orspray{from{opacity:1;scale:.6}to{opacity:0;scale:1.6}}
 .orfl.out{pointer-events:none}.orfl.out span{transform:scale(.01);opacity:0}
 .orfl.out::before{content:'💨';position:absolute;left:50%;top:50%;translate:-50% -50%;font-size:40px;animation:orspray 1s ease-out forwards}
+
+/* Sja-la-lie: five stations in a row; the fifth, security, with stage invaders */
+.orsta{width:18.6vw!important;padding:.8vh .7vw}
+.orsta.fx{left:1vw!important}.orsta.pitch{left:20.6vw!important}.orsta.fire{left:40.2vw!important}.orsta.sec{left:59.8vw!important;right:auto!important}.orsta.speed{right:1vw!important;left:auto!important}
+.orsta .orst{font-size:clamp(.75rem,1.15vw,1.05rem)}
+.orinv{position:absolute;left:0;right:0;bottom:8vh;height:20vh;z-index:5;pointer-events:none;opacity:0;transition:opacity .4s}
+.orov.invaded .orinv{opacity:1}
+.orinv i{position:absolute;bottom:0;font-style:normal;font-size:12vh;animation:orinvd .45s ease-in-out infinite alternate}
+.orinv i:nth-child(1){left:22%}.orinv i:nth-child(2){left:62%;animation-delay:-.2s}.orinv i:nth-child(3){left:74%;animation-delay:-.3s;font-size:10vh}
+@keyframes orinvd{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-2.5vh) rotate(8deg)}}
+/* the phone: the stage, the singer in the middle, invaders running in */
+.orsecpz{position:relative;width:100%;height:46vh;max-height:360px;border-radius:18px;background:linear-gradient(#2a1450,#120724 60%,#3a2a10);overflow:hidden;touch-action:none}
+.orsecst{position:absolute;left:50%;top:50%;translate:-50% -50%;font-size:44px;filter:drop-shadow(0 0 12px #ffd23f)}
+.oriv{position:absolute;width:62px;height:62px;margin-top:-31px;border:0;background:radial-gradient(circle,rgba(255,77,77,.35),transparent 70%);border-radius:50%;font-size:44px;line-height:62px;padding:0;cursor:pointer;touch-action:none;animation:orivl var(--d) linear var(--dl) infinite both}
+.oriv.r{animation-name:orivr}
+@keyframes orivl{from{left:-60px}to{left:calc(50% - 50px)}}
+@keyframes orivr{from{left:calc(100% + 0px)}to{left:calc(50% - 12px)}}
+.oriv.out{animation:orivout .6s ease-in forwards;pointer-events:none}
+@keyframes orivout{to{transform:translateY(-60vh) rotate(720deg);opacity:0}}
+.oriv.reach{filter:drop-shadow(0 0 10px #ff4d4d)}
+
+/* Sja-la-lie: a stage invader pokes her head out from behind the organ */
+.orpeek{position:absolute;right:-2%;top:6%;width:24%;z-index:-1;translate:-60% 30%;rotate:0deg;transition:translate .5s cubic-bezier(.3,1.4,.5,1),rotate .5s}
+.orpeek svg{width:100%;display:block}
+.orov.invaded .orpeek{translate:26% 4%;rotate:16deg;animation:orpeek 1.6s ease-in-out .5s infinite alternate}
+@keyframes orpeek{from{rotate:14deg}to{rotate:6deg}}

@@ -1466,7 +1466,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet: a solo star first, then groups of two to five! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Balance on a swaying pole in space! Follow the glowing zone with your finger as it moves with the music. Stay in the zone or you fall. The last ones standing win!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Hold a direction on your phone: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
-    organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes, fix the cables and put out the fire. Three phases, each harder than the last. The best mechanic wins!' },
+    organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes, fix the cables, put out the fire and keep stage invaders off. Three phases, each harder than the last. The best mechanic wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -4208,7 +4208,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       get art() { return '<div class="hsorgan">' + ORGAN + '</div>'; },
       lines: [['him', 'Look at this beauty: a real Dutch barrel organ! 🎡'],
         ['her', 'Our Dutch singer is about to perform with it, and she has asked for your help to look after her musical machine.'],
-        ['him', 'She has divided four jobs among you: the GEARBOX, the ORGAN PIPES, the WIRING and… the FIRE EXTINGUISHER! 🔥 Your phone shows which one you keep an eye on.'],
+        ['him', 'She has divided five jobs among you: the GEARBOX, the ORGAN PIPES, the WIRING, the FIRE EXTINGUISHER 🔥 and SECURITY, to keep stage invaders off! 🛡️ Your phone shows which one you keep an eye on.'],
         ['her', 'If your part breaks down, fix it on your phone as fast as you can!'],
         ['him', 'Bring the song to a successful end! Points for what you fix and how fast, and the best mechanic wins. 🔧']] },
     rule: { sign: '🪩 We Will Rule the World', theme: 'rule',
@@ -5670,8 +5670,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // everyone gets a new station each phase. Personal score per phase: how much of your own task you finished, a bonus
   // for finishing fast, and a team bonus when the whole organ is fixed before the time runs out. Highest total wins.
   var OR_TEAMS = { 2: [1, 1, 0], 3: [1, 1, 1], 4: [2, 1, 1], 5: [2, 2, 1], 6: [2, 2, 2], 7: [3, 2, 2], 8: [3, 3, 2], 9: [3, 3, 3], 10: [4, 3, 3], 11: [4, 4, 3], 12: [4, 4, 4] };
-  var OR_TASK = [16000, 18000, 20000], OR_ST = ['speed', 'pitch', 'fx', 'fire'], OR_NEED = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4], fire: [3, 5, 7] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
-  var OR_NAME = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring', fire: '🔥 Fire!' };
+  var OR_TASK = [16000, 18000, 20000], OR_ST = ['speed', 'pitch', 'fx', 'fire', 'sec'], OR_NEED = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4], fire: [3, 5, 7], sec: [3, 5, 7] }, OR_MS = [35000, 45000, 55000], orTimer = null, orTick = null;
+  var OR_NAME = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring', fire: '🔥 Fire!', sec: '🛡️ Security' };
   var OR_LINES = ['The organ is slowing down! Grab your tools! 🔧', 'Oh no, it’s falling apart even more! 💨', 'Total meltdown! Save the organ, save the song! 🔥'];
   // The barrel organ, big and ornate (an original drawing in the style of a Dutch street organ): a gilded, scalloped
   // frame with light bulbs, painted tulip panels, cream columns, glowing windows with rows of coloured pipes, a crank.
@@ -5777,7 +5777,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.order.forEach(function (k) { g.phPts[k] = 0; });
     var used = shuffle(OR_ST.filter(function (s2) { return g.order.some(function (k) { return g.sta[k] === s2; }); })), u = used, n = u.length;
     g.groups = g.ph === 1 ? u.map(function (x) { return [x]; })
-      : g.ph === 2 ? (n >= 4 ? [[u[0], u[1]], [u[2], u[3]]] : n === 3 ? [[u[0], u[1]], [u[2], u[0]], [u[1], u[2]]] : n === 2 ? [[u[0], u[1]], [u[0], u[1]]] : [[u[0]], [u[0]]])
+      : g.ph === 2 ? (n >= 5 ? [[u[0], u[1]], [u[2], u[3], u[4]]] : n >= 4 ? [[u[0], u[1]], [u[2], u[3]]] : n === 3 ? [[u[0], u[1]], [u[2], u[0]], [u[1], u[2]]] : n === 2 ? [[u[0], u[1]], [u[0], u[1]]] : [[u[0]], [u[0]]])
       : [u.slice(), u.slice()];
     g.gi = -1; g.gBusy = false; g.fxk = pick(OR_FXK);
     orGroup(2000 + Math.random() * 1500);
@@ -5855,7 +5855,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function orEnd(over) {
     var g = G.organ; if (!g || g.st === 'end') return;
-    orFireSnd(false);
+    orFireSnd(false); orInvSnd(false);
     var best = Math.max.apply(null, g.order.map(function (k) { return g.pts[k]; }));
     g.win = best > 0 ? g.order.filter(function (k) { return g.pts[k] === best; }) : [];
     var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
@@ -5890,6 +5890,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       orNodes = { filt: filt, dl: dl, fb: fb, wet: wet, dry: dry, rob: rob, osc: osc };
     } catch (e) { orNodes = null; }
     return orNodes;
+  }
+  var orInvA = null;
+  function orInvSnd(on) {   // stage invaders: their own song starts blasting while they're on the stage
+    try {
+      if (on) { if (!orInvA) { orInvA = new Audio('sounds/invader.mp3'); orInvA.loop = true; } orInvA.volume = Math.max(0, Math.min(1, .75 * (Music.vol ? Music.vol.fx : 1))); if (orInvA.paused) { orInvA.currentTime = 0; var p = orInvA.play(); if (p && p.catch) p.catch(function () {}); } }
+      else if (orInvA && !orInvA.paused) orInvA.pause();
+    } catch (e) {}
   }
   var orFireA = null;
   function orFireSnd(on) {   // the crackling fire, while it burns
@@ -5973,16 +5980,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var leds = ''; for (var li = 0; li < 9; li++) leds += '<i style="--i:' + li + '"></i>';
       if (g.st !== 'intro') ov.classList.add('live');
       ov.innerHTML = '<div class="orbg"><div class="orleds l">' + leds + '</div><div class="orleds r">' + leds + '</div><div class="orrig">' + leds + leds + '</div><div class="orbeams"><i></i><i></i><i></i><i></i></div></div><div class="orfloor"></div><div class="orsign">🎡 Sja-la-lie Sja-la-Mayhem!</div><div class="orph"></div><div class="orclock"></div>' +
-        '<div class="ormid">' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
+        '<div class="ormid">' + '<div class="orpeek"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M40 60 Q30 150 46 236 L154 236 Q170 150 160 60 Q150 18 100 16 Q50 18 40 60 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M58 160 Q100 150 142 160 L150 240 L50 240 Z" fill="#2c2c34" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M78 168 Q100 196 122 168" fill="none" stroke="#cfd3dc" stroke-width="3"/><path d="M84 172 Q100 214 116 172" fill="none" stroke="#cfd3dc" stroke-width="2.4"/><path d="M100 200 L100 226" stroke="#cfd3dc" stroke-width="3"/><path d="M96 226 L100 238 L104 226 Z" fill="#cfd3dc"/><rect x="88" y="128" width="24" height="32" rx="9" fill="#d9a582" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="38" ry="44" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M60 92 Q58 40 100 38 Q142 40 140 92 Q136 74 128 70 L126 84 L118 66 L112 82 L104 64 L98 82 L90 66 L84 84 L76 68 L72 86 Q66 80 60 92 Z" fill="#15101a" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/><path d="M62 92 Q56 140 66 176 M138 92 Q146 140 134 176" stroke="#15101a" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M80 98 Q87 94 94 98 M106 98 Q113 94 120 98" stroke="#2b1830" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M84 118 Q100 134 116 118 Q100 126 84 118 Z" fill="#fff" stroke="#8a3a3a" stroke-width="2.4"/><ellipse cx="80" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><ellipse cx="120" cy="112" rx="6" ry="3.5" fill="#ff8fa3" opacity=".45"/><circle cx="48" cy="200" r="13" fill="#e2b08c" stroke="#2b1830" stroke-width="3" stroke-linejoin="round"/></svg></div>' + ORGAN + '<div class="orsmoke"><i></i><i></i><i></i></div><div class="orsparks">⚡</div></div>' +
         '<div class="orpuppet p1">' + OR_PUPPET1 + '</div><div class="orpuppet p2">' + OR_PUPPET2 + '</div><div class="orsinger">' + OR_SINGER + '</div>' +
         '<div class="orhosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub orbub him"></div><div class="tcbub orbub her"></div>' +
-        '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orfire"><i></i><i></i><i></i><i></i><i></i></div><div class="ormsg"></div><div class="orboard"></div>';
+        '<div class="orsta speed"></div><div class="orsta pitch"></div><div class="orsta fx"></div><div class="orsta fire"></div><div class="orsta sec"></div><div class="orinv"><i>🕺</i><i>💃</i><i>🕺</i></div><div class="orfire"><i></i><i></i><i></i><i></i><i></i></div><div class="ormsg"></div><div class="orboard"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
     var brk = orBroken(), broken = OR_ST.some(function (s2) { return brk[s2]; });
-    ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.classList.toggle('onfire', !!brk.fire); ov.setAttribute('data-ph', g.ph);
-    orFireSnd(!!brk.fire && !REMOTE);
+    ov.setAttribute('data-st', g.st); ov.classList.toggle('broken', broken); ov.classList.toggle('onfire', !!brk.fire); ov.classList.toggle('invaded', !!brk.sec); ov.setAttribute('data-ph', g.ph);
+    orFireSnd(!!brk.fire && !REMOTE); orInvSnd(!!brk.sec && !REMOTE);
     ov.querySelector('.orph').textContent = g.ph ? 'Phase ' + g.ph + ' of 3' : '';
     var sw = ov.querySelector('.orswap'); if (!sw) { sw = document.createElement('div'); sw.className = 'orswap'; sw.innerHTML = '<b>🔀 Swap!</b><span>Everyone’s tasks have swapped!</span><small>Check your phone for your new station</small>'; ov.appendChild(sw); }   // the break between phases: a big message in front of the organ
     var swOn = g.st === 'brief' && g.ph >= 2; if (sw.classList.contains('on') !== swOn) { sw.classList.toggle('on', swOn); if (swOn && !REMOTE) Music.ding(); }
