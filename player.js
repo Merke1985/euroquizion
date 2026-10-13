@@ -784,8 +784,8 @@
   // Your station's repair job: turn the crank (SPEED), slide the pipes into the dashed lines (PITCH), or unplug the wrong
   // cables and plug them into the socket of their own colour (SOUND EFFECTS). Each phone gets its own puzzle.
   var orKey = '', orD = 0, orSentD = 0, orPz = null, OR_COLS = ['#e53950', '#2f80ed', '#f2c12e', '#27ae60', '#9b51e0', '#ff8a2a'];
-  var OR_HELP = { speed: 'The gears are jammed! Turn the brass crank: drag the handle round and round.', pitch: 'The pipes slipped out of place! Slide each pipe until its top sits in the dashed band.', fx: 'Some wires came loose! Drag each loose plug to the socket of its own colour.' };
-  var OR_TITLE = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring' };
+  var OR_HELP = { speed: 'The gears are jammed! Turn the brass crank: drag the handle round and round.', pitch: 'The pipes slipped out of place! Slide each pipe until its top sits in the dashed band.', fx: 'Some wires came loose! Drag each loose plug to the socket of its own colour.', fire: 'The organ is on fire! Tap the flames with your extinguisher until they are all out!' };
+  var OR_TITLE = { speed: '⚙️ Gearbox', pitch: '🎺 Organ pipes', fx: '🔌 Wiring', fire: '🔥 Fire' };
   function orReport(o) { var g = state && state.organ; if (!net || !g || g.st !== 'fix') return; net.send('organ', { pid: pid, id: g.id, ph: g.ph, bn: (g.bn || {})[g.sta[pid]] || 0, d: orD }); orSentD = orD; }
   function orStep(d) { if (d <= orD) return; orD = d; try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} Music.plop(d); orReport(); var c = $('orui').querySelector('.orcount'); if (c) c.textContent = orD + ' / ' + orPz.of; if (orD >= orPz.of) setTimeout(function () { if (state) orView(state); }, 400); }
   function orView(s) {
@@ -809,10 +809,10 @@
     box.setAttribute('data-k', key);
     box.innerHTML = '<div class="orcount">0 / ' + orPz.of + '</div><div class="orpz"></div>';
     var pz = box.querySelector('.orpz');
-    if (sta === 'speed') orSpeed(pz); else if (sta === 'pitch') orPitch(pz); else orFx(pz);
+    if (sta === 'speed') orSpeed(pz); else if (sta === 'pitch') orPitch(pz); else if (sta === 'fire') orFireUI(pz); else orFx(pz);
   }
   function orMake(sta, ph) {
-    var of = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4] }[sta][ph - 1];
+    var of = { speed: [3, 5, 10], pitch: [3, 4, 7], fx: [1, 2, 4], fire: [3, 5, 7] }[sta][ph - 1];
     if (sta === 'pitch') { var tol = [7, 5, 3.5][ph - 1], pipes = []; for (var i = 0; i < of; i++) { var t = 25 + Math.random() * 55, h; do { h = 12 + Math.random() * 80; } while (Math.abs(h - t) < tol * 2 + 8); pipes.push({ t: t, h: h, ok: false }); } return { of: of, tol: tol, pipes: pipes }; }
     if (sta === 'fx') {
       var m = of + 2, cab = []; for (var c = 0; c < m; c++) cab.push({ col: c, at: -1 });
@@ -822,7 +822,21 @@
       wrong.forEach(function (w) { cab[w].at = -1; });   // (the loose ones are already unplugged: just plug them in)
       return { of: of, cab: cab, socks: socks, base: m - of };
     }
+    if (sta === 'fire') { var fl = [], taps = [3, 4, 5][ph - 1]; for (var q = 0; q < of; q++) fl.push({ x: 12 + Math.random() * 76, y: 18 + Math.random() * 64, hp: taps, max: taps }); return { of: of, fl: fl }; }   // the flames: a few taps each
     return { of: of };
+  }
+  function orFireUI(pz) {   // put out the fire: tap each flame until it's gone
+    var z = orPz;
+    pz.innerHTML = '<div class="orfirepz">' + z.fl.map(function (f, i) { return '<button type="button" class="orfl" data-i="' + i + '" style="left:' + f.x + '%;top:' + f.y + '%"><span>🔥</span></button>'; }).join('') + '</div>';
+    [].forEach.call(pz.querySelectorAll('.orfl'), function (b) {
+      var f = z.fl[+b.getAttribute('data-i')];
+      b.addEventListener('pointerdown', function (e) {
+        e.preventDefault(); if (f.hp <= 0) return;
+        f.hp--; b.style.setProperty('--k', (f.hp / f.max).toFixed(2)); b.classList.remove('spray'); void b.offsetWidth; b.classList.add('spray');
+        try { navigator.vibrate && navigator.vibrate(15); } catch (x) {}
+        if (f.hp <= 0) { b.classList.add('out'); orStep(z.fl.filter(function (x) { return x.hp <= 0; }).length); }
+      });
+    });
   }
   function orAng(e, el) { var r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)); }
   function orSpeed(pz) {

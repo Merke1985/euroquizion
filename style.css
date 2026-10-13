@@ -4210,3 +4210,22 @@ body.hasdock main{padding-bottom:84px}
 .pcount{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap}
 .pcount i{font-style:normal;font-weight:800;font-size:.75rem;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line);color:var(--mute)}
 .pcount i.on{background:var(--yellow);color:#221a00;box-shadow:none}
+
+/* Sja-la-lie: the fourth station, the fire */
+.orsta{width:22.5vw!important}
+.orsta.fx{left:1.5vw!important}.orsta.pitch{left:26vw!important}.orsta.fire{left:50.5vw!important;right:auto!important}.orsta.speed{right:1.5vw!important;left:auto!important}
+.orfire{position:absolute;left:24vw;right:24vw;top:30vh;height:44vh;z-index:3;pointer-events:none;opacity:0;transition:opacity .4s}
+.orov.onfire .orfire{opacity:1}
+.orfire i{position:absolute;bottom:0;width:9vh;height:13vh;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(ellipse at 50% 80%,#fff6a0 0%,#ffcf3a 25%,#ff7a1a 55%,rgba(255,60,0,0) 75%);filter:blur(1px);transform-origin:50% 100%;animation:orflame .5s ease-in-out infinite alternate}
+.orfire i:nth-child(1){left:2%;bottom:6%}.orfire i:nth-child(2){left:24%;bottom:30%;animation-delay:-.2s;scale:1.3}.orfire i:nth-child(3){left:33%;bottom:52%;animation-delay:-.35s;scale:1.1}.orfire i:nth-child(4){left:68%;bottom:34%;animation-delay:-.1s}.orfire i:nth-child(5){left:88%;bottom:8%;animation-delay:-.4s;scale:1.2}
+@keyframes orflame{from{transform:scaleY(.85) skewX(-4deg)}to{transform:scaleY(1.15) skewX(5deg)}}
+.orov.onfire .ormid{animation:benvshake .3s linear infinite}
+/* the phone: tap out the flames */
+.orfirepz{position:relative;width:100%;height:46vh;max-height:360px;border-radius:18px;background:radial-gradient(ellipse at 50% 100%,#5a1a08,#1a0804 70%);overflow:hidden;touch-action:none}
+.orfl{position:absolute;translate:-50% -50%;width:74px;height:74px;border:0;border-radius:50%;background:radial-gradient(circle,rgba(255,140,40,.35),transparent 70%);cursor:pointer;touch-action:none;--k:1}
+.orfl span{display:block;font-size:52px;line-height:1;transform:scale(calc(.4 + .6 * var(--k)));transition:transform .15s;animation:orfl .4s ease-in-out infinite alternate}
+@keyframes orfl{to{rotate:6deg}}
+.orfl.spray::after{content:'💦';position:absolute;left:50%;top:50%;translate:-50% -50%;font-size:36px;animation:orspray .35s ease-out forwards}
+@keyframes orspray{from{opacity:1;scale:.6}to{opacity:0;scale:1.6}}
+.orfl.out{pointer-events:none}.orfl.out span{transform:scale(.01);opacity:0}
+.orfl.out::before{content:'💨';position:absolute;left:50%;top:50%;translate:-50% -50%;font-size:40px;animation:orspray 1s ease-out forwards}
