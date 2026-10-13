@@ -685,11 +685,11 @@
     if (S.fell || z.st !== 'play') return;
     var now = Date.now(), t = (now - S.start) / 1000, dt = Math.min(0.1, (now - (S.last || now)) / 1000); S.last = now;
     if (t >= ZG_LEN) return;
-    var st = zgStage(t), w = zgW(t), tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), inside = brk >= 0 || Math.abs(err) <= w;   // (a break: relax, nothing counts)
-    if (t > 1.5 && brk < 0) { S.tot += dt; if (inside) S.inT += dt; }
+    var st = zgStage(t), w = zgW(t), tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), pre = t < ZG_GO, inside = pre || brk >= 0 || Math.abs(err) <= w;   // (before she starts singing: no control yet, nothing counts)   // (a break: relax, nothing counts)
+    if (t > ZG_GO + 1.5 && brk < 0) { S.tot += dt; if (inside) S.inT += dt; }
     S.outFor = inside ? 0 : S.outFor + dt;
     var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
-    if (t > 3 && S.outFor >= fall) {   // you fall
+    if (t > ZG_GO + 3 && S.outFor >= fall) {   // you fall
       S.fell = true; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc() }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
     }
@@ -698,8 +698,8 @@
     var B = S.box; if (!B) return;
     B.zone.style.left = ((tg - w + 1) / 2 * 100).toFixed(2) + '%'; B.zone.style.width = (w * 100).toFixed(2) + '%';
     B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%';
-    B.track.setAttribute('data-l', lv); B.track.classList.toggle('brk', brk >= 0);
-    var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = brk >= 0 ? (brk === ZG_BRK.length - 1 ? '⚠️ Last stage: only 1 second to get back! ' : '☕ Break time! Relax your fingers… ') + Math.ceil(ZG_BRK[brk][1] - t) + 's' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
+    B.track.setAttribute('data-l', lv); B.track.classList.toggle('brk', brk >= 0); B.track.classList.toggle('pre', pre);
+    var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = pre ? (t >= ZG_GO - 3 ? '🎤 ' + Math.ceil(ZG_GO - t) + '…' : '🎤 Get ready… you take over when she starts singing') : brk >= 0 ? (brk === ZG_BRK.length - 1 ? '⚠️ Last stage: only 1 second to get back! ' : '☕ Break time! Relax your fingers… ') + Math.ceil(ZG_BRK[brk][1] - t) + 's' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
     if (B.info.textContent !== txt) B.info.textContent = txt;
   }
   function zgView(s) {
@@ -728,7 +728,7 @@
       box.innerHTML = '<div class="zginfo">Stage 1 of 3</div><div class="zgtrack" data-l="0"><span class="zgzone"></span><span class="zgme"></span></div><div class="zghint">👆 Slide left and right</div>';
       var tr = box.querySelector('.zgtrack');
       S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo') };
-      var mv = function (e) { e.preventDefault(); var r = tr.getBoundingClientRect(); S.f = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)); };
+      var mv = function (e) { e.preventDefault(); if ((Date.now() - S.start) / 1000 < ZG_GO) return; var r = tr.getBoundingClientRect(); S.f = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)); };
       tr.addEventListener('pointerdown', function (e) { try { tr.setPointerCapture(e.pointerId); } catch (x) {} mv(e); });
       tr.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') mv(e); });
       tr.addEventListener('contextmenu', function (e) { e.preventDefault(); });

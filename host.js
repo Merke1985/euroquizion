@@ -5049,7 +5049,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<g class="zgcrown" stroke="#eef2ff" stroke-width="1.8" stroke-linecap="round" opacity=".95"><line x1="86.1" y1="49.0" x2="46.3" y2="46.6"/><path d="M61.3 43.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="86.7" y1="46.9" x2="58.2" y2="39.1"/><line x1="87.9" y1="45.0" x2="53.2" y2="26.3"/><path d="M66.3 29.0 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="89.6" y1="43.3" x2="67.3" y2="24.0"/><line x1="91.8" y1="41.9" x2="68.3" y2="10.5"/><path d="M77.1 17.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="94.3" y1="40.9" x2="82.1" y2="13.8"/><line x1="97.1" y1="40.2" x2="88.8" y2="1.8"/><path d="M91.9 11.4 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="100.0" y1="40.0" x2="100.0" y2="10.2"/><line x1="102.9" y1="40.2" x2="111.2" y2="1.8"/><path d="M108.1 11.4 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="105.7" y1="40.9" x2="117.9" y2="13.8"/><line x1="108.2" y1="41.9" x2="131.7" y2="10.5"/><path d="M122.9 17.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="110.4" y1="43.3" x2="132.7" y2="24.0"/><line x1="112.1" y1="45.0" x2="146.8" y2="26.3"/><path d="M133.7 29.0 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/><line x1="113.3" y1="46.9" x2="141.8" y2="39.1"/><line x1="113.9" y1="49.0" x2="153.7" y2="46.6"/><path d="M138.7 43.6 l1.6 3.2 l3.4 .5 l-2.5 2.4 l.6 3.4 l-3.1 -1.6 l-3.1 1.6 l.6 -3.4 l-2.5 -2.4 l3.4 -.5 z" fill="#fff" stroke="none"/></g>' +   /* a halo crown of silver rays and stars */
     '<path class="zgtrain" d="M84 168 Q100 162 116 168 Q172 250 198 380 L2 380 Q28 250 84 168 Z" fill="url(#zggown)"/>' +   /* a full white skirt that flows down the pole */
     '<g fill="#fff" opacity=".9"><circle cx="60" cy="250" r="2.0"/><circle cx="120" cy="215" r="1.6"/><circle cx="140" cy="300" r="2.2"/><circle cx="90" cy="330" r="1.8"/><circle cx="56" cy="320" r="1.5"/><circle cx="104" cy="270" r="1.4"/><circle cx="160" cy="350" r="2.0"/><circle cx="36" cy="360" r="1.6"/><circle cx="96" cy="150" r="1.2"/><circle cx="108" cy="160" r="1.1"/><circle cx="88" cy="140" r="1.0"/><circle cx="130" cy="240" r="1.5"/><circle cx="75" cy="290" r="1.4"/><circle cx="118" cy="345" r="1.7"/></g>' +
-    '<path d="M74 66 Q66 104 76 126 Q82 118 88 124 Q84 100 86 84 Z M126 66 Q134 104 124 126 Q118 118 112 124 Q116 100 114 84 Z" fill="#f2d27a"/>' +   /* blonde waves behind */
+    '<path d="M76 60 Q64 100 72 128 Q78 122 84 128 Q92 122 100 126 Q108 122 116 128 Q122 122 128 128 Q136 100 124 60 Z" fill="#f2d27a"/><path d="M80 96 Q78 110 82 122 M120 96 Q122 110 118 122 M100 104 L100 122" stroke="#e8c260" stroke-width="3" fill="none" stroke-linecap="round"/>' +   /* blonde waves behind her (a full head of hair: no gaps beside her neck) */
     '<path d="M82 126 Q100 118 118 126 L116 170 Q100 176 84 170 Z" fill="url(#zgbod)"/><path d="M92 124 L100 146 L108 124 Z" fill="url(#zgskin)"/>' +   /* a sparkly bodice with a V neckline */
     '<g class="zgarm l"><path d="M80 132 Q62 146 42 150" stroke="url(#zgbod)" stroke-width="11" fill="none" stroke-linecap="round"/><circle cx="38" cy="150" r="5.5" fill="url(#zgskin)"/></g>' +   /* one arm reaching out */
     '<ellipse cx="78" cy="128" rx="13" ry="11" fill="url(#zgbod)"/><ellipse cx="122" cy="128" rx="13" ry="11" fill="url(#zgbod)"/>' +   /* big puffed shoulders */
@@ -5107,12 +5107,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     lines.forEach(function (l) { (function (l, t0) { at(t0, function () { zgSay(l[0], l[1]); }); })(l, t); t += Math.max(3800, Array.from(l[1]).length * TALK_MS + 2400); });
     at(t - 1200, function () { var o = $('zgov'); o.classList.add('rise'); Music.douze(); });   // …the singer rises from behind the planet…
     at(t + 2600, function () { var o = $('zgov'); zgSay(''); o.classList.add('hostsoff'); o.classList.add('rise2'); whooshes([0, 300, 600]); });   // …the presenters float off, and everyone rises up too
-    at(t + 6200, function () { Music.want(false); zgReady(); });
+    at(t + 6200, function () { Music.want(false); zgGo(); });   // (the song starts; the 3-2-1 comes just before she opens her mouth)
   }
   function zgReady() {   // 3, 2, 1…
     var g = G.zg; if (!g) return;
-    g.st = 'ready'; push(); zgShow();
-    g.goAt = Date.now() + 3600; [1000, 2000, 3000].forEach(function (t) { setTimeout(function () { if (G.zg === g && g.st === 'ready') zgShow(); }, t); });
+    g.goAt = Date.now() + 3600; g.st = 'ready'; push(); zgShow(); [1000, 2000, 3000].forEach(function (t) { setTimeout(function () { if (G.zg === g && g.st === 'ready') zgShow(); }, t); });
     clearTimeout(zgTimer); zgTimer = setTimeout(zgGo, 3600);
   }
   function zgGo() {
@@ -5120,6 +5119,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ZG_LEN = ZG_LEN0; g.st = 'play'; g.t0 = Date.now(); g.ends = g.t0 + ZG_LEN * 1000; g.len = ZG_LEN; g.stage = 0; push(); Music.ding(); zgSong(true);
     if (!REMOTE) { var lenTry = 0, lenT = setInterval(function () { if (G.zg !== g || g.st !== 'play' || ++lenTry > 40) { clearInterval(lenT); return; } var d = 0; try { d = yt.getDuration() || 0; } catch (e) {} if (d > 100) { clearInterval(lenT); ZG_LEN = g.len = Math.max(150, Math.min(260, Math.floor(d - 1))); g.ends = g.t0 + ZG_LEN * 1000; push(); } }, 500); }   // (the game lasts as long as the song: its length, once YouTube knows it)
     clearInterval(zgLoop); zgLoop = setInterval(zgStep, 100);
+    [ZG_GO - 3, ZG_GO - 2, ZG_GO - 1, ZG_GO].forEach(function (sx) { setTimeout(function () { if (G.zg === g) zgShow(); }, sx * 1000 + 30); });   // (the 3-2-1 on the big screen)
   }
   // The host doesn't steer anything: the path is fixed (zgPath), every phone checks its own finger and only reports
   // when its player changes level (0 on target, 1 a bit off, 2 about to fall) or falls. The bots are simulated here.
@@ -5230,11 +5230,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var lb = el.querySelector('.zglab i'), sc = g.done ? (g.acc[k] || 0) + '%' : ''; if (lb.textContent !== sc) lb.textContent = sc;
       el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
     });
-    var ck = ov.querySelector('.zgclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - Date.now()) / 1000)) : 0;
-    if (ck.textContent !== String(sec)) ck.textContent = sec;
+    var tz = g.st === 'play' ? (Date.now() - g.t0) / 1000 : 0, cdn = g.st === 'play' && tz >= ZG_GO - 3 && tz < ZG_GO ? Math.ceil(ZG_GO - tz) : 0;   // the 3-2-1, timed to her first note
+    var ck = ov.querySelector('.zgclock'), sec = cdn ? String(cdn) : g.st === 'ready' && g.goAt ? String(Math.max(1, Math.ceil((g.goAt - Date.now()) / 1000))) : '';
+    if (ck.textContent !== sec) ck.textContent = sec; ov.classList.toggle('cd', !!cdn);
     var up = g.order.filter(function (k) { return g.out[k] == null; }).length;
     if (g.st !== 'intro') { ov.classList.add('rise'); ov.classList.add('rise2'); ov.classList.add('hostsoff'); }
-    var msg = g.st === 'intro' ? '' : g.st === 'ready' ? 'Hold on tight… keep your finger on the glowing zone on your phone! 🌌' : g.st === 'play' ? (zgBreak((Date.now() - g.t0) / 1000) >= 0 ? '☕ Break time' : 'Stage ' + ((g.stage || 0) + 1) + ' of 3 · ' + up + ' of ' + g.order.length + ' still standing') : !g.done ? 'And… stop! 🌌' : g.win.length ? '🏆 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' win!' : ' wins!') + (shopOn() ? '' : ' +' + g.prize) : 'Everyone fell into space… 🌌';
+    var msg = g.st === 'intro' ? '' : g.st === 'ready' || (g.st === 'play' && tz < ZG_GO) ? 'Hold on tight… keep your finger on the glowing zone on your phone! 🌌' : g.st === 'play' ? (zgBreak((Date.now() - g.t0) / 1000) >= 0 ? '☕ Break time' : 'Stage ' + ((g.stage || 0) + 1) + ' of 3 · ' + up + ' of ' + g.order.length + ' still standing') : !g.done ? 'And… stop! 🌌' : g.win.length ? '🏆 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' win!' : ' wins!') + (shopOn() ? '' : ' +' + g.prize) : 'Everyone fell into space… 🌌';
     var me = ov.querySelector('.zgmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
     var bd = ov.querySelector('.zgboard'), bh = g.done ? zgRank(g).map(function (x, i) { var p = players[x.pid]; if (!p) return ''; return '<div class="tcrow' + (g.win.indexOf(x.pid) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (x.up ? '🧍 standing' : '🌌 fell at ' + Math.floor(x.at) + 's') + '</em><i>' + x.acc + '%</i></div>'; }).join('') : '';
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }

@@ -4403,3 +4403,5 @@ body.hasdock main{padding-bottom:84px}
 .edov2 .edr2{transition:filter .6s,box-shadow .4s}
 .edov2 .edr2.green{--tc:#3ddc84}.edov2 .edr2.club{--tc:#d97bff}.edov2 .edr2.back{--tc:#3fb6ff}.edov2 .edr2.boud{--tc:#ff6fd8}
 .edov2 .edr2.lit{box-shadow:0 0 0 3px var(--tc),0 0 26px var(--tc),inset 0 0 18px color-mix(in srgb,var(--tc) 35%,transparent)}
+.zgov.cd .zgclock{font-size:clamp(4rem,12vw,10rem);right:0;left:0;text-align:center;top:30vh;animation:uthot .5s ease-in-out infinite alternate}
+.zgtrack.pre{opacity:.6}
