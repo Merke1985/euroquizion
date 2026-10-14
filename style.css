@@ -4845,3 +4845,5 @@ body.hasdock main{padding-bottom:84px}
 .fnov.song .fntitle .fnart{font-size:clamp(.8rem,2.2vh,1.4rem);margin-top:.3vh}
 .fnov .fntro{height:19vh}
 .fnov.song .fntitle{bottom:auto;top:6%}
+/* Key Change: the microphone of who is still singing sits under the avatar (not on the flag) */
+.answered .pen.mic{right:auto;left:50%;top:44px;translate:-50% 0;z-index:2}
