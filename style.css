@@ -4623,3 +4623,43 @@ body.hasdock main{padding-bottom:84px}
 .volpanel .volchk input{width:auto;accent-color:#ffd23f}
 .xerow.xegive{box-shadow:inset 3px 0 0 #ff9f1c}.xerow.xegive .xeorig::after{content:"⚠️ Gives it away: never used";display:block;font-size:.75rem;color:#ff9f1c;font-weight:800}
 #flagmsg{transform:none;text-align:center}
+
+/* The studio behind the presenters: a stage with an LED wall, light pillars, moving spotlights and a shiny floor,
+   instead of a flat purple card (only on the presenters' cards: .funcard) */
+.cover .studio{display:none}
+.cover.funcard{background:#06021a}
+.cover.funcard .studio{display:block;position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+.cover.funcard>.q,.cover.funcard>h2{position:relative;z-index:1}
+.studio i{position:absolute;display:block}
+.studio .stwall{left:17%;right:17%;top:9%;bottom:27%;border-radius:8px;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 1px,transparent 1px 4px),linear-gradient(115deg,#ff2e88,#8b2bd9 30%,#2a5bff 55%,#ff2e88 80%,#8b2bd9);
+  background-size:auto,auto,300% 300%;animation:stwall 14s ease-in-out infinite alternate;opacity:.78;
+  box-shadow:0 0 60px 8px rgba(255,46,136,.35),inset 0 0 50px rgba(0,0,0,.55)}
+.studio .stwall::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 50% 55%,rgba(255,255,255,.35),transparent 55%);animation:stpulse 2.6s ease-in-out infinite alternate}
+.studio .stpillar{top:12%;bottom:27%;width:6%;border-radius:6px;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 2px,transparent 2px 7px),linear-gradient(180deg,#30e3ff,#8b2bd9 50%,#ff2e88);
+  background-size:auto,100% 200%;animation:stpillar 3s linear infinite;opacity:.55;box-shadow:0 0 30px rgba(48,227,255,.35)}
+.studio .stpillar.l{left:6%}.studio .stpillar.r{right:6%;animation-delay:-1.5s}
+.studio .sttruss{left:0;right:0;top:0;height:5%;background:linear-gradient(#1b1630,#0d0a1c);box-shadow:0 2px 10px rgba(0,0,0,.6)}
+.studio .sttruss::after{content:'';position:absolute;left:2%;right:2%;bottom:18%;height:38%;
+  background:radial-gradient(circle,#fff6c8 0 30%,rgba(255,210,63,.7) 40%,transparent 70%) 0 50%/2.4% 100% repeat-x;animation:stbulbs 1.2s steps(2) infinite}
+.studio .stbeam{top:3%;width:16%;height:105%;margin-left:-8%;transform-origin:50% 0;mix-blend-mode:screen;filter:blur(3px);
+  clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);opacity:.5;animation:stsweep var(--d,7s) ease-in-out infinite alternate;animation-delay:var(--dl,0s)}
+.studio .b1{left:12%;--a:-28deg;--b:8deg;--d:7s;background:linear-gradient(rgba(255,255,255,.95),rgba(255,46,136,.35) 45%,transparent 85%)}
+.studio .b2{left:28%;--a:18deg;--b:-14deg;--d:9s;--dl:-3s;background:linear-gradient(rgba(255,255,255,.9),rgba(48,227,255,.35) 45%,transparent 85%)}
+.studio .b3{left:44%;--a:-12deg;--b:16deg;--d:6s;--dl:-1s;background:linear-gradient(rgba(255,255,255,.9),rgba(255,210,63,.3) 45%,transparent 85%)}
+.studio .b4{left:56%;--a:12deg;--b:-18deg;--d:8s;--dl:-5s;background:linear-gradient(rgba(255,255,255,.9),rgba(255,210,63,.3) 45%,transparent 85%)}
+.studio .b5{left:72%;--a:-16deg;--b:14deg;--d:10s;--dl:-2s;background:linear-gradient(rgba(255,255,255,.9),rgba(48,227,255,.35) 45%,transparent 85%)}
+.studio .b6{left:88%;--a:26deg;--b:-8deg;--d:7.5s;--dl:-4s;background:linear-gradient(rgba(255,255,255,.95),rgba(255,46,136,.35) 45%,transparent 85%)}
+.studio .stfloor{left:-10%;right:-10%;bottom:0;height:28%;
+  background:linear-gradient(rgba(255,46,136,.22),transparent 40%),repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 1px,transparent 1px 8%),linear-gradient(#1c0b3e,#05020f);
+  border-top:2px solid rgba(255,140,220,.8);box-shadow:0 -4px 24px rgba(255,46,136,.55),0 -1px 0 rgba(48,227,255,.6);transform:perspective(400px) rotateX(18deg);transform-origin:50% 100%}
+.studio .stfloor::after{content:'';position:absolute;left:25%;right:25%;top:0;height:70%;background:radial-gradient(ellipse at 50% 0,rgba(180,90,255,.45),transparent 70%);filter:blur(6px)}
+.studio .sthaze{left:0;right:0;bottom:0;height:45%;background:radial-gradient(ellipse at 50% 100%,rgba(160,120,255,.22),transparent 70%);animation:sthaze 9s ease-in-out infinite alternate}
+@keyframes stwall{from{background-position:0 0,0 0,0% 50%}to{background-position:0 0,0 0,100% 50%}}
+@keyframes stpulse{from{opacity:.35}to{opacity:.9}}
+@keyframes stpillar{from{background-position:0 0,0 0}to{background-position:0 0,0 -200%}}
+@keyframes stbulbs{0%{opacity:1}100%{opacity:.55}}
+@keyframes stsweep{from{transform:rotate(var(--a))}to{transform:rotate(var(--b))}}
+@keyframes sthaze{from{opacity:.6;transform:translateX(-3%)}to{opacity:1;transform:translateX(3%)}}
+@media (prefers-reduced-motion:reduce){.studio i,.studio i::after{animation:none!important}}

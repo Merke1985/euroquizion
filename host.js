@@ -386,7 +386,7 @@
   function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); var triv = id === 'v-game' && !REMOTE && (G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel) && !G.clue;
     var lob = id === 'v-lobby' && G.phase === 'lobby';
     var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
-    Music.want(lob || triv || studio, !studio); }   // the studio loop with the presenters and in Lynda's boutique (it carries on where it left off); the synth loop in the lobby and under trivia questions without a clip
+    if (studioYtOk()) { Music.want(lob || triv, true); studioYt(studio); } else Music.want(lob || triv || studio, !studio); }   // the studio loop with the presenters and in Lynda's boutique (it carries on where it left off); the synth loop in the lobby and under trivia questions without a clip
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -818,8 +818,39 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function pairTag(t) { $('pairtag').textContent = t; $('pairtag').classList.toggle('hidden', !t); }
   function isPair() { return !!(G.q && G.q.pair); }
   function clipLen() { return isPair() ? PAIR_CLIP : clipSecs(); }
+  // The studio music under the presenters and in the boutique: a YouTube video in a player of its own (hidden), so it
+  // never gets in the way of the songs. Paused, it keeps its place, and it carries on from there the next time.
+  // (On phones and tablets, with only one player, and if the video won't play: the music file instead.)
+  var STUDIO_YT = 'BHiS-RI2J8E', STUDIO_VOL = 40, stY = null, stYReady = false, stYOn = false, stYBad = false, stYFade = null;
+  function studioYtOk() { return !REMOTE && !ONE_PLAYER && !stYBad && !!window.YT; }
+  function studioYtMake() {
+    if (REMOTE || ONE_PLAYER) return;
+    var d = document.createElement('div'); d.id = 'ytstudio'; d.setAttribute('aria-hidden', 'true'); d.style.cssText = 'position:fixed;left:-10000px;top:0;width:240px;height:135px;pointer-events:none'; document.body.appendChild(d);
+    try {
+      stY = new YT.Player('ytstudio', { width: 240, height: 135, videoId: STUDIO_YT, playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0 },
+        events: { onReady: function () { ytVolWrap(stY); stYReady = true; try { stY.setVolume(0); } catch (e) {} if (stYOn) stYPlay(); },
+          onStateChange: function (e) { if (e.data === 0) { try { stY.seekTo(0, true); stY.playVideo(); } catch (x) {} } },   // (round and round)
+          onError: function () { stYBad = true; stYOn = false; render(); } } });
+    } catch (e) { stYBad = true; }
+  }
+  function stYPlay() {
+    clearInterval(stYFade); var v = 0;
+    try { stY.setVolume(0); stY.playVideo(); } catch (e) {}
+    stYFade = setInterval(function () { v += 3; try { stY.setVolume(Math.min(STUDIO_VOL, v)); } catch (e) {} if (v >= STUDIO_VOL) clearInterval(stYFade); }, 60);
+  }
+  function stYStop() {
+    clearInterval(stYFade); var v = STUDIO_VOL;
+    stYFade = setInterval(function () { v -= 5; try { stY.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(stYFade); try { stY.pauseVideo(); } catch (e) {} } }, 40);
+  }
+  function studioYt(on) {
+    on = !!on && Music.menuOn();
+    if (on === stYOn) return; stYOn = on;
+    if (!stY || !stYReady) return;
+    if (on) stYPlay(); else stYStop();
+  }
+  function studioYtReset() { stYOn = false; clearInterval(stYFade); try { if (stYReady) { stY.pauseVideo(); stY.seekTo(0, true); } } catch (e) {} }   // a new game: from the top
   window.onYouTubeIframeAPIReady = function () {
-    yt2.make();
+    yt2.make(); studioYtMake();
     yt = new YT.Player('yt', {
       width: '100%', height: '100%',
       playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0, modestbranding: 1 },
@@ -8300,7 +8331,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     // a fresh game: nothing left over from a test run (test settings, test envelopes and heels, items underway)
-    readPicks(); G.opened = false; G.openWait = false; G.openMusic = false; Music.loopReset();   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
+    readPicks(); G.opened = false; G.openWait = false; G.openMusic = false; Music.loopReset(); studioYtReset();   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.quipSongsUsed = []; G.quipUsed = []; G.goldTest = false; G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.fake = null; clearTimeout(fkTimer); clearInterval(fkTick); clearInterval(fkPrivT); G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
@@ -8567,7 +8598,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('volmusic').addEventListener('input', function () { Music.setVol('music', this.value / 100); ytVolApply(); sync(); });
     $('volfx').addEventListener('input', function () { Music.setVol('fx', this.value / 100); sync(); });
     $('volfx').addEventListener('change', function () { Music.ding(); });   // (a sample of the new volume once you let go, not on every step)
-    $('volmenu').addEventListener('change', function () { if (Music.setMenu) Music.setMenu(this.checked); });
+    $('volmenu').addEventListener('change', function () { if (Music.setMenu) Music.setMenu(this.checked); render(); });   // (render: the studio music follows the box too)
   })();
   restore();
   render();
