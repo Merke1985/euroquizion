@@ -48,19 +48,43 @@ var Music = (function () {
   function tick() {
     while (nextT < ctx.currentTime + 0.25) { sched(step, nextT); step++; nextT += S16; }
   }
+  // The host page can swap the synth loop for a music file (Music.useLoop): it loops without a gap, and when it
+  // stops it remembers where it was, so it carries on from there the next time (synth: true still asks for the synth).
+  var loopSrc = '', loopBuf = null, loopLoading = false, loopNode = null, loopGain = null, loopAt = 0, loopT0 = 0, synthNow = false, wantSynth = false;
+  function loopLevel() { return Math.max(0.0001, 0.55 * vol.music); }
+  function loopStart() {
+    if (!loopBuf) {
+      if (!loopLoading) { loopLoading = true; fetch(loopSrc).then(function (r) { return r.arrayBuffer(); }).then(function (b) { return new Promise(function (ok, no) { ctx.decodeAudioData(b, ok, no); }); }).then(function (buf) { loopBuf = buf; loopLoading = false; if (playing && !synthNow) loopStart(); }).catch(function () { loopLoading = false; loopSrc = ''; if (playing) { playing = false; start(); } }); }
+      return;
+    }
+    if (loopNode) return;
+    if (!loopGain) { loopGain = ctx.createGain(); loopGain.connect(ctx.destination); }
+    loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(0.0001, ctx.currentTime); loopGain.gain.exponentialRampToValueAtTime(loopLevel(), ctx.currentTime + 0.6);
+    loopNode = ctx.createBufferSource(); loopNode.buffer = loopBuf; loopNode.loop = true; loopNode.connect(loopGain);
+    loopT0 = ctx.currentTime - loopAt; loopNode.start(0, loopAt % loopBuf.duration);
+  }
+  function loopStop() {
+    if (!loopNode) return;
+    var n = loopNode; loopNode = null; loopAt = (ctx.currentTime - loopT0) % loopBuf.duration;
+    try { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopGain.gain.value, ctx.currentTime); loopGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4); n.stop(ctx.currentTime + 0.45); } catch (e) {}
+  }
   function start() {
     if (playing || !wanted || muted) return;
     try {
       if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.connect(ctx.destination); }
       if (ctx.state === 'suspended') ctx.resume();
       if (ctx.state !== 'running') { setTimeout(function () { if (ctx.state === 'running') start(); }, 300); return; }
+      playing = true; synthNow = !loopSrc || wantSynth;
+      if (!synthNow) { loopStart(); return; }
       master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(0.0001, ctx.currentTime); master.gain.exponentialRampToValueAtTime(musicLevel(), ctx.currentTime + 0.8);
-      playing = true; step = 0; nextT = ctx.currentTime + 0.08; tick(); timer = setInterval(tick, 60);
+      step = 0; nextT = ctx.currentTime + 0.08; tick(); timer = setInterval(tick, 60);
     } catch (e) {}
   }
   function stop() {
     if (!playing) return;
-    playing = false; clearInterval(timer);
+    playing = false;
+    if (!synthNow) { loopStop(); return; }
+    clearInterval(timer);
     try { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(master.gain.value, ctx.currentTime); master.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4); } catch (e) {}
   }
   function draw() {
@@ -513,8 +537,8 @@ var Music = (function () {
   function setVol(k, v) {
     vol[k] = Math.max(0, Math.min(1, v));
     try { localStorage.setItem('esc-vol', JSON.stringify(vol)); } catch (e) {}
-    try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } } catch (e) {}
+    try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, want: function (on) { on = !!on; if (on === wanted) return; wanted = on; if (on) start(); else stop(); draw(); } };
+  return { space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src) { loopSrc = src || ''; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();
