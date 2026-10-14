@@ -568,8 +568,20 @@
       };
       return;
     }
-    box.classList.add('hidden');   // the answer comes out
     var sol = c.sol || {}, parts = [];
+    // the answer comes out: your notebook stays on screen, the right card in each row turns green, a wrong pick gets a red cross
+    var pickd = clueSel.id === c.id ? clueSel : {}, rk = 'rev|' + c.id + '|' + known.join(',') + '|' + (sol.where || '') + (sol.what || '') + (sol.who || '') + '|' + (pickd.who || '') + (pickd.where || '') + (pickd.what || '');
+    box.classList.remove('hidden'); box.classList.add('compact');
+    if (box.getAttribute('data-k') !== rk) {
+      box.setAttribute('data-k', rk);
+      var labr = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
+      box.innerHTML = ['where', 'what', 'who'].map(function (k) {
+        return '<div class="clset"><span>' + labr[k] + '</span><div>' + CLUE_SETS[k].map(function (x) {
+          var out = known.indexOf(k + ':' + x.id) >= 0, mine = pickd[k] === x.id, open = !!sol[k], ok = open && sol[k] === x.id, bad = open && mine && !ok;
+          return '<div class="clbtn ro' + (out ? ' out' : '') + (mine ? ' sel' : '') + (ok ? ' ok' : '') + (bad ? ' bad' : '') + '"><i>' + x.icon + '</i>' + esc(x.name) + '</div>';
+        }).join('') + '</div></div>';
+      }).join('');
+    }
     if (sol.where) parts.push('Hidden ' + clueCard('where:' + sol.where).c.in);
     if (sol.what) parts.push('inside the ' + clueCard('what:' + sol.what).c.name);
     if (sol.who) parts.push('by ' + clueCard('who:' + sol.who).c.name);
@@ -732,7 +744,7 @@
     var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
     var hit = st > 0 && brk < 0 && t > ZG_GO + 3 && zgHit(S.seed, t, S.f, S.y);   // (stages 2 and 3: an asteroid knocks you off)
     if (hit || (t > ZG_GO + 3 && S.outFor >= fall)) {   // you fall
-      S.fell = true; S.hit = hit; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc(), hit: hit ? 1 : 0 }); if (hit) try { var bx = new Audio('sounds/explosion.mp3?v=1'); bx.volume = .8; var bp = bx.play(); if (bp && bp.catch) bp.catch(function () {}); } catch (e) {} try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
+      S.fell = true; S.hit = hit; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc(), hit: hit ? 1 : 0 }); if (hit) try { var bx = S.boom || new Audio('sounds/explosion.mp3?v=1'); bx.muted = false; bx.volume = .9; bx.currentTime = 0; var bp = bx.play(); if (bp && bp.catch) bp.catch(function () {}); } catch (e) {} try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
     }
     if (lv !== S.sent && now - S.sentAt >= 250) { S.sent = lv; S.sentAt = now; zgTell({ l: lv, s: err < 0 ? -1 : 1 }); if (lv === 2) try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
@@ -793,7 +805,8 @@
       S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo'), xh: tr.querySelector('.zgxh'), xv: tr.querySelector('.zgxv'), rocks: [].slice.call(tr.querySelectorAll('.zgrock')), warns: [].slice.call(tr.querySelectorAll('.zgwarn')) };
       S.box.rocks.concat(S.box.warns).forEach(function (e) { e.style.display = 'none'; });
       var mv = function (e) { e.preventDefault(); if ((Date.now() - S.start) / 1000 < ZG_GO) return; var r = tr.getBoundingClientRect(); S.f = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)); S.y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)); };
-      tr.addEventListener('pointerdown', function (e) { try { tr.setPointerCapture(e.pointerId); } catch (x) {} mv(e); });
+      tr.addEventListener('pointerdown', function (e) { try { tr.setPointerCapture(e.pointerId); } catch (x) {} mv(e);
+        if (!S.boom) try { S.boom = new Audio('sounds/explosion.mp3?v=1'); S.boom.muted = true; var up = S.boom.play(); if (up && up.then) up.then(function () { S.boom.pause(); S.boom.currentTime = 0; S.boom.muted = false; }, function () {}); } catch (x) {}   /* (unlocked by this touch: phones only play sounds that a tap started) */ });
       tr.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') mv(e); });
       tr.addEventListener('contextmenu', function (e) { e.preventDefault(); });
       S.box.zone.style.left = ((zgPath(S.seed, 0) - zgW(0) + 1) / 2 * 100) + '%'; S.box.zone.style.width = (zgW(0) * 100) + '%'; S.box.me.style.left = '50%'; S.box.me.style.top = '50%';
@@ -1109,7 +1122,7 @@
       var k = pick(s.cases), m = Math.floor(Math.random() * 5);
       mc = [
         { q: 'What code is on the ' + k.c + ' flight case?', a: k.code, o: edPickOpts(k.code, s.cases.map(function (x) { return x.code; })) },
-        { q: 'How many spotlights hang from the truss?', a: String(s.spots), o: edNums(s.spots, 1, 9) },
+        { q: 'How many spotlights hang from the ceiling?', a: String(s.spots), o: edNums(s.spots, 1, 9) },
         { q: 'Who is ' + ED_ORD[m] + ' in the running order?', a: s.order[m], o: edPickOpts(s.order[m], s.order) },
         { q: 'How many guitars are there?', a: String(s.guitars), o: edNums(s.guitars, 1, 5) }
       ];

@@ -4954,3 +4954,16 @@ body.hasdock main{padding-bottom:84px}
 .ruov .ruhosts .ehost{transition:left 1s cubic-bezier(.3,.8,.3,1),translate 1.2s cubic-bezier(.3,.8,.3,1),opacity 1s}
 .ruvc{background:#160830}
 .ruov.voting .rubub.her{right:1vw;top:30vh;max-width:21vw}.ruov.voting .rubub.him{left:1vw;top:30vh;max-width:21vw}
+/* Zero Gravity on the phone: everything fits on one screen, no scrolling to reach the play field */
+#v-wait:has(#zgui:not(.hidden)){gap:6px;justify-content:flex-start}
+#v-wait:has(#zgui:not(.hidden)) #waitlabel,#v-wait:has(#zgui:not(.hidden)) #profile{display:none}
+#v-wait:has(#zgui:not(.hidden)) #waittitle{font-size:1.15rem;margin:0}
+#v-wait:has(#zgui:not(.hidden)) #waitsub{font-size:.85rem;margin:0}
+#zgui{gap:8px;margin-top:2px}
+.zgtrack{width:min(88vw,360px,calc(100svh - 270px))}
+.zghint{font-size:.75rem;line-height:1.2}
+/* Edgar's reveal on the phone: the right card glows green, a wrong pick gets a red cross */
+.clbtn.ok{border-color:#3ddc84;background:rgba(61,220,132,.35);opacity:1;text-decoration:none;box-shadow:0 0 12px rgba(61,220,132,.6);animation:rupop .4s cubic-bezier(.2,1.6,.4,1)}
+.clbtn.ok::after{content:'✔';margin-left:auto;color:#3ddc84;font-weight:900}
+.clbtn.bad{border-color:#ff4d4d;background:rgba(255,77,77,.22);position:relative}
+.clbtn.bad::after{content:'✖';margin-left:auto;color:#ff4d4d;font-weight:900;font-size:1.1em}

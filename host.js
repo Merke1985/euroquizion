@@ -4337,8 +4337,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // ---------- Where the Hell Is Edgar?: the four rooms ----------
   // A dollhouse of four rooms; everyone has 2 minutes to visit them (any order, no second visits), each room a little
   // task on the phone. Doing it well earns secret clues (cards that are NOT the answer): Green Room 2, Euroclub 3,
-  // Backstage 2, Woodruff's Boudoir 2. The first to finish all four rooms gets 3 extra clues at the reception.
-  // Twelve clues are exactly the twelve wrong cards, so the fastest perfect detective knows the answer for sure.
+  // Backstage 2, Woodruff's Boudoir 2, and 1 bonus clue for finishing all four. The first to finish gets 2 more at the
+  // reception. Twelve clues are exactly the twelve wrong cards, so the fastest perfect detective knows the answer for sure.
   var ED_ROOMS = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 2 }];
   var ED_MS = 150000, edTick = null;
   function edRoom(id) { for (var i = 0; i < ED_ROOMS.length; i++) if (ED_ROOMS[i].id === id) return ED_ROOMS[i]; return null; }
@@ -4567,7 +4567,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function edBackSvg(s) {
     var h = '<rect width="800" height="450" fill="#22252e"/><g stroke="#1a1c24" stroke-width="2">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (i) { return '<line x1="0" y1="' + (i * 30) + '" x2="800" y2="' + (i * 30) + '"/>'; }).join('') + '</g><rect y="330" width="800" height="120" fill="#17181e"/>';
-    // the truss with its spotlights
+    // the ceiling with its spotlights
     h += '<rect x="250" y="12" width="540" height="14" fill="#9aa0ad"/><g stroke="#9aa0ad" stroke-width="2">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(function (i) { return '<line x1="' + (250 + i * 40) + '" y1="12" x2="' + (270 + i * 40) + '" y2="26"/>'; }).join('') + '</g><rect x="760" y="26" width="14" height="300" fill="#6a7080"/>';
     for (var i = 0; i < s.spots; i++) { var x = 270 + (i + .5) * (480 / s.spots); h += '<rect x="' + (x - 3) + '" y="26" width="6" height="10" fill="#555"/><rect x="' + (x - 14) + '" y="34" width="28" height="32" rx="5" fill="#0c0c10"/><circle cx="' + x + '" cy="68" r="10" fill="#ffe27a"/>'; }
     // the spotlights sweep their beams around (slowly, each its own way)
@@ -4674,17 +4674,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var d = 0; try { d = yt.getDuration() || 0; } catch (e) {}
       if (d > 60) { clearInterval(dT); g.ends = t0e + Math.max(ED_MS, Math.min(300000, (d - CLUE_YT_AT - 1) * 1000)); push(); }
     }, 500); }
-    // the bots: a room, ~20–32 seconds, a few seconds walking to the next
+    // the bots take their time: the four rooms spread over the whole search, the last one done just before the clock runs out
     bots.forEach(function (b) {
       if (!players[b.pid] || players[b.pid].off) return;
-      var order = shuffle(ED_ROOMS.map(function (r) { return r.id; })), t = 1500 + Math.random() * 2500, id = g.id;
+      var order = shuffle(ED_ROOMS.map(function (r) { return r.id; })), t = 1500 + Math.random() * 1000, id = g.id, slot = (Math.max(60000, g.ends - Date.now()) - 7000) / 4;
       order.forEach(function (r) {
-        var dur = 20000 + Math.random() * 12000;
+        var dur = slot - 4500 - Math.random() * 1500;
         (function (r, t0, dur) {
           setTimeout(function () { edMsg({ pid: b.pid, id: id, room: r, enter: 1 }); }, t0);
           setTimeout(function () { var mx = edRoom(r).max; edMsg({ pid: b.pid, id: id, room: r, score: Math.random() < .5 ? mx : Math.floor(Math.random() * (mx + 1)) }); }, t0 + dur);
         })(r, t, dur);
-        t += dur + 2500 + Math.random() * 2000;
+        t += slot;
       });
     });
     clearInterval(edTick); edTick = setInterval(function () {
@@ -4701,8 +4701,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var n = Math.max(0, Math.min(edRoom(m.room).max, Math.round(Number(m.score) || 0)));
     r.done.push(m.room); r.cur = ''; r.score[m.room] = n;
     var got = edClues(m.pid, n), bonus = [];
-    if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: the fastest detective gets an extra clue
-      g.fin.push(m.pid); if (g.fin.length === 1) { g.fast = { pid: m.pid, got: edClues(m.pid, 3), at: Date.now() }; Music.ding(); }   // (the fastest detective: Teya & Salena at reception hand over an extra clue)
+    if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: one bonus clue for everyone; the fastest detective gets 2 more at the reception
+      bonus = edClues(m.pid, 1);   // (all rooms perfect: 9 + 1 = 10 of the 12 wrong cards, the 2 missing ones in two different rows, so one row is sure and two are 50/50)
+      g.fin.push(m.pid); if (g.fin.length === 1) { g.fast = { pid: m.pid, got: edClues(m.pid, 2), at: Date.now() }; Music.ding(); }   // (the fastest, all perfect: all 12)   // (the fastest detective: Teya & Salena at reception hand over an extra clue)
     }
     g.last[m.pid] = { room: m.room, n: n, c: got, b: bonus, k: g.id + ':' + m.room };
     push();   // (quietly: the big screen gives nothing away about who is where)
@@ -6130,7 +6131,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ruTimer = setTimeout(function () { if (G.rule !== g) return; if (REMOTE) drop(); else ruVote(g, drop); }, REMOTE ? 1000 : t);
   }
   // Before the dancers land: everyone votes for the act (and so the song): the singer in silver, or the act in yellow
-  var RU_ACTS = [{ t: 'We Will Rule the World', v: 'sjb2wMJXeuw' }, { t: 'Discoteque', v: 'CWqrdzNoBKA' }], RU_VOTE_MS = 15000;
+  var RU_ACTS = [{ t: 'We Will Rule the World', v: 'sjb2wMJXeuw', s: 0 }, { t: 'Discoteque', v: 'CWqrdzNoBKA', s: 74 }], RU_VOTE_MS = 15000;   // (s: where the song starts; the game lasts just as long with either)
   var RU_VOTE_LINE = 'But first: which act do we dance to? Vote on your phone! 🗳️';
   function ruVote(g, then) {
     g.vote = { on: true, votes: {}, ends: Date.now() + RU_VOTE_MS }; push(); ruShow(); Music.ding();
@@ -6160,14 +6161,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try {
       if (!on && fade) { var v = 55, dv = typeof fade === 'number' ? 55 / (fade / 200) : 3; ruSongT = setInterval(function () { v -= dv; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(ruSongT); ruSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
       if (!on) { yt.pauseVideo(); return; }
-      Music.want(false); stage = 'rule'; yt.loadVideoById({ videoId: RU_ACTS[(G.rule && G.rule.act) || 0].v, startSeconds: 0 }); yt.unMute(); yt.setVolume(55);
+      Music.want(false); stage = 'rule'; var ra = RU_ACTS[(G.rule && G.rule.act) || 0]; yt.loadVideoById({ videoId: ra.v, startSeconds: ra.s }); yt.unMute(); yt.setVolume(55);
       var g = G.rule, synced = false;
       ruSongT = setInterval(function () {
         if (G.phase !== 'rule' || !G.rule) { clearInterval(ruSongT); ruSongT = null; return; }
         try {
           var st = yt.getPlayerState(), ct = yt.getCurrentTime();
           if (!synced && st === 1 && ct > 0 && g.st === 'rise' && !g.riseAt) { synced = true; g.riseAt = Date.now() - Math.min(ct, .4) * 1000; var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
-          if (st === 0) { yt.seekTo(0, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo();
+          if (st === 0) { yt.seekTo(ra.s, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo();
         } catch (e) {}
       }, 250);
     } catch (e) {}
@@ -6334,24 +6335,30 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var yel = new T.MeshStandardMaterial({ color: '#f5cf1c', roughness: .55, emissive: '#7a5a00', emissiveIntensity: .35 }), yel2 = new T.MeshStandardMaterial({ color: '#e8bf10', roughness: .6, emissive: '#6a4a00', emissiveIntensity: .3 });
     var skin = new T.MeshStandardMaterial({ color: '#e8b48c', roughness: .6 }), white = new T.MeshStandardMaterial({ color: '#f4f4f8', roughness: .3, metalness: .1 }), dark = new T.MeshStandardMaterial({ color: '#2a1a1a' });
     var add = function (par, geo, mat, x, y, z) { var m = new T.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.castShadow = true; par.add(m); return m; };
-    [-1, 1].forEach(function (s2) {   // wide yellow trousers, white heeled boots peeping out
-      add(g, new T.CylinderGeometry(.15, .21, 1.42, 16), yel, s2 * .16, .86, 0);
-      var b = add(g, new T.BoxGeometry(.16, .12, .3), white, s2 * .16, .09, .05); b.rotation.x = -.15;
-      add(g, new T.CylinderGeometry(.02, .015, .12, 6), white, s2 * .16, .05, -.08);
+    var grp = function (par, x, y, z) { var q = new T.Group(); q.position.set(x || 0, y || 0, z || 0); par.add(q); return q; };
+    // the legs: wide yellow trousers with a knee, so they can bend out into a wide disco squat; white heeled boots
+    var legs = [-1, 1].map(function (s2) {
+      var hip = grp(g, s2 * .16, 1.56, 0); add(hip, new T.CylinderGeometry(.16, .18, .74, 14), yel, 0, -.37, 0);
+      var knee = grp(hip, 0, -.72, 0); add(knee, new T.CylinderGeometry(.18, .22, .72, 14), yel, 0, -.36, 0);
+      var b = add(knee, new T.BoxGeometry(.16, .12, .3), white, 0, -.74, .05); b.rotation.x = -.15; add(knee, new T.CylinderGeometry(.02, .015, .12, 6), white, 0, -.78, -.08);
+      return { hip: hip, knee: knee, s: s2 };
     });
     var lathe = function (pts, mat, y) { var m = add(g, new T.LatheGeometry(pts.map(function (q) { return new T.Vector2(q[0], q[1]); }), 24), mat, 0, y, 0); m.scale.z = .75; return m; };
     lathe([[.3, 0], [.28, .12], [.26, .2]], yel, 1.52);                              // the waistband
     lathe([[.25, 0], [.27, .25], [.3, .5], [.32, .66], [.22, .78], [.08, .82]], yel2, 1.72);   // the short jacket
     add(g, new T.BoxGeometry(.012, .62, .02), new T.MeshStandardMaterial({ color: '#c8a000' }), 0, 2.02, .23);   // (where the jacket closes)
+    // the arms: shoulder and elbow, and a hand with the fingers spread wide
     var mkArm = function (s2) {
-      var sh = new T.Group(); sh.position.set(s2 * .3, 2.4, 0); g.add(sh);
-      add(sh, new T.CylinderGeometry(.075, .085, .86, 12), yel, 0, -.43, 0);   // a yellow sleeve
-      add(sh, new T.SphereGeometry(.07, 12, 10), skin, 0, -.92, 0);   // the hand
-      return sh;
+      var sh = grp(g, s2 * .3, 2.4, 0); add(sh, new T.CylinderGeometry(.08, .085, .46, 12), yel, 0, -.23, 0);
+      var el = grp(sh, 0, -.45, 0); add(el, new T.CylinderGeometry(.07, .08, .42, 12), yel, 0, -.21, 0);
+      var hand = grp(el, 0, -.47, 0); var pm = add(hand, new T.SphereGeometry(.065, 12, 10), skin); pm.scale.set(1, 1.1, .45);
+      for (var f = 0; f < 4; f++) { var fg = add(hand, new T.CapsuleGeometry(.014, .08, 4, 6), skin, (f - 1.5) * .03, -.09, 0); fg.rotation.z = (f - 1.5) * .28; }
+      var th = add(hand, new T.CapsuleGeometry(.016, .06, 4, 6), skin, -s2 * .07, -.01, 0); th.rotation.z = s2 * 1.1;
+      return { sh: sh, el: el };
     };
-    var la = mkArm(-1), ra = mkArm(1);
+    var L = mkArm(-1), R = mkArm(1);
     add(g, new T.CylinderGeometry(.06, .07, .16, 10), skin, 0, 2.58, 0);
-    var head = new T.Group(); head.position.set(0, 2.82, 0); g.add(head);
+    var head = grp(g, 0, 2.82, 0);
     var hd = add(head, new T.SphereGeometry(.2, 22, 18), skin); hd.scale.set(.88, 1.08, .95);   // a shaved head
     var st = add(head, new T.SphereGeometry(.205, 22, 12, 0, Math.PI * 2, 0, Math.PI * .42), new T.MeshStandardMaterial({ color: '#8a6a50', transparent: true, opacity: .35 }), 0, .015, -.01); st.scale.set(.88, 1.08, .95);
     [-1, 1].forEach(function (e) {
@@ -6360,7 +6367,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       add(head, new T.BoxGeometry(.06, .012, .015), dark, e * .065, .08, .17).rotation.z = e * .2;
     });
     var mo = add(head, new T.SphereGeometry(.045, 12, 10), new T.MeshStandardMaterial({ color: '#5a1a1a' }), 0, -.08, .16); mo.scale.set(1, 1.2, .4);   // singing at full blast
-    g.userData = { la: la, ra: ra, head: head, fr: new T.Group(), robot: true };
+    // the moves, one per beat: [left shoulder, left elbow, right shoulder, right elbow, squat 0–1, turn]. The first is the
+    // big one: knees wide, hands up beside the face with the fingers spread, like claws.
+    var POSES = [[-1.15, -2.3, 1.15, 2.3, 1, 0], [-.5, 1.3, 2.75, 0, .3, -.3], [-1.15, -2.3, 1.15, 2.3, 1, .25], [-1, 0, .45, -1.3, .35, .3],
+      [-2.6, 0, 2.6, 0, .6, 0], [-1.45, -1.9, 1.2, 2.1, 1, -.25], [-2.75, 0, .5, -1.3, .3, .3], [-1.15, -2.3, 1.15, 2.3, 1, 0]];
+    var cur = [-.15, 0, .15, 0, 0, 0];
+    g.userData = { la: L.sh, ra: R.sh, head: head, fr: new T.Group(), robot: true,
+      move: function (t, dance) {   // sharp: each pose snaps in fast, then holds
+        var P = dance ? POSES[Math.floor(t * 2.1) % POSES.length] : [-.15, 0, .15, 0, 0, 0];
+        for (var i = 0; i < 6; i++) cur[i] += (P[i] - cur[i]) * .38;
+        L.sh.rotation.z = cur[0]; L.el.rotation.z = cur[1]; R.sh.rotation.z = cur[2]; R.el.rotation.z = cur[3];
+        var sq = cur[4], a = .95 * sq;
+        legs.forEach(function (l) { l.hip.rotation.z = -l.s * a; l.knee.rotation.z = l.s * a * .65; });   // (the shins stay a little splayed: a wide stance)
+        g.position.y = -.72 * (1 - Math.cos(a)); g.rotation.y = cur[5]; head.rotation.z = -cur[5] * .4;
+      } };
     return g;
   }
   var RU_TURN = -0.07;
@@ -6451,11 +6471,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var k = st.risen ? 1 : st.riseAt ? Math.min(1, (Date.now() - st.riseAt) / RU_RISE) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       stage.position.y = -11 + e * 11.3; sLight.intensity = Math.max(0, e * 1.6 - .5); haze.intensity = 3 * (1 - e * .6);
       var singer = st.singer, u = singer.userData, dance = e >= 1 ? 1 : 0;
-      if (u.robot) {   // the yellow act: sharp robot poses on the beat
-        var bt = Math.floor(t * 2.2), P = [[-.3, .3, 0], [-2.6, .3, .6], [-.3, 2.6, -.6], [-2.4, 2.4, 0], [-1.4, .2, .4], [-.2, 1.4, -.4]][bt % 6];
-        u.la.rotation.z = dance ? P[0] : -.15; u.ra.rotation.z = dance ? P[1] : .15; u.la.rotation.x = 0; singer.rotation.y = dance ? P[2] : 0;
+      if (u.robot) { u.move(t, dance);   // the yellow act: disco poses on the beat
       } else { u.la.rotation.z = -(.15 + dance * (.25 + Math.max(0, Math.sin(t * 2.1)) * .5)); u.ra.rotation.z = .15 + dance * (.2 + Math.max(0, Math.cos(t * 1.05)) * 2.3); u.la.rotation.x = -dance * (.3 + Math.sin(t * 4.2) * .2);
-      singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; } singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; u.fr.rotation.y = Math.sin(t * 8) * .15; u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
+      singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; } u.fr.rotation.y = Math.sin(t * 8) * .15; if (!u.robot) u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
       var gI = G.rule;   // the laser item, and its beams when someone takes it
       if (gI && gI.item && gI.st === 'play') { item.visible = true; item.position.set(gI.item[0] - n / 2 + .5, .75 + Math.sin(t * 3) * .12, gI.item[1] - n / 2 + .5); item.rotation.y = t * 2.4; } else item.visible = false;
