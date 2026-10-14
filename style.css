@@ -4611,3 +4611,4 @@ body.hasdock main{padding-bottom:84px}
 .xecontent .xefoot{margin-top:auto}
 @media (max-width:760px){.xemain{flex-direction:column}.xenav{flex:none;flex-direction:row;overflow-x:auto}.xesec small{display:none}.xesec{flex:0 0 auto}}
 .xesubhint{display:none}
+.testrow{position:fixed;right:16px;bottom:14px;margin:0;z-index:20;justify-content:flex-end}
