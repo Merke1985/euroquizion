@@ -4337,8 +4337,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // ---------- Where the Hell Is Edgar?: the four rooms ----------
   // A dollhouse of four rooms; everyone has 2 minutes to visit them (any order, no second visits), each room a little
   // task on the phone. Doing it well earns secret clues (cards that are NOT the answer): Green Room 2, Euroclub 3,
-  // Backstage 2, Woodruff's Boudoir 3. The first to finish all four rooms gets 2 bonus clues, the second 1.
-  // Twelve clues are exactly the twelve wrong cards, so a perfect detective knows the answer for sure.
+  // Backstage 2, Woodruff's Boudoir 2. The first to finish all four rooms gets 3 extra clues at the reception.
+  // Twelve clues are exactly the twelve wrong cards, so the fastest perfect detective knows the answer for sure.
   var ED_ROOMS = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 2 }];
   var ED_MS = 150000, edTick = null;
   function edRoom(id) { for (var i = 0; i < ED_ROOMS.length; i++) if (ED_ROOMS[i].id === id) return ED_ROOMS[i]; return null; }
@@ -4702,7 +4702,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     r.done.push(m.room); r.cur = ''; r.score[m.room] = n;
     var got = edClues(m.pid, n), bonus = [];
     if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: the fastest detective gets an extra clue
-      g.fin.push(m.pid); if (g.fin.length === 1) { g.fast = { pid: m.pid, got: edClues(m.pid, 1), at: Date.now() }; Music.ding(); }   // (the fastest detective: Teya & Salena at reception hand over an extra clue)
+      g.fin.push(m.pid); if (g.fin.length === 1) { g.fast = { pid: m.pid, got: edClues(m.pid, 3), at: Date.now() }; Music.ding(); }   // (the fastest detective: Teya & Salena at reception hand over an extra clue)
     }
     g.last[m.pid] = { room: m.room, n: n, c: got, b: bonus, k: g.id + ':' + m.room };
     push();   // (quietly: the big screen gives nothing away about who is where)

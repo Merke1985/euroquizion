@@ -1023,7 +1023,7 @@
       var fresh = last.c.concat(last.b);
       clueNotes({ clue: { id: c.id, n: last.k, known: c.known, fresh: (function () { var o = {}; o[pid] = fresh; return o; })() } });
       $('waittitle').textContent = fresh.length ? '🔍 ' + fresh.length + ' new clue' + (fresh.length > 1 ? 's' : '') + '!' + (last.b.length ? ' (' + last.b.length + ' bonus!)' : '') : '🔍 No clues this time…';
-      var nb = $('clueui'); if (!nb.querySelector('.ednext')) nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">' + (me.done.length >= 4 ? '✅ All rooms searched!' : '🚪 Next room') + '</button>');
+      var nb = $('clueui'), lbl = me.done.length >= 4 ? '✅ All rooms searched!' : '🚪 Next room', ob = nb.querySelector('.ednext'); if (ob && ob.textContent !== lbl) { ob.remove(); ob = null; } if (!ob) nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">' + lbl + '</button>');
       nb.querySelector('.ednext').onclick = function () { edSeen = last.k; $('clueui').classList.add('hidden'); edView(state); };
       return;
     }
@@ -1035,11 +1035,11 @@
         box.setAttribute('data-k', 'fast');
         box.innerHTML = '<button type="button" class="btn big edfast">🛎️ Collect my extra clues</button>';
         box.querySelector('.edfast').onclick = function () {
-          box.innerHTML = ''; box.removeAttribute('data-k');
+          box.innerHTML = ''; box.removeAttribute('data-k'); box.classList.add('hidden'); edNotes = true;   // (the notes stay open until OK: state updates don't redraw this)
           if (fst.got && fst.got.length) clueNotes({ clue: { id: c.id, n: 'fast', known: c.known, fresh: (function () { var o = {}; o[pid] = fst.got; return o; })() } });
           $('waittitle').textContent = fst.got && fst.got.length ? '🗝️ ' + fst.got.length + ' extra clue' + (fst.got.length > 1 ? 's' : '') + '!' : '🗝️ No new clues left to give…'; $('waitsub').textContent = '';
-          var nb = $('clueui'); if (!nb.querySelector('.ednext')) nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">✅ OK</button>');
-          nb.querySelector('.ednext').onclick = function () { edSeen = 'fast' + c.id; $('clueui').classList.add('hidden'); edView(state); };
+          var nb = $('clueui'), ob = nb.querySelector('.ednext'); if (ob) ob.remove(); nb.classList.remove('hidden'); nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">✅ OK</button>');
+          nb.querySelector('.ednext').onclick = function () { edSeen = 'fast' + c.id; edNotes = false; $('clueui').classList.add('hidden'); edView(state); };
         };
       }
       return;
