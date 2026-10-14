@@ -3711,7 +3711,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
     '<path d="M109.5 97 Q107.5 101.5 108 103.5 Q110 105 112.5 103.5" stroke="#c08a6c" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".75"/>' +   // (a small, ordinary nose)
     '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
-    '<g class="emouth"><path d="M103 110 Q110 109 117 110 Q117 118 110 118 Q103 118 103 110 Z" fill="#7a1e2c"/><rect x="104.6" y="110" width="10.8" height="2.2" rx="1.1" fill="#fff"/><ellipse cx="110" cy="116.4" rx="4.2" ry="1.9" fill="#df7078"/></g>' +   // (opens when she talks)
+    '<g class="emouth"><path d="M101.5 109.5 Q110 108.5 118.5 109.5 Q118.5 119 110 119 Q101.5 119 101.5 109.5 Z" fill="#5e1424" stroke="#c8102e" stroke-width="2.2" stroke-linejoin="round"/><rect x="103.5" y="110.1" width="13" height="2.4" rx="1.2" fill="#fff"/><ellipse cx="110" cy="117" rx="4.76" ry="2.1" fill="#e07a84"/></g>' +   // (opens when she talks)
     '<ellipse cx="88" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
     '</svg>';
   // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
