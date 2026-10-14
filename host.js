@@ -5213,9 +5213,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return st;
   }
   // The row of photographers we are standing in, seen from behind: backs of heads and shoulders, cameras held up
-  // (some with a long lens), each with a flash that goes off. The middle stays free: that's our spot.
+  // (some with a long lens), each with a flash that goes off.
   function tcPapsSvg() {
-    var P = [[-80, 'cap', '#1d1d24', '#3a5a8a', 1], [160, 'short', '#5a3420', '#2b2b30', 0], [400, 'pony', '#e3c27a', '#6b2a2a', 1], [1200, 'beanie', '#2a1b12', '#2f4a32', 0], [1440, 'bald', '#c48a60', '#20202a', 1], [1680, 'curly', '#1b1b1f', '#4a3a6a', 0]];
+    var P = [[-80, 'cap', '#1d1d24', '#3a5a8a', 1], [171, 'short', '#5a3420', '#2b2b30', 0], [423, 'pony', '#e3c27a', '#6b2a2a', 1], [674, 'curly', '#7a3a1a', '#1f3a5a', 0], [926, 'short', '#1b1b1f', '#5a2a4a', 1], [1177, 'beanie', '#2a1b12', '#2f4a32', 0], [1429, 'bald', '#c48a60', '#20202a', 1], [1680, 'curly', '#1b1b1f', '#4a3a6a', 0]];   // (a full row now, the middle too)
     var h = '<svg viewBox="-200 -40 2000 450" preserveAspectRatio="xMidYMin meet" aria-hidden="true">';
     P.forEach(function (p, i) {
       var x = p[0], hx = x + (i % 2 ? 8 : -8), skin = p[2] === '#c48a60' ? '#c48a60' : '#d9a585', hair = p[2], coat = p[3], long = p[4];
@@ -5228,7 +5228,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var head = '<ellipse cx="' + hx + '" cy="150" rx="52" ry="58" fill="' + (p[1] === 'bald' ? skin : hair) + '"/>';
       if (p[1] === 'cap') head += '<path d="M' + (hx - 55) + ' 142 Q' + (hx - 52) + ' 88 ' + hx + ' 88 Q' + (hx + 52) + ' 88 ' + (hx + 55) + ' 142 Z" fill="#c8102e"/><path d="M' + (hx - 14) + ' 142 Q' + hx + ' 128 ' + (hx + 14) + ' 142" stroke="' + hair + '" stroke-width="8" fill="none"/>';
       if (p[1] === 'beanie') head += '<path d="M' + (hx - 54) + ' 146 Q' + (hx - 50) + ' 84 ' + hx + ' 84 Q' + (hx + 50) + ' 84 ' + (hx + 54) + ' 146 Z" fill="#ff8a2a"/><rect x="' + (hx - 56) + '" y="136" width="112" height="18" rx="8" fill="#e06a10"/><circle cx="' + hx + '" cy="82" r="12" fill="#ffd23f"/>';
-      if (p[1] === 'pony') head += '<path d="M' + (hx - 6) + ' 170 Q' + (hx + 10) + ' 220 ' + (hx - 4) + ' 250" stroke="' + hair + '" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="' + hx + '" cy="168" r="9" fill="#ff5fa8"/>';
+      if (p[1] === 'pony') head += '<path d="M' + (hx - 6) + ' 170 Q' + (hx + 10) + ' 220 ' + (hx - 4) + ' 250" stroke="' + hair + '" stroke-width="22" fill="none" stroke-linecap="round"/>';
       if (p[1] === 'curly') head += [[-34, 112], [0, 98], [34, 112], [-44, 146], [44, 146], [-30, 176], [30, 176]].map(function (c) { return '<circle cx="' + (hx + c[0]) + '" cy="' + c[1] + '" r="22" fill="' + hair + '"/>'; }).join('');
       if (p[1] === 'bald') head += '<path d="M' + (hx - 50) + ' 168 Q' + hx + ' 196 ' + (hx + 50) + ' 168" stroke="#5a3420" stroke-width="12" fill="none"/>';
       h += head + '<ellipse cx="' + (hx - 52) + '" cy="152" rx="8" ry="14" fill="' + skin + '"/><ellipse cx="' + (hx + 52) + '" cy="152" rx="8" ry="14" fill="' + skin + '"/>';
