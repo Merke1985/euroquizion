@@ -732,14 +732,14 @@
     var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
     var hit = st > 0 && brk < 0 && t > ZG_GO + 3 && zgHit(S.seed, t, S.f, S.y);   // (stages 2 and 3: an asteroid knocks you off)
     if (hit || (t > ZG_GO + 3 && S.outFor >= fall)) {   // you fall
-      S.fell = true; S.hit = hit; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc(), hit: hit ? 1 : 0 }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
+      S.fell = true; S.hit = hit; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc(), hit: hit ? 1 : 0 }); if (hit) try { var bx = new Audio('sounds/explosion.mp3?v=1'); bx.volume = .8; var bp = bx.play(); if (bp && bp.catch) bp.catch(function () {}); } catch (e) {} try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
     }
     if (lv !== S.sent && now - S.sentAt >= 250) { S.sent = lv; S.sentAt = now; zgTell({ l: lv, s: err < 0 ? -1 : 1 }); if (lv === 2) try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
     // draw: the zone, your finger, the clock
     var B = S.box; if (!B) return;
     B.zone.style.left = ((tg - w + 1) / 2 * 100).toFixed(2) + '%'; B.zone.style.width = (w * 100).toFixed(2) + '%';
-    B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%'; B.me.style.top = (S.y * 100).toFixed(2) + '%';
+    B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%'; B.me.style.top = (S.y * 100).toFixed(2) + '%'; if (B.xh) { B.xh.style.top = B.me.style.top; B.xv.style.left = B.me.style.left; }   // (the crosshair: where you are, across the whole field)
     var warn = zgRockDraw(B, S.seed, t);
     B.track.setAttribute('data-l', lv); B.track.classList.toggle('brk', brk >= 0); B.track.classList.toggle('pre', pre);
     var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = pre ? (t >= ZG_GO - 3 ? '🎤 ' + Math.ceil(ZG_GO - t) + '…' : '🎤 Get ready… you take over when she starts singing') : brk >= 0 ? '☕ Break time! Relax your fingers… ' + Math.ceil(ZG_BRK[brk][1] - t) + 's' + (brk === 0 ? ' · Next: asteroids! ☄️' : '') : warn && inside ? '☄️ Asteroids! Slide up or down to the gap!' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
@@ -788,9 +788,9 @@
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id || !S.box) {
       box.setAttribute('data-id', z.id);
-      box.innerHTML = '<div class="zginfo">Stage 1 of 3</div><div class="zgtrack" data-l="0"><span class="zgzone"></span><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgwarn"></i><i class="zgwarn"></i><span class="zgme"></span></div><div class="zghint">👆 Slide left and right to stay in the zone · from stage 2 also up and down to dodge the asteroids ☄️</div>';
+      box.innerHTML = '<div class="zginfo">Stage 1 of 3</div><div class="zgtrack" data-l="0"><span class="zgzone"></span><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgwarn"></i><i class="zgwarn"></i><i class="zgxh"></i><i class="zgxv"></i><span class="zgme"></span></div><div class="zghint">👆 Slide left and right to stay in the zone · from stage 2 also up and down to dodge the asteroids ☄️</div>';
       var tr = box.querySelector('.zgtrack');
-      S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo'), rocks: [].slice.call(tr.querySelectorAll('.zgrock')), warns: [].slice.call(tr.querySelectorAll('.zgwarn')) };
+      S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo'), xh: tr.querySelector('.zgxh'), xv: tr.querySelector('.zgxv'), rocks: [].slice.call(tr.querySelectorAll('.zgrock')), warns: [].slice.call(tr.querySelectorAll('.zgwarn')) };
       S.box.rocks.concat(S.box.warns).forEach(function (e) { e.style.display = 'none'; });
       var mv = function (e) { e.preventDefault(); if ((Date.now() - S.start) / 1000 < ZG_GO) return; var r = tr.getBoundingClientRect(); S.f = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)); S.y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)); };
       tr.addEventListener('pointerdown', function (e) { try { tr.setPointerCapture(e.pointerId); } catch (x) {} mv(e); });

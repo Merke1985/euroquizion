@@ -3276,10 +3276,12 @@ body.hasdock main{padding-bottom:84px}
 .zglab{position:absolute;left:0;top:-15vh;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;white-space:nowrap;font-weight:900;text-shadow:0 2px 8px #000;pointer-events:none}
 .zglab b{font-size:clamp(.65rem,1.1vw,1rem)}.zglab i{font-style:normal;color:#ffd23f;font-size:clamp(.8rem,1.4vw,1.2rem)}
 .zgp.risky .zgfig .char{box-shadow:0 0 0 3px #ff4d4d,0 0 20px #ff4d4d}
-.zgp.out .zgfig{animation:zgfloat 5s cubic-bezier(.3,.1,.5,1) forwards}
+.zgp.out .zgfig{animation:zgfall 5s cubic-bezier(.3,.1,.5,1) forwards}
+.zgp.out.hit .zgfig{animation:zgblast 1.8s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes zgblast{0%{translate:0 0;rotate:0deg;opacity:1;filter:brightness(3)}10%{filter:brightness(1)}100%{translate:calc(var(--dir,1) * 45vw) -90vh;rotate:calc(var(--dir,1) * 1440deg);opacity:0}}
 .zgp.out .zglab{opacity:.45}
 .zgp.out .zglab b::after{content:' 🚀'}
-@keyframes zgfloat{0%{translate:0 0;rotate:calc(var(--dir,1) * 60deg);opacity:1}100%{translate:calc(var(--dir,1) * 22vw) -75vh;rotate:calc(var(--dir,1) * 1080deg);opacity:0}}
+@keyframes zgfall{0%{translate:0 0;rotate:calc(var(--dir,1) * 60deg);opacity:1}100%{translate:calc(var(--dir,1) * 22vw) -75vh;rotate:calc(var(--dir,1) * 1080deg);opacity:0}}
 .zgp.win .zgfig .char{box-shadow:0 0 0 4px #ffd23f,0 0 30px #ffd23f}
 .zgmsg{position:absolute;left:0;right:0;bottom:2.5vh;text-align:center;font-weight:900;font-size:clamp(1rem,2.2vw,1.9rem);text-shadow:0 3px 12px #000;z-index:5;padding:0 10vw}
 .zgboard{position:absolute;left:50%;top:15vh;width:min(560px,60vw);transform:translateX(-50%);display:flex;flex-direction:column;gap:.6vh;z-index:6}
@@ -4914,3 +4916,15 @@ body.hasdock main{padding-bottom:84px}
 /* the finale winner holds the flag pole IN the hand: the pole runs through the fist (a quarter of it below), and turns around the grip */
 .fnov .fnp.big .lbod .ca .hflag{left:calc(50% - .5vh);bottom:-1.6vh;transform-origin:.5vh 75%}
 .fnov .fnp.big .lbod .ca .hflag::after{content:'';position:absolute;left:.5vh;top:75%;width:2.5vh;height:2.5vh;translate:-50% -50%;border-radius:50%;background:#e8b48c;box-shadow:inset -.25vh -.3vh 0 rgba(0,0,0,.15);z-index:2}
+/* Zero Gravity on the phone: a crosshair through your dot, so you can see what you line up with */
+.zgxh,.zgxv{position:absolute;z-index:3;pointer-events:none;background:rgba(255,255,255,.55);box-shadow:0 0 6px rgba(255,255,255,.6)}
+.zgxh{left:0;right:0;top:50%;height:2px;margin-top:-1px}
+.zgxv{top:0;bottom:0;left:50%;width:2px;margin-left:-1px}
+/* Zero Gravity on the phone: clearer safe and danger areas. Everything outside the zone gets a red tint (stripes),
+   the zone itself is brighter, with a thicker glowing edge */
+.zgtrack{background:#150e34}
+.zgzone{background:rgba(63,240,255,.42);box-shadow:0 0 0 999px rgba(255,45,70,.2),0 0 26px #3ff0ff,inset 0 0 0 4px #3ff0ff;z-index:1}
+.zgzone::before{content:'SAFE';position:absolute;left:50%;top:8px;translate:-50% 0;font-weight:900;font-size:.7rem;letter-spacing:.12em;color:#dffcff;opacity:.8}
+.zgtrack::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,60,80,.18) 0 10px,transparent 10px 22px);pointer-events:none}
+.zgtrack[data-l="1"] .zgzone{box-shadow:0 0 0 999px rgba(255,170,40,.24),0 0 26px #ffd23f,inset 0 0 0 4px #ffd23f}
+.zgtrack[data-l="2"] .zgzone{box-shadow:0 0 0 999px rgba(255,45,70,.38),0 0 26px #ff4d4d,inset 0 0 0 4px #ff4d4d}

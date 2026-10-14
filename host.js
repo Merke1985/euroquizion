@@ -5685,7 +5685,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.zg; if (!g || G.phase !== 'zg' || !m || m.id !== g.id || !m.pid || g.lvl[m.pid] == null) return;
     if (m.acc != null) g.acc[m.pid] = Math.max(0, Math.min(100, Math.round(Number(m.acc) || 0)));
     if (g.st !== 'play' || g.out[m.pid] != null) return;
-    if (m.out != null) { g.out[m.pid] = Math.max(0, Math.min(ZG_LEN, Number(m.out) || g.t)); g.lvl[m.pid] = 3; if (m.hit) { (g.hit = g.hit || {})[m.pid] = 1; zgBoom(m.pid); } Music.scream(); push(); return; }
+    if (m.out != null) { g.out[m.pid] = Math.max(0, Math.min(ZG_LEN, Number(m.out) || g.t)); g.lvl[m.pid] = 3; if (m.hit) { (g.hit = g.hit || {})[m.pid] = 1; zgBoom(m.pid); boomSnd(); setTimeout(function () { Music.scream(); }, 250); } else Music.scream(); push(); return; }
     if (m.l != null) { g.lvl[m.pid] = Math.max(0, Math.min(2, m.l | 0)); g.sgn[m.pid] = m.s < 0 ? -1 : 1; }
   }
   function zgRank(g) {   // the ones still standing first (the most accurate first), then whoever fell last
@@ -5778,7 +5778,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.st === 'play' && !ov._raf) { var loop = function () { var g2 = G.zg, o2 = $('zgov'); if (!g2 || !o2 || g2.st !== 'play') { if (o2) o2._raf = 0; return; } zgPose(o2, g2); o2._raf = requestAnimationFrame(loop); }; ov._raf = requestAnimationFrame(loop); }   // (every frame: smooth swaying)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
       var k = el.getAttribute('data-p'), lv = g.lvl[k] || 0, o = g.out[k] != null;
-      if (o && !el.classList.contains('out')) { el.classList.add('out'); el.style.setProperty('--dir', (g.sgn[k] || 1)); }
+      if (o && !el.classList.contains('out')) { el.classList.add('out'); el.classList.toggle('hit', !!(g.hit || {})[k]); el.style.setProperty('--dir', (g.sgn[k] || 1)); }   // (hit by an asteroid: blasted off at once)
       el.classList.toggle('wobbly', !o && lv === 1); el.classList.toggle('risky', !o && lv === 2);
       var lb = el.querySelector('.zglab i'), sc = g.done ? (g.acc[k] || 0) + '%' : ''; if (lb.textContent !== sc) lb.textContent = sc;
       el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
