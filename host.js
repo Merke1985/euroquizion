@@ -252,7 +252,7 @@
   function snapshot() {
     var s = { phase: G.phase, round: G.round, total: G.total, total_ms: G.guessMs, bar_ms: G.barMs, left: G.frozenLeft != null ? G.frozenLeft : Math.max(0, G.endsAt - Date.now()), frozen: G.frozenLeft != null,
       cfg: { era: G.era, cat: G.cat, showVideo: G.showVideo, atype: G.atype, subject: G.subject, scoring: G.scoring, showScore: G.showScore },
-      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, cc: p.cc || '', cch: G.phase === 'guess' && !G.draw && !(G.q && G.q.battle) && ccHit(p), col: p.col, ccb: G.phase === 'reveal' && p.got ? p.ccb || '' : '', flagc: p.flagc || '', flagby: p.flagBy || '', robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
+      players: list().map(function (p) { return { pid: p.pid, name: p.name, char: p.char, score: p.score, got: p.got, done: !!p.done, picked: p.pick != null, in: isIn(p), pick: G.phase === 'reveal' ? p.pick : null, pts: p.pts, inv: p.inv || [], uses: p.uses || {}, sit: p.sitNow || '', flag: !!p.flagNow, half: !!p.halfNow, cc: p.cc || '', cch: G.phase === 'guess' && !G.draw && !(G.q && G.q.battle) && ccHit(p) && ccShown(p), col: p.col, ccb: G.phase === 'reveal' && p.got ? p.ccb || '' : '', flagc: p.flagc || '', flagby: p.flagBy || '', robbed: p.robbed || null, loot: p.loot || null, hit: p.hitMsg || null }; }) };
     if (G.sing) s.sing = singSnapshot();
     if (G.frozenLeft != null) s.itemBusy = true;   /* an item is going off: nobody can use one right now */
     if (G.phase === 'bomb' && G.bomb) s.bomb = bombSnap();
@@ -943,6 +943,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // An ad seems to be playing: show the player (title bar stays masked) so it can be skipped by hand.
   var adShown = false;
   /* the question is about the player's fan-flag country (its song, or its name in the question or the answer): double points */
+  function ccShown(p) {   // may the phone say "this one is about your country" during the question? Only when the question itself already shows it (a flag, a map, the name in the question); otherwise it would give the answer away
+    var cc = p.cc, q = G.q; if (!cc || !q) return false;
+    if (q.flag === cc || q.map === cc) return true;
+    var names = [countries[cc]].concat((typeof COUNTRY_ALIASES !== 'undefined' && COUNTRY_ALIASES[cc]) || []).filter(Boolean);
+    return names.some(function (n) { return new RegExp('(^|[^\\p{L}])' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}])', 'iu').test(q.text || ''); });
+  }
   function ccHit(p) {
     var cc = p.cc, q = G.q; if (!cc || !q) return false;
     if (q.flag === cc || q.map === cc) return true;
