@@ -22,8 +22,37 @@ var TITLE_EN = {}, TITLE_BASE = {};
 if (typeof fetch === 'function' && typeof document !== 'undefined' && document.getElementById('s-subject')) {
   fetch('titles_en.json?v=1').then(function (r) { return r.json(); }).then(function (d) { TITLE_BASE = d || {}; escApply(); }).catch(function () {});
 }
+// Does the translation give the title away? The same word in both, or a word that is nearly the same (one letter
+// different, the same start of 4 letters, or 60% or more alike, also by how it sounds: Musik / Music, Muzika / Music,
+// Paradiso / Paradise, Sommer / Summer, Morgen / Morning).
+// Such titles are never used for Language barrier or United by Nonsense.
+var SAME_STEM = [['jardi', 'garden'], ['hemel', 'heaven'], ['himmel', 'heaven'], ['aggel', 'angel'], ['bruck', 'bridge'], ['brug', 'bridge'], ['tijd', 'time'], ['genoeg', 'enough'], ['herz', 'heart'], ['hart', 'heart'], ['welt', 'world'], ['wereld', 'world'], ['vrouw', 'woman'], ['vader', 'father'], ['moeder', 'mother'], ['mutter', 'mother'], ['broer', 'brother'], ['bruder', 'brother'], ['schwester', 'sister'], ['zuster', 'sister'], ['nacht', 'night'], ['licht', 'light'], ['vuur', 'fire'], ['feuer', 'fire'], ['wasser', 'water'], ['zomer', 'summer'], ['winter', 'winter'], ['lied', 'song'], ['liefde', 'love'], ['lieb', 'love'], ['mond', 'moon'], ['maan', 'moon'], ['sonne', 'sun'], ['zon', 'sun'], ['ster', 'star'], ['stern', 'star'], ['huis', 'house'], ['haus', 'house'], ['dag', 'day'], ['tag', 'day'], ['morgen', 'tomorrow'], ['sonntag', 'sunday'], ['liv', 'life'], ['lif', 'life'], ['lif', 'alive'], ['mam', 'mom'], ['mam', 'mum'], ['grand', 'great'], ['nuit', 'night'], ['nott', 'night'], ['noch', 'night'], ['notte', 'tonight'], ['trois', 'three'], ['deux', 'two'], ['flieg', 'fly'], ['sol', 'sun']];   // (words that are the same word, even if they don't look alike enough)
+function titleGivesAway(title, en) {
+  var norm = function (x) { return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s*[(\[][^)\]]*[)\]]/g, ' '); };
+  var words = function (x) { return norm(x).match(/[a-z0-9]+|[\u0370-\u03ff\u0400-\u04ff]+/g) || []; };
+  var a = (String(title || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').match(/[a-z0-9]+|[\u0370-\u03ff\u0400-\u04ff]+/g) || []), b = words(en);   // (the title with its bit in brackets: La Noche Es Para Mí (The Night Is For Me) gives itself away)
+  if (!b.length || a.join(' ') === b.join(' ')) return true;
+  var lev = function (x, y) { var p = [], i, j; for (j = 0; j <= y.length; j++) p[j] = j; for (i = 1; i <= x.length; i++) { var prev = p[0]; p[0] = i; for (j = 1; j <= y.length; j++) { var t = p[j]; p[j] = Math.min(p[j] + 1, p[j - 1] + 1, prev + (x[i - 1] === y[j - 1] ? 0 : 1)); prev = t; } } return p[y.length]; };
+  var alike = function (v, w) {
+    if (v === w) return w.length >= 2;   // (the same word: Amor = Love is fine, Love Me Tonight = Love Me Tonight is not)
+    if (v.length < 3 || w.length < 3) return false;
+    if (v.length >= 4 && w.length >= 4 && v.slice(0, 4) === w.slice(0, 4)) return true;
+    var d = lev(v, w), m = Math.max(v.length, w.length);
+    if (d <= 1 || (m >= 4 && 1 - d / m >= 0.6)) return true;
+    if (v.length >= 5 && w.length >= 5 && v.slice(0, 3) === w.slice(0, 3)) return true;   // (Morgen / Morning, Balão / Balloon)
+    var snd = function (x) { return x.replace(/ph/g, 'f').replace(/[kq]/g, 'c').replace(/z/g, 's').replace(/y/g, 'i').replace(/w/g, 'v').replace(/(.)\1/g, '$1').replace(/[aeiou]+$/, ''); };   // (how it sounds: Muzika / Music, Kafe / Cafe)
+    var p = snd(v), q = snd(w), m2 = Math.max(p.length, q.length);
+    if (p === q || (m2 >= 4 && 1 - lev(p, q) / m2 >= 0.6)) return true;
+    if (v.length >= 4 && w.length >= 4 && (v.indexOf(w) >= 0 || w.indexOf(v) >= 0)) return true;   // (one hides in the other: Historyja / Story)
+    if (p.length >= 3 && q.length >= 3 && (p.indexOf(q) >= 0 || q.indexOf(p) >= 0)) return true;   // (also by sound: Komme / Coming)
+    var bones = function (x) { return snd(x).replace(/[aeiou]/g, '').replace(/(.)\1/g, '$1'); }, bv = bones(v), bw = bones(w);   // (the consonants: Monts / Mountains, Fleur / Flower)
+    if (bv.length >= 3 && bw.length >= 3 && (lev(bv, bw) <= 1 || bv.slice(0, 3) === bw.slice(0, 3))) return true;
+    return SAME_STEM.some(function (st) { return (v.indexOf(st[0]) === 0 && w.indexOf(st[1]) === 0) || (w.indexOf(st[0]) === 0 && v.indexOf(st[1]) === 0); });
+  };
+  return b.some(function (w) { return a.some(function (v) { return alike(v, w); }); });
+}
 function makeLost(song, allSongs, opt) {
-  var has = function (s) { return !!TITLE_EN[s[4]]; }, swap = null;
+  var has = function (s) { return !!TITLE_EN[s[4]] && !titleGivesAway(s[3], TITLE_EN[s[4]]); }, swap = null;   // (never a translation that gives the title away)
   if (!has(song)) {
     // the song that was drawn has no translation (an English title, a name): take one that has, from the same selection
     var c = shuffle(((opt && opt.pool) || allSongs).filter(has));

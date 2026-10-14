@@ -167,7 +167,8 @@
   function drawTitles(B) {
     var all = H().songs.filter(function (s) { return String(s[10]).toLowerCase() !== 'english'; });
     var withTr = all.filter(function (s) { return trOf(s[4]); }).length;
-    B.innerHTML = '<p class="mute">United by Nonsense asks what a title means; the real English translation hides between the players’ made-up ones. ' + withTr + ' of ' + all.length + ' non-English songs have a translation (only those can come up).</p>' +
+    var give = all.filter(function (s) { var v = trOf(s[4]); return v && titleGivesAway(s[3], v); }).length;
+    B.innerHTML = '<p class="mute">United by Nonsense asks what a title means; the real English translation hides between the players’ made-up ones. Language barrier shows the translation and asks for the song. ' + withTr + ' of ' + all.length + ' non-English songs have a translation. <b>' + give + '</b> of them are never used, because the translation has (nearly) the same word as the title: they’re marked ⚠️.</p>' +
       '<div class="xerowtop"><input type="search" id="xetq" placeholder="Search title, artist, country or year…" value="' + esc(tq) + '"><label class="xechk"><input type="checkbox" id="xetall"' + (tAll ? ' checked' : '') + '> also songs without a translation</label></div><div class="xelist" id="xetl"></div>';
     var list = function () {
       var q = tq.toLowerCase(), hits = all.filter(function (s) { return (tAll || trOf(s[4])) && (!q || (s[3] + ' ' + s[2] + ' ' + (H().countries[s[1]] || '') + ' ' + s[0]).toLowerCase().indexOf(q) >= 0); });
@@ -175,7 +176,9 @@
       $('xetl').innerHTML = hits.map(function (s) { return '<div class="xerow" data-id="' + s[4] + '"><div class="xerowtop"><b class="xeorig">' + esc(s[3]) + '<small>' + esc(s[2] + ' · ' + (H().countries[s[1]] || s[1]) + ' ' + s[0] + ' · ' + s[10]) + '</small></b><input type="text" class="xetr" placeholder="English translation" value="' + esc(trOf(s[4])) + '"></div></div>'; }).join('') + (n > 60 ? '<p class="mute">…and ' + (n - 60) + ' more: search to narrow it down.</p>' : '');
       [].forEach.call($('xetl').querySelectorAll('.xerow'), function (r) {
         var id = r.getAttribute('data-id');
-        r.querySelector('.xetr').addEventListener('input', function () { var v = this.value.trim(); if (v === (TITLE_BASE[id] || '')) delete data.titles[id]; else data.titles[id] = v || null; touch(); });
+        var orig = r.querySelector('.xeorig').firstChild.textContent, mark = function () { var v = trOf(id), bad = !!v && titleGivesAway(orig, v); r.classList.toggle('xegive', bad); };
+        mark();
+        r.querySelector('.xetr').addEventListener('input', function () { var v = this.value.trim(); if (v === (TITLE_BASE[id] || '')) delete data.titles[id]; else data.titles[id] = v || null; touch(); mark(); });
       });
     };
     $('xetq').addEventListener('input', function () { tq = this.value; list(); });
