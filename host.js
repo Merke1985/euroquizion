@@ -1535,7 +1535,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
-    if (kind === 'bluff' && !REMOTE) { greenRoom(bluffAll, null, 'bluff'); return; }   // (United by Nonsense starts in the Green Room too)
+    if (kind === 'bluff' && !REMOTE) { greenRoom(bluffAll, null, 'bluff'); return; }
+    if (kind === 'sing' && !REMOTE) { greenRoom(singStart, null, 'sing'); return; }   // (Key Change starts in the Green Room too)   // (United by Nonsense starts in the Green Room too)
     if (kind === 'clue') { if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
     if (kind === 'queue') {   // Sofia needs some air first, and takes everyone outside, to Verona
@@ -7283,9 +7284,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // (the players on the front sofa). They explain the game, then the performance starts and the question comes.
   var GR_SOFAS = ['#8e1b3a', '#1d6b6b', '#5b2a86', '#a8641a', '#25507f'];
   function greenRoom(then, winners, kind) {
-    var nb = kind === 'bluff';   // (United by Nonsense; otherwise Disqualivision)
+    var nb = kind === 'bluff', kc = kind === 'sing';   // (United by Nonsense, Key Change; otherwise Disqualivision)
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
-    G.fun = { kind: 'groom', icon: FUN[nb ? 'bluff' : 'quip'].icon, title: FUN[nb ? 'bluff' : 'quip'].title, sub: FUN[nb ? 'bluff' : 'quip'].sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
+    var fk = kc ? 'sing' : nb ? 'bluff' : 'quip';
+    G.fun = { kind: 'groom', icon: FUN[fk].icon, title: FUN[fk].title, sub: FUN[fk].sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); push();
     hostsAway();
     var old = $('grov'); if (old) old.remove();
@@ -7316,11 +7318,29 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (winners) {   /* back in the green room after three performances: the hosts name the winner */
       ov.classList.add('reveal');
       var wn = winners.map(function (k) { return players[k] ? players[k].name : '?'; }), wtxt = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
+      if (kc) {   /* Key Change: the winner, and one more listen to the winning performance */
+        at(1500, function () { Music.ding(); say('him', 'Welcome back to the Green Room! What a show of voices… 🎤'); });
+        at(5300, function () { say('her', 'Every vote is in. And the winner of Key Change is…'); try { Music.dread && Music.dread(true); } catch (e) {} });
+        at(9300, function () { try { Music.dread && Music.dread(false); } catch (e) {} ov.classList.add('crowned'); Music.ding(); say('him', wn.length ? wtxt + '! 🏆 Douze points for the best voice' + (wn.length > 1 ? 's' : '') + '!' : 'Nobody! Not a single vote… we’ll call it a draw. 🤷'); });
+        at(13300, function () { say('her', 'Let’s listen one more time to the winning performance! 🎶'); });
+        at(17300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
+        at(18300, function () { ov.remove(); then(); });
+        return;
+      }
       at(1500, function () { Music.ding(); say('him', 'Welcome back to the Green Room! The jury has seen enough… 😵'); });
       at(5300, function () { say('her', nb ? 'Three titles, three bluffs. And the winner of United by Nonsense is…' : 'Three performances, three roasts. And the winner of Disqualivision is…'); try { Music.dread && Music.dread(true); } catch (e) {} });
       at(9300, function () { try { Music.dread && Music.dread(false); } catch (e) {} ov.classList.add('crowned'); Music.ding(); say('him', wn.length ? wtxt + '! 🏆 Douze points for the ' + (nb ? 'best bluffer' : 'sharpest tongue') + (wn.length > 1 ? 's' : '') + '!' : nb ? 'Nobody! Not a single point… what a lot of nonsense. 🙊' : 'Nobody! Not a single vote… the jury is speechless. 🙊'); });
       at(14300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
       at(15300, function () { ov.remove(); then(); });
+      return;
+    }
+    if (kc) {   /* Key Change: the presenters explain it here first */
+      at(1500, function () { Music.ding(); say('him', 'Welcome to Key Change! Here in the Green Room, the stars are warming up their voices… 🎤'); });
+      at(5300, function () { say('her', 'You vote for a song, and then you listen to the original…'); });
+      at(9100, function () { say('him', '…and then it’s your turn: sing it into your phone! 🎶'); });
+      at(12300, function () { say('her', 'Then everyone votes for who sang it best. Douze points for the winner! 🏆'); });
+      at(16300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
+      at(17300, function () { ov.remove(); then(); });
       return;
     }
     if (nb) {
@@ -7905,7 +7925,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     push(); annTimer = setTimeout(step, 600);
   }
   function singReveal2() {
-    if (!G.sing || G.phase === 'reveal') return;
+    if (!G.sing || G.phase === 'reveal' || G.sing.grDone) return;   // (once: the Green Room takes it from there)
     $('cover').classList.remove('funcard');
     clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio(); stopTimers(); G.revealAt = 0;
     var tally = {}, v, max = 0;
@@ -7921,6 +7941,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       p.score += p.pts; p.got = true;
       return { pid: pid, name: p.name, char: p.char, votes: tally[pid], win: win, pts: p.pts };
     }).sort(function (a, b) { return b.votes - a.votes; });
+    if (!REMOTE && !G.sing.grDone) {   // first to the Green Room, where the presenters name the winner…
+      G.sing.grDone = true; G.sing.now = null; clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {}
+      var sg0 = G.sing, wins0 = G.sing.result.filter(function (r) { return r.win; }).map(function (r) { return r.pid; });
+      greenRoom(function () { if (G.sing === sg0) singReveal3(); }, wins0, 'sing');
+      return;
+    }
+    singReveal3();
+  }
+  function singReveal3() {   // …and then we listen to the winning performance once more
+    if (!G.sing) return;
     G.phase = 'reveal'; stage = 'reveal'; G.sing.in = {}; G.sing.now = null;
     cover(false); masks(false);
     clearInterval(silenceTick); silenceTick = null;
