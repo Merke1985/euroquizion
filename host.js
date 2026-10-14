@@ -3561,6 +3561,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var SHOPTILL = '<svg class="till" viewBox="0 0 300 300" aria-hidden="true">' +
     '<rect x="6" y="92" width="288" height="202" rx="8" fill="#c48a3a" stroke="#6b4518" stroke-width="4"/><rect x="0" y="84" width="300" height="16" rx="6" fill="#e0b060" stroke="#6b4518" stroke-width="4"/>' +
     '<path d="M24 120 h252 M24 160 h252 M24 200 h252 M24 240 h252" stroke="#a8702c" stroke-width="3"/><g fill="#ffd23f"><circle cx="150" cy="180" r="14"/><text x="150" y="187" font-size="18" font-weight="900" text-anchor="middle" fill="#6b4518">€</text></g>' +
+    '<g><rect x="86" y="108" width="128" height="40" rx="7" fill="#f3d27a" stroke="#6b4518" stroke-width="3"/><rect x="92" y="114" width="116" height="28" rx="4" fill="none" stroke="#b8913a" stroke-width="1.5"/><text x="150" y="137" font-size="24" font-weight="900" font-family="Georgia, serif" font-style="italic" text-anchor="middle" fill="#4a2a10">Lynda</text></g>' +   // (her name plate on the counter)
     '<path d="M150 84 L156 34 Q158 22 170 22 L262 22 Q274 22 276 34 L282 84 Z" fill="#ff5fa8" stroke="#7a1e4a" stroke-width="4" stroke-linejoin="round"/>' +
     '<rect x="186" y="4" width="62" height="24" rx="4" fill="#1d2a44" stroke="#7a1e4a" stroke-width="3"/><text x="217" y="22" font-size="15" font-weight="900" text-anchor="middle" fill="#7dffb0" font-family="monospace" class="tilln">0.00</text>' +
     '<g fill="#fff" stroke="#7a1e4a" stroke-width="2">' + [0, 1, 2].map(function (r) { return [0, 1, 2, 3].map(function (c) { return '<rect x="' + (174 + c * 22) + '" y="' + (38 + r * 14) + '" width="17" height="10" rx="3"/>'; }).join(''); }).join('') + '</g>' +
@@ -3639,7 +3640,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (snd === 'lose') { Music.woosh(); setTimeout(function () { Music.crumble(); }, 250); }
     else if (snd === 'blow') { Music.woosh(); setTimeout(function () { Music.woosh(); }, 400); }
     else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
-    else if (snd === 'sit') Music.buzz();
+    else if (snd === 'sit') { if (!REMOTE) { try { var mz = new Audio('sounds/shock.mp3'); mz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var mp = mz.play(); if (mp && mp.catch) mp.catch(function () {}); } catch (e) {} } setTimeout(function () { Music.micdrop(); }, 500); }   // (the Broken Mic: the same shock and thud as the microphone in Hold That Note)
     else if (snd === 'thief') itemGetSnd();   // (left the Euroclub with an item)
     else if (snd === 'heel') { Music.blip(); setTimeout(function () { Music.crumble(); }, 200); }
     else if (snd === 'block') { Music.blip(); setTimeout(function () { Music.ding(); }, 250); }
