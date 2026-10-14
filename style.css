@@ -4811,3 +4811,7 @@ body.hasdock main{padding-bottom:84px}
 .fnov .fnp .lbod .cl{z-index:1}
 .fnov .fnp .lbod .ca{z-index:3}
 .fnov .fnp .char{z-index:2}
+/* Verona: the walking (legs, arms, bobbing) at half the speed */
+.jmt.run .char,.jmt.home .char,.jmt.falling .char,.jmt.run .hflag,.jmt.home .hflag,.jmt.falling .hflag{animation-duration:.36s}
+.jmt.run .jmlegs i,.jmt.home .jmlegs i,.jmt.falling .jmlegs i,.jmt.run .jmbody i,.jmt.falling .jmbody i,.jmt.home .jmbody i{animation-duration:.44s}
+.jmt.falling.hop .hflag,.jmt.falling.hop .char{animation-duration:.75s}
