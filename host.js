@@ -1298,7 +1298,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 400);
   }
   function startRound() {
-    if (!G.round && !G.opened && !REMOTE && !G.skipOpening) { G.opened = true; G.openWait = true; studioSting(); setTimeout(function () { G.openWait = false; opening(startRound); }, 1200); return; }   // the very first thing: the studio jingle, and then the show opens
+    if (!G.round && !G.opened && !REMOTE && !G.skipOpening) { G.opened = true; opening(startRound); return; }   // the very first thing: the show opens
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
     list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; p.halfNow = false; p.cardNow = ''; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
