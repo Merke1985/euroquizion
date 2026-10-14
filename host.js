@@ -265,7 +265,7 @@
     if (G.organ && G.phase === 'organ') s.organ = orSnap();
     if (G.atype === 'party' && list().some(function (p) { return (p.inv || []).indexOf('golden') >= 0; })) s.pgames = partyGames().map(function (k) { return { k: k, icon: FUN[k].icon, title: FUN[k].title }; });   // (for the Golden Ticket's choice)
     if (G.qj && G.phase === 'qj') s.qj = qjSnap();
-    if (G.fin && G.phase === 'finale') s.fin = { id: G.fin.id, pid: G.fin.pid, name: G.fin.name, st: G.fin.st, opts: G.fin.st === 'pick' ? G.fin.opts : [], song: G.fin.song || '' };
+    if (G.fin && G.phase === 'finale') s.fin = { id: G.fin.id, pid: G.fin.pid, name: G.fin.name, st: G.fin.st, opts: G.fin.st === 'pick' ? G.fin.opts : [], ids: G.fin.st === 'pick' ? G.fin.ids : [], left: G.fin.st === 'pick' ? Math.max(0, G.fin.ends - Date.now()) : 0, song: G.fin.song || '' };
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
@@ -2349,6 +2349,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var c = G.chase; clearTimeout(chaseTimer); clearInterval(chaseCount); Music.dread(false); chaseMusic(false);
     $('chase').classList.add('hidden');
     if (!c) return;
+    if (c.monster) G.lastMon = c.monster.id;   // (the finale puts this monster at the side of the stage, with the others)
     c.done = true;
     G.chaseLost = c.grab ? mName() : '';
     (c.win || []).forEach(function (k) { if (players[k]) players[k].champ = true; });
@@ -2374,6 +2375,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.innerHTML = '<div class="studio fnstudio"><i class="sttruss"></i><i class="stwall"></i><i class="stbeam b1"></i><i class="stbeam b2"></i><i class="stbeam b3"></i><i class="stbeam b4"></i><i class="stbeam b5"></i><i class="stbeam b6"></i><i class="stfloor"></i><i class="sthaze"></i></div>' +
       '<div class="fnscreen"><div class="fntitle"><span>🏆</span><b>EuroQuizion</b><em>' + esc(wp.name) + '</em></div><div class="fnboard"></div></div>' +
       [others.slice(0, Math.ceil(others.length / 2)), others.slice(Math.ceil(others.length / 2))].map(function (grp, side) { return '<div class="fnback ' + (side ? 'r' : 'l') + '">' + grp.map(function (p) { return '<div class="fnp" style="--d:' + (-Math.random() * 2).toFixed(2) + 's">' + body(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div>'; }).join('') + '</div>'; }).join('') +
+      finMon() +
       '<div class="fnwin"><div class="fnp big">' + body(wp, true) + charSvg(wp.char) + '</div><b class="fnname">' + esc(wp.name) + '</b></div>' +
       '<div class="fnhosts">' + HOST_HIM + HOST_HER + '</div><div class="fnbub him"></div><div class="fnbub her"></div>' +
       '<div class="fnconf">' + conf + '</div><div class="fncrowd">' + fans + '</div>';
@@ -2395,6 +2397,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     at(17500, function () { finPick(win, ov, say, then); });   // then the winner picks the victory song on their phone
   }
+  function finMon() {   // the Grand Final's monster, as big as the players, beside the others at the side of the stage
+    var id = G.lastMon || (pick(CHASE_MONSTERS) || {}).id, sv = id && $('chmon') && $('chmon').querySelector('svg.' + id); if (!sv) return '';
+    var m = CHASE_MONSTERS.filter(function (x) { return x.id === id; })[0] || {};
+    return '<div class="fnmon"><div class="fnmonfig">' + sv.outerHTML.replace(/id="([a-zA-Z0-9_]+)"/g, 'id="fm$1"').replace(/url\(#([a-zA-Z0-9_]+)\)/g, 'url(#fm$1)') + '</div><b>' + esc(m.name || '') + '</b></div>';
+  }
   function finTrophy() { var t = $('chtro') && $('chtro').querySelector('svg.trophy'); return t ? t.outerHTML.replace(/id="([^"]+)"/g, 'id="fn$1"').replace(/url\(#([^)]+)\)/g, 'url(#fn$1)').replace(/href="#([^"]+)"/g, 'href="#fn$1"') : '🏆'; }   // (the same trophy as in the Grand Final)
   // The crowd in the finale: a big arena roar on a loop (two copies taking turns, so the seam can't be heard), quieter while the presenters talk
   var crowdEls = null, crowdT = null, crowdLvl = 1;
@@ -2415,7 +2422,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function crowdDuck(on) { crowdLvl = on ? 0.35 : 1; }
   // The victory song: the winner picks any Eurovision song from their own country on their phone, and it plays on the big stage.
-  var finT = null, finYt = null;
+  var finT = null, finYt = null, FIN_PICK_MS = 60000;
+  function finTimer(ov) {   // the 60 seconds to choose, counting down on the big screen
+    var el = document.createElement('div'); el.className = 'fntimer'; ov.appendChild(el);
+    var tick = function () { var g = G.fin; if (!g || g.st !== 'pick' || !el.isConnected) { el.remove(); return; } var s = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)); el.innerHTML = '⏱ <b>' + s + '</b>'; el.classList.toggle('hurry', s <= 10); setTimeout(tick, 250); };
+    tick();
+  }
   function finSongs(p) {
     var cc = p.cc || (typeof CHAR_CC !== 'undefined' && CHAR_CC[p.char]) || '';
     var l = songs.filter(function (x) { return x[1] === cc && x[4]; });
@@ -2425,18 +2437,39 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function finPick(win, ov, say, then) {
     var wp = players[win]; if (!wp || !ov.isConnected) { ov.remove(); then(); return; }
     var list0 = finSongs(wp);
-    G.fin = { id: 'fin' + Math.random().toString(36).slice(2, 6), pid: win, name: wp.name, st: 'pick', opts: list0.map(function (x) { return x[0] + ' · ' + x[2] + ' – ' + x[3]; }), ends: Date.now() + 40000, list: list0, ov: ov, then: then };
+    G.fin = { id: 'fin' + Math.random().toString(36).slice(2, 6), pid: win, name: wp.name, st: 'pick', opts: list0.map(function (x) { return x[0] + ' · ' + x[2] + ' – ' + x[3]; }), ids: list0.map(function (x) { return x[4]; }), ends: Date.now() + FIN_PICK_MS, list: list0, ov: ov, then: then };
     push();
     say('her', 'And now… pick your victory song on your phone! 🎶', 'fin_pick');
-    ov.classList.add('picking');
+    ov.classList.add('picking'); finVidPrep(ov);
     var t = ov.querySelector('.fntitle'); if (t) t.innerHTML = '<span>🎶</span><b>Victory song</b><em class="fnpick">' + esc(wp.name) + ' is choosing…</em>';
     // (the final scores stay up on the big screen while the winner is choosing)
-    clearTimeout(finT); finT = setTimeout(function () { var g = G.fin; if (g && g.st === 'pick') finPlay(Math.floor(Math.random() * Math.min(10, g.list.length))); }, 40000);   // (too slow: one of the newest ones)
+    clearTimeout(finT); finT = setTimeout(function () { var g = G.fin; if (g && g.st === 'pick') finPlay(Math.floor(Math.random() * g.list.length)); }, FIN_PICK_MS);   // (nothing picked in time: a random one of their country's songs)
+    finTimer(ov);
     if (wp.bot) setTimeout(function () { var g = G.fin; if (g && g.st === 'pick') finPlay(Math.floor(Math.random() * g.list.length)); }, 5000);
+  }
+  // The LED wall's video player: made as soon as the winner starts choosing, so the song starts right away once picked
+  var finWant = '', finReady = false;
+  function finVidPrep(ov) {
+    if (REMOTE || finYt) return;
+    var scr = ov.querySelector('.fnscreen'); if (!scr) return;
+    var box = document.createElement('div'); box.className = 'fnvid'; box.innerHTML = '<div id="fnyt"></div><i class="fnvidgrid"></i>'; scr.insertBefore(box, scr.firstChild);
+    finReady = false; finWant = '';
+    try {
+      finYt = new YT.Player('fnyt', { playerVars: { autoplay: 0, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, fs: 0 },
+        events: { onReady: function () { finReady = true; if (finWant) finVid(ov, finWant); },
+          onStateChange: function (e) { if (!e) return; if (e.data === 1) box.classList.add('on'); if (e.data === 0) finEnd(); } } });   // (the picture shows once it really plays; at the end of the song the show ends)
+    } catch (e) { finYt = null; }
+  }
+  function finVid(ov, id) {
+    finWant = id;
+    if (!finYt) { finVidPrep(ov); }
+    if (finYt && finReady) { try { finYt.loadVideoById({ videoId: id, startSeconds: 0 }); finYt.unMute(); finYt.setVolume(85); finYt.playVideo(); } catch (e) {} }
+    else if (!finYt) { try { yt.loadVideoById({ videoId: id, startSeconds: 0 }); yt.unMute(); yt.setVolume(85); } catch (e) {} var b = ov.querySelector('.fnvid'); if (b) b.classList.add('on'); }
+    setTimeout(function () { var b = ov.querySelector('.fnvid'); if (b) b.classList.add('on'); }, 6000);   // (just in case it never says it plays)
   }
   function finMsg(m) {
     var g = G.fin; if (!g || g.st !== 'pick' || !m || m.id !== g.id || m.pid !== g.pid) return;
-    var i = Math.floor(Number(m.i)); if (!(i >= 0 && i < g.list.length)) return;
+    var i = m.v ? g.ids.indexOf(String(m.v)) : Math.floor(Number(m.i)); if (!(i >= 0 && i < g.list.length)) return;   // (by the video itself: always the song that was tapped)
     finPlay(i);
   }
   function finPlay(i) {
@@ -2447,12 +2480,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); });
     var t = ov.querySelector('.fntitle'); if (t) t.innerHTML = '<span>🎶</span><b>' + esc(String(sg[0])) + ' · ' + esc(countries[sg[1]] || '') + '</b><em>' + esc(sg[3]) + '</em><small class="fnart">' + esc(sg[2]) + '</small>';
     try { Music.want(false); stYStop && stYStop(); } catch (e) {}
-    var scr = ov.querySelector('.fnscreen'), box = document.createElement('div'); box.className = 'fnvid'; box.innerHTML = '<div id="fnyt"></div><i class="fnvidgrid"></i>'; if (scr) scr.insertBefore(box, scr.firstChild);   // the video on the big LED wall, with the LED grid over it
-    try {
-      finYt = new YT.Player('fnyt', { videoId: sg[4], playerVars: { autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, fs: 0, start: 0 },
-        events: { onReady: function (e) { try { e.target.unMute(); e.target.setVolume(85); e.target.playVideo(); } catch (x) {} }, onStateChange: function (e) { if (e && e.data === 0) finEnd(); } } });   // (the song plays to the end, then the show ends)
-    } catch (e) { finYt = null; try { yt.loadVideoById({ videoId: sg[4], startSeconds: 0 }); yt.unMute(); yt.setVolume(85); } catch (e2) {} }
-    setTimeout(function () { box.classList.add('on'); }, 600);
+    finVid(ov, sg[4]);   // the video on the big LED wall (the player was already set up while the winner was choosing)
     if (!ov.querySelector('.fnend')) { var b = document.createElement('button'); b.type = 'button'; b.className = 'fnend'; b.textContent = 'End the show ▸'; b.addEventListener('click', finEnd); ov.appendChild(b); }
     finT = setTimeout(finEnd, 8 * 60000);   // (the whole song: the show ends when it's over, or with the button; this is only a safety net)
   }

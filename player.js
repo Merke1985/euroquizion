@@ -580,21 +580,34 @@
   // Watch the runway; after each act, the question with four answers (20 seconds).
   var tcSent = {}, tcTimerT = null, tcEnd = 0;
   // The finale: the winner picks the victory song (any Eurovision song from their country), the others watch
-  var finSent = '';
+  var finSent = '', finEnds = 0, finTickT = null;
   function finView(s) {
     var f = s.fin, box = $('finui'); show('v-wait'); $('waitlabel').textContent = '';
+    clearInterval(finTickT);
+    if (f && f.st === 'pick' && f.pid === pid && finSent !== f.id) {   // the 60 seconds to choose (or a random song is picked)
+      finEnds = Date.now() + (f.left || 0);
+      var tk = function () { var sec = Math.max(0, Math.ceil((finEnds - Date.now()) / 1000)); $('waitlabel').textContent = '⏱ ' + sec + 's to choose, or a random song plays'; };
+      tk(); finTickT = setInterval(function () { if (!state || state.phase !== 'finale' || finSent === f.id) { clearInterval(finTickT); $('waitlabel').textContent = ''; return; } tk(); }, 500);
+    }
     if (!f) { $('waittitle').textContent = '🏆 The winner of EuroQuizion!'; $('waitsub').textContent = 'Watch the big screen.'; return; }
     if (f.st === 'pick' && f.pid === pid && finSent !== f.id) {
       $('waittitle').textContent = '🎶 Pick your victory song!'; $('waitsub').textContent = 'Any Eurovision song from your country. It plays on the big screen.';
       if (box.getAttribute('data-k') !== f.id) {
         box.setAttribute('data-k', f.id);
-        box.innerHTML = f.opts.map(function (o, i) { return '<button type="button" class="finopt" data-i="' + i + '">' + esc(o) + '</button>'; }).join('');
-        box.onclick = function (e) { var b = e.target.closest('.finopt'); if (!b || !net) return; finSent = f.id; net.send('fin', { pid: pid, id: f.id, i: +b.getAttribute('data-i') }); box.classList.add('hidden'); $('waittitle').textContent = '🎶 Great choice!'; $('waitsub').textContent = b.textContent; };
+        var list = function () { box.innerHTML = f.opts.map(function (o, i) { return '<button type="button" class="finopt" data-i="' + i + '">' + esc(o) + '</button>'; }).join(''); };
+        list();
+        box.onclick = function (e) {   // tap a song, then confirm it (or go back to the list)
+          var b = e.target.closest('.finopt'), yes = e.target.closest('.finyes'), back = e.target.closest('.finback');
+          if (back) { list(); return; }
+          if (yes) { if (!net) return; var i = +yes.getAttribute('data-i'); finSent = f.id; net.send('fin', { pid: pid, id: f.id, i: i, v: (f.ids || [])[i] || '' }); box.classList.add('hidden'); $('waittitle').textContent = '🎶 Great choice!'; $('waitsub').textContent = f.opts[i] + ' · it starts playing now!'; return; }
+          if (!b) return; var k = +b.getAttribute('data-i');
+          box.innerHTML = '<div class="finconf"><b>Play this one?</b><span>' + esc(f.opts[k]) + '</span><button type="button" class="finyes" data-i="' + k + '">✔ Yes, play it!</button><button type="button" class="finback">✖ Back to the list</button></div>';
+        };
       }
       box.classList.remove('hidden'); return;
     }
     box.classList.add('hidden');
-    if (f.st === 'pick') { $('waittitle').textContent = f.pid === pid ? '🎶 Great choice!' : '🎶 ' + f.name + ' is picking the victory song…'; $('waitsub').textContent = f.pid === pid ? 'It plays in a moment.' : 'Watch the big screen.'; }
+    if (f.st === 'pick') { $('waittitle').textContent = f.pid === pid ? '🎶 Great choice!' : '🎶 ' + f.name + ' is picking the victory song…'; $('waitsub').textContent = f.pid === pid ? 'It starts playing now!' : 'Watch the big screen.'; }
     else { $('waittitle').textContent = '🎶 Victory song'; $('waitsub').textContent = f.song || ''; }
   }
   function carpetView(s) {

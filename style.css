@@ -4850,3 +4850,22 @@ body.hasdock main{padding-bottom:84px}
 /* the finale: during the victory song the spotlights go out, only the LED wall shines */
 .fnov .fnstudio .stbeam,.fnov .fnstudio .sthaze{transition:opacity 1.2s}
 .fnov.song .fnstudio .stbeam,.fnov.song .fnstudio .sthaze{opacity:0}
+.finconf{display:flex;flex-direction:column;gap:10px;align-items:stretch;text-align:center}
+.finconf b{font-size:1.2rem}
+.finconf span{font-weight:800;font-size:1.1rem;padding:12px;border-radius:14px;background:rgba(255,255,255,.1)}
+.finyes,.finback{border:0;border-radius:14px;padding:14px;font:900 1.1rem inherit;font-family:inherit;color:#fff;cursor:pointer}
+.finyes{background:linear-gradient(135deg,#2fd27a,#139a50)}
+.finback{background:rgba(255,255,255,.14)}
+.fnov .fnbub.her{top:35vh;right:1.5vw;max-width:22vw}
+.fnov .fntimer{position:absolute;right:11vw;top:9vh;z-index:7;font-weight:900;font-size:clamp(1.2rem,3.4vh,2.2rem);color:#fff;background:rgba(10,4,30,.75);border:3px solid #ffd23f;border-radius:99px;padding:.2em .8em;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.fnov .fntimer b{font-variant-numeric:tabular-nums}
+.fnov .fntimer.hurry{border-color:#ff4d6a;color:#ff4d6a;animation:fsshake .12s linear infinite alternate}
+.fnov .fntimer{right:auto;left:10vw;top:8.5vh}
+/* the Grand Final's monster at the side of the stage, as big as the players (next to the right-hand group) */
+.fnov .fnmon{position:absolute;right:17.5%;bottom:31vh;z-index:2;display:flex;flex-direction:column;align-items:center;animation:grbob 2.6s ease-in-out infinite alternate}
+.fnov .fnmonfig{height:14vh;display:flex;align-items:flex-end}
+.fnov .fnmonfig svg{height:100%;width:auto;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.fnov .fnmon b{margin-top:.3vh;font-size:clamp(.55rem,1.3vh,.8rem);white-space:nowrap;background:rgba(0,0,0,.45);padding:.05em .45em;border-radius:6px}
+.fnov .fntimer{left:1vw;top:7vh}
+.fnov .fnback.r{right:7%}
+.fnov .fnmon{right:.6%}
