@@ -51,6 +51,13 @@ var Music = (function () {
   // The host page can swap the synth loop for a music file (Music.useLoop): it loops without a gap, and when it
   // stops it remembers where it was, so it carries on from there the next time (synth: true still asks for the synth).
   var loopSrc = '', loopBuf = null, loopLoading = false, loopNode = null, loopGain = null, loopAt = 0, loopT0 = 0, synthNow = false, wantSynth = false;
+  var loopLen = 0, loopSpan = 1, loopA0 = -1;
+  function loopEdge() {   // where the music really starts in the decoded file (an mp3 has a few milliseconds of silence up front)
+    if (loopA0 >= 0) return loopA0;
+    var d = loopBuf.getChannelData(0), i = 0, n = Math.min(d.length, loopBuf.sampleRate);
+    while (i < n && Math.abs(d[i]) < 0.02) i++;
+    loopA0 = i < n ? i / loopBuf.sampleRate : 0; return loopA0;
+  }
   function loopLevel() { return Math.max(0.0001, 0.55 * vol.music); }
   function loopStart() {
     if (!loopBuf) {
@@ -61,11 +68,13 @@ var Music = (function () {
     if (!loopGain) { loopGain = ctx.createGain(); loopGain.connect(ctx.destination); }
     loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(0.0001, ctx.currentTime); loopGain.gain.exponentialRampToValueAtTime(loopLevel(), ctx.currentTime + 0.6);
     loopNode = ctx.createBufferSource(); loopNode.buffer = loopBuf; loopNode.loop = true; loopNode.connect(loopGain);
-    loopT0 = ctx.currentTime - loopAt; loopNode.start(0, loopAt % loopBuf.duration);
+    var a0 = loopEdge(), len = loopLen && a0 + loopLen <= loopBuf.duration + 0.01 ? Math.min(loopLen, loopBuf.duration - a0) : loopBuf.duration - a0;
+    loopNode.loopStart = a0; loopNode.loopEnd = a0 + len; loopSpan = len;   // (exactly so many bars, from the first beat: no hiccup where it goes round)
+    loopT0 = ctx.currentTime - loopAt; loopNode.start(0, a0 + loopAt % len);
   }
   function loopStop() {
     if (!loopNode) return;
-    var n = loopNode; loopNode = null; loopAt = (ctx.currentTime - loopT0) % loopBuf.duration;
+    var n = loopNode; loopNode = null; loopAt = (ctx.currentTime - loopT0) % loopSpan;
     try { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopGain.gain.value, ctx.currentTime); loopGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4); n.stop(ctx.currentTime + 0.45); } catch (e) {}
   }
   function start() {
@@ -540,5 +549,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src) { loopSrc = src || ''; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
+  return { space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();

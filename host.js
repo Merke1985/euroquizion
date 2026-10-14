@@ -382,7 +382,7 @@
   var endShown = false, endFanfare = false;
   function ptsLabel(n) { return n + (n === 1 ? ' point' : ' points'); }
   var viewNow = '';
-  Music.useLoop('sounds/studio_loop.mp3?v=2');   // the studio music: a dance loop instead of the made-up synth one
+  Music.useLoop('sounds/studio_loop.mp3?v=2', 16.6957);   /* (8 bars at 115 bpm: measured, so it goes round on the beat) */   // the studio music: a dance loop instead of the made-up synth one
   function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); var triv = id === 'v-game' && !REMOTE && (G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel) && !G.clue;
     var lob = id === 'v-lobby' && G.phase === 'lobby';
     var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
