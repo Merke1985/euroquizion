@@ -2068,7 +2068,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (c.placed >= c.placeOrder.length) {
       // a wheel with the monsters, an arrow spins in the middle and picks the one that chases (the pick was made at the start)
       c.showing = null;
-      var toPre = function () { c.st = 'pre'; push(); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'pre') chaseSpin(c); }, 3000); };
+      var toPre = function () { c.st = 'pre'; push(); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'pre') chaseSpin(c); }, Math.max(3000, (VOICE_MS.ch_pre || 0) + 1000)); };   // (the wheel waits for the line, then one more second)
       if (!c.skated && c.perks && c.perks.some(function (x) { return x.kind === 'skates'; })) { c.skated = true; chasePerks(c, function () { c.st = 'intro'; chaseIntroNext(); }, 'skates'); return; }   // first the ice skates: they glide ahead
       if (c.heelers && c.heelers.length && !c.heelDone) { c.heelDone = true; chaseHeelPick(c, function () { chaseIntroNext(); }); return; }   // the broken heels: their owners pick who gets them
       if (c.perks && c.perks.some(function (x) { return x.kind === 'heel'; }) && !c.perked) { c.perked = true; chasePerks(c, toPre, 'heel'); return; }   // then the broken heels are revealed
