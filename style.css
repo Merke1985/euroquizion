@@ -4967,3 +4967,7 @@ body.hasdock main{padding-bottom:84px}
 .clbtn.ok::after{content:'✔';margin-left:auto;color:#3ddc84;font-weight:900}
 .clbtn.bad{border-color:#ff4d4d;background:rgba(255,77,77,.22);position:relative}
 .clbtn.bad::after{content:'✖';margin-left:auto;color:#ff4d4d;font-weight:900;font-size:1.1em}
+/* Green Room: the flagpole sits in the raised hand (the flag is part of the arm, and the arm waves it) */
+.grov .grarm{animation:grarmwave 1.1s ease-in-out infinite alternate;animation-delay:var(--d)}
+@keyframes grarmwave{from{rotate:10deg}to{rotate:38deg}}
+.grov .grarm .grflag{left:50%;margin-left:-1px;bottom:3.4vh;height:10vh;width:2px;rotate:-24deg;transform-origin:50% 75%;animation:none;z-index:2}

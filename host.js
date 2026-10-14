@@ -7728,7 +7728,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
 */    var person = function (charId, name, i, flag, won, pc) {   // someone on a sofa: body, head, and now and then a flag to wave
       var col = pc != null && PCOLS[pc] ? PCOLS[pc][0] : ['#e8457c', '#f2b134', '#3fb6c9', '#9b6bf2', '#55c27a', '#f07a3a'][i % 6];
       return '<div class="grp' + (Math.random() < 0.45 ? ' hop' : '') + (won ? ' grwin' : '') + '" style="--d:' + (-Math.random() * 3).toFixed(2) + 's">' + (won ? '<span class="grcrown">👑</span>' : '') +
-        (flag ? '<i class="grarm" style="background:' + col + '"><b></b></i><span class="grflag"><img src="https://flagcdn.com/w80/' + flag + '.png" alt=""></span>' : '') +   /* (an arm up, the hand holding the flagpole) */
+        (flag ? '<i class="grarm" style="background:' + col + '"><span class="grflag"><img src="https://flagcdn.com/w80/' + flag + '.png" alt=""></span><b></b></i>' : '') +   /* (an arm up, the hand holding the flagpole) */
         '<span class="grbody" style="background:' + col + '"></span>' + charSvg(charId) + '</div>';
     };
     var sofa = function (people, k, names) { return '<div class="grsofa" style="--c:' + GR_SOFAS[k % GR_SOFAS.length] + '"><div class="grseat">' + people.join('') + '</div><span class="grfront"></span>' + (names ? '<div class="grnames">' + names.map(function (n) { return '<b>' + esc(n) + '</b>'; }).join('') + '</div>' : '') + '</div>'; };
