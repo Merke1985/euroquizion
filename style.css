@@ -3449,7 +3449,7 @@ body.hasdock main{padding-bottom:84px}
 .tc3d{position:absolute;inset:0;z-index:0;display:none}
 .tc3d canvas{display:block;width:100%!important;height:100%!important}
 .tcov.is3d .tc3d{display:block}
-.tcov.is3d .tcsky,.tcov.is3d .tchall,.tcov.is3d .tctrees,.tcov.is3d .tcrun,.tcov.is3d .tcwalk,.tcov.is3d .tcropes,.tcov.is3d .tccams{display:none}
+.tcov.is3d .tcsec,.tcov.is3d .tcsky,.tcov.is3d .tchall,.tcov.is3d .tctrees,.tcov.is3d .tcrun,.tcov.is3d .tcwalk,.tcov.is3d .tcropes,.tcov.is3d .tccams{display:none}
 .tcov.is3d.flashed::after{animation:tcwhite3 .22s ease-out forwards}
 @keyframes tcwhite3{0%{opacity:.12}100%{opacity:0}}
 /* We Will Rule the World in 3D */
