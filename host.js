@@ -2352,7 +2352,47 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     (c.win || []).forEach(function (k) { if (players[k]) players[k].champ = true; });
     // for the overview at the end: everyone's points in the chase (one per right answer), and who won
     G.chaseOv = c.order.map(function (k) { return { pid: k, fp: (c.lanes[k] && c.lanes[k].fp) || 0, win: (c.win || []).indexOf(k) >= 0 }; });
-    try { yt.stopVideo(); } catch (e) {} G.go = {}; G.phase = 'end'; push();
+    try { yt.stopVideo(); } catch (e) {}
+    var toEnd = function () { G.go = {}; G.phase = 'end'; push(); };
+    if (!REMOTE && (c.win || []).length && players[c.win[0]]) { G.phase = 'finale'; push(); finale(c.win[0], toEnd); } else toEnd();   // first the celebration on the big stage
+  }
+  // The finale: back on the big stage, now packed with waving fans. The presenters in front, the winner between them
+  // holding the trophy, the other players behind. Congratulations, and then the final scores on the big screen
+  // (the Grand Final and the game itself).
+  function finale(win, then) {
+    var old = $('fnov'); if (old) old.remove();
+    var wp = players[win], others = list().filter(function (p) { return !p.off && p.pid !== win; });
+    var body = function (p) { var col = p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#e8457c'; return '<span class="fnbody" style="background:' + col + '"></span>'; };
+    var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }));
+    var fans = ''; for (var r = 0; r < 3; r++) { var n = 16 + r * 3; for (var i = 0; i < n; i++) {
+      var fl = Math.random() < 0.45 ? '<span class="fnflag" style="--d:' + (-Math.random() * 2).toFixed(2) + 's"><img src="https://flagcdn.com/w80/' + codes[(r * 20 + i) % codes.length] + '.png" alt=""></span>' : (Math.random() < 0.3 ? '<span class="fnphone"></span>' : '');
+      fans += '<i class="fnfan r' + r + '" style="left:' + ((i + Math.random() * 0.6) / n * 100).toFixed(1) + '%;--d:' + (-Math.random() * 1.6).toFixed(2) + 's;--h:' + (0.85 + Math.random() * 0.3).toFixed(2) + '">' + fl + '</i>'; } }
+    var conf = ''; for (var k = 0; k < 70; k++) conf += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;--d:' + (-Math.random() * 6).toFixed(2) + 's;--t:' + (4 + Math.random() * 4).toFixed(1) + 's;--c:' + ['#ff3fa4', '#ffd23f', '#30e3ff', '#7dffb0', '#ffffff', '#b06bff'][k % 6] + '"></i>';
+    var ov = document.createElement('div'); ov.id = 'fnov'; ov.className = 'fnov enter';
+    ov.innerHTML = '<div class="studio fnstudio"><i class="sttruss"></i><i class="stwall"></i><i class="stbeam b1"></i><i class="stbeam b2"></i><i class="stbeam b3"></i><i class="stbeam b4"></i><i class="stbeam b5"></i><i class="stbeam b6"></i><i class="stfloor"></i><i class="sthaze"></i></div>' +
+      '<div class="fnscreen"><div class="fntitle"><span>🏆</span><b>EuroQuizion</b><em>' + esc(wp.name) + '</em></div><div class="fnboard"></div></div>' +
+      '<div class="fnback">' + others.map(function (p) { return '<div class="fnp" style="--d:' + (-Math.random() * 2).toFixed(2) + 's">' + body(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div>'; }).join('') + '</div>' +
+      '<div class="fnwin"><span class="fntro">🏆</span><div class="fnp big">' + body(wp) + charSvg(wp.char) + '</div><b class="fnname">' + esc(wp.name) + '</b></div>' +
+      '<div class="fnhosts">' + HOST_HIM + HOST_HER + '</div><div class="fnbub him"></div><div class="fnbub her"></div>' +
+      '<div class="fnconf">' + conf + '</div><div class="fncrowd">' + fans + '</div>';
+    document.body.appendChild(ov);
+    whooshes([0, 300, 600]); itemSfx('sounds/applause.mp3?v=1', Music.douze);
+    setTimeout(function () { ov.classList.remove('enter'); }, 1800);
+    var at = function (ms, f) { setTimeout(function () { if (ov.isConnected) f(); }, ms); };
+    var say = function (who, txt, voice) { [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.fnbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, voice ? null : who); if (voice) hostVoice(voice, who); };
+    at(2200, function () { ov.classList.add('raise'); say('him', 'Congratulations, ' + wp.name + '! 🎉', 'congrats'); });
+    at(4700, function () { say('her', 'You are the winner of EuroQuizion! 🏆', 'winner_euroquizion'); });
+    at(8200, function () { say('him', 'Let’s take a look at the final scores! 📊', 'final_scores'); });
+    at(10200, function () {   // the scoreboard on the big screen: the Grand Final and the game, the winner on top
+      var ov2 = G.chaseOv || [], fp = {}; ov2.forEach(function (o) { fp[o.pid] = o.fp; });
+      var rows = list().filter(function (p) { return !p.off; }).sort(function (a, b) { return (b.pid === win) - (a.pid === win) || (fp[b.pid] || 0) - (fp[a.pid] || 0) || b.score - a.score; });
+      ov.querySelector('.fnboard').innerHTML = '<div class="fnrow fnhead"><span></span><span></span><span>Grand Final</span><span>Points</span></div>' + rows.map(function (p, i) {
+        return '<div class="fnrow' + (p.pid === win ? ' w' : '') + '" style="--i:' + i + '"><span>' + (p.pid === win ? '🏆' : i + 1) + '</span><span class="fnn">' + charSvg(p.char) + esc(p.name) + '</span><span>' + (fp[p.pid] || 0) + '</span><span>' + p.score + '</span></div>'; }).join('');
+      ov.classList.add('scores'); Music.ding();
+      [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); });
+    });
+    at(24000, function () { ov.classList.add('leaving'); whooshes([0, 300]); });
+    at(25000, function () { ov.remove(); then(); });
   }
   $('chstop').addEventListener('click', function () { var c = G.chase; if (!c) return; if (c.st !== 'win') { var al = chaseAlive(), best = al.length ? Math.max.apply(null, al.map(function (k) { return c.lanes[k].pos; })) : 0; c.win = al.filter(function (k) { return c.lanes[k].pos === best; }); } chaseDone(); });
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
@@ -2438,6 +2478,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     testStandings(function () { chaseStart(true); if (G.chase) { G.chase.monster = CHASE_MONSTERS.filter(function (m) { return m.id === 'fiddler'; })[0] || G.chase.monster; $('chmon').setAttribute('data-mon', G.chase.monster.id); }   /* (testing: the newest monster, every time) */ var b0 = list().filter(function (p) { return p.bot && !p.off; })[0]; if (G.chase && b0) G.chase.plan = b0.pid; });   // (testing: one bot gets everything right, the others one out of three)
   });
   /* testing the final scores: random scores, and a couple of envelopes for the EBU (a human player's, or else a bot's), then back to the lobby */
+  // Test the finale: four bots, random scores, one of them won the trophy in the Grand Final; after it, back to the lobby
+  $('fntest').addEventListener('click', function () {
+    if (REMOTE || G.phase !== 'lobby') return;
+    var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 4 && bots.length < 8) { botAdd(); nb++; }
+    var all = list().filter(function (p) { return !p.off; }), bs = all.filter(function (p) { return p.bot; }), win = pick(bs.length ? bs : all);
+    all.forEach(function (p) { p.score = 12 * (3 + Math.floor(Math.random() * 14)); p.champ = p === win; });
+    G.finalMode = 'chase'; G.chaseOv = all.map(function (p) { return { pid: p.pid, fp: p === win ? 9 : Math.floor(Math.random() * 8), win: p === win }; });
+    $('testclose') && $('testclose').click();
+    G.phase = 'finale'; push();
+    finale(win.pid, function () { all.forEach(function (p) { p.score = 0; p.pts = 0; p.champ = false; }); G.chaseOv = null; G.phase = 'lobby'; push(); render(); });
+  });
   $('fstest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 3 && bots.length < 8) { botAdd(); nb++; }
@@ -3181,7 +3232,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function mouthOf(who) {
     if (REMOTE) return null;
     if (who === 'lynda') return document.querySelector('.bqkeeper svg');
-    var pc = $('pcov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
+    var pc = $('fnov') || $('pcov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
   }
   function mouth(who, v) { var el = mouthOf(who); if (el) el.style.setProperty('--mo', (Math.max(0, Math.min(1, v)) * 0.85).toFixed(2)); }   // (never quite all the way open)
   var mouthAC = null, mouthRaf = 0;
