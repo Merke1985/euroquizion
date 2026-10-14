@@ -6245,13 +6245,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         g.order.forEach(function (b) { if (b === a || bump[a]) return; var stays = !mv[b] || bump[b]; if (stays && key(g.pos[b]) === key(mv[a])) { bump[a] = 1; changed = true; } });
       });
     }
-    var hit = false;
+    var hit = false, flip = 0;
     ks.forEach(function (k) {
       g.next[k] = now + ((g.fast || {})[k] > now ? RU_STEP / 2 : RU_STEP);   // (speed shoes: twice as fast)
       if (bump[k]) { g.stun[k] = now + RU_STUN; hit = true; return; }
+      var ti = mv[k][1] * g.n + mv[k][0]; if (g.own[ti] !== k) flip++;
       g.pos[k] = mv[k]; ruClaim(g, k, mv[k][0], mv[k][1]); ruFill(g, k);
       if (g.item && g.item[0] === mv[k][0] && g.item[1] === mv[k][1]) ruItemTake(g, k);
     });
+    if (flip && !REMOTE) Music.plop(Math.floor(Math.random() * 5), .1);   // (a soft little tick when tiles change colour: one per beat, however many)
     if (hit && !REMOTE) { try { var sn = new Audio('sounds/ru_stun.mp3'); sn.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var sp = sn.play(); if (sp && sp.catch) sp.catch(function () {}); } catch (e) { Music.buzz(); } }   // (the stunned sound)
     g.cnt = ruCount(g); ruShow();
     if (now - ruSent >= 3000 || hit) ruBeat();   // (the phones: an update every 3 seconds, or straight away when someone is stunned)
