@@ -1538,7 +1538,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var gspin = function () { partySlot(games.indexOf(gch) >= 0 ? games : games.concat(gch), gch, function () { partyGo(gch, 2500); }, '🌟 ' + (gwho ? gwho + '’s ' : '') + 'Golden Ticket!'); };
       if (REMOTE) { gspin(); return; }
       stopTimers(); G.phase = 'loading'; G.q = null; cover(true, '', '', false); shopLast = { icon: '🌟', deltas: [{ pid: gp.pid, tag: '🌟' }], sound: 'golden' }; push();   // (only now does anyone find out: the item alarm, then the spin lands on the chosen game)
-      itemAlarm(function () { shopHit('🌟 ' + gwho + ' used the Golden Ticket and has chosen this party game!', 5200); push(); setTimeout(gspin, 5400); });
+      itemAlarm(function () { shopHit('🌟 ' + gwho + ' used the Golden Ticket and has chosen this party game!', ITEM_MS); push(); setTimeout(gspin, ITEM_MS + 200); });
       return;
     }
     if (how === 'order') {
@@ -3279,7 +3279,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (it.kind === 'smoke') { inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: it.id, target: p.pid }); Music.blip(); push(); return; }   // the Smoke Machine waits for the next question
       if (open && it.kind !== 'heel') {   // during a question: it lands right away (the Broken Heel is always a delivery, before the next question); the video and the timer stop while it does
         inv.splice(k, 1);
-        shopFreeze(7800 + ALARM_MS, function () { itemAlarm(function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopHit(txt, 7600); push(); }); });
+        shopFreeze(ITEM_MS + 200 + ALARM_MS, function () { itemAlarm(function () { var txt = shopApply({ by: p.pid, item: it.id, target: t.pid }); if (txt) shopHit(txt, ITEM_MS); push(); }); });
         return;
       }
       inv.splice(k, 1); (G.shopQ = G.shopQ || []).push({ by: p.pid, item: m.use, target: t.pid });
@@ -3312,8 +3312,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       itemAlarm(function () {
         var txt = shopApply(q[i]); if (!txt) { step(i + 1); return; }
         FUN.shopgo = { icon: shopLast.icon, title: 'Special delivery!', sub: txt };
-        funIntro('shopgo', function () { step(i + 1); }, 7800);
-        shopHit(txt, 7600);
+        funIntro('shopgo', function () { step(i + 1); }, ITEM_MS + 200);
+        shopHit(txt, ITEM_MS);
       });
     };
     step(0);
@@ -3409,7 +3409,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shopLast = { icon: '✉️', sound: 'steal', deltas: Object.keys(got).map(function (k) { return { pid: k, n: got[k] }; }) };
     var txt = '✉️ ' + (names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] + ' bribed' : names[0] + ' bribed') + ' the EBU! ' + (names.length > 1 ? 'Extra points for all of them' : pot + ' points') + ' before the Grand Final.';
     FUN.shopgo = { icon: '✉️', title: 'A brown envelope…', sub: txt };
-    funIntro('shopgo', then, 9000); shopHit(txt, 8800);
+    funIntro('shopgo', then, ITEM_MS + 200); shopHit(txt, ITEM_MS);
   }
   // What an item does; returns the line for the big screen.
   var shopLast = null, SHOP_OFFER = 2;   // what the last item did: { icon, deltas: [{ pid, n }] }, for the big announcement
@@ -3494,9 +3494,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     list().forEach(function (x) { if (x.got && x.pts) x.score -= x.pts; x.got = false; x.done = false; x.pick = null; x.pts = 0; x.ranks = null; x.ccb = ''; x.sitNow = ''; });
     G.phase = 'loading'; G.q = null; cover(true, '💿', 'Skip!', false);
     shopLast = { icon: '💿', deltas: [{ pid: p.pid, tag: '⏭️ skip' }], sound: 'skip' };
-    shopHit('💿 ' + p.name + ' pressed skip on the Eurovision Song Contest CD Player! On to a different question, and nobody scores this one.', 4200);
+    shopHit('💿 ' + p.name + ' pressed skip on the Eurovision Song Contest CD Player! On to a different question, and nobody scores this one.', ITEM_MS);
     push();
-    setTimeout(function () { if (G.phase === 'loading' && !G.q) loadSong(); }, 4300);
+    setTimeout(function () { if (G.phase === 'loading' && !G.q) loadSong(); }, ITEM_MS + 100);
   }
   function shopFreeze(ms, apply) {
     if (G.phase !== 'guess') { apply(); push(); return; }
@@ -3625,7 +3625,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // Someone used an item: everything stops, a police siren wails and the screen flashes red and blue for three seconds,
   // and only then does the item's card come up.
-  var ALARM_MS = 3000, sirenEl = null;
+  var ALARM_MS = 3000, ITEM_MS = 6000, sirenEl = null;   // (the siren, then every item's card is on screen for the same 6 seconds: long enough to read it and for its sound)
   function itemAlarm(then) {
     if (REMOTE) { then(); return; }
     if (!(G.phase === 'guess' && isPair())) { try { yt.pauseVideo(); } catch (e) {} }   // (a question with two songs runs on: its clips have their own timing, and nothing would start it again)
