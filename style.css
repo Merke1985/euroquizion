@@ -4618,3 +4618,6 @@ body.hasdock main{padding-bottom:84px}
 .xecat .xecatname i{font-style:normal;opacity:.8}
 .xecat .xew8{flex:0 1 220px;accent-color:#ffd23f}
 .xecat .xepct{width:56px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+.hostpage #musicbtn{display:none!important}
+.volpanel .volchk{display:flex;flex-direction:row;align-items:center;gap:8px;cursor:pointer}
+.volpanel .volchk input{width:auto;accent-color:#ffd23f}

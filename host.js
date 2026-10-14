@@ -8521,15 +8521,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   (function () {
     var b = document.createElement('button'); b.type = 'button'; b.id = 'volbtn'; b.className = 'volbtn'; b.setAttribute('aria-label', 'Volume'); b.textContent = '🔊';
     var pnl = document.createElement('div'); pnl.id = 'volpanel'; pnl.className = 'volpanel hidden';
-    pnl.innerHTML = '<label>🎵 Music<input type="range" min="0" max="100" id="volmusic"></label><label>💥 Sound effects<input type="range" min="0" max="100" id="volfx"></label>';
+    pnl.innerHTML = '<label>🎵 Music<input type="range" min="0" max="100" id="volmusic"></label><label>💥 Sound effects<input type="range" min="0" max="100" id="volfx"></label><label class="volchk"><input type="checkbox" id="volmenu"> 🎶 Menu music in the lobby</label>';
+    document.body.classList.add('hostpage');   // (the menu music's own button in the bottom left is not needed here: it is a tick box in this panel)
     document.body.appendChild(b); document.body.appendChild(pnl);
-    var sync = function () { $('volmusic').value = Math.round(Music.vol.music * 100); $('volfx').value = Math.round(Music.vol.fx * 100); b.textContent = Music.vol.music + Music.vol.fx === 0 ? '🔇' : '🔊'; };
+    var sync = function () { $('volmusic').value = Math.round(Music.vol.music * 100); $('volfx').value = Math.round(Music.vol.fx * 100); $('volmenu').checked = !Music.menuOn || Music.menuOn(); b.textContent = Music.vol.music + Music.vol.fx === 0 ? '🔇' : '🔊'; };
     sync();
     b.addEventListener('click', function (e) { e.stopPropagation(); pnl.classList.toggle('hidden'); });
     pnl.addEventListener('click', function (e) { e.stopPropagation(); });
     document.addEventListener('click', function () { pnl.classList.add('hidden'); });
     $('volmusic').addEventListener('input', function () { Music.setVol('music', this.value / 100); ytVolApply(); sync(); });
-    $('volfx').addEventListener('input', function () { Music.setVol('fx', this.value / 100); Music.ding(); sync(); });
+    $('volfx').addEventListener('input', function () { Music.setVol('fx', this.value / 100); sync(); });
+    $('volfx').addEventListener('change', function () { Music.ding(); });   // (a sample of the new volume once you let go, not on every step)
+    $('volmenu').addEventListener('change', function () { if (Music.setMenu) Music.setMenu(this.checked); });
   })();
   restore();
   render();
