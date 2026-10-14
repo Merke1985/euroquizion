@@ -830,9 +830,22 @@
       $('waitsub').textContent = mine ? 'You had ' + ((r.cnt || {})[pid] || 0) + ' tiles.' : '';
       return;
     }
+    if (r.vote) {   // first the vote: which act (and song) do we dance to?
+      var my = (r.vote.votes || {})[pid];
+      $('waittitle').textContent = r.vote.on ? '🗳️ Which act do we dance to?' : '🎶 ' + (r.vote.won ? 'Discoteque' : 'We Will Rule the World') + '!'; $('waitsub').textContent = r.vote.on ? (my != null ? 'Vote sent! You can still change your mind. ⏱️ ' + Math.ceil((r.vote.left || 0) / 1000) + 's' : 'Tap your favourite act.') : 'Get ready to dance…';
+      if (!mine || !r.vote.on) { box.classList.add('hidden'); return; }
+      box.classList.remove('hidden');
+      if (box.getAttribute('data-id') !== r.id + 'v') {
+        box.setAttribute('data-id', r.id + 'v');
+        box.innerHTML = '<div class="ruvote2"><button type="button" class="ruvb a0" data-v="0"><b>✨🪩</b>We Will Rule the World<small>the singer in silver</small></button><button type="button" class="ruvb a1" data-v="1"><b>💛🤖</b>Discoteque<small>the act in yellow</small></button></div>';
+        [].forEach.call(box.querySelectorAll('.ruvb'), function (b) { b.onclick = function () { var v = +b.getAttribute('data-v'); [].forEach.call(box.querySelectorAll('.ruvb'), function (x) { x.classList.toggle('on', x === b); }); if (net) (net.toHost || net.send)('rule', { pid: pid, id: r.id, vote: v }); }; });
+      }
+      [].forEach.call(box.querySelectorAll('.ruvb'), function (x) { x.classList.toggle('on', my != null && +x.getAttribute('data-v') === my); });
+      return;
+    }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 We Will Rule the World'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var col = (r.cols || {})[pid] || '#888';
-    $('waittitle').textContent = r.st === 'play' ? '🪩 Claim the floor!' : r.st === 'rise' ? '✨ Here she comes…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow and you keep dancing that way. Tap it again to stop.';
+    $('waittitle').textContent = r.st === 'play' ? '🪩 Claim the floor!' : r.st === 'rise' ? '✨ Here comes the star…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow and you keep dancing that way. Tap it again to stop.';
     box.classList.remove('hidden'); box.style.setProperty('--c', col);
     if (box.getAttribute('data-id') !== r.id) {
       box.setAttribute('data-id', r.id); ruD = ''; clearInterval(ruDT); ruStunEnd = 0;
