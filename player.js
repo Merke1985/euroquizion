@@ -284,7 +284,9 @@
       var isBluff = /^What does “/.test(qp || '');
       $('qlead').textContent = isBluff ? 'About the song that is playing:' : 'Write a funny answer about the song that is playing. Afterwards everyone votes for the funniest.'; $('quipin').placeholder = isBluff ? 'Your fake translation…' : 'Your funniest answer…';
       if (!qp) { show('v-wait'); $('waittitle').textContent = 'Everyone is writing'; $('waitsub').textContent = 'You can vote in a moment.'; }
-      else if (s.quips.done[pid] || quipSent) { show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
+      var tr = s.quips.truth && s.quips.truth[pid];
+      if (tr && quipSent && tr === quipLast) { quipSent = false; quipLast = ''; $('quipfb').className = 'fb no'; $('quipfb').textContent = 'Sneaky! That is the real translation 😉 Make up a fake one to fool the others.'; }
+      if (!qp) {} else if (s.quips.done[pid] || quipSent) { show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…'; }
       else { show('v-quip'); $('qprompt').textContent = qp; }
     }
     else if (s.phase === 'chase' && s.chase) chaseView(s.chase);
@@ -1876,14 +1878,14 @@
     [].forEach.call($('opts').querySelectorAll('canvas[data-g]'), function (cv) { drawClear(cv); (bestStore.items[+cv.getAttribute('data-g')] || []).forEach(function (m) { drawPaint(cv, m); }); });
   }
   // Quip!: send the finished line (a few times, in case a message gets lost; the host takes the first).
-  var quipKey = '', quipSent = false;
+  var quipKey = '', quipSent = false, quipLast = '';
   $('quipform').addEventListener('submit', function (e) {
     e.preventDefault();
     var t = $('quipin').value.replace(/\s+/g, ' ').trim();
     if (!t) { $('quipfb').className = 'fb no'; $('quipfb').textContent = 'Type something first.'; return; }
     if (!net || !state || state.phase !== 'qall') return;
-    quipSent = true; var qk = quipKey;
-    [0, 700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (quipKey === qk && state && state.phase === 'qall' && net) net.send('quip', { pid: pid, text: t }); }, ms); });
+    quipSent = true; quipLast = t.slice(0, 70); $('quipfb').textContent = ''; var qk = quipKey;
+    [0, 700, 2000, 4500].forEach(function (ms) { setTimeout(function () { if (quipKey === qk && quipSent && quipLast === t.slice(0, 70) && state && state.phase === 'qall' && net) net.send('quip', { pid: pid, text: t }); }, ms); });
     show('v-wait'); $('waittitle').textContent = 'Answer sent!'; $('waitsub').textContent = 'Waiting for the others…';
   });
   var padPicked = -1, padDone = false, padSkipped = false;
