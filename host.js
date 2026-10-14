@@ -2130,9 +2130,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Before the first question: everyone presses Ready on their phone (test bots after three seconds).
   function chaseReady(c) {
     if (G.chase !== c) return;
-    c.st = 'ready'; c.ready = {}; c.msgAt = Date.now() + 2000; c.readyEnds = Date.now() + 62000; push();   // two seconds of the monster alone, then the message
-    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'ready') chaseGo(c); }, 62000);   // a minute at most, ready or not
-    chaseAlive().forEach(function (k) { if (players[k] && players[k].bot) setTimeout(function () { chaseMsg({ pid: k, key: c.key + '-r', ready: 1 }); }, 5000); });
+    c.st = 'ready'; c.ready = {}; c.msgAt = Date.now() + 2000; c.readyOpen = c.msgAt + (VOICE_MS.ch_ready || 5000) + 300; c.readyEnds = c.readyOpen + 60000; push();   // (Ready only works once the rules have been said)   // two seconds of the monster alone, then the message
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (G.chase === c && c.st === 'ready') chaseGo(c); }, c.readyEnds - Date.now());
+    setTimeout(function () { if (G.chase === c && c.st === 'ready') push(); }, c.readyOpen - Date.now() + 50);   // (the phones: Ready can be pressed now)   // a minute at most, ready or not
+    chaseAlive().forEach(function (k) { if (players[k] && players[k].bot) setTimeout(function () { chaseMsg({ pid: k, key: c.key + '-r', ready: 1 }); }, c.readyOpen - Date.now() + 2000 + Math.random() * 2000); });
   }
   function chaseGo(c) {
     c.st = 'go'; chaseMusic(true); push(); clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseAsk, 2500);
@@ -2179,7 +2180,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var c = G.chase; if (!c || G.phase !== 'chase') return;
     if (m.heelTo) { if (c.st === 'heelpick' && c.hp && m.key === c.hp.key && m.pid === c.hp.by && c.lanes[m.heelTo] && m.heelTo !== m.pid && c.hpGo) c.hpGo(m.heelTo); return; }
     if (m.ready) {
-      if (c.st !== 'ready' || m.key !== c.key + '-r' || !c.lanes[m.pid] || c.ready[m.pid]) return;
+      if (c.st !== 'ready' || m.key !== c.key + '-r' || !c.lanes[m.pid] || c.ready[m.pid] || Date.now() < (c.readyOpen || 0)) return;
       c.ready[m.pid] = 1; Music.plop(Object.keys(c.ready).length); push();
       if (chaseAlive().every(function (k) { return c.ready[k]; })) chaseGo(c);   // everyone is ready: the monster's song starts
       return;
@@ -2657,7 +2658,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { arr.style.transition = 'transform 4.3s cubic-bezier(.12,.75,.15,1)'; arr.style.transform = 'rotate(' + (360 * 5 + target) + 'deg)'; }, 1500);   // a moment to take in the wheel first
   }
   function chaseSnap() {
-    var c = G.chase, s = { hp: c.st === 'heelpick' ? c.hp : null, rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
+    var c = G.chase, s = { hp: c.st === 'heelpick' ? c.hp : null, rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, rwait: c.st === 'ready' ? Math.max(0, (c.readyOpen || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
     var nx = c.monsterDead ? 0 : (c.st === 'ask' || c.st === 'show' || c.st === 'pause' || c.st === 'move') ? divaStep(c.n) : divaStep(c.n + 1);
     c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { danger: !l.out && !!nx && l.pos <= c.mon + nx && l.pos < CHASE_GOAL, fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });

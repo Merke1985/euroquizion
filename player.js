@@ -83,7 +83,9 @@
       $('chhelp').textContent = rd ? 'Waiting for the others…' : 'The chase starts when everyone is ready.'; $('chopts').innerHTML = '';
       if (c.st === 'ready' && chBarKey !== c.rkey) { chBarKey = c.rkey; var rb = $('chpbar'); rb.style.transition = 'none'; rb.style.width = (c.rleft / 600) + '%'; rb.getBoundingClientRect(); rb.style.transition = 'width ' + c.rleft + 'ms linear'; rb.style.width = '0%'; }
       $('chpbar').parentNode.classList.toggle('hidden', c.st !== 'ready');
-      $('chready').classList.remove('hidden'); $('chready').classList.toggle('on', rd); $('chready').setAttribute('aria-pressed', rd ? 'true' : 'false'); $('chreadytext').textContent = rd ? 'Ready!' : 'Ready';
+      var wait = c.st === 'ready' && c.rwait > 0 && !rd;   // (listen to the rules first: Ready works once they've been said)
+      $('chready').classList.remove('hidden'); $('chready').classList.toggle('on', rd); $('chready').disabled = wait; $('chready').classList.toggle('wait', wait); $('chready').setAttribute('aria-pressed', rd ? 'true' : 'false'); $('chreadytext').textContent = rd ? 'Ready!' : wait ? '👂 Listen…' : 'Ready';
+      clearTimeout(chWaitT); if (wait) chWaitT = setTimeout(function () { if (state && state.chase && state.chase.st === 'ready') { state.chase.rwait = 0; chaseView(state.chase); } }, c.rwait + 100);
       return;
     }
     $('chpbar').parentNode.classList.remove('hidden'); $('chready').classList.add('hidden');
@@ -103,7 +105,9 @@
     $('waitsub').textContent = where;
   }
   $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); if (state && state.chase) chaseView(state.chase); chaseSend(false); });
+  var chWaitT = null;
   $('chready').addEventListener('click', function () {
+    if ($('chready').disabled) return;
     var cs = state && state.chase;
     if (cs && (cs.st === 'ready' || cs.st === 'go')) { if (chReadyKey === cs.rkey || !net) return; chReadyKey = cs.rkey; var rk = cs.rkey; net.send('chase', { pid: pid, key: rk, ready: 1 }); [800, 2200].forEach(function (ms) { setTimeout(function () { if (net && state && state.chase && state.chase.st === 'ready') net.send('chase', { pid: pid, key: rk, ready: 1 }); }, ms); }); chaseView(cs); }
   });
