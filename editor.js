@@ -3,11 +3,17 @@
 // (bugs and changes for Claude to pick up). Saved in Supabase (escSave in quiz.js): live for everyone on the next game.
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var GROUPS = [['🎵 Songs', [['jury', '🎤 Key Change! songs'], ['green', '⚖️ Disqualivision clips'], ['titles', '🗣️ United by Nonsense titles']]],
-    ['🎉 Minigames', [['roasts', '⚖️ Disqualivision prompts']]], ['🛍️ Items', [['items', '🛍️ The boutique']]], ['❓ Trivia', [['trivia', '❓ Trivia questions']]],
-    ['📝 Requests', [['req', '📝 Bugs & changes']]], ['🔒 Password', [['pass', '🔒 Password']]]];
-  var TABS = []; GROUPS.forEach(function (g) { TABS = TABS.concat(g[1]); });
-  var NOSAVE = { pass: 1, req: 1 };
+  // the sections (left) and their parts (the tabs on top): [icon, name, what it's for, [[tab, name, what it's for]]]
+  var GROUPS = [
+    ['🎵', 'Songs', 'The songs the minigames use', [['jury', '🎤 Key Change!', 'The songs to sing: the part to sing and the lyrics on the phones'], ['green', '⚖️ Disqualivision', 'The performances that get judged'], ['titles', '🗣️ United by Nonsense', 'The English translation of every non-English title']]],
+    ['🎉', 'Minigames', 'Texts used in the minigames', [['roasts', '⚖️ Disqualivision prompts', 'The questions players answer about the performance']]],
+    ['🛍️', 'Items', 'Lynda’s boutique', [['items', '🛍️ All items', 'Names, explanations, shelf (price) and stock']]],
+    ['❓', 'Trivia', 'The questions between the songs', [['trivia', '❓ Trivia questions', 'One right answer, three wrong ones and an explanation']]],
+    ['📝', 'Requests', 'Bugs, suggestions and Claude’s reports', [['req', '📝 Bugs & suggestions', 'Tell Claude what is wrong or what you would like'], ['fb', '💬 Player feedback', 'Sent with the Feedback button on the join screen'], ['notes', '🔔 Reports', 'What Claude did on each run']]],
+    ['🔒', 'Settings', 'The admin password', [['pass', '🔒 Password', 'The password for this admin']]]];
+  var TABS = []; GROUPS.forEach(function (g) { TABS = TABS.concat(g[3]); });
+  var NOSAVE = { pass: 1, req: 1, fb: 1, notes: 1 };
+  function groupOf(t) { for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][3].some(function (x) { return x[0] === t; })) return GROUPS[i]; return GROUPS[0]; }
   var tab = 'jury', W = null, data = null, dirty = false;
   function H() { return (window.escHostData && window.escHostData()) || { songs: [], countries: {}, chorusBase: {} }; }
   function pass() { try { return sessionStorage.getItem('esc-edit-pass') || ''; } catch (e) { return ''; } }
@@ -41,7 +47,7 @@
     if (!W) {
       W = document.createElement('div'); W.id = 'editov'; W.className = 'testov editov';
       W.innerHTML = '<div class="testcard xecard"><div class="testhead"><h2>⚙️ Admin</h2><input type="password" id="xepass" class="hidden" autocomplete="off"><button class="btn alt small" id="xelock" type="button">🔒 Lock</button><button class="btn alt small" id="xeclose" type="button">Close</button></div>' +
-        '<div id="xegate" class="xegate hidden"></div><div id="xemain"><div class="xetabs">' + GROUPS.map(function (g) { return '<div class="xegrp"><b>' + g[0] + '</b><span>' + g[1].map(function (t) { return '<button type="button" class="xetab" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</span></div>'; }).join('') + '</div><div id="xebody"></div>' +
+        '<div id="xegate" class="xegate hidden"></div><div id="xemain" class="xemain"><nav class="xenav">' + GROUPS.map(function (g, gi) { return '<button type="button" class="xesec" data-g="' + gi + '"><span class="xesi">' + g[0] + '</span><span><b>' + g[1] + '</b><small>' + g[2] + '</small></span></button>'; }).join('') + '</nav><div class="xecontent"><div class="xesubs" id="xesubs"></div><p class="xesubhint" id="xesubhint"></p><div id="xebody"></div>' +
         '<div class="xefoot"><span id="xemsg"></span><button class="btn alt small" id="xedef" type="button">Back to the built-in list</button><button class="btn small" id="xesave" type="button">💾 Save</button></div></div></div>';
       document.body.appendChild(W);
       $('xepass').value = pass();
@@ -49,7 +55,7 @@
       $('xeclose').addEventListener('click', close);
       $('xelock').addEventListener('click', function () { try { sessionStorage.removeItem('esc-edit-pass'); sessionStorage.removeItem('esc-admin-ok'); } catch (e) {} $('xepass').value = ''; gate(); });
       W.addEventListener('click', function (e) { if (e.target === W) close(); });
-      [].forEach.call(W.querySelectorAll('.xetab'), function (b) { b.addEventListener('click', function () { tab = b.getAttribute('data-t'); draw(); }); });
+      [].forEach.call(W.querySelectorAll('.xesec'), function (b) { b.addEventListener('click', function () { var g = GROUPS[+b.getAttribute('data-g')]; if (dirty && groupOf(tab) !== g) { msg('Save first, or your changes are lost (press it again to leave anyway).', 'warn'); dirty = false; return; } tab = g[3][0][0]; draw(); }); });
       $('xesave').addEventListener('click', save);
       $('xedef').addEventListener('click', backToDefault);
     }
@@ -84,10 +90,14 @@
   function msg(t, k) { var m = $('xemsg'); m.textContent = t || ''; m.className = k || ''; }
   function touch() { dirty = true; msg('Not saved yet', 'warn'); }
   function draw() {
-    [].forEach.call(W.querySelectorAll('.xetab'), function (b) { b.classList.toggle('on', b.getAttribute('data-t') === tab); });
+    var g = groupOf(tab), sub = g[3].filter(function (x) { return x[0] === tab; })[0];
+    [].forEach.call(W.querySelectorAll('.xesec'), function (b) { b.classList.toggle('on', GROUPS[+b.getAttribute('data-g')] === g); b.classList.toggle('attn', GROUPS[+b.getAttribute('data-g')][1] === 'Requests' && (window.escAttention || 0) > 0); });
+    $('xesubs').innerHTML = '<h3 class="xesech">' + g[0] + ' ' + g[1] + '</h3>' + (g[3].length > 1 ? '<div class="xetabs">' + g[3].map(function (t) { return '<button type="button" class="xetab' + (t[0] === tab ? ' on' : '') + '" data-t="' + t[0] + '" title="' + t[2] + '">' + t[1] + '</button>'; }).join('') + '</div>' : '');
+    $('xesubhint').textContent = sub ? sub[2] : '';
+    [].forEach.call($('xesubs').querySelectorAll('.xetab'), function (b) { b.onclick = function () { if (dirty) { msg('Save first, or your changes are lost (press it again to leave anyway).', 'warn'); dirty = false; return; } tab = b.getAttribute('data-t'); draw(); }; });
     $('xesave').classList.toggle('hidden', !!NOSAVE[tab]); $('xedef').classList.toggle('hidden', !!NOSAVE[tab]);
     var B = $('xebody'); msg(dirty ? 'Not saved yet' : '', dirty ? 'warn' : '');
-    if (tab === 'jury') drawJury(B); else if (tab === 'green') drawGreen(B); else if (tab === 'roasts') drawRoasts(B); else if (tab === 'titles') drawTitles(B); else if (tab === 'items') drawItems(B); else if (tab === 'trivia') drawTrivia(B); else if (tab === 'req') drawReq(B); else drawPass(B);
+    if (tab === 'jury') drawJury(B); else if (tab === 'green') drawGreen(B); else if (tab === 'roasts') drawRoasts(B); else if (tab === 'titles') drawTitles(B); else if (tab === 'items') drawItems(B); else if (tab === 'trivia') drawTrivia(B); else if (tab === 'req' || tab === 'fb' || tab === 'notes') drawReq(B, tab); else drawPass(B);
   }
   // ---- Key Change!: the songs to choose from, the part to sing, and the lyrics on the phones ----
   function drawJury(B) {
@@ -226,19 +236,19 @@
   var RQ_KIND = { bug: '🐞 Bug', change: '💡 Suggestion', idea: '💡 Suggestion' };
   var rqGame = 'general', rqKind = 'bug';
   function gameName(k) { var g = (H().games || []).filter(function (x) { return x.k === k; })[0]; return g ? g.icon + ' ' + g.title : ({ general: '🌍 General', trivia: '❓ Trivia', shop: '🛍️ Boutique & items', final: '🏆 Grand Final', phone: '📱 Phones' })[k] || k; }
-  function drawReq(B) {
+  function drawReq(B, mode) {
     var sb = escClient();
-    var opts = ['general', 'trivia', 'shop', 'final', 'phone'].concat((H().games || []).map(function (g) { return g.k; }));
-    B.innerHTML = '<div class="xerow xereqnew"><div class="xerowtop"><select id="xerk">' + [['bug', '🐞 Bug'], ['idea', '💡 Suggestion']].map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === rqKind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div>' +
+    if (mode === 'notes') { B.innerHTML = '<div id="xenotes"><p class="mute">Loading…</p></div><p class="mute xereqhow">Claude checks every night (around 3:00). When something was done, a report appears here and you get an email. In a hurry? Press Run now on the scheduled task <b>“Process EuroQuizion requests”</b> in the Claude app.</p>'; drawNotes(sb); return; }
+    B.innerHTML = (mode === 'fb' ? '<p class="mute xereqhow">Players can send a bug or a suggestion with the 💬 Feedback button on the join screen. Claude looks at each one at night and writes what it would do; nothing is built until you press 👍 Go ahead.</p>' : '<div class="xerow xereqnew"><div class="xerowtop"><select id="xerk">' + [['bug', '🐞 Bug'], ['idea', '💡 Suggestion']].map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === rqKind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div>' +
       '<textarea class="xelytxt" id="xert" rows="3" placeholder="What is wrong, or what should change? The more precise, the better."></textarea><div class="xerowtop" style="justify-content:flex-end"><button type="button" class="btn small" id="xersend">📨 Send</button></div></div>' +
-      '<p class="mute xereqhow">Claude checks every night (around 3:00) and handles what’s here; you get an email and a 🔔 report here when something was done. In a hurry? Press Run now on the scheduled task <b>“Process EuroQuizion requests”</b> in the Claude app. Every done request gets an overview and an ↩️ Undo button; anything new (an item, a trivia mode, a minigame, reworking one) waits for your 👍 first: only fixes are built straight away. Feedback from players (the 💬 Feedback button on the join screen) shows up here too: Claude reviews it and suggests a fix, which waits for your 👍.</p>' +
-      '<div id="xenotes"></div><div class="xelist" id="xerl"><p class="mute">Loading…</p></div>';
-    $('xerk').onchange = function () { rqKind = this.value; };
+      '<p class="mute xereqhow">Claude handles these at night (around 3:00). Fixes for things that are wrong are built straight away, each with an overview and an ↩️ Undo button; anything new (an item, a trivia mode, a minigame, reworking one) waits for your 👍 first.</p>') +
+      '<div class="xelist xelist2" id="xerl"><p class="mute">Loading…</p></div>';
+    if ($('xerk')) $('xerk').onchange = function () { rqKind = this.value; };
     var load = function () {
       if (!sb) { $('xerl').innerHTML = '<p class="mute">No Supabase connection.</p>'; return; }
       sb.rpc('esc_req_list', { p_pass: pass() }).then(function (r) {
         if (r.error) { $('xerl').innerHTML = '<p class="bad">' + esc(/password/.test(r.error.message) ? 'Wrong password: lock and open the admin again.' : r.error.message) + '</p>'; return; }
-        var rows = r.data || [];
+        var rows = (r.data || []).filter(function (q) { return mode === 'fb' ? q.source === 'player' : q.source !== 'player'; });
         $('xerl').innerHTML = rows.length ? rows.map(function (q) {
           var st = RQ_ST[q.status] || ['•', q.status], d = new Date(q.created_at);
           var acts = (q.status === 'needs_ok' ? '<button type="button" class="btn small" data-a="approve">👍 Go ahead</button><button type="button" class="btn alt small" data-a="decline">🚫 Don’t</button>' : '') +
@@ -249,7 +259,7 @@
           return '<div class="xerow xereq st-' + q.status + '" data-id="' + q.id + '"><div class="xerowtop"><b>#' + q.id + ' · ' + (RQ_KIND[q.kind] || q.kind) + (q.game && q.game !== 'general' ? ' · ' + esc(gameName(q.game)) : '') + (q.source === 'player' ? ' · 💬 from ' + esc(q.who || 'a player') : '') + '</b><span class="xest">' + st[0] + ' ' + st[1] + '</span></div>' +
             '<p class="xebody2">' + esc(q.body) + '</p>' + (q.note ? '<div class="xenote">' + esc(q.note).replace(/\n/g, '<br>') + (q.version ? '<small> · v' + esc(q.version) + '</small>' : '') + '</div>' : '') +
             '<div class="xerowtop"><small class="mute">' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</small><span style="flex:1"></span>' + acts + '</div></div>';
-        }).join('') : '<p class="mute">No requests yet.</p>';
+        }).join('') : '<p class="mute">' + (mode === 'fb' ? 'No feedback from players yet.' : 'No requests yet.') + '</p>';
         [].forEach.call($('xerl').querySelectorAll('[data-a]'), function (b) { b.onclick = function () {
           var id = +b.closest('.xereq').getAttribute('data-id'), a = b.getAttribute('data-a');
           if (a === 'answer') { var t = prompt('Your answer:'); if (!t) return; sb.rpc('esc_req_answer', { p_pass: pass(), p_id: id, p_text: t }).then(function (x) { if (x.error) msg(x.error.message, 'bad'); load(); }); return; }
@@ -259,20 +269,23 @@
         }; });
       });
     };
-    if (sb) sb.rpc('esc_notes_list', { p_pass: pass() }).then(function (r) {   // (the reports of the nightly runs: new ones highlighted, then marked as read)
-      var ns = (r && r.data) || [], el = $('xenotes'); if (!el || !ns.length) return;
-      var unseen = ns.filter(function (n) { return !n.seen; }).length;
-      el.innerHTML = '<details class="xenotes"' + (unseen ? ' open' : '') + '><summary>🔔 Reports from Claude' + (unseen ? ' <b class="xenew">' + unseen + ' new</b>' : '') + '</summary>' + ns.slice(0, 10).map(function (n) {
-        var d = new Date(n.created_at);
-        return '<div class="xenoterow' + (n.seen ? '' : ' unseen') + '"><b>' + (n.seen ? '' : '🆕 ') + esc(n.title) + '</b> <small class="mute">' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</small>' + (n.body ? '<p>' + esc(n.body).replace(/\n/g, '<br>') + '</p>' : '') + '</div>';
-      }).join('') + '</details>';
-      if (unseen) sb.rpc('esc_notes_seen', { p_pass: pass() }).then(function () { if (window.escAdminBadge) window.escAdminBadge(); });
-    });
-    $('xersend').onclick = function () {
+    if ($('xersend')) $('xersend').onclick = function () {
       var t = $('xert').value.trim(); if (!t || !sb) return;
       sb.rpc('esc_req_add', { p_pass: pass(), p_game: rqGame, p_kind: rqKind, p_body: t }).then(function (x) { if (x.error) { msg(/password/.test(x.error.message) ? 'Wrong password' : x.error.message, 'bad'); return; } $('xert').value = ''; msg('Sent ✓ #' + x.data, 'ok'); load(); });
     };
     load();
+  }
+  function drawNotes(sb) {   // (the reports of the runs: new ones highlighted, then marked as read)
+    if (!sb) return;
+    sb.rpc('esc_notes_list', { p_pass: pass() }).then(function (r) {   // (the reports of the nightly runs: new ones highlighted, then marked as read)
+      var ns = (r && r.data) || [], el = $('xenotes'); if (!el) return; if (!ns.length) { el.innerHTML = '<p class="mute">No reports yet.</p>'; return; }
+      var unseen = ns.filter(function (n) { return !n.seen; }).length;
+      el.innerHTML = '<div class="xenotes">' + ns.slice(0, 20).map(function (n) {
+        var d = new Date(n.created_at);
+        return '<div class="xenoterow' + (n.seen ? '' : ' unseen') + '"><b>' + (n.seen ? '' : '🆕 ') + esc(n.title) + '</b> <small class="mute">' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</small>' + (n.body ? '<p>' + esc(n.body).replace(/\n/g, '<br>') + '</p>' : '') + '</div>';
+      }).join('') + '</div>';
+      if (unseen) sb.rpc('esc_notes_seen', { p_pass: pass() }).then(function () { if (window.escAdminBadge) window.escAdminBadge(); });
+    });
   }
   // ---- the password ----
   function drawPass(B) {

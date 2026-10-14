@@ -4590,3 +4590,24 @@ body.hasdock main{padding-bottom:84px}
 .xenoterow{padding:8px 0;border-top:1px solid rgba(255,255,255,.08);font-size:.9rem}
 .xenoterow.unseen b{color:#ffd23f}
 .xenoterow p{margin:4px 0 0;white-space:normal}
+/* ⚙️ Admin: sections on the left, their parts as tabs on top */
+.editov .xecard{width:min(1180px,100%);height:min(92vh,900px)}
+.xemain{display:flex;gap:16px;flex:1;min-height:0}
+.xemain.hidden{display:none}
+.xenav{flex:0 0 230px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.xesec{position:relative;display:flex;align-items:center;gap:10px;text-align:left;border:0;border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.04);color:#fff;font-family:inherit;cursor:pointer}
+.xesec:hover{background:rgba(255,255,255,.09)}
+.xesec .xesi{font-size:1.5rem;width:32px;text-align:center}
+.xesec b{display:block;font-size:1rem}
+.xesec small{display:block;font-size:.75rem;color:var(--mute);line-height:1.2}
+.xesec.on{background:#ffd23f;color:#1a1040}.xesec.on small{color:#5a4a20}
+.xesec.attn::after{content:'';position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;background:#ff4d6a;box-shadow:0 0 8px #ff4d6a}
+.xecontent{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;min-height:0}
+.xesech{margin:0;font-size:1.3rem}
+.xesubs .xetabs{margin-top:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1)}
+.xesubhint{margin:0;color:var(--mute);font-size:.9rem}
+.xecontent #xebody{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.xecontent .xelist{max-height:none;overflow:visible}
+.xecontent .xefoot{margin-top:auto}
+@media (max-width:760px){.xemain{flex-direction:column}.xenav{flex:none;flex-direction:row;overflow-x:auto}.xesec small{display:none}.xesec{flex:0 0 auto}}
+.xesubhint{display:none}
