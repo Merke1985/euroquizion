@@ -4975,3 +4975,11 @@ body.hasdock main{padding-bottom:84px}
 .rut.frz .jmt,.rutok.frz{filter:hue-rotate(180deg) saturate(.4) brightness(1.3) drop-shadow(0 0 8px #7fe0ff)}
 .rut.frz .rustar,.rutok.frz .rustar{font-size:0}.rut.frz .rustar::after,.rutok.frz .rustar::after{content:'❄️';font-size:2.4vh}
 .rut.fast .jmt,.rutok.fast{filter:drop-shadow(0 0 10px #3ddc84) drop-shadow(0 0 4px #3ddc84)}
+/* The Grand Final: the presenters on the stage, beside the trophy, with their speech balloons */
+.chhosts{position:absolute;inset:0;pointer-events:none;z-index:30}
+.chhosts .ehost{position:absolute;bottom:2vh;height:30vh;width:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.6));animation:ehbob 3.2s ease-in-out infinite alternate}
+.chhosts .him{right:15vw}.chhosts .her{right:4vw;animation-delay:-1.6s}
+.chbub{position:absolute;bottom:31vh;max-width:24vw;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(.9rem,1.5vw,1.3rem);line-height:1.25;padding:.6em .9em;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:translateY(8px) scale(.95);transition:opacity .3s,transform .3s}
+.chbub.him{right:16vw;border-bottom-right-radius:4px}.chbub.her{right:2vw;border-bottom-right-radius:4px}
+.chbub.on{opacity:1;transform:none}
+.chbub .unsaid{opacity:0}
