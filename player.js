@@ -599,7 +599,7 @@
         box.onclick = function (e) {   // tap a song, then confirm it (or go back to the list)
           var b = e.target.closest('.finopt'), yes = e.target.closest('.finyes'), back = e.target.closest('.finback');
           if (back) { list(); return; }
-          if (yes) { if (!net) return; var i = +yes.getAttribute('data-i'); finSent = f.id; net.send('fin', { pid: pid, id: f.id, i: i, v: (f.ids || [])[i] || '' }); box.classList.add('hidden'); $('waittitle').textContent = '🎶 Great choice!'; $('waitsub').textContent = f.opts[i] + ' · it starts playing now!'; return; }
+          if (yes) { if (!net) return; var i = +yes.getAttribute('data-i'); finSent = f.id; net.send('fin', { pid: pid, id: f.id, i: i, v: (f.ids || [])[i] || '' }); box.classList.add('hidden'); $('waittitle').textContent = '🎶 Great choice!'; $('waitsub').textContent = f.opts[i] + ' · it will play in a moment!'; return; }
           if (!b) return; var k = +b.getAttribute('data-i');
           box.innerHTML = '<div class="finconf"><b>Play this one?</b><span>' + esc(f.opts[k]) + '</span><button type="button" class="finyes" data-i="' + k + '">✔ Yes, play it!</button><button type="button" class="finback">✖ Back to the list</button></div>';
         };
@@ -607,7 +607,7 @@
       box.classList.remove('hidden'); return;
     }
     box.classList.add('hidden');
-    if (f.st === 'pick') { $('waittitle').textContent = f.pid === pid ? '🎶 Great choice!' : '🎶 ' + f.name + ' is picking the victory song…'; $('waitsub').textContent = f.pid === pid ? 'It starts playing now!' : 'Watch the big screen.'; }
+    if (f.st === 'pick') { $('waittitle').textContent = f.pid === pid ? '🎶 Great choice!' : '🎶 ' + f.name + ' is picking the victory song…'; $('waitsub').textContent = f.pid === pid ? 'Your song will play in a moment!' : 'Watch the big screen.'; }
     else { $('waittitle').textContent = '🎶 Victory song'; $('waitsub').textContent = f.song || ''; }
   }
   function carpetView(s) {
