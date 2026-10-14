@@ -234,7 +234,7 @@
   // ---- 📝 Requests: bugs and changes for Claude to pick up ----
   var RQ_ST = { 'new': ['🆕', 'Waiting'], working: ['⚙️', 'Being worked on'], done: ['✅', 'Done'], needs_ok: ['✋', 'Needs your OK'], approved: ['👍', 'Approved: next run'], undo: ['↩️', 'Undo: next run'], undone: ['↩️', 'Undone'], declined: ['🚫', 'Not done'], question: ['❓', 'Question for you'], feedback: ['💬', 'Player feedback: Claude reviews it'] };
   var RQ_KIND = { bug: '🐞 Bug', change: '💡 Suggestion', idea: '💡 Suggestion' };
-  var rqGame = 'general', rqKind = 'bug';
+  var rqGame = 'general', rqKind = 'bug'; var rqTick = null;
   function gameName(k) { var g = (H().games || []).filter(function (x) { return x.k === k; })[0]; return g ? g.icon + ' ' + g.title : ({ general: '🌍 General', trivia: '❓ Trivia', shop: '🛍️ Boutique & items', final: '🏆 Grand Final', phone: '📱 Phones' })[k] || k; }
   function drawReq(B, mode) {
     var sb = escClient();
@@ -242,8 +242,9 @@
     B.innerHTML = (mode === 'fb' ? '<p class="mute xereqhow">Players can send a bug or a suggestion with the 💬 Feedback button on the join screen. Claude looks at each one at night and writes what it would do; nothing is built until you press 👍 Go ahead.</p>' : '<div class="xerow xereqnew"><div class="xerowtop"><select id="xerk">' + [['bug', '🐞 Bug'], ['idea', '💡 Suggestion']].map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === rqKind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div>' +
       '<textarea class="xelytxt" id="xert" rows="3" placeholder="What is wrong, or what should change? The more precise, the better."></textarea><div class="xerowtop" style="justify-content:flex-end"><button type="button" class="btn small" id="xersend">📨 Send</button></div></div>' +
       '<p class="mute xereqhow">Claude handles these at night (around 3:00). Fixes for things that are wrong are built straight away, each with an overview and an ↩️ Undo button; anything new (an item, a trivia mode, a minigame, reworking one) waits for your 👍 first.</p>') +
-      '<div class="xelist xelist2" id="xerl"><p class="mute">Loading…</p></div>';
+      '<div class="xerowtop" style="justify-content:flex-end"><button type="button" class="btn alt small" id="xerref">🔄 Refresh</button></div><div class="xelist xelist2" id="xerl"><p class="mute">Loading…</p></div>';
     if ($('xerk')) $('xerk').onchange = function () { rqKind = this.value; };
+    clearInterval(rqTick); rqTick = setInterval(function () { if (!$('xerl') || !W || W.classList.contains('hidden') || (tab !== 'req' && tab !== 'fb')) { clearInterval(rqTick); return; } load(); }, 20000);   // (new requests and feedback show up by themselves)
     var load = function () {
       if (!sb) { $('xerl').innerHTML = '<p class="mute">No Supabase connection.</p>'; return; }
       sb.rpc('esc_req_list', { p_pass: pass() }).then(function (r) {
@@ -273,6 +274,7 @@
       var t = $('xert').value.trim(); if (!t || !sb) return;
       sb.rpc('esc_req_add', { p_pass: pass(), p_game: rqGame, p_kind: rqKind, p_body: t }).then(function (x) { if (x.error) { msg(/password/.test(x.error.message) ? 'Wrong password' : x.error.message, 'bad'); return; } $('xert').value = ''; msg('Sent ✓ #' + x.data, 'ok'); load(); });
     };
+    $('xerref').onclick = function () { $('xerl').innerHTML = '<p class="mute">Loading…</p>'; load(); };
     load();
   }
   function drawNotes(sb) {   // (the reports of the runs: new ones highlighted, then marked as read)
