@@ -2420,7 +2420,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (a.duration && a.currentTime > a.duration - 2.5 && b.paused) { start(b); cur = 1 - cur; setTimeout(function () { try { a.pause(); } catch (e) {} }, 2400); }
     }, 200);
   }
-  function crowdDuck(on) { crowdLvl = on ? 0.35 : 1; }
+  function crowdDuck(on) { crowdLvl = on ? 0.6 : 1; }
   // The victory song: the winner picks any Eurovision song from their own country on their phone, and it plays on the big stage.
   var finT = null, finYt = null, FIN_PICK_MS = 60000;
   function finTimer(ov) {   // the 60 seconds to choose, counting down on the big screen
@@ -3360,7 +3360,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=9'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=10'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       if (who) {   // (the mouth follows how loud the line is, frame by frame)
         try {
           var AC = window.AudioContext || window.webkitAudioContext;
