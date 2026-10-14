@@ -2812,7 +2812,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function whooshes(times) { if (REMOTE) return; times.forEach(function (t) { setTimeout(function () { Music.woosh(); }, t); }); }
   function viewEnter(id) {
     var v = $(id); if (!v || REMOTE) return;
-    v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter');
+    if (v.classList.contains('enter')) return;   // (already sliding in: starting over would send the presenters off and back on again)
+    v.classList.add('enter');
     clearTimeout(v._enterT); v._enterT = setTimeout(function () { v.classList.remove('enter'); }, 2400);
     if (id === 'v-game') whooshes([0, 350, 700, 1000]); else if (id === 'v-end') whooshes([0, 400]);
   }
@@ -3277,6 +3278,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'juliet|the first round i ll make easy my arrow stays visible while you tap it in': 'jul_visible',
     'juliet|one wrong turn and you re lost in verona the last one left wins ready': 'jul_ready',
     'juliet|oh no someone just got lost in verona': 'jul_lost',
+    'juliet|the streets in verona can be dangerous press the button to avoid getting run over': 'jul_cars',
+    'juliet|oh no another one got lost in verona': 'jul_lost2',
     'juliet|look the studio is right behind you off you go ciao': 'jul_ciao',
     'her|good timing i need a smoke': 'ver_smoke',
     'her|i mean some fresh air of course if you can all follow me outside that would be lovely': 'ver_air',
@@ -3287,7 +3290,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|and now pick your victory song on your phone': 'fin_pick',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
+  var VOICE_MS = { jul_lost2: 4520, jul_cars: 5960, jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -6914,7 +6917,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // then two, then three… Everyone taps the whole route from memory on their phone; every right step takes your token one
   // tile further and lights up the maze. One wrong step and you're lost (out). The last one left wins; if everyone left
   // goes wrong in the same round, whoever got furthest that round wins.
-  var JM_COLS = 7, JM_ROWS = 6, JM_MAX = 10, JM_PTS = [12, 8, 4], JM_DIRS = [[-1, 0], [0, -1], [1, 0], [0, 1], [0, 0]], JM_ARROW = ['⬅️', '⬆️', '➡️', '⬇️', '🚗'], JM_CAR = 4, qjTimer = null, qjTick = null;
+  var JM_COLS = 7, JM_ROWS = 6, JM_MAX = 10, JM_PTS = [12, 8, 4], JM_DIRS = [[-1, 0], [0, -1], [1, 0], [0, 1], [0, 0]], JM_ARROW = ['⬅️', '⬆️', '➡️', '⬇️', '🚗'], JM_CAR = 4, JM_WALK = 1650, qjTimer = null, qjTick = null;
   var JULIET = '<svg class="juliet" viewBox="0 0 200 300" aria-hidden="true"><path d="M58 58 Q60 14 100 12 Q140 14 142 58 L150 150 Q100 162 50 150 Z" fill="#3a1a14"/><rect x="88" y="94" width="24" height="22" rx="8" fill="#f2c9a8"/><ellipse cx="100" cy="68" rx="32" ry="36" fill="#f2c9a8"/><path d="M68 56 Q72 26 100 26 Q128 26 132 56 Q118 40 100 42 Q82 40 68 56 Z" fill="#3a1a14"/><circle cx="88" cy="70" r="4" fill="#2a1410"/><circle cx="112" cy="70" r="4" fill="#2a1410"/><path d="M84 62 q4 -3 8 0 M108 62 q4 -3 8 0" stroke="#2a1410" stroke-width="2" fill="none"/><path d="M90 86 Q100 94 110 86" stroke="#b0303a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="80" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><ellipse cx="120" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><circle cx="100" cy="30" r="5" fill="#ffd23f"/><circle cx="90" cy="33" r="3" fill="#fff"/><circle cx="110" cy="33" r="3" fill="#fff"/><path d="M66 118 Q100 104 134 118 L150 240 Q100 252 50 240 Z" fill="#c2185b"/><path d="M80 116 Q100 126 120 116 L118 132 Q100 140 82 132 Z" fill="#ffd6e6"/><path d="M66 122 Q40 150 46 176" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="46" cy="180" r="8" fill="#f2c9a8"/><path class="jarm" d="M134 122 Q166 104 172 70" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle class="jhand" cx="172" cy="64" r="8" fill="#f2c9a8"/><circle cx="168" cy="52" r="7" fill="#e0245e"/><path d="M168 59 l0 14" stroke="#2f7a3a" stroke-width="3"/></svg>';   // (an original character: Juliet with a rose)
   function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards
     var r = [], prev = -1;
@@ -7031,7 +7034,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Juliet's own speech balloon, next to her balcony
   function jmLostSay(ks) {   /* Juliet, as soon as they're out of sight: who is lost now */
     var ns = ks.map(function (k) { return players[k] ? players[k].name : '?'; }), lj = ns.length > 1 ? ns.slice(0, -1).join(', ') + ' and ' + ns[ns.length - 1] : ns[0];
-    jmJul('Oh no! Someone just got lost in Verona! 😵');   // (spoken: no names; the board shows who)
+    var g = G.qj, again = g && g.lostN; if (g) g.lostN = (g.lostN || 0) + 1;
+    jmJul(again ? 'Oh no! Another one got lost in Verona! 😵' : 'Oh no! Someone just got lost in Verona! 😵');   // (spoken: no names; the board shows who)
   }
   function jmJul(txt) {
     var ov = $('qjov'), b = ov && ov.querySelector('.jmjbub'); if (!b) return;
@@ -7127,7 +7131,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         left = left.filter(function (k) { return fall.indexOf(k) < 0; });
       }
       if (!left.length) return;
-      at(t, function () { g.pos = i + 1; push(); qjShow(); runSnd(620); }); t += 650;
+      at(t, function () { g.pos = i + 1; push(); qjShow(); runSnd(JM_WALK - 30); }); t += JM_WALK;   // (one step through the streets: the buildings glide by)
     })(i);
     at(t + 500, qjJudge);
   }
@@ -7152,8 +7156,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else line = lost.length ? '😵 ' + lost.map(nm).join(', ') + (lost.length > 1 ? ' are' : ' is') + ' lost in Verona!' : 'Everyone found the way! 👏 One more step…';
     g.alive = ok.length ? ok : g.alive;
     if (lost.length) Music.buzz(); else Music.ding();
-    var cars = !end && g.round === JM_CAR - 1;
-    setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul(''); if (end) qjEnd(); else qjRound(); }, lost.length && !end ? 1500 : 4200);
+    var cars = !end && g.round === JM_CAR - 1;   // after round 3: Juliet warns about the cars, and the car button turns up on the phones
+    var CARL = 'The streets in Verona can be dangerous. Press the 🚗 button to avoid getting run over!';
+    setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul('');
+      if (end) { qjEnd(); return; }
+      if (!cars) { qjRound(); return; }
+      setTimeout(function () { if (G.qj !== g) return; g.carOn = true; push(); jmJul(CARL); }, 600);
+      setTimeout(function () { if (G.qj !== g) return; jmJul(''); qjRound(); }, 600 + Math.max(5200, voiceMs('juliet', CARL) + 900));
+    }, lost.length && !end ? 1500 : 4200);
   }
   function qjEnd() {
     var g = G.qj; if (!g) return;
@@ -7373,7 +7383,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.setAttribute('data-p', ck);
       var far = Math.abs(x - was[0]) + Math.abs(y - was[1]) !== 1 || g.st !== 'run';   /* (only walking the route glides; a new round snaps back to the start, also after a route of one step) */
       if (far) V3.clearHoles();
-      V3.go(x, y, far);   /* (a new round: back to the start in one go; every block looks the same, so you don't see it) */   // (a new round: back to the start in one go)
+      V3.go(x, y, far, far ? 0 : JM_WALK - 50);   /* (a new round: back to the start in one go; every block looks the same, so you don't see it) */   // (a new round: back to the start in one go)
       ov.querySelector('.jmholes').innerHTML = '';
     }
     // the group: everyone still in, together in the middle; whoever goes wrong runs into a side street and falls
