@@ -3647,7 +3647,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function shopHit(txt, ms) {
     var snd = (shopLast && shopLast.sound) || '';
     if (snd === 'lose') { Music.woosh(); setTimeout(function () { itemSfx('sounds/powerbank.mp3?v=1', Music.crumble); }, 250); }   // (Marc's Powerbank: thrown, then the impact)
-    else if (snd === 'blow') { Music.woosh(); setTimeout(function () { Music.woosh(); }, 400); }
+    else if (snd === 'blow') itemSfx('sounds/wind.mp3?v=1', Music.woosh);   // (the Wind Machine: a gust)
     else if (snd === 'steal' && !(shopLast && shopLast.icon === '✉️')) itemSfx('sounds/hack.mp3?v=1', Music.ping);   // (the Televote Hacking Device: a glitch)
     else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
     else if (snd === 'skip') itemSfx('sounds/cd_scratch.mp3?v=1', Music.woosh);   // (the CD Player: a record scratch)
