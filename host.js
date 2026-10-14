@@ -5669,7 +5669,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var b = g.bot[k];
       if (zgBreak(t) >= 0) { if (g.lvl[k]) g.lvl[k] = 0; return; }   // (a break: everyone relaxes)
       var wv = zgRocks(g.seed).filter(function (w) { return t >= w.t0 + w.dur * .5 && t < w.t0 + w.dur * .5 + 0.1; })[0];   // (a wave passing: a bot can get hit)
-      if (wv && b.wave !== wv.t0) { b.wave = wv.t0; if (Math.random() < (wv.st === 1 ? 0.06 : 0.11) * (1.4 - b.skill)) { zgMsg({ pid: k, id: g.id, out: Math.round(t * 10) / 10, acc: Math.round(60 + b.skill * 35), hit: 1 }); return; } }
+      if (wv && b.wave !== wv.t0) { b.wave = wv.t0; if (Math.random() < (wv.st === 1 ? 0.06 : 0.15) * (1.4 - b.skill)) { zgMsg({ pid: k, id: g.id, out: Math.round(t * 10) / 10, acc: Math.round(60 + b.skill * 35), hit: 1 }); return; } }
       if (now < b.until) return;
       var risk = [0.03, 0.04, 0.08][st] * (1.3 - b.skill), r = Math.random();
       if (g.lvl[k] === 2 && r < 0.35 * (1.2 - b.skill)) { zgMsg({ pid: k, id: g.id, out: Math.round(t * 10) / 10, acc: Math.round(60 + b.skill * 35) }); return; }

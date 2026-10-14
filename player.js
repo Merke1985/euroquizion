@@ -750,7 +750,7 @@
   function zgRockDraw(B, seed, t) {
     var L = zgRocks(seed), ri = 0, wi = 0, warn = false;
     for (var i = 0; i < L.length; i++) {
-      var w = L[i]; if (t < w.t0 - ZG_WARN || t > w.t0 + w.dur || zgBreak(t) >= 0) continue;
+      var w = L[i]; if (t < w.t0 - (w.warn || ZG_WARN) || t > w.t0 + w.dur || zgBreak(t) >= 0) continue;
       if (t < w.t0) {   // the warning
         warn = true; var e = B.warns[wi++]; if (!e) continue;
         e.className = 'zgwarn ' + (w.dir > 0 ? 'l' : 'r'); e.style.display = '';

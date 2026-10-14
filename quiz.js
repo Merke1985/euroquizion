@@ -1000,13 +1000,13 @@ var ZG_WARN = 1.4, zgRockC = {};
 function zgRocks(seed) {
   if (zgRockC.seed === seed && zgRockC.len === ZG_LEN) return zgRockC.list;
   var R = zgRnd((seed || 1) ^ 0x5eed), L = [], gy = 0.5;
-  [[ZG_ST[0] + 3, ZG_BRK[1][0] - 4, 4.6, 3.4, 0.44], [ZG_ST[1] + 3, ZG_LEN - 7, 3.1, 2.3, 0.36]].forEach(function (S, si) {
+  [[ZG_ST[0] + 3, ZG_BRK[1][0] - 4, 4.6, 3.4, 0.44, 0.16, 1.4], [ZG_ST[1] + 3, ZG_LEN - 6, 2.3, 1.6, 0.27, 0.3, 1.0]].forEach(function (S, si) {   // (start, end, every … s, crossing time, gap, smallest jump to the next gap, warning) — the last stage: faster, more often, a smaller gap that jumps further
     for (var t = S[0]; t <= S[1]; t += S[2] * (0.9 + R() * 0.2)) {
-      var gap = S[4], lo = gap / 2 + 0.01, hi = 1 - lo, jump = 0.16 + R() * 0.3, c = [gy - jump, gy + jump].filter(function (v) { return v >= lo && v <= hi; }), ny = c.length ? c[Math.floor(R() * c.length)] : (gy - lo > hi - gy ? lo : hi);   // (the next gap is never where the last one was: you have to move)
+      var gap = S[4], lo = gap / 2 + 0.01, hi = 1 - lo, jump = S[5] + R() * 0.3, c = [gy - jump, gy + jump].filter(function (v) { return v >= lo && v <= hi; }), ny = c.length ? c[Math.floor(R() * c.length)] : (gy - lo > hi - gy ? lo : hi);   // (the next gap is never where the last one was: you have to move)
       gy = ny; var dir = R() < 0.5 ? 1 : -1, rocks = [], top = gy - gap / 2, bot = 1 - (gy + gap / 2);
       if (top > 0.05) rocks.push({ y: top / 2 - 0.03, r: top / 2 + 0.03 });
       if (bot > 0.05) rocks.push({ y: 1 - bot / 2 + 0.03, r: bot / 2 + 0.03 });
-      L.push({ t0: t, dur: S[3], dir: dir, gy: gy, gap: gap, rocks: rocks, st: si + 1 });
+      L.push({ t0: t, dur: S[3], dir: dir, gy: gy, gap: gap, rocks: rocks, st: si + 1, warn: S[6] });
     }
   });
   zgRockC = { seed: seed, len: ZG_LEN, list: L }; return L;
