@@ -3162,7 +3162,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'him|win a party game and you get to go shopping in woodruff s boutique': 'plan_shopwin',
     'her|and our final game tonight the grand final you ll race each other for the eurovision trophy': 'plan_final_chase',
     'him|but first let s pay a visit to lynda in woodruff s boutique': 'but_first_lynda',
-    'him|everyone has their first item from lynda grab your phones': 'first_item',
+    'him|everyone has their item from lynda use it wisely': 'first_item',
     'her|so what are we starting with tonight': 'first_1',
     'her|let s see what s first on tonight s menu': 'first_2',
     'her|and our very first round tonight is': 'first_3',
@@ -3172,7 +3172,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course look at your phone and take your pick': 'lynda_freebie',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 4440, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
+  var VOICE_MS = { but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -3190,7 +3190,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=6'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=7'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       if (who) {   // (the mouth follows how loud the line is, frame by frame)
         try {
           var AC = window.AudioContext || window.webkitAudioContext;
@@ -3259,7 +3259,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) { then(); return; }
     G.phase = 'loading'; G.studioTalk = true; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();   // (studioTalk: the studio music plays on while they talk)
     hostHold = true; clearTimeout(hostT.away);
-    var l1 = first ? 'Everyone has their first item from Lynda! Grab your phones… ✨' : vary('souvenir') + ' ' + vary('onward'), l2 = first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia');   // (the very first visit, right after the opening: now the first trivia; testing the party games: no trivia in between)
+    var l1 = first ? 'Everyone has their item from Lynda! Use it wisely! ✨' : vary('souvenir') + ' ' + vary('onward'), l2 = first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia');   // (the very first visit, right after the opening: now the first trivia; testing the party games: no trivia in between)
     var t2 = Math.max(3300, voiceMs('him', l1) + 400), t3 = t2 + Math.max(3100, voiceMs('her', l2) + 400);   // (room for the spoken lines)
     hostSay('him', l1, Math.max(3600, voiceMs('him', l1) + 300));
     setTimeout(function () { hostSay('her', l2, Math.max(3000, voiceMs('her', l2) + 300)); }, t2);
