@@ -4911,3 +4911,6 @@ body.hasdock main{padding-bottom:84px}
 .ruconf i{position:absolute;top:-4vh;width:1vh;height:1.6vh;background:var(--c);border-radius:2px;animation:fnfall var(--t) linear infinite;animation-delay:var(--d)}
 /* the party game vote: once the game is chosen, the other three go dark */
 #slotov .slcell.hi.out{filter:grayscale(1) brightness(.4)!important;opacity:.6;box-shadow:none!important;animation:none!important;transition:filter .5s,opacity .5s}
+/* the finale winner holds the flag pole IN the hand: the pole runs through the fist (a quarter of it below), and turns around the grip */
+.fnov .fnp.big .lbod .ca .hflag{left:calc(50% - .5vh);bottom:-1.6vh;transform-origin:.5vh 75%}
+.fnov .fnp.big .lbod .ca .hflag::after{content:'';position:absolute;left:.5vh;top:75%;width:2.5vh;height:2.5vh;translate:-50% -50%;border-radius:50%;background:#e8b48c;box-shadow:inset -.25vh -.3vh 0 rgba(0,0,0,.15);z-index:2}
