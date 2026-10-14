@@ -2771,8 +2771,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       'Put down your notes, Europe: it’s game time! 🎮', 'Who’s ready to have some fun? Party game! 🥳', 'Time to get off the sofa: party game! 🛋️➡️💃', 'Confetti cannons ready… it’s party game time! 🎊',
       'Let’s see who can keep their cool: party game! 😎', 'Fasten your seatbelts, here comes a party game! 🎢', 'No more quiz for a bit: let the games begin! 🎮', 'Warm up your thumbs: party game coming up! 👍',
       'Disco lights on! It’s party game time! 🪩', 'Let’s spin the wheel of chaos: party game! 🎡', 'Time for something completely different: a party game! ✨', 'Hold on to your sequins: party game! 💫'],
-    trivia: ['It’s time again for trivia! 🧠', 'Brains on, Europe: trivia time! 🧠', 'Back to the questions! 🎧', 'Let’s see what you really know about Eurovision! 🧠', 'Phones ready: here come the questions! 📱', 'Trivia time! Douze points for the know-it-alls! 🧠', 'Time to sort the fans from the superfans! 🤓', 'Ears open, Europe: the music is back! 🎶'],
-    first: ['It’s time to test your knowledge: it’s trivia time! 🧠', 'Let’s find out who the real Eurovision expert is: trivia time! 🧠', 'First up: trivia! Show us what you know! 🧠', 'We start with some trivia. Ears open, Europe! 🎧'],
+    trivia: ['And next up on the big screen… 👀', 'Brains on, Europe, because next up is… 🧠', 'Let’s see what’s next… 🥁', 'Phones ready! Next up… 📱', 'Time to sort the fans from the superfans… 🤓', 'Ears open, Europe, here comes… 🎶', 'And now, back to… 🥁', 'Eyes on the big screen! ✨'],   // (teasers: the big screen says it)
+    first: ['So… what are we starting with tonight? 🤔', 'Let’s see what’s first on tonight’s menu… 👀', 'And our very first round tonight is… 🥁', 'Eyes on the big screen: here’s our first round… ✨'],   // (a teaser: the big screen says what it is)
     souvenir: ['I hope you got a nice souvenir!', 'Ooh, shopping bags! I hope you spent wisely! 🛍️', 'Lynda will be counting her coins tonight! 💰', 'Back from the boutique, and looking fabulous! ✨', 'Did anyone buy something dangerous? I hope not! 😬', 'I spotted something shiny in that bag… 👀'],
     onward: ['Let’s get on with the show!', 'On with the show!', 'The show must go on!', 'Back to business!', 'Where were we? Ah, yes!'],
     lynda: ['Let’s go and see our beloved Lynda!', 'To the boutique! Lynda is waiting… 🛍️', 'Shopping time! Don’t keep Lynda waiting! 🛍️', 'Lynda has opened her doors… let’s pay her a visit! 👠', 'Wallets out, Europe: off to Lynda! 💸']
@@ -3163,16 +3163,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|and our final game tonight the grand final you ll race each other for the eurovision trophy': 'plan_final_chase',
     'him|but first let s pay a visit to lynda in woodruff s boutique': 'but_first_lynda',
     'him|everyone has their first item from lynda grab your phones': 'first_item',
-    'her|it s time to test your knowledge it s trivia time': 'first_1',
-    'her|let s find out who the real eurovision expert is trivia time': 'first_2',
-    'her|first up trivia show us what you know': 'first_3',
-    'her|we start with some trivia ears open europe': 'first_4',
+    'her|so what are we starting with tonight': 'first_1',
+    'her|let s see what s first on tonight s menu': 'first_2',
+    'her|and our very first round tonight is': 'first_3',
+    'her|eyes on the big screen here s our first round': 'first_4',
     'lynda|hello eurovision fans my name is lynda woodruff welcome to my shop': 'lynda_hello',
     'lynda|whoever wins a party game gets to shop here so put your best foot forward': 'lynda_rules',
     'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course look at your phone and take your pick': 'lynda_freebie',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { but_first_lynda: 4754, first_1: 4048, first_2: 4754, first_3: 3474, first_4: 3866, first_item: 4440, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
+  var VOICE_MS = { but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 4440, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -3190,7 +3190,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=5'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=6'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       if (who) {   // (the mouth follows how loud the line is, frame by frame)
         try {
           var AC = window.AudioContext || window.webkitAudioContext;
