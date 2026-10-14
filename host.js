@@ -741,7 +741,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }).join('');
   }
   function cover(on, icon, text, pulse) {
-    $('cover').classList.toggle('hidden', !on);
+    $('cover').classList.toggle('hidden', !on); $('cover').classList.remove('onscreen');   // (a title on the big screen: only while the card that put it there is up)
     if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; $('covericon').classList.toggle('pulse', !!pulse); }
   }
   // Countdown: the video loads muted behind the cover while 5..1 counts down.
@@ -829,12 +829,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try {
       stY = new YT.Player('ytstudio', { width: 240, height: 135, videoId: STUDIO_YT, playerVars: { controls: 0, disablekb: 1, rel: 0, iv_load_policy: 3, playsinline: 1, fs: 0 },
         events: { onReady: function () { ytVolWrap(stY); stYReady = true; try { stY.setVolume(0); } catch (e) {} if (stYOn) stYPlay(); },
-          onStateChange: function (e) { if (e.data === 0) { try { stY.seekTo(0, true); stY.playVideo(); } catch (x) {} } },   // (round and round)
+          onStateChange: function (e) { if (e.data === 0) { try { stY.seekTo(0, true); if (stYOn) stY.playVideo(); else stY.pauseVideo(); } catch (x) {} } },   // (at the end: back to the start, and on again if it's wanted)
           onError: function () { stYBad = true; stYOn = false; render(); } } });
     } catch (e) { stYBad = true; }
   }
   function stYPlay() {
     clearInterval(stYFade); var v = 0;
+    try { var d = stY.getDuration() || 0, t = stY.getCurrentTime() || 0; if (stY.getPlayerState() === 0 || (d && d - t < 3)) stY.seekTo(0, true); } catch (e) {}   // (it had reached the end: from the beginning again)
     try { stY.setVolume(0); stY.playVideo(); } catch (e) {}
     stYFade = setInterval(function () { v += 3; try { stY.setVolume(Math.min(STUDIO_VOL, v)); } catch (e) {} if (v >= STUDIO_VOL) clearInterval(stYFade); }, 60);
   }
@@ -1785,13 +1786,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'fun'; G.barMs = 0;
     if (!REMOTE) {
       try { yt.pauseVideo(); } catch (e) {}
-      cover(true, f.icon, f.title, false); masks(true); $('cover').classList.add('funcard');
+      cover(true, f.icon, f.title, false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('onscreen');   // (on the big LED screen behind the presenters)
+      var hq = (kind === 'quiz' || kind === 'starter' || kind === 'bigfive') && hostsEl();   // the presenters stay on stage, in front of it, for the round's card
+      if (hq) { hq.classList.remove('away'); hq.classList.remove('together'); hostHold = true; clearTimeout(hostT.away); }
       [0, 140, 280].forEach(function (ms, i) { setTimeout(function () { if (G.phase === 'fun') Music.plop(i * 3); }, ms); });
       setTimeout(function () { if (G.phase === 'fun') Music.ding(); }, 460);
     }
     push();
     clearTimeout(funTimer);
-    funTimer = setTimeout(function () { if (G.phase !== 'fun') return; $('cover').classList.remove('funcard'); G.fun = null; G.phase = 'loading'; then(); }, ms || 5200);
+    funTimer = setTimeout(function () { if (G.phase !== 'fun') return; $('cover').classList.remove('funcard'); G.fun = null; G.phase = 'loading'; if (hostHold && !REMOTE && (kind === 'quiz' || kind === 'starter' || kind === 'bigfive')) { hostHold = false; hostsAway(); } then(); }, ms || 5200);   // (then they leave the screen to the questions)
   }
 
   // ---------- rounds, and the spin for the years ----------
@@ -2734,6 +2737,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TALK_MS = 26;
   function typeSay(el, text, voice) {
     text = String(text); if (el._said === text) return 0; el._said = text;
+    if (!REMOTE && voice) voiceFor(voice, text);   // (a recorded line: spoken out loud as well)
     var chars = Array.from(text), n = 0;
     clearInterval(el._typeT);
     var draw = function () { el.innerHTML = '<span>' + esc(chars.slice(0, n).join('')) + '</span><span class="unsaid">' + esc(chars.slice(n).join('')) + '</span>'; };
@@ -2821,10 +2825,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', 'Grab your phones. Let’s get this show started!']);
       lines.push([lines[lines.length - 1][0] === 'him' ? 'her' : 'him', vary('first')]);
     }
+    // (the first line once they're in place; every next line waits until the spoken one before it has finished)
+    var lineGap = function (i) { return i ? Math.max(3300, voiceMs(lines[i - 1][0], lines[i - 1][1]) + 500) : 3300; };
     if (shopNow) {
       G.shopFirst = true;
-      lines.forEach(function (l, i) { step(i === 1 ? 3700 : i === 2 ? 4900 : 3300, function () { hostSay(l[0], l[1], 3600); if (i < 2) hostVoice(i ? 'sofia_hello' : 'oliver_hello'); else if (!i) Music.ding(); }); });   // (their very first lines are spoken out loud)   // (the first line once they're in place)
-      step(3600, function () {
+      lines.forEach(function (l, i) { step(lineGap(i), function () { hostSay(l[0], l[1], Math.max(3600, voiceMs(l[0], l[1]) + 400)); }); });
+      step(Math.max(3600, voiceMs(lines[lines.length - 1][0], lines[lines.length - 1][1]) + 500), function () {
         v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive');
         G.mode = G.lastParty = 'shop'; G.mgBase = null;
         v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]);
@@ -2832,8 +2838,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       return;
     }
-    lines.forEach(function (l, i) { step(i === 1 ? 3700 : i === 2 ? 4900 : 3300, function () { hostSay(l[0], l[1], 3600); if (i < 2) hostVoice(i ? 'sofia_hello' : 'oliver_hello'); else if (!i) Music.ding(); }); });   // (their very first lines are spoken out loud)   // (the first line once they're in place)
-    step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
+    lines.forEach(function (l, i) { step(lineGap(i), function () { hostSay(l[0], l[1], Math.max(3600, voiceMs(l[0], l[1]) + 400)); }); });
+    step(Math.max(3300, voiceMs(lines[lines.length - 1][0], lines[lines.length - 1][1]) + 500), function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
   // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Sofia!").
   function showPlan() {
@@ -3133,13 +3139,39 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // they announce it, and the whole studio moves over to the shop.
   // The presenters welcome Europe back, a card appears on the screen between them, they announce what comes, then it starts.
   var stingEl = null;
-  // The presenters' recorded lines (sounds/voice_*.mp3, made with ElevenLabs): the studio music dips while they speak.
+  // The recorded lines (sounds/voice_*.mp3, made with ElevenLabs): when someone says a line that has a recording, it plays.
+  // The key is who says it plus the words (lower case, letters and digits only), so emoji and quote marks don't matter.
+  var VOICE_FILES = {
+    'him|good evening europe i m oliver lindstr m': 'oliver_hello',
+    'her|and i m sofia lindberg welcome to euroquizion': 'sofia_hello',
+    'him|tonight it s party night with five party games and you vote for each one': 'plan_partynight5',
+    'her|first five trivia questions then a party game and so on until all 5 party games have been played': 'plan_blocks5',
+    'him|songs from every era of eurovision from 1956 until now': 'plan_eras',
+    'her|a right answer is worth 12 points douze points': 'plan_douze',
+    'him|win a party game and you get to go shopping in woodruff s boutique': 'plan_shopwin',
+    'her|and our final game tonight the grand final you ll race each other for the eurovision trophy': 'plan_final_chase',
+    'him|but first let s pay a visit to lynda in woodruff s boutique': 'but_first_lynda',
+    'him|everyone has their first item from lynda grab your phones': 'first_item',
+    'her|it s time to test your knowledge it s trivia time': 'first_1',
+    'her|let s find out who the real eurovision expert is trivia time': 'first_2',
+    'her|first up trivia show us what you know': 'first_3',
+    'her|we start with some trivia ears open europe': 'first_4',
+    'lynda|hello eurovision fans my name is lynda woodruff welcome to my shop': 'lynda_hello',
+    'lynda|whoever wins a party game gets to shop here so put your best foot forward': 'lynda_rules',
+    'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course take your pick': 'lynda_freebie',
+    'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
+  };
+  var VOICE_MS = { but_first_lynda: 4519, first_1: 4048, first_2: 4754, first_3: 3474, first_4: 3866, first_item: 3970, lynda_bye: 4911, lynda_freebie: 7627, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3395, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5250, plan_final_chase: 7079, plan_partynight5: 4989, plan_shopwin: 4205, sofia_hello: 4597 };
+  function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
+  function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f); }
+  // The studio music dips while they speak.
   var voiceEl = null, voiceDip = null;
   function hostVoice(name) {
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=2'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=3'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       var dip = function (on) {   // (the music fades down to a whisper while they talk, and back up after)
         try { if (!(stY && stYReady && stYOn)) return; clearInterval(stYFade); var v = stY._want == null ? STUDIO_VOL : stY._want, to = on ? Math.round(STUDIO_VOL * 0.15) : STUDIO_VOL;
           stYFade = setInterval(function () { v += v < to ? 2 : -3; if ((on && v <= to) || (!on && v >= to)) { v = to; clearInterval(stYFade); } try { stY.setVolume(v); } catch (e) {} }, 30); } catch (e) {}
@@ -3177,7 +3209,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!on) at(200, function () { hostSay('him', vary('back'), 4000); });
     if (hh) hh.classList.add('together');
     at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
-      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
+      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); $('cover').classList.add('onscreen'); Music.ding(); whooshes([0]); push(); });   // (on the big LED screen behind them)
     at(3700 + d, function () { hostSay('her', line, 3400); });
     at(7200 + d, function () { hostHold = false; then(); });
     setTimeout(function () { hostHold = false; }, 7600 + d);
@@ -3187,9 +3219,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) { then(); return; }
     G.phase = 'loading'; G.studioTalk = true; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();   // (studioTalk: the studio music plays on while they talk)
     hostHold = true; clearTimeout(hostT.away);
-    hostSay('him', first ? 'Everyone has their first item from Lynda! Grab your phones… ✨' : vary('souvenir') + ' ' + vary('onward'), 3600);   // (the very first visit, right after the opening: now the first trivia)
-    setTimeout(function () { hostSay('her', first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia'), 3000); }, 3300);   // (testing the party games: there is no trivia in between)
-    setTimeout(function () { hostHold = false; G.studioTalk = false; then(); }, 6400);
+    var l1 = first ? 'Everyone has their first item from Lynda! Grab your phones… ✨' : vary('souvenir') + ' ' + vary('onward'), l2 = first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia');   // (the very first visit, right after the opening: now the first trivia; testing the party games: no trivia in between)
+    var t2 = Math.max(3300, voiceMs('him', l1) + 400), t3 = t2 + Math.max(3100, voiceMs('her', l2) + 400);   // (room for the spoken lines)
+    hostSay('him', l1, Math.max(3600, voiceMs('him', l1) + 300));
+    setTimeout(function () { hostSay('her', l2, Math.max(3000, voiceMs('her', l2) + 300)); }, t2);
+    setTimeout(function () { hostHold = false; G.studioTalk = false; then(); }, t3);
   }
   function shopIntro() {
     if (REMOTE) { partyGo('shop'); return; }
@@ -3235,8 +3269,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else act.forEach(function (p) { var mine = []; while (mine.length < Math.min(SHOP_OFFER, stock.length)) mine.push(deal(mine)); offer[p.pid] = mine; });
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
-    var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = 5600, TALK2 = 5600;
-    if (talk) { G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 1; G.phase = 'shop'; G.barMs = 0; push(); hostVoice('lynda_hello');   /* (her first line, spoken) */ var g0 = G.shop; setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, TALK1 + TALK2); return; }
+    var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = Math.max(5600, (VOICE_MS.lynda_hello || 0) + 600), TALK2 = Math.max(5600, (VOICE_MS.lynda_rules || 0) + 600);   // (her spoken lines get to finish)
+    if (talk) { G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 1; G.phase = 'shop'; G.barMs = 0; push();  var g0 = G.shop; setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, TALK1 + TALK2); return; }
     shopOpen();
   }
   function shopOpen() {
