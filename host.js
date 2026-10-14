@@ -3229,7 +3229,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'juliet|hi guys i m juliet i know this city pretty well': 'jul_hi',
     'juliet|if you want to find your way back to the studio just follow my instructions': 'jul_follow',
     'juliet|i will give you instructions step by step which you will follow on your phone': 'jul_steps',
-    'juliet|the first round i ll make easy my arrow stays up while you tap it in': 'jul_easy',
+    'juliet|the first round i ll make easy my arrow stays visible while you tap it in': 'jul_visible',
     'juliet|one wrong turn and you re lost in verona the last one left wins ready': 'jul_ready',
     'juliet|look the studio is right behind you off you go ciao': 'jul_ciao',
     'her|good timing i need a smoke': 'ver_smoke',
@@ -3240,7 +3240,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'him|shame we had to call ubers for some of you': 'ver_uber_some',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { jul_hi: 4833, jul_follow: 5068, jul_steps: 5799, jul_easy: 5564, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
+  var VOICE_MS = { jul_hi: 4833, jul_follow: 5068, jul_steps: 5799, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -6965,7 +6965,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     t += 2400 + 4000;
     at(t, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) { b.innerHTML = '<i class="e">🤔</i><span class="t"></span>'; b.classList.add('on'); typeSay(b.querySelector('.t'), 'Now what…?', 'him'); Music.plop(5); setTimeout(function () { Music.plop(2); }, 200); } });   /* a puzzled "huh?" */
     t += 2000;
-    at(t, function () { jmSong(true); });
     at(t + 2500, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) b.classList.remove('on'); });
     t += 5000;
     at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // then Juliet steps out
@@ -6973,12 +6972,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       'Hi guys, I’m Juliet! 🌹 I know this city pretty well.',
       'If you want to find your way back to the studio, just follow my instructions!',
       'I will give you instructions, step by step, which you will follow on your phone. 📱',
-      'The first round I’ll make easy: my arrow stays up while you tap it in. 😉',
+      'The first round I’ll make easy: my arrow stays visible while you tap it in. 😉',
       'One wrong turn and you’re lost in Verona! 😵 The last one left wins. Ready?'
     ];
     t += 1200;
     jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); if (/on your phone/.test(l)) { g.pad = true; push(); } }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200, voiceMs('juliet', l) + 900); });   /* (the arrows appear on the phones as she mentions them) */
-    at(t, function () { jmJul(''); if (!(G.qj && G.qj.song)) jmSong(true); qjRound(); });   /* (the song is already playing) */
+    at(t, function () { jmJul(''); if (!(G.qj && G.qj.song)) jmSong(true); qjRound(); });   /* (the song starts with the first countdown) */
   }
   // Juliet's own speech balloon, next to her balcony
   function jmLostSay(ks) {   /* Juliet, as soon as they're out of sight: who is lost now */
@@ -7313,7 +7312,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     var rl = g.seq ? g.seq.length : g.round; ov.querySelector('.vrno').textContent = g.round ? 'Route: ' + rl + ' step' + (rl === 1 ? '' : 's') : '';
     // Juliet calls out an arrow
-    var easy = g.round === 1 && g.st === 'input', si = easy ? 0 : g.show;   /* (round 1: the arrow stays up while everyone taps it in) */
+    var easy = g.round === 1 && g.st === 'input', si = easy ? 0 : g.show;   /* (round 1: the arrow stays visible while everyone taps it in) */
     var say = ov.querySelector('.jmsay'), sv = (g.st === 'show' && g.show >= 0) || easy ? JM_ARROW[g.seq[si]] : '';
     if (say.getAttribute('data-v') !== (sv ? si + sv : '')) { say.setAttribute('data-v', sv ? si + sv : ''); say.innerHTML = sv ? '<b>' + sv + '</b><small>' + (si + 1) + '</small>' : ''; say.classList.toggle('on', !!sv); }
     ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show');
