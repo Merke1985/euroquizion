@@ -4693,4 +4693,10 @@ body.hasdock main{padding-bottom:84px}
 .shosts .ehost.her{transition:right .8s cubic-bezier(.3,.6,.4,1)}
 
 /* Talking mouths: closed (flat) until --mo opens them, set by the sound of the line or the typing */
-.ehost .emouth,.keeper .emouth{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(var(--mo,0));transition:transform .07s ease-out}   /* (a soft open mouth with teeth and a tongue, hinged at the top lip) */
+.ehost .emin,.keeper .emin{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(var(--mo,0));transition:transform .07s ease-out}   /* (a soft open mouth with teeth and a tongue, hinged at the top lip…) */
+.ehost .elip,.keeper .elip{transform:translateY(calc(var(--mo,0) * var(--lh,8px)));opacity:min(1,calc(var(--mo,0) * 6));transition:transform .07s ease-out,opacity .07s}   /* (…and the bottom lip always there, moving down with it) */
+/* The boutique's timer: right next to Lynda, big and bright (it was a small pill in the bottom corner) */
+.shopov.boutique .bqtimer{left:calc(4vw + 23vh);right:auto;bottom:auto;top:53vh;padding:.35em .75em;border-radius:18px;
+  background:linear-gradient(160deg,#ff3fa4,#7a1fa8);border:3px solid #ffd23f;color:#fff;font-size:clamp(1.7rem,3.4vw,3.2rem);line-height:1;
+  box-shadow:0 0 0 4px rgba(255,210,63,.18),0 10px 30px rgba(0,0,0,.55),0 0 34px rgba(255,63,164,.55);text-shadow:0 2px 0 rgba(0,0,0,.25);z-index:5}
+.shopov.boutique .bqtimer.hurry{color:#fff;background:linear-gradient(160deg,#ff4a5f,#b0102e);border-color:#fff}

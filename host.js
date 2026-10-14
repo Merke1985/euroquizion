@@ -2686,7 +2686,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="89" cy="94" rx="3.2" ry="4" fill="#2a1a10"/><ellipse cx="111" cy="94" rx="3.2" ry="4" fill="#2a1a10"/>' +
     '<path d="M83 84 q6 -4 12 0 M105 84 q6 -4 12 0" stroke="#2b1d14" stroke-width="3" fill="none" stroke-linecap="round"/>' +
     '<path d="M88 110 Q100 122 112 110" stroke="#7a3b2a" stroke-width="3.5" fill="#fff" stroke-linecap="round"/>' +
-    '<g class="emouth"><path d="M93 111 Q100 110 107 111 Q107 119 100 119 Q93 119 93 111 Z" fill="#7a2e26"/><rect x="94.6" y="111" width="10.8" height="2.2" rx="1.1" fill="#fff"/><ellipse cx="100" cy="117.4" rx="4.2" ry="1.9" fill="#d9706e"/></g>' +   // (opens when he talks)
+    '<g class="emouth"><g class="emin"><path d="M92 111 Q100 110 108 111 Q108 121 100 121 Q92 121 92 111 Z" fill="#7a2e26"/><rect x="93.6" y="111" width="12.8" height="2.3" rx="1.1" fill="#fff"/><ellipse cx="100" cy="119.2" rx="4.8" ry="2" fill="#d9706e"/></g><path class="elip" style="--lh:7.5px" d="M92.5 111.5 Q100 116 107.5 111.5" stroke="#7a3b2a" stroke-width="3.2" fill="none" stroke-linecap="round"/></g>' +   // (opens when he talks)
     '</svg>';
   var HOST_HER = '<svg class="ehost her" viewBox="0 0 200 420" aria-hidden="true"><defs>' +
     '<linearGradient id="ehgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3fa4"/><stop offset=".55" stop-color="#b0208a"/><stop offset="1" stop-color="#5a1170"/></linearGradient>' +
@@ -2706,7 +2706,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="90" cy="92" rx="3" ry="3.8" fill="#2a1a10"/><ellipse cx="110" cy="92" rx="3" ry="3.8" fill="#2a1a10"/>' +
     '<path d="M85 86 l-3 -3 M115 86 l3 -3" stroke="#2a1a10" stroke-width="2" stroke-linecap="round"/>' +
     '<path d="M90 107 Q100 116 110 107" stroke="#c0204a" stroke-width="4" fill="#fff" stroke-linecap="round"/>' +
-    '<g class="emouth"><path d="M93.5 108.5 Q100 107.5 106.5 108.5 Q106.5 116 100 116 Q93.5 116 93.5 108.5 Z" fill="#8a2a36"/><rect x="95.1" y="108.5" width="9.8" height="2.2" rx="1.1" fill="#fff"/><ellipse cx="100" cy="114.4" rx="3.9" ry="1.9" fill="#e07a80"/></g>' +   // (opens when she talks)
+    '<g class="emouth"><g class="emin"><path d="M92.5 108.5 Q100 107.5 107.5 108.5 Q107.5 118 100 118 Q92.5 118 92.5 108.5 Z" fill="#8a2a36"/><rect x="94.1" y="108.5" width="11.8" height="2.3" rx="1.1" fill="#fff"/><ellipse cx="100" cy="116.2" rx="4.5" ry="2" fill="#e07a80"/></g><path class="elip" style="--lh:7px" d="M93 109 Q100 113.5 107 109" stroke="#c0204a" stroke-width="3.6" fill="none" stroke-linecap="round"/></g>' +   // (opens when she talks)
     '<circle cx="74" cy="100" r="3" fill="#ffd23f"/><circle cx="126" cy="100" r="3" fill="#ffd23f"/>' +
     '</svg>';
 
@@ -3182,7 +3182,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (who === 'lynda') return document.querySelector('.bqkeeper svg');
     var pc = $('pcov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
   }
-  function mouth(who, v) { var el = mouthOf(who); if (el) el.style.setProperty('--mo', (Math.max(0, Math.min(1, v)) * 0.75).toFixed(2)); }   // (never all the way open)
+  function mouth(who, v) { var el = mouthOf(who); if (el) el.style.setProperty('--mo', (Math.max(0, Math.min(1, v)) * 0.85).toFixed(2)); }   // (never quite all the way open)
   var mouthAC = null, mouthRaf = 0;
   // The studio music dips while they speak.
   var voiceEl = null, voiceDip = null;
@@ -3711,7 +3711,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
     '<path d="M109.5 97 Q107.5 101.5 108 103.5 Q110 105 112.5 103.5" stroke="#c08a6c" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".75"/>' +   // (a small, ordinary nose)
     '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
-    '<g class="emouth"><path d="M101.5 109.5 Q110 108.5 118.5 109.5 Q118.5 119 110 119 Q101.5 119 101.5 109.5 Z" fill="#5e1424" stroke="#c8102e" stroke-width="2.2" stroke-linejoin="round"/><rect x="103.5" y="110.1" width="13" height="2.4" rx="1.2" fill="#fff"/><ellipse cx="110" cy="117" rx="4.76" ry="2.1" fill="#e07a84"/></g>' +   // (opens when she talks)
+    '<g class="emouth"><g class="emin"><path d="M101 109.5 Q110 108.5 119 109.5 Q119 120 110 120 Q101 120 101 109.5 Z" fill="#5e1424"/><rect x="102.6" y="109.5" width="14.8" height="2.3" rx="1.1" fill="#fff"/><ellipse cx="110" cy="118.2" rx="5.4" ry="2" fill="#e07a84"/></g><path class="elip" style="--lh:8px" d="M101.5 110 Q110 114.5 118.5 110" stroke="#c8102e" stroke-width="3.6" fill="none" stroke-linecap="round"/></g>' +   // (opens when she talks)
     '<ellipse cx="88" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
     '</svg>';
   // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
