@@ -335,7 +335,7 @@
         if (m && m.flag) requestAnimationFrame(flagFit); pl.classList.toggle('on', !!(m && m.half));
         var cn = $('ccnote'), ck = m && m.cc ? m.cc : ''; if (cn.getAttribute('data-cc') !== ck) { cn.setAttribute('data-cc', ck); cn.innerHTML = ck ? '<img src="https://flagcdn.com/w40/' + ck + '.png" alt=""><span>' + (countries[ck] ? esc(countries[ck]) + '! ' : '') + 'This one is about your country: double points! ✨</span>' : ''; }
         cn.classList.toggle('hidden', !(ck && m.cch)); cn.classList.toggle('cchit', !!(ck && m.cch));   /* (only when the question is about your own country) */
-        $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc'); $('flagmsg').classList.toggle('hidden', !(m && m.flag && q.type === 'mc'));   /* the flag hides every answer: only the outlines are left, so you pick blind */
+        $('opts').classList.toggle('flagged', !!(m && m.flag) && q.type === 'mc'); $('flagmsg').classList.toggle('hidden', !(m && m.flag && q.type === 'mc')); if (m && m.flag) { var fmt = '🚩 ' + (m.flagby ? m.flagby + '’s flag! ' : '') + 'Your answers are scrambled behind it… What do you press? Who knows! 🤷'; if ($('flagmsg').textContent !== fmt) $('flagmsg').textContent = fmt; }   /* the flag hides every answer: only the outlines are left, so you pick blind */
         var mc = q.type === 'mc';
         $('guessform').classList.toggle('hidden', mc); $('opts').classList.toggle('hidden', !mc);
         var bkey = key + (mc && m && m.flag && q.subject !== 'best' ? '|flag' : '');   /* (a Giant Flag landing mid-question: the answers are rebuilt, scrambled) */
@@ -1723,7 +1723,7 @@
     fl.style.top = Math.round(top - r0.top - 10) + 'px'; fl.style.height = Math.max(120, Math.round(bot - top + 16)) + 'px';
     /* a bit narrower than the answers: their left and right ends peek out, so you can still tap them (blind) */
     var ro = (low === ob ? ob : $('qtext')).getBoundingClientRect(); fl.style.left = Math.round(ro.left - r0.left + 16) + 'px'; fl.style.right = Math.round(r0.right - ro.right + 16) + 'px';
-    var fmg = $('flagmsg'), fr0 = fl.getBoundingClientRect(); if (fmg) { fmg.style.top = Math.round(fr0.top - r0.top + fr0.height - 14) + 'px'; fmg.style.left = Math.round(fr0.left - r0.left + 30) + 'px'; fmg.style.right = Math.round(r0.right - fr0.right + 18) + 'px'; }   /* the message on the flag itself */
+    var fmg = $('flagmsg'), fr0 = fl.getBoundingClientRect(); if (fmg) { fmg.style.top = Math.round(fr0.bottom - r0.top + 12) + 'px'; fmg.style.left = Math.round(fr0.left - r0.left + 8) + 'px'; fmg.style.right = Math.round(r0.right - fr0.right + 8) + 'px'; }   /* the message just below the flag, not on it */
     var fb = fl.getBoundingClientRect().bottom, pole = fl.querySelector('.pole'); if (pole) pole.style.bottom = -Math.max(30, Math.round(window.innerHeight - fb)) + 'px';   /* the pole goes all the way down to the bottom of the screen, as if someone below is holding it */
   }
   window.addEventListener('resize', flagFit); setInterval(flagFit, 1000);
