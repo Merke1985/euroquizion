@@ -1394,7 +1394,7 @@
     var big = function (icon, title, sub) {
       var e = $('probbed'); if (!e) { e = document.createElement('div'); e.id = 'probbed'; e.className = 'probbed'; document.body.appendChild(e); }
       e.innerHTML = '<div class="pr"><div class="pri">' + icon + '</div><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></div>';
-      e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); clearTimeout(e._t); e._t = setTimeout(function () { e.classList.remove('on'); }, 4500);
+      e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); clearTimeout(e._t); e._t = setTimeout(function () { e.classList.remove('on'); }, 7000);   /* (as long as the item's card on the big screen) */
     };
     var nm = function (id) { var it = (typeof shopItem === 'function') && shopItem(id); return it ? it : { icon: '❓', name: id }; };
     if (m.robbed && m.robbed.k !== robSeen) { var first = !robSeen; robSeen = m.robbed.k; if (!first || Date.now() - (window.__pStart || 0) > 8000) { var a = nm(m.robbed.it); big('🎟️' + a.icon, 'Robbed!', m.robbed.by + ' sneaked into the Euroclub and stole your ' + a.name + '!'); } }
