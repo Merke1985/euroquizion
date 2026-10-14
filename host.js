@@ -282,7 +282,7 @@
     if (G.q && (G.phase === 'guess' || G.phase === 'reveal')) s.q = { subject: G.q.subject, type: G.q.type, text: G.q.text, hint: G.q.hint, options: G.q.options, shots: G.q.shots || null, noclip: !!G.q.noclip, peel: !!G.q.peel, smoke: G.phase === 'guess' && G.smoke && G.smoke.length ? G.smoke : null, fan: G.phase === 'guess' && G.fanQ && G.fanQ.key === qKeyNow() ? G.fanQ.map : null };
     if (G.q && G.phase === 'reveal') { s.q.correct = G.q.correct; s.q.answer = G.q.answer; s.q.explain = G.q.explain; if (G.q.reveal) s.q.reveal = G.q.reveal; }
     if (G.phase === 'pspin' && G.slot) s.fun = { icon: '🎰', title: 'Pick a game!', sub: 'Watch the big screen…' };
-    if (G.phase === 'pspin' && G.pspin) s.fun = { icon: '🎉', title: 'Party round!', sub: G.pspin.done ? 'It is ' + G.pspin.games[G.pspin.roll].title : 'Spinning…' };
+    if (G.phase === 'pspin' && G.pspin) s.fun = { icon: '🎉', title: 'Party game!', sub: G.pspin.done ? 'It is ' + G.pspin.games[G.pspin.roll].title : 'Spinning…' };
     if (G.phase === 'fun' && G.fun) s.fun = { icon: G.fun.icon, title: G.fun.title, sub: G.fun.sub };
     if (G.phase === 'part' && G.part) s.part = { n: G.part.n, of: G.part.of, spin: !!G.part.eras, label: G.part.done ? G.part.label : '' };
     if (G.quips && G.phase === 'qall') {
@@ -655,7 +655,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     spinLayout(); $('qopts').classList.remove('notearea'); $('qopts').classList.remove('tiles'); $('qopts').classList.remove('tiles3');   // (tiles: only Jury Show with more than four singers)
     if (G.phase === 'pspin' && G.pspin) {
       var sp = G.pspin;
-      $('qtext').textContent = sp.done ? 'Party round: ' + sp.games[sp.roll].title : 'Party round! Which one will it be?';
+      $('qtext').textContent = sp.done ? 'Party game: ' + sp.games[sp.roll].title : 'Party game! Which one will it be?';
       $('qopts').innerHTML = sp.games.map(function (g, i) { return '<div class="optcol"><div class="opt' + (i === sp.roll ? (sp.done ? ' right picked' : ' rolling') : g.out ? ' dim' : '') + '"><span class="bigicon">' + g.icon + '</span><span class="bigname">' + esc(g.title) + '</span></div></div>'; }).join('');
       $('qopts').classList.remove('votelist'); $('qopts').classList.add('eras'); G.plopped = null; return;
     }
@@ -697,7 +697,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       G.noteJust = null; G.plopped = null; return;
     }
     if (G.phase === 'fun' && G.fun && G.fun.quiet) { $('qtext').textContent = ''; $('qopts').innerHTML = ''; }   // (an announcement by the presenters: the screen says it all)
-    else if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party round: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
+    else if (G.phase === 'fun' && G.fun) { $('qtext').textContent = (G.fun.plain ? '' : 'Party game: ') + G.fun.title; $('qopts').innerHTML = '<p class="funsub">' + esc(G.fun.sub) + '</p>'; $('qopts').classList.remove('votelist'); $('qopts').classList.remove('eras'); G.plopped = null; return; }
     if (G.phase === 'part' && G.part) {
       var pt = G.part, head = G.atype === 'party' ? 'Next trivia' : pt.of > 1 ? 'Round ' + pt.n + ' of ' + pt.of : 'This game';
       $('qtext').textContent = pt.eras ? (pt.done ? head + ': ' + pt.label : head + ': which era will it be?') : head;
@@ -1508,7 +1508,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
-    partytime: { icon: '🎉', title: 'Party round!', sub: '' },
+    partytime: { icon: '🎉', title: 'Party game!', sub: '' },
     shop: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: 'Everyone gets one free item! Use it whenever you like. From now on, win a party game to go shopping again.' },
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Search the four rooms on your phone in two minutes for secret clues, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
@@ -1570,7 +1570,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
-    studioIntro('🎉', 'Party round!', '', vary('party'), function () { partyChoose(games); }, 'partytime');
+    studioIntro('🎉', 'Party game!', '', vary('party'), function () { partyChoose(games); }, 'partytime');
   }
   function partyChoose(games) {
     var how = games.length < 2 ? 'single' : (G.partyPick || 'order');
@@ -1617,7 +1617,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     stopTimers(); G.draw = null; G.song = null; G.clip = null;
     G.best = { pick: true, kinds: games, pids: games.map(function () { return null; }), only: chooser ? chooser.pid : null, id: 'pick' + G.round, tally: null, wins: null };
     G.q = { subject: 'pick', type: 'mc', text: chooser ? chooser.name + ' picks the party round' : 'Vote: which party round is next?', hint: '', options: games.map(function (k) { return FUN[k].icon + ' ' + FUN[k].title; }), correct: -1, answer: '', noclip: true };
-    if (!REMOTE) { cover(true, '🎉', 'Party round!', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); }
+    if (!REMOTE) { cover(true, '🎉', 'Party game!', false); masks(true); $('cover').classList.add('funcard'); stageEl().classList.add('novideo'); }
     G.guessAt = Date.now(); G.phase = 'guess'; G.barMs = PICK_MS; G.endsAt = Date.now() + PICK_MS; push();
     endTimer = setTimeout(reveal, PICK_MS);
   }
@@ -1773,7 +1773,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'pspin'; G.barMs = 0;
     G.pspin = { games: (only || PARTY_KINDS).map(function (k) { return { kind: k, icon: FUN[k].icon, title: FUN[k].title, out: games.indexOf(k) < 0 }; }), roll: -1, done: false };
     var idx = function (k) { return (only || PARTY_KINDS).indexOf(k); };
-    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '🎉', 'Party round!', false); masks(true); $('cover').classList.add('funcard'); }
+    if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} cover(true, '🎉', 'Party game!', false); masks(true); $('cover').classList.add('funcard'); }
     var hops = games.length < 2 ? 0 : 16 + Math.floor(Math.random() * games.length), start = (games.indexOf(chosen) - (hops % games.length) + games.length * 8) % games.length, k = 0;   // only one left: no running light, straight to yellow and then green
     var hop = function () {
       if (G.phase !== 'pspin') return;
@@ -3370,12 +3370,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       at(2700, function () { hostSay('him', l1, Math.max(3000, voiceMs('him', l1) + 300)); });
       tPoint = 2700 + Math.max(2700, voiceMs('him', l1) + 300);
     }
-    at(tPoint, function () { var h2 = hostsEl(); if (h2) h2.classList.add('point'); });   // Sofia points at the big screen…
-    at(tPoint + 600, function () {   // …and there it is
-      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); $('cover').classList.add('onscreen'); Music.ding(); whooshes([0]); push();
-      if (kind === 'partytime') hostVoice('party_round', 'her');
-    });
-    var t3 = tPoint + 2000, t4 = t3 + Math.max(3500, voiceMs('her', line) + 500);
+    var shown = function () { G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); $('cover').classList.add('onscreen'); push(); };
+    var party = kind === 'partytime';
+    if (party) shown();   // a party game: it's already up on the big screen behind them when we're back (no pointing, nothing announced)
+    else {
+      at(tPoint, function () { var h2 = hostsEl(); if (h2) h2.classList.add('point'); });   // Sofia points at the big screen…
+      at(tPoint + 600, function () { shown(); Music.ding(); whooshes([0]); });   // …and there it is
+    }
+    var t3 = party ? tPoint + (on ? 0 : 300) : tPoint + 2000, t4 = t3 + Math.max(3500, voiceMs('her', line) + 500);
     at(t3, function () { hostSay('her', line, Math.max(3400, voiceMs('her', line) + 300)); });
     at(t4, function () { var h3 = hostsEl(); if (h3) h3.classList.remove('point'); hostHold = false; then(); });
     setTimeout(function () { hostHold = false; var h4 = hostsEl(); if (h4) h4.classList.remove('point'); }, t4 + 400);
