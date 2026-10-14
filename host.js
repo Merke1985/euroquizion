@@ -2057,7 +2057,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     Music.want(false); Music.dread(true);
     push();
     // first a message in the middle, then it moves up and the jury votes are counted
-    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1100); }, Math.max(6200, (VOICE_MS.ch_intro || 0) + 2000) + CHASE_ENTER + CHASE_BUILD);   // (the welcome is said in full, and a breath after it, before the first jury votes)
+    chaseTimer = setTimeout(function () { var c2 = G.chase; if (!c2 || c2.st !== 'intro') return; c2.introTop = true; push(); chaseTimer = setTimeout(chaseIntroNext, 1800); }, Math.max(6200, (VOICE_MS.ch_intro || 0) + 400) + CHASE_ENTER + CHASE_BUILD);   // (the welcome is said in full, and a breath after it, before the first jury votes)
   }
   // The start: one by one, lowest score first, each player is shown big in the middle while their jury votes count up
   // to their score; then they take their place on the runway. When all are on it, the Diva rises from the smoke.
