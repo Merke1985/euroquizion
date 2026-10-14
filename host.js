@@ -2378,10 +2378,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<div class="fnhosts">' + HOST_HIM + HOST_HER + '</div><div class="fnbub him"></div><div class="fnbub her"></div>' +
       '<div class="fnconf">' + conf + '</div><div class="fncrowd">' + fans + '</div>';
     document.body.appendChild(ov);
-    whooshes([0, 300, 600]); itemSfx('sounds/applause.mp3?v=1', Music.douze);
+    whooshes([0, 300, 600]); crowdOn(true);   // the arena erupts: cheering and shouting, on a loop until the victory song starts
     setTimeout(function () { ov.classList.remove('enter'); }, 1800);
     var at = function (ms, f) { setTimeout(function () { if (ov.isConnected) f(); }, ms); };
-    var say = function (who, txt, voice) { [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.fnbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, voice ? null : who); if (voice) hostVoice(voice, who); };
+    var say = function (who, txt, voice) { [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.fnbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, voice ? null : who); if (voice) hostVoice(voice, who); crowdDuck(true); clearTimeout(say.t); say.t = setTimeout(function () { crowdDuck(false); }, Math.max(2500, (VOICE_MS[voice] || 0) + 300)); };
     at(2200, function () { ov.classList.add('raise'); say('him', 'Congratulations, ' + wp.name + '! 🎉', 'congrats'); });
     at(4700, function () { say('her', 'You are the winner of EuroQuizion! 🏆', 'winner_euroquizion'); });
     at(8200, function () { say('him', 'Let’s take a look at the final scores! 📊', 'final_scores'); });
@@ -2396,6 +2396,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(17500, function () { finPick(win, ov, say, then); });   // then the winner picks the victory song on their phone
   }
   function finTrophy() { var t = $('chtro') && $('chtro').querySelector('svg.trophy'); return t ? t.outerHTML.replace(/id="([^"]+)"/g, 'id="fn$1"').replace(/url\(#([^)]+)\)/g, 'url(#fn$1)').replace(/href="#([^"]+)"/g, 'href="#fn$1"') : '🏆'; }   // (the same trophy as in the Grand Final)
+  // The crowd in the finale: a big arena roar on a loop (two copies taking turns, so the seam can't be heard), quieter while the presenters talk
+  var crowdEls = null, crowdT = null, crowdLvl = 1;
+  function crowdVol() { return Math.max(0, Math.min(1, 0.9 * crowdLvl * (Music.vol ? Music.vol.fx : 1))); }
+  function crowdOn(on) {
+    if (REMOTE) return;
+    clearInterval(crowdT); crowdT = null;
+    if (!on) { var els = crowdEls; crowdEls = null; if (els) els.forEach(function (a) { var f = setInterval(function () { try { a.volume = Math.max(0, a.volume - 0.025); if (a.volume <= 0.01) { clearInterval(f); a.pause(); } } catch (e) { clearInterval(f); } }, 80); }); return; }
+    crowdLvl = 1;
+    crowdEls = [new Audio('sounds/crowd_winner.mp3?v=1'), new Audio('sounds/crowd_winner.mp3?v=1')];
+    var cur = 0, start = function (a) { try { a.currentTime = 0; a.volume = crowdVol(); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} };
+    start(crowdEls[0]);
+    crowdT = setInterval(function () {   // a little before the end, the other copy takes over (a short crossfade)
+      if (!crowdEls) return; var a = crowdEls[cur], b = crowdEls[1 - cur];
+      crowdEls.forEach(function (x) { if (!x.paused) x.volume = crowdVol(); });
+      if (a.duration && a.currentTime > a.duration - 2.5 && b.paused) { start(b); cur = 1 - cur; setTimeout(function () { try { a.pause(); } catch (e) {} }, 2400); }
+    }, 200);
+  }
+  function crowdDuck(on) { crowdLvl = on ? 0.35 : 1; }
   // The victory song: the winner picks any Eurovision song from their own country on their phone, and it plays on the big stage.
   var finT = null, finYt = null;
   function finSongs(p) {
@@ -2423,7 +2441,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function finPlay(i) {
     var g = G.fin, ov = g && g.ov; if (!g || g.st !== 'pick') return;
-    clearTimeout(finT); var sg = g.list[i]; g.st = 'play'; g.song = g.opts[i]; push();
+    clearTimeout(finT); var sg = g.list[i]; g.st = 'play'; g.song = g.opts[i]; push(); crowdOn(false);
     if (!ov || !ov.isConnected) { finEnd(); return; }
     ov.classList.remove('scores', 'picking'); ov.classList.add('song'); Music.ding();
     [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); });
@@ -2440,7 +2458,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function finEnd() {
     var g = G.fin; if (!g || g.st === 'end') return;
-    clearTimeout(finT); g.st = 'end';
+    clearTimeout(finT); g.st = 'end'; crowdOn(false);
     var ov = g.ov, v = 85, pl = finYt || yt, fade = setInterval(function () { v -= 5; try { pl.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fade); try { pl.pauseVideo(); } catch (e) {} if (pl === finYt) { try { finYt.destroy(); } catch (e) {} finYt = null; } } }, 80);
     if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
     setTimeout(function () { if (ov) ov.remove(); var then = g.then; G.fin = null; then(); }, 1600);

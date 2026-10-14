@@ -4847,3 +4847,6 @@ body.hasdock main{padding-bottom:84px}
 .fnov.song .fntitle{bottom:auto;top:6%}
 /* Key Change: the microphone of who is still singing sits under the avatar (not on the flag) */
 .answered .pen.mic{right:auto;left:50%;top:44px;translate:-50% 0;z-index:2}
+/* the finale: during the victory song the spotlights go out, only the LED wall shines */
+.fnov .fnstudio .stbeam,.fnov .fnstudio .sthaze{transition:opacity 1.2s}
+.fnov.song .fnstudio .stbeam,.fnov.song .fnstudio .sthaze{opacity:0}
