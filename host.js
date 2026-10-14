@@ -3418,12 +3418,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }
       var dip = function (on) {   // (the music fades down to a whisper while they talk, and back up after)
         try { if (G.qj && G.qj.song) yt.setVolume(on ? 20 : 55); } catch (e) {}   // (in Verona: the song, under the voices)
-        try { if (!(stY && stYReady && stYOn)) return; clearInterval(stYFade); var v = stY._want == null ? STUDIO_VOL : stY._want, to = on ? Math.round(STUDIO_VOL * 0.15) : STUDIO_VOL;
-          stYFade = setInterval(function () { v += v < to ? 2 : -3; if ((on && v <= to) || (!on && v >= to)) { v = to; clearInterval(stYFade); } try { stY.setVolume(v); } catch (e) {} }, 30); } catch (e) {}
+        try { if (!(stY && stYReady && stYOn)) return; clearInterval(stYFade); var v = stY._want == null ? STUDIO_VOL : stY._want, to = on ? Math.round(STUDIO_VOL * 0.3) : STUDIO_VOL;   // (down to a steady 30% while they talk)
+          if (v === to) return; var up = v < to; stYFade = setInterval(function () { v += up ? 1 : -2; if (up ? v >= to : v <= to) { v = to; clearInterval(stYFade); } try { stY.setVolume(v); } catch (e) {} }, up ? 70 : 25); } catch (e) {}
       };
       dip(true); clearTimeout(voiceDip);
-      voiceEl.addEventListener('ended', function () { voiceDip = setTimeout(function () { dip(false); }, 250); });
-      voiceDip = setTimeout(function () { dip(false); }, Math.max(6000, (VOICE_MS[name] || 0) + 500));   // (in case it never says it ended)
+      voiceEl.addEventListener('ended', function () { clearTimeout(voiceDip); voiceDip = setTimeout(function () { dip(false); }, 3500); });   // (the music stays down between lines: it only comes back once they've stopped talking for a while)
+      voiceDip = setTimeout(function () { dip(false); }, Math.max(6000, (VOICE_MS[name] || 0) + 3500));   // (in case it never says it ended)
       var p = voiceEl.play(); if (p && p.catch) p.catch(function () { dip(false); });
     } catch (e) {}
   }
