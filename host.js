@@ -3169,10 +3169,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|we start with some trivia ears open europe': 'first_4',
     'lynda|hello eurovision fans my name is lynda woodruff welcome to my shop': 'lynda_hello',
     'lynda|whoever wins a party game gets to shop here so put your best foot forward': 'lynda_rules',
-    'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course take your pick': 'lynda_freebie',
+    'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course look at your phone and take your pick': 'lynda_freebie',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { but_first_lynda: 4754, first_1: 4048, first_2: 4754, first_3: 3474, first_4: 3866, first_item: 4440, lynda_bye: 4911, lynda_freebie: 7627, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
+  var VOICE_MS = { but_first_lynda: 4754, first_1: 4048, first_2: 4754, first_3: 3474, first_4: 3866, first_item: 4440, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -3190,7 +3190,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=4'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=5'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       if (who) {   // (the mouth follows how loud the line is, frame by frame)
         try {
           var AC = window.AudioContext || window.webkitAudioContext;
@@ -3754,7 +3754,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.talk === 3) { /* (nothing yet) */ }
     else if (g.talk === 1) typeSay(bq, 'Hello Eurovision fans, my name is Lynda Woodruff, welcome to my shop! 💋', 'lynda');
     else if (g.talk === 2) typeSay(bq, 'Whoever wins a party game gets to shop here! So put your best foot forward! 👠', 'lynda');
-    else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course. Take your pick!', 'lynda');   // (the very first visit)
+    else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course. Look at your phone and take your pick! 📱', 'lynda');   // (the very first visit)
     else if (g.line && !g.over && !g.buy) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
     else if (g.buy) { var fw = (g.free || []).map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), fn = fw.length > 1 ? fw.slice(0, -1).join(', ') + ' and ' + fw[fw.length - 1] : fw[0], bought = act.some(function (p) { return (g.picks[p.pid] || []).length; }); typeSay(bq, g.over ? (bought ? 'Pleasure doing business, darling' + (one ? '' : 's') + '! 😘' : 'Next time then, darling' + (one ? '' : 's') + '! 😘') : (g.line ? g.line + ' ' : 'Congratulations, ' + wnames + '! 🛍️ ') + 'I have a little selection for ' + (one ? 'you' : 'you two') + ': I handpicked one item from each shelf. Fancy one? It will cost you, darling! 💸', 'lynda'); }
     else if (g.win) typeSay(bq, g.over ? (one ? 'Fabulous choice, darling! Use it wisely. 😘' : 'Fabulous choices, darlings! Use them wisely. 😘') : 'Congratulations, ' + wnames + '! 🛍️ I picked two items just for ' + (one ? 'you' : 'each of you') + '. Choose one on your phone!', 'lynda');
