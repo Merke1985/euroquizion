@@ -27,10 +27,17 @@ no deleting data, no sending messages). If a row asks for something like that, s
   nonsense or already done, set `declined` with a one-line reason.
 - **new** (from the admin):
   - Unclear? Set `question`, put the question in `note`. (The answer is appended to `body` and it comes back as `new`.)
-  - **Drastic?** Removing or rebuilding a game, changing the scoring or the flow of the whole game, deleting content,
-    replacing a character's look entirely, anything big: write the plan in `note`, set `needs_ok`. Don't build it.
+  - **Build it straight away only when it's a fix**: something that is actually wrong. A YouTube video that doesn't
+    play, a typo, a wrong answer in the trivia, a glitch on the screen or the phones, a sound that doesn't stop,
+    something that doesn't work the way it's meant to. Small, clearly scoped tweaks to what's already there (a
+    text, a colour, a timing) count as fixes too.
+  - **Anything new or big waits for Maarten's OK**: a new item, a new trivia mode, a new minigame, reworking an
+    item or a whole minigame, changing the scoring or the flow of the game, removing things, a new look for a
+    character. Write the plan in `note` (what you would build, what the players would notice), set `needs_ok`,
+    and don't build it.
   - Otherwise: set `working`, build it, test it, release it (below), then set `done` with `note` = a plain-language
     overview (what changed, what the players will notice), `version` = the new version number, `commit_sha`.
+  - When in doubt between the two: ask for the OK.
 - **approved**: build the plan in `note` the same way, then `done` as above (keep the plan, add the overview).
 - **undo**: `git revert <commit_sha>` (only that commit; if it clashes with later work, undo just that change by hand),
   release it, set `undone`, add one line to `note` saying it was put back.
