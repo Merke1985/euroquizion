@@ -3651,6 +3651,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (snd === 'steal' && !(shopLast && shopLast.icon === '✉️')) itemSfx('sounds/hack.mp3?v=1', Music.ping);   // (the Televote Hacking Device: a glitch)
     else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
     else if (snd === 'skip') itemSfx('sounds/cd_scratch.mp3?v=1', Music.woosh);   // (the CD Player: a record scratch)
+    else if (snd === 'smoke') itemSfx('sounds/smoke.mp3?v=1', Music.woosh);   // (the Smoke Machine)
     else if (snd === 'tab') itemSfx('sounds/champagne.mp3?v=1', Music.woosh);   // (the Overpriced Champagne: pop!)
     else if (snd === 'sit') { if (!REMOTE) { try { var mz = new Audio('sounds/shock.mp3'); mz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var mp = mz.play(); if (mp && mp.catch) mp.catch(function () {}); } catch (e) {} } setTimeout(function () { Music.micdrop(); }, 500); }   // (the Broken Mic: the same shock and thud as the microphone in Hold That Note)
     else if (snd === 'thief') itemGetSnd();   // (left the Euroclub with an item)
