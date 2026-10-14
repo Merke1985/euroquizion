@@ -385,7 +385,7 @@
   Music.useLoop('sounds/studio_loop.mp3?v=2', 16.6957);   /* (8 bars at 115 bpm: measured, so it goes round on the beat) */   // the studio music: a dance loop instead of the made-up synth one
   function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); var triv = id === 'v-game' && !REMOTE && (G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel) && !G.clue;
     var lob = id === 'v-lobby' && G.phase === 'lobby';
-    var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
+    var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || (G.phase === 'loading' && G.studioTalk) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
     if (studioYtOk()) { Music.want(lob || triv, true); studioYt(studio); } else Music.want(lob || triv || studio, !studio); }   // the studio loop with the presenters and in Lynda's boutique (it carries on where it left off); the synth loop in the lobby and under trivia questions without a clip
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
@@ -3168,11 +3168,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Back in the studio after the boutique: the presenters hope you found something nice, and it's trivia time again.
   function backFromShop(n, then, first) {
     if (REMOTE) { then(); return; }
-    G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
+    G.phase = 'loading'; G.studioTalk = true; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();   // (studioTalk: the studio music plays on while they talk)
     hostHold = true; clearTimeout(hostT.away);
     hostSay('him', first ? 'Everyone has their first item from Lynda! Grab your phones… ✨' : vary('souvenir') + ' ' + vary('onward'), 3600);   // (the very first visit, right after the opening: now the first trivia)
     setTimeout(function () { hostSay('her', first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia'), 3000); }, 3300);   // (testing the party games: there is no trivia in between)
-    setTimeout(function () { hostHold = false; then(); }, 6400);
+    setTimeout(function () { hostHold = false; G.studioTalk = false; then(); }, 6400);
   }
   function shopIntro() {
     if (REMOTE) { partyGo('shop'); return; }
@@ -3360,7 +3360,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (G.phase !== 'shop') return;
         var then = g.then || startRound, v = $('v-game'); G.shop = null;
         $('cover').classList.remove('introcard');
-        if (v.classList.contains('leaving')) { v.classList.remove('leaving'); G.phase = 'loading'; cover(true, '', '', false); push(); viewEnter('v-game'); setTimeout(then, 2100); }   // the studio slides back in first
+        if (v.classList.contains('leaving')) { v.classList.remove('leaving'); G.phase = 'loading'; G.studioTalk = true; cover(true, '', '', false); push(); viewEnter('v-game'); setTimeout(function () { G.studioTalk = false; then(); }, 2100); }   // the studio slides back in first (the studio music plays on)
         else then();
       }, 1300);
     }, g.welcome ? 5400 : 3800);   // (the first visit: time for her goodbye)
@@ -8332,7 +8332,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     // a fresh game: nothing left over from a test run (test settings, test envelopes and heels, items underway)
-    readPicks(); G.opened = false; G.openWait = false; G.openMusic = false; Music.loopReset(); studioYtReset();   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
+    readPicks(); G.opened = false; G.openWait = false; G.openMusic = false; G.studioTalk = false; Music.loopReset(); studioYtReset();   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.quipSongsUsed = []; G.quipUsed = []; G.goldTest = false; G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.fake = null; clearTimeout(fkTimer); clearInterval(fkTick); clearInterval(fkPrivT); G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
