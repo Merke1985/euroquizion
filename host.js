@@ -2908,14 +2908,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function showPlan() {
     var L = [], who = 'him', say = function (t) { L.push([who, t]); who = who === 'him' ? 'her' : 'him'; };
     var party = G.atype === 'party', lad = !party && (ladderGame() || G.partLadder), multi = !party && G.parts > 1;
-    var fin = G.finalMode === 'chase' ? 'And our final game tonight: the Grand Final! You’ll race each other for the Eurovision trophy… 🏆'
+    var fin = G.finalMode === 'chase' ? 'And after all rounds are done, you will all star in the Grand Final! 🏆'
       : G.finalMode === 'double' ? 'And our final game tonight: the Big Five! Five extra questions at the end, all for double points. ⭐'
       : 'No final game tonight: whoever has the most points after the last question wins!';
     // 1. What we play tonight
     if (party) {
-      if (G.tourMax) say('Tonight it’s Party Night with ' + (['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][G.tourMax] || G.tourMax) + ' party games, and you vote for each one! 🗳️'); else
+      if (G.tourMax) say('Tonight we are playing Party Mode! 🎉'); else
       say({ order: 'Tonight it’s Party mode: the Grand Tour! 🎉', random: 'Tonight it’s Party mode, and the wheel decides! 🎡', vote: 'Tonight it’s Party mode, and you vote! 🗳️', one: 'Tonight it’s Party mode, and you take turns to choose!' }[G.partyPick] || 'Tonight it’s Party mode! 🎉');
-      if (G.tourMax) say('First ' + (['', 'one trivia question', 'two trivia questions', 'three trivia questions', 'four trivia questions', 'five trivia questions', 'six trivia questions'][G.block || 5] || (G.block + ' trivia questions')) + ', then a party game, and so on, until all ' + G.tourMax + ' party games have been played.'); else
+      if (G.tourMax) say('First ' + (['', 'one trivia question', 'two trivia questions', 'three trivia questions', 'four trivia questions', 'five trivia questions', 'six trivia questions'][G.block || 5] || (G.block + ' trivia questions')) + ', then a party game, and so on, all the way until ' + G.tourMax + ' rounds have been completed.'); else
       say({ order: 'First ' + (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')).toLowerCase() + ', then a party game, and so on, until every party game has had its turn.', random: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then the wheel picks a party game, and so on.', vote: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then you vote for the next party game, and so on.', one: (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then one of you picks the next party game, and so on.' }[G.partyPick] || (['', 'One trivia question', 'Two trivia questions', 'Three trivia questions', 'Four trivia questions', 'Five trivia questions', 'Six trivia questions'][G.block || 3] || (G.block + ' trivia questions')) + ', then a party game, and so on.');
     } else if (lad) say(G.parts > 1 ? 'Tonight we play the Ladder, in ' + G.parts + ' rounds! 🪜' : 'Tonight we play the Ladder! 🪜');
     else say(multi ? 'Tonight it’s a quiz in ' + G.parts + ' rounds, of ' + G.per + ' questions each! 🎤' : 'Tonight it’s a quiz: ' + G.per + ' questions about Eurovision songs! 🎤');
@@ -2926,7 +2926,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (G.eraSpin) say('Before ' + block + ', the wheel picks the era. 🎡');
     else if (eraTxt && eraTxt !== 'All eras' && eraTxt !== 'Custom') say('Every song tonight comes from ' + eraTxt + '.');
     else if (eraTxt === 'Custom') say('Tonight’s songs come from the eras you picked.');
-    else say('Songs from every era of Eurovision, from 1956 until now!');
+    else say('The trivia will include songs from every era of Eurovision! 🎶');
     if (G.cat === 'win') say('And only winners tonight! 🏆');
     else if (G.cat === 'nq') say('And only songs that never made it out of the semi-final… 😬');
     else if (G.cat === 'final') say('And only songs that made it to the final.');
@@ -2935,7 +2935,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (G.scoring === 'speed') say('Be quick: the first right answer gets 12 points, the next 10, then 8, and so on.');
     else if (G.scoring === 'random') say('Every question is worth a surprise number of points: keep an eye on the screen!');
     else say('A right answer is worth 12 points, douze points!');
-    if (party && shopOn()) say('Win a party game and you get to go shopping in Woodruff’s Boutique! 🛍️');
     if (multi && !lad) { say('Every round starts from zero, and the winner of a round wears a crown in the next one. 👑'); say('After the last round, all your rounds add up!'); }
     // 4. The final game
     say(fin);
@@ -3207,12 +3206,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var VOICE_FILES = {
     'him|good evening europe i m oliver lindstr m': 'oliver_hello',
     'her|and i m sofia lindberg welcome to euroquizion': 'sofia_hello',
-    'him|tonight it s party night with five party games and you vote for each one': 'plan_partynight5',
-    'her|first five trivia questions then a party game and so on until all 5 party games have been played': 'plan_blocks5',
-    'him|songs from every era of eurovision from 1956 until now': 'plan_eras',
     'her|a right answer is worth 12 points douze points': 'plan_douze',
-    'him|win a party game and you get to go shopping in woodruff s boutique': 'plan_shopwin',
-    'her|and our final game tonight the grand final you ll race each other for the eurovision trophy': 'plan_final_chase',
+    'him|tonight we are playing party mode': 'plan_partymode',
+    'her|first five trivia questions then a party game and so on all the way until 5 rounds have been completed': 'plan_blocks5r',
+    'him|the trivia will include songs from every era of eurovision': 'plan_eras2',
+    'him|and after all rounds are done you will all star in the grand final': 'plan_final_star',
+    'her|but first let s pay a visit to lynda in woodruff s boutique': 'but_first_lynda_her',
     'him|but first let s pay a visit to lynda in woodruff s boutique': 'but_first_lynda',
     'him|everyone has their item from lynda use it wisely': 'first_item',
     'her|so what are we starting with tonight': 'first_1',
@@ -3221,13 +3220,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|eyes on the big screen here s our first round': 'first_4',
     'lynda|hello eurovision fans my name is lynda woodruff welcome to my shop': 'lynda_hello',
     'lynda|whoever wins a party game gets to shop here so put your best foot forward': 'lynda_rules',
-    'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course look at your phone and take your pick': 'lynda_freebie',
+    'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course': 'lynda_freebie',
+    'lynda|i ve selected 2 items for all of you to choose from look at your phone and take your pick': 'lynda_pick2',
     'him|breaking news edgar has been abducted': 'edgar_news',
     'her|who the hell is edgar': 'edgar_who',
     'him|our mascot of course and he is missing': 'edgar_mascot',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
+  var VOICE_MS = { plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -3245,7 +3245,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=7'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=8'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       if (who) {   // (the mouth follows how loud the line is, frame by frame)
         try {
           var AC = window.AudioContext || window.webkitAudioContext;
@@ -3374,8 +3374,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else act.forEach(function (p) { var mine = []; while (mine.length < Math.min(SHOP_OFFER, stock.length)) mine.push(deal(mine)); offer[p.pid] = mine; });
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
-    var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = Math.max(5600, (VOICE_MS.lynda_hello || 0) + 600), TALK2 = Math.max(5600, (VOICE_MS.lynda_rules || 0) + 600);   // (her spoken lines get to finish)
-    if (talk) { var HUSH = 2800; G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 3; G.phase = 'shop'; G.barMs = 0; push(); var g0 = G.shop; setTimeout(function () { if (G.shop === g0 && g0.talk === 3) { g0.talk = 1; push(); render(); } }, HUSH); setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, HUSH + TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, HUSH + TALK1 + TALK2); return; }   // (talk 3: a few seconds to look around the boutique before she speaks)
+    var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = Math.max(5600, (VOICE_MS.lynda_hello || 0) + 600), TALK2 = Math.max(5600, (VOICE_MS.lynda_rules || 0) + 600), TALK3 = Math.max(5200, (VOICE_MS.lynda_freebie || 0) + 600);   // (her spoken lines get to finish)
+    if (talk) { var HUSH = 2800; G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 3; G.phase = 'shop'; G.barMs = 0; push(); var g0 = G.shop; setTimeout(function () { if (G.shop === g0 && g0.talk === 3) { g0.talk = 1; push(); render(); } }, HUSH); setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, HUSH + TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 4; push(); render(); } }, HUSH + TALK1 + TALK2); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, HUSH + TALK1 + TALK2 + TALK3); return; }   // (talk 3: a few seconds to look around the boutique before she speaks)
     shopOpen();
   }
   function shopOpen() {
@@ -3819,7 +3819,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.talk === 3) { /* (nothing yet) */ }
     else if (g.talk === 1) typeSay(bq, 'Hello Eurovision fans, my name is Lynda Woodruff, welcome to my shop! 💋', 'lynda');
     else if (g.talk === 2) typeSay(bq, 'Whoever wins a party game gets to shop here! So put your best foot forward! 👠', 'lynda');
-    else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course. Look at your phone and take your pick! 📱', 'lynda');   // (the very first visit)
+    else if (g.talk === 4) typeSay(bq, 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course.', 'lynda');
+    else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'I’ve selected ' + SHOP_OFFER + ' items for all of you to choose from. Look at your phone and take your pick! 📱', 'lynda');   // (the very first visit)
     else if (g.line && !g.over && !g.buy) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
     else if (g.buy) { var fw = (g.free || []).map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), fn = fw.length > 1 ? fw.slice(0, -1).join(', ') + ' and ' + fw[fw.length - 1] : fw[0], bought = act.some(function (p) { return (g.picks[p.pid] || []).length; }); typeSay(bq, g.over ? (bought ? 'Pleasure doing business, darling' + (one ? '' : 's') + '! 😘' : 'Next time then, darling' + (one ? '' : 's') + '! 😘') : (g.line ? g.line + ' ' : 'Congratulations, ' + wnames + '! 🛍️ ') + 'I have a little selection for ' + (one ? 'you' : 'you two') + ': I handpicked one item from each shelf. Fancy one? It will cost you, darling! 💸', 'lynda'); }
     else if (g.win) typeSay(bq, g.over ? (one ? 'Fabulous choice, darling! Use it wisely. 😘' : 'Fabulous choices, darlings! Use them wisely. 😘') : 'Congratulations, ' + wnames + '! 🛍️ I picked two items just for ' + (one ? 'you' : 'each of you') + '. Choose one on your phone!', 'lynda');
