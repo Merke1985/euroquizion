@@ -2450,11 +2450,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var scr = ov.querySelector('.fnscreen'), box = document.createElement('div'); box.className = 'fnvid'; box.innerHTML = '<div id="fnyt"></div><i class="fnvidgrid"></i>'; if (scr) scr.insertBefore(box, scr.firstChild);   // the video on the big LED wall, with the LED grid over it
     try {
       finYt = new YT.Player('fnyt', { videoId: sg[4], playerVars: { autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, fs: 0, start: 0 },
-        events: { onReady: function (e) { try { e.target.unMute(); e.target.setVolume(85); e.target.playVideo(); } catch (x) {} } } });
+        events: { onReady: function (e) { try { e.target.unMute(); e.target.setVolume(85); e.target.playVideo(); } catch (x) {} }, onStateChange: function (e) { if (e && e.data === 0) finEnd(); } } });   // (the song plays to the end, then the show ends)
     } catch (e) { finYt = null; try { yt.loadVideoById({ videoId: sg[4], startSeconds: 0 }); yt.unMute(); yt.setVolume(85); } catch (e2) {} }
     setTimeout(function () { box.classList.add('on'); }, 600);
     if (!ov.querySelector('.fnend')) { var b = document.createElement('button'); b.type = 'button'; b.className = 'fnend'; b.textContent = 'End the show ▸'; b.addEventListener('click', finEnd); ov.appendChild(b); }
-    finT = setTimeout(finEnd, 120000);   // (two minutes of the song, then the show ends; the button ends it sooner)
+    finT = setTimeout(finEnd, 8 * 60000);   // (the whole song: the show ends when it's over, or with the button; this is only a safety net)
   }
   function finEnd() {
     var g = G.fin; if (!g || g.st === 'end') return;
