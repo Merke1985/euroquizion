@@ -1537,7 +1537,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.tour) { G.tourN = (G.tourN || 0) + 1; if (games.every(function (x) { return dn.indexOf(x) >= 0; }) || (G.tourMax && G.tourN >= G.tourMax)) G.tourLast = true; }
       var gspin = function () { partySlot(games.indexOf(gch) >= 0 ? games : games.concat(gch), gch, function () { partyGo(gch, 2500); }, '🌟 ' + (gwho ? gwho + '’s ' : '') + 'Golden Ticket!'); };
       if (REMOTE) { gspin(); return; }
-      stopTimers(); G.phase = 'loading'; G.q = null; cover(true, '', '', false); shopLast = { icon: '🌟', deltas: [{ pid: gp.pid, tag: '🌟' }] }; push();   // (only now does anyone find out: the item alarm, then the spin lands on the chosen game)
+      stopTimers(); G.phase = 'loading'; G.q = null; cover(true, '', '', false); shopLast = { icon: '🌟', deltas: [{ pid: gp.pid, tag: '🌟' }], sound: 'golden' }; push();   // (only now does anyone find out: the item alarm, then the spin lands on the chosen game)
       itemAlarm(function () { shopHit('🌟 ' + gwho + ' used the Golden Ticket and has chosen this party game!', 5200); push(); setTimeout(gspin, 5400); });
       return;
     }
@@ -3652,6 +3652,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
     else if (snd === 'skip') itemSfx('sounds/cd_scratch.mp3?v=1', Music.woosh);   // (the CD Player: a record scratch)
     else if (snd === 'smoke') itemSfx('sounds/smoke.mp3?v=1', Music.woosh);   // (the Smoke Machine)
+    else if (snd === 'golden') itemSfx('sounds/fanfare.mp3?v=1', Music.douze);   // (the Golden Ticket: a fanfare)
     else if (snd === 'tab') itemSfx('sounds/champagne.mp3?v=1', Music.woosh);   // (the Overpriced Champagne: pop!)
     else if (snd === 'sit') { if (!REMOTE) { try { var mz = new Audio('sounds/shock.mp3'); mz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var mp = mz.play(); if (mp && mp.catch) mp.catch(function () {}); } catch (e) {} } setTimeout(function () { Music.micdrop(); }, 500); }   // (the Broken Mic: the same shock and thud as the microphone in Hold That Note)
     else if (snd === 'thief') itemGetSnd();   // (left the Euroclub with an item)
