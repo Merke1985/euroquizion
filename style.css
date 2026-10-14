@@ -4689,8 +4689,8 @@ body.hasdock main{padding-bottom:84px}
 .shosts .ehost.her .earm{transform-box:view-box;transform-origin:76px 156px;transition:transform .55s cubic-bezier(.3,1.5,.5,1)}
 .shosts.point .ehost.her .earm{transform:rotate(128deg)}
 /* stepping aside (from side by side to the edges of the stage) is a walk, not a jump */
-.shosts .ehost.him{transition:left .8s cubic-bezier(.3,.6,.4,1)}
-.shosts .ehost.her{transition:right .8s cubic-bezier(.3,.6,.4,1)}
+.shosts .ehost.him{transition:translate .9s cubic-bezier(.3,.7,.35,1),opacity .6s,left .8s cubic-bezier(.3,.6,.4,1)}
+.shosts .ehost.her{transition:translate .9s cubic-bezier(.3,.7,.35,1),opacity .6s,right .8s cubic-bezier(.3,.6,.4,1)}   /* (walking on and off stays smooth too) */
 
 /* Talking mouths: closed (flat) until --mo opens them, set by the sound of the line or the typing */
 .ehost .emin,.keeper .emin{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(var(--mo,0));transition:transform .07s ease-out}   /* (a soft open mouth with teeth and a tongue, hinged at the top lip…) */

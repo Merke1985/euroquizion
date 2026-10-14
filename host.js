@@ -3244,15 +3244,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
-    var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
+    var hh = hostsEl(), on = hh && !hh.classList.contains('away'); hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
     if (!on && !stung) studioSting();   // (back to the studio: the jingle)
-    if (!on) at(200, function () { hostSay('him', vary('back'), 4000); });
-    if (hh) hh.classList.add('together');
-    at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
-      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); $('cover').classList.add('onscreen'); Music.ding(); whooshes([0]); push(); });   // (on the big LED screen behind them)
-    at(3700 + d, function () { hostSay('her', line, 3400); });
-    at(7200 + d, function () { hostHold = false; then(); });
-    setTimeout(function () { hostHold = false; }, 7600 + d);
+    if (hh) hh.classList.remove('together');   // (they come on at the sides of the stage, where they stay: no shuffling around)
+    var tPoint = 700;
+    if (!on) {   // a moment for the studio to settle, then they walk on, and only then the welcome back
+      at(1400, function () { var h1 = hostsEl(); if (h1) h1.classList.remove('away'); });
+      var l1 = vary('back');
+      at(2700, function () { hostSay('him', l1, Math.max(3000, voiceMs('him', l1) + 300)); });
+      tPoint = 2700 + Math.max(2700, voiceMs('him', l1) + 300);
+    }
+    at(tPoint, function () { var h2 = hostsEl(); if (h2) h2.classList.add('point'); });   // Sofia points at the big screen…
+    at(tPoint + 600, function () {   // …and there it is
+      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); $('cover').classList.add('onscreen'); Music.ding(); whooshes([0]); push();
+      if (kind === 'partytime') hostVoice('party_round', 'her');
+    });
+    var t3 = tPoint + 2000, t4 = t3 + Math.max(3500, voiceMs('her', line) + 500);
+    at(t3, function () { hostSay('her', line, Math.max(3400, voiceMs('her', line) + 300)); });
+    at(t4, function () { var h3 = hostsEl(); if (h3) h3.classList.remove('point'); hostHold = false; then(); });
+    setTimeout(function () { hostHold = false; var h4 = hostsEl(); if (h4) h4.classList.remove('point'); }, t4 + 400);
   }
   // Back in the studio after the boutique: the presenters hope you found something nice, and it's trivia time again.
   function backFromShop(n, then, first) {
