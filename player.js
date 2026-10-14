@@ -998,7 +998,7 @@
 
   // ---------- Where the Hell Is Edgar?: the four rooms on the phone ----------
   var ED_R = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 2 }];
-  var edNotes = false, edCur = '', edGame = '', edSeen = '', edT = [], edAc = null;
+  var edNotes = false, edCur = '', edGame = '', edSeen = '', edFastSeen = '', edT = [], edAc = null;
   function edLater(f, ms) { edT.push(setTimeout(f, ms)); }
   function edClear() { edT.forEach(clearTimeout); edT = []; }
   function edTone(i) {   // a short tone for each sound symbol (its own pitch)
@@ -1042,7 +1042,7 @@
       return;
     }
     var fst = c.fast;
-    if (fst && fst.pid === pid && edSeen !== 'fast' + c.id) {   // the fastest detective: extra clues at the reception
+    if (fst && fst.pid === pid && edFastSeen !== c.id) {   // the fastest detective: extra clues at the reception
       $('clueui').classList.add('hidden'); box.classList.remove('hidden');
       $('waittitle').textContent = '🏆 You were the fastest detective!'; $('waitsub').textContent = 'Teya & Salena at the reception have extra clues for you.';
       if (box.getAttribute('data-k') !== 'fast') {
@@ -1053,7 +1053,7 @@
           if (fst.got && fst.got.length) clueNotes({ clue: { id: c.id, n: 'fast', known: c.known, fresh: (function () { var o = {}; o[pid] = fst.got; return o; })() } });
           $('waittitle').textContent = fst.got && fst.got.length ? '🗝️ ' + fst.got.length + ' extra clue' + (fst.got.length > 1 ? 's' : '') + '!' : '🗝️ No new clues left to give…'; $('waitsub').textContent = '';
           var nb = $('clueui'), ob = nb.querySelector('.ednext'); if (ob) ob.remove(); nb.classList.remove('hidden'); nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">✅ OK</button>');
-          nb.querySelector('.ednext').onclick = function () { edSeen = 'fast' + c.id; edNotes = false; $('clueui').classList.add('hidden'); edView(state); };
+          nb.querySelector('.ednext').onclick = function () { edFastSeen = c.id; edNotes = false; $('clueui').classList.add('hidden'); edView(state); };
         };
       }
       return;
