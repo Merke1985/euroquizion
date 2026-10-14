@@ -3236,7 +3236,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
     var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = 5600, TALK2 = 5600;
-    if (talk) { G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 1; G.phase = 'shop'; G.barMs = 0; push(); Music.ding(); var g0 = G.shop; setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, TALK1 + TALK2); return; }
+    if (talk) { G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 1; G.phase = 'shop'; G.barMs = 0; push(); hostVoice('lynda_hello');   /* (her first line, spoken) */ var g0 = G.shop; setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, TALK1 + TALK2); return; }
     shopOpen();
   }
   function shopOpen() {
