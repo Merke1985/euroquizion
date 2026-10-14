@@ -251,9 +251,11 @@ function peelPoints(ms, blur) {
 function makePeel(song, allSongs, countries, opt) {
   // always the song itself: four bars with title and artist, the other three from about the same years
   // Only winners, on the screen and on the bars: a song that did not win makes way for a winner (from the years in play, if there is one).
-  var wins = allSongs.filter(function (s) { return s[5] === 2; }), swap = null;
+  // Only winners of the last ten contests (the newest year in the song list and the nine before it): recent enough to recognise by sight.
+  var top = allSongs.reduce(function (m, s) { return Math.max(m, s[0]); }, 0);
+  var wins = allSongs.filter(function (s) { return s[5] === 2 && s[0] >= top - 9; }), swap = null;
   if (wins.length < 4) return null;
-  if (song[5] !== 2) {
+  if (wins.indexOf(song) < 0) {   // (not one of those winners: one of them takes its place)
     var yrs = {}, used = (opt && opt.used) || {}; ((opt && opt.pool) || []).forEach(function (s) { yrs[s[0]] = 1; });
     var near = wins.filter(function (s) { return yrs[s[0]]; }); if (!near.length) near = wins;
     var fresh = near.filter(function (s) { return !used[s[4]]; }); if (fresh.length) near = fresh;
