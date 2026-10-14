@@ -408,6 +408,49 @@ var Music = (function () {
       [o, o2, v].forEach(function (x) { x.start(t); x.stop(t + len + 0.05); });
     } catch (e) {}
   }
+  // The monster wheel: a dark tick (a low, hollow knock with a dissonant metal ring) and a demonic hit when it lands
+  function darkTick(n) {
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01, f0 = 110 + ((n || 0) % 3) * 6;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.16);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.42, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.24);
+      [311, 440].forEach(function (f) {   // a tritone apart: the "devil's interval"
+        var m = ctx.createOscillator(), mg = ctx.createGain(), bp = ctx.createBiquadFilter();
+        m.type = 'square'; m.frequency.value = f; bp.type = 'bandpass'; bp.frequency.value = f * 2; bp.Q.value = 6;
+        mg.gain.setValueAtTime(0.0001, t); mg.gain.exponentialRampToValueAtTime(0.035, t + 0.004); mg.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+        m.connect(bp); bp.connect(mg); mg.connect(fxOut()); m.start(t); m.stop(t + 0.2);
+      });
+    } catch (e) {}
+  }
+  function darkHit() {
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.02;
+      // a deep boom
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(28, t + 1.2);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+      o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 1.65);
+      // a low, detuned, dissonant chord (root, minor second, tritone) that swells and sinks
+      [[36, 0], [37, 0.12], [42, 0.06], [48, -0.1]].forEach(function (n) {
+        var a = ctx.createOscillator(), b = ctx.createOscillator(), cg = ctx.createGain(), lp = ctx.createBiquadFilter();
+        a.type = 'sawtooth'; b.type = 'sawtooth'; a.frequency.value = hz(n[0]); b.frequency.value = hz(n[0]) * 1.012; a.detune.value = n[1] * 100;
+        a.frequency.exponentialRampToValueAtTime(hz(n[0]) * 0.8, t + 2.4); b.frequency.exponentialRampToValueAtTime(hz(n[0]) * 0.81, t + 2.4);
+        lp.type = 'lowpass'; lp.frequency.setValueAtTime(1400, t); lp.frequency.exponentialRampToValueAtTime(220, t + 2.4);
+        cg.gain.setValueAtTime(0.0001, t); cg.gain.exponentialRampToValueAtTime(0.07, t + 0.08); cg.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+        a.connect(lp); b.connect(lp); lp.connect(cg); cg.connect(fxOut()); a.start(t); b.start(t); a.stop(t + 2.65); b.stop(t + 2.65);
+      });
+      // a dark gong-like noise wash
+      if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      var s = ctx.createBufferSource(), ng = ctx.createGain(), nf = ctx.createBiquadFilter();
+      s.buffer = noiseBuf; s.loop = true; nf.type = 'bandpass'; nf.frequency.setValueAtTime(700, t); nf.frequency.exponentialRampToValueAtTime(150, t + 2); nf.Q.value = 2;
+      ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.3, t + 0.02); ng.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      s.connect(nf); nf.connect(ng); ng.connect(fxOut()); s.start(t); s.stop(t + 2.25);
+    } catch (e) {}
+  }
   function crumble() {   // stone breaking: a rumble with cracks in it
     if (!ac()) return;
     try {
@@ -580,5 +623,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
+  return { darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();
