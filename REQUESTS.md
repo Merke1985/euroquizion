@@ -8,6 +8,8 @@ Supabase table `public.esc_requests` (project `gtdzuuvlluyofkvbpusx`). A run of 
 
 `id, created_at, updated_at, game, kind (bug/change/idea), body, status, note, version, commit_sha, source (admin/player), who`
 
+`kind` is `bug` or `idea` (a suggestion); `game` is usually `general`: work out from the text which part of the game it's about.
+
 Statuses: `new` → `working` → `done` (or `needs_ok`, `question`, `declined`); the admin's buttons set `approved`
 (go ahead with the plan in `note`) and `undo` (put a done change back). Player feedback arrives as `feedback`.
 

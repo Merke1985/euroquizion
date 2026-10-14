@@ -222,18 +222,17 @@
   }
   // ---- 📝 Requests: bugs and changes for Claude to pick up ----
   var RQ_ST = { 'new': ['🆕', 'Waiting'], working: ['⚙️', 'Being worked on'], done: ['✅', 'Done'], needs_ok: ['✋', 'Needs your OK'], approved: ['👍', 'Approved: next run'], undo: ['↩️', 'Undo: next run'], undone: ['↩️', 'Undone'], declined: ['🚫', 'Not done'], question: ['❓', 'Question for you'], feedback: ['💬', 'Player feedback: Claude reviews it'] };
-  var RQ_KIND = { bug: '🐞 Bug', change: '✏️ Change', idea: '💡 Idea' };
-  var rqGame = 'general', rqKind = 'change';
+  var RQ_KIND = { bug: '🐞 Bug', change: '💡 Suggestion', idea: '💡 Suggestion' };
+  var rqGame = 'general', rqKind = 'bug';
   function gameName(k) { var g = (H().games || []).filter(function (x) { return x.k === k; })[0]; return g ? g.icon + ' ' + g.title : ({ general: '🌍 General', trivia: '❓ Trivia', shop: '🛍️ Boutique & items', final: '🏆 Grand Final', phone: '📱 Phones' })[k] || k; }
   function drawReq(B) {
     var sb = escClient();
     var opts = ['general', 'trivia', 'shop', 'final', 'phone'].concat((H().games || []).map(function (g) { return g.k; }));
-    B.innerHTML = '<div class="xerow xereqnew"><div class="xerowtop"><select id="xerg">' + opts.map(function (k) { return '<option value="' + k + '"' + (k === rqGame ? ' selected' : '') + '>' + esc(gameName(k)) + '</option>'; }).join('') + '</select>' +
-      '<select id="xerk">' + Object.keys(RQ_KIND).map(function (k) { return '<option value="' + k + '"' + (k === rqKind ? ' selected' : '') + '>' + RQ_KIND[k] + '</option>'; }).join('') + '</select></div>' +
+    B.innerHTML = '<div class="xerow xereqnew"><div class="xerowtop"><select id="xerk">' + [['bug', '🐞 Bug'], ['idea', '💡 Suggestion']].map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === rqKind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div>' +
       '<textarea class="xelytxt" id="xert" rows="3" placeholder="What is wrong, or what should change? The more precise, the better."></textarea><div class="xerowtop" style="justify-content:flex-end"><button type="button" class="btn small" id="xersend">📨 Send</button></div></div>' +
       '<p class="mute xereqhow">Claude picks these up when you run the scheduled task <b>“Process EuroQuizion requests”</b> in the Claude app (Run now), or say “process my requests” in a chat. Every done request gets an overview and an ↩️ Undo button; big changes wait for your 👍 first. Feedback from players (the 💬 Feedback button on the join screen) shows up here too: Claude reviews it and suggests a fix, which waits for your 👍.</p>' +
       '<div class="xelist" id="xerl"><p class="mute">Loading…</p></div>';
-    $('xerg').onchange = function () { rqGame = this.value; }; $('xerk').onchange = function () { rqKind = this.value; };
+    $('xerk').onchange = function () { rqKind = this.value; };
     var load = function () {
       if (!sb) { $('xerl').innerHTML = '<p class="mute">No Supabase connection.</p>'; return; }
       sb.rpc('esc_req_list', { p_pass: pass() }).then(function (r) {
@@ -246,7 +245,7 @@
             (q.status === 'question' ? '<button type="button" class="btn small" data-a="answer">💬 Answer</button>' : '') +
             (q.status === 'feedback' ? '<button type="button" class="btn small" data-a="review">📨 Make it a request</button><button type="button" class="btn alt small" data-a="decline">🚫 Ignore</button>' : '') +
             (['new', 'needs_ok', 'question', 'declined', 'undone', 'feedback'].indexOf(q.status) >= 0 ? '<button type="button" class="btn alt small" data-a="delete">🗑</button>' : '');
-          return '<div class="xerow xereq st-' + q.status + '" data-id="' + q.id + '"><div class="xerowtop"><b>#' + q.id + ' · ' + esc(gameName(q.game)) + ' · ' + (q.source === 'player' ? '💬 From ' + esc(q.who || 'a player') : (RQ_KIND[q.kind] || q.kind)) + '</b><span class="xest">' + st[0] + ' ' + st[1] + '</span></div>' +
+          return '<div class="xerow xereq st-' + q.status + '" data-id="' + q.id + '"><div class="xerowtop"><b>#' + q.id + ' · ' + (RQ_KIND[q.kind] || q.kind) + (q.game && q.game !== 'general' ? ' · ' + esc(gameName(q.game)) : '') + (q.source === 'player' ? ' · 💬 from ' + esc(q.who || 'a player') : '') + '</b><span class="xest">' + st[0] + ' ' + st[1] + '</span></div>' +
             '<p class="xebody2">' + esc(q.body) + '</p>' + (q.note ? '<div class="xenote">' + esc(q.note).replace(/\n/g, '<br>') + (q.version ? '<small> · v' + esc(q.version) + '</small>' : '') + '</div>' : '') +
             '<div class="xerowtop"><small class="mute">' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</small><span style="flex:1"></span>' + acts + '</div></div>';
         }).join('') : '<p class="mute">No requests yet.</p>';

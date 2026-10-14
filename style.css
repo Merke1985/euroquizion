@@ -4574,3 +4574,10 @@ body.hasdock main{padding-bottom:84px}
 .xerow .xerowtop .xename{flex:1 1 200px}
 .xereqnew select{width:auto}
 .xereqnew .xerowtop{flex-wrap:wrap}
+.fbkinds{display:flex;gap:8px;margin:0 0 12px}
+.fbkinds .btn{flex:1;margin:0}
+.fbkinds .btn.on{background:var(--yellow,#ffd23f);color:#1a1040;box-shadow:none}
+.fbkinds{display:flex;gap:8px;margin:0 0 12px}
+.fbkinds .btn{flex:1;margin:0}
+.fbkinds .btn.on{background:var(--yellow,#ffd23f);color:#1a1040;box-shadow:none}
+.fbkinds .btn{white-space:nowrap;padding-left:8px;padding-right:8px;font-size:1rem}
