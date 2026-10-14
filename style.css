@@ -4693,4 +4693,4 @@ body.hasdock main{padding-bottom:84px}
 .shosts .ehost.her{transition:right .8s cubic-bezier(.3,.6,.4,1)}
 
 /* Talking mouths: closed (flat) until --mo opens them, set by the sound of the line or the typing */
-.ehost .emouth,.keeper .emouth{transform-box:fill-box;transform-origin:50% 20%;transform:scale(calc(.8 + var(--mo,0) * .25),var(--mo,0));transition:transform .08s ease-out}
+.ehost .emouth,.keeper .emouth{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(var(--mo,0));transition:transform .07s ease-out}   /* (a soft open mouth with teeth and a tongue, hinged at the top lip) */
