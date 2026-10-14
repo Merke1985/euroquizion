@@ -3625,7 +3625,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // Someone used an item: everything stops, a police siren wails and the screen flashes red and blue for three seconds,
   // and only then does the item's card come up.
-  var ALARM_MS = 3000, ITEM_MS = 6000, sirenEl = null;   // (the siren, then every item's card is on screen for the same 6 seconds: long enough to read it and for its sound)
+  var ALARM_MS = 3000, ITEM_MS = 7000, sirenEl = null;   // (the siren, then every item's card is on screen for the same 7 seconds: long enough to read it and for its sound)
   function itemAlarm(then) {
     if (REMOTE) { then(); return; }
     if (!(G.phase === 'guess' && isPair())) { try { yt.pauseVideo(); } catch (e) {} }   // (a question with two songs runs on: its clips have their own timing, and nothing would start it again)
