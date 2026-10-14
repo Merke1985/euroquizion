@@ -2130,7 +2130,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Before the first question: everyone presses Ready on their phone (test bots after three seconds).
   function chaseReady(c) {
     if (G.chase !== c) return;
-    c.st = 'ready'; c.ready = {}; c.msgAt = Date.now() + 2000; var mMs = VOICE_MS['ch_m_' + c.monster.id] || 2500, cryMs = c.monster.cry ? (VOICE_MS[c.monster.cryv || 'cry_' + c.monster.id] || 3000) + 700 : 0;
+    c.st = 'ready'; c.ready = {}; c.msgAt = Date.now() + 2000; var mMs = VOICE_MS['ch_m_' + c.monster.id] || 2500, cryMs = c.monster.cry ? (VOICE_MS[c.monster.cryv || 'cry_' + c.monster.id] || 3000) + 2700 : 0;   /* (+2 s of silence after the monster's own words) */
     c.cryEnd = c.msgAt + cryMs; c.readyOpen = c.cryEnd + mMs + 300 + (VOICE_MS.ch_ready4 || 3500) + 300;   // (first the monster's own creepy words, alone on the screen; then who is coming, then what to do)
     if (cryMs) setTimeout(function () { if (G.chase === c && c.st === 'ready') hostVoice(c.monster.cryv || 'cry_' + c.monster.id); }, c.msgAt - Date.now());
     setTimeout(function () { if (G.chase === c && c.st === 'ready') { push(); chSay(c, 'rise', 'm_' + c.monster.id); } }, c.cryEnd - Date.now());
