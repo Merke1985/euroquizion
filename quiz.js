@@ -970,12 +970,12 @@ function edSym(id, x, y, sz) { var s = ED_SYMS2[id]; return '<g transform="trans
 function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y + ') scale(' + (sz / 40) + ')">' + ED_SOCKS[id] + '</g>'; }
 
 // Zero Gravity: the path the poles follow, the same on every device (from one seed), timed to the song. Three stages:
-// 0:00–1:02 a slow steady swing, a 10-second break 1:02–1:12, 1:12–2:05 a faster steady swing, a 10-second break
-// 2:05–2:15, then the maximum sway to the end. Off the zone: 2 seconds to get back, always; the zone slowly gets smaller.
+// 0:00–1:02 a slow steady swing, a 10-second break 1:02–1:12, 1:12–2:05 still slow but with asteroids, a 10-second
+// break 2:05–2:15, then fast, with more and faster asteroids, to the end. Off the zone: 2 seconds to get back, always.
 // In a break the poles come back to the middle and nobody can fall.
 // x goes from -1 (far left) to 1 (far right).
 var ZG_GO = 9, ZG_LEN0 = 182, ZG_LEN = ZG_LEN0, ZG_ST = [72, 135], ZG_BRK = [[62, 72], [125, 135]], ZG_FALL = [2, 2, 2], zgPar = {};
-function zgW(t) { return [0.24, 0.18, 0.135][zgStage(t)]; }   // (the zone: each stage 25% smaller than the one before)
+function zgW(t) { return [0.24, 0.24, 0.21][zgStage(t)]; }   // (the zone: a bit smaller in the fast stage)
 function zgNext(t) { var n = ZG_LEN; ZG_BRK.forEach(function (b) { if (b[0] > t && b[0] < n) n = b[0]; if (t >= b[0] && t < b[1] && b[1] < n) n = b[1]; }); return n; }   // (the end of the current stage, or break)
 function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
 function zgRnd(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -983,16 +983,42 @@ function zgPath(seed, t) {   // the same on every device; seed is kept for older
   var sm = function (v) { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); }, x;
   if (t < 9) x = 0;   // still until she starts singing (0:09)…
   else if (t < ZG_ST[0]) x = 0.29 * sm((t - 9) / 12) * Math.sin(2 * Math.PI * (t - 9) / 8);   // …then slowly, a third of the way (every 8 s)
-  else if (t < ZG_ST[1]) x = 0.59 * Math.sin(2 * Math.PI * (t - ZG_ST[0]) / 4.5);   // stage 2: two thirds of the way, faster
-  else {   // stage 3: all the way, faster and faster… and in the last 10 seconds faster still
-    var u = t - ZG_ST[1], A = Math.max(1, ZG_LEN - ZG_ST[1] - 10), f0 = 1 / 3.4, fa = 1 / 1.6, f2 = 1 / 0.7, ph;
-    if (u <= A) ph = f0 * u + (fa - f0) * u * u / (2 * A);
-    else { var v = u - A; ph = f0 * A + (fa - f0) * A / 2 + fa * v + (f2 - fa) * v * v / 20; }
-    x = 0.88 * Math.sin(2 * Math.PI * ph);
+  else if (t < ZG_ST[1]) x = 0.4 * Math.sin(2 * Math.PI * (t - ZG_ST[0]) / 8);   // stage 2: still slow (every 8 s), a bit wider; the asteroids are the challenge
+  else {   // stage 3: fast, and a little faster towards the end
+    var u = t - ZG_ST[1], A = Math.max(1, ZG_LEN - ZG_ST[1]), f0 = 1 / 4.5, fa = 1 / 3;
+    x = 0.55 * Math.sin(2 * Math.PI * (f0 * u + (fa - f0) * u * u / (2 * A)));
   }
   var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 3) : t > b[1] ? sm((t - b[1]) / 2) : 0;   /* (gliding back to the middle over the last 3 seconds before a break; after it, off again from the middle) */ });   // (the breaks: back to the middle)
   if (t > ZG_LEN - 3) env *= sm((ZG_LEN - t) / 3);   // (the last 3 seconds: slowly back to the middle, and it ends at 3:02)
   return env * x;
+}
+// The asteroids (stages 2 and 3): waves that fly straight across the play field, from the left or the right. Each wave
+// leaves one gap; slide up or down (inside the zone) to be in the gap when it passes. A warning shows the wave (and its
+// gap) at the edge it comes from, a moment before. The field is square: x from -1 to 1, y from 0 (top) to 1 (bottom);
+// a rock is a circle (radius r in field heights). The same on every device: everything follows from the seed.
+var ZG_WARN = 1.4, zgRockC = {};
+function zgRocks(seed) {
+  if (zgRockC.seed === seed && zgRockC.len === ZG_LEN) return zgRockC.list;
+  var R = zgRnd((seed || 1) ^ 0x5eed), L = [], gy = 0.5;
+  [[ZG_ST[0] + 3, ZG_BRK[1][0] - 4, 4.6, 3.4, 0.44], [ZG_ST[1] + 3, ZG_LEN - 7, 3.1, 2.3, 0.36]].forEach(function (S, si) {
+    for (var t = S[0]; t <= S[1]; t += S[2] * (0.9 + R() * 0.2)) {
+      var gap = S[4], lo = gap / 2 + 0.01, hi = 1 - lo, jump = 0.16 + R() * 0.3, c = [gy - jump, gy + jump].filter(function (v) { return v >= lo && v <= hi; }), ny = c.length ? c[Math.floor(R() * c.length)] : (gy - lo > hi - gy ? lo : hi);   // (the next gap is never where the last one was: you have to move)
+      gy = ny; var dir = R() < 0.5 ? 1 : -1, rocks = [], top = gy - gap / 2, bot = 1 - (gy + gap / 2);
+      if (top > 0.05) rocks.push({ y: top / 2 - 0.03, r: top / 2 + 0.03 });
+      if (bot > 0.05) rocks.push({ y: 1 - bot / 2 + 0.03, r: bot / 2 + 0.03 });
+      L.push({ t0: t, dur: S[3], dir: dir, gy: gy, gap: gap, rocks: rocks, st: si + 1 });
+    }
+  });
+  zgRockC = { seed: seed, len: ZG_LEN, list: L }; return L;
+}
+// Where the rocks of a wave are at time t (x of their centres; null before they come in or after they left).
+function zgWaveX(w, t) { var u = (t - w.t0) / w.dur; if (u < 0 || u > 1) return null; var rm = 0.8; return w.dir * (-1 - rm + (2 + 2 * rm) * u); }
+// Is the point (x, y) hit by a rock at time t? (a little forgiving: 85% of the rock counts)
+function zgHit(seed, t, x, y) {
+  var L = zgRocks(seed);
+  for (var i = 0; i < L.length; i++) { var w = L[i]; if (t < w.t0 || t > w.t0 + w.dur) continue; var ax = zgWaveX(w, t); if (ax == null) continue;
+    for (var j = 0; j < w.rocks.length; j++) { var k = w.rocks[j], dx = (x - ax) / 2, dy = y - k.y; if (dx * dx + dy * dy < k.r * k.r * 0.72) return true; } }
+  return false;
 }
 function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }
 

@@ -730,24 +730,46 @@
     if (t > ZG_GO + 1.5 && brk < 0) { S.tot += dt; if (inside) S.inT += dt; }
     S.outFor = inside ? 0 : S.outFor + dt;
     var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
-    if (t > ZG_GO + 3 && S.outFor >= fall) {   // you fall
-      S.fell = true; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc() }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
+    var hit = st > 0 && brk < 0 && t > ZG_GO + 3 && zgHit(S.seed, t, S.f, S.y);   // (stages 2 and 3: an asteroid knocks you off)
+    if (hit || (t > ZG_GO + 3 && S.outFor >= fall)) {   // you fall
+      S.fell = true; S.hit = hit; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc(), hit: hit ? 1 : 0 }); try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
     }
     if (lv !== S.sent && now - S.sentAt >= 250) { S.sent = lv; S.sentAt = now; zgTell({ l: lv, s: err < 0 ? -1 : 1 }); if (lv === 2) try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
     // draw: the zone, your finger, the clock
     var B = S.box; if (!B) return;
     B.zone.style.left = ((tg - w + 1) / 2 * 100).toFixed(2) + '%'; B.zone.style.width = (w * 100).toFixed(2) + '%';
-    B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%';
+    B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%'; B.me.style.top = (S.y * 100).toFixed(2) + '%';
+    var warn = zgRockDraw(B, S.seed, t);
     B.track.setAttribute('data-l', lv); B.track.classList.toggle('brk', brk >= 0); B.track.classList.toggle('pre', pre);
-    var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = pre ? (t >= ZG_GO - 3 ? '🎤 ' + Math.ceil(ZG_GO - t) + '…' : '🎤 Get ready… you take over when she starts singing') : brk >= 0 ? '☕ Break time! Relax your fingers… ' + Math.ceil(ZG_BRK[brk][1] - t) + 's' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
+    var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = pre ? (t >= ZG_GO - 3 ? '🎤 ' + Math.ceil(ZG_GO - t) + '…' : '🎤 Get ready… you take over when she starts singing') : brk >= 0 ? '☕ Break time! Relax your fingers… ' + Math.ceil(ZG_BRK[brk][1] - t) + 's' + (brk === 0 ? ' · Next: asteroids! ☄️' : '') : warn && inside ? '☄️ Asteroids! Slide up or down to the gap!' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
     if (B.info.textContent !== txt) B.info.textContent = txt;
+  }
+  // The asteroids on the phone: a warning at the edge they come from (red where the rocks will be, the gap stays dark),
+  // then the rocks themselves flying across. A small pool of elements, reused every frame.
+  function zgRockDraw(B, seed, t) {
+    var L = zgRocks(seed), ri = 0, wi = 0, warn = false;
+    for (var i = 0; i < L.length; i++) {
+      var w = L[i]; if (t < w.t0 - ZG_WARN || t > w.t0 + w.dur || zgBreak(t) >= 0) continue;
+      if (t < w.t0) {   // the warning
+        warn = true; var e = B.warns[wi++]; if (!e) continue;
+        e.className = 'zgwarn ' + (w.dir > 0 ? 'l' : 'r'); e.style.display = '';
+        var a = Math.max(0, w.gy - w.gap / 2) * 100, b = Math.min(1, w.gy + w.gap / 2) * 100;
+        e.style.background = 'linear-gradient(180deg,rgba(255,60,60,.85) 0 ' + a.toFixed(1) + '%,transparent ' + a.toFixed(1) + '% ' + b.toFixed(1) + '%,rgba(255,60,60,.85) ' + b.toFixed(1) + '%)';
+        continue;
+      }
+      var ax = zgWaveX(w, t); if (ax == null) continue; if (t < w.t0 + w.dur * .5) warn = true;
+      w.rocks.forEach(function (k, j) { var r = B.rocks[ri++]; if (!r) return; r.style.display = ''; r.style.left = ((ax + 1) / 2 * 100 - k.r * 100).toFixed(2) + '%'; r.style.top = ((k.y - k.r) * 100).toFixed(2) + '%'; r.style.width = r.style.height = (k.r * 200).toFixed(2) + '%'; r.style.rotate = ((t * 90 * w.dir + j * 70) % 360).toFixed(1) + 'deg'; });
+    }
+    for (; ri < B.rocks.length; ri++) B.rocks[ri].style.display = 'none';
+    for (; wi < B.warns.length; wi++) B.warns[wi].style.display = 'none';
+    return warn;
   }
   function zgView(s) {
     var z = s.zg, box = $('zgui'), mine = z.order.indexOf(pid) >= 0;
     if (z.len) ZG_LEN = z.len;   // (as long as the song)
     show('v-wait');
-    if (!zgS || zgS.id !== z.id) { zgStop(); zgS = { id: z.id, seed: z.seed, start: 0, f: 0, inT: 0, tot: 0, outFor: 0, sent: 0, sentAt: 0, fell: false, fin: false, raf: 0, box: null }; }
+    if (!zgS || zgS.id !== z.id) { zgStop(); zgS = { id: z.id, seed: z.seed, start: 0, f: 0, y: 0.5, hit: false, inT: 0, tot: 0, outFor: 0, sent: 0, sentAt: 0, fell: false, fin: false, raf: 0, box: null }; }
     var S = zgS, fell = S.fell || (z.out || {})[pid] != null;
     if (z.st === 'play' && z.el != null) { var st0 = Date.now() - z.el; if (!S.start || st0 < S.start) S.start = st0; }   /* (the earliest estimate: least network delay) */
     if (z.st === 'end') {
@@ -759,21 +781,22 @@
       return;
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Watch the big screen!'; return; }
-    if (fell) { zgStop(); box.classList.add('hidden'); $('waittitle').textContent = '🚀 You fell into space!'; $('waitsub').textContent = 'You followed the zone ' + zgAcc() + '% of the time. Watch the others wobble…'; return; }
+    if (fell) { zgStop(); box.classList.add('hidden'); $('waittitle').textContent = S.hit ? '☄️ Hit by an asteroid! You fell into space!' : '🚀 You fell into space!'; $('waitsub').textContent = 'You followed the zone ' + zgAcc() + '% of the time. Watch the others wobble…'; return; }
     if (z.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Listen to the astronauts on the big screen… 👩‍🚀'; return; }
     $('waittitle').textContent = z.st === 'ready' ? '🌌 Get ready…' : '🌌 Keep your balance!';
-    $('waitsub').textContent = 'Keep your finger on the glowing zone: it moves with the music. Stay in the zone, or you fall!';
+    $('waitsub').textContent = (z.stage || 0) > 0 ? 'Stay in the glowing zone, and slide up or down to dodge the asteroids! ☄️' : 'Keep your finger on the glowing zone: it moves with the music. Stay in the zone, or you fall!';
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id || !S.box) {
       box.setAttribute('data-id', z.id);
-      box.innerHTML = '<div class="zginfo">Stage 1 of 3</div><div class="zgtrack" data-l="0"><span class="zgzone"></span><span class="zgme"></span></div><div class="zghint">👆 Slide left and right</div>';
+      box.innerHTML = '<div class="zginfo">Stage 1 of 3</div><div class="zgtrack" data-l="0"><span class="zgzone"></span><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgwarn"></i><i class="zgwarn"></i><span class="zgme"></span></div><div class="zghint">👆 Slide left and right to stay in the zone · from stage 2 also up and down to dodge the asteroids ☄️</div>';
       var tr = box.querySelector('.zgtrack');
-      S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo') };
-      var mv = function (e) { e.preventDefault(); if ((Date.now() - S.start) / 1000 < ZG_GO) return; var r = tr.getBoundingClientRect(); S.f = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)); };
+      S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo'), rocks: [].slice.call(tr.querySelectorAll('.zgrock')), warns: [].slice.call(tr.querySelectorAll('.zgwarn')) };
+      S.box.rocks.concat(S.box.warns).forEach(function (e) { e.style.display = 'none'; });
+      var mv = function (e) { e.preventDefault(); if ((Date.now() - S.start) / 1000 < ZG_GO) return; var r = tr.getBoundingClientRect(); S.f = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)); S.y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)); };
       tr.addEventListener('pointerdown', function (e) { try { tr.setPointerCapture(e.pointerId); } catch (x) {} mv(e); });
       tr.addEventListener('pointermove', function (e) { if (e.buttons || e.pointerType === 'touch') mv(e); });
       tr.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-      S.box.zone.style.left = ((zgPath(S.seed, 0) - zgW(0) + 1) / 2 * 100) + '%'; S.box.zone.style.width = (zgW(0) * 100) + '%'; S.box.me.style.left = '50%';
+      S.box.zone.style.left = ((zgPath(S.seed, 0) - zgW(0) + 1) / 2 * 100) + '%'; S.box.zone.style.width = (zgW(0) * 100) + '%'; S.box.me.style.left = '50%'; S.box.me.style.top = '50%';
     }
     if (z.st === 'play' && !S.raf) { S.last = Date.now(); S.raf = requestAnimationFrame(zgFrame); }
   }
