@@ -1796,7 +1796,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var g0 = G.fun; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard');
         hq.classList.remove('away'); hq.classList.remove('together'); hostHold = true; clearTimeout(hostT.away);
         setTimeout(function () { if (G.fun === g0) hq.classList.add('point'); }, 700);
-        setTimeout(function () { if (G.fun !== g0) return; show(); if (kind === 'quiz') hostVoice('trivia'); }, 1300);
+        setTimeout(function () { if (G.fun !== g0) return; show(); if (kind === 'quiz') hostVoice('trivia', 'her'); }, 1300);
         setTimeout(function () { hq.classList.remove('point'); }, (ms || 5200) + 1100);
         ms = (ms || 5200) + 1300;
       } else show();
@@ -2686,6 +2686,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="89" cy="94" rx="3.2" ry="4" fill="#2a1a10"/><ellipse cx="111" cy="94" rx="3.2" ry="4" fill="#2a1a10"/>' +
     '<path d="M83 84 q6 -4 12 0 M105 84 q6 -4 12 0" stroke="#2b1d14" stroke-width="3" fill="none" stroke-linecap="round"/>' +
     '<path d="M88 110 Q100 122 112 110" stroke="#7a3b2a" stroke-width="3.5" fill="#fff" stroke-linecap="round"/>' +
+    '<ellipse class="emouth" cx="100" cy="114" rx="9" ry="7" fill="#4a1a14" stroke="#7a3b2a" stroke-width="2"/>' +   // (opens when he talks)
     '</svg>';
   var HOST_HER = '<svg class="ehost her" viewBox="0 0 200 420" aria-hidden="true"><defs>' +
     '<linearGradient id="ehgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3fa4"/><stop offset=".55" stop-color="#b0208a"/><stop offset="1" stop-color="#5a1170"/></linearGradient>' +
@@ -2705,6 +2706,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<ellipse cx="90" cy="92" rx="3" ry="3.8" fill="#2a1a10"/><ellipse cx="110" cy="92" rx="3" ry="3.8" fill="#2a1a10"/>' +
     '<path d="M85 86 l-3 -3 M115 86 l3 -3" stroke="#2a1a10" stroke-width="2" stroke-linecap="round"/>' +
     '<path d="M90 107 Q100 116 110 107" stroke="#c0204a" stroke-width="4" fill="#fff" stroke-linecap="round"/>' +
+    '<ellipse class="emouth" cx="100" cy="111" rx="8" ry="6.5" fill="#5a1020" stroke="#c0204a" stroke-width="2.5"/>' +   // (opens when she talks)
     '<circle cx="74" cy="100" r="3" fill="#ffd23f"/><circle cx="126" cy="100" r="3" fill="#ffd23f"/>' +
     '</svg>';
 
@@ -2745,7 +2747,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var TALK_MS = 26;
   function typeSay(el, text, voice) {
     text = String(text); if (el._said === text) return 0; el._said = text;
-    if (!REMOTE && voice) voiceFor(voice, text);   // (a recorded line: spoken out loud as well)
+    var spoken = !REMOTE && voice ? voiceFor(voice, text) : false;   // (a recorded line: spoken out loud as well)
     var chars = Array.from(text), n = 0;
     clearInterval(el._typeT);
     var draw = function () { el.innerHTML = '<span>' + esc(chars.slice(0, n).join('')) + '</span><span class="unsaid">' + esc(chars.slice(n).join('')) + '</span>'; };
@@ -2755,7 +2757,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       n++; draw();
       var c = chars[n - 1];
       if (!REMOTE && c && /[A-Za-zÀ-ÿ0-9]/.test(c) && n % 3 === 1) Music.talk(voice);
-      if (n >= chars.length) clearInterval(el._typeT);
+      if (!spoken && voice && n % 2 === 0) mouth(voice, c && /[A-Za-zÀ-ÿ]/.test(c) ? 0.35 + Math.random() * 0.6 : 0);   // (no recording: the mouth moves with the letters)
+      if (n >= chars.length) { clearInterval(el._typeT); if (!spoken && voice) mouth(voice, 0); }
     }, TALK_MS);
     return chars.length * TALK_MS;
   }
@@ -3172,14 +3175,43 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var VOICE_MS = { but_first_lynda: 4754, first_1: 4048, first_2: 4754, first_3: 3474, first_4: 3866, first_item: 4440, lynda_bye: 4911, lynda_freebie: 7627, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
-  function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f); }
+  function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
+  // Mouths: the figure's mouth opens and closes with the sound of the recorded line (or along with the typing).
+  function mouthOf(who) {
+    if (REMOTE) return null;
+    if (who === 'lynda') return document.querySelector('.bqkeeper svg');
+    var pc = $('pcov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
+  }
+  function mouth(who, v) { var el = mouthOf(who); if (el) el.style.setProperty('--mo', Math.max(0, Math.min(1, v)).toFixed(2)); }
+  var mouthAC = null, mouthRaf = 0;
   // The studio music dips while they speak.
   var voiceEl = null, voiceDip = null;
-  function hostVoice(name) {
+  function hostVoice(name, who) {
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
       voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=4'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      if (who) {   // (the mouth follows how loud the line is, frame by frame)
+        try {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!mouthAC && AC) mouthAC = new AC();
+          if (mouthAC && mouthAC.state === 'suspended') mouthAC.resume();
+          var an = null;
+          if (mouthAC && mouthAC.state === 'running') {   // (only when sound can flow through it; otherwise the line would go silent)
+            var src = mouthAC.createMediaElementSource(voiceEl); an = mouthAC.createAnalyser(); an.fftSize = 512;
+            src.connect(an); an.connect(mouthAC.destination);
+          }
+          var buf = an ? new Uint8Array(an.fftSize) : null, me = voiceEl, sm = 0, fl = 0; cancelAnimationFrame(mouthRaf);
+          var tick = function () {
+            if (me !== voiceEl || me.ended || (me.paused && me.currentTime > 0)) { mouth(who, 0); return; }
+            if (an) { an.getByteTimeDomainData(buf); var sum = 0; for (var i = 0; i < buf.length; i++) { var x = (buf[i] - 128) / 128; sum += x * x; }
+              var rms = Math.sqrt(sum / buf.length); sm = sm * 0.5 + Math.min(1, rms * 5) * 0.5; mouth(who, sm < 0.08 ? 0 : sm); }
+            else if (!me.paused && ++fl % 5 === 0) mouth(who, Math.random() < 0.2 ? 0 : 0.35 + Math.random() * 0.6);   // (no analyser: a lively flap while it plays)
+            mouthRaf = requestAnimationFrame(tick);
+          };
+          mouthRaf = requestAnimationFrame(tick);
+        } catch (e) {}
+      }
       var dip = function (on) {   // (the music fades down to a whisper while they talk, and back up after)
         try { if (!(stY && stYReady && stYOn)) return; clearInterval(stYFade); var v = stY._want == null ? STUDIO_VOL : stY._want, to = on ? Math.round(STUDIO_VOL * 0.15) : STUDIO_VOL;
           stYFade = setInterval(function () { v += v < to ? 2 : -3; if ((on && v <= to) || (!on && v >= to)) { v = to; clearInterval(stYFade); } try { stY.setVolume(v); } catch (e) {} }, 30); } catch (e) {}
@@ -3679,6 +3711,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
     '<path d="M109.5 97 Q107.5 101.5 108 103.5 Q110 105 112.5 103.5" stroke="#c08a6c" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".75"/>' +   // (a small, ordinary nose)
     '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
+    '<ellipse class="emouth" cx="110" cy="112" rx="9" ry="6.5" fill="#4a0a18" stroke="#c8102e" stroke-width="3"/>' +   // (opens when she talks)
     '<ellipse cx="88" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/><ellipse cx="132" cy="106" rx="5" ry="3" fill="#ff8fa3" opacity=".4"/>' +
     '</svg>';
   // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
