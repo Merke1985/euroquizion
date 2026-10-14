@@ -1537,7 +1537,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (kind === 'quip' && !REMOTE) { greenRoom(quipAll); return; }
     if (kind === 'bluff' && !REMOTE) { greenRoom(bluffAll, null, 'bluff'); return; }
     if (kind === 'sing' && !REMOTE) { greenRoom(singStart, null, 'sing'); return; }   // (Key Change starts in the Green Room too)   // (United by Nonsense starts in the Green Room too)
-    if (kind === 'clue') { if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
+    if (kind === 'clue') { if (!REMOTE) { Music.want(false); edBox(true); } if (G.phase !== 'pspin') { autoStop(); stopTimers(); G.phase = 'loading'; push(); }   /* (the mysterious music right away) */ setTimeout(function () { if (G.mode === 'clue' && !G.clue) clueAll(); }, 1000); return; }   // (a second of quiet first, so the 'Who the hell…' sting is heard clearly; then the presenters explain it in the scene)
     if (kind === 'note') { noteAll(); return; }
     if (kind === 'queue') {   // Sofia needs some air first, and takes everyone outside, to Verona
       if (REMOTE) { qjAll(); return; }
@@ -2362,7 +2362,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function finale(win, then) {
     var old = $('fnov'); if (old) old.remove();
     var wp = players[win], others = list().filter(function (p) { return !p.off && p.pid !== win; });
-    var body = function (p) { var col = p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#e8457c'; return '<span class="fnbody" style="background:' + col + '"></span>'; };
+    var body = function (p, win) { var fl = handFlag({ cc: p.cc || 'eu' }); return '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca">' + (win ? '<span class="fntro">🏆</span>' : '') + '</i><i class="ca">' + fl + '</i><i class="ct"></i></span>'; };   // (the others stand at the sides of the stage, the winner in the middle)   // (full bodies; the winner: the trophy in one hand, the flag waving in the other)
     var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }));
     var fans = ''; for (var r = 0; r < 3; r++) { var n = 16 + r * 3; for (var i = 0; i < n; i++) {
       var fl = Math.random() < 0.45 ? '<span class="fnflag" style="--d:' + (-Math.random() * 2).toFixed(2) + 's"><img src="https://flagcdn.com/w80/' + codes[(r * 20 + i) % codes.length] + '.png" alt=""></span>' : (Math.random() < 0.3 ? '<span class="fnphone"></span>' : '');
@@ -2371,8 +2371,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = document.createElement('div'); ov.id = 'fnov'; ov.className = 'fnov enter';
     ov.innerHTML = '<div class="studio fnstudio"><i class="sttruss"></i><i class="stwall"></i><i class="stbeam b1"></i><i class="stbeam b2"></i><i class="stbeam b3"></i><i class="stbeam b4"></i><i class="stbeam b5"></i><i class="stbeam b6"></i><i class="stfloor"></i><i class="sthaze"></i></div>' +
       '<div class="fnscreen"><div class="fntitle"><span>🏆</span><b>EuroQuizion</b><em>' + esc(wp.name) + '</em></div><div class="fnboard"></div></div>' +
-      '<div class="fnback">' + others.map(function (p) { return '<div class="fnp" style="--d:' + (-Math.random() * 2).toFixed(2) + 's">' + body(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div>'; }).join('') + '</div>' +
-      '<div class="fnwin"><span class="fntro">🏆</span><div class="fnp big">' + body(wp) + charSvg(wp.char) + '</div><b class="fnname">' + esc(wp.name) + '</b></div>' +
+      [others.slice(0, Math.ceil(others.length / 2)), others.slice(Math.ceil(others.length / 2))].map(function (grp, side) { return '<div class="fnback ' + (side ? 'r' : 'l') + '">' + grp.map(function (p) { return '<div class="fnp" style="--d:' + (-Math.random() * 2).toFixed(2) + 's">' + body(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div>'; }).join('') + '</div>'; }).join('') +
+      '<div class="fnwin"><div class="fnp big">' + body(wp, true) + charSvg(wp.char) + '</div><b class="fnname">' + esc(wp.name) + '</b></div>' +
       '<div class="fnhosts">' + HOST_HIM + HOST_HER + '</div><div class="fnbub him"></div><div class="fnbub her"></div>' +
       '<div class="fnconf">' + conf + '</div><div class="fncrowd">' + fans + '</div>';
     document.body.appendChild(ov);
@@ -3953,7 +3953,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       sol: { who: pick(CLUE_WHO).id, where: pick(CLUE_WHERE).id, what: pick(CLUE_WHAT).id } };
     G.fun = { kind: 'clue', icon: FUN.clue.icon, title: FUN.clue.title, sub: FUN.clue.sub, plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push();
-    clueShow(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); }   // mysterious music under the story and the briefing; Edgar's tune once the search starts
+    clueShow(); if (!REMOTE) { Music.want(false); edBox(true); }   // mysterious music under the story and the briefing; Edgar's tune once the search starts
     G.clueSting = false;   // (the sting plays right after “abducted!”)
     var ov = $('clueov'); if (ov) { ov.classList.add('story'); ov.classList.add('intro'); ov.classList.add('nohosts'); ov.classList.add('noframe'); }
     setTimeout(function () { var o = $('clueov'); if (o) { o.classList.remove('noframe'); Music.blip(); } }, 2600);   // the framed photo, a little later
@@ -3979,6 +3979,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       t += Math.max(4200, Array.from(l[1]).length * TALK_MS + 2800);
     });
     at(t, function () { clueLeave(edStart); });
+  }
+  // The music box under Edgar's story and the briefing (looped; it fades out once the search starts, or when the game moves on)
+  var edBoxEl = null, edBoxT = null;
+  function edBox(on) {
+    if (REMOTE) return;
+    clearInterval(edBoxT); edBoxT = null;
+    var vol = function () { return Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.music : 1))); };
+    if (on) {
+      try {
+        if (!edBoxEl) { edBoxEl = new Audio('sounds/edgar_musicbox.mp3?v=1'); edBoxEl.loop = true; }
+        if (edBoxEl.paused) { edBoxEl.currentTime = 0; var pr = edBoxEl.play(); if (pr && pr.catch) pr.catch(function () {}); }
+        edBoxEl.volume = vol();
+      } catch (e) {}
+      edBoxT = setInterval(function () { if (!edMystKeep()) edBox(false); }, 500);
+      return;
+    }
+    var a = edBoxEl; if (!a || a.paused) return;
+    var t = setInterval(function () { try { a.volume = Math.max(0, a.volume - 0.07); if (a.volume <= 0.01) { clearInterval(t); a.pause(); } } catch (e) { clearInterval(t); } }, 60);
   }
   function edMystKeep() { var g = G.clue; if (!g) return G.mode === 'clue'; return (g.st === 'intro' || g.st === 'brief') && (G.phase === 'fun' || G.phase === 'cluerooms' || G.phase === 'loading'); }   // (the mysterious music: only during the story and the briefing)
   function clueSay(who, txt) {
@@ -4430,7 +4448,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = ''; g.duo = edDuoPick(); g.duoQ = null;
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
-    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); Music.mystery(true, edMystKeep); } edShow();
+    cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); edBox(true); } edShow();
     var lines = [
       ['him', 'Edgar’s kidnapper left clues all over the building. Go from room to room on your phone to find them!', ''],
       ['her', 'The Green Room, where the artists wait for their turn. 🛋️', 'green'],
@@ -4465,7 +4483,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.clue; if (!g) return;
     g.st = 'rooms'; g.ends = Date.now() + ED_MS;
     var ov = $('edov'); if (ov) { ov.classList.add('go'); ov.removeAttribute('data-lit'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); }); }
-    push(); Music.ding(); whooshes([0, 300]); if (!REMOTE) Music.mystery(false); clueSong();   // Edgar's tune: from the search to the end of the clue questions
+    push(); Music.ding(); whooshes([0, 300]); if (!REMOTE) edBox(false); clueSong();   // Edgar's tune: from the search to the end of the clue questions
     if (!REMOTE) { var t0e = Date.now(), dTry = 0, dT = setInterval(function () {   // the search lasts as long as the song (from 0:14 to its end), once YouTube knows its length
       if (G.clue !== g || g.st !== 'rooms' || ++dTry > 30) { clearInterval(dT); return; }
       var d = 0; try { d = yt.getDuration() || 0; } catch (e) {}

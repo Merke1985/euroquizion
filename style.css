@@ -4729,18 +4729,13 @@ body.hasdock main{padding-bottom:84px}
 @keyframes fnrow{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
 /* on the stage: the other players at the back, the winner in front between the presenters */
 .fnov .fnback{position:absolute;left:24%;right:24%;bottom:45vh;display:flex;justify-content:center;gap:5vw;z-index:2}
-.fnov .fnp{position:relative;width:9vh;height:17vh;animation:grbob 2.2s ease-in-out infinite alternate;animation-delay:var(--d,0s)}
+.fnov .fnp{position:relative;width:9vh;height:18vh;animation:grbob 2.2s ease-in-out infinite alternate;animation-delay:var(--d,0s)}
 .fnov .fnp .char{position:absolute;left:50%;top:0;width:8vh;height:8vh;margin-left:-4vh;z-index:2}
-.fnov .fnbody{position:absolute;left:50%;bottom:2.4vh;width:8vh;margin-left:-4vh;height:8.5vh;border-radius:4vh 4vh 1vh 1vh;box-shadow:inset 0 -8px 12px rgba(0,0,0,.25)}
 .fnov .fnp>b{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:clamp(.6rem,1.5vh,.85rem);white-space:nowrap;background:rgba(0,0,0,.45);padding:.05em .45em;border-radius:6px}
 .fnov .fnwin{position:absolute;left:50%;bottom:17vh;transform:translateX(-50%);z-index:4;text-align:center}
 .fnov .fnp.big{width:17vh;height:30vh;margin:0 auto}
 .fnov .fnp.big .char{width:15vh;height:15vh;margin-left:-7.5vh}
-.fnov .fnp.big .fnbody{width:15vh;margin-left:-7.5vh;height:15vh;bottom:0;border-radius:7.5vh 7.5vh 2vh 2vh}
 .fnov .fnname{display:inline-block;margin-top:.4vh;font-size:clamp(1rem,3vh,1.8rem);font-weight:900;background:linear-gradient(90deg,#ffd23f,#ffb200);color:#2a1700;padding:.15em .8em;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.5)}
-.fnov .fntro{position:absolute;left:50%;top:9vh;font-size:9vh;transform:translate(10%,40%) rotate(10deg);transition:transform 1s cubic-bezier(.2,1.4,.4,1);filter:drop-shadow(0 0 18px rgba(255,210,63,.9));z-index:3}
-.fnov.raise .fntro{transform:translate(20%,-55%) rotate(-8deg);animation:fntro 1.2s 1s ease-in-out infinite alternate}
-@keyframes fntro{from{rotate:0deg}to{rotate:10deg}}
 .fnov .fnhosts .ehost{position:absolute;bottom:5vh;height:50vh;width:auto;z-index:4;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));animation:ehbob 3.2s ease-in-out infinite alternate}
 .fnov .fnhosts .him{left:14vw}.fnov .fnhosts .her{right:14vw;animation-delay:-1.6s}
 .fnov .fnbub{position:absolute;top:30vh;max-width:28vw;z-index:6;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(1rem,1.9vw,1.5rem);line-height:1.25;padding:.65em 1em;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:scale(.6);transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
@@ -4763,3 +4758,49 @@ body.hasdock main{padding-bottom:84px}
 .fnov .fnconf i{position:absolute;top:-4vh;width:1vh;height:1.6vh;background:var(--c);border-radius:2px;animation:fnfall var(--t) linear infinite;animation-delay:var(--d)}
 @keyframes fnfall{from{transform:translateY(0) rotate(0)}to{transform:translateY(110vh) rotate(720deg)}}
 @media (prefers-reduced-motion:reduce){.fnov *{animation:none!important}}
+
+/* the finale: full bodies (the lobby figure), a flag in every hand; the winner holds up the trophy and waves the flag */
+.fnov .fnp .lbod{position:absolute;left:50%;top:6.6vh;width:5.6vh;height:8.6vh;margin-left:-2.8vh;z-index:1}
+.fnov .fnp .lbod .ca .hflag{left:.1vh;top:-1.6vh;width:3.8vh;height:5.4vh}
+.fnov .fnp>b{bottom:-.6vh}
+.fnov .fnp.big{height:32vh}
+.fnov .fnp.big .lbod{top:12.6vh;width:11vh;height:17vh;margin-left:-5.5vh}
+.fnov .fnp.big .lbod .ca{width:20%;height:46%}
+.fnov .fnp.big .lbod .ca:nth-of-type(3){left:-6%;rotate:148deg;z-index:3;transition:rotate .9s cubic-bezier(.3,1.4,.5,1)}
+.fnov .fnp.big .lbod .ca:nth-of-type(4){right:-6%;rotate:-150deg;z-index:3;animation:fnwave .7s ease-in-out infinite alternate}
+.fnov .fnp.big .lbod .ca .hflag{left:50%;top:auto;bottom:-1.2vh;width:9vh;height:12vh;transform-origin:0 100%;animation:fnwaveflag .7s ease-in-out infinite alternate}
+.fnov .fnp.big .lbod .ca .hflag img{animation-duration:.45s}
+.fnov .fntro{position:absolute;left:50%;top:100%;font-size:8vh;line-height:1;transform:translate(-50%,-25%) rotate(-148deg);filter:drop-shadow(0 0 18px rgba(255,210,63,.9));z-index:4;pointer-events:none}
+.fnov:not(.raise) .fnp.big .lbod .ca:nth-of-type(3){rotate:40deg}
+.fnov:not(.raise) .fntro{transform:translate(-50%,-25%) rotate(-40deg)}
+.fnov .fntro{transition:transform .9s cubic-bezier(.3,1.4,.5,1)}
+@keyframes fnwave{from{rotate:-135deg}to{rotate:-170deg}}
+@keyframes fnwaveflag{from{rotate:125deg}to{rotate:185deg}}
+/* (sizes: the winner a little smaller, the others in the back smaller) */
+.fnov .fnp{width:7vh;height:14vh}
+.fnov .fnp .char{width:6vh;height:6vh;margin-left:-3vh}
+.fnov .fnp .lbod{top:4.9vh;width:4.2vh;height:6.6vh;margin-left:-2.1vh}
+.fnov .fnp .lbod .ca .hflag{top:-1.2vh;width:2.9vh;height:4.1vh}
+.fnov .fnp.big{width:14vh;height:27vh}
+.fnov .fnp.big .char{width:12vh;height:12vh;margin-left:-6vh}
+.fnov .fnp.big .lbod{top:10vh;width:9vh;height:14vh;margin-left:-4.5vh}
+.fnov .fnp.big .lbod .ca .hflag{top:auto;bottom:-1vh;width:7.5vh;height:10vh}
+.fnov .fntro{font-size:6.5vh}
+.fnov .fnp.big .lbod .ca:nth-of-type(3){rotate:162deg}
+.fnov.raise .fntro{transform:translate(-50%,-25%) rotate(-162deg)}
+.fnov .fnback{bottom:41vh}
+.fnov .fnp.big{width:15vh;height:27vh}
+.fnov .fnp.big .char{width:13.5vh;height:13.5vh;margin-left:-6.75vh}
+.fnov .fnp.big .lbod{top:11.3vh;width:10vh;height:15.5vh;margin-left:-5vh}
+.fnov .fnp.big .lbod .ca .hflag{width:8vh;height:10.8vh}
+.fnov .fntro{font-size:7vh}
+.fnov .fngap{flex:0 0 14vh}
+.fnov .fnback{left:10%;right:10%}
+/* the others: at the left and right side of the stage, out of the way */
+.fnov .fnback{left:auto;right:auto;bottom:31vh;width:15%;gap:0;justify-content:center}
+.fnov .fnback.l{left:1.5%}
+.fnov .fnback.r{right:1.5%}
+.fnov .fnback .fnp{margin:0 -.6vh}
+.fnov .fnback .fnp{margin:0 .5vh}
+.fnov .fnback .fnp>b{max-width:9vh;overflow:hidden;text-overflow:ellipsis}
+.fnov .fnwin{bottom:19vh}
