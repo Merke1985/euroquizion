@@ -1988,3 +1988,25 @@
     else if (state.sing) $('sbar').style.transform = 'scaleX(' + (state.phase === 'loading' || state.phase === 'splay' ? 0 : f) + ')';
   }, 100);
 })();
+
+// 💬 Feedback (the button on the join screen): it lands in the host's ⚙️ Admin → 📝 Requests, as player feedback.
+(function () {
+  var b = document.getElementById('fbbtn'), ov = document.getElementById('fbov'); if (!b || !ov) return;
+  var G = [['general', '🌍 The game in general'], ['phone', '📱 This phone screen'], ['trivia', '❓ The trivia'], ['shop', '🛍️ The boutique & items'], ['final', '🏆 The Grand Final'],
+    ['sing', '🎤 Key Change!'], ['draw', '🎨 Postcard Picasso'], ['quip', '⚖️ Disqualivision'], ['bluff', '🗣️ United by Nonsense'], ['clue', '🔍 Where the Hell Is Edgar?'], ['bomb', '💣 The Unlucky Draw'], ['fake', '☝️ Just One!'], ['note', '🎶 Hold That Note!'], ['carpet', '💎 Turquoise Carpet'], ['zg', '🌌 Zero Gravity'], ['rule', '🪩 We Will Rule the World'], ['organ', '🎡 Sja-la-lie Sja-la-Mayhem!'], ['queue', '🌹 Lost in Verona']];
+  var sel = document.getElementById('fbgame'); sel.innerHTML = G.map(function (g) { return '<option value="' + g[0] + '">' + g[1] + '</option>'; }).join('');
+  var m = document.getElementById('fbmsg'), t = document.getElementById('fbtext'), nm = document.getElementById('fbname'), send = document.getElementById('fbsend');
+  b.onclick = function () { m.textContent = ''; m.className = 'fb'; try { var n0 = document.getElementById('name'); if (n0 && n0.value && !nm.value) nm.value = n0.value; } catch (e) {} ov.classList.remove('hidden'); setTimeout(function () { try { t.focus(); } catch (e) {} }, 50); };
+  document.getElementById('fbclose').onclick = function () { ov.classList.add('hidden'); };
+  ov.addEventListener('click', function (e) { if (e.target === ov) ov.classList.add('hidden'); });
+  send.onclick = function () {
+    var txt = t.value.trim(); if (txt.length < 3) { m.textContent = 'Write a little more, please.'; m.className = 'fb no'; return; }
+    var sb = typeof escClient === 'function' ? escClient() : null; if (!sb) { m.textContent = 'No connection: try again later.'; m.className = 'fb no'; return; }
+    send.disabled = true; m.textContent = 'Sending…'; m.className = 'fb';
+    sb.rpc('esc_feedback_add', { p_name: nm.value.trim(), p_game: sel.value, p_body: txt }).then(function (r) {
+      send.disabled = false;
+      if (r.error) { m.textContent = 'That didn’t work: ' + r.error.message; m.className = 'fb no'; return; }
+      t.value = ''; m.textContent = '✅ Thank you! Your feedback has been sent.'; m.className = 'fb ok';
+    }, function () { send.disabled = false; m.textContent = 'That didn’t work: try again later.'; m.className = 'fb no'; });
+  };
+})();

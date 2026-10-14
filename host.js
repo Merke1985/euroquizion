@@ -2303,7 +2303,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
-    $('editbtn').addEventListener('click', function () { $('testov').classList.add('hidden'); if (window.escEditorOpen) window.escEditorOpen(); });
+    $('adminbtn').addEventListener('click', function () { if (window.escEditorOpen) window.escEditorOpen(); });   // (⚙️ Admin: songs, minigames, items, trivia and requests, behind the password)
     $('testov').addEventListener('click', function (e) { if (e.target === $('testov')) $('testov').classList.add('hidden'); });
     $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #itemtest, #goldtest, #chasetest, #chasetest2, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
     $('onegame').addEventListener('click', function (e) {
@@ -3189,7 +3189,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var b = Math.max(2, Math.round(avg / 6)); if (G.shop) G.shop.base = b; return b;
   }
   function shopPrice(it) { return shopBase() * ((it && it.tier) || 2); }
-  function shopAvail() { return SHOP_ITEMS.filter(function (it) { return (!it.final || G.finalMode === 'chase') && !soldOut(it.id); }); }
+  function shopAvail() { return SHOP_ITEMS.filter(function (it) { return !it.off && (!it.final || G.finalMode === 'chase') && !soldOut(it.id); }); }
   // Some items are one of a kind (stock: 1): once someone has it, it is gone from the boutique for the rest of the game.
   function soldOut(id) { var it = shopItem(id); return !!(it && it.stock && ((G.sold || {})[id] || 0) >= it.stock); }
   function shopTake(ids) { G.sold = G.sold || {}; ids.forEach(function (id) { var it = shopItem(id); if (it && it.stock) G.sold[id] = (G.sold[id] || 0) + 1; }); }
@@ -8462,7 +8462,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }).catch(function () { $('start').textContent = 'Could not load songs'; });
   var chorusBase = {};
   fetch('chorus.json?v=46').then(function (r) { return r.json(); }).then(function (d) { chorusBase = d || {}; chorus = ESC_EDIT.jury || chorusBase; }).catch(function () {});
-  window.escHostData = function () { return { songs: songs, countries: countries, chorusBase: chorusBase }; };
+  window.escHostData = function () { return { songs: songs, countries: countries, chorusBase: chorusBase, games: PARTY_KINDS.filter(function (k) { return FUN[k]; }).map(function (k) { return { k: k, icon: FUN[k].icon, title: FUN[k].title }; }) }; };
   window.escOnApply = function () { chorus = ESC_EDIT.jury && typeof ESC_EDIT.jury === 'object' ? ESC_EDIT.jury : chorusBase; };   // (the editor's Key Change list, when there is one)
   keepSettings(['s-time', 's-scoring', 's-rounds']);   // shared with solo play (the eras have their own switches here)
   /* Presets: Party Night (the Grand Tour), Quick Quiz (ten questions), or Custom (every setting) */

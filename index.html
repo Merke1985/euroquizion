@@ -6,7 +6,7 @@
 <title>EuroQuizion – join</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=837">
+<link rel="stylesheet" href="style.css?v=838">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -47,7 +47,7 @@
     <a class="btn alt big" href="solo.html" style="display:block;text-align:center;text-decoration:none;margin-top:12px">🎤 Play solo</a>
     <p class="mute" style="margin:14px 0 0;font-size:.9rem"><strong style="color:var(--ink)">Host a game:</strong> open it on a TV or laptop that everyone can see; it plays the videos for everyone, and the players join with their phones. Also works when streaming through Discord.</p>
     </div>
-    <p style="margin:18px 0 0;font-size:.8rem;text-align:center"><a href="credits.html" style="color:var(--mute)">Photo credits</a></p>
+    <button type="button" class="btn alt" id="fbbtn" style="display:block;width:100%;margin-top:18px">💬 Feedback</button>
   </section>
 
   <section id="v-pick" class="hidden">
@@ -155,6 +155,17 @@
     <div id="myscorebox"><div class="mute">Your score</div><div class="score" id="myscore">0</div><div class="mute" id="myrank"></div></div>
   </section>
 </main>
+<div id="fbov" class="fbov hidden"><div class="fbcard">
+  <h2>💬 Feedback</h2>
+  <p class="mute" style="margin:0 0 12px">Found a bug, or have an idea? Tell us! Everything goes straight to the makers of the game.</p>
+  <div class="field"><label for="fbgame">About</label><select id="fbgame"></select></div>
+  <div class="field"><label for="fbtext">Your feedback</label><textarea id="fbtext" rows="5" maxlength="1500" placeholder="What happened, or what would make it better?"></textarea></div>
+  <div class="field"><label for="fbname">Your name (if you like)</label><input id="fbname" type="text" maxlength="30" placeholder="Optional"></div>
+  <p id="fbmsg" class="fb" style="margin:0 0 10px"></p>
+  <button type="button" class="btn big" id="fbsend" style="width:100%">📨 Send</button>
+  <button type="button" class="btn alt" id="fbclose" style="width:100%;margin-top:10px">Close</button>
+  <p style="margin:14px 0 0;font-size:.75rem;text-align:center"><a href="credits.html" style="color:var(--mute)">Photo credits</a></p>
+</div></div>
 <div id="chatbar" class="chatbar hidden">
   <div id="chatpop" class="chatpop" aria-live="polite"></div>
   <div id="chat" class="chatsheet hidden" role="dialog" aria-label="Conversation">
@@ -168,13 +179,13 @@
   </form>
 </div>
 <button type="button" id="bagbtn" class="bagbtn hidden" aria-label="My items">🛍️<b id="bagn"></b></button><div id="bagpanel" class="bagpanel hidden"></div><div id="ptoast" class="ptoast hidden"></div>
-<script src="vendor/supabase.js?v=837"></script>
-<script src="config.js?v=837"></script>
-<script src="match.js?v=837"></script>
-<script src="quiz.js?v=837"></script>
-<script src="net.js?v=837"></script>
-<script src="music.js?v=837"></script>
-<script src="chars.js?v=837"></script>
-<script src="player.js?v=837"></script>
+<script src="vendor/supabase.js?v=838"></script>
+<script src="config.js?v=838"></script>
+<script src="match.js?v=838"></script>
+<script src="quiz.js?v=838"></script>
+<script src="net.js?v=838"></script>
+<script src="music.js?v=838"></script>
+<script src="chars.js?v=838"></script>
+<script src="player.js?v=838"></script>
 </body>
 </html>

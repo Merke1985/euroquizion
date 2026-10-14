@@ -947,7 +947,7 @@ function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }
 //   jury   (Key Change!: video id -> [from, to] seconds; replaces chorus.json)   lyrics (Key Change!: video id -> text)
 //   green  (Disqualivision clips: [{ id, s, name }])   roasts (Disqualivision prompts: [{ p, h }])
 //   titles (United by Nonsense: video id -> English translation; only what differs from titles_en.json, null = removed)
-var ESC_EDIT = {}, ESC_DEF = { green: QUIP_SONGS.slice(), roasts: ROASTS.slice(), lyrics: {} }, escSb = null, escLoaded = false;
+var ESC_EDIT = {}, ESC_DEF = { green: QUIP_SONGS.slice(), roasts: ROASTS.slice(), lyrics: {}, items: JSON.parse(JSON.stringify(SHOP_ITEMS)), trivia: OBSCURE.slice() }, escSb = null, escLoaded = false;
 function escClient() {
   var c = window.ESC_CONFIG || {};
   if (!escSb && c.supabaseUrl && c.supabaseKey && window.supabase) { try { escSb = window.supabase.createClient(c.supabaseUrl, c.supabaseKey); } catch (e) {} }
@@ -958,6 +958,14 @@ function escApply() {
   if (Array.isArray(E.green) && E.green.length) QUIP_SONGS = E.green.filter(function (x) { return x && /^[\w-]{11}$/.test(x.id); }).map(function (x) { return { id: x.id, s: Math.max(0, +x.s || 0), name: x.name || '' }; });
   if (Array.isArray(E.roasts) && E.roasts.length) ROASTS = E.roasts.filter(function (x) { return x && x.p; });
   if (E.lyrics && typeof E.lyrics === 'object') LYRICS = E.lyrics;
+  if (Array.isArray(E.trivia) && E.trivia.length) OBSCURE = E.trivia.filter(function (f) { return f && f.q && f.a && Array.isArray(f.w) && f.w.length; });   // (the admin's trivia list)
+  if (E.items && typeof E.items === 'object') {   // (the admin's item changes: names, texts, shelf, stock, or taken out of the shop; what an item does stays in the code)
+    SHOP_ITEMS.forEach(function (it) {
+      var b = ESC_DEF.items.filter(function (x) { return x.id === it.id; })[0] || {}, o = E.items[it.id] || {};
+      ['icon', 'name', 'desc', 'tier', 'stock'].forEach(function (k) { if (k === 'stock' && o.stock === -1) delete it.stock; else if (o[k] != null && o[k] !== '') it[k] = o[k]; else if (b[k] != null) it[k] = b[k]; else delete it[k]; });
+      it.off = !!o.off;
+    });
+  }
   var t = {}; Object.keys(TITLE_BASE).forEach(function (k) { t[k] = TITLE_BASE[k]; });
   if (E.titles && typeof E.titles === 'object') Object.keys(E.titles).forEach(function (k) { if (E.titles[k]) t[k] = String(E.titles[k]); else delete t[k]; });
   TITLE_EN = t;

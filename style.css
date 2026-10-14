@@ -4539,3 +4539,38 @@ body.hasdock main{padding-bottom:84px}
 .jcscore{bottom:4.1vh;font-size:clamp(.7rem,1.2vw,1.15rem)}
 .jcgscore{top:3.6vh;font-size:clamp(.8rem,1.5vw,1.5rem);z-index:2}
 .jcgscore:empty{display:none}
+/* 🧪 Test and ⚙️ Admin on the host page */
+.testrow{display:flex;gap:10px;justify-content:center}
+.testbtn{opacity:.6;font-weight:800;border-radius:999px;padding:4px 12px;background:rgba(255,255,255,.06)}
+.testbtn:hover{opacity:1}
+.xegrp{display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:12px;background:rgba(255,255,255,.04)}
+.xegrp>b{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.xegrp>span{display:flex;flex-wrap:wrap;gap:6px}
+.xegate{padding:20px;display:flex;flex-direction:column;gap:10px;max-width:520px}
+.xegate input{padding:9px 12px;border-radius:10px;border:0;background:#160f38;color:#fff;font-family:inherit;flex:1}
+.xegate .bad,.xefoot .bad{color:#ff7a8a}
+.xerow .xeicon{width:52px;text-align:center;font-size:1.2rem}
+.xerow select,.xereqnew select{padding:7px 10px;border-radius:8px;border:0;background:#160f38;color:#fff;font-family:inherit}
+.xerow.xeoff{opacity:.5}
+.xetriv input{flex:1 1 150px}
+.xerow .xeq{flex:1 1 400px}.xerow .xee{flex:2 1 300px}
+.xereqhow{font-size:.85rem;margin:4px 0}
+.xereq .xest{font-size:.85rem;font-weight:800;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.08)}
+.xereq.st-needs_ok .xest,.xereq.st-question .xest{background:#ffd23f;color:#1a1040}
+.xereq.st-done .xest{background:#2fbf71;color:#fff}
+.xereq.st-feedback .xest{background:#3fb6ff;color:#06203a}
+.xebody2{margin:6px 0;white-space:pre-wrap;font-size:.95rem}
+.xenote{margin:4px 0 6px;padding:8px 10px;border-radius:8px;background:rgba(47,191,113,.12);border-left:3px solid #2fbf71;font-size:.9rem}
+.xereq.st-needs_ok .xenote{background:rgba(255,210,63,.12);border-left-color:#ffd23f}
+/* 💬 Feedback on the join screen */
+.fbov{position:fixed;inset:0;z-index:90;background:rgba(6,0,18,.75);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
+.fbcard{width:100%;max-width:440px;background:var(--card,#1d1240);border-radius:20px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.fbcard h2{margin:0 0 6px}
+.fbcard select,.fbcard textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:0;font-family:inherit;font-size:1rem;background:#fff;color:#1a1147}
+.fbcard textarea{resize:vertical}
+.fbcard{background:#1d1240;border:1px solid rgba(255,255,255,.1)}
+.fbov{background:rgba(6,0,18,.88)}
+.xerow select{width:auto;flex:0 0 auto}
+.xerow .xerowtop .xename{flex:1 1 200px}
+.xereqnew select{width:auto}
+.xereqnew .xerowtop{flex-wrap:wrap}
