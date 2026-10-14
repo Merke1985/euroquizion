@@ -2406,10 +2406,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The crowd in the finale: a big arena roar on a loop (two copies taking turns, so the seam can't be heard), quieter while the presenters talk
   var crowdEls = null, crowdT = null, crowdLvl = 1;
   function crowdVol() { return Math.max(0, Math.min(1, 0.9 * crowdLvl * (Music.vol ? Music.vol.fx : 1))); }
-  function crowdOn(on) {
+  function crowdOn(on, fadeMs) {
     if (REMOTE) return;
     clearInterval(crowdT); crowdT = null;
-    if (!on) { var els = crowdEls; crowdEls = null; if (els) els.forEach(function (a) { var f = setInterval(function () { try { a.volume = Math.max(0, a.volume - 0.025); if (a.volume <= 0.01) { clearInterval(f); a.pause(); } } catch (e) { clearInterval(f); } }, 80); }); return; }
+    if (!on) { var els = crowdEls; crowdEls = null; if (els) els.forEach(function (a) { var stp = Math.max(0.003, a.volume / ((fadeMs || 3000) / 80)), f = setInterval(function () { try { a.volume = Math.max(0, a.volume - stp); if (a.volume <= 0.01) { clearInterval(f); a.pause(); } } catch (e) { clearInterval(f); } }, 80); }); return; }
     crowdLvl = 1;
     crowdEls = [new Audio('sounds/crowd_winner.mp3?v=1'), new Audio('sounds/crowd_winner.mp3?v=1')];
     var cur = 0, start = function (a) { try { a.currentTime = 0; a.volume = crowdVol(); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} };
@@ -2474,7 +2474,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function finPlay(i) {
     var g = G.fin, ov = g && g.ov; if (!g || g.st !== 'pick') return;
-    clearTimeout(finT); var sg = g.list[i]; g.st = 'play'; g.song = g.opts[i]; push(); crowdOn(false);
+    clearTimeout(finT); var sg = g.list[i]; g.st = 'play'; g.song = g.opts[i]; push(); crowdOn(false, 10000);   // (the cheering fades out slowly over the first ten seconds of the song)
     if (!ov || !ov.isConnected) { finEnd(); return; }
     ov.classList.remove('scores', 'picking'); ov.classList.add('song'); Music.ding();
     [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); });
