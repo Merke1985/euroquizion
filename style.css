@@ -4684,3 +4684,10 @@ body.hasdock main{padding-bottom:84px}
 @keyframes stscreenon{0%{filter:brightness(.2) saturate(.4)}35%{filter:brightness(2.2)}100%{filter:none}}
 @keyframes stflash{0%{opacity:0}20%{opacity:.85}100%{opacity:0}}
 @keyframes stin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+
+/* Sofia points at the big screen (her right arm swings up towards it) */
+.shosts .ehost.her .earm{transform-box:view-box;transform-origin:76px 156px;transition:transform .55s cubic-bezier(.3,1.5,.5,1)}
+.shosts.point .ehost.her .earm{transform:rotate(128deg)}
+/* stepping aside (from side by side to the edges of the stage) is a walk, not a jump */
+.shosts .ehost.him{transition:left .8s cubic-bezier(.3,.6,.4,1)}
+.shosts .ehost.her{transition:right .8s cubic-bezier(.3,.6,.4,1)}

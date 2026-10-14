@@ -1786,11 +1786,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'fun'; G.barMs = 0;
     if (!REMOTE) {
       try { yt.pauseVideo(); } catch (e) {}
-      cover(true, f.icon, f.title, false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('onscreen');   // (on the big LED screen behind the presenters)
-      var hq = (kind === 'quiz' || kind === 'starter' || kind === 'bigfive') && hostsEl();   // the presenters stay on stage, in front of it, for the round's card
-      if (hq) { hq.classList.remove('away'); hq.classList.remove('together'); hostHold = true; clearTimeout(hostT.away); }
-      [0, 140, 280].forEach(function (ms, i) { setTimeout(function () { if (G.phase === 'fun') Music.plop(i * 3); }, ms); });
-      setTimeout(function () { if (G.phase === 'fun') Music.ding(); }, 460);
+      var hq = (kind === 'quiz' || kind === 'starter' || kind === 'bigfive') && hostsEl();   // the presenters stay on stage, in front of the screen, for the round's card
+      var show = function () {   // the card on the big LED screen behind the presenters
+        cover(true, f.icon, f.title, false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('onscreen');
+        [0, 140, 280].forEach(function (ms, i) { setTimeout(function () { if (G.phase === 'fun') Music.plop(i * 3); }, ms); });
+        setTimeout(function () { if (G.phase === 'fun') Music.ding(); }, 460);
+      };
+      if (hq) {   // first they step aside to make room, Sofia points at the screen… and there it is: "Trivia!"
+        var g0 = G.fun; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard');
+        hq.classList.remove('away'); hq.classList.remove('together'); hostHold = true; clearTimeout(hostT.away);
+        setTimeout(function () { if (G.fun === g0) hq.classList.add('point'); }, 700);
+        setTimeout(function () { if (G.fun !== g0) return; show(); if (kind === 'quiz') hostVoice('trivia'); }, 1300);
+        setTimeout(function () { hq.classList.remove('point'); }, (ms || 5200) + 1100);
+        ms = (ms || 5200) + 1300;
+      } else show();
     }
     push();
     clearTimeout(funTimer);
@@ -2686,9 +2695,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehgown)"/>' +
     '<path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehsparkle)" class="esparkle"/>' +
     '<path d="M70 232 Q100 244 130 232" stroke="#ffd23f" stroke-width="4" fill="none"/>' +
-    '<path d="M74 152 Q60 196 64 236 L76 236 Q76 200 84 160 Z" fill="url(#ehskin2)"/>' +
     '<path d="M126 152 Q146 180 144 214 L132 218 Q134 192 118 164 Z" fill="url(#ehskin2)"/>' +
-    '<circle cx="70" cy="240" r="8" fill="url(#ehskin2)"/>' +
+    '<g class="earm"><path d="M74 152 Q60 196 64 236 L76 236 Q76 200 84 160 Z" fill="url(#ehskin2)"/><circle cx="70" cy="240" r="8" fill="url(#ehskin2)"/></g>' +   // (this arm can point at the big screen)
     '<g class="emic"><rect x="134" y="196" width="7" height="30" rx="3" fill="#222" transform="rotate(18 137 211)"/><circle cx="133" cy="194" r="8" fill="#9aa0b4"/><circle cx="140" cy="220" r="8" fill="url(#ehskin2)"/></g>' +
     '<rect x="93" y="118" width="14" height="26" fill="#b9805a"/>' +
     '<path d="M64 96 Q58 40 100 38 Q144 40 138 98 Q146 150 128 176 Q132 128 122 106 L78 106 Q68 128 72 176 Q54 150 64 96 Z" fill="#6b2a12"/>' +
