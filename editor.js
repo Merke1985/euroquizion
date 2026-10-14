@@ -234,10 +234,10 @@
   // ---- 📝 Requests: bugs and changes for Claude to pick up ----
   var RQ_ST = { 'new': ['🆕', 'Waiting'], working: ['⚙️', 'Being worked on'], done: ['✅', 'Done'], needs_ok: ['✋', 'Needs your OK'], approved: ['👍', 'Approved: next run'], undo: ['↩️', 'Undo: next run'], undone: ['↩️', 'Undone'], declined: ['🚫', 'Not done'], question: ['❓', 'Question for you'], feedback: ['💬', 'Player feedback: Claude reviews it'] };
   var RQ_KIND = { bug: '🐞 Bug', change: '💡 Suggestion', idea: '💡 Suggestion' };
-  var rqGame = 'general', rqKind = 'bug'; var rqTick = null;
+  var rqGame = 'general', rqKind = 'bug'; var rqTick = null, rqSeen = false;
   function gameName(k) { var g = (H().games || []).filter(function (x) { return x.k === k; })[0]; return g ? g.icon + ' ' + g.title : ({ general: '🌍 General', trivia: '❓ Trivia', shop: '🛍️ Boutique & items', final: '🏆 Grand Final', phone: '📱 Phones' })[k] || k; }
   function drawReq(B, mode) {
-    var sb = escClient();
+    var sb = escClient(); rqSeen = false;
     if (mode === 'notes') { B.innerHTML = '<div id="xenotes"><p class="mute">Loading…</p></div><p class="mute xereqhow">Claude checks every night (around 3:00). When something was done, a report appears here and you get an email. In a hurry? Press Run now on the scheduled task <b>“Process EuroQuizion requests”</b> in the Claude app.</p>'; drawNotes(sb); return; }
     B.innerHTML = (mode === 'fb' ? '<p class="mute xereqhow">Players can send a bug or a suggestion with the 💬 Feedback button on the join screen. Claude looks at each one at night and writes what it would do; nothing is built until you press 👍 Go ahead.</p>' : '<div class="xerow xereqnew"><div class="xerowtop"><select id="xerk">' + [['bug', '🐞 Bug'], ['idea', '💡 Suggestion']].map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === rqKind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div>' +
       '<textarea class="xelytxt" id="xert" rows="3" placeholder="What is wrong, or what should change? The more precise, the better."></textarea><div class="xerowtop" style="justify-content:flex-end"><button type="button" class="btn small" id="xersend">📨 Send</button></div></div>' +
@@ -250,6 +250,7 @@
       sb.rpc('esc_req_list', { p_pass: pass() }).then(function (r) {
         if (r.error) { $('xerl').innerHTML = '<p class="bad">' + esc(/password/.test(r.error.message) ? 'Wrong password: lock and open the admin again.' : r.error.message) + '</p>'; return; }
         var rows = (r.data || []).filter(function (q) { return mode === 'fb' ? q.source === 'player' : q.source !== 'player'; });
+        if (mode === 'fb' && !rqSeen) { rqSeen = true; sb.rpc('esc_notes_seen', { p_pass: pass() }).then(function () { if (window.escAdminBadge) window.escAdminBadge(); }); }   // (the feedback shows what the reports say: they count as read)
         $('xerl').innerHTML = rows.length ? rows.map(function (q) {
           var st = RQ_ST[q.status] || ['•', q.status], d = new Date(q.created_at);
           var acts = (q.status === 'needs_ok' ? '<button type="button" class="btn small" data-a="approve">👍 Go ahead</button><button type="button" class="btn alt small" data-a="decline">🚫 Don’t</button>' : '') +
@@ -266,7 +267,7 @@
           if (a === 'answer') { var t = prompt('Your answer:'); if (!t) return; sb.rpc('esc_req_answer', { p_pass: pass(), p_id: id, p_text: t }).then(function (x) { if (x.error) msg(x.error.message, 'bad'); load(); }); return; }
           if (a === 'delete' && !confirm('Delete request #' + id + '?')) return;
           if (a === 'undo' && !confirm('Undo request #' + id + '? The next run puts it back the way it was.')) return;
-          sb.rpc('esc_req_act', { p_pass: pass(), p_id: id, p_action: a }).then(function (x) { if (x.error) msg(x.error.message, 'bad'); else msg('✓', 'ok'); load(); });
+          sb.rpc('esc_req_act', { p_pass: pass(), p_id: id, p_action: a }).then(function (x) { if (x.error) msg(x.error.message, 'bad'); else msg('✓', 'ok'); load(); if (window.escAdminBadge) window.escAdminBadge(); });
         }; });
       });
     };
@@ -340,7 +341,10 @@
   // the badge on the ⚙️ Admin button: how many reports and requests wait for you (only a number, no password needed)
   window.escAdminBadge = function () {
     var b = $('adminbtn'), sb = escClient(); if (!b || !sb) return;
-    sb.rpc('esc_attention').then(function (r) { var n = +(r && r.data) || 0; window.escAttention = n; b.classList.toggle('attn', n > 0); b.setAttribute('data-n', n > 9 ? '9+' : String(n)); });
+    sb.rpc('esc_attn').then(function (r) {   // (the number: requests waiting for your 👍 or an answer; just a dot for an unread report)
+      var d = (r && r.data) || {}, n = +d.act || 0, u = +d.unread || 0; window.escAttention = n + u;
+      b.classList.toggle('attn', n + u > 0); b.classList.toggle('dot', !n && u > 0); b.setAttribute('data-n', n > 9 ? '9+' : n ? String(n) : '');
+    });
   };
   setTimeout(window.escAdminBadge, 1500); setInterval(function () { if (document.visibilityState === 'visible') window.escAdminBadge(); }, 300000);
 })();
