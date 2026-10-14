@@ -3090,12 +3090,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The first visit: the presenters welcome Europe back, the boutique appears on the screen between them,
   // they announce it, and the whole studio moves over to the shop.
   // The presenters welcome Europe back, a card appears on the screen between them, they announce what comes, then it starts.
+  var stingEl = null;
+  function studioSting() {   // the jingle when the show cuts back to the presenters (sounds/studio.mp3)
+    if (REMOTE) return;
+    try { if (!stingEl) stingEl = new Audio('sounds/studio.mp3?v=1'); stingEl.currentTime = 0; stingEl.volume = Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.fx : 1))); var p = stingEl.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
   function studioIntro(icon, title, sub, line, then, kind) {
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
     var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
+    if (!on) studioSting();   // (back to the studio: the jingle)
     if (!on) at(200, function () { hostSay('him', vary('back'), 4000); });
     if (hh) hh.classList.add('together');
     at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
@@ -3108,7 +3114,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function backFromShop(n, then, first) {
     if (REMOTE) { then(); return; }
     G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
-    hostHold = true; clearTimeout(hostT.away);
+    hostHold = true; clearTimeout(hostT.away); studioSting();   // (back from the boutique to the studio)
     hostSay('him', first ? 'Everyone has their first item from Lynda! Grab your phones… ✨' : vary('souvenir') + ' ' + vary('onward'), 3600);   // (the very first visit, right after the opening: now the first trivia)
     setTimeout(function () { hostSay('her', first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia'), 3000); }, 3300);   // (testing the party games: there is no trivia in between)
     setTimeout(function () { hostHold = false; then(); }, 6400);
