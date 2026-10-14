@@ -3358,6 +3358,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       studioIntro2(icon, title, sub, line, then, kind, true);
     }, 1500 + 500);
   }
+  // "Party game!" pops up on the big screen: a party horn and a little fanfare, with a confetti pop
+  function partySting() {
+    if (REMOTE) return;
+    itemSfx('sounds/champagne.mp3?v=1', function () { Music.douze(); });   // (a champagne pop…)
+    [120, 210, 300, 390].forEach(function (ms, i) { setTimeout(function () { try { Music.plop(6 + i * 3); } catch (e) {} }, ms); });   // (…and a little rising run of plops, like confetti)
+  }
   function studioIntro2(icon, title, sub, line, then, kind, stung) {
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
@@ -3375,12 +3381,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     var shown = function () { G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); $('cover').classList.add('onscreen'); push(); };
     var party = kind === 'partytime';
-    if (party) shown();   // a party game: it's already up on the big screen behind them when we're back (no pointing, nothing announced)
+    if (party) at(on ? 300 : tPoint, function () { shown(); partySting(); });   // a party game: Oliver says his bit first, then it pops up on the big screen behind them (no pointing)
     else {
       at(tPoint, function () { var h2 = hostsEl(); if (h2) h2.classList.add('point'); });   // Sofia points at the big screen…
       at(tPoint + 600, function () { shown(); Music.ding(); whooshes([0]); });   // …and there it is
     }
-    var t3 = party ? tPoint + (on ? 0 : 300) : tPoint + 2000, t4 = t3 + Math.max(3500, voiceMs('her', line) + 500);
+    var t3 = party ? (on ? 300 : tPoint) + 1000 : tPoint + 2000, t4 = t3 + Math.max(3500, voiceMs('her', line) + 500);
     at(t3, function () { hostSay('her', line, Math.max(3400, voiceMs('her', line) + 300)); });
     at(t4, function () { var h3 = hostsEl(); if (h3) h3.classList.remove('point'); hostHold = false; then(); });
     setTimeout(function () { hostHold = false; var h4 = hostsEl(); if (h4) h4.classList.remove('point'); }, t4 + 400);
@@ -4051,12 +4057,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function edBox(on) {
     if (REMOTE) return;
     clearInterval(edBoxT); edBoxT = null;
-    var vol = function () { return Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.music : 1))); };
+    var vol = function () { return Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.music : 1))); };   // (the music box: a little quieter than the rest, under the story)
     if (on) {
       try {
         if (!edBoxEl) { edBoxEl = new Audio('sounds/edgar_musicbox.mp3?v=1'); edBoxEl.loop = true; }
         if (edBoxEl.paused) { edBoxEl.currentTime = 0; var pr = edBoxEl.play(); if (pr && pr.catch) pr.catch(function () {}); }
-        edBoxEl.volume = vol();
+        edBoxEl.volume = vol() * 0.55;
       } catch (e) {}
       edBoxT = setInterval(function () { if (!edMystKeep()) edBox(false); }, 500);
       return;
