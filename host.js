@@ -2077,6 +2077,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     function chaseSpin(c) {
       c.st = 'wheel'; c.wheelAt = Date.now(); push();
+      Music.darkDrone(6);   // (a dark drone while it spins, until it lands)
       var turns = 0, gaps = [];
       for (var g = 60; turns < 4200; g *= 1.09) { gaps.push(g); turns += g; }
       var tk = 1500; /* the wheel shows for 1.5 seconds before the arrow starts */ gaps.forEach(function (g) { tk += g; setTimeout(function () { if (G.chase === c && c.st === 'wheel') Music.darkTick(tk); }, tk); });
