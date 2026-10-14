@@ -385,7 +385,7 @@
   Music.useLoop('sounds/studio_loop.mp3?v=2', 16.6957);   /* (8 bars at 115 bpm: measured, so it goes round on the beat) */   // the studio music: a dance loop instead of the made-up synth one
   function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); var triv = id === 'v-game' && !REMOTE && (G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel) && !G.clue;
     var lob = id === 'v-lobby' && G.phase === 'lobby';
-    var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && (G.fun.kind === 'clue' || G.fun.screen))) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
+    var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
     if (studioYtOk()) { Music.want(lob || triv, true); studioYt(studio); } else Music.want(lob || triv || studio, !studio); }   // the studio loop with the presenters and in Lynda's boutique (it carries on where it left off); the synth loop in the lobby and under trivia questions without a clip
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
@@ -741,7 +741,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }).join('');
   }
   function cover(on, icon, text, pulse) {
-    $('cover').classList.toggle('hidden', !on); $('cover').classList.remove('onscreen');   // (the title on the big screen: only for the moment the presenters put it there)
+    $('cover').classList.toggle('hidden', !on);
     if (on) { $('covericon').textContent = icon; $('covertext').textContent = text; $('covericon').classList.toggle('pulse', !!pulse); }
   }
   // Countdown: the video loads muted behind the cover while 5..1 counts down.
@@ -3133,11 +3133,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // they announce it, and the whole studio moves over to the shop.
   // The presenters welcome Europe back, a card appears on the screen between them, they announce what comes, then it starts.
   var stingEl = null;
-  var screenEl = null;
-  function screenSnd() {   // the big screen lights up with the round's title (sounds/screen.mp3)
-    if (REMOTE) return;
-    try { if (!screenEl) screenEl = new Audio('sounds/screen.mp3?v=1'); screenEl.currentTime = 0; screenEl.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var p = screenEl.play(); if (p && p.catch) p.catch(function () { Music.ding(); }); } catch (e) { Music.ding(); }
-  }
   function studioSting() {   // the jingle when the show cuts back to the presenters (sounds/studio.mp3)
     if (REMOTE) return;
     try { if (!stingEl) stingEl = new Audio('sounds/studio.mp3?v=1'); stingEl.currentTime = 0; stingEl.volume = Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.fx : 1))); var p = stingEl.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
@@ -3165,7 +3160,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!on) at(200, function () { hostSay('him', vary('back'), 4000); });
     if (hh) hh.classList.add('together');
     at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
-      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; G.fun.screen = true; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); $('cover').classList.add('onscreen'); screenSnd(); push(); });   // on the big screen behind them; the studio music stops for the reveal sound
+      G.fun.icon = icon; G.fun.title = title; G.fun.sub = sub; cover(true, icon, title, false); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); Music.ding(); whooshes([0]); push(); });
     at(3700 + d, function () { hostSay('her', line, 3400); });
     at(7200 + d, function () { hostHold = false; then(); });
     setTimeout(function () { hostHold = false; }, 7600 + d);
