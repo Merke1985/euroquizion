@@ -2823,7 +2823,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (shopNow) {
       G.shopFirst = true;
-      lines.forEach(function (l, i) { step(i ? 3300 : 3300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });   // (the first line once they're in place)
+      lines.forEach(function (l, i) { step(i === 1 ? 3700 : i === 2 ? 4900 : 3300, function () { hostSay(l[0], l[1], 3600); if (i < 2) hostVoice(i ? 'sofia_hello' : 'oliver_hello'); else if (!i) Music.ding(); }); });   // (their very first lines are spoken out loud)   // (the first line once they're in place)
       step(3600, function () {
         v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive');
         G.mode = G.lastParty = 'shop'; G.mgBase = null;
@@ -2832,7 +2832,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       return;
     }
-    lines.forEach(function (l, i) { step(i ? 3300 : 3300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });   // (the first line once they're in place)
+    lines.forEach(function (l, i) { step(i === 1 ? 3700 : i === 2 ? 4900 : 3300, function () { hostSay(l[0], l[1], 3600); if (i < 2) hostVoice(i ? 'sofia_hello' : 'oliver_hello'); else if (!i) Music.ding(); }); });   // (their very first lines are spoken out loud)   // (the first line once they're in place)
     step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
   // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Sofia!").
@@ -3133,6 +3133,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // they announce it, and the whole studio moves over to the shop.
   // The presenters welcome Europe back, a card appears on the screen between them, they announce what comes, then it starts.
   var stingEl = null;
+  // The presenters' recorded lines (sounds/voice_*.mp3, made with ElevenLabs): the studio music dips while they speak.
+  var voiceEl = null, voiceDip = null;
+  function hostVoice(name) {
+    if (REMOTE) return;
+    try {
+      if (voiceEl) voiceEl.pause();
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=1'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      var dip = function (on) { try { if (stY && stYReady && stYOn) { clearInterval(stYFade); stY.setVolume(on ? Math.round(STUDIO_VOL * 0.35) : STUDIO_VOL); } } catch (e) {} };
+      dip(true); clearTimeout(voiceDip);
+      voiceEl.addEventListener('ended', function () { voiceDip = setTimeout(function () { dip(false); }, 250); });
+      voiceDip = setTimeout(function () { dip(false); }, 6000);   // (in case it never says it ended)
+      var p = voiceEl.play(); if (p && p.catch) p.catch(function () { dip(false); });
+    } catch (e) {}
+  }
   function studioSting() {   // the jingle when the show cuts back to the presenters (sounds/studio.mp3)
     if (REMOTE) return;
     try { if (!stingEl) stingEl = new Audio('sounds/studio.mp3?v=1'); stingEl.currentTime = 0; stingEl.volume = Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.fx : 1))); var p = stingEl.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
