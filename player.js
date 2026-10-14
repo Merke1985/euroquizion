@@ -989,6 +989,23 @@
       nb.querySelector('.ednext').onclick = function () { edSeen = last.k; $('clueui').classList.add('hidden'); edView(state); };
       return;
     }
+    var fst = c.fast;
+    if (fst && fst.pid === pid && edSeen !== 'fast' + c.id) {   // the fastest detective: extra clues at the reception
+      $('clueui').classList.add('hidden'); box.classList.remove('hidden');
+      $('waittitle').textContent = '🏆 You were the fastest detective!'; $('waitsub').textContent = 'Teya & Salena at the reception have extra clues for you.';
+      if (box.getAttribute('data-k') !== 'fast') {
+        box.setAttribute('data-k', 'fast');
+        box.innerHTML = '<button type="button" class="btn big edfast">🛎️ Collect my extra clues</button>';
+        box.querySelector('.edfast').onclick = function () {
+          box.innerHTML = ''; box.removeAttribute('data-k');
+          if (fst.got && fst.got.length) clueNotes({ clue: { id: c.id, n: 'fast', known: c.known, fresh: (function () { var o = {}; o[pid] = fst.got; return o; })() } });
+          $('waittitle').textContent = fst.got && fst.got.length ? '🗝️ ' + fst.got.length + ' extra clue' + (fst.got.length > 1 ? 's' : '') + '!' : '🗝️ No new clues left to give…'; $('waitsub').textContent = '';
+          var nb = $('clueui'); if (!nb.querySelector('.ednext')) nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">✅ OK</button>');
+          nb.querySelector('.ednext').onclick = function () { edSeen = 'fast' + c.id; $('clueui').classList.add('hidden'); edView(state); };
+        };
+      }
+      return;
+    }
     $('clueui').classList.add('hidden');
     if (me.done.length >= 4) { box.classList.add('hidden'); $('waittitle').textContent = '✅ All four rooms searched!'; $('waitsub').textContent = 'Wait for the others… then make your accusation.'; return; }
     $('waittitle').textContent = '🚪 Pick a room'; $('waitsub').textContent = 'Every room only once. Time left: ' + Math.ceil((c.left || 0) / 1000) + 's';

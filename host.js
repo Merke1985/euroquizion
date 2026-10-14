@@ -4641,7 +4641,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     r.done.push(m.room); r.cur = ''; r.score[m.room] = n;
     var got = edClues(m.pid, n), bonus = [];
     if (r.done.length === ED_ROOMS.length && g.fin.indexOf(m.pid) < 0) {   // all four rooms: the fastest detective gets an extra clue
-      g.fin.push(m.pid); if (g.fin.length === 1) { if (g.duo) { g.duoQ = Object.assign({ pid: m.pid, st: 'ask', ends: Date.now() + 20000 }, edDuoQ(g.duo)); var dq = g.duoQ; setTimeout(function () { if (G.clue === g && dq.st === 'ask') { dq.st = 'wrong'; push(); } }, 20500); if (players[m.pid] && players[m.pid].bot) setTimeout(function () { clueMsg({ pid: m.pid, id: g.id, duo: Math.random() < .6 ? dq.ans : Math.floor(Math.random() * 4) }); }, 4000 + Math.random() * 6000); } else bonus = edClues(m.pid, 1); }   // (the fastest detective first answers a question about the two stars)
+      g.fin.push(m.pid); if (g.fin.length === 1) { g.fast = { pid: m.pid, got: edClues(m.pid, 1), at: Date.now() }; Music.ding(); }   // (the fastest detective: Teya & Salena at reception hand over an extra clue)
     }
     g.last[m.pid] = { room: m.room, n: n, c: got, b: bonus, k: g.id + ':' + m.room };
     push();   // (quietly: the big screen gives nothing away about who is where)
@@ -4663,7 +4663,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('edov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
-      ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg></div></div>' +
+      ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' + edPerson(62, 116, { s: .7, hair: 'black', hairStyle: 'long', top: 'teal', dress: 1 }) + edPerson(138, 116, { s: .7, hair: 'brown', hairStyle: 'pony', top: 'pink', dress: 1, flip: 1 }) + '<rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><text x="62" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">TEYA</text><text x="138" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">SALENA</text><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg><div class="edrecbub">🗝️ Extra clues for the fastest detective!</div></div></div>' +
         ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '<div class="edtoks"></div>' +
         '<div class="edbrhosts">' + HOST_HIM + HOST_HER + '</div><div class="edbrbub him"></div><div class="edbrbub her"></div>';
       if (g.st === 'brief') ov.classList.add('edbrief');
@@ -4686,11 +4686,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var tw0 = Math.min(rc.width * 0.95, Math.max(rc.width * 0.25, N * Hh * 0.088 + Hh * 0.03));   // (the label always has room for everyone)   // (the label sits at the left of the room's edge)
         x = (r === 'green' || r === 'back' ? rc.right - oc.left - tw0 : rc.left - oc.left) + Hh * 0.015 + (mi + 0.5) * step;   // (in the label, from left to right)
         y = ((r === 'green' || r === 'club') ? rc.top - oc.top - Hh * 0.07 : rc.bottom - oc.top) + Hh * 0.035 - Hh * 0.027;   // (halfway up the label)
+      } else if (g.fast && g.fast.pid === k && Date.now() - g.fast.at < 9000) {   // the fastest detective: at the reception desk, between Teya and Salena
+        x = lb.left - oc.left + lb.width * 0.5; y = lb.bottom - oc.top - lb.height * 0.2;
       } else {   // in the lobby: two columns, at their own spot
         var rowH = Math.min(Hh * 0.105, (lb.height * 0.62) / Math.max(1, Math.ceil(N / 2)));
         x = lb.left - oc.left + lb.width * (slot % 2 === 0 ? 0.3 : 0.7); y = lb.top - oc.top + lb.height * 0.1 + Math.floor(slot / 2) * rowH;
       }
-      var L = (100 * x / W).toFixed(2) + '%', T = (100 * y / Hh).toFixed(2) + '%', where = r || 'lobby';
+      var atDesk = !r && g.fast && g.fast.pid === k && Date.now() - g.fast.at < 9000;
+      var L = (100 * x / W).toFixed(2) + '%', T = (100 * y / Hh).toFixed(2) + '%', where = r || (atDesk ? 'desk' : 'lobby');
+      el.classList.toggle('fast', !!atDesk);
       el.classList.toggle('srch', !!r);
       if (!el.getAttribute('data-w')) { el.style.left = L; el.style.top = T; el.setAttribute('data-w', where); return; }
       if (el.getAttribute('data-w') !== where) {   // moving: pop out here, pop in there
@@ -4699,6 +4703,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       } else if (!el.classList.contains('out')) { el.style.left = L; el.style.top = T; }
     });
     [].forEach.call(toks.querySelectorAll('.edtok'), function (el) { if (ks.indexOf(el.getAttribute('data-p')) < 0) el.remove(); });
+    var rb = ov.querySelector('.edrecbub'); if (rb) rb.classList.toggle('on', !!(g.fast && Date.now() - g.fast.at < 9000));
+    if (g.fast && Date.now() - g.fast.at < 9500 && !g.fast.tk) { g.fast.tk = setTimeout(function () { if (G.clue === g) edShow(); }, 9100); }   // (afterwards: back to their own spot)
     edDuo(ov, g);
     // every room has a tab on its outer edge, in its own colour, where the avatars of the searchers sit
     ['green', 'club', 'back', 'boud'].forEach(function (r) {
@@ -4714,7 +4720,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function clueSnap() {
     var g = G.clue, acc = {};
     Object.keys(g.acc).forEach(function (k) { acc[k] = 1; });
-    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' || g.st === 'rooms' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step, rooms: g.st === 'rooms' ? g.rooms : null, scene: g.st === 'rooms' ? g.scene : null, last: g.st === 'rooms' ? g.last : null, fin: g.fin || [], duoQ: g.st === 'rooms' && g.duoQ ? { pid: g.duoQ.pid, st: g.duoQ.st, text: g.duoQ.text, opts: g.duoQ.opts, ans: g.duoQ.st === 'ask' ? -1 : g.duoQ.ans, got: g.duoQ.got || [], left: Math.max(0, g.duoQ.ends - Date.now()) } : null,
+    return { id: g.id, st: g.st, n: g.n, of: CLUE_N, known: g.known, fresh: g.fresh, freshKey: g.freshKey || '', acc: acc, left: g.st === 'acc' || g.st === 'rooms' ? Math.max(0, g.ends - Date.now()) : 0, step: g.step, rooms: g.st === 'rooms' ? g.rooms : null, scene: g.st === 'rooms' ? g.scene : null, last: g.st === 'rooms' ? g.last : null, fin: g.fin || [], fast: g.st === 'rooms' && g.fast ? { pid: g.fast.pid, got: g.fast.got } : null, duoQ: g.st === 'rooms' && g.duoQ ? { pid: g.duoQ.pid, st: g.duoQ.st, text: g.duoQ.text, opts: g.duoQ.opts, ans: g.duoQ.st === 'ask' ? -1 : g.duoQ.ans, got: g.duoQ.got || [], left: Math.max(0, g.duoQ.ends - Date.now()) } : null,
       sol: g.st === 'reveal' ? { where: g.step >= 1 ? g.sol.where : '', what: g.step >= 2 ? g.sol.what : '', who: g.step >= 3 ? g.sol.who : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
   }
   // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.

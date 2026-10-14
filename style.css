@@ -4869,3 +4869,8 @@ body.hasdock main{padding-bottom:84px}
 .fnov .fntimer{left:1vw;top:7vh}
 .fnov .fnback.r{right:7%}
 .fnov .fnmon{right:.6%}
+/* Edgar: Teya & Salena at the reception hand the fastest detective extra clues */
+.edlobroom .edrecbub{position:absolute;left:50%;bottom:27%;transform:translate(-50%,10px) scale(.8);z-index:3;background:#fff;color:#2b1830;font-weight:900;font-size:clamp(.55rem,.95vw,.95rem);padding:.4em .8em;border-radius:12px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.5);opacity:0;transition:opacity .4s,transform .4s}
+.edlobroom .edrecbub.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.edtok.fast .char{box-shadow:0 0 0 3px #ffd23f,0 0 18px #ffd23f}
+.edlobroom .edrecbub{white-space:normal;width:88%;text-align:center;bottom:31%;font-size:clamp(.55rem,.85vw,.9rem)}
