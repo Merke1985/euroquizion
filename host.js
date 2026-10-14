@@ -3102,12 +3102,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     try { if (!stingEl) stingEl = new Audio('sounds/studio.mp3?v=1'); stingEl.currentTime = 0; stingEl.volume = Math.max(0, Math.min(1, 0.7 * (Music.vol ? Music.vol.fx : 1))); var p = stingEl.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
   }
   function studioIntro(icon, title, sub, line, then, kind) {
+    // From the trivia back to the presenters: everything slides out, the studio jingle, half a second, then the studio comes back in
+    var hh0 = hostsEl(), on0 = hh0 && !hh0.classList.contains('away'), v = $('v-game');
+    if (REMOTE || on0 || !v || v.classList.contains('hidden')) { studioIntro2(icon, title, sub, line, then, kind); return; }
+    stopTimers(); try { yt.pauseVideo(); } catch (e) {}
+    G.phase = 'loading'; G.barMs = 0; push();
+    v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550, 800]); studioSting();
+    setTimeout(function () {
+      cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard');
+      v.classList.remove('leaving'); viewEnter('v-game');
+      studioIntro2(icon, title, sub, line, then, kind, true);
+    }, 1500 + 500);
+  }
+  function studioIntro2(icon, title, sub, line, then, kind, stung) {
     stopTimers(); try { yt.pauseVideo(); } catch (e) {}
     G.fun = { kind: kind, icon: '', title: '', sub: '', plain: true, quiet: true }; G.phase = 'fun'; G.barMs = 0;
     cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); $('cover').classList.add('introcard'); push();
     var at = function (ms, f) { setTimeout(function () { if (G.phase === 'fun' && G.fun && G.fun.kind === kind) f(); }, ms); };
     var hh = hostsEl(), on = hh && !hh.classList.contains('away'), d = on ? -2000 : 0; hostHold = true; clearTimeout(hostT.away);   // already on stage (right after the opening): no "welcome back"
-    if (!on) studioSting();   // (back to the studio: the jingle)
+    if (!on && !stung) studioSting();   // (back to the studio: the jingle)
     if (!on) at(200, function () { hostSay('him', vary('back'), 4000); });
     if (hh) hh.classList.add('together');
     at(2400 + d, function () { var h2 = hostsEl(); if (h2) h2.classList.remove('together');   // the card comes between them
