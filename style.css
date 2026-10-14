@@ -4874,3 +4874,5 @@ body.hasdock main{padding-bottom:84px}
 .edlobroom .edrecbub.on{opacity:1;transform:translate(-50%,0) scale(1)}
 .edtok.fast .char{box-shadow:0 0 0 3px #ffd23f,0 0 18px #ffd23f}
 .edlobroom .edrecbub{white-space:normal;width:88%;text-align:center;bottom:31%;font-size:clamp(.55rem,.85vw,.9rem)}
+/* the boutique covers everything at once (it used to be see-through for a moment while sliding in: the studio flashed by) */
+.shopov{background:#0b0520;backdrop-filter:none}
