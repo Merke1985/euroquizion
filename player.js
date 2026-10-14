@@ -625,6 +625,7 @@
       box.classList.remove('hidden'); return;
     }
     box.classList.add('hidden');
+    if (f.mon) { $('waittitle').textContent = '👹 ' + f.name + ' stole the trophy!'; $('waitsub').textContent = 'Nobody could stop it… watch the big screen.'; return; }
     if (f.st === 'pick') { $('waittitle').textContent = f.pid === pid ? '🎶 Great choice!' : '🎶 ' + f.name + ' is picking the victory song…'; $('waitsub').textContent = f.pid === pid ? 'Your song will play in a moment!' : 'Watch the big screen.'; }
     else { $('waittitle').textContent = '🎶 Victory song'; $('waitsub').textContent = f.song || ''; }
   }
