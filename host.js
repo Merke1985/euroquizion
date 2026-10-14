@@ -2666,7 +2666,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   $('chasetest3').addEventListener('click', function () {   // test: the bots get everything wrong, so the monster wins (and its own finale follows)
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 3 && bots.length < 8) { botAdd(); nb++; }
-    testStandings(function () { chaseStart(true, true); if (G.chase) { G.chase.lose = true; G.chase.face = false; } });
+    testStandings(function () { chaseStart(true, true); if (G.chase) { G.chase.lose = true; G.chase.face = false; Object.keys(G.chase.lanes).forEach(function (k) { G.chase.lanes[k].pos += 1; }); push(); }   /* (everyone one space further ahead) */ });
   });
   $('chasetest2').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
