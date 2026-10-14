@@ -3493,7 +3493,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!REMOTE) { try { yt.pauseVideo(); } catch (e) {} try { yt2.pause(); } catch (e) {} stageEl().classList.remove('second'); pairTag(''); }
     list().forEach(function (x) { if (x.got && x.pts) x.score -= x.pts; x.got = false; x.done = false; x.pick = null; x.pts = 0; x.ranks = null; x.ccb = ''; x.sitNow = ''; });
     G.phase = 'loading'; G.q = null; cover(true, '💿', 'Skip!', false);
-    shopLast = { icon: '💿', deltas: [{ pid: p.pid, tag: '⏭️ skip' }], sound: 'blow' };
+    shopLast = { icon: '💿', deltas: [{ pid: p.pid, tag: '⏭️ skip' }], sound: 'skip' };
     shopHit('💿 ' + p.name + ' pressed skip on the Eurovision Song Contest CD Player! On to a different question, and nobody scores this one.', 4200);
     push();
     setTimeout(function () { if (G.phase === 'loading' && !G.q) loadSong(); }, 4300);
@@ -3649,6 +3649,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (snd === 'lose') { Music.woosh(); setTimeout(function () { itemSfx('sounds/powerbank.mp3?v=1', Music.crumble); }, 250); }   // (Marc's Powerbank: thrown, then the impact)
     else if (snd === 'blow') { Music.woosh(); setTimeout(function () { Music.woosh(); }, 400); }
     else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
+    else if (snd === 'skip') itemSfx('sounds/cd_scratch.mp3?v=1', Music.woosh);   // (the CD Player: a record scratch)
     else if (snd === 'tab') itemSfx('sounds/champagne.mp3?v=1', Music.woosh);   // (the Overpriced Champagne: pop!)
     else if (snd === 'sit') { if (!REMOTE) { try { var mz = new Audio('sounds/shock.mp3'); mz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var mp = mz.play(); if (mp && mp.catch) mp.catch(function () {}); } catch (e) {} } setTimeout(function () { Music.micdrop(); }, 500); }   // (the Broken Mic: the same shock and thud as the microphone in Hold That Note)
     else if (snd === 'thief') itemGetSnd();   // (left the Euroclub with an item)
