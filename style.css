@@ -4671,3 +4671,16 @@ body.hasdock main{padding-bottom:84px}
 @keyframes walkR{from{translate:46vw 0}to{translate:0 0}}
 @keyframes ehshuffle{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-7px) rotate(3deg)}}
 @media (prefers-reduced-motion:reduce){.game.opening .shosts.arrive .ehost.him,.game.opening .shosts.arrive .ehost.her{animation:none}}
+
+/* The round's title on the big LED screen behind the presenters: the screen flashes on, the title sits inside it */
+.cover.funcard.onscreen .stwall{opacity:1;animation:stwall 14s ease-in-out infinite alternate,stscreenon .7s ease-out both;box-shadow:0 0 90px 16px rgba(255,46,136,.55),inset 0 0 40px rgba(0,0,0,.35)}
+.cover.funcard.onscreen .stwall::before{content:'';position:absolute;inset:0;border-radius:inherit;background:#fff;animation:stflash .7s ease-out both;pointer-events:none}
+.cover.funcard.onscreen>.q,.cover.funcard.onscreen>h2{top:-9%;filter:drop-shadow(0 0 14px rgba(255,255,255,.55))}
+.cover.funcard.onscreen>.q{animation:stin .6s .15s cubic-bezier(.2,1.4,.4,1) both;font-size:clamp(2.2rem,5vw,4.2rem)}
+.cover.funcard.onscreen #covericon{font-size:clamp(2.2rem,5vw,4.2rem)}
+.cover.funcard.onscreen>h2{animation:stin .6s .25s cubic-bezier(.2,1.4,.4,1) both;max-width:60%}
+.cover.funcard.onscreen .studio::after{content:'';position:absolute;left:17%;right:17%;top:9%;bottom:27%;border-radius:8px;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);z-index:2;mix-blend-mode:multiply}
+@keyframes stscreenon{0%{filter:brightness(.2) saturate(.4)}35%{filter:brightness(2.2)}100%{filter:none}}
+@keyframes stflash{0%{opacity:0}20%{opacity:.85}100%{opacity:0}}
+@keyframes stin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
