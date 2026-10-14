@@ -3169,7 +3169,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course take your pick': 'lynda_freebie',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { but_first_lynda: 4519, first_1: 4048, first_2: 4754, first_3: 3474, first_4: 3866, first_item: 3970, lynda_bye: 4911, lynda_freebie: 7627, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3395, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5250, plan_final_chase: 7079, plan_partynight5: 4989, plan_shopwin: 4205, sofia_hello: 4597 };
+  var VOICE_MS = { but_first_lynda: 4754, first_1: 4048, first_2: 4754, first_3: 3474, first_4: 3866, first_item: 4440, lynda_bye: 4911, lynda_freebie: 7627, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f); }
@@ -3179,7 +3179,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=3'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=4'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       var dip = function (on) {   // (the music fades down to a whisper while they talk, and back up after)
         try { if (!(stY && stYReady && stYOn)) return; clearInterval(stYFade); var v = stY._want == null ? STUDIO_VOL : stY._want, to = on ? Math.round(STUDIO_VOL * 0.15) : STUDIO_VOL;
           stYFade = setInterval(function () { v += v < to ? 2 : -3; if ((on && v <= to) || (!on && v >= to)) { v = to; clearInterval(stYFade); } try { stY.setVolume(v); } catch (e) {} }, 30); } catch (e) {}
