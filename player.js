@@ -749,13 +749,14 @@
   // The chosen arrow glows. Stunned: the pad turns grey, 3-2-1 in the middle; you can still pick (or stop) a direction, and off you go when it ends.
   var ruLive = null, ruD = '', ruDT = null, ruStunEnd = 0, ruStunT = null;
   function ruSendD() { var r = state && state.rule; if (!net || !r || r.st !== 'play') return; (net.toHost || net.send)('rule', { pid: pid, id: r.id, d: ruD }); }
-  function ruSet(d) { if (d === ruD) return; ruD = d; ruSendD(); clearInterval(ruDT); if (d) ruDT = setInterval(ruSendD, 2500); }
-  function ruOnLive(m) { var r = state && state.rule; if (!m || !m.cnt || !r || m.id !== r.id) return; ruLive = m; if ((m.stun || {})[pid]) ruStunEnd = Date.now() + m.stun[pid]; ruPad(); }
+  function ruSet(d) { if (d === ruD) return; ruD = d; ruSendD(); clearInterval(ruDT); }   // (only when the direction changes or you let go: nothing is sent while you just hold it)
+  function ruOnLive(m) { var r = state && state.rule; if (!m || !m.cnt || !r || m.id !== r.id) return; ruLive = m; m.at = Date.now(); if ((m.stun || {})[pid]) ruStunEnd = Date.now() + m.stun[pid]; ruPad(); }
+  setInterval(function () { if (state && state.phase === 'rule' && state.rule) ruPad(); }, 1000);   // (the clock and the count on the phone stay fresh between updates)
   function ruPad() {
     var box = $('ruui'), r = state && state.rule; if (!box || !r) return;
     var src = ruLive && ruLive.id === r.id ? ruLive : r, n = (src.cnt || {})[pid] || 0;
     var c = box.querySelector('.rucnt b'); if (c) c.textContent = n;
-    var tm = box.querySelector('.rucnt i'); if (tm && src.left != null) { var s = Math.ceil(src.left / 1000); tm.textContent = Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+    var tm = box.querySelector('.rucnt i'); if (tm && src.left != null) { var s = Math.max(0, Math.ceil((src.left - (src.at ? Date.now() - src.at : 0)) / 1000));   /* (the clock runs on by itself between updates) */ tm.textContent = Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
     var left = ruStunEnd - Date.now(), pad = box.querySelector('.rupad'); if (!pad) return;
     pad.classList.toggle('stun', left > 0); pad.querySelector('.ruc').textContent = left > 0 ? Math.ceil(left / 1000) : '';
     clearTimeout(ruStunT); if (left > 0) ruStunT = setTimeout(ruPad, Math.min(250, left));

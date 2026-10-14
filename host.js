@@ -5725,7 +5725,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     if (hit && !REMOTE) { try { var sn = new Audio('sounds/ru_stun.mp3'); sn.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var sp = sn.play(); if (sp && sp.catch) sp.catch(function () {}); } catch (e) { Music.buzz(); } }   // (the stunned sound)
     g.cnt = ruCount(g); ruShow();
-    if (now - ruSent >= 900 || hit) ruBeat();
+    if (now - ruSent >= 3000 || hit) ruBeat();   // (the phones: an update every 3 seconds, or straight away when someone is stunned)
   }
   function ruBeat() {   // the small update for the phones: tiles owned and who is stunned
     var g = G.rule; if (!g || !net) return; ruSent = Date.now();
