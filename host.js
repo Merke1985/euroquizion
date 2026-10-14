@@ -1164,6 +1164,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Grand tour: the game is over when the last minigame is (with Postcard: when its last drawing and the vote are done).
   function tourOver() { return !!(G.tour && G.tourLast && !(G.gallery && (G.gallery.queue.length || G.gallery.vote))); }
   function lastSong() { return G.round >= G.total || !!(G.ladderWon && ladderGame() && (!G.partLadder || (G.partN || 0) >= G.parts)); }
+  var correctEl = null;
+  function correctSnd() {   // the right answer lights up (sounds/correct.mp3)
+    try { if (!correctEl) correctEl = new Audio('sounds/correct.mp3?v=1'); correctEl.currentTime = 0; correctEl.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var p = correctEl.play(); if (p && p.catch) p.catch(function () { Music.ding(); }); } catch (e) { Music.ding(); }
+  }
   function reveal() {
     if (G.frozenLeft != null && G.phase === 'guess') { G.revealPending = true; return; }   // an item is landing: the answer waits
     if (G.phase === 'guess' && !REMOTE && G.q && G.q.type === 'mc' && !(G.best && G.best.four && G.slotVote) && list().some(function (p) { return p.pick != null; })) { showPicks(); return; }   // (the vote on the slot machine shows its own voters: no second round of plops)
@@ -1234,7 +1238,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var answered = G.draw ? list().filter(function (p) { return p.pick != null && p.pid !== G.draw.pid; }).length : 0;
     if (artist && right.length) { artist.pts = Math.max(1, Math.round(12 * right.length / Math.max(answered, right.length))); artist.score += artist.pts; artist.got = true; }
     if (G.q && G.q.battle) battlePay();
-    if (!REMOTE && G.q) Music.ding();   // the right answer lights up
+    if (!REMOTE && G.q) correctSnd();   // the right answer lights up
     if (!REMOTE && list().some(function (p) { return p.got && p.ccb; })) setTimeout(function () { try { itemGetSnd(); } catch (e) {} setTimeout(function () { Music.ding(); }, 220); }, 650);   /* the flag bonus: a cheer of its own */
     cover(false); masks(false); peelStop();
     // After a drawing the video only starts now, and YouTube shows its title and buttons over the first seconds:
