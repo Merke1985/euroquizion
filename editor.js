@@ -8,11 +8,13 @@
     ['🎵', 'Songs', 'The songs the minigames use', [['jury', '🎤 Key Change!', 'The songs to sing: the part to sing and the lyrics on the phones'], ['green', '⚖️ Disqualivision', 'The performances that get judged'], ['titles', '🗣️ United by Nonsense', 'The English translation of every non-English title']]],
     ['🎉', 'Minigames', 'Texts used in the minigames', [['roasts', '⚖️ Disqualivision prompts', 'The questions players answer about the performance']]],
     ['🛍️', 'Items', 'Lynda’s boutique', [['items', '🛍️ All items', 'Names, explanations, shelf (price) and stock']]],
-    ['❓', 'Trivia', 'The questions between the songs', [['trivia', '❓ Trivia questions', 'One right answer, three wrong ones and an explanation']]],
+    ['❓', 'Trivia', 'The questions between the songs', [['tcats', '📊 Categories', 'Which kinds of questions come up, and how often'], ['trivia', '💡 Did you know?', 'The fact questions: one right answer, three wrong ones and an explanation'], ['ltitles', '🗣️ Language barrier', 'The English translation of every non-English title']]],
     ['💬', 'Feedback', 'From the players, and Claude’s reports', [['fb', '💬 Player feedback', 'Sent with the Feedback button on the join screen'], ['notes', '🔔 Reports', 'What Claude did on each run']]],
     ['🔒', 'Settings', 'The admin password', [['pass', '🔒 Password', 'The password for this admin']]]];
   var TABS = []; GROUPS.forEach(function (g) { TABS = TABS.concat(g[3]); });
   var NOSAVE = { pass: 1, req: 1, fb: 1, notes: 1 };
+  var KEYOF = { ltitles: 'titles' };   // (a tab that edits the same list as another one)
+  function asKey(fn) { return function () { var t0 = tab; tab = KEYOF[t0] || t0; try { fn(); } finally { tab = t0; } }; }
   function groupOf(t) { for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][3].some(function (x) { return x[0] === t; })) return GROUPS[i]; return GROUPS[0]; }
   var tab = 'jury', W = null, data = null, dirty = false;
   function H() { return (window.escHostData && window.escHostData()) || { songs: [], countries: {}, chorusBase: {} }; }
@@ -39,7 +41,7 @@
       jury: clone(ESC_EDIT.jury || h.chorusBase || {}), lyrics: clone(ESC_EDIT.lyrics || LYRICS || {}),
       green: clone(QUIP_SONGS), roasts: clone(ROASTS), titles: clone(ESC_EDIT.titles || {}),
       items: SHOP_ITEMS.map(function (it) { return { id: it.id, icon: it.icon, name: it.name, desc: it.desc, tier: it.tier || 2, stock: it.stock == null ? '' : it.stock, off: !!it.off }; }),
-      trivia: clone(OBSCURE)
+      trivia: clone(OBSCURE), tweights: clone(TYPE_WEIGHT)
     };
     dirty = false;
   }
@@ -56,8 +58,8 @@
       $('xelock').addEventListener('click', function () { try { sessionStorage.removeItem('esc-edit-pass'); sessionStorage.removeItem('esc-admin-ok'); } catch (e) {} $('xepass').value = ''; gate(); });
       W.addEventListener('click', function (e) { if (e.target === W) close(); });
       [].forEach.call(W.querySelectorAll('.xesec'), function (b) { b.addEventListener('click', function () { var g = GROUPS[+b.getAttribute('data-g')]; if (dirty && groupOf(tab) !== g) { msg('Save first, or your changes are lost (press it again to leave anyway).', 'warn'); dirty = false; return; } tab = g[3][0][0]; draw(); }); });
-      $('xesave').addEventListener('click', save);
-      $('xedef').addEventListener('click', backToDefault);
+      $('xesave').addEventListener('click', asKey(save));
+      $('xedef').addEventListener('click', asKey(backToDefault));
     }
     if (!escClient()) { W.querySelector('#xebody').innerHTML = '<p class="mute">There is no Supabase connection on this page, so nothing can be saved.</p>'; }
     fresh(); W.classList.remove('hidden');
@@ -97,7 +99,7 @@
     [].forEach.call($('xesubs').querySelectorAll('.xetab'), function (b) { b.onclick = function () { if (dirty) { msg('Save first, or your changes are lost (press it again to leave anyway).', 'warn'); dirty = false; return; } tab = b.getAttribute('data-t'); draw(); }; });
     $('xesave').classList.toggle('hidden', !!NOSAVE[tab]); $('xedef').classList.toggle('hidden', !!NOSAVE[tab]);
     var B = $('xebody'); msg(dirty ? 'Not saved yet' : '', dirty ? 'warn' : '');
-    if (tab === 'jury') drawJury(B); else if (tab === 'green') drawGreen(B); else if (tab === 'roasts') drawRoasts(B); else if (tab === 'titles') drawTitles(B); else if (tab === 'items') drawItems(B); else if (tab === 'trivia') drawTrivia(B); else if (tab === 'req' || tab === 'fb' || tab === 'notes') drawReq(B, tab); else drawPass(B);
+    if (tab === 'jury') drawJury(B); else if (tab === 'green') drawGreen(B); else if (tab === 'roasts') drawRoasts(B); else if (tab === 'titles' || tab === 'ltitles') drawTitles(B); else if (tab === 'tcats') drawCats(B); else if (tab === 'items') drawItems(B); else if (tab === 'trivia') drawTrivia(B); else if (tab === 'req' || tab === 'fb' || tab === 'notes') drawReq(B, tab); else drawPass(B);
   }
   // ---- Key Change!: the songs to choose from, the part to sing, and the lyrics on the phones ----
   function drawJury(B) {
@@ -199,6 +201,37 @@
       row.querySelector('.xestock').addEventListener('input', function () { it.stock = this.value; touch(); });
       row.querySelector('.xein').addEventListener('change', function () { it.off = !this.checked; row.classList.toggle('xeoff', it.off); touch(); });
       row.querySelector('.xedesc').addEventListener('input', function () { it.desc = this.value; touch(); });
+    });
+  }
+  // ---- the trivia categories: on or off, and how often each one comes up ----
+  var CATS = [['facts', '🎵 Song facts', 'Country, artist, title, year or placing of the song that plays', 'made from the song list'],
+    ['odd', '🧩 Odd one out', 'Three songs share something, one does not', 'made from the song list'],
+    ['mistake', '🔎 Find the mistake', 'Four facts, one is wrong', 'made from the song list'],
+    ['higher', '📈 Higher or lower', 'Two clips: which finished higher?', 'made from the song list'],
+    ['newer', '📅 Which came out later', 'Two clips: which song came out later?', 'made from the song list'],
+    ['lost', '🗣️ Language barrier', 'A translated title: which song is it?', 'uses the translations: see 🗣️ Language barrier'],
+    ['peel', '🎭 Behind the curtain', 'A winner, silent, uncovered bit by bit', 'made from the winners'],
+    ['blur', '🌫️ Out of focus', 'A winner, silent, starts blurred and sharpens', 'made from the winners'],
+    ['flag', '🚩 Whose flag?', 'A flag on the screen: which song did that country send?', 'made from the song list'],
+    ['host', '🏙️ Host city', 'A dot on the map: which city held the contest?', 'made from the host cities'],
+    ['trivia', '💡 Did you know?', 'Obscure Eurovision facts', 'the questions in 💡 Did you know?']];
+  function drawCats(B) {
+    var tot = 0; CATS.forEach(function (c) { tot += +data.tweights[c[0]] || 0; });
+    B.innerHTML = '<p class="mute">Every question picks a category by chance; the slider sets how often each one comes up compared to the others (switch it off and it never does). The host can still switch categories off per game in the game settings.</p>' +
+      '<div class="xelist">' + CATS.map(function (c) {
+        var w = +data.tweights[c[0]] || 0, pct = tot ? Math.round(w / tot * 100) : 0;
+        return '<div class="xerow xecat' + (w ? '' : ' xeoff') + '" data-k="' + c[0] + '"><div class="xerowtop"><span class="xecatname"><b>' + c[1] + '</b><small>' + c[2] + ' · <i>' + c[3] + '</i></small></span>' +
+          '<input type="range" class="xew8" min="0" max="50" step="0.5" value="' + w + '"><span class="xepct">' + (w ? '≈ ' + pct + '%' : 'off') + '</span>' +
+          '<label class="xechk"><input type="checkbox" class="xeon"' + (w ? ' checked' : '') + '> On</label></div></div>';
+      }).join('') + '</div>';
+    [].forEach.call(B.querySelectorAll('.xecat'), function (row) {
+      var k = row.getAttribute('data-k'), r = row.querySelector('.xew8');
+      r.addEventListener('input', function () {   // (the percentages follow while you slide)
+        data.tweights[k] = +this.value; touch();
+        var tot2 = 0; CATS.forEach(function (c) { tot2 += +data.tweights[c[0]] || 0; });
+        [].forEach.call(B.querySelectorAll('.xecat'), function (x) { var w2 = +data.tweights[x.getAttribute('data-k')] || 0; x.querySelector('.xepct').textContent = w2 ? '≈ ' + Math.round(w2 / tot2 * 100) + '%' : 'off'; x.classList.toggle('xeoff', !w2); x.querySelector('.xeon').checked = !!w2; });
+      });
+      row.querySelector('.xeon').addEventListener('change', function () { data.tweights[k] = this.checked ? (+ESC_DEF.tweights[k] || 10) : 0; touch(); drawCats(B); });
     });
   }
   // ---- the trivia questions (the 'Trivia' questions between the song questions) ----
@@ -308,6 +341,7 @@
   function clean(key) {
     if (key === 'green') return data.green.filter(function (c) { return ytId(c.id); }).map(function (c) { return { id: ytId(c.id), s: Math.max(0, +c.s || 0), name: String(c.name || '').slice(0, 80) }; });
     if (key === 'roasts') return data.roasts.filter(function (r) { return String(r.p || '').trim(); }).map(function (r) { return { p: String(r.p).trim(), h: String(r.h || '').trim() || 'No comment' }; });
+    if (key === 'tweights') { var tw = {}; Object.keys(data.tweights).forEach(function (k) { tw[k] = Math.max(0, Math.round((+data.tweights[k] || 0) * 10) / 10); }); return tw; }
     if (key === 'items') { var io = {}; data.items.forEach(function (it) { var st = parseInt(it.stock, 10); io[it.id] = { icon: String(it.icon || '').trim(), name: String(it.name || '').trim(), desc: String(it.desc || '').trim(), tier: +it.tier || 2, stock: st > 0 ? st : -1, off: !!it.off }; }); return io; }
     if (key === 'trivia') return data.trivia.filter(function (f) { return String(f.q || '').trim() && String(f.a || '').trim() && (f.w || []).some(function (w) { return String(w || '').trim(); }); }).map(function (f) { var o2 = { q: String(f.q).trim(), a: String(f.a).trim(), w: (f.w || []).map(function (w) { return String(w || '').trim(); }).filter(Boolean), e: String(f.e || '').trim() }; if (f.n) o2.n = true; if (f.s && f.s[0] && f.s[1]) o2.s = [+f.s[0], f.s[1]]; return o2; });
     if (key === 'jury') { var o = {}; Object.keys(data.jury).forEach(function (id) { var c = data.jury[id]; if (c && c[1] > c[0]) o[id] = [+c[0], +c[1]]; }); return o; }
@@ -335,6 +369,7 @@
     else if (tab === 'titles') data.titles = {};
     else if (tab === 'items') data.items = ESC_DEF.items.map(function (it) { return { id: it.id, icon: it.icon, name: it.name, desc: it.desc, tier: it.tier || 2, stock: it.stock == null ? '' : it.stock, off: false }; });
     else if (tab === 'trivia') data.trivia = clone(ESC_DEF.trivia);
+    else if (tab === 'tcats') data.tweights = clone(ESC_DEF.tweights);
     touch(); draw(); msg('The built-in list is back: press Save to use it.', 'warn');
   }
   window.escEditorOpen = open;
