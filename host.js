@@ -384,8 +384,9 @@
   var viewNow = '';
   Music.useLoop('sounds/studio_loop.mp3?v=1');   // the studio music: a dance loop instead of the made-up synth one
   function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); var triv = id === 'v-game' && !REMOTE && (G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel) && !G.clue;
-    var studio = ((id === 'v-lobby' && G.phase === 'lobby') || (id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || G.phase === 'opening' || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
-    Music.want(triv || studio, triv && !studio); }   // the studio loop with the presenters and in Lynda's boutique (it carries on where it left off); the synth loop under trivia questions without a clip
+    var lob = id === 'v-lobby' && G.phase === 'lobby';
+    var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
+    Music.want(lob || triv || studio, !studio); }   // the studio loop with the presenters and in Lynda's boutique (it carries on where it left off); the synth loop in the lobby and under trivia questions without a clip
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
     if (G.phase === 'end' || G.phase === 'lobby' || G.phase === 'brief' || G.phase === 'intro') return false;
@@ -1297,7 +1298,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 400);
   }
   function startRound() {
-    if (!G.round && !G.opened && !REMOTE && !G.skipOpening) { G.opened = true; opening(startRound); return; }   // the very first thing: the show opens
+    if (!G.round && !G.opened && !REMOTE && !G.skipOpening) { G.opened = true; G.openWait = true; studioSting(); setTimeout(function () { G.openWait = false; opening(startRound); }, 1200); return; }   // the very first thing: the studio jingle, and then the show opens
     payFlush(); paper(null); peelStop();
     G.round++; G.phase = 'loading'; G.singSkips = 0; G.qWorth = 0; worthHide();
     list().forEach(function (p) { p.sitNow = ''; p.flagNow = false; p.halfNow = false; p.cardNow = ''; }); G.smoke = null; G.frozenLeft = null; G.revealPending = false; clearTimeout(freezeT);
@@ -2778,7 +2779,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var v = $('v-game'); v.classList.add('opening'); push();
     var h = hostsEl(); if (h) { h.classList.remove('arrive'); h.classList.remove('away'); }
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
-    step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); });
+    step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); G.openMusic = true; render(); });   // (the studio music starts from the top once everything has slid in)
     // what they say: who they are, what we play tonight and how it works, then off we go
     var lines = [['him', 'Good evening, Europe! I’m Oliver Lindström…'], ['her', '…and I’m Sofia Lindberg! Welcome to EuroQuizion!']].concat(showPlan());
     // Party with the boutique: after the plan, straight to Lynda (she gives everyone a first item), and only then the first trivia
@@ -7506,7 +7507,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // The fanfare is over, or the host pressed "Start now": on to the first song.
   function introEnd() {
-    if (G.phase !== 'intro') return;
+    if (G.phase !== 'intro' || G.openWait) return;   // (not twice while the jingle plays before the opening)
     clearTimeout(introTimer);
     fanStop();
     try { if (!REMOTE) yt.pauseVideo(); } catch (e) {}
@@ -8299,7 +8300,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ladderGame()) { G.total = ENDLESS; G.showScore = 'always'; }   // the ladder is the score, and it goes on until someone is at the top   // the clip, then 5 seconds more to answer
     G.round = 0; G.used = {}; fails = 0; note('');
     // a fresh game: nothing left over from a test run (test settings, test envelopes and heels, items underway)
-    readPicks(); G.opened = false;   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
+    readPicks(); G.opened = false; G.openWait = false; G.openMusic = false; Music.loopReset();   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
     G.quipSongsUsed = []; G.quipUsed = []; G.goldTest = false; G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.fake = null; clearTimeout(fkTimer); clearInterval(fkTick); clearInterval(fkPrivT); G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
