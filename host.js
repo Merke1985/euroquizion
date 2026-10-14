@@ -2810,7 +2810,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var v = $('v-game'); v.classList.add('opening'); push();
     var h = hostsEl(); if (h) { h.classList.remove('arrive'); h.classList.remove('away'); }
     var at = 0, step = function (ms, f) { at += ms; setTimeout(function () { if (G.phase === 'opening') f(); }, at); };
-    step(1900, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } whooshes([0, 120]); G.openMusic = true; render(); });   // (the studio music starts from the top once everything has slid in)
+    step(900, function () { G.openMusic = true; render(); });   // the stage is in view: the studio music starts (from the top)
+    step(1000, function () { var hh = hostsEl(); if (hh) { hh.classList.add('arrive'); } });   // then the presenters shuffle in from the sides (3 seconds)
     // what they say: who they are, what we play tonight and how it works, then off we go
     var lines = [['him', 'Good evening, Europe! I’m Oliver Lindström…'], ['her', '…and I’m Sofia Lindberg! Welcome to EuroQuizion!']].concat(showPlan());
     // Party with the boutique: after the plan, straight to Lynda (she gives everyone a first item), and only then the first trivia
@@ -2822,7 +2823,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (shopNow) {
       G.shopFirst = true;
-      lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
+      lines.forEach(function (l, i) { step(i ? 3300 : 3300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });   // (the first line once they're in place)
       step(3600, function () {
         v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive');
         G.mode = G.lastParty = 'shop'; G.mgBase = null;
@@ -2831,7 +2832,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       return;
     }
-    lines.forEach(function (l, i) { step(i ? 3300 : 1300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });
+    lines.forEach(function (l, i) { step(i ? 3300 : 3300, function () { hostSay(l[0], l[1], 3600); if (!i) Music.ding(); }); });   // (the first line once they're in place)
     step(3300, function () { v.classList.remove('opening'); var hh = hostsEl(); if (hh) hh.classList.remove('arrive'); if (!G.mgTest) hostsAway(); then(); });   // (testing the party games: they stay on, the boutique is announced straight away)
   }
   // The plan for tonight, in the presenters' words (alternating him / her, after "…and I'm Sofia!").

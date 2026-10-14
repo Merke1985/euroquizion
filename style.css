@@ -4663,3 +4663,11 @@ body.hasdock main{padding-bottom:84px}
 @keyframes stsweep{from{transform:rotate(var(--a))}to{transform:rotate(var(--b))}}
 @keyframes sthaze{from{opacity:.6;transform:translateX(-3%)}to{opacity:1;transform:translateX(3%)}}
 @media (prefers-reduced-motion:reduce){.studio i,.studio i::after{animation:none!important}}
+
+/* The opening: the presenters shuffle in from the sides, little steps, three seconds (him from the left, her from the right) */
+.game.opening .shosts.arrive .ehost.him{animation:walkL 3s cubic-bezier(.3,.2,.5,1) both,ehshuffle .375s ease-in-out 8 alternate,ehbob 3.2s 3s ease-in-out infinite alternate}
+.game.opening .shosts.arrive .ehost.her{animation:walkR 3s cubic-bezier(.3,.2,.5,1) both,ehshuffle .375s .1s ease-in-out 8 alternate,ehbob 3.2s 3.2s ease-in-out infinite alternate}
+@keyframes walkL{from{translate:-46vw 0}to{translate:0 0}}
+@keyframes walkR{from{translate:46vw 0}to{translate:0 0}}
+@keyframes ehshuffle{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-7px) rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.game.opening .shosts.arrive .ehost.him,.game.opening .shosts.arrive .ehost.her{animation:none}}
