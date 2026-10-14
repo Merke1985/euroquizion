@@ -2294,7 +2294,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var i = c.order.indexOf(k), ks = [k], ls = ks.map(function (x) { return c.order.indexOf(x); }); if (!all) { c.nsfDone = c.nsfDone || {}; c.nsfDone[k] = 1; }
     c.st = 'nsf'; c.nsf = { pid: k, i: i, all: all || null, ks: ks, ls: ls }; push(); if (!all || all.indexOf(k) === 0) Music.buzz(); Music.dread(true, true);
     var tiles = function (f) { return [].filter.call($('chtiles').children, function (t) { return ls.indexOf(+t.getAttribute('data-l')) >= 0 && f(+t.getAttribute('data-r')); }); };
-    var ok = function () { return G.chase === c && c.nsf && c.nsf.pid === k; }, t = all && all.indexOf(k) > 0 ? 500 : 1600;   /* (everyone: one after the other, quicker after the first) */
+    var ok = function () { return G.chase === c && c.nsf && c.nsf.pid === k; }, t = all && all.indexOf(k) > 0 ? 500 : Math.max(1600, (VOICE_MS['nsf_' + c.monster.id] || 3000) + 400);   /* (first the monster says it, while lining up; then the bite) */   /* (everyone: one after the other, quicker after the first) */
     var at = function (ms, f) { setTimeout(function () { if (ok()) f(); }, ms); };
     // twice: two spaces glow, are smashed, and the lane runs back two spaces with the leader (and their gold space) on it
     var bite = function () {
