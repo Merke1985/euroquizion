@@ -2364,7 +2364,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function finale(win, then) {
     var old = $('fnov'); if (old) old.remove();
     var wp = players[win], others = list().filter(function (p) { return !p.off && p.pid !== win; });
-    var body = function (p, win) { var fl = handFlag({ cc: p.cc || (typeof CHAR_CC !== 'undefined' && CHAR_CC[p.char]) || 'eu' }); return '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca">' + (win ? '<span class="fntro">🏆</span>' : '') + '</i><i class="ca">' + fl + '</i><i class="ct"></i></span>'; };   // (the others stand at the sides of the stage, the winner in the middle)   // (full bodies; the winner: the trophy in one hand, the flag waving in the other)
+    var body = function (p, win) { var fl = handFlag({ cc: p.cc || (typeof CHAR_CC !== 'undefined' && CHAR_CC[p.char]) || 'eu' }); return '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca">' + (win ? '<span class="fntro">' + finTrophy() + '</span>' : '') + '</i><i class="ca">' + fl + '</i><i class="ct"></i></span>'; };   // (the others stand at the sides of the stage, the winner in the middle)   // (full bodies; the winner: the trophy in one hand, the flag waving in the other)
     var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }));
     var fans = ''; for (var r = 0; r < 3; r++) { var n = 16 + r * 3; for (var i = 0; i < n; i++) {
       var fl = Math.random() < 0.45 ? '<span class="fnflag" style="--d:' + (-Math.random() * 2).toFixed(2) + 's"><img src="https://flagcdn.com/w80/' + codes[(r * 20 + i) % codes.length] + '.png" alt=""></span>' : (Math.random() < 0.3 ? '<span class="fnphone"></span>' : '');
@@ -2395,8 +2395,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     at(17500, function () { finPick(win, ov, say, then); });   // then the winner picks the victory song on their phone
   }
+  function finTrophy() { var t = $('chtro') && $('chtro').querySelector('svg.trophy'); return t ? t.outerHTML.replace(/id="([^"]+)"/g, 'id="fn$1"').replace(/url\(#([^)]+)\)/g, 'url(#fn$1)').replace(/href="#([^"]+)"/g, 'href="#fn$1"') : '🏆'; }   // (the same trophy as in the Grand Final)
   // The victory song: the winner picks any Eurovision song from their own country on their phone, and it plays on the big stage.
-  var finT = null;
+  var finT = null, finYt = null;
   function finSongs(p) {
     var cc = p.cc || (typeof CHAR_CC !== 'undefined' && CHAR_CC[p.char]) || '';
     var l = songs.filter(function (x) { return x[1] === cc && x[4]; });
@@ -2428,14 +2429,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); });
     var t = ov.querySelector('.fntitle'); if (t) t.innerHTML = '<span>🎶</span><b>' + esc(String(sg[0])) + ' · ' + esc(countries[sg[1]] || '') + '</b><em>' + esc(sg[3]) + '</em><small class="fnart">' + esc(sg[2]) + '</small>';
     try { Music.want(false); stYStop && stYStop(); } catch (e) {}
-    try { yt.loadVideoById({ videoId: sg[4], startSeconds: 0 }); yt.unMute(); yt.setVolume(85); } catch (e) {}
+    var scr = ov.querySelector('.fnscreen'), box = document.createElement('div'); box.className = 'fnvid'; box.innerHTML = '<div id="fnyt"></div><i class="fnvidgrid"></i>'; if (scr) scr.insertBefore(box, scr.firstChild);   // the video on the big LED wall, with the LED grid over it
+    try {
+      finYt = new YT.Player('fnyt', { videoId: sg[4], playerVars: { autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, fs: 0, start: 0 },
+        events: { onReady: function (e) { try { e.target.unMute(); e.target.setVolume(85); e.target.playVideo(); } catch (x) {} } } });
+    } catch (e) { finYt = null; try { yt.loadVideoById({ videoId: sg[4], startSeconds: 0 }); yt.unMute(); yt.setVolume(85); } catch (e2) {} }
+    setTimeout(function () { box.classList.add('on'); }, 600);
     if (!ov.querySelector('.fnend')) { var b = document.createElement('button'); b.type = 'button'; b.className = 'fnend'; b.textContent = 'End the show ▸'; b.addEventListener('click', finEnd); ov.appendChild(b); }
     finT = setTimeout(finEnd, 120000);   // (two minutes of the song, then the show ends; the button ends it sooner)
   }
   function finEnd() {
     var g = G.fin; if (!g || g.st === 'end') return;
     clearTimeout(finT); g.st = 'end';
-    var ov = g.ov, v = 85, fade = setInterval(function () { v -= 5; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fade); try { yt.pauseVideo(); } catch (e) {} } }, 80);
+    var ov = g.ov, v = 85, pl = finYt || yt, fade = setInterval(function () { v -= 5; try { pl.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fade); try { pl.pauseVideo(); } catch (e) {} if (pl === finYt) { try { finYt.destroy(); } catch (e) {} finYt = null; } } }, 80);
     if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
     setTimeout(function () { if (ov) ov.remove(); var then = g.then; G.fin = null; then(); }, 1600);
   }
@@ -2527,7 +2533,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   $('fntest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return p.bot; }).length; while (nb < 4 && bots.length < 8) { botAdd(); nb++; }
-    var all = list().filter(function (p) { return !p.off; }), bs = all.filter(function (p) { return p.bot; }), win = pick(bs.length ? bs : all);
+    var all = list().filter(function (p) { return !p.off; }), hs = all.filter(function (p) { return !p.bot; }), win = pick(hs.length ? hs : all);   // (a real player always wins the test: so you can pick the song on your phone)
     all.forEach(function (p) { p.score = 12 * (3 + Math.floor(Math.random() * 14)); p.champ = p === win; });
     G.finalMode = 'chase'; G.chaseOv = all.map(function (p) { return { pid: p.pid, fp: p === win ? 9 : Math.floor(Math.random() * 8), win: p === win }; });
     $('testclose') && $('testclose').click();
@@ -3290,7 +3296,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|and now pick your victory song on your phone': 'fin_pick',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { jul_lost2: 4520, jul_cars: 5960, jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
+  var VOICE_MS = { jul_lost2: 4520, jul_cars: 5960, jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5880, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -3308,7 +3314,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=8'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=9'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
       if (who) {   // (the mouth follows how loud the line is, frame by frame)
         try {
           var AC = window.AudioContext || window.webkitAudioContext;
@@ -4750,7 +4756,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       get art() { return '<div class="hszg">' + ZG_SINGER + '</div>'; },
       lines: [['him', 'Welcome to space, Europe! 🌌 Up here, there’s no gravity at all…'],
         ['her', 'So you’ll need to keep your balance! Keep your finger in the glowing zone on your phone: it moves with the music.'],
-        ['him', 'Stay in the zone! Whoever keeps their balance until the end wins. And here she comes… 🌟']] },
+        ['him', 'Stay in the zone! Whoever keeps their balance until the end wins. 🌟']] },
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
       lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
@@ -5592,7 +5598,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t = g.st === 'play' ? (Date.now() - g.t0) / 1000 : 0, px = g.st === 'play' ? zgPath(g.seed, t) : 0;
     var bi = g.st === 'play' ? zgBreak(t) : -1, bk = ov.querySelector('.zgbrk');   // the break: "Break time" with a bar that fills up
     if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><strong></strong><i><em></em></i>'; ov.appendChild(bk); }
-    bk.classList.toggle('on', bi >= 0); var wn = bk.querySelector('strong'), wt = bi === ZG_BRK.length - 1 ? '⚠️ Warning: in the last stage you only have 1 second to get back in the zone!' : ''; if (wn.textContent !== wt) wn.textContent = wt; if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
+    bk.classList.toggle('on', bi >= 0); var wn = bk.querySelector('strong'), wt = ''; if (wn.textContent !== wt) wn.textContent = wt; if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
     ov.style.setProperty('--sw', (px * [14, 30, 52][g.st === 'play' ? zgStage((Date.now() - g.t0) / 1000) : 0]).toFixed(2) + 'deg');   // (the swing reaches further each stage: wider in stage 2, much wider in stage 3)
     var sing = g.st === 'play' && t >= 9 || g.st === 'end'; if (ov.classList.contains('sing') !== sing) ov.classList.toggle('sing', sing);   // (she starts singing at 0:09 in the song)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
@@ -6925,6 +6931,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // goes wrong in the same round, whoever got furthest that round wins.
   var JM_COLS = 7, JM_ROWS = 6, JM_MAX = 10, JM_PTS = [12, 8, 4], JM_DIRS = [[-1, 0], [0, -1], [1, 0], [0, 1], [0, 0]], JM_ARROW = ['⬅️', '⬆️', '➡️', '⬇️', '🚗'], JM_CAR = 4, JM_WALK = 1650, qjTimer = null, qjTick = null;
   var JULIET = '<svg class="juliet" viewBox="0 0 200 300" aria-hidden="true"><path d="M58 58 Q60 14 100 12 Q140 14 142 58 L150 150 Q100 162 50 150 Z" fill="#3a1a14"/><rect x="88" y="94" width="24" height="22" rx="8" fill="#f2c9a8"/><ellipse cx="100" cy="68" rx="32" ry="36" fill="#f2c9a8"/><path d="M68 56 Q72 26 100 26 Q128 26 132 56 Q118 40 100 42 Q82 40 68 56 Z" fill="#3a1a14"/><circle cx="88" cy="70" r="4" fill="#2a1410"/><circle cx="112" cy="70" r="4" fill="#2a1410"/><path d="M84 62 q4 -3 8 0 M108 62 q4 -3 8 0" stroke="#2a1410" stroke-width="2" fill="none"/><path d="M90 86 Q100 94 110 86" stroke="#b0303a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="80" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><ellipse cx="120" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><circle cx="100" cy="30" r="5" fill="#ffd23f"/><circle cx="90" cy="33" r="3" fill="#fff"/><circle cx="110" cy="33" r="3" fill="#fff"/><path d="M66 118 Q100 104 134 118 L150 240 Q100 252 50 240 Z" fill="#c2185b"/><path d="M80 116 Q100 126 120 116 L118 132 Q100 140 82 132 Z" fill="#ffd6e6"/><path d="M66 122 Q40 150 46 176" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="46" cy="180" r="8" fill="#f2c9a8"/><path class="jarm" d="M134 122 Q166 104 172 70" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle class="jhand" cx="172" cy="64" r="8" fill="#f2c9a8"/><circle cx="168" cy="52" r="7" fill="#e0245e"/><path d="M168 59 l0 14" stroke="#2f7a3a" stroke-width="3"/></svg>';   // (an original character: Juliet with a rose)
+  // The characters' gradients (skin, suit, gown…) live once in a hidden-but-rendered <svg> on the page. Inside each drawing
+  // they went missing whenever the first copy of a drawing sat in a hidden screen: the copies on show lost their colours.
+  (function () {
+    var defs = '', strip = function (str) { return str.replace(/<defs>([\s\S]*?)<\/defs>/g, function (m, d) { defs += d; return ''; }); };
+    HOST_HIM = strip(HOST_HIM); HOST_HER = strip(HOST_HER); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
+    try { var box = document.createElement('div'); box.innerHTML = '<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"><defs>' + defs + '</defs></svg>'; document.body.appendChild(box.firstChild); } catch (e) {}
+  })();
   function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards
     var r = [], prev = -1;
     for (var i = 0; i < JM_MAX; i++) { var w = []; [0, 1, 2, 3].forEach(function (d) { if (prev >= 0 && d === (prev + 2) % 4) return; for (var k = 0; k < (d === 1 ? 3 : d === 3 ? 1 : 2); k++) w.push(d); }); prev = pick(w); r.push(prev); }
@@ -7037,6 +7050,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); if (/on your phone/.test(l)) { g.pad = true; push(); } }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200, voiceMs('juliet', l) + 900); });   /* (the arrows appear on the phones as she mentions them) */
     at(t, function () { jmJul(''); if (!(G.qj && G.qj.song)) jmSong(true); qjRound(); });   /* (the song starts with the first countdown) */
   }
+  // Juliet calls out each step as it shows: left, up, right, down, jump
+  var JM_CALLS = ['jul_left', 'jul_up', 'jul_right', 'jul_down', 'jul_jump'], jmCallEl = {};
+  function jmCall(d) {
+    if (REMOTE || !JM_CALLS[d]) return;
+    try { if (jmCallEl.last) jmCallEl.last.pause(); var a = jmCallEl[d] || (jmCallEl[d] = new Audio('sounds/voice_' + JM_CALLS[d] + '.mp3?v=1')); jmCallEl.last = a; a.currentTime = 0; a.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
   // Juliet's own speech balloon, next to her balcony
   function jmLostSay(ks) {   /* Juliet, as soon as they're out of sight: who is lost now */
     var ns = ks.map(function (k) { return players[k] ? players[k].name : '?'; }), lj = ns.length > 1 ? ns.slice(0, -1).join(', ') + ' and ' + ns[ns.length - 1] : ns[0];
@@ -7078,7 +7097,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [3, 2, 1].forEach(function (n, k) { at(1300 + k * 800, function () { cdEl(String(n)); }); });
     at(1300 + 3 * 800, function () { cdEl(''); });
     for (var i = 0; i < g.seq.length; i++) (function (i) {
-      at(CD + 1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4, 12][g.seq[i]]); });
+      at(CD + 1200 + i * STEP, function () { g.show = i; push(); qjShow(); Music.plop([2, 6, 9, 4, 12][g.seq[i]]); jmCall(g.seq[i]); });
       at(CD + 1200 + i * STEP + STEP * 0.7, function () { g.show = -2; qjShow(); });
     })(i);
     at(CD + 1200 + g.seq.length * STEP + 300, function () {
@@ -7489,9 +7508,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (kc) {   /* Key Change: the presenters explain it here first */
       at(1500, function () { Music.ding(); say('him', 'Welcome to Key Change! Here in the Green Room, the stars are warming up their voices… 🎤'); });
-      at(5300, function () { say('her', 'You vote for a song, and then you listen to the original…'); });
-      at(9100, function () { say('him', '…and then it’s your turn: sing it into your phone! 🎶'); });
-      at(12300, function () { say('her', 'Then everyone votes for who sang it best. Douze points for the winner! 🏆'); });
+      at(5300, function () { say('her', 'First you vote for a song, and we listen to the original together…'); });
+      at(9100, function () { say('him', '…after that it’s your turn: sing it into your phone! 🎶'); });
+      at(12300, function () { say('her', 'Finally, everyone votes for the best singer. Douze points for the winner! 🏆'); });
       at(16300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
       at(17300, function () { ov.remove(); then(); });
       return;
