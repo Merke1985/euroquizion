@@ -5502,7 +5502,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var add = function (k, n) { var p = players[k]; if (!p || !n) return; p.score += n; p.pts = (p.pts || 0) + n; p.got = true; g.res[k] = (g.res[k] || 0) + n; g.tot[k] = (g.tot[k] || 0) + n; };
     var kept = Object.keys(g.clues).filter(function (k) { return !g.out[k]; });
     if (g.right) { add(g.guesser, 12); kept.forEach(function (k) { add(fkWho(k), kept.length === 1 ? 9 : 6); }); }   // (every clue that survived scores for its writer)
-    push(); fkShow(); if (g.right) Music.douze(); else Music.buzz();
+    push(); fkShow(); if (g.right) itemSfx('sounds/applause.mp3?v=1', Music.douze); else itemSfx('sounds/boo.mp3?v=1', Music.buzz);   // (the press room claps or boos)
     fkTimer = setTimeout(function () { if (G.fake !== g) return; if (g.rnd < g.of) { whooshes([0, 300]); fkRound(); } else fkFinish(); }, 8000);
   }
   function fkFinish() {   // after the last round: most points over all rounds wins
