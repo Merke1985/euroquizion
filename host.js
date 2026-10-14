@@ -2812,7 +2812,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     else if (c.st === 'heelpick' && c.hp) { chSay(c, 'hp', 'heelpick'); big.innerHTML = '⏳ A player is using an item…<small>Please wait!</small>';   /* (kept vague: the broken heel is revealed after) */ big.classList.remove('hidden'); }
     else if (c.st === 'pre') { chSay(c, 'pre', 'pre'); big.innerHTML = '👑 A Eurovision icon is coming for the trophy…<small>Who will it be?</small>'; big.classList.remove('hidden'); }
-    else if (c.st === 'wheel') { chSay(c, 'wheel', 'wheel'); big.classList.add('hidden'); }   // (just the wheel: no title above it)
+    else if (c.st === 'wheel') { big.classList.add('hidden'); }   // (just the wheel: no title above it)
     else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)
     else if (c.st === 'intro' && (c.heelDone || c.skated)) { big.classList.add('hidden'); }   /* (after an item was used: no welcome again) */
     else if (c.st === 'intro') { chSay(c, 'intro', 'intro'); big.innerHTML = 'You have reached the Grand Final!<small>First, let’s see how many jury votes you received: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
