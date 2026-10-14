@@ -3139,8 +3139,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return;
     try {
       if (voiceEl) voiceEl.pause();
-      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=1'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
-      var dip = function (on) { try { if (stY && stYReady && stYOn) { clearInterval(stYFade); stY.setVolume(on ? Math.round(STUDIO_VOL * 0.35) : STUDIO_VOL); } } catch (e) {} };
+      voiceEl = new Audio('sounds/voice_' + name + '.mp3?v=2'); voiceEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1));
+      var dip = function (on) {   // (the music fades down to a whisper while they talk, and back up after)
+        try { if (!(stY && stYReady && stYOn)) return; clearInterval(stYFade); var v = stY._want == null ? STUDIO_VOL : stY._want, to = on ? Math.round(STUDIO_VOL * 0.15) : STUDIO_VOL;
+          stYFade = setInterval(function () { v += v < to ? 2 : -3; if ((on && v <= to) || (!on && v >= to)) { v = to; clearInterval(stYFade); } try { stY.setVolume(v); } catch (e) {} }, 30); } catch (e) {}
+      };
       dip(true); clearTimeout(voiceDip);
       voiceEl.addEventListener('ended', function () { voiceDip = setTimeout(function () { dip(false); }, 250); });
       voiceDip = setTimeout(function () { dip(false); }, 6000);   // (in case it never says it ended)
