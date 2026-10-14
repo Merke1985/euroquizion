@@ -9,7 +9,7 @@
     ['🎉', 'Minigames', 'Texts used in the minigames', [['roasts', '⚖️ Disqualivision prompts', 'The questions players answer about the performance']]],
     ['🛍️', 'Items', 'Lynda’s boutique', [['items', '🛍️ All items', 'Names, explanations, shelf (price) and stock']]],
     ['❓', 'Trivia', 'The questions between the songs', [['trivia', '❓ Trivia questions', 'One right answer, three wrong ones and an explanation']]],
-    ['📝', 'Requests', 'Bugs, suggestions and Claude’s reports', [['req', '📝 Bugs & suggestions', 'Tell Claude what is wrong or what you would like'], ['fb', '💬 Player feedback', 'Sent with the Feedback button on the join screen'], ['notes', '🔔 Reports', 'What Claude did on each run']]],
+    ['💬', 'Feedback', 'From the players, and Claude’s reports', [['fb', '💬 Player feedback', 'Sent with the Feedback button on the join screen'], ['notes', '🔔 Reports', 'What Claude did on each run']]],
     ['🔒', 'Settings', 'The admin password', [['pass', '🔒 Password', 'The password for this admin']]]];
   var TABS = []; GROUPS.forEach(function (g) { TABS = TABS.concat(g[3]); });
   var NOSAVE = { pass: 1, req: 1, fb: 1, notes: 1 };
@@ -62,7 +62,7 @@
     if (!escClient()) { W.querySelector('#xebody').innerHTML = '<p class="mute">There is no Supabase connection on this page, so nothing can be saved.</p>'; }
     fresh(); W.classList.remove('hidden');
     var ok = false; try { ok = sessionStorage.getItem('esc-admin-ok') === '1'; } catch (e) {}
-    if ((window.escAttention || 0) > 0) tab = 'req';   // (something waits for you: straight to the requests)
+    if ((window.escAttention || 0) > 0) tab = 'fb';   // (something waits for you: straight to the requests)
     if (ok) { $('xegate').classList.add('hidden'); $('xemain').classList.remove('hidden'); draw(); } else gate();
   }
   // ---- the door: the admin opens with the password (the very first time, you choose one) ----
@@ -91,7 +91,7 @@
   function touch() { dirty = true; msg('Not saved yet', 'warn'); }
   function draw() {
     var g = groupOf(tab), sub = g[3].filter(function (x) { return x[0] === tab; })[0];
-    [].forEach.call(W.querySelectorAll('.xesec'), function (b) { b.classList.toggle('on', GROUPS[+b.getAttribute('data-g')] === g); b.classList.toggle('attn', GROUPS[+b.getAttribute('data-g')][1] === 'Requests' && (window.escAttention || 0) > 0); });
+    [].forEach.call(W.querySelectorAll('.xesec'), function (b) { b.classList.toggle('on', GROUPS[+b.getAttribute('data-g')] === g); b.classList.toggle('attn', GROUPS[+b.getAttribute('data-g')][1] === 'Feedback' && (window.escAttention || 0) > 0); });
     $('xesubs').innerHTML = '<h3 class="xesech">' + g[0] + ' ' + g[1] + '</h3>' + (g[3].length > 1 ? '<div class="xetabs">' + g[3].map(function (t) { return '<button type="button" class="xetab' + (t[0] === tab ? ' on' : '') + '" data-t="' + t[0] + '" title="' + t[2] + '">' + t[1] + '</button>'; }).join('') + '</div>' : '');
     $('xesubhint').textContent = sub ? sub[2] : '';
     [].forEach.call($('xesubs').querySelectorAll('.xetab'), function (b) { b.onclick = function () { if (dirty) { msg('Save first, or your changes are lost (press it again to leave anyway).', 'warn'); dirty = false; return; } tab = b.getAttribute('data-t'); draw(); }; });
