@@ -2042,7 +2042,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var perks = [];   // (announced once everyone is ready: first the broken heels, then the ice skates)
     (G.heels || []).forEach(function (h) { if (lanes[h.to] && players[h.by]) perks.push({ kind: 'heel', by: h.by, to: h.to }); }); G.heels = [];
     ps.forEach(function (p) { var n = (p.inv || []).filter(function (id) { return id === 'skates'; }).length; if (n) perks.push({ kind: 'skates', pid: p.pid, n: 2 * n }); });
-    var heelers = []; ps.forEach(function (p) { (p.inv || []).forEach(function (id) { if (id === 'heel') heelers.push(p.pid); }); });   // (a broken heel in the bag: its owner picks a victim once everyone is on the runway)
+    var heelers = []; ps.forEach(function (p) { (p.inv || []).forEach(function (id) { if (id === 'heel') heelers.push(p.pid); }); });
+    if (face) { perks = []; heelers = []; }   // (the face-off test: nobody brings broken heels or ice skates)   // (a broken heel in the bag: its owner picks a victim once everyone is on the runway)
     list().forEach(function (p) { p.inv = []; p.uses = {}; });   // in the Grand Final nobody has any items left
     // they are put on the runway one by one, half a second apart, the lowest score first
     var placeOrder = ps.map(function (p) { return p.pid; }).sort(function (a, b) { return scores[a] - scores[b]; });
