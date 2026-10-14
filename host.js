@@ -4437,7 +4437,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['him', 'The Euroclub, with DJ Ohrmeister behind the decks. 🪩', 'club'],
       ['her', 'Backstage, full of cables, amps and guitars. 🎸', 'back'],
       ['him', 'And Woodruff’s Boudoir, with the dresses and the wigs. 👗', 'boud'],
-      ['her', 'Every answer is up here on the big screen. A wrong answer locks you out for 10 seconds! The fastest detective gets an extra clue. Go! 🔍', 'all']
+      ['her', 'Solve puzzles in each room to find the clues! 🧩', 'all'],
+      ['him', 'Be careful, a wrong answer locks your screen for 10 seconds! ⏳', 'all']
     ], t = 1800, id = g.id;
     lines.forEach(function (l) {
       (function (l, t0) { clueTimer = setTimeout(function () {
