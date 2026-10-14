@@ -3639,9 +3639,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // The big announcement of an item: across the whole screen, with the points flying and a sound.
   var shopHitT = null;
+  var itemSfxEl = {};
+  function itemSfx(src, fallback) {   // an item's own sound effect (and a made-up one if the file can't play)
+    if (REMOTE) { if (fallback) fallback(); return; }
+    try { var a = itemSfxEl[src] || (itemSfxEl[src] = new Audio(src)); a.currentTime = 0; a.volume = Math.max(0, Math.min(1, 0.9 * (Music.vol ? Music.vol.fx : 1))); var p = a.play(); if (p && p.catch) p.catch(function () { if (fallback) fallback(); }); } catch (e) { if (fallback) fallback(); }
+  }
   function shopHit(txt, ms) {
     var snd = (shopLast && shopLast.sound) || '';
-    if (snd === 'lose') { Music.woosh(); setTimeout(function () { Music.crumble(); }, 250); }
+    if (snd === 'lose') { Music.woosh(); setTimeout(function () { itemSfx('sounds/powerbank.mp3?v=1', Music.crumble); }, 250); }   // (Marc's Powerbank: thrown, then the impact)
     else if (snd === 'blow') { Music.woosh(); setTimeout(function () { Music.woosh(); }, 400); }
     else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
     else if (snd === 'sit') { if (!REMOTE) { try { var mz = new Audio('sounds/shock.mp3'); mz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var mp = mz.play(); if (mp && mp.catch) mp.catch(function () {}); } catch (e) {} } setTimeout(function () { Music.micdrop(); }, 500); }   // (the Broken Mic: the same shock and thud as the microphone in Hold That Note)
