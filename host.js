@@ -2694,10 +2694,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function chSay(c, key, line) {
     if (REMOTE || !c) return; c._said = c._said || {}; if (c._said[key]) return; c._said[key] = 1;
     var L = CH_LINES[line]; if (!L) return;
-    var box = $('chhosts'); if (!box) return;
-    [].forEach.call(box.querySelectorAll('.chbub'), function (x) { x.classList.remove('on'); });
-    var b = box.querySelector('.chbub.' + L[0]); b._said = ''; b.classList.add('on'); typeSay(b, L[1], L[0]);
-    clearTimeout(chSay.t); chSay.t = setTimeout(function () { b.classList.remove('on'); }, Math.max(3000, voiceMs(L[0], L[1]) + 1600));
+    var f = voiceFile(L[0], L[1]); if (f) hostVoice(f);   // (just the voices, as a voice-over: no presenters on the stage)
   }
   function chaseX(pos) { return Math.max(0, Math.min(CHASE_END, pos)) / CHASE_END * 100; }
   function chaseShow() {
@@ -2800,7 +2797,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     cc.classList.toggle('hidden', !sp);
     if (sp && cc.getAttribute('data-k') !== c.showing) { cc.setAttribute('data-k', c.showing); cc.innerHTML = '<div class="chcard-face">' + charSvg(sp.char) + '</div><b>' + esc(sp.name) + '</b><span>Jury votes</span><strong id="chcount">' + (c.count || 0) + '</strong>'; }
     cc.classList.toggle('final', !!(sp && c.counted));
-    if (!REMOTE && !$('chhosts')) { var hb = document.createElement('div'); hb.id = 'chhosts'; hb.className = 'chhosts'; hb.innerHTML = HOST_HIM + HOST_HER + '<div class="chbub him"></div><div class="chbub her"></div>'; $('chase').appendChild(hb); }   // (the presenters on the stage)
     if (c.st === 'mwin') { big.innerHTML = esc(mName()) + ' grabbed the trophy!<small>Everyone lost.</small>'; big.classList.remove('hidden'); big.classList.add('winbox'); chSay(c, 'mwin', 'mwin'); }
     var nm = function (ks) { return esc(ks.map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')); };
     if (c.st === 'mwin') {}
@@ -3439,7 +3435,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function mouthOf(who) {
     if (REMOTE) return null;
     if (who === 'lynda') return document.querySelector('.bqkeeper svg');
-    var pc = $('fnov') || $('pcov') || $('clueov') || (G.phase === 'chase' && $('chhosts')), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
+    var pc = $('fnov') || $('pcov') || $('clueov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
   }
   function mouth(who, v) { var el = mouthOf(who); if (el) el.style.setProperty('--mo', (Math.max(0, Math.min(1, v)) * 0.85).toFixed(2)); }   // (never quite all the way open)
   var mouthAC = null, mouthRaf = 0;
