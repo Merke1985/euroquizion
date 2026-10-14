@@ -2,7 +2,7 @@
 // The photos come from Wikimedia Commons under free licences; see credits.html.
 function commons(file) { return 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(file) + '?width=330'; }
 var CHARS = [
-  { id: 'kaarija', name: 'Käärijä', file: 'Käärijä esiintymässä Louhela Jam -tapahtumassa (Vantaa, 2023) – 01 (cropped) (cropped).jpg', by: 'Sanni Penttinen', lic: 'CC BY 4.0', licUrl: 'https://creativecommons.org/licenses/by/4.0', face: [43, 15], zoom: 2.4 },
+  { id: 'kaarija', name: 'Käärijä', file: 'Käärijä esiintymässä Louhela Jam -tapahtumassa (Vantaa, 2023) – 01 (cropped) (cropped).jpg', by: 'Sanni Penttinen', lic: 'CC BY 4.0', licUrl: 'https://creativecommons.org/licenses/by/4.0', pos: '50% 0%', face: [45, 19], zoom: 2.6 },
   { id: 'loreen', name: 'Loreen', file: 'Loreen Melodifestivalen - 10 mars 2023.jpg', by: 'Anna Höök', lic: 'CC BY 4.0', licUrl: 'https://creativecommons.org/licenses/by/4.0', pos: '50% 50%', face: [42, 32], zoom: 1.9 },
   { id: 'verka', name: 'Verka Serduchka', file: 'Verka Serduchka 2017 1 (cropped).jpg', by: 'Serecki', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', face: [40, 55], zoom: 1.5 },
   { id: 'logan', name: 'Johnny Logan', file: 'Eurovision Song Contest 1980 postcards - Johnny Logan 05.png', by: 'NOS', lic: 'CC BY-SA 3.0 NL', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0/nl/deed.en', pos: '50% 50%', face: [36, 28], zoom: 2.1 },
@@ -10,7 +10,7 @@ var CHARS = [
   { id: 'lordi', name: 'Lordi', file: 'Lordi performing at the ESC 2007.jpg', by: 'Indrek Galetin', lic: 'Nagi BY-SA', licUrl: 'http://nagi.ee/lists/PhotoLicense/Attribution-ShareAlike', pos: '60% 50%', face: [53, 37], zoom: 3.0 },
   { id: 'babylasagna', name: 'Baby Lasagna', file: 'Baby Lasagna 01 (cropped).jpg', by: 'Pedro J Pacheco', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 20%', face: [51, 32], zoom: 1.9 },
   { id: 'perrelli', name: 'Charlotte Perrelli', file: 'Charlotte Perrelli, Melodifestivalen 2017 (cropped).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 30%', face: [50, 23], zoom: 2.1 },
-  { id: 'rybak', name: 'Alexander Rybak', file: 'Alexander Rybak during Eurovision 2009.jpg', by: 'Daniel Kruczynski', lic: 'CC BY-SA 2.0', licUrl: 'https://creativecommons.org/licenses/by-sa/2.0', pos: '50% 20%', face: [45, 58], zoom: 1.3 },
+  { id: 'rybak', name: 'Alexander Rybak', file: 'Alexander Rybak during Eurovision 2009.jpg', by: 'Daniel Kruczynski', lic: 'CC BY-SA 2.0', licUrl: 'https://creativecommons.org/licenses/by-sa/2.0', pos: '50% 20%', face: [50, 68], zoom: 1.6 },
   { id: 'joost', name: 'Joost Klein', file: 'Joost Klein Press Event 2024 (cropped) B.jpg', by: 'VDanDesign', lic: 'CC BY 4.0', licUrl: 'https://creativecommons.org/licenses/by/4.0', pos: '50% 10%', face: [42, 30], zoom: 1.8 },
   { id: 'tyler', name: 'Bonnie Tyler', file: 'Bonnie Tyler, ESC2013 press conference 02 (cropped).jpg', by: 'Albin Olsson', lic: 'CC BY-SA 3.0', licUrl: 'https://creativecommons.org/licenses/by-sa/3.0', pos: '50% 30%', face: [50, 42], zoom: 1.5 },
   { id: 'duncan', name: 'Duncan Laurence', file: 'Duncan Laurence with the 2019 Eurovision Trophy (cropped2).jpg', by: 'Martin Fjellanger, EuroVisionary', lic: 'CC BY-SA 4.0', licUrl: 'https://creativecommons.org/licenses/by-sa/4.0', pos: '50% 20%', face: [50, 48], zoom: 1.25 },
