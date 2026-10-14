@@ -3278,7 +3278,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // the very first visit: Lynda first tells what her boutique is, then offers everyone a free item, and only then the choice
     var talk = !win && !line && !G.shopTalked && !REMOTE, TALK1 = Math.max(5600, (VOICE_MS.lynda_hello || 0) + 600), TALK2 = Math.max(5600, (VOICE_MS.lynda_rules || 0) + 600);   // (her spoken lines get to finish)
-    if (talk) { G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 1; G.phase = 'shop'; G.barMs = 0; push();  var g0 = G.shop; setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, TALK1 + TALK2); return; }
+    if (talk) { var HUSH = 2800; G.shopTalked = true; G.shop.welcome = true; G.shop.talk = 3; G.phase = 'shop'; G.barMs = 0; push(); var g0 = G.shop; setTimeout(function () { if (G.shop === g0 && g0.talk === 3) { g0.talk = 1; push(); render(); } }, HUSH); setTimeout(function () { if (G.shop === g0) { g0.talk = 2; push(); render(); } }, HUSH + TALK1); setTimeout(function () { if (G.shop === g0) { g0.talk = 0; shopOpen(); } }, HUSH + TALK1 + TALK2); return; }   // (talk 3: a few seconds to look around the boutique before she speaks)
     shopOpen();
   }
   function shopOpen() {
@@ -3717,8 +3717,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     var act = list().filter(function (p) { return !p.off && (!g.who || g.who.indexOf(p.pid) >= 0); }), first = g.who && g.who.length === list().filter(function (p) { return !p.off; }).length && g.n === 1;
     var one = act.length === 1, wn = act.map(function (p) { return p.name; }), wnames = wn.length > 1 ? wn.slice(0, -1).join(', ') + ' and ' + wn[wn.length - 1] : wn[0];
-    var bq = ov.querySelector('.bqbubble');
-    if (g.talk === 1) typeSay(bq, 'Hello Eurovision fans, my name is Lynda Woodruff, welcome to my shop! 💋', 'lynda');
+    var bq = ov.querySelector('.bqbubble'); bq.style.visibility = g.talk === 3 ? 'hidden' : '';   // (just arrived: she says nothing yet)
+    if (g.talk === 3) { /* (nothing yet) */ }
+    else if (g.talk === 1) typeSay(bq, 'Hello Eurovision fans, my name is Lynda Woodruff, welcome to my shop! 💋', 'lynda');
     else if (g.talk === 2) typeSay(bq, 'Whoever wins a party game gets to shop here! So put your best foot forward! 👠', 'lynda');
     else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course. Take your pick!', 'lynda');   // (the very first visit)
     else if (g.line && !g.over && !g.buy) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
