@@ -189,6 +189,7 @@
     if (s.phase !== 'shop') $('shopui').classList.add('hidden');
     if (s.phase !== 'bomb' || !s.bomb) $('bombui').classList.add('hidden');
     if (s.phase !== 'carpet' || !s.carpet) $('carpetui').classList.add('hidden');
+    if (s.phase !== 'finale' || !s.fin || s.fin.st !== 'pick' || s.fin.pid !== pid) { $('finui').classList.add('hidden'); $('finui').removeAttribute('data-k'); }
     if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
@@ -299,6 +300,7 @@
     else if (s.phase === 'rule' && s.rule) ruView(s);
     else if (s.phase === 'organ' && s.organ) orView(s);
     else if (s.phase === 'qj' && s.qj) qjView(s);
+    else if (s.phase === 'finale') finView(s);
     else if (s.phase === 'dall' && s.gallery) {
       // Draw!: everyone picks one of their own four songs and draws it, all within the minute.
       var go = s.gallery.opts[pid];
@@ -577,6 +579,24 @@
   // ---------- Turquoise Carpet ----------
   // Watch the runway; after each act, the question with four answers (20 seconds).
   var tcSent = {}, tcTimerT = null, tcEnd = 0;
+  // The finale: the winner picks the victory song (any Eurovision song from their country), the others watch
+  var finSent = '';
+  function finView(s) {
+    var f = s.fin, box = $('finui'); show('v-wait'); $('waitlabel').textContent = '';
+    if (!f) { $('waittitle').textContent = '🏆 The winner of EuroQuizion!'; $('waitsub').textContent = 'Watch the big screen.'; return; }
+    if (f.st === 'pick' && f.pid === pid && finSent !== f.id) {
+      $('waittitle').textContent = '🎶 Pick your victory song!'; $('waitsub').textContent = 'Any Eurovision song from your country. It plays on the big screen.';
+      if (box.getAttribute('data-k') !== f.id) {
+        box.setAttribute('data-k', f.id);
+        box.innerHTML = f.opts.map(function (o, i) { return '<button type="button" class="finopt" data-i="' + i + '">' + esc(o) + '</button>'; }).join('');
+        box.onclick = function (e) { var b = e.target.closest('.finopt'); if (!b || !net) return; finSent = f.id; net.send('fin', { pid: pid, id: f.id, i: +b.getAttribute('data-i') }); box.classList.add('hidden'); $('waittitle').textContent = '🎶 Great choice!'; $('waitsub').textContent = b.textContent; };
+      }
+      box.classList.remove('hidden'); return;
+    }
+    box.classList.add('hidden');
+    if (f.st === 'pick') { $('waittitle').textContent = f.pid === pid ? '🎶 Great choice!' : '🎶 ' + f.name + ' is picking the victory song…'; $('waitsub').textContent = f.pid === pid ? 'It plays in a moment.' : 'Watch the big screen.'; }
+    else { $('waittitle').textContent = '🎶 Victory song'; $('waitsub').textContent = f.song || ''; }
+  }
   function carpetView(s) {
     var c = s.carpet, box = $('carpetui');
     show('v-wait'); $('waitlabel').textContent = c.sec ? 'Eurovision act ' + c.sec + ' of 5' : '';

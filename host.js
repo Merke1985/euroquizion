@@ -265,6 +265,7 @@
     if (G.organ && G.phase === 'organ') s.organ = orSnap();
     if (G.atype === 'party' && list().some(function (p) { return (p.inv || []).indexOf('golden') >= 0; })) s.pgames = partyGames().map(function (k) { return { k: k, icon: FUN[k].icon, title: FUN[k].title }; });   // (for the Golden Ticket's choice)
     if (G.qj && G.phase === 'qj') s.qj = qjSnap();
+    if (G.fin && G.phase === 'finale') s.fin = { id: G.fin.id, pid: G.fin.pid, name: G.fin.name, st: G.fin.st, opts: G.fin.st === 'pick' ? G.fin.opts : [], song: G.fin.song || '' };
     if (G.phase === 'shop' && G.shop && !G.shop.talk) { s.shop = { id: G.shop.id, sold: Object.keys(G.sold || {}).filter(soldOut), buy: !!G.shop.buy, free: G.shop.free || [], n: G.shop.n || SHOP_PICKS, who: G.shop.who, items: SHOP_ITEMS.map(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.price = shopPrice(it); return c; }), offer: G.shop.offer || null, done: {}, over: !!G.shop.over }; Object.keys(G.shop.picks).forEach(function (k) { s.shop.done[k] = G.shop.picks[k]; }); }
     if (G.atype === 'party') { s.shopq = (G.shopQ || []).length; s.mg = !!G.mgLive; }
     if (G.phase === 'chase' && G.chase) s.chase = chaseSnap();
@@ -385,7 +386,7 @@
   Music.useLoop('sounds/studio_loop.mp3?v=2', 16.6957);   /* (8 bars at 115 bpm: measured, so it goes round on the beat) */   // the studio music: a dance loop instead of the made-up synth one
   function show(id) { if (id !== viewNow) { viewNow = id; viewEnter(id); } ['v-lobby', 'v-brief', 'v-game', 'v-end'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); }); var triv = id === 'v-game' && !REMOTE && (G.phase === 'guess' || (G.phase === 'reveal' && G.q && G.q.subject === 'trivia')) && !!G.q && (!!G.q.noclip || !!G.q.peel) && !G.clue;
     var lob = id === 'v-lobby' && G.phase === 'lobby';
-    var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || (G.phase === 'loading' && G.studioTalk) || G.phase === 'shop' || (G.phase === 'qj' && !(G.qj && G.qj.song)) || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
+    var studio = ((id === 'v-game' && !REMOTE && ((roundMode() === 'draw' && (G.phase === 'dall' || G.phase === 'loading')) || G.phase === 'part' || (G.phase === 'opening' && G.openMusic) || (G.phase === 'loading' && G.studioTalk) || G.phase === 'shop' || (G.phase === 'fun' && !(G.fun && G.fun.kind === 'clue')) || G.phase === 'pspin')) && !G.clue) || !!G.fsMusic;
     if (studioYtOk()) { Music.want(lob || triv, true); studioYt(studio); } else Music.want(lob || triv || studio, !studio); }   // the studio loop with the presenters and in Lynda's boutique (it carries on where it left off); the synth loop in the lobby and under trivia questions without a clip
   // "Show score: at the end of the round" keeps every total secret until the final scoreboard.
   function hideScores() {
@@ -2392,8 +2393,51 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov.classList.add('scores'); Music.ding();
       [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); });
     });
-    at(24000, function () { ov.classList.add('leaving'); whooshes([0, 300]); });
-    at(25000, function () { ov.remove(); then(); });
+    at(17500, function () { finPick(win, ov, say, then); });   // then the winner picks the victory song on their phone
+  }
+  // The victory song: the winner picks any Eurovision song from their own country on their phone, and it plays on the big stage.
+  var finT = null;
+  function finSongs(p) {
+    var cc = p.cc || (typeof CHAR_CC !== 'undefined' && CHAR_CC[p.char]) || '';
+    var l = songs.filter(function (x) { return x[1] === cc && x[4]; });
+    if (!l.length) l = songs.filter(function (x) { return x[6] === 1 && x[4]; });   // (no country: the Eurovision winners)
+    return l.slice().sort(function (a, b) { return b[0] - a[0]; });
+  }
+  function finPick(win, ov, say, then) {
+    var wp = players[win]; if (!wp || !ov.isConnected) { ov.remove(); then(); return; }
+    var list0 = finSongs(wp);
+    G.fin = { id: 'fin' + Math.random().toString(36).slice(2, 6), pid: win, name: wp.name, st: 'pick', opts: list0.map(function (x) { return x[0] + ' · ' + x[2] + ' – ' + x[3]; }), ends: Date.now() + 40000, list: list0, ov: ov, then: then };
+    push();
+    say('her', 'And now… pick your victory song on your phone! 🎶', 'fin_pick');
+    ov.classList.add('picking');
+    var t = ov.querySelector('.fntitle'); if (t) t.innerHTML = '<span>🎶</span><b>Victory song</b><em class="fnpick">' + esc(wp.name) + ' is choosing…</em>';
+    setTimeout(function () { if (G.fin && G.fin.st === 'pick') ov.classList.remove('scores'); }, 2500);
+    clearTimeout(finT); finT = setTimeout(function () { var g = G.fin; if (g && g.st === 'pick') finPlay(Math.floor(Math.random() * Math.min(10, g.list.length))); }, 40000);   // (too slow: one of the newest ones)
+    if (wp.bot) setTimeout(function () { var g = G.fin; if (g && g.st === 'pick') finPlay(Math.floor(Math.random() * g.list.length)); }, 5000);
+  }
+  function finMsg(m) {
+    var g = G.fin; if (!g || g.st !== 'pick' || !m || m.id !== g.id || m.pid !== g.pid) return;
+    var i = Math.floor(Number(m.i)); if (!(i >= 0 && i < g.list.length)) return;
+    finPlay(i);
+  }
+  function finPlay(i) {
+    var g = G.fin, ov = g && g.ov; if (!g || g.st !== 'pick') return;
+    clearTimeout(finT); var sg = g.list[i]; g.st = 'play'; g.song = g.opts[i]; push();
+    if (!ov || !ov.isConnected) { finEnd(); return; }
+    ov.classList.remove('scores', 'picking'); ov.classList.add('song'); Music.ding();
+    [].forEach.call(ov.querySelectorAll('.fnbub'), function (x) { x.classList.remove('on'); });
+    var t = ov.querySelector('.fntitle'); if (t) t.innerHTML = '<span>🎶</span><b>' + esc(String(sg[0])) + ' · ' + esc(countries[sg[1]] || '') + '</b><em>' + esc(sg[3]) + '</em><small class="fnart">' + esc(sg[2]) + '</small>';
+    try { Music.want(false); stYStop && stYStop(); } catch (e) {}
+    try { yt.loadVideoById({ videoId: sg[4], startSeconds: 0 }); yt.unMute(); yt.setVolume(85); } catch (e) {}
+    if (!ov.querySelector('.fnend')) { var b = document.createElement('button'); b.type = 'button'; b.className = 'fnend'; b.textContent = 'End the show ▸'; b.addEventListener('click', finEnd); ov.appendChild(b); }
+    finT = setTimeout(finEnd, 120000);   // (two minutes of the song, then the show ends; the button ends it sooner)
+  }
+  function finEnd() {
+    var g = G.fin; if (!g || g.st === 'end') return;
+    clearTimeout(finT); g.st = 'end';
+    var ov = g.ov, v = 85, fade = setInterval(function () { v -= 5; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fade); try { yt.pauseVideo(); } catch (e) {} } }, 80);
+    if (ov) { ov.classList.add('leaving'); whooshes([0, 300]); }
+    setTimeout(function () { if (ov) ov.remove(); var then = g.then; G.fin = null; then(); }, 1600);
   }
   $('chstop').addEventListener('click', function () { var c = G.chase; if (!c) return; if (c.st !== 'win') { var al = chaseAlive(), best = al.length ? Math.max.apply(null, al.map(function (k) { return c.lanes[k].pos; })) : 0; c.win = al.filter(function (k) { return c.lanes[k].pos === best; }); } chaseDone(); });
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
@@ -3124,6 +3168,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   net.on('clue', clueMsg);
   net.on('note', noteMsg);
   net.on('qj', qjMsg);
+  net.on('fin', finMsg);
 
   // ---------- Eurofan Shop ----------
   // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
@@ -3238,9 +3283,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|nobody is lost in verona': 'ver_nobody',
     'him|shame we had to call ubers for all of you': 'ver_uber_all',
     'him|shame we had to call ubers for some of you': 'ver_uber_some',
+    'her|and now pick your victory song on your phone': 'fin_pick',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { jul_hi: 4833, jul_follow: 5068, jul_steps: 5799, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
+  var VOICE_MS = { fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps: 5799, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -6950,7 +6996,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.qj = { id: 'jm' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', round: 0, route: jmRoute(), wrong: {}, falls: {}, pos: 0, order: act.map(function (p) { return p.pid; }), alive: act.map(function (p) { return p.pid; }), prog: {}, fail: {}, outAt: {}, best: {}, lit: 0, show: -1, ends: 0, win: [], rank: null };
     G.phase = 'qj'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); qjShow();
-    if (!REMOTE) Music.want(true);   /* the studio music plays on in Verona until the song starts */
+    if (!REMOTE) Music.want(false);   /* quiet in Verona until the song starts (with the first countdown) */
     var g = G.qj, at = function (ms, f) { setTimeout(function () { if (G.qj === g && $('qjov')) f(); }, ms); };
     // outside: Sofia feels better, and the presenters run off home; then Juliet comes out on her balcony
     var l0 = 'Ahh… I feel much better! 😌 See you back at the studio… bye for now! 👋';
