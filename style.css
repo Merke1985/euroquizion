@@ -3279,7 +3279,7 @@ body.hasdock main{padding-bottom:84px}
 .zgp.out .zgfig{animation:zgfall 5s cubic-bezier(.3,.1,.5,1) forwards}
 .zgp.out.hit .zgfig{animation:zgblast 1.8s cubic-bezier(.1,.7,.3,1) forwards}
 @keyframes zgblast{0%{translate:0 0;rotate:0deg;opacity:1;filter:brightness(3)}10%{filter:brightness(1)}100%{translate:calc(var(--dir,1) * 45vw) -90vh;rotate:calc(var(--dir,1) * 1440deg);opacity:0}}
-.zgp.out .zglab{opacity:.45}
+.zgp.out .zglab{opacity:0;transition:opacity .6s}
 .zgp.out .zglab b::after{content:' 🚀'}
 @keyframes zgfall{0%{translate:0 0;rotate:calc(var(--dir,1) * 60deg);opacity:1}100%{translate:calc(var(--dir,1) * 22vw) -75vh;rotate:calc(var(--dir,1) * 1080deg);opacity:0}}
 .zgp.win .zgfig .char{box-shadow:0 0 0 4px #ffd23f,0 0 30px #ffd23f}

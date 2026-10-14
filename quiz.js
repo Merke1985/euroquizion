@@ -985,8 +985,9 @@ function zgPath(seed, t) {   // the same on every device; seed is kept for older
   else if (t < ZG_ST[0]) x = 0.29 * sm((t - 9) / 12) * Math.sin(2 * Math.PI * (t - 9) / 8);   // …then slowly, a third of the way (every 8 s)
   else if (t < ZG_ST[1]) x = 0.4 * Math.sin(2 * Math.PI * (t - ZG_ST[0]) / 8);   // stage 2: still slow (every 8 s), a bit wider; the asteroids are the challenge
   else {   // stage 3: fast, and a little faster towards the end
-    var u = t - ZG_ST[1], A = Math.max(1, ZG_LEN - ZG_ST[1]), f0 = 1 / 4.5, fa = 1 / 3;
-    x = 0.55 * Math.sin(2 * Math.PI * (f0 * u + (fa - f0) * u * u / (2 * A)));
+    var u = t - ZG_ST[1], A = Math.max(1, ZG_LEN - ZG_ST[1]), f0 = 1 / 4.5, fa = 1 / 3, v = Math.max(0, t - (ZG_LEN - 15));
+    // (the last 15 seconds: faster still, and the zone swings all the way to the edges)
+    x = (0.55 + 0.24 * sm(v / 3)) * Math.sin(2 * Math.PI * (f0 * u + (fa - f0) * u * u / (2 * A) + 0.16 * v * v / 30));
   }
   var env = 1; ZG_BRK.forEach(function (b) { env *= t < b[0] ? sm((b[0] - t) / 3) : t > b[1] ? sm((t - b[1]) / 2) : 0;   /* (gliding back to the middle over the last 3 seconds before a break; after it, off again from the middle) */ });   // (the breaks: back to the middle)
   if (t > ZG_LEN - 3) env *= sm((ZG_LEN - t) / 3);   // (the last 3 seconds: slowly back to the middle, and it ends at 3:02)
