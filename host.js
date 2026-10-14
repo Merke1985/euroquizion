@@ -3652,19 +3652,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function shopHit(txt, ms) {
     var snd = (shopLast && shopLast.sound) || '';
-    if (snd === 'lose') { Music.woosh(); setTimeout(function () { itemSfx('sounds/powerbank.mp3?v=1', Music.crumble); }, 250); }   // (Marc's Powerbank: thrown, then the impact)
-    else if (snd === 'blow') itemSfx('sounds/wind.mp3?v=1', Music.woosh);   // (the Wind Machine: a gust)
-    else if (snd === 'steal' && !(shopLast && shopLast.icon === '✉️')) itemSfx('sounds/hack.mp3?v=1', Music.ping);   // (the Televote Hacking Device: a glitch)
-    else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
-    else if (snd === 'skip') itemSfx('sounds/cd_scratch.mp3?v=1', Music.woosh);   // (the CD Player: a record scratch)
-    else if (snd === 'smoke') itemSfx('sounds/smoke.mp3?v=1', Music.woosh);   // (the Smoke Machine)
-    else if (snd === 'golden') itemSfx('sounds/fanfare.mp3?v=1', Music.douze);   // (the Golden Ticket: a fanfare)
-    else if (snd === 'tab') itemSfx('sounds/champagne.mp3?v=1', Music.woosh);   // (the Overpriced Champagne: pop!)
-    else if (snd === 'sit') { if (!REMOTE) { try { var mz = new Audio('sounds/shock.mp3'); mz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var mp = mz.play(); if (mp && mp.catch) mp.catch(function () {}); } catch (e) {} } setTimeout(function () { Music.micdrop(); }, 500); }   // (the Broken Mic: the same shock and thud as the microphone in Hold That Note)
-    else if (snd === 'thief') itemGetSnd();   // (left the Euroclub with an item)
-    else if (snd === 'heel') { Music.blip(); setTimeout(function () { Music.crumble(); }, 200); }
-    else if (snd === 'block') { Music.blip(); setTimeout(function () { Music.ding(); }, 250); }
-    else Music.woosh();
+    setTimeout(function () {   // (the sound comes half a second later, together with the card popping up)
+      if (snd === 'lose') { Music.woosh(); setTimeout(function () { itemSfx('sounds/powerbank.mp3?v=1', Music.crumble); }, 250); }   // (Marc's Powerbank: thrown, then the impact)
+      else if (snd === 'blow') itemSfx('sounds/wind.mp3?v=1', Music.woosh);   // (the Wind Machine: a gust)
+      else if (snd === 'steal' && !(shopLast && shopLast.icon === '✉️')) itemSfx('sounds/hack.mp3?v=1', Music.ping);   // (the Televote Hacking Device: a glitch)
+      else if (snd === 'steal') { Music.ping(); setTimeout(function () { Music.ding(); }, 300); }
+      else if (snd === 'skip') itemSfx('sounds/cd_scratch.mp3?v=1', Music.woosh);   // (the CD Player: a record scratch)
+      else if (snd === 'smoke') itemSfx('sounds/smoke.mp3?v=1', Music.woosh);   // (the Smoke Machine)
+      else if (snd === 'golden') itemSfx('sounds/fanfare.mp3?v=1', Music.douze);   // (the Golden Ticket: a fanfare)
+      else if (snd === 'tab') itemSfx('sounds/champagne.mp3?v=1', Music.woosh);   // (the Overpriced Champagne: pop!)
+      else if (snd === 'sit') { if (!REMOTE) { try { var mz = new Audio('sounds/shock.mp3'); mz.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var mp = mz.play(); if (mp && mp.catch) mp.catch(function () {}); } catch (e) {} } setTimeout(function () { Music.micdrop(); }, 500); }   // (the Broken Mic: the same shock and thud as the microphone in Hold That Note)
+      else if (snd === 'thief') itemGetSnd();   // (left the Euroclub with an item)
+      else if (snd === 'heel') { Music.blip(); setTimeout(function () { Music.crumble(); }, 200); }
+      else if (snd === 'block') { Music.blip(); setTimeout(function () { Music.ding(); }, 250); }
+      else Music.woosh();
+    }, 500);
     if (REMOTE) return;
     var ov = $('shophit'); if (!ov) { ov = document.createElement('div'); ov.id = 'shophit'; ov.className = 'shophit'; document.body.appendChild(ov); }
     var ds = (shopLast && shopLast.deltas || []).filter(function (d) { return players[d.pid]; });   // everyone it involves: who used it and who it hit
