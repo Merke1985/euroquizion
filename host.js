@@ -1544,12 +1544,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       autoStop(); stopTimers(); try { yt.pauseVideo(); } catch (e) {} G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
       hostHold = true; clearTimeout(hostT.away);
       var l1 = 'Good timing, I need a smoke. 🚬', l2 = '…I mean, some fresh air, of course! 😇 If you can all follow me outside, that would be lovely!';
-      setTimeout(function () { hostSay('her', l1, 2600); }, 400);
-      setTimeout(function () { hostSay('her', l2, 4800); }, 400 + Array.from(l1).length * TALK_MS + 1500);
+      var g1 = Math.max(Array.from(l1).length * TALK_MS + 1500, voiceMs('her', l1) + 500), g2 = Math.max(Array.from(l2).length * TALK_MS + 3100, voiceMs('her', l2) + 900);   // (room for the spoken lines)
+      setTimeout(function () { hostSay('her', l1, Math.max(2600, voiceMs('her', l1) + 300)); }, 400);
+      setTimeout(function () { hostSay('her', l2, Math.max(4800, voiceMs('her', l2) + 300)); }, 400 + g1);
       setTimeout(function () {
         hostHold = false; var v = $('v-game'); v.classList.remove('enter'); v.classList.add('leaving'); whooshes([0, 300, 550]);
         setTimeout(function () { v.classList.remove('leaving'); $('cover').classList.remove('funcard'); if (G.mode === 'queue') qjAll(); }, 1300);
-      }, 400 + (Array.from(l1).length + Array.from(l2).length) * TALK_MS + 4600);
+      }, 400 + g1 + g2);
       return;
     }
     if (kind === 'carpet' && !REMOTE) { carpetAll(); return; }
@@ -2362,7 +2363,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function finale(win, then) {
     var old = $('fnov'); if (old) old.remove();
     var wp = players[win], others = list().filter(function (p) { return !p.off && p.pid !== win; });
-    var body = function (p, win) { var fl = handFlag({ cc: p.cc || 'eu' }); return '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca">' + (win ? '<span class="fntro">🏆</span>' : '') + '</i><i class="ca">' + fl + '</i><i class="ct"></i></span>'; };   // (the others stand at the sides of the stage, the winner in the middle)   // (full bodies; the winner: the trophy in one hand, the flag waving in the other)
+    var body = function (p, win) { var fl = handFlag({ cc: p.cc || (typeof CHAR_CC !== 'undefined' && CHAR_CC[p.char]) || 'eu' }); return '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca">' + (win ? '<span class="fntro">🏆</span>' : '') + '</i><i class="ca">' + fl + '</i><i class="ct"></i></span>'; };   // (the others stand at the sides of the stage, the winner in the middle)   // (full bodies; the winner: the trophy in one hand, the flag waving in the other)
     var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2 && ['yu', 'cs'].indexOf(c) < 0; }));
     var fans = ''; for (var r = 0; r < 3; r++) { var n = 16 + r * 3; for (var i = 0; i < n; i++) {
       var fl = Math.random() < 0.45 ? '<span class="fnflag" style="--d:' + (-Math.random() * 2).toFixed(2) + 's"><img src="https://flagcdn.com/w80/' + codes[(r * 20 + i) % codes.length] + '.png" alt=""></span>' : (Math.random() < 0.3 ? '<span class="fnphone"></span>' : '');
@@ -3225,9 +3226,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'him|breaking news edgar has been abducted': 'edgar_news',
     'her|who the hell is edgar': 'edgar_who',
     'him|our mascot of course and he is missing': 'edgar_mascot',
+    'juliet|hi guys i m juliet i know this city pretty well': 'jul_hi',
+    'juliet|if you want to find your way back to the studio just follow my instructions': 'jul_follow',
+    'juliet|i will give you instructions step by step which you will follow on your phone': 'jul_steps',
+    'juliet|the first round i ll make easy my arrow stays up while you tap it in': 'jul_easy',
+    'juliet|one wrong turn and you re lost in verona the last one left wins ready': 'jul_ready',
+    'juliet|look the studio is right behind you off you go ciao': 'jul_ciao',
+    'her|good timing i need a smoke': 'ver_smoke',
+    'her|i mean some fresh air of course if you can all follow me outside that would be lovely': 'ver_air',
+    'her|ahh i feel much better see you back at the studio bye for now': 'ver_better',
+    'her|nobody is lost in verona': 'ver_nobody',
+    'him|shame we had to call ubers for all of you': 'ver_uber_all',
+    'him|shame we had to call ubers for some of you': 'ver_uber_some',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
+  var VOICE_MS = { jul_hi: 4833, jul_follow: 5068, jul_steps: 5799, jul_easy: 5564, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5956, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -3268,12 +3281,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         } catch (e) {}
       }
       var dip = function (on) {   // (the music fades down to a whisper while they talk, and back up after)
+        try { if (G.qj && G.qj.song) yt.setVolume(on ? 20 : 55); } catch (e) {}   // (in Verona: the song, under the voices)
         try { if (!(stY && stYReady && stYOn)) return; clearInterval(stYFade); var v = stY._want == null ? STUDIO_VOL : stY._want, to = on ? Math.round(STUDIO_VOL * 0.15) : STUDIO_VOL;
           stYFade = setInterval(function () { v += v < to ? 2 : -3; if ((on && v <= to) || (!on && v >= to)) { v = to; clearInterval(stYFade); } try { stY.setVolume(v); } catch (e) {} }, 30); } catch (e) {}
       };
       dip(true); clearTimeout(voiceDip);
       voiceEl.addEventListener('ended', function () { voiceDip = setTimeout(function () { dip(false); }, 250); });
-      voiceDip = setTimeout(function () { dip(false); }, 6000);   // (in case it never says it ended)
+      voiceDip = setTimeout(function () { dip(false); }, Math.max(6000, (VOICE_MS[name] || 0) + 500));   // (in case it never says it ended)
       var p = voiceEl.play(); if (p && p.catch) p.catch(function () { dip(false); });
     } catch (e) {}
   }
@@ -6945,7 +6959,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(600, function () { var o = $('qjov'); if (o) o.classList.add('puff'); qjSay('her', '…'); });
     at(5600, function () { var o = $('qjov'); if (o) o.classList.remove('puff'); });
     at(5900, function () { qjSay('her', l0); });
-    var t = 5900 + Array.from(l0).length * TALK_MS + 1800;
+    var t = 5900 + Math.max(Array.from(l0).length * TALK_MS + 1800, voiceMs('her', l0) + 700);
     at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); });   // Sofia and Oliver run off north, into the clouds
     /* the players are on their own: five seconds of nothing, then "Now what…?", two seconds later the song, five seconds later Juliet */
     t += 2400 + 4000;
@@ -6963,7 +6977,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       'One wrong turn and you’re lost in Verona! 😵 The last one left wins. Ready?'
     ];
     t += 1200;
-    jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); if (/on your phone/.test(l)) { g.pad = true; push(); } }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200); });   /* (the arrows appear on the phones as she mentions them) */
+    jl.forEach(function (l) { (function (l, t0) { at(t0, function () { jmJul(l); if (/on your phone/.test(l)) { g.pad = true; push(); } }); })(l, t); t += Math.max(3800, Array.from(l).length * TALK_MS + 2200, voiceMs('juliet', l) + 900); });   /* (the arrows appear on the phones as she mentions them) */
     at(t, function () { jmJul(''); if (!(G.qj && G.qj.song)) jmSong(true); qjRound(); });   /* (the song is already playing) */
   }
   // Juliet's own speech balloon, next to her balcony
@@ -6974,7 +6988,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function jmJul(txt) {
     var ov = $('qjov'), b = ov && ov.querySelector('.jmjbub'); if (!b) return;
     if (!txt) { b.classList.remove('on'); return; }
-    b._said = ''; b.classList.add('on'); typeSay(b, txt, 'her');
+    b._said = ''; b.classList.add('on'); typeSay(b, txt, 'juliet');   // (her own voice)
   }
   // "Verona" (Estonia 2017) plays during the game
   function jmSong(on) {

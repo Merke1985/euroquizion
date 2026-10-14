@@ -4804,3 +4804,10 @@ body.hasdock main{padding-bottom:84px}
 .fnov .fnback .fnp{margin:0 .5vh}
 .fnov .fnback .fnp>b{max-width:9vh;overflow:hidden;text-overflow:ellipsis}
 .fnov .fnwin{bottom:19vh}
+/* (the finale: no flag on the avatar, it's in the hand; the arms in front of the face, the body behind it) */
+.fnov .fnp .chflag{display:none}
+.fnov .fnp .lbod{z-index:auto}
+.fnov .fnp .lbod .ct{z-index:1}
+.fnov .fnp .lbod .cl{z-index:1}
+.fnov .fnp .lbod .ca{z-index:3}
+.fnov .fnp .char{z-index:2}
