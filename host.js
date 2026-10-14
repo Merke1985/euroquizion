@@ -6075,13 +6075,33 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.item || now < (g.itemAt || Infinity)) return;
     var occ = {}; g.order.forEach(function (k) { occ[g.pos[k][0] + ',' + g.pos[k][1]] = 1; });
     var free = []; for (var y = 0; y < g.n; y++) for (var x = 0; x < g.n; x++) if (!ruStage(g, x, y) && !occ[x + ',' + y]) free.push([x, y]);
-    if (!free.length) return; g.item = pick(free); push(); if (!REMOTE) Music.blip();
+    if (!free.length) return; var it = pick(free); g.item = [it[0], it[1], pick(['laser', 'speed', 'freeze'])]; push(); if (!REMOTE) Music.blip();
   }
-  function ruItemTake(g, k) {   // stepped on it: the laser fires up, down, left and right, and every tile in those lines is yours
+  var RU_ITEM = { laser: '⚡', speed: '👟', freeze: '❄️' }, RU_SPEED = 6000, RU_FREEZE = 3500;
+  function ruItemTake(g, k) {   // stepped on it: the laser (four lines of tiles), speed shoes (twice as fast), or a freeze (everyone else stands still)
+    var kind = g.item[2] || 'laser', now = Date.now();
+    if (kind !== 'laser') {
+      g.item = null; g.itemAt = now + 12000 + Math.random() * 8000;
+      if (kind === 'speed') { (g.fast = g.fast || {})[k] = now + RU_SPEED; g.fx = { k: k, t: 'speed', at: now }; if (!REMOTE) { Music.zap(); whooshes([0, 120, 240]); } }
+      else { g.order.forEach(function (o) { if (o !== k) { g.stun[o] = Math.max(g.stun[o] || 0, now + RU_FREEZE); (g.frz = g.frz || {})[o] = now + RU_FREEZE; } }); g.fx = { k: k, t: 'freeze', at: now }; if (!REMOTE) itemSfx('sounds/ice.mp3?v=1', Music.zap); ruBeat(); }
+      return;
+    }
     var c = g.pos[k], dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
     dirs.forEach(function (d) { for (var x = c[0] + d[0], y = c[1] + d[1]; x >= 0 && y >= 0 && x < g.n && y < g.n; x += d[0], y += d[1]) if (!ruStage(g, x, y)) g.own[y * g.n + x] = k; });
-    g.laser = { x: c[0], y: c[1], k: k, at: Date.now() }; g.item = null; g.itemAt = Date.now() + 20000 + Math.random() * 10000;
+    g.laser = { x: c[0], y: c[1], k: k, at: Date.now() }; g.fx = { k: k, t: 'laser', at: Date.now() }; g.item = null; g.itemAt = Date.now() + 12000 + Math.random() * 8000;
     if (!REMOTE) Music.laser();
+  }
+  // A closed loop: every tile you have walled in with your own tiles becomes yours at once. (Flood the floor from the
+  // edges over everything that isn't yours; whatever the flood can't reach is enclosed. The stage counts as open floor.)
+  function ruFill(g, k) {
+    var n = g.n, seen = new Uint8Array(n * n), q = [], i, x, y;
+    var open = function (x2, y2) { var j = y2 * n + x2; if (seen[j] || g.own[j] === k) return; seen[j] = 1; q.push(j); };
+    for (i = 0; i < n; i++) { open(i, 0); open(i, n - 1); open(0, i); open(n - 1, i); }
+    for (y = 0; y < n; y++) for (x = 0; x < n; x++) if (ruStage(g, x, y) && g.own[y * n + x] !== k) open(x, y);
+    while (q.length) { var c = q.pop(); x = c % n; y = (c / n) | 0; if (x > 0) open(x - 1, y); if (x < n - 1) open(x + 1, y); if (y > 0) open(x, y - 1); if (y < n - 1) open(x, y + 1); }
+    var got = 0; for (i = 0; i < n * n; i++) { x = i % n; y = (i / n) | 0; if (!seen[i] && g.own[i] !== k && !ruStage(g, x, y)) { g.own[i] = k; got++; } }
+    if (got) { g.fx = { k: k, t: 'fill', n: got, at: Date.now() }; if (!REMOTE) { Music.douze(); } }
+    return got;
   }
   function ruStage(g, x, y) { var a = (g.n - g.s) / 2; return x >= a && x < a + g.s && y >= a && y < a + g.s; }
   function ruAll() {
@@ -6182,7 +6202,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
-    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP : g.t0 + RU_MS; g.itemAt = Date.now() + 20000 + Math.random() * 10000; g.item = null; push(); Music.ding();   // (the first laser item turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP : g.t0 + RU_MS; g.itemAt = Date.now() + 12000 + Math.random() * 8000; g.item = null; push(); Music.ding();   // (the first laser item turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
   function ruBot(g, k) {   // a bot: walks in straight lines for a while, preferring tiles that aren't its own
@@ -6226,9 +6246,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     var hit = false;
     ks.forEach(function (k) {
-      g.next[k] = now + RU_STEP;
+      g.next[k] = now + ((g.fast || {})[k] > now ? RU_STEP / 2 : RU_STEP);   // (speed shoes: twice as fast)
       if (bump[k]) { g.stun[k] = now + RU_STUN; hit = true; return; }
-      g.pos[k] = mv[k]; ruClaim(g, k, mv[k][0], mv[k][1]);
+      g.pos[k] = mv[k]; ruClaim(g, k, mv[k][0], mv[k][1]); ruFill(g, k);
       if (g.item && g.item[0] === mv[k][0] && g.item[1] === mv[k][1]) ruItemTake(g, k);
     });
     if (hit && !REMOTE) { try { var sn = new Audio('sounds/ru_stun.mp3'); sn.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var sp = sn.play(); if (sp && sp.catch) sp.catch(function () {}); } catch (e) { Music.buzz(); } }   // (the stunned sound)
@@ -6267,7 +6287,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruCol(k) { var p = players[k]; return p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#888'; }
   function ruSnap() {
     var g = G.rule, cols = {}; g.order.forEach(function (k) { cols[k] = ruCol(k); });
-    return { id: g.id, st: g.st, act: g.act || 0, vote: g.vote ? { on: g.vote.on, votes: g.vote.votes, left: Math.max(0, g.vote.ends - Date.now()), won: g.vote.won } : null, order: g.order, cols: cols, cnt: g.cnt, left: g.st === 'play' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
+    var nowS = Date.now(), left = function (m) { var o = {}; Object.keys(m || {}).forEach(function (k) { if (m[k] > nowS) o[k] = m[k] - nowS; }); return o; };   // (time left, not clock times: the phone's clock differs)
+    return { id: g.id, st: g.st, act: g.act || 0, fast: left(g.fast), frz: left(g.frz), vote: g.vote ? { on: g.vote.on, votes: g.vote.votes, left: Math.max(0, g.vote.ends - Date.now()), won: g.vote.won } : null, order: g.order, cols: cols, cnt: g.cnt, left: g.st === 'play' ? Math.max(0, g.ends - Date.now()) : 0, win: g.st === 'end' ? g.win : null, prize: g.prize || 0 };
   }
   // The big screen: the disco floor from above, the singer on her stage in the middle, the players as tokens.
   // ---------- We Will Rule the World in 3D (three.js) ----------
@@ -6478,7 +6499,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; } u.fr.rotation.y = Math.sin(t * 8) * .15; if (!u.robot) u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
       var gI = G.rule;   // the laser item, and its beams when someone takes it
-      if (gI && gI.item && gI.st === 'play') { item.visible = true; item.position.set(gI.item[0] - n / 2 + .5, .75 + Math.sin(t * 3) * .12, gI.item[1] - n / 2 + .5); item.rotation.y = t * 2.4; } else item.visible = false;
+      if (gI && gI.item && gI.st === 'play') { item.visible = true; var ic = { laser: '#ff3fd0', speed: '#3ddc84', freeze: '#7fe0ff' }[gI.item[2] || 'laser']; if (item.userData.c !== ic) { item.userData.c = ic; item.material.color.set(ic); item.material.emissive.set(ic); } item.position.set(gI.item[0] - n / 2 + .5, .75 + Math.sin(t * 3) * .12, gI.item[1] - n / 2 + .5); item.rotation.y = t * 2.4; } else item.visible = false;
       var lz = gI && gI.laser, lk = lz ? (Date.now() - lz.at) / 700 : 2;
       beams.forEach(function (bm, i) {
         if (lk >= 1) { bm.visible = false; return; }
@@ -6563,7 +6584,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       g.order.forEach(function (k) {
         var o = s3.toks[k], p = g.pos[k]; if (!o || !p) return;
         if (o.tx !== p[0] || o.ty !== p[1]) { var kk = o.t0 ? Math.min(1, (now - o.t0) / 330) : 1; o.fx = o.fx + (o.tx - o.fx) * kk; o.fy = o.fy + (o.ty - o.fy) * kk; o.tx = p[0]; o.ty = p[1]; o.t0 = now; }
-        o.el.classList.toggle('stun', g.stun[k] > now); o.el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+        o.el.classList.toggle('stun', g.stun[k] > now); o.el.classList.toggle('frz', (g.frz || {})[k] > now); o.el.classList.toggle('fast', (g.fast || {})[k] > now); o.el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
         if (g.st === 'drop' && o.el.classList.contains('pre')) { o.el.classList.remove('pre'); o.el.classList.add('drop'); }
         if (g.st !== 'drop' && g.st !== 'intro') o.el.classList.remove('drop', 'pre');
       });
@@ -6574,7 +6595,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       [].forEach.call(ov.querySelectorAll('.rutok'), function (el) {
         var k = el.getAttribute('data-p'), p = g.pos[k]; if (!p) return;
         el.style.left = ((p[0] + 0.5) / n * 100) + '%'; el.style.top = ((p[1] + 0.5) / n * 100) + '%';
-        el.classList.toggle('stun', g.stun[k] > now); el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+        el.classList.toggle('stun', g.stun[k] > now); el.classList.toggle('frz', (g.frz || {})[k] > now); el.classList.toggle('fast', (g.fast || {})[k] > now); el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
       });
     }
     var ck = ov.querySelector('.ruclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - now) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - now) / 1000)) : 0;
@@ -6607,7 +6628,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (g.st === 'count' && k0 > 0 && k0 <= best && lb._k !== k0) { lb._k = k0; Music.climb(best ? k0 / best : 0, running <= 1 ? 1 : .8); }   // (a sound for every square counted, higher and higher)
       ov.classList.add('counting');
     } else { if (lb.innerHTML) { lb.innerHTML = ''; lb.removeAttribute('data-id'); } ov.classList.remove('counting'); }
-    var msg = g.st === 'play' && g.laser && Date.now() - g.laser.at < 3000 ? '⚡ ' + (players[g.laser.k] ? esc(players[g.laser.k].name) : '') + ' fires the laser! 4 lines claimed!' : g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here comes the star… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var fxn = g.fx && players[g.fx.k] ? esc(players[g.fx.k].name) : '', msg = g.st === 'play' && g.fx && Date.now() - g.fx.at < 3000 ? (g.fx.t === 'laser' ? '⚡ ' + fxn + ' fires the laser! 4 lines claimed!' : g.fx.t === 'speed' ? '👟 ' + fxn + ' has speed shoes! Twice as fast!' : g.fx.t === 'freeze' ? '❄️ ' + fxn + ' freezes everyone else!' : '🔁 ' + fxn + ' closes a loop: ' + g.fx.n + ' tiles at once!') : g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here comes the star… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.rumsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('rule', ruMsg);
