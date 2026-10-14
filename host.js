@@ -2025,7 +2025,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     lights.forEach(function (els, i) { setTimeout(function () { els.forEach(function (e) { e.classList.add('lit'); }); chaseSpot(); }, CHASE_ENTER + 4000 + i * 420); });
     setTimeout(function () { ch.classList.remove('nolights'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 150);   // the crowd brightens with the last light
     setTimeout(function () { ch.classList.remove('nofire'); [].forEach.call(ch.querySelectorAll('.chpyro'), function (e) { e.classList.remove('ign'); void e.offsetWidth; e.classList.add('ign'); }); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 2000);
-    setTimeout(function () { chaseSpot('sounds/fire.mp3?v=1'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 1700);   // the whoosh starts a little early, so the burst lands on it   // two seconds after the last light, the flames burst up
+    setTimeout(function () { chaseSpot('sounds/fire_burst.mp3?v=1'); }, CHASE_ENTER + 4000 + (lights.length - 1) * 420 + 1700);   // the whoosh starts a little early, so the burst lands on it   // two seconds after the last light, the flames burst up
     setTimeout(function () { ch.classList.remove('nocrowd'); Music.woosh(); }, CHASE_ENTER + 2800);   // the fans come in, still in the dark
   }
   function chaseWanted() { return !REMOTE && G.finalMode === 'chase' && !(G.chase && G.chase.done) && list().length > 0; }
@@ -4925,13 +4925,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pcRev = d.id;
         var mk = ov.querySelector('.pcmark'), song = d.options[d.chosen];
         mk.textContent = song ? song[3] : ''; setTimeout(function () { if (mk.isConnected) { mk.classList.add('on'); Music.ding(); } }, 600);
-        setTimeout(function () {
+        setTimeout(function () {   // no words from Sofia (the song can't be heard here): the points show up on the players instead
           if (!G.draw || G.draw.id !== d.id || G.phase !== 'reveal') return;
-          var ok = list().filter(function (p) { return p.pid !== d.pid && !p.off && (p.pts || 0) > 0; }).length, art = players[d.pid];
-          hostSay('her', 'It was “' + (song ? song[3] : '?') + '”! 🎶 ' + (ok ? ok + (ok > 1 ? ' of you' : ' player') + ' recognised it' + (art && art.pts ? ', and ' + art.name + ' scores ' + art.pts + ' as the artist!' : '!') : 'Nobody recognised it this time… 🙈'), 5200);
+          var box = ov.querySelector('.pcpts'); if (!box) { box = document.createElement('div'); box.className = 'pcpts'; ov.appendChild(box); }
+          var got = list().filter(function (p) { return !p.off && (p.pts || 0) > 0; }).sort(function (a, b) { return (b.pid === d.pid) - (a.pid === d.pid) || b.pts - a.pts; });
+          box.innerHTML = got.length ? got.map(function (p, i) { return '<span class="pcpt' + (p.pid === d.pid ? ' art' : '') + '" style="--i:' + i + '">' + charSvg(p.char) + '<b>' + esc(p.name) + '</b><em>+' + p.pts + (p.pid === d.pid ? ' 🎨' : '') + '</em></span>'; }).join('') : '<span class="pcnone">Nobody recognised it… 🙈</span>';
+          box.classList.add('on'); Music.ding();
         }, 1400);
       }
       if (G.phase !== 'reveal') ov.querySelector('.pcmark').classList.remove('on');
+      if (G.phase !== 'reveal' && ov.querySelector('.pcpts')) ov.querySelector('.pcpts').classList.remove('on');
     }
     if (st === 'best') {
       var bv = $('bestview'), bb = ov.querySelector('.pcbest');

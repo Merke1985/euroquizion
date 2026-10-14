@@ -4876,3 +4876,12 @@ body.hasdock main{padding-bottom:84px}
 .edlobroom .edrecbub{white-space:normal;width:88%;text-align:center;bottom:31%;font-size:clamp(.55rem,.85vw,.9rem)}
 /* the boutique covers everything at once (it used to be see-through for a moment while sliding in: the studio flashed by) */
 .shopov{background:#0b0520;backdrop-filter:none}
+/* Postcard Picasso: who scored for this postcard, under it (the artist first, with a 🎨) */
+.pcpts{position:absolute;left:50%;bottom:4vh;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:1vh 1.4vw;max-width:80vw;z-index:6;opacity:0;transition:opacity .4s}
+.pcpts.on{opacity:1}
+.pcpt{display:flex;align-items:center;gap:.6vh;background:rgba(10,4,30,.82);border:2px solid #7dffb0;border-radius:99px;padding:.4vh 1.2vh .4vh .4vh;font-weight:800;font-size:clamp(.8rem,1.9vh,1.2rem);color:#fff;animation:inUp .5s calc(var(--i) * .12s) both}
+.pcpt.art{border-color:#ffd23f}
+.pcpt .char{width:4.2vh;height:4.2vh}
+.pcpt em{font-style:normal;color:#7dffb0;font-weight:900}
+.pcpt.art em{color:#ffd23f}
+.pcnone{font-weight:900;font-size:clamp(1rem,2.4vh,1.5rem);background:rgba(10,4,30,.82);padding:.6vh 1.6vh;border-radius:12px}
