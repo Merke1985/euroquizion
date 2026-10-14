@@ -7051,7 +7051,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* this round's route: a brand-new one every round, one step longer each time, except round 4: three steps again, but
      now one of them is a car (that's the step up); then four, five… From a length of eight, two cars */
   function jmSeq(g) {
-    var n = g.round <= 3 ? g.round : g.round - 1, cars = n >= 8 ? 2 : g.round >= JM_CAR ? 1 : 0, r = [], prev = -1;
+    var n = g.round, cars = g.round >= 9 ? 2 : g.round >= JM_CAR ? 1 : 0,   /* (as many steps as the round number; the car from round 4, two of them from round 9) */ r = [], prev = -1;
     for (var i = 0; i < n - cars; i++) { var w = []; [0, 1, 2, 3].forEach(function (d) { if (prev >= 0 && d === (prev + 2) % 4) return; for (var k = 0; k < (d === 1 ? 3 : d === 3 ? 1 : 2); k++) w.push(d); }); prev = pick(w); r.push(prev); }
     for (var c = 0; c < cars; c++) {   // the cars somewhere in it, never two in a row
       var spots = []; for (var j = 0; j <= r.length; j++) if (r[j - 1] !== 4 && r[j] !== 4) spots.push(j);
