@@ -3222,9 +3222,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'lynda|hello eurovision fans my name is lynda woodruff welcome to my shop': 'lynda_hello',
     'lynda|whoever wins a party game gets to shop here so put your best foot forward': 'lynda_rules',
     'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course look at your phone and take your pick': 'lynda_freebie',
+    'him|breaking news edgar has been abducted': 'edgar_news',
+    'her|who the hell is edgar': 'edgar_who',
+    'him|our mascot of course and he is missing': 'edgar_mascot',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
+  var VOICE_MS = { edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 8907, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_blocks5: 6765, plan_douze: 4127, plan_eras: 5799, plan_final_chase: 7079, plan_partynight5: 5642, plan_shopwin: 4519, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -3232,7 +3235,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function mouthOf(who) {
     if (REMOTE) return null;
     if (who === 'lynda') return document.querySelector('.bqkeeper svg');
-    var pc = $('fnov') || $('pcov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
+    var pc = $('fnov') || $('pcov') || $('clueov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
   }
   function mouth(who, v) { var el = mouthOf(who); if (el) el.style.setProperty('--mo', (Math.max(0, Math.min(1, v)) * 0.85).toFixed(2)); }   // (never quite all the way open)
   var mouthAC = null, mouthRaf = 0;
@@ -3957,7 +3960,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var at = function (ms, f) { clueTimer = setTimeout(function () { if (G.clue && G.clue.st === 'intro' && $('clueov')) f(); }, ms); };
     // The story, taken slowly: each line stays long enough to type out and read (and the rows light up as they are explained).
     var lines = [
-      ['him', 'Breaking news! Edgar, our beloved mascot, has been abducted! 😱'],
+      ['him', 'Breaking news! Edgar has been abducted! 😱'],
+      ['her', 'Who the hell is Edgar?! 🤨'],
+      ['him', 'Our mascot, of course! And he is missing! 🐦'],
       ['her', 'So, who took him? 🕵️', 'm1'],
       ['him', 'Where in the building is he hidden?', 'm2'],
       ['her', 'And what is he hidden inside? 📦 That’s for you to find out!', 'm3']
@@ -3966,7 +3971,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     lines.forEach(function (l) {
       (function (l, at0) { at(at0, function () {
         clueSay(l[0], l[1]);
-        if (l === lines[0]) setTimeout(function () { if (G.clue && G.clue.st === 'intro') clueSting(); }, Array.from(l[1]).length * TALK_MS + 300);   // “Who the hell…?!” right after the news
         var ov2 = $('clueov'); if (ov2) {
           if (l[2]) { var o3 = ov2; setTimeout(function () { o3.classList.add(l[2]); Music.plop(+l[2][1] + 2); }, 900); }   // the three questions turn up one by one, as they're asked
         }
@@ -4594,7 +4598,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.classList.toggle('found', g.st === 'reveal' && g.step >= 4);
     var rows = ov.querySelector('.clrows'), tb = rows && rows.querySelector('.clacbar'); if (rows && !tb) { tb = document.createElement('div'); tb.className = 'clacbar'; tb.innerHTML = '<em></em><b></b>'; rows.appendChild(tb); }   // the timer bar, under the cards
     if (tb) { var on = g.st === 'acc' && g.barOn && !g.allIn, lft = Math.max(0, g.ends - Date.now()); tb.classList.toggle('on', on); tb.querySelector('em').style.width = (100 * Math.max(0, lft - 1000) / CLUE_ACC_MS).toFixed(1) + '%'; tb.querySelector('b').textContent = on ? Math.ceil(lft / 1000) + 's' : ''; tb.classList.toggle('hot', lft <= 10000); }
-    var msg = g.st === 'intro' ? 'Edgar, the EuroQuizion mascot, is missing!' : g.st === 'acc' ? (g.allIn ? 'Everyone has made their accusation… 🎶' : Date.now() > g.ends ? 'Time’s up! 🎶' : 'Accuse on your phone: who, where, and with what? 🔍') : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar is back! 🎉' : 'Edgar found his own way back… 😅') : g.st === 'reveal' ? 'Who took Edgar…?' : '';
+    var msg = g.st === 'intro' ? 'Edgar is missing!' : g.st === 'acc' ? (g.allIn ? 'Everyone has made their accusation… 🎶' : Date.now() > g.ends ? 'Time’s up! 🎶' : 'Accuse on your phone: who, where, and with what? 🔍') : g.st === 'reveal' && g.step >= 4 ? (g.res && Object.keys(g.res).some(function (k) { return g.res[k].n === 3; }) ? 'Edgar is back! 🎉' : 'Edgar found his own way back… 😅') : g.st === 'reveal' ? 'Who took Edgar…?' : '';
     var me = ov.querySelector('.clmsg'); if (me.textContent !== msg) me.textContent = msg;
     var act = list().filter(function (p) { return !p.off; });
     var html = act.map(function (p) {
@@ -7976,7 +7980,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     push(); annTimer = setTimeout(step, 600);
   }
   function singReveal2() {
-    if (!G.sing || G.phase === 'reveal' || G.sing.grDone) return;   // (once: the Green Room takes it from there)
+    if (!G.sing || G.phase === 'reveal') return;
     $('cover').classList.remove('funcard');
     clearTimeout(singTimer); clearTimeout(bestTimer); stopAudio(); stopTimers(); G.revealAt = 0;
     var tally = {}, v, max = 0;
@@ -7992,12 +7996,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       p.score += p.pts; p.got = true;
       return { pid: pid, name: p.name, char: p.char, votes: tally[pid], win: win, pts: p.pts };
     }).sort(function (a, b) { return b.votes - a.votes; });
-    if (!REMOTE && !G.sing.grDone) {   // first to the Green Room, where the presenters name the winner…
-      G.sing.grDone = true; G.sing.now = null; clearInterval(silenceTick); silenceTick = null; try { yt.pauseVideo(); } catch (e) {}
-      var sg0 = G.sing, wins0 = G.sing.result.filter(function (r) { return r.win; }).map(function (r) { return r.pid; });
-      greenRoom(function () { if (G.sing === sg0) singReveal3(); }, wins0, 'sing');
-      return;
-    }
     singReveal3();
   }
   function singReveal3() {   // …and then we listen to the winning performance once more
