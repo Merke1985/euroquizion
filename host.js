@@ -2265,7 +2265,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (G.chase !== c) return;
         c.st = 'fmsg'; Music.douze(); push();
         chaseTimer = setTimeout(chaseAsk, 5500);
-      }, 2300);
+      }, chaseDieMs(c));
     };
   }
   function chaseSdMove() {
@@ -2319,6 +2319,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     bite(); if (!all) { t += 1000; bite(); }   /* (everyone: just the one bite) */
     at(t + 1400, function () { c.nsf = null; c.st = 'diva'; push(); Music.dread(true); then(); });   // (her next spaces blink as usual; she slides back to her place)
   }
+  function chaseDieMs(c) { return (c.monster && VOICE_MS['die_' + c.monster.id] || 2300) + 2000; }   /* (its death scream to the end, then 2 seconds) */
   function chaseDie(c) { c.monsterDead = true; chaseMusic(false); Music.dread(false); Music.short(); if (!REMOTE && c.monster) hostVoice('die_' + c.monster.id);   /* (a cry of agony as it falls) */ setTimeout(function () { Music.defeat(); }, 350); push(); }
   function chaseWreck(c) { c.wrecked = true; c.mon = CHASE_END; chaseSfx('brk', 1, Music.crumble); push(); }   // the whole runway breaks away
   // Nobody left: the monster smashes the rest of the runway, rushes onto the stage and grabs the trophy. Everyone lost.
@@ -2352,7 +2353,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         chaseTimer = setTimeout(function () {
           if (G.chase !== c) return;
           chaseDie(c);
-          chaseTimer = setTimeout(function () { if (G.chase === c) chaseWin(c.wpend); }, 2300);
+          chaseTimer = setTimeout(function () { if (G.chase === c) chaseWin(c.wpend); }, chaseDieMs(c));
         }, 1900);
       }, 2000);
       return;
