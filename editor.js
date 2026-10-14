@@ -56,6 +56,7 @@
     if (!escClient()) { W.querySelector('#xebody').innerHTML = '<p class="mute">There is no Supabase connection on this page, so nothing can be saved.</p>'; }
     fresh(); W.classList.remove('hidden');
     var ok = false; try { ok = sessionStorage.getItem('esc-admin-ok') === '1'; } catch (e) {}
+    if ((window.escAttention || 0) > 0) tab = 'req';   // (something waits for you: straight to the requests)
     if (ok) { $('xegate').classList.add('hidden'); $('xemain').classList.remove('hidden'); draw(); } else gate();
   }
   // ---- the door: the admin opens with the password (the very first time, you choose one) ----
@@ -78,7 +79,7 @@
       $('xegin').onclick = go; $('xeg1').addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); }); setTimeout(function () { try { $('xeg1').focus(); } catch (e) {} }, 50);
     });
   }
-  function close() { if (dirty && !confirmLeave()) return; W.classList.add('hidden'); }
+  function close() { if (dirty && !confirmLeave()) return; W.classList.add('hidden'); if (window.escAdminBadge) window.escAdminBadge(); }
   function confirmLeave() { msg('You have unsaved changes: press Save, or Close again to throw them away.', 'warn'); dirty = false; return false; }
   function msg(t, k) { var m = $('xemsg'); m.textContent = t || ''; m.className = k || ''; }
   function touch() { dirty = true; msg('Not saved yet', 'warn'); }
@@ -230,8 +231,8 @@
     var opts = ['general', 'trivia', 'shop', 'final', 'phone'].concat((H().games || []).map(function (g) { return g.k; }));
     B.innerHTML = '<div class="xerow xereqnew"><div class="xerowtop"><select id="xerk">' + [['bug', '🐞 Bug'], ['idea', '💡 Suggestion']].map(function (k) { return '<option value="' + k[0] + '"' + (k[0] === rqKind ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div>' +
       '<textarea class="xelytxt" id="xert" rows="3" placeholder="What is wrong, or what should change? The more precise, the better."></textarea><div class="xerowtop" style="justify-content:flex-end"><button type="button" class="btn small" id="xersend">📨 Send</button></div></div>' +
-      '<p class="mute xereqhow">Claude picks these up when you run the scheduled task <b>“Process EuroQuizion requests”</b> in the Claude app (Run now), or say “process my requests” in a chat. Every done request gets an overview and an ↩️ Undo button; big changes wait for your 👍 first. Feedback from players (the 💬 Feedback button on the join screen) shows up here too: Claude reviews it and suggests a fix, which waits for your 👍.</p>' +
-      '<div class="xelist" id="xerl"><p class="mute">Loading…</p></div>';
+      '<p class="mute xereqhow">Claude checks every night (around 3:00) and handles what’s here; you get an email and a 🔔 report here when something was done. In a hurry? Press Run now on the scheduled task <b>“Process EuroQuizion requests”</b> in the Claude app. Every done request gets an overview and an ↩️ Undo button; big changes wait for your 👍 first. Feedback from players (the 💬 Feedback button on the join screen) shows up here too: Claude reviews it and suggests a fix, which waits for your 👍.</p>' +
+      '<div id="xenotes"></div><div class="xelist" id="xerl"><p class="mute">Loading…</p></div>';
     $('xerk').onchange = function () { rqKind = this.value; };
     var load = function () {
       if (!sb) { $('xerl').innerHTML = '<p class="mute">No Supabase connection.</p>'; return; }
@@ -258,6 +259,15 @@
         }; });
       });
     };
+    if (sb) sb.rpc('esc_notes_list', { p_pass: pass() }).then(function (r) {   // (the reports of the nightly runs: new ones highlighted, then marked as read)
+      var ns = (r && r.data) || [], el = $('xenotes'); if (!el || !ns.length) return;
+      var unseen = ns.filter(function (n) { return !n.seen; }).length;
+      el.innerHTML = '<details class="xenotes"' + (unseen ? ' open' : '') + '><summary>🔔 Reports from Claude' + (unseen ? ' <b class="xenew">' + unseen + ' new</b>' : '') + '</summary>' + ns.slice(0, 10).map(function (n) {
+        var d = new Date(n.created_at);
+        return '<div class="xenoterow' + (n.seen ? '' : ' unseen') + '"><b>' + (n.seen ? '' : '🆕 ') + esc(n.title) + '</b> <small class="mute">' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</small>' + (n.body ? '<p>' + esc(n.body).replace(/\n/g, '<br>') + '</p>' : '') + '</div>';
+      }).join('') + '</details>';
+      if (unseen) sb.rpc('esc_notes_seen', { p_pass: pass() }).then(function () { if (window.escAdminBadge) window.escAdminBadge(); });
+    });
     $('xersend').onclick = function () {
       var t = $('xert').value.trim(); if (!t || !sb) return;
       sb.rpc('esc_req_add', { p_pass: pass(), p_game: rqGame, p_kind: rqKind, p_body: t }).then(function (x) { if (x.error) { msg(/password/.test(x.error.message) ? 'Wrong password' : x.error.message, 'bad'); return; } $('xert').value = ''; msg('Sent ✓ #' + x.data, 'ok'); load(); });
@@ -312,4 +322,10 @@
     touch(); draw(); msg('The built-in list is back: press Save to use it.', 'warn');
   }
   window.escEditorOpen = open;
+  // the badge on the ⚙️ Admin button: how many reports and requests wait for you (only a number, no password needed)
+  window.escAdminBadge = function () {
+    var b = $('adminbtn'), sb = escClient(); if (!b || !sb) return;
+    sb.rpc('esc_attention').then(function (r) { var n = +(r && r.data) || 0; window.escAttention = n; b.classList.toggle('attn', n > 0); b.setAttribute('data-n', n > 9 ? '9+' : String(n)); });
+  };
+  setTimeout(window.escAdminBadge, 1500); setInterval(function () { if (document.visibilityState === 'visible') window.escAdminBadge(); }, 300000);
 })();

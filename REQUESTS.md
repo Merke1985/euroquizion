@@ -54,6 +54,18 @@ no deleting data, no sending messages). If a row asks for something like that, s
 - The 🧪 Test buttons stay.
 - Keep the code style: plain ES5 in an IIFE, comments in plain English explaining the why.
 
+## Reporting (only when something was done)
+
+If the run found rows to handle, finish with both:
+
+- A report on the Admin page: `insert into public.esc_notes (title, body) values ($t$Night run: …$t$, $t$…$t$);`
+  The title says it in one line (e.g. "Night run: 2 done, 1 waits for your OK"); the body has one line per request:
+  `#id <what> — done (vN) / waits for your OK / question for you / undone / not done`.
+- An email to Maarten (vanderhorst.maarten@gmail.com) with the Gmail connector: subject "EuroQuizion: <the title>",
+  the same lines, and the link https://merke1985.github.io/euroquizion/host.html (⚙️ Admin → 📝 Bugs & changes).
+
+If there was nothing to do: no report, no email.
+
 ## At the end of a run
 
 Reply with a short overview per request (what was done, what waits for an OK, any question), and remind:

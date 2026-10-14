@@ -4581,3 +4581,12 @@ body.hasdock main{padding-bottom:84px}
 .fbkinds .btn{flex:1;margin:0}
 .fbkinds .btn.on{background:var(--yellow,#ffd23f);color:#1a1040;box-shadow:none}
 .fbkinds .btn{white-space:nowrap;padding-left:8px;padding-right:8px;font-size:1rem}
+#adminbtn{position:relative}
+#adminbtn.attn{opacity:1;color:#fff;background:rgba(255,77,106,.25)}
+#adminbtn.attn::after{content:attr(data-n);position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff4d6a;color:#fff;font-size:.7rem;font-weight:900;line-height:18px;text-align:center}
+.xenotes{margin:6px 0;background:rgba(63,182,255,.08);border-radius:12px;padding:8px 12px}
+.xenotes summary{cursor:pointer;font-weight:800}
+.xenew{background:#ff4d6a;color:#fff;border-radius:999px;padding:1px 8px;font-size:.75rem;margin-left:6px}
+.xenoterow{padding:8px 0;border-top:1px solid rgba(255,255,255,.08);font-size:.9rem}
+.xenoterow.unseen b{color:#ffd23f}
+.xenoterow p{margin:4px 0 0;white-space:normal}
