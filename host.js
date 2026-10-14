@@ -3120,7 +3120,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function backFromShop(n, then, first) {
     if (REMOTE) { then(); return; }
     G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
-    hostHold = true; clearTimeout(hostT.away); studioSting();   // (back from the boutique to the studio)
+    hostHold = true; clearTimeout(hostT.away);
     hostSay('him', first ? 'Everyone has their first item from Lynda! Grab your phones… ✨' : vary('souvenir') + ' ' + vary('onward'), 3600);   // (the very first visit, right after the opening: now the first trivia)
     setTimeout(function () { hostSay('her', first ? vary('first') : G.mgTest ? 'On to the next party game! 🎉' : vary('trivia'), 3000); }, 3300);   // (testing the party games: there is no trivia in between)
     setTimeout(function () { hostHold = false; then(); }, 6400);
