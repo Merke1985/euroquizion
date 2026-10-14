@@ -73,8 +73,9 @@
   var SAVE = 'esc-host-' + room;
   var joinUrl = new URL('./?k=' + room, location.href).href;
   $('roomcode').textContent = room; $('codebig').textContent = room;
-  $('joinurl').textContent = joinUrl.replace(/^https?:\/\//, '').replace(/\?k=.*$/, '');
-  $('joinhint').textContent = joinUrl.replace(/^https?:\/\//, '').replace(/\?k=.*$/, '');
+  var shown = /github\.io$/.test(location.hostname) ? 'tinyurl.com/euroquizion' : joinUrl.replace(/^https?:\/\//, '').replace(/\?k=.*$/, '');   // (the short address to type; the QR code still goes straight to the game, room code and all)
+  $('joinurl').textContent = shown;
+  $('joinhint').textContent = shown;
   try { var q = qrcode(0, 'M'); q.addData(joinUrl); q.make(); $('qr').innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('qr').classList.add('hidden'); }
 
   net = escConnect(room); if (net.hostIn) net.hostIn();   // (the fast phone controls arrive on their own channel)
