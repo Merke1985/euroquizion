@@ -3330,7 +3330,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'juliet|the first round i ll make easy my arrow stays visible while you tap it in': 'jul_visible',
     'juliet|one wrong turn and you re lost in verona the last one left wins ready': 'jul_ready',
     'juliet|oh no someone just got lost in verona': 'jul_lost',
-    'juliet|the streets in verona can be dangerous press the button to avoid getting run over': 'jul_cars',
+    'juliet|you now have an extra button on your phone a car if i tell you to jump press it good luck': 'jul_cars2',
     'juliet|oh no another one got lost in verona': 'jul_lost2',
     'juliet|look the studio is right behind you off you go ciao': 'jul_ciao',
     'her|good timing i need a smoke': 'ver_smoke',
@@ -3342,7 +3342,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|and now pick your victory song on your phone': 'fin_pick',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { jul_lost2: 4520, jul_cars: 5960, jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5880, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
+  var VOICE_MS = { jul_lost2: 4520, jul_cars2: 7400, jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5880, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   function voiceMs(who, text) { if (REMOTE) return 0; var f = VOICE_FILES[voiceKey(who, text)]; return f ? VOICE_MS[f] || 0 : 0; }   // (how long a recorded line takes: the next line waits for it)
   function voiceKey(who, text) { return who + '|' + String(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voiceFor(who, text) { var f = VOICE_FILES[voiceKey(who, text)]; if (f) hostVoice(f, who); return !!f; }
@@ -7228,7 +7228,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.alive = ok.length ? ok : g.alive;
     if (lost.length) Music.buzz(); else Music.ding();
     var cars = !end && g.round === JM_CAR - 1;   // after round 3: Juliet warns about the cars, and the car button turns up on the phones
-    var CARL = 'The streets in Verona can be dangerous. Press the 🚗 button to avoid getting run over!';
+    var CARL = 'You now have an extra button on your phone: a car 🚗. If I tell you to jump, press it. Good luck!';
     setTimeout(function () { if (G.qj !== g) return; qjSay(''); jmJul('');
       if (end) { qjEnd(); return; }
       if (!cars) { qjRound(); return; }
