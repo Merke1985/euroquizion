@@ -484,6 +484,37 @@ var Music = (function () {
       fg.gain.setValueAtTime(0.0001, t + 0.35); fg.gain.exponentialRampToValueAtTime(0.08, t + 0.6); fg.gain.exponentialRampToValueAtTime(0.0001, t + 1.3); f.connect(fg); fg.connect(out); f.start(t + 0.35); f.stop(t + 1.35);
     } catch (e) {}
   }
+  // A snare drum roll that swells for ms milliseconds (the end of a count), then a cymbal crash. roll(false) stops it.
+  var rollT = null;
+  function roll(on, ms) {
+    clearTimeout(rollT); rollT = null; if (rollG) { try { rollG.gain.cancelScheduledValues(0); rollG.gain.value = 0; } catch (e) {} rollG = null; }
+    if (!on || !ac()) return;
+    try {
+      if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      var t0 = ctx.currentTime + 0.02, len = Math.max(0.5, (ms || 3000) / 1000), G = ctx.createGain(); G.gain.setValueAtTime(0.05, t0); G.gain.linearRampToValueAtTime(0.32, t0 + len); G.connect(fxOut()); rollG = G;
+      for (var t = 0; t < len; t += 0.045) { var s = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter(); s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = .7; g.gain.setValueAtTime(t % 0.09 < 0.045 ? 1 : 0.7, t0 + t); g.gain.exponentialRampToValueAtTime(0.0001, t0 + t + 0.06); s.connect(f); f.connect(g); g.connect(G); s.start(t0 + t, Math.random() * 0.2); s.stop(t0 + t + 0.07); }
+      rollT = setTimeout(function () { rollT = null; rollG = null; crash(); }, len * 1000);
+    } catch (e) {}
+  }
+  var rollG = null;
+  function climb(fr, vol) {   // a counting blip that climbs: fr from 0 to 1 (up an octave and a half)
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01, o = ctx.createOscillator(), g = ctx.createGain(), f = 420 * Math.pow(2, Math.max(0, Math.min(1, fr)) * 1.5);
+      o.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 1.25, t + 0.06);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28 * (vol > 0 ? vol : 1), t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.14);
+    } catch (e) {}
+  }
+  function crash() {   // a cymbal crash (and a low boom under it)
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01, s = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter(), n = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = n.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1);
+      s.buffer = n; f.type = 'highpass'; f.frequency.value = 3500; g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+      s.connect(f); f.connect(g); g.connect(fxOut()); s.start(t); s.stop(t + 1.9); thump(t, 110, 0.5);
+    } catch (e) {}
+  }
   function buzz() {   // not good enough: a short error buzzer, two low notes
     if (!ac()) return;
     try {
@@ -549,5 +580,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
+  return { roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();
