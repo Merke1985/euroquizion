@@ -2430,7 +2430,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     say('her', 'And now… pick your victory song on your phone! 🎶', 'fin_pick');
     ov.classList.add('picking');
     var t = ov.querySelector('.fntitle'); if (t) t.innerHTML = '<span>🎶</span><b>Victory song</b><em class="fnpick">' + esc(wp.name) + ' is choosing…</em>';
-    setTimeout(function () { if (G.fin && G.fin.st === 'pick') ov.classList.remove('scores'); }, 2500);
+    // (the final scores stay up on the big screen while the winner is choosing)
     clearTimeout(finT); finT = setTimeout(function () { var g = G.fin; if (g && g.st === 'pick') finPlay(Math.floor(Math.random() * Math.min(10, g.list.length))); }, 40000);   // (too slow: one of the newest ones)
     if (wp.bot) setTimeout(function () { var g = G.fin; if (g && g.st === 'pick') finPlay(Math.floor(Math.random() * g.list.length)); }, 5000);
   }
