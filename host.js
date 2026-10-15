@@ -6177,7 +6177,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<rect x="55" y="34" width="10" height="12" rx="4" fill="#c68a5e"/><circle cx="60" cy="24" r="15" fill="#c68a5e"/>' +
     '<path d="M42 22 Q40 2 60 4 Q82 4 78 24 Q74 12 60 14 Q48 14 42 22 Z" fill="#2a1a10"/><circle cx="44" cy="18" r="9" fill="#2a1a10"/><circle cx="76" cy="18" r="9" fill="#2a1a10"/>' +
     '<circle cx="55" cy="24" r="2" fill="#1a1010"/><circle cx="65" cy="24" r="2" fill="#1a1010"/><path d="M54 31 Q60 36 66 31" stroke="#8a1a30" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';   // (an original character: a disco singer in a golden suit)
-  function ruSize(n) { return n <= 3 ? [9, 3] : n === 4 ? [11, 3] : n <= 8 ? [15, 5] : [17, 5]; }
+  function ruSize(n) { return n <= 4 ? [11, 3] : n <= 8 ? [15, 5] : [17, 5]; }
   function ruItemTick(g, now) {   // a laser item on a free tile, every 20–30 seconds
     if (g.item || now < (g.itemAt || Infinity)) return;
     var occ = {}; g.order.forEach(function (k) { occ[g.pos[k][0] + ',' + g.pos[k][1]] = 1; });
