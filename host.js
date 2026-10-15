@@ -6626,7 +6626,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ruTimer = setTimeout(function () { if (G.rule !== g) return; if (REMOTE) drop(); else ruVote(g, drop); }, REMOTE ? 1000 : t);
   }
   // Before the dancers land: everyone votes for the act (and so the song): the singer in silver, or the act in yellow
-  var RU_ACTS = [{ t: 'We Will Rule the World', v: 'sjb2wMJXeuw', s: 0 }, { t: 'Discoteque', v: 'CWqrdzNoBKA', s: 74, lag: 2000 }], RU_VOTE_MS = 15000;   // (s: where the song starts; the game lasts just as long with either)
+  var RU_ACTS = [{ t: 'We Will Rule the World', v: 'sjb2wMJXeuw', s: 0 }, { t: 'Discoteque', v: 'CWqrdzNoBKA', s: 74 }], RU_VOTE_MS = 15000;   // (s: where the song starts; the game lasts just as long with either)
   var RU_VOTE_LINE = 'But first: which song do we dance to? Vote on your phone! 🗳️';
   function ruVote(g, then) {
     g.vote = { on: true, votes: {}, ends: Date.now() + RU_VOTE_MS }; push(); ruShow(); Music.ding();
@@ -6662,7 +6662,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (G.phase !== 'rule' || !G.rule) { clearInterval(ruSongT); ruSongT = null; return; }
         try {
           var st = yt.getPlayerState(), ct = yt.getCurrentTime();
-          if (!synced && st === 1 && ct > 0 && g.st === 'rise' && !g.riseAt) { synced = true; g.riseAt = Date.now() - Math.min(ct, .4) * 1000; var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
+          if (st === 1 && ct > 0 && g.st === 'rise' && (!g.riseAt || synced)) { synced = true; g.riseAt = Date.now() - Math.max(0, Math.min(RU_RISE / 1000, ct - ra.s)) * 1000;   /* (the rise follows the song's own clock: the stage is at the top 8 s in, at 1:22 for Discoteque) */ var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
           if (st === 0) { yt.seekTo(ra.s, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo();
         } catch (e) {}
       }, 250);
