@@ -756,7 +756,8 @@
     svS.g = (z.grp || {})[pid] || 'A';
     var S = svS;
     if ((z.st === 'count' || z.st === 'end') && mine && !S.sent && S.chart) {   // the song is over: send my results (once)
-      S.sent = true; if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, res: S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join('') });
+      S.sent = true; var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''), zid = z.id, send = function () { if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res }); };
+      send(); clearInterval(S.rs); S.rs = setInterval(function () { var z2 = state && state.sv; if (!z2 || z2.id !== zid || z2.st === 'end' || (z2.rcv || []).indexOf(pid) >= 0) { clearInterval(S.rs); return; } send(); }, 900);   // (sent again until the big screen has it: a message can get lost)
     }
     if (z.st === 'count') { svStop(); box.classList.add('hidden'); $('waittitle').textContent = '🪩 Counting the steps…'; $('waitsub').textContent = 'Look at the big screen!'; return; }
     if (z.st === 'end') {

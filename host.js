@@ -6430,7 +6430,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (now >= g.ends) {   // the song is over: the phones send their results (bots: perfect); a few seconds at most
         g.st = 'count'; push();
         g.order.forEach(function (pk) { var p = players[pk]; if (p && p.bot) svMsg({ pid: pk, id: g.id, res: g.chart.map(function () { return '2'; }).join('') }); });
-        clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv === g && g.st === 'count') svEnd(g); }, 4000);
+        clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv === g && g.st === 'count') svEnd(g); }, 9000);   // (wait for every phone, up to 9 seconds)
         return;
       }
     }
@@ -6448,7 +6448,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function svSnap() {
     var g = G.sv, now = Date.now(), nk = g.t0 ? Math.max(0, Math.ceil(svBeat(g, now))) : 0;
-    return { id: g.id, st: g.st, stage: g.stage, order: g.order, dist: g.dist, win: g.win, chart: g.chart, res: g.st === 'end' ? g.res : null, grp: g.grp, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, lead: svLead(g), lo: g.lo || 0 };
+    return { id: g.id, st: g.st, stage: g.stage, order: g.order, dist: g.dist, win: g.win, chart: g.chart, res: g.st === 'end' ? g.res : null, rcv: Object.keys(g.res), grp: g.grp, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, lead: svLead(g), lo: g.lo || 0 };
   }
   // the skippy ball (stage 3): an original drawing in the player's colour, with two little horn handles and a smiley
   function svBall(c, d) { return '<svg viewBox="0 0 100 100" class="svball"><ellipse cx="50" cy="96" rx="34" ry="4" fill="rgba(0,0,0,.25)"/><path d="M34 22 Q30 6 40 6 Q44 12 42 24 M66 22 Q70 6 60 6 Q56 12 58 24" stroke="' + d + '" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="50" cy="56" r="38" fill="' + c + '" stroke="' + d + '" stroke-width="3"/><ellipse cx="36" cy="40" rx="12" ry="7" fill="#fff" opacity=".35" transform="rotate(-30 36 40)"/><circle cx="40" cy="58" r="3.5" fill="' + d + '"/><circle cx="60" cy="58" r="3.5" fill="' + d + '"/><path d="M40 70 Q50 78 60 70" stroke="' + d + '" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>'; }
