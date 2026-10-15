@@ -6372,7 +6372,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (she cuts him off)   // (and the song cuts in already: the presenters talk over its intro)
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
-  var SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!'], ['him', 'When it’s your turn, look at your phones!']], SV_WALKIN = 6000;
+  var SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!'], ['him', 'When it’s your turn, look at your phones!'], ['her', 'And when it’s not your turn to dance, you’ll be asked to help pump up the skippy balls!']], SV_WALKIN = 6000;
   function svIntro(g) {
     var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
     SV_LINES.forEach(function (l, li) {
