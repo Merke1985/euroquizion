@@ -6556,10 +6556,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var now = performance.now(), t = (now - t0) / 1000, fl = Math.max(0, 1 - (now - st.beatAt) / 420), p = st.pal;
       for (var i = 0; i < C * R; i++) {   // the tiles: a pattern that shifts every beat, bright on the beat and fading after
         var x = i % C, y = Math.floor(i / C), sn = Math.floor(st.n / 4), on = (x + y + sn) % 2 === 0;
-        var mk = st.mk[i]; if (mk) col.set(mk).multiplyScalar(.75 + fl * .4); else col.set(x < C / 2 ? (on ? '#ff2d4a' : '#5a0a1e') : (on ? '#2f8cff' : '#0a2560')).multiplyScalar(on ? .34 + fl * .06 : .5 + fl * .05); tiles.setColorAt(i, col);   /* (the red team's half and the blue team's half) */
+        var mk = st.mk[i]; if (mk) col.set(mk).multiplyScalar(.75 + fl * .4); else col.set(x < C / 2 ? (on ? '#ff2d4a' : '#5a0a1e') : (on ? '#2a2430' : '#060408')).multiplyScalar(on ? (x < C / 2 ? .34 : .45) + fl * .06 : .5 + fl * .05); tiles.setColorAt(i, col);   /* (the red team's half and the blue team's half) */
       }
       tiles.instanceColor.needsUpdate = true;
-      for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C), mkl = st.mkL[i]; if (mkl) col.set(mkl).multiplyScalar(.8 + fl * .4); else col.set((lx + ly) % 2 ? '#ffc93c' : '#e0102a').multiplyScalar((lx + ly) % 2 ? .22 + fl * .05 : .32 + fl * .06); ltiles.setColorAt(i, col); }
+      for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C), mkl = st.mkL[i]; if (mkl) col.set(mkl).multiplyScalar(.8 + fl * .4); else col.set((lx + ly) % 2 ? '#141016' : '#e0102a').multiplyScalar((lx + ly) % 2 ? 1 : .42 + fl * .06); ltiles.setColorAt(i, col); }
       ltiles.instanceColor.needsUpdate = true;
       beams.forEach(function (b, j) { b.arm.rotation.z = b.sd * (.55 + .35 * Math.sin(t * .9 + j)) ; b.arm.rotation.x = .25 * Math.sin(t * .7 + j * 1.7); b.cone.material.color.set(p[(j + st.n) % 3]); b.cone.material.opacity = .1 + fl * .12; });
       for (var bi = 0; bi < 44; bi++) bulbs.setColorAt(bi, col.set((bi + st.n) % 2 ? '#fff6d0' : '#ff9a30').multiplyScalar((bi + st.n) % 2 ? 1 : .55 + fl * .4)); bulbs.instanceColor.needsUpdate = true;
@@ -6733,7 +6733,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rdyN = null; if ((g.st === 'play' || g.st === 'ready') && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= 5000) rdyN = x; });   // (5 seconds before a team's turn: their name and 'Get ready!' in the middle)
     var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Red team' : 'Blue team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
-    var kant = g.st === 'play' && SV_FAST.some(function (x) { return b >= x - .5 && b < x + 2.5; }), ktx = kant ? 'Serving kant!' : '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
+    var kant = g.st === 'play' && SV_FAST.some(function (x, ki) { var e = ki ? 500 / SV_BT : 0; return b >= x - .5 - e && b < x + 2.5 - e; })   /* (the second one half a second earlier) */, ktx = kant ? 'Serving kant!' : '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
     if (kb && kb._t !== ktx) { kb._t = ktx; if (ktx) kb.textContent = ktx; kb.classList.toggle('on', !!ktx); }
     if (g.st === 'play' && b >= SV_BRK && b < SV_BRK + 3.5) swB = '<small>Breather!</small>Everyone ready?<em>Something’s coming up out of the floor… 👀</em>';
     var bn = ov.querySelector('.svbanner'), showB = g.st === 'play' && g.stage === 3 && g.stageAt && now - g.stageAt < 2600, bh = swB ? swB : showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Your turn! Nice and slow first…</em>' : g.stage === 3 ? '<em>Everyone together! A step on every beat, double points 🏐</em>' : '') : '';
