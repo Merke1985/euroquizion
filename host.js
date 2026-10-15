@@ -3320,7 +3320,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // ---------- Eurofan Shop ----------
   // Everyone picks free items on their phone. They keep them, and use one whenever they like (on their phone);
   // what was used lands just before the next question: points blown away or stolen, or a mic that breaks.
-  var SHOP_MS = 30000, shopTimer = null;
+  var SHOP_MS = 60000, shopTimer = null;   // (a minute to choose: time to make up your mind)
   function shopOn() { return G.atype === 'party'; }   // Woodruff's Boutique is part of every Party game (no switch)
   function mgScores() { var o = {}; list().forEach(function (p) { o[p.pid] = p.score; }); return o; }
   // A party game is over: what it scored is taken back, and whoever scored the most in it (a tie: all of them) wins a visit to the boutique.
@@ -6698,7 +6698,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     sc.traverse(function (o) { if (o.isLight) o.layers.enable(1); });
     // six big disco balls overhead, slowly turning
     var ballM = new T.MeshStandardMaterial({ color: '#dfe3ff', metalness: 1, roughness: .18, flatShading: true, emissive: '#6a5aa0', emissiveIntensity: .35 });
-    var ipar = new T.Group(); ipar.rotation.y = RU_TURN; sc.add(ipar);
+    var ipar = new T.Group(); sc.add(ipar);   /* (the scene itself is already turned: the items sit exactly on their tile) */
     var item = (function () {   // the star: a bright golden five-pointed star with a glowing halo and little sparkles around it
       var sh = new T.Shape(); for (var q = 0; q < 10; q++) { var r = q % 2 ? .27 : .62, a = Math.PI / 2 + q * Math.PI / 5; if (q) sh.lineTo(Math.cos(a) * r, Math.sin(a) * r); else sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } sh.closePath();
       var geo = new T.ExtrudeGeometry(sh, { depth: .18, bevelEnabled: true, bevelThickness: .06, bevelSize: .05, bevelSegments: 2 }); geo.center();
@@ -6764,7 +6764,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; } u.fr.rotation.y = Math.sin(t * 8) * .15; if (!u.robot) u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
       var gI = G.rule;   // the laser item, and its beams when someone takes it
-      if (gI && gI.item && gI.st === 'play' && gI.item[2] === 'freeze') { item.visible = false; flake.visible = true; flake.position.set(gI.item[0] - n / 2 + .5, .48 + Math.sin(t * 2.4) * .03, gI.item[1] - n / 2 + .5); flake.rotation.set(-.35, 0, t * .9); flake.userData.mat.emissiveIntensity = .55 + .35 * (.5 + .5 * Math.sin(t * 5)); var fh = 1.9 + .3 * Math.sin(t * 4); flake.userData.halo.scale.set(fh, fh, 1); } else if (gI && gI.item && gI.st === 'play') { flake.visible = false; item.visible = true; item.material.emissiveIntensity = .9 + .6 * (.5 + .5 * Math.sin(t * 9)); if (item.userData.halo) { var hs = 2.6 + .5 * Math.sin(t * 6); item.userData.halo.scale.set(hs, hs, 1); item.userData.halo.material.opacity = .55 + .3 * Math.sin(t * 6); } (item.userData.spk || []).forEach(function (sp, i) { var a = t * 2.6 + i * Math.PI * 2 / 4; sp.position.set(Math.cos(a) * .9, Math.sin(t * 5 + i) * .35, Math.sin(a) * .9); var sc2 = .25 + .2 * Math.max(0, Math.sin(t * 11 + i * 1.7)); sp.scale.set(sc2, sc2, 1); }); item.position.set(gI.item[0] - n / 2 + .5, .44 + Math.sin(t * 3) * .03, gI.item[1] - n / 2 + .5); item.rotation.y = t * 2.4; } else { item.visible = false; flake.visible = false; }
+      if (gI && gI.item && gI.st === 'play' && gI.item[2] === 'freeze') { item.visible = false; flake.visible = true; flake.position.set(gI.item[0] - n / 2 + .5, .7 + Math.sin(t * 2.4) * .025, gI.item[1] - n / 2 + .5); flake.rotation.set(-.35, 0, t * .9); flake.userData.mat.emissiveIntensity = .55 + .35 * (.5 + .5 * Math.sin(t * 5)); var fh = 1.9 + .3 * Math.sin(t * 4); flake.userData.halo.scale.set(fh, fh, 1); } else if (gI && gI.item && gI.st === 'play') { flake.visible = false; item.visible = true; item.material.emissiveIntensity = .9 + .6 * (.5 + .5 * Math.sin(t * 9)); if (item.userData.halo) { var hs = 2.6 + .5 * Math.sin(t * 6); item.userData.halo.scale.set(hs, hs, 1); item.userData.halo.material.opacity = .55 + .3 * Math.sin(t * 6); } (item.userData.spk || []).forEach(function (sp, i) { var a = t * 2.6 + i * Math.PI * 2 / 4; sp.position.set(Math.cos(a) * .9, Math.sin(t * 5 + i) * .35, Math.sin(a) * .9); var sc2 = .25 + .2 * Math.max(0, Math.sin(t * 11 + i * 1.7)); sp.scale.set(sc2, sc2, 1); }); item.position.set(gI.item[0] - n / 2 + .5, .7 + Math.sin(t * 3) * .025, gI.item[1] - n / 2 + .5);   /* (hovering just above the tile, never through it) */ item.rotation.y = t * 2.4; } else { item.visible = false; flake.visible = false; }
       var lz = gI && gI.laser, lk = lz ? (Date.now() - lz.at) / 700 : 2;
       beams.forEach(function (bm, i) {
         if (lk >= 1) { bm.visible = false; return; }
