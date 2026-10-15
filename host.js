@@ -6365,9 +6365,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     order.forEach(function (k, i) { G.sv.grp[k] = i % 2 ? 'B' : 'A'; });   // (two groups, taking turns)
     G.sv.home = svHomes(G.sv);
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
-    var g = G.sv, t = 1600;
-    [['him', 'Welcome to the dance-off, Europe! 🪩 Tonight we’re Serving!'], ['her', 'It’s an aerobics class! Hit the arrows on your phone as they reach the top, and you take a step. Pink team first, then blue team: nice and slow, then double time!'], ['him', 'And at the end… everyone together, on skippy balls! 🏐']].forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3600, talkLen(l[0], l[1], 2400)); });
-    setTimeout(function () { if (G.sv !== g) return; svSay(''); g.st = 'ready'; push(); svSong(true); }, t);   // (the song starts from 0:00 when the presenters are done: that's where the game starts)
+    var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving! 🪩 As background dancers… I hope.'];
+    setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, 1400);
+    setTimeout(function () { if (G.sv === g) svSong(true); }, 1400 + Math.max(3200, talkLen(l0[0], l0[1], 2400)));   // (and the song cuts in already: the presenters talk over its intro)
+  }
+  // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
+  var SV_LINES = [['her', 'Oh! She’s already starting! You’d better get ready!'], ['him', 'Hurry! Take your places, and follow her instructions!'], ['her', 'Hit the arrows on your phone as they reach the top: every arrow is a step. The wrong way? You fall through the floor!'], ['him', 'Pink team first, then blue team. And at the end… everyone together, on skippy balls! 🏐'], ['her', 'Here she comes! Pink team: eyes on your phones!']];
+  function svIntro(g) {
+    var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
+    g.entAt = g.t0 + 2600;   // (everyone walks onto their spot)
+    SV_LINES.forEach(function (l) {
+      var len = Math.max(3000, talkLen(l[0], l[1], 2400)); if (at + len > first - 5000 + 1500) return;
+      (function (l, when) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, Math.max(0, when - Date.now())); })(l, at);
+      at += len + 400;
+    });
+    setTimeout(function () { if (G.sv === g) svSay(''); }, Math.max(0, first - 5000 - Date.now()));
   }
   function svSay(who, txt) { var ov = $('svov'); if (!ov) return; [].forEach.call(ov.querySelectorAll('.svbub'), function (x) { x.classList.remove('on'); }); if (!who) return; var b = ov.querySelector('.svbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); }
   function svSong(on) {
@@ -6389,9 +6401,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function svGo(g, t0) {   // a 3-2-1 on the big screen (the song is playing), then the dancing starts
     g.t0 = t0; push();
-    var first = t0 + g.chart[0][0] * SV_BT;   // (the song's intro first, a 3-2-1 before the first arrow)
-    g.st = 'ready'; push();
-    clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv !== g) return; g.st = 'play'; g.ends = g.t0 + SV_END * SV_BT + 400; push(); }, Math.max(0, first - Date.now() - 200));
+    var first = t0 + g.chart[0][0] * SV_BT;   // (the song's intro, with the presenters; 5 seconds before the first arrow they're gone; then the dancing)
+    svIntro(g);
+    clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv !== g) return; svSay(''); g.st = 'ready'; push(); svTimer = setTimeout(function () { if (G.sv !== g) return; g.st = 'play'; g.ends = g.t0 + SV_END * SV_BT + 400; push(); }, Math.max(0, first - Date.now() - 200)); }, Math.max(0, first - Date.now() - 5000));
     clearInterval(svLoop); svLoop = setInterval(svTick, 40);
   }
   function svBeat(g, now) { return (now - g.t0) / SV_BT; }   // (in bounces)
@@ -6697,8 +6709,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var el = ov.querySelector('.svaf[data-p="' + k + '"]'); if (!el) return;
       var h = g.home[k], p = players[k], f = g.fall[k], myN = null, myI = -1;
       g.chart.forEach(function (n, i) { if (n[0] <= b + .02 && svMineN(g, k, n)) { myN = n; myI = i; } });
-      var off = f && f.off ? f.off : bph === 'hop' ? [0, 1] : myN && g.st === 'play' ? svOff(g, k, myN[3], b + .02, now) : [0, 0], c = h[0] + off[0], r = h[1] + off[1]; place(el, c, r);
+      var off = !g.entAt || now < g.entAt ? [g.grp[k] === 'B' ? 9 : -9, 0] : f && f.off ? f.off : bph === 'hop' ? [0, 1] : myN && g.st === 'play' ? svOff(g, k, myN[3], b + .02, now) : [0, 0], c = h[0] + off[0], r = h[1] + off[1]; place(el, c, r);
       var nb = ov.querySelector('.svnb[data-b="' + k + '"]'); if (nb) place(nb, h[0], h[1] + 1);
+      el.classList.toggle('walkin', !!g.entAt && now >= g.entAt && now < g.entAt + 4200); el.classList.toggle('offst', !g.entAt || now < g.entAt);
       if (myN && el._mi !== myI && g.st === 'play' && !f) { el._mi = myI; var q0 = g.got[k][myI]; if (q0 == null || q0 > 0) { el.classList.remove('ok', 'oops', 'p0', 'p1', 'p2'); void el.offsetWidth; el.classList.add('ok', 'p' + (myI % 3)); } }   /* (the hop: on the beat, all together) */
       el.classList.toggle('fall', !!f); if (f && el._fa !== f.at) { el._fa = f.at; el.classList.remove('bump'); if (f.bump) { var dv = SV_DV[f.d] || [0, 0], P0 = svProj(ov, c, r), P1 = svProj(ov, c + dv[0], r + dv[1]); el.style.setProperty('--bx', ((P1.x - P0.x) * .45).toFixed(0) + 'px'); el.style.setProperty('--by', ((P1.y - P0.y) * .45).toFixed(0) + 'px'); void el.offsetWidth; el.classList.add('bump'); } var qe0 = el.querySelector('.svq'); qe0.textContent = f.bump ? 'BUMP! 💥' : 'FELL! 🕳️'; qe0.className = 'svq q0'; el._lk = (g.last[k] || {}).at; }
       marks.push({ c: c, r: r, col: f ? '#000000' : p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#ffffff' });
