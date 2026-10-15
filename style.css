@@ -5065,7 +5065,6 @@ body.hasdock main{padding-bottom:84px}
 /* Edgar: the lobby lights */
 .edlobroom{transition:filter .8s}
 .edov2 .edlobroom.dark{filter:brightness(.32) saturate(.55)}
-.edov2.edbrief:not(.go) .edlobroom{filter:none}
 
 /* Rules the World: the little countdowns above the heads */
 .rut .rutime{position:absolute;left:0;top:-18vh;transform:translate(-50%,-50%);min-width:3.4vh;padding:.15vh .8vh;border-radius:1.2vh;font:900 2.6vh/1.25 system-ui,sans-serif;text-align:center;color:#fff;background:rgba(10,6,24,.82);box-shadow:0 2px 6px rgba(0,0,0,.5);display:none;pointer-events:none}
@@ -5086,3 +5085,18 @@ body.rufrozen #waittitle{color:#0b3a66}
 
 /* frozen or stunned, you can still pick a direction: you set off as soon as it wears off */
 #ruui.frz .rupad .rub{filter:hue-rotate(160deg) saturate(.5) brightness(1.2)}
+
+.edtok.walkin{transition:top 1.6s cubic-bezier(.3,.7,.4,1),opacity .25s!important}
+.edtok.walkin .edbody i:nth-of-type(1){animation:edwalk .25s ease-in-out infinite alternate}.edtok.walkin .edbody i:nth-of-type(2){animation:edwalk .25s ease-in-out infinite alternate-reverse}
+@keyframes edwalk{from{transform:translateY(-.3vh)}to{transform:translateY(.2vh)}}
+
+/* Edgar's intro: the old hotel lobby behind the poster */
+.clueov .clhotel{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;filter:brightness(.85)}
+.clueov .clhotel .hlamp{animation:hflicker 4s steps(1) infinite}
+@keyframes hflicker{0%,100%{opacity:1}7%{opacity:.55}8%{opacity:1}52%{opacity:.8}53%{opacity:.35}55%{opacity:1}78%{opacity:.9}}
+.clueov .clhotel .hpeyes{animation:hpeyes 6s ease-in-out infinite}
+@keyframes hpeyes{0%,40%,100%{opacity:.15}48%,70%{opacity:1}}
+.clueov .clhotel .hpend{transform-origin:1485px 412px;transform-box:view-box;animation:hpend 2s ease-in-out infinite alternate}
+@keyframes hpend{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+.clueov .clhotel .hchand{transform-origin:800px 0;transform-box:view-box;animation:hchand 5s ease-in-out infinite alternate}
+@keyframes hchand{from{transform:rotate(-1.5deg)}to{transform:rotate(1.5deg)}}

@@ -1153,7 +1153,8 @@
       { q: 'What colour is the hair of the man with the glasses?', a: s.man.hair, o: edPickOpts(s.man.hair, HAIRS), col: 1 },
       { q: 'What colour is the little girl’s hair?', a: s.child.hair, o: edPickOpts(s.child.hair, HAIRS), col: 1 }
     ];
-    return [mc[2]].concat(shuffle(ppl).slice(0, 1));   // (two simple questions: the word on the mirror, and one about the three guests)
+    var rtl = Math.random() < .5, rk = s.rack.map(function (x) { return x.c; });   // (always the dresses: left to right, or right to left)
+    return [{ t: 'rack', rtl: rtl, q: 'Hang the dresses back on the rack in the same order, from ' + (rtl ? 'RIGHT to LEFT' : 'LEFT to RIGHT') + '!', a: rtl ? rk.slice().reverse() : rk }, mc[2]].concat(shuffle(ppl).slice(0, 1));   // (three puzzles: the dresses, the word on the mirror, and one about the three guests)
   }
   function edMini(p) {   // a small cartoon guest for the phone: hair colour, hair style and top
     var H = ED_HEX[p.hair] || p.hair, T = ED_HEX[p.top] || p.top, K = ' stroke="#2b1830" stroke-width="2.4" stroke-linejoin="round"', h = '';
@@ -1227,7 +1228,7 @@
       if (q.t === 'rack') {
         var cols = shuffle(q.a.concat([['red', 'blue', 'yellow', 'green', 'purple', 'black'].filter(function (c) { return q.a.indexOf(c) < 0; })[0]])), seq = [];
         var drawR = function () {
-          box.innerHTML = head + '<div class="edrack2">' + [0, 1, 2, 3, 4].map(function (i) { return '<span>' + (seq[i] ? '<i style="background:' + ED_HEX[seq[i]] + '"></i>' : '') + '</span>'; }).join('') + '</div><div class="eddress">' + cols.map(function (c) { return '<button type="button" class="eddr' + (seq.indexOf(c) >= 0 ? ' used' : '') + '" data-c="' + c + '"><i style="background:' + ED_HEX[c] + '"></i>' + ED_NAME[c] + '</button>'; }).join('') + '</div><div class="edrow2"><button type="button" class="btn alt edundo">↩️ Undo</button><button type="button" class="btn eddone"' + (seq.length === 5 ? '' : ' disabled') + '>✅ Done</button></div>';
+          box.innerHTML = head + '<div class="edrack2">' + [0, 1, 2, 3, 4].map(function (i) { var j = q.rtl ? 4 - i : i; return '<span>' + (seq[j] ? '<i style="background:' + ED_HEX[seq[j]] + '"></i>' : '') + '</span>'; }).join('') + '</div><div class="eddress">' + cols.map(function (c) { return '<button type="button" class="eddr' + (seq.indexOf(c) >= 0 ? ' used' : '') + '" data-c="' + c + '"><i style="background:' + ED_HEX[c] + '"></i>' + ED_NAME[c] + '</button>'; }).join('') + '</div><div class="edrow2"><button type="button" class="btn alt edundo">↩️ Undo</button><button type="button" class="btn eddone"' + (seq.length === 5 ? '' : ' disabled') + '>✅ Done</button></div>';
           [].forEach.call(box.querySelectorAll('.eddr'), function (b) { b.onclick = function () { var c = b.getAttribute('data-c'); if (seq.length < 5 && seq.indexOf(c) < 0) seq.push(c); drawR(); }; });
           box.querySelector('.edundo').onclick = function () { seq.pop(); drawR(); };
           box.querySelector('.eddone').onclick = function () { next(seq.join() === q.a.join()); };

@@ -4767,10 +4767,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       }, 700 + i * 1000); });
     }, t);
   }
-  function edGo() {   // the briefing is over: the hosts step aside, the lights go on, the clock starts
+  var ED_ENTER = 2800;
+  function edGo() {   // the briefing is over: the hosts step aside, the lobby lights go on, everyone walks in from the bottom, Teya & Salena pop up behind the desk… then the clock starts
     var g = G.clue; if (!g) return;
-    g.st = 'rooms'; g.ends = Date.now() + ED_MS;
     var ov = $('edov'); if (ov) { ov.classList.add('go'); ov.removeAttribute('data-lit'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); }); }
+    if (!g.enterAt) { g.enter = true; g.enterAt = Date.now(); edShow(); if (!REMOTE) whooshes([0, 250, 500]); [700, 1400, ED_ENTER - 200].forEach(function (ms) { setTimeout(function () { if (G.clue === g) edShow(); }, ms); }); setTimeout(function () { if (G.clue === g) edGo(); }, ED_ENTER); return; }
+    g.enter = false;
+    g.st = 'rooms'; g.ends = Date.now() + ED_MS;
     push(); Music.ding(); whooshes([0, 300]); if (!REMOTE) edBox(false); clueSong();   // Edgar's tune: from the search to the end of the clue questions
     if (!REMOTE) { var t0e = Date.now(), dTry = 0, dT = setInterval(function () {   // the search lasts as long as the song (from 0:14 to its end), once YouTube knows its length
       if (G.clue !== g || g.st !== 'rooms' || ++dTry > 30) { clearInterval(dT); return; }
@@ -4828,15 +4831,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('edov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
-      ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom duo"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g class="edrecduo">' + edPerson(62, 108, { s: .7, hair: 'black', hairStyle: 'long', top: 'teal', dress: 1 }) + edPerson(138, 108, { s: .7, hair: 'brown', hairStyle: 'pony', top: 'pink', dress: 1, flip: 1 }) + '</g><rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><text x="62" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">TEYA</text><text x="138" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">SALENA</text><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg><div class="edrecbub">🗝️ Someone solved all the puzzles and gets the final clue!</div></div></div>' +
+      ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom duo"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g class="edrecduo">' + edPerson(62, 108, { s: .7, hair: 'black', hairStyle: 'long', top: 'teal', dress: 1 }) + edPerson(138, 108, { s: .7, hair: '#f3dc8a', hairStyle: 'pony', top: 'pink', dress: 1, flip: 1 }) + '</g><rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><text x="62" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">TEYA</text><text x="138" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">SALENA</text><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg><div class="edrecbub">🗝️ Someone solved all the puzzles and gets the final clue!</div></div></div>' +
         ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '<div class="edtoks"></div>' +
         '<div class="edbrhosts">' + HOST_HIM + HOST_HER + '</div><div class="edbrbub him"></div><div class="edbrbub her"></div>';
       if (g.st === 'brief') ov.classList.add('edbrief');
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       setTimeout(function () { ov.classList.remove('enter'); }, 1600);
     }
-    if (g.st === 'brief') return;   // (the players stay in the lobby, the clock waits)
-    var ck = ov.querySelector('.edclock'), sec = Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)), txt = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
+    if (g.st === 'brief' && !g.enter) { var lr0 = ov.querySelector('.edlobroom'); lr0.classList.add('dark'); lr0.classList.remove('duo'); return; }   // (during the briefing: the lobby is dark and empty, the clock waits)
+    var ck = ov.querySelector('.edclock'), sec = g.enter ? Math.round(ED_MS / 1000) : Math.max(0, Math.ceil((g.ends - Date.now()) / 1000)), txt = Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
     if (ck.textContent !== txt) ck.textContent = txt; ck.classList.toggle('hot', sec <= 15);
     var toks = ov.querySelector('.edtoks'), ks = Object.keys(g.rooms).filter(function (k) { return players[k] && !players[k].off; }), by = {};
     // Everyone has a fixed spot (their place in the list), the same in every room and in the lobby, so nobody shifts
@@ -4861,7 +4864,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var L = (100 * x / W).toFixed(2) + '%', T = (100 * y / Hh).toFixed(2) + '%', where = r || (atDesk ? 'desk' : 'lobby');
       el.classList.toggle('fast', !!atDesk);
       el.classList.toggle('srch', !!r); el.classList.toggle('lob', !r);
-      if (!el.getAttribute('data-w')) { el.style.left = L; el.style.top = T; el.setAttribute('data-w', where); return; }
+      if (!el.getAttribute('data-w')) { el.setAttribute('data-w', where); el.style.left = L; if (g.enter) { el.style.top = (100 * (lb.bottom - oc.top + Hh * 0.04) / Hh).toFixed(2) + '%'; el.classList.add('walkin'); el.style.transitionDelay = (slot * 120) + 'ms'; void el.offsetWidth; el.style.top = T; setTimeout(function () { el.classList.remove('walkin'); el.style.transitionDelay = ''; }, 2400); } else el.style.top = T; return; }   // (walking in from the bottom of the lobby)
       if (el.getAttribute('data-w') !== where) {   // moving: pop out here, pop in there
         el.setAttribute('data-w', where); el.classList.add('out');
         clearTimeout(el._t); el._t = setTimeout(function () { el.style.left = L; el.style.top = T; void el.offsetWidth; el.classList.remove('out'); el.classList.add('in'); setTimeout(function () { el.classList.remove('in'); }, 500); }, 260);
@@ -4872,7 +4875,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Teya & Salena stand at the desk at the start; once everyone has left the lobby they slide down behind it and the
     // lights go out; when the first detective is done, the lights come back on and they pop up again
     if (g.st === 'rooms' && !ov._lobOut && ks.length && ks.every(function (k) { return !!(g.rooms[k].cur || (g.rooms[k].done || []).length); }) && !ks.some(function (k) { return !g.rooms[k].cur; })) ov._lobOut = true;
-    var lobOn = !ov._lobOut || fa >= ED_POP, lr = ov.querySelector('.edlobroom'); lr.classList.toggle('duo', lobOn); lr.classList.toggle('dark', !lobOn);
+    var lobOn = !ov._lobOut || fa >= ED_POP, lr = ov.querySelector('.edlobroom'); lr.classList.toggle('duo', lobOn && !(g.enter && Date.now() - g.enterAt < 1300)); lr.classList.toggle('dark', !lobOn);   // (walking in: Teya & Salena pop up a moment later)
     if (g.fast && fa < ED_POP + 9500 && !g.fast.tk) { g.fast.tk = [setTimeout(function () { if (G.clue === g) edShow(); }, ED_POP + 20), setTimeout(function () { if (G.clue === g) edShow(); }, ED_POP + 320), setTimeout(function () { if (G.clue === g) edShow(); }, ED_POP + 9100)]; }   // (the pop-up, the bubble, and back to their own spot)
     edDuo(ov, g);
     // every room has a tab on its outer edge, in its own colour, where the avatars of the searchers sit
@@ -4893,13 +4896,51 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       sol: g.st === 'reveal' ? { where: g.step >= 1 ? g.sol.where : '', what: g.step >= 2 ? g.sol.what : '', who: g.step >= 3 ? g.sol.who : '' } : null, res: g.step >= 4 ? g.res : null, gift: g.step >= 5 ? g.gift : null };
   }
   // The scene on the big screen: an empty pedestal, the three rows of cards, the presenters, and the players.
+  // The intro's backdrop: a dark, slightly spooky old hotel lobby (damask wallpaper, wood panelling, flickering wall
+  // lamps, a grand staircase, a dusty chandelier, a portrait whose eyes glow, a grandfather clock and cobwebs)
+  var ED_HOTEL = (function () {
+    var w = 1600, h = 900, s = '<svg class="clhotel" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>' +
+      '<linearGradient id="hwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0a1e"/><stop offset="1" stop-color="#2e1226"/></linearGradient>' +
+      '<pattern id="hdam" width="80" height="110" patternUnits="userSpaceOnUse"><path d="M40 8 C52 28 64 34 64 55 C64 76 52 82 40 102 C28 82 16 76 16 55 C16 34 28 28 40 8 Z" fill="none" stroke="#4a2440" stroke-width="2.4" opacity=".7"/><circle cx="40" cy="55" r="7" fill="#4a2440" opacity=".55"/><path d="M0 0 L10 14 M80 0 L70 14 M0 110 L10 96 M80 110 L70 96" stroke="#4a2440" stroke-width="2" opacity=".5"/></pattern>' +
+      '<linearGradient id="hwood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1d12"/><stop offset="1" stop-color="#1d0d08"/></linearGradient>' +
+      '<radialGradient id="hlamp"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".75"/><stop offset=".35" stop-color="#ff9a3a" stop-opacity=".25"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="hvig" cx=".5" cy=".45" r=".75"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".85"/></radialGradient></defs>';
+    s += '<rect width="' + w + '" height="' + h + '" fill="url(#hwall)"/><rect width="' + w + '" height="600" fill="url(#hdam)"/>';
+    // a picture rail and the wood panelling below
+    s += '<rect x="0" y="120" width="' + w + '" height="10" fill="#2a1410"/><rect x="0" y="590" width="' + w + '" height="310" fill="url(#hwood)"/><rect x="0" y="584" width="' + w + '" height="14" fill="#4a2616"/>';
+    for (var px = 20; px < w; px += 160) s += '<rect x="' + px + '" y="620" width="130" height="220" rx="6" fill="none" stroke="#120604" stroke-width="5" opacity=".8"/><rect x="' + (px + 4) + '" y="624" width="122" height="212" rx="4" fill="none" stroke="#5a2e1a" stroke-width="2" opacity=".5"/>';
+    // the grand staircase going up on the left, in shadow
+    var st = ''; for (var i = 0; i < 9; i++) st += '<rect x="' + (40 + i * 26) + '" y="' + (580 - i * 46) + '" width="' + (300 - i * 26) + '" height="46" fill="#1a0b10" stroke="#2a141c" stroke-width="2"/>';
+    s += '<g opacity=".95">' + st + '<path d="M60 560 L300 180" stroke="#3a1e14" stroke-width="10" stroke-linecap="round"/>';
+    for (var b = 0; b < 9; b++) s += '<rect x="' + (68 + b * 26) + '" y="' + (520 - b * 42) + '" width="6" height="46" fill="#2e1810"/>';
+    s += '</g>';
+    // a portrait with eyes that follow you (and glow)
+    s += '<g transform="translate(1180 170)"><rect x="-8" y="-8" width="196" height="246" rx="10" fill="#6a4a1a" stroke="#2a1a08" stroke-width="6"/><rect x="10" y="10" width="160" height="210" fill="#140c14"/>' +
+      '<path d="M40 220 Q40 150 90 140 Q140 150 140 220 Z" fill="#241622"/><ellipse cx="90" cy="105" rx="34" ry="42" fill="#2a1a26"/><path d="M56 92 Q90 40 124 92 Q118 60 90 56 Q62 60 56 92 Z" fill="#160c14"/>' +
+      '<g class="hpeyes"><ellipse cx="76" cy="104" rx="6" ry="3.2" fill="#ffdd55"/><ellipse cx="104" cy="104" rx="6" ry="3.2" fill="#ffdd55"/></g></g>';
+    // a second, crooked painting: a dark landscape
+    s += '<g transform="translate(470 210) rotate(-4)"><rect x="-6" y="-6" width="172" height="122" rx="6" fill="#5a3e18" stroke="#2a1a08" stroke-width="5"/><rect x="6" y="6" width="148" height="98" fill="#0f1426"/><path d="M6 90 L50 50 L80 74 L118 38 L154 82 L154 104 L6 104 Z" fill="#1a1a22"/><circle cx="124" cy="28" r="10" fill="#d8d0a0" opacity=".7"/></g>';
+    // the grandfather clock on the right
+    s += '<g transform="translate(1440 300)"><rect x="0" y="0" width="90" height="300" rx="10" fill="#2a120a" stroke="#120604" stroke-width="5"/><circle cx="45" cy="55" r="32" fill="#e8dcb8" stroke="#6a4a1a" stroke-width="5"/><path d="M45 55 L45 32 M45 55 L60 64" stroke="#1a0c08" stroke-width="4" stroke-linecap="round"/><rect x="20" y="110" width="50" height="150" rx="6" fill="#140806"/><g class="hpend"><path d="M45 112 L45 220" stroke="#b08a3a" stroke-width="3"/><circle cx="45" cy="226" r="14" fill="#c9a24a"/></g></g>';
+    // wall lamps that flicker
+    [[420, 420], [880, 400], [1340, 430]].forEach(function (L, i) { s += '<g class="hlamp" style="animation-delay:' + (-i * 1.3) + 's"><circle cx="' + L[0] + '" cy="' + L[1] + '" r="150" fill="url(#hlamp)"/></g><g transform="translate(' + L[0] + ' ' + L[1] + ')"><path d="M-6 40 L6 40 L4 10 L-4 10 Z" fill="#6a4a1a"/><path d="M-22 10 L22 10 L14 -22 L-14 -22 Z" fill="#c98a3a" opacity=".85"/></g>'; });
+    // the dusty chandelier, swinging a little
+    s += '<g class="hchand"><path d="M800 0 L800 70" stroke="#3a2a1a" stroke-width="4"/><path d="M700 110 Q800 150 900 110" stroke="#6a5020" stroke-width="6" fill="none"/><path d="M730 90 Q800 120 870 90" stroke="#6a5020" stroke-width="5" fill="none"/><circle cx="800" cy="80" r="16" fill="#6a5020"/>';
+    [700, 735, 770, 830, 865, 900].forEach(function (cx) { s += '<rect x="' + (cx - 4) + '" y="86" width="8" height="22" fill="#e8dcb8" opacity=".6"/><circle cx="' + cx + '" cy="82" r="5" fill="#ffcf7a" opacity=".55"/>'; });
+    s += '</g>';
+    // cobwebs in the top corners
+    var web = function (x, y, sx) { var o = '<g transform="translate(' + x + ' ' + y + ') scale(' + sx + ' 1)" stroke="#c8c0d0" stroke-width="1.4" fill="none" opacity=".35">'; for (var a = 0; a <= 4; a++) { var an = a * Math.PI / 8; o += '<path d="M0 0 L' + (Math.cos(an) * 220).toFixed(0) + ' ' + (Math.sin(an) * 220).toFixed(0) + '"/>'; } [50, 95, 140, 190].forEach(function (r) { var d = 'M' + r + ' 0'; for (var a2 = 1; a2 <= 4; a2++) { var an2 = a2 * Math.PI / 8; d += ' Q' + (Math.cos(an2 - Math.PI / 16) * r * .82).toFixed(0) + ' ' + (Math.sin(an2 - Math.PI / 16) * r * .82).toFixed(0) + ' ' + (Math.cos(an2) * r).toFixed(0) + ' ' + (Math.sin(an2) * r).toFixed(0); } o += '<path d="' + d + '"/>'; }); return o + '</g>'; };
+    s += web(0, 0, 1) + web(w, 0, -1);
+    s += '<rect width="' + w + '" height="' + h + '" fill="url(#hvig)"/></svg>';
+    return s;
+  })();
   function clueShow() {
     var g = G.clue; if (!g) return;
     var ov = $('clueov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'clueov'; ov.className = 'grov clueov enter';
       var row = function (k, label) { return '<div class="clrow" data-k="' + k + '"><span class="cllab">' + label + '</span>' + CLUE_SETS[k].map(function (c) { return '<div class="clcard" data-id="' + c.id + '"><span>' + c.icon + '</span><b>' + esc(c.name) + '</b></div>'; }).join('') + '</div>'; };
-      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="clspot"></div>' +
+      ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div>' + ED_HOTEL + '<div class="clspot"></div>' +
         '<div class="grsign clsign">🔍 Where the Hell Is Edgar?</div>' +
         '<div class="clposter"><b>MISSING</b>' + EDGAR + '<small>Have you seen Edgar?</small></div><div class="clframe"><img src="' + commons(EXTRA_PHOTOS[0].file) + '" alt=""><small>With love to Teya &amp; Salena · Austria 2023</small></div><div class="cledgar">' + EDGAR + '</div>' +
         '<div class="clrows">' + row('where', 'Hidden where?') + row('what', 'Hidden inside?') + row('who', 'Who took him?') + '</div>' +
