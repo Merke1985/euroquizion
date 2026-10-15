@@ -6644,14 +6644,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       g.order.forEach(function (k) { var c = g.pos[k]; ruClaim(g, k, c[0], c[1]); }); g.cnt = ruCount(g); push();
       ruTimer = setTimeout(function () {   // then the song starts, and the stage with the singer rises: up by the 8th second
-        if (G.rule !== g) return; g.st = 'rise'; g.riseAt = 0; push(); var lag = RU_ACTS[g.act || 0].lag || 0; if (lag) { g.riseAt = Date.now(); var ov3 = $('ruov'); if (ov3 && ov3._3) ov3._3.riseAt = g.riseAt; setTimeout(function () { if (G.rule === g) ruSong(true); }, lag); } else ruSong(true);   // (Discoteque: the stage already rises, the song comes in 2 seconds later, so the singing starts as he arrives)   // (the rise starts when the song really starts playing)
-        setTimeout(function () { if (G.rule === g && g.st === 'rise' && !g.riseAt) { g.riseAt = Date.now(); ruShow(); } }, REMOTE ? 0 : 3000);
-        var up = function () {   // and once she is all the way up: a 5-second countdown
+        if (G.rule !== g) return; g.st = 'rise'; g.riseAt = Date.now(); g.songAt = 0; g.went = false; push(); var ov3 = $('ruov'); if (ov3 && ov3._3) ov3._3.riseAt = g.riseAt;
+        // the stage rises straight away (8 s), then a 3-2-1; the song starts so that the singing begins exactly as the count hits 0 (0:09 for her, 1:22 for him)
+        var ra = RU_ACTS[g.act || 0], songIn = Math.max(0, RU_RISE + 300 + 3000 - ((ra.top || ra.s) - ra.s) * 1000);
+        if (REMOTE) ruSong(true); else setTimeout(function () { if (G.rule === g) ruSong(true); }, songIn);
+        var up = function () {   // once the singer is all the way up: the 3-second count-in
           if (G.rule !== g) return;
-          if (!g.riseAt || Date.now() < g.riseAt + RU_RISE + 300) { ruTimer = setTimeout(up, 100); return; }
-          g.st = 'ready'; g.goAt = Date.now() + 3000; push(); if (!REMOTE) Music.discoTick();   // (a 3-second count-in, right below the singer, with soft disco ticks)
-          [1000, 2000].forEach(function (t2) { setTimeout(function () { if (G.rule === g && g.st === 'ready') { ruShow(); if (!REMOTE) Music.discoTick(); } }, t2); });
-          ruTimer = setTimeout(function () { if (!REMOTE) Music.discoTick(true); ruGo(); }, 3000);
+          if (Date.now() < g.riseAt + RU_RISE + 300) { ruTimer = setTimeout(up, 100); return; }
+          g.st = 'ready'; g.goAt = Date.now() + 3000; push(); if (!REMOTE) Music.discoTick();
+          var lastSec = 3, tick = setInterval(function () {   // (a soft tick each time the count drops; 'go' follows the song itself, see ruSong)
+            if (G.rule !== g || g.st !== 'ready') { clearInterval(tick); return; }
+            var sec = Math.max(1, Math.ceil((g.goAt - Date.now()) / 1000)); if (sec < lastSec) { lastSec = sec; ruShow(); if (!REMOTE) Music.discoTick(); }
+            var ra2 = RU_ACTS[g.act || 0]; if (g.songAt && (Date.now() - g.songAt) / 1000 + ra2.s >= (ra2.top || ra2.s)) { clearInterval(tick); ruGoNow(g); return; }   // (go, exactly on the song's moment)
+            if (Date.now() >= g.goAt + (g.songAt ? 1500 : 0)) { clearInterval(tick); ruGoNow(g); }   // (no song clock: just go)
+          }, 50);
         };
         ruTimer = setTimeout(up, 500);
       }, 2200);   // (they all land at once: a short pause, then the song)
@@ -6695,7 +6701,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (G.phase !== 'rule' || !G.rule) { clearInterval(ruSongT); ruSongT = null; return; }
         try {
           var st = yt.getPlayerState(), ct = yt.getCurrentTime();
-          if (st === 1 && ct > 0 && g.st === 'rise' && (!g.riseAt || synced)) { synced = true; var off = ((ra.top || ra.s + RU_RISE / 1000) - ra.s) * 1000 - RU_RISE; g.riseAt = Date.now() - Math.min(RU_RISE, (ct - ra.s) * 1000 - off);   /* (the stage starts rising so it's at the top exactly at the act's moment: 0:09, 1:22) */   /* (the rise follows the song's own clock: the stage is at the top 8 s in, at 1:22 for Discoteque) */ var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
+          if (st === 1 && ct > 0) { g.songAt = Date.now() - (ct - ra.s) * 1000; if (g.st === 'ready') { var tgt = ra.top || ra.s; g.goAt = Date.now() + (tgt - ct) * 1000; if (ct >= tgt - .03) ruGoNow(g); } }   /* (the song's own clock: the count-in ends exactly on the act's moment) */ if (false) {   /* (the rise follows the song's own clock: the stage is at the top 8 s in, at 1:22 for Discoteque) */ var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
           if (st === 0) { yt.seekTo(ra.s, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo();
         } catch (e) {}
       }, 250);
@@ -6706,9 +6712,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var t = g.trail[k]; t.push(i); if (t.length > 4) t.shift();
   }
   function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
+  function ruGoNow(g) { if (G.rule !== g || g.went || g.st !== 'ready') return; g.went = true; if (!REMOTE) Music.discoTick(true); ruGo(); }
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
-    g.st = 'play'; g.t0 = Date.now(); var ra0 = RU_ACTS[g.act || 0]; g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP - (((ra0.top || ra0.s + RU_RISE / 1000) - ra0.s) * 1000 - RU_RISE) : g.t0 + RU_MS; g.itemAt = Date.now() + 12000 + Math.random() * 8000; g.item = null; push(); Music.ding();   // (the first star turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
+    g.st = 'play'; g.t0 = Date.now(); g.ends = g.songAt && !REMOTE ? g.songAt + RU_STOP : g.t0 + RU_MS; g.itemAt = Date.now() + 12000 + Math.random() * 8000; g.item = null; push(); Music.ding();   // (the first star turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
     if (G.mgTest && G.ruForce != null) { var lb = g.order.filter(function (k) { return players[k] && players[k].bot; })[0]; if (lb) g.bot[lb].loop = {}; }   // (the test buttons: one bot always takes the stage with a loop)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
@@ -7206,7 +7213,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       // the stage: in the hole, rising over 10 seconds, then up
       var k = st.risen ? 1 : st.riseAt ? Math.max(0, Math.min(1, (Date.now() - st.riseAt) / RU_RISE)) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       stage.position.y = -11 + e * 11.3; sLight.intensity = Math.max(0, e * 1.6 - .5); haze.intensity = 3 * (1 - e * .6);
-      var singer = st.singer, u = singer.userData, dance = e >= 1 ? 1 : 0;
+      var singer = st.singer, u = singer.userData, dance = st.play ? 1 : 0;   // (they start singing and dancing as the count hits 0)
       if (u.robot) { u.move(t, dance);   // the yellow act: disco poses on the beat
       } else { u.la.rotation.z = -(.15 + dance * (.25 + Math.max(0, Math.sin(t * 2.1)) * .5)); u.ra.rotation.z = .15 + dance * (.2 + Math.max(0, Math.cos(t * 1.05)) * 2.3); u.la.rotation.x = -dance * (.3 + Math.sin(t * 4.2) * .2);
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; } u.fr.rotation.y = Math.sin(t * 8) * .15; if (!u.robot) u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
@@ -7327,7 +7334,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var now = Date.now(), tr = {};
     g.order.forEach(function (k) { (g.trail[k] || []).forEach(function (i) { if (g.own[i] === k) tr[i] = 1; }); });
     if (ov._3) {
-      var s3 = ov._3; s3.riseAt = g.riseAt || 0; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true;
+      var s3 = ov._3; s3.riseAt = g.riseAt || 0; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true; s3.play = g.st === 'play' || g.st === 'count' || g.st === 'end';
       s3.paint(g.own, tr, ruCol);
       if (g.loopFx && s3.lfAt !== g.loopFx.at) { s3.lfAt = g.loopFx.at; s3.flashAll(g.loopFx.tiles); }
       g.order.forEach(function (k) {
