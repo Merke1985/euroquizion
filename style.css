@@ -5503,3 +5503,4 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes svbump{50%{translate:var(--bx,0) var(--by,0)}}
 .svov .svaf.fall .svnm,.svov .svaf.fall .svpt{opacity:.5}
 .svov .svins{width:calc(var(--s) * 2.8 * 320 / 540);height:calc(var(--s) * 2.8);margin:calc(var(--s) * -2.72) 0 0 calc(var(--s) * -1.4 * 320 / 540)}
+.svov .svins.walk.walk{transition:transform 7s ease-in-out}

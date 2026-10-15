@@ -6314,7 +6314,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
   var SV_VID = 'WPfV96fRvW0', SV_S = 44, SV_BT = 60000 / 122 * 2, SV_PHASE = 5.001,   /* (measured from the official video: exactly 122 BPM, bar 1 at 0:42.165; the beat drops at 0:52.00: that's bounce 0) */ svLoop = null, svTimer = null, svSongT = null;
-  var SV_STAGES = [{ n: 1, t: 'The dance floor', from: 0, to: 32 }, { n: 2, t: 'Double time', from: 36, to: 57 }, { n: 3, t: 'Skippy balls!', from: 61, to: 88 }], SV_END = 89;
+  var SV_STAGES = [{ n: 1, t: 'The dance floor', from: 0, to: 56 }, { n: 2, t: 'Double time', from: 62, to: 83 }, { n: 3, t: 'Skippy balls!', from: 87, to: 114 }], SV_END = 115;
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { for (var i = 0; i < SV_STAGES.length; i++) if (t < SV_STAGES[i].to + 1.5) return SV_STAGES[i]; return SV_STAGES[SV_STAGES.length - 1]; }
   // Stages 1 and 2 are an aerobics class: every arrow you hit is a step on the stage (left, forward, back, right), and the
@@ -6336,9 +6336,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (jump) { var o = Math.random() < .5 ? 0 : 1, jt = t0 + 4 * gap; N.push([jt, o, 0, ph, 1, solo ? '*' : grp], [jt, 3 - o, 0, ph, 1, solo ? '*' : grp]); }
       ph++;
     }
-    set(0, 2, 'A'); set(8, 2, 'A'); set(18, 2, 'B'); set(26, 2, 'B');   // stage 1 (a short pause while she walks over)
-    set(36, 1, 'A', 1); set(41, 1, 'A', 1); set(48, 1, 'B', 1); set(53, 1, 'B', 1);   // stage 2
-    set(61, .5, 'A', 1); set(64, .5, 'A', 1); set(69, .5, 'B', 1); set(72, .5, 'B', 1); set(77, .5, '*', 1); set(80, .5, '*', 1); set(83, .5, '*', 1); set(86, .5, '*', 1);   // stage 3: and then everyone
+    set(0, 2, 'A'); set(8, 2, 'A'); set(16, 2, 'A'); set(34, 2, 'B'); set(42, 2, 'B'); set(50, 2, 'B');   // stage 1: about 20 seconds each, and 10 seconds in between while she walks over
+    set(62, 1, 'A', 1); set(67, 1, 'A', 1); set(74, 1, 'B', 1); set(79, 1, 'B', 1);   // stage 2
+    set(87, .5, 'A', 1); set(90, .5, 'A', 1); set(95, .5, 'B', 1); set(98, .5, 'B', 1); set(103, .5, '*', 1); set(106, .5, '*', 1); set(109, .5, '*', 1); set(112, .5, '*', 1);   // stage 3: and then everyone
     return N;
   }
   function svMineN(g, k, n) { return !n[5] || n[5] === '*' || g.grp[k] === n[5]; }
@@ -6638,7 +6638,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (cur && cur[3] != null && g.st === 'play') g.chart.forEach(function (n) { if (n[3] === cur[3] && !n[4] && n[0] <= b + .02) { ix += SV_DV[n[1]][0]; iy += SV_DV[n[1]][1]; } });
     ov.setAttribute('data-act', act);
     var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 4 : 10 + Math.round(r * 2)); };
-    var ins = ov.querySelector('.svins'), lc = solo || act === '*' ? 11.5 : act === 'A' ? 6 : 17;
+    var ins = ov.querySelector('.svins');
+    if (ins._act !== act) { if (ins._act && g.st === 'play') { ins.classList.add('walk'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk'); }, 7000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
+    var lc = solo || act === '*' ? 11.5 : act === 'A' ? 6 : 17;
     var lcx = lc + ix, lry = Math.max(0, Math.min(2, SV_LROW + iy)); place(ins, lcx, lry, true);
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }
     var marks = [];
@@ -6660,7 +6662,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     bt.querySelector('b').textContent = cd ? String(cd) : '';
     var S = svStageAt(Math.max(0, b)), stx = g.st === 'play' || g.st === 'ready' ? 'Stage ' + S.n + ' of 3 · ' + S.t : '';
     var se = ov.querySelector('.svstage'); if (se.textContent !== stx) se.textContent = stx;
-    var bn = ov.querySelector('.svbanner'), showB = g.st === 'play' && g.stageAt && now - g.stageAt < 2600, bh = showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Faster! And JUMP: both arrows at once!</em>' : g.stage === 3 ? '<em>A step on every beat, double points! 🏐</em>' : '') : '';
+    var swB = !solo && g.st === 'play' && g.swAt && now - g.swAt < 3200 && !(g.stageAt && now - g.stageAt < 2600) ? '<small>Switch!</small>' + (g.swTo === 'A' ? 'Pink team' : 'Blue team') + '<em>Your turn next! 💃</em>' : '';
+    var bn = ov.querySelector('.svbanner'), showB = g.st === 'play' && g.stageAt && now - g.stageAt < 2600, bh = swB ? swB : showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Faster! And JUMP: both arrows at once!</em>' : g.stage === 3 ? '<em>A step on every beat, double points! 🏐</em>' : '') : '';
     if (bn._h !== bh) { bn._h = bh; bn.innerHTML = bh; bn.classList.toggle('on', !!bh); }
     var nm = function (k) { return players[k] ? esc(players[k].name) : ''; };
     var msg = g.st === 'intro' || g.st === 'play' ? '' : g.st === 'ready' ? 'Get ready… hit the arrows on your phone! 📱' : g.win.length ? '🏆 ' + g.win.map(nm).join(' & ') + (g.win.length > 1 ? ' win' : ' wins') + '! +' + g.prize : 'The end!';
