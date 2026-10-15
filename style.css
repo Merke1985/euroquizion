@@ -5624,3 +5624,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svfield .svfb{font-size:9vw;font-weight:900;text-shadow:0 3px 10px rgba(0,0,0,.5)}
 .svfb.pop{animation:svfbpop .35s cubic-bezier(.2,1.6,.4,1)}
 @keyframes svfbpop{0%{transform:scale(.5)}100%{transform:scale(1)}}
+/* Serving: the arrow panels only appear when the presenters are done */
+.svov .svchart{transition:opacity .6s}
+.svov[data-st="intro"] .svchart{opacity:0!important}
