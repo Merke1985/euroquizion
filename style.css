@@ -5154,3 +5154,18 @@ body.rufrozen #waittitle{color:#0b3a66}
 
 /* Turquoise Carpet: flat (2D) contestants walking over the 3D square (TC_FIG2D) */
 .tcov.is3d.fig2d .tcwalk{display:block;z-index:3;bottom:22vh;height:37vh;filter:drop-shadow(0 1.2vh 1vh rgba(0,0,0,.45)) drop-shadow(0 0 2vh rgba(255,255,255,.25))}
+
+/* Turquoise Carpet (2D): the side view while walking, the front view while posing; groups in their rows */
+.tcg{display:block}
+.tcg .tcgrow{position:absolute;left:50%;bottom:0;height:100%;display:flex;align-items:flex-end;transform:translateX(-50%)}
+.tcg .tcgrow.back{height:84%;bottom:9%;filter:brightness(.92)}
+.tcg.grp .tcgrow.front{height:92%}
+.tcone{position:relative;height:100%;display:block;margin:0 -1.2vh;flex:none}
+.tcone>.tcgirl{height:100%;width:auto;display:block}
+.tcone>.tcfront{position:absolute;left:0;top:0;opacity:0;overflow:visible}
+.tcone>.tcgirl{transition:opacity .18s}
+.tcg.posing .tcone>.tcfront{opacity:1}
+.tcg.posing .tcone>.tcgirl:not(.tcfront){opacity:0}
+.tcg .tcone>.tcgirl{filter:none}
+.tcov.is3d.fig2d .tcwalk{filter:none}
+.tcone{filter:drop-shadow(0 1vh 1vh rgba(0,0,0,.45))}

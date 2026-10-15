@@ -5173,7 +5173,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       return '<path d="M98 456 L126 456 Q140 460 140 468 L98 468 Z" fill="#1d1d24"/>';
     };
     var leg = function (cls, col) { return '<g class="tcleg ' + cls + '"><rect x="' + (w.o === 'dress' ? 97 : 94) + '" y="246" width="' + (w.o === 'dress' ? 22 : 28) + '" height="212" rx="10" fill="' + col + '"/>' + shoe() + '</g>'; };
-    var arm = function (cls, col) { return '<g class="tcarm ' + cls + '"><rect x="100" y="146" width="18" height="118" rx="9" fill="' + col + '"/><circle cx="109" cy="267" r="10" fill="' + sk + '"/></g>'; };
+    var arm = function (cls, col) { return '<g class="tcarm ' + cls + '"><rect x="100" y="146" width="18" height="118" rx="9" fill="' + col + '"/>' + (cls === 'f' && w.f ? '<rect x="108" y="14" width="5" height="290" rx="2" fill="#d9c08a" stroke="#8a6a30" stroke-width="1"/><image href="' + tcFlagUrl(w.f) + '" x="113" y="16" width="72" height="48" preserveAspectRatio="none"/>' : '') + '<circle cx="109" cy="267" r="10" fill="' + sk + '"/></g>'; };
     var sleeve = w.o === 'suit' ? c : sk, sleeveD = w.o === 'suit' ? cd : sk;
     var body = w.o === 'dress' ? '<path d="M82 144 Q108 130 134 144 Q138 186 128 224 Q156 300 170 366 Q110 384 46 366 Q62 300 88 224 Q78 186 82 144 Z" fill="' + c + '"/><path d="M88 224 Q108 230 128 224" stroke="' + cd + '" stroke-width="6" fill="none"/>'
       : w.o === 'jumpsuit' ? '<path d="M82 144 Q108 130 134 144 Q138 186 130 222 Q138 244 134 266 L82 266 Q78 244 86 222 Q78 186 82 144 Z" fill="' + c + '"/><path d="M86 222 Q108 228 130 222" stroke="' + cd + '" stroke-width="8" fill="none"/>'
@@ -5190,6 +5190,48 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       : w.h === 5 ? '<path d="M86 66 Q86 36 112 36 Q138 36 138 66 Z" fill="#e0283a"/><path d="M130 64 L170 66 Q168 72 132 70 Z" fill="#a31424"/>'
       : w.h === 6 ? '<ellipse cx="112" cy="62" rx="40" ry="7" fill="#3a3a48"/><path d="M90 62 Q92 34 112 32 Q132 34 134 62 Z" fill="#4a4a5a"/><rect x="90" y="52" width="44" height="6" fill="#d9a520"/>' : '';
     return '<svg class="tcgirl" viewBox="0 0 200 490" aria-hidden="true">' + hairBack + leg('b', legD) + arm('b', sleeveD) + leg('f', legC) + body + face + hairFront + hat + arm('f', sleeve) + '</svg>';
+  }
+  function tcFlagUrl(f) { return f === 'pride' ? 'images/flag_pride.png' : 'https://flagcdn.com/w160/' + f + '.png'; }
+  // The same contestant from the front, for when they stop and pose for the cameras (one arm up, the other on the hip)
+  function tcSvgFront(w) {
+    var sk = TC_SKIN[w.k], hr = TC_HAIR[w.r], c = TC_COLORS[w.c][1], cd = TC_COLORS[w.c][2], dress = w.o === 'dress', legC = dress ? sk : c, legD = dress ? sk : cd;
+    var sleeve = w.o === 'suit' ? c : sk, h = '';
+    // the hair behind the head
+    h += w.y === 0 ? '<path d="M68 86 Q66 46 100 44 Q134 46 132 86 L136 196 Q100 206 64 196 Z" fill="' + hr + '"/>' : w.y === 1 ? '<path d="M68 88 Q66 46 100 44 Q134 46 132 88 L134 128 Q100 136 66 128 Z" fill="' + hr + '"/>' : '<circle cx="100" cy="42" r="17" fill="' + hr + '"/><path d="M70 86 Q68 50 100 48 Q132 50 130 86 Z" fill="' + hr + '"/>';
+    // the legs and shoes
+    [[dress ? 81 : 75, legD], [dress ? 101 : 99, legC]].forEach(function (L) {
+      var x = L[0], wd = dress ? 18 : 26;
+      h += '<rect x="' + x + '" y="' + (dress ? 300 : 246) + '" width="' + wd + '" height="' + (dress ? 160 : 214) + '" rx="9" fill="' + L[1] + '"/>';
+      var cx = x + wd / 2;
+      h += w.s === 0 ? '<path d="M' + (cx - 10) + ' 458 Q' + cx + ' 452 ' + (cx + 10) + ' 458 L' + (cx + 8) + ' 470 L' + (cx - 8) + ' 470 Z" fill="#d9dce6" stroke="#8a8fa0" stroke-width="2"/>'
+        : w.s === 1 ? '<rect x="' + (cx - 15) + '" y="396" width="30" height="74" rx="8" fill="#6b3b1f" stroke="#3b1f0f" stroke-width="2"/>'
+        : '<ellipse cx="' + cx + '" cy="464" rx="15" ry="7" fill="#1d1d24"/>';
+    });
+    // the arm on the hip (behind the body)
+    h += '<path d="M76 152 Q50 196 70 232" stroke="' + sleeve + '" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="74" cy="234" r="10" fill="' + sk + '"/>';
+    // the body
+    h += dress ? '<path d="M74 144 Q100 132 126 144 Q130 186 120 224 Q150 300 164 366 Q100 384 36 366 Q50 300 80 224 Q70 186 74 144 Z" fill="' + c + '"/><path d="M80 224 Q100 230 120 224" stroke="' + cd + '" stroke-width="6" fill="none"/>'
+      : w.o === 'jumpsuit' ? '<path d="M74 144 Q100 132 126 144 Q130 186 122 222 Q130 244 126 266 L74 266 Q70 244 78 222 Q70 186 74 144 Z" fill="' + c + '"/><path d="M78 222 Q100 228 122 222" stroke="' + cd + '" stroke-width="8" fill="none"/>'
+      : '<path d="M70 142 Q100 128 130 142 L134 284 L66 284 Z" fill="' + c + '"/><path d="M90 136 L100 186 L110 136 Z" fill="#fff"/><path d="M90 136 L100 186 L110 136 M100 186 L100 282" stroke="' + cd + '" stroke-width="3" fill="none"/><circle cx="106" cy="214" r="3" fill="' + cd + '"/><circle cx="106" cy="240" r="3" fill="' + cd + '"/>';
+    // the neck, the head and the face
+    h += '<rect x="92" y="112" width="16" height="30" rx="6" fill="' + sk + '"/><circle cx="100" cy="92" r="30" fill="' + sk + '"/>' +
+      '<path d="M70 90 Q70 56 100 56 Q130 56 130 90 Q118 70 100 72 Q82 70 70 90 Z" fill="' + hr + '"/>' +
+      '<ellipse cx="84" cy="104" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/><ellipse cx="116" cy="104" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/>' +
+      '<path d="M90 108 Q100 117 110 108" stroke="#b0303a" stroke-width="3.5" fill="none" stroke-linecap="round"/>' +
+      (w.g ? '<path d="M78 86 L122 86" stroke="#111" stroke-width="3"/><rect x="80" y="84" width="17" height="12" rx="5" fill="#111"/><rect x="103" y="84" width="17" height="12" rx="5" fill="#111"/>'
+        : '<circle cx="89" cy="91" r="3.2" fill="#2a1a10"/><circle cx="111" cy="91" r="3.2" fill="#2a1a10"/><path d="M84 84 Q89 81 94 84 M106 84 Q111 81 116 84" stroke="#2a1a10" stroke-width="2" fill="none"/>');
+    // the hat
+    h += w.h === 1 ? '<rect x="79" y="18" width="42" height="44" rx="3" fill="#15151c"/><rect x="79" y="48" width="42" height="7" fill="#3a3a48"/><ellipse cx="100" cy="62" rx="34" ry="6" fill="#15151c"/>'
+      : w.h === 2 ? '<ellipse cx="100" cy="64" rx="56" ry="10" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M76 64 Q78 34 100 34 Q122 34 124 64 Z" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M77 58 Q100 52 123 58" stroke="#8b5cf6" stroke-width="6" fill="none"/>'
+      : w.h === 3 ? '<ellipse cx="100" cy="58" rx="36" ry="13" fill="#6d3cc0"/><circle cx="100" cy="44" r="4" fill="#6d3cc0"/>'
+      : w.h === 4 ? '<path d="M44 62 Q100 80 156 62 Q140 70 100 70 Q60 70 44 62 Z" fill="#a0642c"/><path d="M76 64 Q78 30 92 36 Q100 42 108 36 Q122 30 124 64 Z" fill="#b8763a"/>'
+      : w.h === 5 ? '<path d="M74 66 Q74 36 100 36 Q126 36 126 66 Z" fill="#e0283a"/><ellipse cx="100" cy="67" rx="30" ry="6" fill="#a31424"/>'
+      : w.h === 6 ? '<ellipse cx="100" cy="62" rx="40" ry="7" fill="#3a3a48"/><path d="M78 62 Q80 34 100 32 Q120 34 122 62 Z" fill="#4a4a5a"/><rect x="78" y="52" width="44" height="6" fill="#d9a520"/>' : '';
+    // the other arm up in the air (waving, or holding up the flag)
+    h += '<path d="M124 152 Q144 110 138 50" stroke="' + sleeve + '" stroke-width="18" fill="none" stroke-linecap="round"/>' +
+      (w.f ? '<rect x="136" y="-30" width="5" height="250" rx="2" fill="#d9c08a" stroke="#8a6a30" stroke-width="1"/><image href="' + tcFlagUrl(w.f) + '" x="141" y="-28" width="72" height="48" preserveAspectRatio="none"/>' : '') +
+      '<circle cx="138" cy="46" r="10" fill="' + sk + '"/>';
+    return '<svg class="tcgirl tcfront" viewBox="0 0 200 490" overflow="visible" aria-hidden="true">' + h + '</svg>';
   }
   var TC_FLAGN = { eu: 'Europe', pride: 'The Pride flag' };   // (flags that aren't a country's)
   function tcQuestion(girls, used) {
@@ -5696,7 +5738,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var wk = ov.querySelector('.tcwalk'), key = g.sec + ':' + g.cur;
     if ((!ov._3 || TC_FIG2D) && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
       wk.setAttribute('data-k', key);
-      wk.innerHTML = '<div class="tcg walking">' + g.girls.map(tcSvg).join('') + '</div>';
+      var one = function (w) { return '<span class="tcone">' + tcSvg(w) + tcSvgFront(w) + '</span>'; }, bk = g.girls.filter(function (w) { return w.row === 'back'; }), fr = g.girls.filter(function (w) { return w.row !== 'back'; });
+      wk.innerHTML = '<div class="tcg walking' + (g.girls.length > 1 ? ' grp' : '') + '">' + (bk.length ? '<div class="tcgrow back">' + bk.map(one).join('') + '</div>' : '') + '<div class="tcgrow front">' + fr.map(one).join('') + '</div></div>';   // (from the side while walking, from the front while posing)
       var el = wk.firstChild, at = function (ms, f) { setTimeout(function () { if (el.isConnected) f(); }, ms); };
       at(2200, function () { el.classList.remove('walking'); el.classList.add('posing'); });   // she stops, turns to the cameras and poses…
       [2500, 2900, 3400, 3900, 4400, 4900, 5500, 6000].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
