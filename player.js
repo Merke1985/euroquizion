@@ -764,10 +764,10 @@
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 Serving!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
-    var stn = ['', 'The dance floor', 'Double time', 'Skippy balls! 🏐'][z.stage || 1];
+    var stn = ['', 'Pink team', 'Blue team', 'Skippy balls! 🏐'][z.stage || 1];
     $('waittitle').textContent = z.st === 'play' ? 'Stage ' + (z.stage || 1) + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🪩 Serving!';
     var tm = svS.g === 'B' ? 'blue' : 'pink';
-    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : (z.order.length > 1 ? 'You’re in the ' + tm + ' team. ' : '') + (z.stage === 2 ? 'Two arrows at once? JUMP: hit both!' : z.stage === 3 ? 'A step on every beat, double points!' : 'Hit the arrow as it reaches the top: every hit is a step!');
+    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : (z.order.length > 1 ? 'You’re in the ' + tm + ' team. ' : '') + (z.stage !== 3 ? 'First slow, then double time. Two arrows at once? JUMP: hit both!' : z.stage === 3 ? 'A step on every beat, double points!' : 'Hit the arrow as it reaches the top: every hit is a step!');
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id) {   // the chart: arrows scroll up to the receptors; four big pads below
       box.setAttribute('data-id', z.id); S.chart = z.chart || []; S.notes = null;
