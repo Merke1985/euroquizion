@@ -6414,7 +6414,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.sv; if (!g || G.phase !== 'sv' || !m || m.id !== g.id || g.order.indexOf(m.pid) < 0 || g.res[m.pid] || typeof m.res !== 'string') return;
     var R = { p: 0, g: 0, m: 0, pts: 0 };
     g.chart.forEach(function (n, i) { if (!svMineN(g, m.pid, n)) return; var q = Math.max(0, Math.min(2, +m.res.charAt(i) || 0)); R[q === 2 ? 'p' : q ? 'g' : 'm']++; R.pts += SV_PTS[q] * (n[0] >= SV_STAGES[2].from ? 2 : 1); });
-    R.pump = Math.max(0, Math.min(40, Math.round(+m.pump || 0))); R.pts += R.pump * 2;   // (every skippy ball pumped up while waiting: 2 points)
+    R.pump = Math.max(0, Math.round(+m.pump || 0)); if (R.pump) R.pts += Math.max(1, 16 - Math.round(R.pump / 1000));   // (the skippy ball pumped up while waiting: the faster, the more points, up to 15)
     g.res[m.pid] = R; push();
     if (g.st === 'count' && g.order.every(function (k) { return g.res[k]; })) svEnd(g);
   }
@@ -6486,40 +6486,64 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ZB = Z0L - TS / 2 - 1.6;
     var cv = document.createElement('canvas'); cv.width = 512; cv.height = 256; var cx = cv.getContext('2d'), wtex = new T.CanvasTexture(cv); wtex.encoding = T.sRGBEncoding;
     var wall = new T.Mesh(new T.PlaneGeometry(C * TS + 6, 23), new T.MeshBasicMaterial({ map: wtex })); wall.position.set(0, 8, ZB - 3.5); sc.add(wall);
-    var arch = document.createElement('canvas'); arch.width = 128; arch.height = 128; (function (x) {
-      var gr = x.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, '#5f86d8'); gr.addColorStop(1, '#2b4a9a'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
-      x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(0, 0, 8, 128); x.fillRect(120, 0, 8, 128);
-      x.beginPath(); x.moveTo(20, 122); x.lineTo(20, 52); x.arc(64, 52, 44, Math.PI, 0); x.lineTo(108, 122); x.closePath(); x.fillStyle = '#ff1e3c'; x.fill();
-      x.lineWidth = 7; x.strokeStyle = '#ffc93c'; x.stroke(); x.lineWidth = 2; x.strokeStyle = '#7a3a00'; x.stroke();
-      x.strokeStyle = 'rgba(40,0,10,.75)'; x.lineWidth = 3; x.beginPath(); x.moveTo(26, 60); x.lineTo(102, 118); x.moveTo(102, 60); x.lineTo(26, 118); x.stroke();
-      x.fillStyle = '#d6e4ff'; x.fillRect(12, 40, 6, 82); x.fillRect(110, 40, 6, 82);
+    // the arcades: tiers of golden arches on a dark purple frame, each with a glowing red window and a lattice cross
+    var arch = document.createElement('canvas'); arch.width = 128; arch.height = 160; (function (x) {
+      x.fillStyle = '#22103a'; x.fillRect(0, 0, 128, 160);
+      var wg = x.createLinearGradient(0, 30, 0, 160); wg.addColorStop(0, '#ff3a5a'); wg.addColorStop(1, '#c0062a');
+      x.beginPath(); x.moveTo(24, 156); x.lineTo(24, 66); x.arc(64, 66, 40, Math.PI, 0); x.lineTo(104, 156); x.closePath(); x.fillStyle = wg; x.fill();
+      x.strokeStyle = 'rgba(70,0,20,.8)'; x.lineWidth = 3; x.beginPath(); x.moveTo(30, 74); x.lineTo(98, 152); x.moveTo(98, 74); x.lineTo(30, 152); x.moveTo(64, 28); x.lineTo(64, 156); x.stroke();
+      var gg = x.createLinearGradient(0, 0, 128, 0); gg.addColorStop(0, '#a8741a'); gg.addColorStop(.5, '#ffe08a'); gg.addColorStop(1, '#a8741a');
+      x.beginPath(); x.moveTo(16, 160); x.lineTo(16, 66); x.arc(64, 66, 48, Math.PI, 0); x.lineTo(112, 160); x.lineTo(104, 160); x.lineTo(104, 66); x.arc(64, 66, 40, 0, Math.PI, true); x.lineTo(24, 160); x.closePath(); x.fillStyle = gg; x.fill();
+      x.fillStyle = '#ffd86a'; x.fillRect(10, 112, 10, 48); x.fillRect(108, 112, 10, 48);
+      x.fillStyle = '#6a7ac8'; x.fillRect(0, 0, 128, 4);
     })(arch.getContext('2d'));
-    var archT = function (n, m) { var t = new T.CanvasTexture(arch); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(n, m); t.encoding = T.sRGBEncoding; return t; };
-    [-1, 1].forEach(function (sd) {   // three tiers of arcades on each side, stepping up towards the outside
-      [[12, 4, C * TS / 2 - 6, 2], [9, 3.6, C * TS / 2 - 4.5, 5.8], [6, 3.6, C * TS / 2 - 3, 9.4]].forEach(function (tr) {
-        var bx = new T.Mesh(new T.BoxGeometry(tr[0], tr[1], 1.4), [new T.MeshStandardMaterial({ color: '#3b5cb0' }), new T.MeshStandardMaterial({ color: '#3b5cb0' }), new T.MeshStandardMaterial({ color: '#8aa8f0' }), new T.MeshStandardMaterial({ color: '#3b5cb0' }), new T.MeshBasicMaterial({ map: archT(Math.round(tr[0] / 2.4), 1) }), new T.MeshStandardMaterial({ color: '#3b5cb0' })]);
-        bx.position.set(sd * tr[2], tr[3], ZB - 1); sc.add(bx);
-        var cap = new T.Mesh(new T.BoxGeometry(tr[0] + .3, .25, 1.6), new T.MeshStandardMaterial({ color: '#c8d8ff', metalness: .3 })); cap.position.set(sd * tr[2], tr[3] + tr[1] / 2 + .12, ZB - 1); sc.add(cap);
+    var archT = function (n) { var t = new T.CanvasTexture(arch); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(n, 1); t.encoding = T.sRGBEncoding; return t; };
+    var frameM = new T.MeshStandardMaterial({ color: '#22103a', roughness: .7 });
+    [-1, 1].forEach(function (sd) {   // three tiers of arcades on each side, each curving towards the middle
+      [[14, 3.6, 1.9, 0], [12, 3.6, 5.6, 1.2], [10, 3.6, 9.3, 2.4]].forEach(function (tr, ti) {
+        var n = Math.round(tr[0] / 1.9), g2 = new T.Group();
+        var bx = new T.Mesh(new T.BoxGeometry(tr[0], tr[1], 1), [frameM, frameM, frameM, frameM, new T.MeshBasicMaterial({ map: archT(n) }), frameM]);
+        g2.add(bx); g2.position.set(sd * (C * TS / 2 - tr[0] / 2 + 1 - tr[3]), tr[2], ZB - 1.6 - ti * .6); g2.rotation.y = -sd * .22; sc.add(g2);
+        var cap = new T.Mesh(new T.BoxGeometry(tr[0] + .2, .18, 1.1), new T.MeshStandardMaterial({ color: '#7a8ad8', metalness: .3 })); cap.position.y = tr[1] / 2 + .09; g2.add(cap);
       });
+      // a leopard-print slope in front of the arcades
+      var lc = document.createElement('canvas'); lc.width = 256; lc.height = 256; (function (x) { x.fillStyle = '#c99a3a'; x.fillRect(0, 0, 256, 256); for (var k = 0; k < 90; k++) { var px = (k * 73) % 256, py = (k * 151) % 256, rr = 6 + k % 5; x.fillStyle = '#2a1606'; x.beginPath(); x.ellipse(px, py, rr * 1.3, rr, k, 0, 6.28); x.fill(); x.fillStyle = '#8a5a1a'; x.beginPath(); x.ellipse(px, py, rr * .6, rr * .45, k, 0, 6.28); x.fill(); } })(lc.getContext('2d'));
+      var lt = new T.CanvasTexture(lc); lt.wrapS = lt.wrapT = T.RepeatWrapping; lt.repeat.set(3, 2); lt.encoding = T.sRGBEncoding;
+      var tri = new T.Shape(); tri.moveTo(0, 0); tri.lineTo(7, 0); tri.quadraticCurveTo(2.5, .6, 0, 4.2); tri.lineTo(0, 0);
+      var sl = new T.Mesh(new T.ExtrudeGeometry(tri, { depth: 3.4, bevelEnabled: false }), new T.MeshStandardMaterial({ map: lt, roughness: .9 })); sl.scale.x = -sd; sl.position.set(sd * (C * TS / 2 + 1.2), 0, ZB - .4); sc.add(sl);   // (sloping down towards the stage)
     });
     var gold = new T.MeshStandardMaterial({ color: '#ffc93c', metalness: .9, roughness: .25, emissive: '#5a3a00' });
-    var hp = []; for (i = 0; i <= 120; i++) { var a = i / 120 * Math.PI * 2; hp.push(new T.Vector3(16 * Math.pow(Math.sin(a), 3) * .34, (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) * .34, 0)); }
-    var heart = new T.Group(); heart.position.set(0, 7.2, ZB - .4); sc.add(heart);
-    heart.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(hp, true), 200, .28, 10, true), gold));
-    var bulbs = new T.InstancedMesh(new T.SphereGeometry(.2, 10, 8), new T.MeshBasicMaterial({ color: '#ffffff' }), 44), bm = new T.Matrix4();
-    for (i = 0; i < 44; i++) { var q2 = hp[Math.floor(i * 120 / 44)]; bm.makeTranslation(q2.x, q2.y, .3); bulbs.setMatrixAt(i, bm); bulbs.setColorAt(i, col.set('#fff2c0')); }
-    heart.add(bulbs);
-    var orn = new T.Group(); orn.position.set(0, 4.1, .3); heart.add(orn);   // (the golden ornament where the two halves meet)
-    [[0, 0, .75], [-.7, -.3, .5], [.7, -.3, .5], [0, .9, .45], [-.45, -.9, .4], [.45, -.9, .4], [0, -1.3, .35]].forEach(function (o) { var m = new T.Mesh(new T.IcosahedronGeometry(o[2], 0), gold); m.position.set(o[0], o[1], 0); orn.add(m); });
-    var ls = new T.Shape();   // the lips: an outline with the mouth cut out
-    ls.moveTo(-4.4, 0); ls.bezierCurveTo(-3.4, 1.4, -2, 2.6, -.9, 2.3); ls.bezierCurveTo(-.4, 2.2, -.2, 1.8, 0, 1.75); ls.bezierCurveTo(.2, 1.8, .4, 2.2, .9, 2.3); ls.bezierCurveTo(2, 2.6, 3.4, 1.4, 4.4, 0);
-    ls.bezierCurveTo(3.2, -2.4, 1.6, -3, 0, -3); ls.bezierCurveTo(-1.6, -3, -3.2, -2.4, -4.4, 0);
-    var mh = new T.Path(); mh.absellipse(0, -.35, 2.4, 1.55, 0, Math.PI * 2, true); ls.holes.push(mh);
-    var lips = new T.Mesh(new T.ExtrudeGeometry(ls, { depth: .9, bevelEnabled: true, bevelThickness: .35, bevelSize: .3, bevelSegments: 4, curveSegments: 24 }), new T.MeshStandardMaterial({ color: '#d0102a', roughness: .25, metalness: .2, emissive: '#3a0008' }));
-    lips.position.set(0, 3.1, ZB + .2); sc.add(lips);
-    var dark = new T.Mesh(new T.CircleGeometry(1.5, 32), new T.MeshBasicMaterial({ color: '#12040c' })); dark.scale.set(1.55, 1, 1); dark.position.set(0, 2.75, ZB + .05); sc.add(dark);
-    var mouth = new T.Mesh(new T.IcosahedronGeometry(1.3, 2), new T.MeshStandardMaterial({ color: '#e8ecff', metalness: 1, roughness: .12, emissive: '#3a2a4a', flatShading: true })); mouth.position.set(0, 2.75, ZB + .7); sc.add(mouth);   // (a disco ball in her mouth)
-    var mlight = new T.PointLight('#ffffff', .9, 8); mlight.position.set(0, 3.4, ZB + 3); sc.add(mlight);
+    var hframe = new T.MeshStandardMaterial({ color: '#2a0a34', metalness: .4, roughness: .5 });
+    var hp = []; for (i = 0; i <= 120; i++) { var a = i / 120 * Math.PI * 2; hp.push(new T.Vector3(16 * Math.pow(Math.sin(a), 3) * .36, (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) * .36, 0)); }
+    var heart = new T.Group(); heart.position.set(0, 7.4, ZB - .6); sc.add(heart);
+    var bulbs = new T.InstancedMesh(new T.SphereGeometry(.17, 10, 8), new T.MeshBasicMaterial({ color: '#ffffff' }), 80), bm = new T.Matrix4(), nb = 0;
+    [[1, 0, .34, 48], [.58, -1.6, .26, 32]].forEach(function (h) {   // the big heart and a smaller one inside: dark frames studded with golden bulbs
+      var pts = hp.map(function (v) { return new T.Vector3(v.x * h[0], v.y * h[0] + h[1], 0); });
+      heart.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts, true), 200, h[2], 10, true), hframe));
+      heart.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts, true), 200, h[2] * .35, 6, true), gold));
+      for (var k = 0; k < h[3]; k++) { var q2 = pts[Math.floor(k * 120 / h[3])]; bm.makeTranslation(q2.x, q2.y, h[2] + .05); bulbs.setMatrixAt(nb, bm); bulbs.setColorAt(nb, col.set('#fff2c0')); nb++; }
+    });
+    bulbs.count = nb; heart.add(bulbs);
+    [[0, 4.3, 1], [0, 1.1, .7]].forEach(function (o2) {   // golden ornaments where the halves meet
+      var orn = new T.Group(); orn.position.set(0, o2[1], .4); orn.scale.setScalar(o2[2]); heart.add(orn);
+      [[0, 0, .75], [-.7, -.3, .5], [.7, -.3, .5], [0, .9, .45], [-.45, -.9, .4], [.45, -.9, .4], [0, -1.3, .35], [-1, .3, .3], [1, .3, .3]].forEach(function (o) { var m = new T.Mesh(new T.IcosahedronGeometry(o[2], 0), gold); m.position.set(o[0], o[1], 0); orn.add(m); });
+    });
+    // the giant lips: glossy, a darker line between them, and a huge mirror ball in the open mouth
+    var ls = new T.Shape();
+    ls.moveTo(-5.4, .2); ls.bezierCurveTo(-4.2, 1.8, -2.6, 3.1, -1.1, 2.8); ls.bezierCurveTo(-.5, 2.7, -.25, 2.2, 0, 2.15); ls.bezierCurveTo(.25, 2.2, .5, 2.7, 1.1, 2.8); ls.bezierCurveTo(2.6, 3.1, 4.2, 1.8, 5.4, .2);
+    ls.bezierCurveTo(4, -2.9, 2, -3.7, 0, -3.7); ls.bezierCurveTo(-2, -3.7, -4, -2.9, -5.4, .2);
+    var mh = new T.Path(); mh.absellipse(0, -.3, 3.3, 2.05, 0, Math.PI * 2, true); ls.holes.push(mh);
+    var lipM = new T.MeshPhysicalMaterial ? new T.MeshPhysicalMaterial({ color: '#520008', roughness: .22, metalness: .05, clearcoat: .8, clearcoatRoughness: .15, emissive: '#0c0001' }) : new T.MeshStandardMaterial({ color: '#c40c24', roughness: .2, emissive: '#3a0008' });
+    var lips = new T.Mesh(new T.ExtrudeGeometry(ls, { depth: 1.2, bevelEnabled: true, bevelThickness: .55, bevelSize: .45, bevelSegments: 6, curveSegments: 32 }), lipM);
+    lips.position.set(0, 3.3, ZB + .3); sc.add(lips);
+    var crease = new T.Mesh(new T.TorusGeometry(1, .07, 6, 48), new T.MeshBasicMaterial({ color: '#5a0010' })); crease.scale.set(3.35, 2.1, 1); crease.position.set(0, 3, ZB + 1.75); sc.add(crease);
+    var shine = new T.Mesh(new T.PlaneGeometry(2.2, .35), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .35 })); shine.position.set(-2.4, 5.2, ZB + 2.05); shine.rotation.z = .35; sc.add(shine);
+    var shine2 = shine.clone(); shine2.position.x = 2.4; shine2.rotation.z = -.35; sc.add(shine2);
+    var dark = new T.Mesh(new T.CircleGeometry(1, 40), new T.MeshBasicMaterial({ color: '#12040c' })); dark.scale.set(3.3, 2.05, 1); dark.position.set(0, 3, ZB + .2); sc.add(dark);
+    var mc = document.createElement('canvas'); mc.width = 256; mc.height = 128; (function (x) { for (var yy = 0; yy < 16; yy++) for (var xx = 0; xx < 32; xx++) { var v = (xx * 7 + yy * 13) % 9; x.fillStyle = v < 3 ? '#ff2a4a' : v < 5 ? '#ffd0d8' : v < 7 ? '#5a0a1a' : '#a01030'; x.fillRect(xx * 8 + .5, yy * 8 + .5, 7, 7); } })(mc.getContext('2d'));
+    var mt = new T.CanvasTexture(mc); mt.encoding = T.sRGBEncoding;
+    var mouth = new T.Mesh(new T.SphereGeometry(2.6, 32, 16), new T.MeshStandardMaterial({ map: mt, metalness: .7, roughness: .25, emissive: '#2a0008', emissiveMap: mt, emissiveIntensity: .5 })); mouth.position.set(0, 3, ZB - 1.2); sc.add(mouth);   // (a huge mirror ball, deep in the mouth)
+    var mlight = new T.PointLight('#ff6a80', 1.1, 10); mlight.position.set(0, 4, ZB + 3); sc.add(mlight);
     var spot = new T.PointLight('#ff5a7a', 1.2, 30); spot.position.set(0, 6, ZB + 5); sc.add(spot);
     var ball = { rotation: {} };   // (no disco ball on this set)
     // truss towers with moving heads: soft additive cones
@@ -6559,7 +6583,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C); col.set((lx + ly) % 2 ? '#0c0c10' : '#b8902a').convertSRGBToLinear(); ltiles.setColorAt(i, col); }   // (her stage: deep red and black, fixed)
       ltiles.instanceColor.needsUpdate = true;
       beams.forEach(function (b, j) { b.arm.rotation.z = b.sd * (.55 + .35 * Math.sin(t * .9 + j)) ; b.arm.rotation.x = .25 * Math.sin(t * .7 + j * 1.7); b.cone.material.color.set(p[(j + st.n) % 3]); b.cone.material.opacity = .1 + fl * .12; });
-      for (var bi = 0; bi < 44; bi++) bulbs.setColorAt(bi, col.set((bi + st.n) % 2 ? '#fff6d0' : '#ff9a30').multiplyScalar((bi + st.n) % 2 ? 1 : .55 + fl * .4)); bulbs.instanceColor.needsUpdate = true;
+      for (var bi = 0; bi < bulbs.count; bi++) bulbs.setColorAt(bi, col.set((bi + st.n) % 2 ? '#fff6d0' : '#ff9a30').multiplyScalar((bi + st.n) % 2 ? 1 : .55 + fl * .4)); bulbs.instanceColor.needsUpdate = true;
       mouth.rotation.y = t * .7;
       sk.forEach(function (s, j) { st.e.set(0, 0, .5 * Math.sin(t * 4.1 + s.ph)); st.q.setFromEuler(st.e); st.p.set(s.x, -.2 + .2 * Math.sin(t * 4.1 + s.ph), s.z); m4.compose(st.p, st.q, st.s); sticks.setMatrixAt(j, m4); });
       sticks.instanceMatrix.needsUpdate = true;
@@ -6678,6 +6702,31 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var SV_RIDE_DAN = function (hair, skin) { return svRider({ ball: '#e0102a', ballS: '#6a0614', top: '#e3141e', legs: '#8a1a24', boots: '#141014', arms: '#e3141e', skin: skin,
     back: '<path d="M44 6 Q50 -6 58 4 Q62 18 56 24 Z" fill="' + hair + '"/>',
     head: '<ellipse cx="50" cy="21" rx="9" ry="10.5" fill="' + skin + '"/><path d="M41 19 Q41 9 50 9 Q59 9 59 19 Q55 13 50 13 Q45 13 41 19 Z" fill="' + hair + '"/><path d="M45 21 h3 M52 21 h3" stroke="#111" stroke-width="1.2"/><ellipse cx="50" cy="26" rx="2.4" ry="1.4" fill="#a00c18"/>' }, true); };
+  // her two male backup dancers: curly hair, a red fluffy shrug, a long red coat with a black sash, black thigh-high heeled boots, a big black fan
+  var SV_BACKUP_M = function (hair, skin) {
+    var fur = '', i; for (i = 0; i < 60; i++) { var a = i * 2.39996, rr = (i * 7 % 13) + 4; fur += '<circle cx="' + (160 + Math.cos(a) * (40 + rr)).toFixed(1) + '" cy="' + (178 + Math.sin(a) * (30 + rr * .5)).toFixed(1) + '" r="' + (9 + i % 4 * 2) + '" fill="' + ['#e3142a', '#ff3a46', '#b80c1e', '#f0202f'][i % 4] + '"/>'; }
+    var furArm = function (x1, y1, x2, y2) { var o = ''; for (var k = 0; k <= 6; k++) { var t = k / 6; o += '<circle cx="' + (x1 + (x2 - x1) * t).toFixed(1) + '" cy="' + (y1 + (y2 - y1) * t).toFixed(1) + '" r="' + (19 - k) + '" fill="' + (k % 2 ? '#e3142a' : '#ff3a46') + '"/>'; } return o; };
+    var curls = ''; for (i = 0; i < 16; i++) { var b2 = i / 16 * Math.PI; curls += '<circle cx="' + (160 + Math.cos(b2 + Math.PI) * 26).toFixed(1) + '" cy="' + (88 - Math.sin(b2) * 24).toFixed(1) + '" r="' + (8 + i % 3) + '" fill="' + hair + '"/>'; }
+    return '<svg viewBox="0 0 320 540" class="svleadsvg svbackup" aria-hidden="true">' +
+      '<ellipse cx="160" cy="528" rx="72" ry="8" fill="rgba(0,0,0,.35)"/><g class="svlbody">' +
+      '<path d="M120 236 L200 236 L214 420 L106 420 Z" fill="#b80c1e" stroke="#5a0010" stroke-width="2"/>' +   // (the long red coat)
+      '<path d="M156 236 L164 236 L168 420 L152 420 Z" fill="#7a0614"/>' +
+      '<path d="M124 380 L154 380 L150 508 L132 508 Z M166 380 L196 380 L190 508 L172 508 Z" fill="#141014" stroke="#000" stroke-width="2"/>' +   // (thigh-high boots)
+      '<path d="M128 506 L156 506 L158 520 L130 520 Z M170 506 L198 506 L200 520 L172 520 Z" fill="#141014"/><path d="M132 520 L134 530 M196 520 L194 530" stroke="#141014" stroke-width="4"/>' +
+      '<path d="M122 150 Q160 140 198 150 L204 240 L116 240 Z" fill="' + skin + '"/><path d="M122 150 Q160 140 198 150 L204 240 L116 240 Z" fill="rgba(20,8,10,.35)"/>' +
+      '<path d="M114 232 Q160 246 206 232 L208 262 Q160 276 112 262 Z" fill="#141014"/><path d="M190 250 Q214 300 200 350 L186 346 Q196 300 178 258 Z" fill="#141014"/>' +   // (the black sash, tied at the side)
+      fur + furArm(116, 168, 96, 236) + furArm(204, 168, 226, 236) +
+      '<path d="M148 120 L172 120 L174 146 L146 146 Z" fill="' + skin + '"/>' +
+      '<circle cx="94" cy="242" r="8" fill="' + skin + '"/><circle cx="228" cy="242" r="8" fill="' + skin + '"/>' +
+      '<g class="svlarm r"><path d="M230 244 L282 196 Q292 236 274 270 Z" fill="#141014"/><path d="M230 244 L282 196 M230 244 L288 218 M230 244 L284 244 M230 244 L274 268" stroke="#3a3a40" stroke-width="1.5"/></g>' +   // (a big black fan)
+      '<g class="svlhead">' + curls + '<ellipse cx="160" cy="98" rx="25" ry="29" fill="' + skin + '"/>' +
+      '<path d="M146 94 Q151 90 156 94 M164 94 Q169 90 174 94" stroke="#111" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      '<g class="svlmouth"><path d="M152 110 Q160 108 168 110 Q166 118 160 118 Q154 118 152 110 Z" fill="#5a1a1a"/></g>' +
+      '<circle cx="135" cy="102" r="2.6" fill="#ffd23f"/></g>' +
+      '</g></svg>';
+  };
+  var SV_RIDE_DANM = function (hair, skin) { return svRider({ ball: '#e0102a', ballS: '#6a0614', top: '#e3142a', legs: '#141014', boots: '#141014', arms: '#e3142a', skin: skin,
+    head: '<circle cx="43" cy="14" r="5" fill="' + hair + '"/><circle cx="50" cy="10" r="6" fill="' + hair + '"/><circle cx="57" cy="14" r="5" fill="' + hair + '"/><ellipse cx="50" cy="22" rx="8.5" ry="10" fill="' + skin + '"/><path d="M45 21 h3 M52 21 h3" stroke="#111" stroke-width="1.2"/><ellipse cx="50" cy="27" rx="2.4" ry="1.3" fill="#5a1a1a"/>' }, true); };
   // her side view (facing right; mirrored to walk left): for crossing her stage, stamping on her heels
   var SV_LEAD_SIDE = (function () {
     var leg = function (cls) { return '<g class="svsleg ' + cls + '"><path d="M150 296 Q138 360 146 420 Q150 470 144 500 L178 500 Q182 466 178 420 Q186 360 182 296 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><path d="M140 496 Q138 516 150 522 L200 522 Q206 512 194 500 Q180 494 172 494 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><rect x="142" y="519" width="56" height="8" rx="3" fill="#a00c18"/><path d="M146 527 L146 538 L152 538 L152 527 Z" fill="#a00c18"/></g>'; };
@@ -6741,7 +6790,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
-      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall(col[0], col[1]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + SV_RIDE_LEAD + '</div>' + [['#2a1810', '#e8b896'], ['#1a1214', '#c98a62']].map(function (d, j) { return '<div class="svins svdan d' + j + '"><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_BACKUP(d[0], d[1]).replace(/svnet/g, 'svnet' + j) + SV_RIDE_DAN(d[0], d[1]) + '</div><div class="svnb insd d' + j + '"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>'; }).join('') + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall(col[0], col[1]) + svDancer(col[0], col[1], p && p.cc) + svRider({ ball: col[0], ballS: col[1], top: col[0], legs: col[1], boots: '#1a1a22' }) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
+      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall(col[0], col[1]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + SV_RIDE_LEAD + '</div>' + [['#2a1810', '#e8b896'], ['#1a1214', '#c98a62'], ['#1a0e08', '#7a4a2a', 1], ['#120a06', '#5a3418', 1]].map(function (d, j) { return '<div class="svins svdan d' + j + '"><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + (d[2] ? SV_BACKUP_M(d[0], d[1]) + SV_RIDE_DANM(d[0], d[1]) : SV_BACKUP(d[0], d[1]).replace(/svnet/g, 'svnet' + j) + SV_RIDE_DAN(d[0], d[1])) + '</div><div class="svnb insd d' + j + '"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>'; }).join('') + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall(col[0], col[1]) + svDancer(col[0], col[1], p && p.cc) + svRider({ ball: col[0], ballS: col[1], top: col[0], legs: col[1], boots: '#1a1a22' }) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
     }
     if (!g.home) g.home = svHomes(g);
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
@@ -6763,7 +6812,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }   /* (the hop class first, then the move: so it never slides) */
     var wk = ins.classList.contains('walk'); if (wk && ins._wr == null) ins._wr = SV_LROW; if (!wk) ins._wr = null;
     var lcx = lc + (wk ? 0 : ix), lry = bph === 'hop' ? 2 : wk ? ins._wr : Math.max(0, Math.min(2, SV_LROW + iy)); ins._ry = lry;   /* (walking: straight along the row she's on) */   /* (walking: straight along her row) */ place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
-    [-3, 3].forEach(function (dx, j) {   // her two backup dancers: one tile free on either side, doing exactly what she does
+    [-4, 4, -2, 2].forEach(function (dx, j) {   // (the two women on the outside, the two men closest to her: a tile free between everyone)   // her two backup dancers: one tile free on either side, doing exactly what she does
       var dn = ov.querySelector('.svdan.d' + j), db = ov.querySelector('.svnb.insd.d' + j); if (!dn) return;
       var cl = 'svins svdan d' + j + ' ' + ins.className.replace(/\bsvins\b/, '').trim(); if (dn.className !== cl) dn.className = cl;   /* (the walk class first, then the move: so they walk too, not slide) */
       dn.style.setProperty('--wd', ins.style.getPropertyValue('--wd'));
@@ -6804,7 +6853,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nm = function (k) { return players[k] ? esc(players[k].name) : ''; };
     var rs = ov.querySelector('.svres'), rh = '';   // the results: everyone's perfects, goods and misses
     if (g.st === 'count') rh = '<h3>🪩 Counting the steps…</h3>';
-    else if (g.st === 'end') rh = '<h3>🪩 The results</h3><table><tr><th></th><th>Perfect</th><th>Good</th><th>Miss</th><th>🎈</th><th>Points</th></tr>' + g.order.slice().sort(function (a, c) { return g.dist[c] - g.dist[a]; }).map(function (k) { var R = g.res[k] || { p: 0, g: 0, m: 0, pts: 0 }, w = g.win.indexOf(k) >= 0; return '<tr class="' + (w ? 'w' : '') + (g.grp[k] === 'B' ? ' b' : ' a') + '"><td>' + (w ? '🏆 ' : '') + nm(k) + '</td><td>' + R.p + '</td><td>' + R.g + '</td><td>' + R.m + '</td><td>' + (R.pump || 0) + '</td><td><b>' + R.pts + '</b></td></tr>'; }).join('') + '</table>';
+    else if (g.st === 'end') rh = '<h3>🪩 The results</h3><table><tr><th></th><th>Perfect</th><th>Good</th><th>Miss</th><th>🎈</th><th>Points</th></tr>' + g.order.slice().sort(function (a, c) { return g.dist[c] - g.dist[a]; }).map(function (k) { var R = g.res[k] || { p: 0, g: 0, m: 0, pts: 0 }, w = g.win.indexOf(k) >= 0; return '<tr class="' + (w ? 'w' : '') + (g.grp[k] === 'B' ? ' b' : ' a') + '"><td>' + (w ? '🏆 ' : '') + nm(k) + '</td><td>' + R.p + '</td><td>' + R.g + '</td><td>' + R.m + '</td><td>' + (R.pump ? (R.pump / 1000).toFixed(1) + 's' : '–') + '</td><td><b>' + R.pts + '</b></td></tr>'; }).join('') + '</table>';
     if (rs._h !== rh) { rs._h = rh; rs.innerHTML = rh; rs.classList.toggle('on', !!rh); }
     var msg = g.st === 'intro' || g.st === 'play' ? '' : g.st === 'ready' ? '' : g.win.length ? '🏆 ' + g.win.map(nm).join(' & ') + (g.win.length > 1 ? ' win' : ' wins') + '! +' + g.prize : 'The end!';
     var me = ov.querySelector('.svmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;

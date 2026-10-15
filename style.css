@@ -5706,3 +5706,5 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svui .svrec.flash.f2 svg path,.svui .svrec.flash.f1 svg path,.svui .svrec.flash.f0 svg path{fill:rgba(255,255,255,.08)}
 .svui .svrec.flash.f2 svg path{animation:svrf2 .35s ease-out}.svui .svrec.flash.f1 svg path{animation:svrf1 .35s ease-out}.svui .svrec.flash.f0 svg path{animation:svrf0 .35s ease-out}
 @keyframes svrf2{0%{fill:#ffd23f}}@keyframes svrf1{0%{fill:#9fe7ff}}@keyframes svrf0{0%{fill:#ff4d4d}}
+.svins.svdan.d1 .svlbody,.svins.svdan.d3 .svlbody{animation-delay:-.49s}
+.svpump.done em{visibility:hidden}.svpump.done .svpn{color:#ffd23f}

@@ -756,7 +756,7 @@
     svS.g = (z.grp || {})[pid] || 'A';
     var S = svS;
     if ((z.st === 'count' || z.st === 'end') && mine && !S.sent && S.chart) {   // the song is over: send my results (once)
-      S.sent = true; var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''), zid = z.id, send = function () { if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res, pump: S.balls }); };
+      S.sent = true; var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''), zid = z.id, send = function () { if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res, pump: S.pdone || 0 }); };
       send(); clearInterval(S.rs); S.rs = setInterval(function () { var z2 = state && state.sv; if (!z2 || z2.id !== zid || z2.st === 'end' || (z2.rcv || []).indexOf(pid) >= 0) { clearInterval(S.rs); return; } send(); }, 900);   // (sent again until the big screen has it: a message can get lost)
     }
     if (z.st === 'count') { svStop(); box.classList.add('hidden'); $('waittitle').textContent = '🪩 Counting the steps…'; $('waitsub').textContent = 'Look at the big screen!'; return; }
@@ -778,15 +778,15 @@
     if (box.getAttribute('data-id') !== z.id) {   // the chart: arrows scroll up to the receptors; four big pads below
       box.setAttribute('data-id', z.id); S.chart = z.chart || []; S.notes = null;
       var A = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';
-      box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div><div class="svwt"></div><div class="svpump"><div class="svpball"><i></i></div><div class="svpump2"><i class="svph"></i><i class="svpcyl"></i></div><b class="svpn"></b><em>Slide up and down to pump!</em></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
+      box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div><div class="svwt"></div><div class="svpump"><div class="svpball"><i></i></div><div class="svpump2"><i class="svph"></i><i class="svpcyl"></i></div><b class="svpn"></b><em>Pump it up! 20 pumps, as fast as you can!</em></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
       (function () {   // while the other team dances: pump up a skippy ball (slide a finger up and down); every full ball is a bonus
         var pu = box.querySelector('.svpump'), y0 = 0, p0 = 0;
-        var paint = function () { var S2 = svS; if (!S2) return; pu.style.setProperty('--p', S2.pp.toFixed(3)); pu.style.setProperty('--f', S2.pf.toFixed(3)); pu.querySelector('.svpn').textContent = S2.balls ? '🎈 × ' + S2.balls : ''; };
+        var paint = function () { var S2 = svS; if (!S2) return; pu.style.setProperty('--p', S2.pp.toFixed(3)); pu.style.setProperty('--f', S2.pf.toFixed(3)); pu.querySelector('.svpn').textContent = S2.pdone ? '🎈 Full in ' + (S2.pdone / 1000).toFixed(1) + 's!' : S2.pn ? S2.pn + ' / 20' : ''; pu.classList.toggle('done', !!S2.pdone); };
         pu.addEventListener('pointerdown', function (e) { e.preventDefault(); y0 = e.clientY; p0 = svS ? svS.pp : 0; try { pu.setPointerCapture(e.pointerId); } catch (x) {} });
         pu.addEventListener('pointermove', function (e) {
           var S2 = svS; if (!S2 || !(e.buttons || e.pressure)) return;
           S2.pp = Math.max(0, Math.min(1, p0 + (e.clientY - y0) / (pu.clientHeight * .5)));
-          if (S2.pp > .85 && !S2.pdown) { S2.pdown = true; S2.pf = Math.min(1, S2.pf + .1); try { navigator.vibrate && navigator.vibrate(10); } catch (x) {} if (S2.pf >= 1) { S2.balls++; S2.pf = 0; pu.classList.remove('full'); void pu.offsetWidth; pu.classList.add('full'); } }   // (a full stroke down: a puff of air)
+          if (S2.pp > .85 && !S2.pdown && !S2.pdone) { S2.pdown = true; if (!S2.pn) S2.pt0 = Date.now(); S2.pn = (S2.pn || 0) + 1; S2.pf = Math.min(1, S2.pn / 20); try { navigator.vibrate && navigator.vibrate(10); } catch (x) {} if (S2.pn >= 20) { S2.pdone = Math.max(1, Date.now() - S2.pt0); pu.classList.remove('full'); void pu.offsetWidth; pu.classList.add('full'); try { navigator.vibrate && navigator.vibrate([30, 40, 60]); } catch (x) {} } }   // (a full stroke down: a puff of air; 20 to fill the ball, the faster the better)
           if (S2.pp < .15) S2.pdown = false;
           paint();
         });
