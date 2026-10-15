@@ -5260,3 +5260,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 /* the vote cards: standing still, mouths closed (they only start once they're on the stage) */
 .ruvart .rsmouth{transform:scaleY(.22)!important;animation:none!important}
 .ruvart .rsspk{animation:none;opacity:0}
+/* the singing mouths: a calmer pace */
+.rus2d.dance .rsmouth{animation-duration:.75s}
+.rus2d.yel.dance .rsmouth{animation-duration:.65s}
