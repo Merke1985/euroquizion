@@ -6314,7 +6314,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
   var SV_VID = 'WPfV96fRvW0', SV_S = 0, SV_BT = 60000 / 122 * 2, SV_PHASE = -3, SV_LAG = 90,   /* (measured: exactly 122 BPM, and in the video the beat starts right at 0:00: bounce 0 = 0:00; the song plays from the start, under the presenters. SV_LAG: the sound reaches the room a little after the player reports its time) */ svLoop = null, svTimer = null, svSongT = null;
-  var SV_STAGES = [{ n: 1, t: 'Pink team', from: 32, to: 74, at: 0 }, { n: 2, t: 'Blue team', from: 84, to: 126, at: 78 }, { n: 3, t: 'Skippy balls!', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 144, SV_HOP = 152, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
+  var SV_STAGES = [{ n: 1, t: 'Red team', from: 32, to: 74, at: 0 }, { n: 2, t: 'Blue team', from: 84, to: 126, at: 78 }, { n: 3, t: 'Skippy balls!', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 144, SV_HOP = 152, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { var S = SV_STAGES[0]; SV_STAGES.forEach(function (x) { if (t >= x.at) S = x; }); return S; }
   // Stages 1 and 2 are an aerobics class: every arrow you hit is a step on the stage (left, forward, back, right), and the
@@ -6336,7 +6336,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (jump) { var o = Math.random() < .5 ? 0 : 1, jt = t0 + 4 * gap; N.push([jt, o, 0, ph, 1, solo ? '*' : grp], [jt, 3 - o, 0, ph, 1, solo ? '*' : grp]); }
       ph++;
     }
-    [32, 40, 48].forEach(function (t) { set(t, 2, 'A'); }); [58, 64, 70].forEach(function (t) { set(t, 1, 'A', 1); });   // pink team: a step every four beats, then every two beats (with a JUMP after each set)
+    [32, 40, 48].forEach(function (t) { set(t, 2, 'A'); }); [58, 64, 70].forEach(function (t) { set(t, 1, 'A', 1); });   // red team: a step every four beats, then every two beats (with a JUMP after each set)
     [84, 92, 100].forEach(function (t) { set(t, 2, 'B'); }); [110, 116, 122].forEach(function (t) { set(t, 1, 'B', 1); });   // blue team, the same length (10 seconds in between while she walks over)
     // then a break: she walks to the middle (2:58); the skippy balls come up out of the floor (3:12); and at 3:21.5, the last chorus:
     for (var k3 = 0; k3 < 8; k3++) set(162 + k3 * 2, .5, '*');   // stage 3: everyone together on the skippy balls, a step on every beat
@@ -6365,12 +6365,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     order.forEach(function (k, i) { G.sv.grp[k] = i % 2 ? 'B' : 'A'; });   // (two groups, taking turns)
     G.sv.home = svHomes(G.sv);
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
-    var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving! 🪩 As background dancers… I hope.'];
+    var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
     setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, 1400);
-    setTimeout(function () { if (G.sv === g) svSong(true); }, 1400 + Math.max(3200, talkLen(l0[0], l0[1], 2400)));   // (and the song cuts in already: the presenters talk over its intro)
+    setTimeout(function () { if (G.sv === g) svSong(true); }, 1400 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (she cuts him off)   // (and the song cuts in already: the presenters talk over its intro)
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
-  var SV_LINES = [['her', 'Oh! She’s already starting! You’d better get ready!'], ['him', 'Hurry! Take your places, and follow her instructions!'], ['her', 'Hit the arrows on your phone as they reach the top: every arrow is a step. The wrong way? You fall through the floor!'], ['him', 'Pink team first, then blue team. And at the end… everyone together, on skippy balls! 🏐'], ['her', 'Here she comes! Pink team: eyes on your phones!']];
+  var SV_LINES = [['her', 'Oh! She’s already starting!'], ['him', 'Follow her instructions: press the arrows at the right time!'], ['her', 'When it’s your turn, look at your phones!']];
   function svIntro(g) {
     var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
     g.entAt = g.t0 + 2600;   // (everyone walks onto their spot)
@@ -6435,7 +6435,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       g.chart.forEach(function (n, i) {   // the soft beat tick, and the bots, once per arrow
         if (n[0] > b + .05 || n[0] < b - .5 || (g.tk || (g.tk = {}))[i]) return; g.tk[i] = 1;
         if (!REMOTE && (n[0] % 1 === 0) && !(i > 0 && g.chart[i - 1][0] === n[0])) { if (n[2]) Music.discoTick(true); else Music.discoTick(); }
-        g.order.forEach(function (pk) { var p = players[pk]; if (!p || !p.bot || !svMineN(g, pk, n)) return; var sk = (p.pid.charCodeAt(1) % 5) / 10 + .45, r = Math.random(); var wd = Math.random() < .1 ? (n[1] + 1 + Math.floor(Math.random() * 3)) % 4 : n[1]; setTimeout(function () { svMsg({ pid: pk, id: g.id, i: i, d: wd, q: r < sk * .6 ? 2 : r < sk + .15 ? 1 : 0 }); }, 60 + Math.random() * 200); });
+        g.order.forEach(function (pk) { var p = players[pk]; if (!p || !p.bot || !svMineN(g, pk, n)) return; /* (bots: always perfect) */ setTimeout(function () { svMsg({ pid: pk, id: g.id, i: i, d: n[1], q: 2 }); }, 40 + Math.random() * 60); });
       });
       if (now >= g.ends) { svEnd(g); return; }
     }
@@ -6658,7 +6658,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<g class="svsarm f">' + sleeve('M180 180 Q206 214 214 198 Q220 170 214 136') + '<circle cx="214" cy="136" r="8.5" fill="#f0c8b2"/><g transform="rotate(-62 216 130)"><rect x="211" y="100" width="11" height="40" rx="4" fill="#161616"/><ellipse cx="216.5" cy="98" rx="10" ry="12" fill="#2b2b2b"/></g></g>' +
       '</g></svg>').replace(/url\(#sv/g, 'url(#svS');
   })();
-  // The stage: the 3D floor is a board of 14 × 9 tiles. The pink team stands on the left half, the blue team on the right
+  // The stage: the 3D floor is a board of 14 × 9 tiles. The red team stands on the left half, the blue team on the right
   // half, everyone two tiles apart; every step is exactly one tile. The instructor stands at the front of the team whose
   // turn it is and does the steps with them. Their arrows scroll on their own side of the screen: pink left, blue right.
   var SV_BC = 24, SV_BR = 5, SV_HROW = 2, SV_LROW = 1;   /* (the singer: row 1 of the 3 rows of her own stage) */
@@ -6680,8 +6680,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('svov'), solo = g.order.length < 2;
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'svov'; ov.className = 'svov enter' + (solo ? ' solo' : '');
-      var chart = function (side) { return '<div class="svchart ' + side + '"><b class="svteam">' + (solo ? 'Your arrows' : side === 'l' ? 'Pink team' : 'Blue team') + '</b>' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { var gp = n[5] || '*'; if (gp !== '*' && gp !== (side === 'l' ? 'A' : 'B')) return ''; return '<i class="svn c' + n[1] + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div>'; };
-      ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svsign">🪩 Serving! <small>dance-off · test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
+      var chart = function (side) { return '<div class="svchart ' + side + '"><b class="svteam">' + (solo ? 'Your arrows' : side === 'l' ? 'Red team' : 'Blue team') + '</b>' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { var gp = n[5] || '*'; if (gp !== '*' && gp !== (side === 'l' ? 'A' : 'B')) return ''; return '<i class="svn c' + n[1] + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div>'; };
+      ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svsign">🪩 Serving! <small>dance-off · test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
@@ -6727,16 +6727,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     bt.querySelector('b').textContent = cd ? String(cd) : '';
     var S = svStageAt(Math.max(0, b)), stx = g.st === 'play' || g.st === 'ready' ? 'Stage ' + S.n + ' of 3 · ' + S.t : '';
     var se = ov.querySelector('.svstage'); if (se.textContent !== stx) se.textContent = stx;
-    var swB = !solo && g.st === 'play' && g.swAt && now - g.swAt < 3200 && !(g.stageAt && now - g.stageAt < 2600) ? '<small>Switch!</small>' + (g.swTo === 'A' ? 'Pink team' : 'Blue team') + '<em>Your turn next! 💃</em>' : '';
+    var swB = '';
     if (!g.starts) { g.starts = []; g.chart.forEach(function (n, i) { if (!i || g.chart[i - 1][5] !== n[5] || n[0] - g.chart[i - 1][0] > 6) g.starts.push(n[0]); }); }   // (where a team's turn begins)
-    var rdy = (g.st === 'play' || g.st === 'ready') && g.t0 && g.starts.some(function (x) { var ms = (x - b) * SV_BT; return ms > 0 && ms <= 3000; });
-    var kant = g.st === 'play' && SV_FAST.some(function (x) { return b >= x - .5 && b < x + 2.5; }), ktx = rdy ? 'Get ready!' : kant ? 'Serving kant!' : '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
+    var rdyN = null; if ((g.st === 'play' || g.st === 'ready') && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= 5000) rdyN = x; });   // (5 seconds before a team's turn: their name and 'Get ready!' in the middle)
+    var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Red team' : 'Blue team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
+    if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
+    var kant = g.st === 'play' && SV_FAST.some(function (x) { return b >= x - .5 && b < x + 2.5; }), ktx = kant ? 'Serving kant!' : '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
     if (kb && kb._t !== ktx) { kb._t = ktx; if (ktx) kb.textContent = ktx; kb.classList.toggle('on', !!ktx); }
     if (g.st === 'play' && b >= SV_BRK && b < SV_BRK + 3.5) swB = '<small>Breather!</small>Everyone ready?<em>Something’s coming up out of the floor… 👀</em>';
-    var bn = ov.querySelector('.svbanner'), showB = g.st === 'play' && g.stageAt && now - g.stageAt < 2600, bh = swB ? swB : showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Your turn! Nice and slow first…</em>' : g.stage === 3 ? '<em>Everyone together! A step on every beat, double points 🏐</em>' : '') : '';
+    var bn = ov.querySelector('.svbanner'), showB = g.st === 'play' && g.stage === 3 && g.stageAt && now - g.stageAt < 2600, bh = swB ? swB : showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Your turn! Nice and slow first…</em>' : g.stage === 3 ? '<em>Everyone together! A step on every beat, double points 🏐</em>' : '') : '';
     if (bn._h !== bh) { bn._h = bh; bn.innerHTML = bh; bn.classList.toggle('on', !!bh); }
     var nm = function (k) { return players[k] ? esc(players[k].name) : ''; };
-    var msg = g.st === 'intro' || g.st === 'play' ? '' : g.st === 'ready' ? 'Get ready… hit the arrows on your phone! 📱' : g.win.length ? '🏆 ' + g.win.map(nm).join(' & ') + (g.win.length > 1 ? ' win' : ' wins') + '! +' + g.prize : 'The end!';
+    var msg = g.st === 'intro' || g.st === 'play' ? '' : g.st === 'ready' ? '' : g.win.length ? '🏆 ' + g.win.map(nm).join(' & ') + (g.win.length > 1 ? ' win' : ' wins') + '! +' + g.prize : 'The end!';
     var me = ov.querySelector('.svmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('sv', svMsg);

@@ -5547,3 +5547,12 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svkant{position:absolute;left:50%;bottom:calc(100% + var(--s) * .15);z-index:5;transform:translateX(-50%) scale(0);transform-origin:50% 100%;white-space:nowrap;padding:.35em .8em;border-radius:16px;background:#fff;color:#c8102e;font-weight:900;font-size:calc(var(--s) * .42);box-shadow:0 6px 18px rgba(0,0,0,.45);transition:transform .25s cubic-bezier(.2,1.6,.4,1)}
 .svkant::after{content:'';position:absolute;left:50%;top:100%;margin-left:-8px;border:8px solid transparent;border-top-color:#fff}
 .svkant.on{transform:translateX(-50%) scale(1)}
+/* Serving: red team (left) and blue team (right); 'Get ready!' in the middle 5 seconds before a team's turn */
+.svchart.l .svteam{color:#ff6b7a}.svchart.l{box-shadow:inset 0 0 0 2px rgba(255,45,74,.7)}
+.svaf.gA .svtile{box-shadow:0 0 0 2px #ff2d4a,0 0 18px #ff2d4a}
+.svready{position:absolute;left:50%;top:42vh;z-index:7;transform:translate(-50%,-50%) scale(.3);opacity:0;pointer-events:none;text-align:center;padding:2vh 4vw;border-radius:24px;background:rgba(20,4,30,.72);box-shadow:0 0 0 4px #fff,0 0 50px rgba(255,255,255,.4);transition:transform .35s cubic-bezier(.2,1.5,.4,1),opacity .3s}
+.svready.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.svready b{display:block;font-size:clamp(2.2rem,6vw,5.5rem);font-weight:900;line-height:1;color:#fff}
+.svready em{display:block;font-style:normal;font-weight:900;font-size:clamp(1.2rem,2.6vw,2.4rem);color:#ffd23f;margin-top:.4em}
+.svready.a b{color:#ff4d63;text-shadow:0 0 30px #ff2d4a}.svready.b b{color:#4da3ff;text-shadow:0 0 30px #2f8cff}.svready.all b{color:#ffd23f}
+.svready.a{box-shadow:0 0 0 4px #ff2d4a,0 0 50px rgba(255,45,74,.6)}.svready.b{box-shadow:0 0 0 4px #2f8cff,0 0 50px rgba(47,140,255,.6)}
