@@ -6436,7 +6436,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (now >= g.ends) {   // the song is over: the phones send their results (bots: perfect); a few seconds at most
         g.st = 'count'; push();
         g.order.forEach(function (pk) { var p = players[pk]; if (p && p.bot) svMsg({ pid: pk, id: g.id, res: g.chart.map(function () { return '2'; }).join('') }); });
-        clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv === g && g.st === 'count') svEnd(g); }, 9000);   // (wait for every phone, up to 9 seconds)
+        clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv === g && g.st === 'count') svEnd(g); }, 12000);   // (wait for every phone, up to 12 seconds: some watch through a stream)
         return;
       }
     }
@@ -6891,8 +6891,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var fl = ov.querySelector('.calfl'), b = fl.querySelector('b');
     var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
     for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
-    setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 600 - Date.now());
-    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } ov.remove(); }, g.t0 + g.n * g.gap + 9000 - Date.now());
+    setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 5500 - Date.now());   // (a stream can be seconds behind: wait for the last taps)
+    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } ov.remove(); }, g.t0 + g.n * g.gap + 14000 - Date.now());
   }
   function calShow() {
     var g = G.cal, ov = $('calov'); if (!g || !ov) return;

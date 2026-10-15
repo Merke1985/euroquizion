@@ -765,9 +765,12 @@
     box.classList.toggle('tB', svS.g === 'B' && z.order.length > 1);   // (the pump ball in the team colour)
     var S = svS;
     if ((z.st === 'count' || z.st === 'end') && mine && !S.sent && S.chart) {   // the song is over: send my results (once)
-      S.sent = true; var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''), zid = z.id, send = function () { if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res, pump: S.pdone || 0 }); };
-      send(); clearInterval(S.rs); S.rs = setInterval(function () { var z2 = state && state.sv; if (!z2 || z2.id !== zid || z2.st === 'end' || (z2.rcv || []).indexOf(pid) >= 0) { clearInterval(S.rs); return; } send(); }, 900);   // (sent again until the big screen has it: a message can get lost)
+      S.sent = true; var zid = z.id, send = function () { var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''); if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res, pump: S.pdone || 0 }); };
+      var lastT = S.t0 + (S.chart.length ? S.chart[S.chart.length - 1][0] : 0) * S.bt + 700, wait = Math.max(0, lastT - Date.now());   // (with a stream delay the phone's song ends later: finish first)
+      S.sent = 'wait'; S.lastT = lastT; setTimeout(function () { S.sent = true; send(); if (svS === S) { svStop(); S.st = 'count'; if (state) svView(state); } }, wait);
+      clearInterval(S.rs); S.rs = setInterval(function () { if (S.sent !== true) return; var z2 = state && state.sv; if (!z2 || z2.id !== zid || z2.st === 'end' || (z2.rcv || []).indexOf(pid) >= 0) { clearInterval(S.rs); return; } send(); }, 900);   // (sent again until the big screen has it: a message can get lost)
     }
+    if (z.st === 'count' && S.sent === 'wait') { S.st = 'play'; return; }   // (my song is still going: keep dancing)
     if (z.st === 'count') { svStop(); box.classList.add('hidden'); $('waittitle').textContent = '🪩 Counting the steps…'; $('waitsub').textContent = 'Look at the big screen!'; return; }
     if (z.st === 'end') {
       svStop(); box.classList.add('hidden');
@@ -823,9 +826,10 @@
     }
     if (c.done && !calS.res) {
       if (SV_WHERE === 'online') {
-        var offs = []; calS.taps.forEach(function (tt) { var k = Math.floor((tt - calS.t0 + 250) / c.gap); if (k < 0 || k >= c.n) return; var o = tt - (calS.t0 + k * c.gap); if (o > -250 && o < 1500) offs.push(o); });
+        var taps = calS.taps.filter(function (tt) { return tt > calS.t0 - 300; }), offs = [];   // (the 1st tap goes with the 1st click, the 2nd with the 2nd…: so even a delay of seconds is measured right)
+        taps.slice(0, c.n).forEach(function (tt, k) { var o = tt - (calS.t0 + k * c.gap); if (o > -300 && o < 6000) offs.push(o); });
         offs.sort(function (a, b) { return a - b; });
-        if (offs.length >= 3) { var d = Math.max(0, Math.min(1500, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: d }); }
+        if (offs.length >= 3) { var d = Math.max(0, Math.min(6000, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: d }); }
         else { calS.res = -2; ov.querySelector('em').textContent = 'Not enough taps: ask the host to sync again.'; }
       } else { calS.res = -1; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -1 }); }
     }
@@ -844,7 +848,7 @@
   }
   function svFb(q) { var S = svS, fb = $('svui').querySelector('.svfb'); if (!fb) return; fb.textContent = q === 2 ? 'PERFECT!' : q ? 'GOOD' : 'MISS'; fb.className = 'svfb q' + q; fb.classList.remove('pop'); void fb.offsetWidth; fb.classList.add('pop'); S.fbAt = Date.now(); var t = { 2: 0, 1: 0, 0: 0 }; Object.keys(S.q).forEach(function (i) { t[S.q[i]]++; }); var me = $('svui').querySelector('.svme'); if (me) me.textContent = 'Perfect ' + t[2] + ' · Good ' + t[1] + ' · Miss ' + t[0]; }   // (the tally right away)
   function svTap(d) {
-    var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || z.st !== 'play' || !S.chart) return;
+    var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || (z.st !== 'play' && S.st !== 'play') || !S.chart) return;   // (with a stream delay my song can still be going while the big screen is done)
     var now = Date.now(), b = (now - S.t0) / S.bt, best = -1, bd = 9;
     S.chart.forEach(function (n, i) { if (S.done[i] || n[1] !== d || !svMine(n)) return; var x = Math.abs(n[0] - b); if (x < bd) { bd = x; best = i; } });   // (the nearest open arrow in this column)
     var any = -1, ad = 9; S.chart.forEach(function (n, i) { if (S.done[i] || !svMine(n)) return; var x = Math.abs(n[0] - b); if (x < ad) { ad = x; any = i; } });
