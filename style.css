@@ -5556,3 +5556,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svready em{display:block;font-style:normal;font-weight:900;font-size:clamp(1.2rem,2.6vw,2.4rem);color:#ffd23f;margin-top:.4em}
 .svready.a b{color:#ff4d63;text-shadow:0 0 30px #ff2d4a}.svready.b b{color:#4da3ff;text-shadow:0 0 30px #2f8cff}.svready.all b{color:#ffd23f}
 .svready.a{box-shadow:0 0 0 4px #ff2d4a,0 0 50px rgba(255,45,74,.6)}.svready.b{box-shadow:0 0 0 4px #2f8cff,0 0 50px rgba(47,140,255,.6)}
+.svkant{font-size:calc(var(--s) * .95);padding:.25em .6em;border-radius:22px;border:4px solid #ff2d4a;box-shadow:0 0 30px rgba(255,45,74,.8),0 8px 24px rgba(0,0,0,.5)}
+.svkant.on{animation:svkantp .5s ease-in-out infinite alternate}
+@keyframes svkantp{to{transform:translateX(-50%) scale(1.08) rotate(-2deg)}}

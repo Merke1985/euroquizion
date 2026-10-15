@@ -767,7 +767,7 @@
     var stn = ['', 'Red team', 'Blue team', 'Skippy balls! 🏐'][z.stage || 1];
     $('waittitle').textContent = z.st === 'play' ? 'Stage ' + (z.stage || 1) + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🪩 Serving!';
     var tm = svS.g === 'B' ? 'blue' : 'red';
-    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : (z.order.length > 1 ? 'You’re in the ' + tm + ' team. ' : '') + (z.stage !== 3 ? 'First slow, then double time. Two arrows at once? JUMP: hit both!' : z.stage === 3 ? 'A step on every beat, double points!' : 'Hit the arrow as it reaches the top: every hit is a step!');
+    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : (z.order.length > 1 ? 'You’re in the ' + tm + ' team. ' : '') + (z.stage !== 3 ? 'First a step every four beats, then every two. Every arrow is a step!' : z.stage === 3 ? 'A step on every beat, double points!' : 'Hit the arrow as it reaches the top: every hit is a step!');
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id) {   // the chart: arrows scroll up to the receptors; four big pads below
       box.setAttribute('data-id', z.id); S.chart = z.chart || []; S.notes = null;

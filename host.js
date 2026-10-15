@@ -6314,7 +6314,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
   var SV_VID = 'WPfV96fRvW0', SV_S = 0, SV_BT = 60000 / 122 * 2, SV_PHASE = -3, SV_LAG = 90,   /* (measured: exactly 122 BPM, and in the video the beat starts right at 0:00: bounce 0 = 0:00; the song plays from the start, under the presenters. SV_LAG: the sound reaches the room a little after the player reports its time) */ svLoop = null, svTimer = null, svSongT = null;
-  var SV_STAGES = [{ n: 1, t: 'Red team', from: 32, to: 74, at: 0 }, { n: 2, t: 'Blue team', from: 84, to: 126, at: 78 }, { n: 3, t: 'Skippy balls!', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 144, SV_HOP = 152, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
+  var SV_STAGES = [{ n: 1, t: 'Red team', from: 34, to: 74, at: 0 }, { n: 2, t: 'Blue team', from: 86, to: 126, at: 78 }, { n: 3, t: 'Skippy balls!', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 144, SV_HOP = 152, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { var S = SV_STAGES[0]; SV_STAGES.forEach(function (x) { if (t >= x.at) S = x; }); return S; }
   // Stages 1 and 2 are an aerobics class: every arrow you hit is a step on the stage (left, forward, back, right), and the
@@ -6327,7 +6327,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var h = []; for (var k = 0; k < 2; k++) h.push(Math.floor(Math.random() * 4)); return h.concat(h.slice().reverse().map(function (d) { return 3 - d; }));
   }
   // The class is split in two groups (pink and blue) that take turns; the instructor goes and stands in front of the group
-  // whose turn it is. Stage 1: a step every four beats. Stage 2: every two beats, with a JUMP after each phrase.
+  // whose turn it is. Stage 1: a step every four beats. Then every two beats; one arrow at a time.
   // Stage 3, on skippy balls: everyone together, with her in the middle; a step on every beat (double points).
   function svChart(solo) {   // the notes: [time in bounces, arrow 0–3 (left, down, up, right), (unused), phrase, jump, group 'A' / 'B' / '*']
     var N = [], ph = 0;
@@ -6336,8 +6336,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (jump) { var o = Math.random() < .5 ? 0 : 1, jt = t0 + 4 * gap; N.push([jt, o, 0, ph, 1, solo ? '*' : grp], [jt, 3 - o, 0, ph, 1, solo ? '*' : grp]); }
       ph++;
     }
-    [32, 40, 48].forEach(function (t) { set(t, 2, 'A'); }); [58, 64, 70].forEach(function (t) { set(t, 1, 'A', 1); });   // red team: a step every four beats, then every two beats (with a JUMP after each set)
-    [84, 92, 100].forEach(function (t) { set(t, 2, 'B'); }); [110, 116, 122].forEach(function (t) { set(t, 1, 'B', 1); });   // blue team, the same length (10 seconds in between while she walks over)
+    [34, 42, 50].forEach(function (t) { set(t, 2, 'A'); }); [58, 62, 66, 70].forEach(function (t) { set(t, 1, 'A'); });   // red team: a step every four beats, then (from the mark) every two beats; one arrow at a time
+    [86, 94, 102].forEach(function (t) { set(t, 2, 'B'); }); [110, 114, 118, 122].forEach(function (t) { set(t, 1, 'B'); });   // blue team, the same length (10 seconds in between while she walks over)
     // then a break: she walks to the middle (2:58); the skippy balls come up out of the floor (3:12); and at 3:21.5, the last chorus:
     for (var k3 = 0; k3 < 8; k3++) set(162 + k3 * 2, .5, '*');   // stage 3: everyone together on the skippy balls, a step on every beat
     return N;
