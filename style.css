@@ -5559,3 +5559,8 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svkant{font-size:calc(var(--s) * .95);padding:.25em .6em;border-radius:22px;border:4px solid #ff2d4a;box-shadow:0 0 30px rgba(255,45,74,.8),0 8px 24px rgba(0,0,0,.5)}
 .svkant.on{animation:svkantp .5s ease-in-out infinite alternate}
 @keyframes svkantp{to{transform:translateX(-50%) scale(1.08) rotate(-2deg)}}
+/* Serving: everyone walks slowly onto their spot from the side during the song's intro */
+.svov .svaf.walkin.walkin{transition:transform 6s linear}
+.svaf.walkin .svfb2{animation:svwalkin .34s ease-in-out infinite}
+@keyframes svwalkin{50%{transform:translateY(calc(var(--s) * -.12)) rotate(4deg)}}
+.svaf.offst{opacity:0}

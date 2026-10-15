@@ -6370,23 +6370,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { if (G.sv === g) svSong(true); }, 1400 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (she cuts him off)   // (and the song cuts in already: the presenters talk over its intro)
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
-  var SV_LINES = [['her', 'Oh! She’s already starting!'], ['him', 'Follow her instructions: press the arrows at the right time!'], ['her', 'When it’s your turn, look at your phones!']];
+  var SV_LINES = [['her', 'Hurry, she’s already starting!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!'], ['him', 'When it’s your turn, look at your phones!']], SV_WALKIN = 6000;
   function svIntro(g) {
     var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
-    g.entAt = g.t0 + 2600;   // (everyone walks onto their spot)
-    SV_LINES.forEach(function (l) {
+    SV_LINES.forEach(function (l, li) {
       var len = Math.max(3000, talkLen(l[0], l[1], 2400)); if (at + len > first - 5000 + 1500) return;
       (function (l, when) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, Math.max(0, when - Date.now())); })(l, at);
       at += len + 400;
+      if (!li) { g.entAt = at - 200; at += SV_WALKIN + 300; }   // (after 'hurry': everyone walks slowly onto their spot, red from the left, blue from the right)
     });
-    setTimeout(function () { if (G.sv === g) svSay(''); }, Math.max(0, first - 5000 - Date.now()));
+    if (!g.entAt) g.entAt = g.t0 + 2600;
+    setTimeout(function () { if (G.sv !== g) return; svSay(''); if (!REMOTE) [36, 44, 52, 60].forEach(function (v, i) { setTimeout(function () { try { yt.setVolume(v); } catch (e) {} }, i * 250); }); }, Math.max(0, first - 5000 - Date.now()));   // (they're done: the music comes up)
   }
   function svSay(who, txt) { var ov = $('svov'); if (!ov) return; [].forEach.call(ov.querySelectorAll('.svbub'), function (x) { x.classList.remove('on'); }); if (!who) return; var b = ov.querySelector('.svbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); }
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
     if (!on) { try { yt.pauseVideo(); } catch (e) {} return; }
     var g = G.sv; Music.want(false); stage = 'sv';
-    try { yt.loadVideoById({ videoId: SV_VID, startSeconds: SV_S }); yt.unMute(); yt.setVolume(55); } catch (e) {}
+    try { yt.loadVideoById({ videoId: SV_VID, startSeconds: SV_S }); yt.unMute(); yt.setVolume(28); } catch (e) {}   // (quiet while the presenters talk)
     var fb = setTimeout(function () { if (G.sv === g && !g.t0) svGo(g, Date.now() + 3000); }, 6000);   // (no song: go anyway)
     svSongT = setInterval(function () {
       if (G.phase !== 'sv' || G.sv !== g) { clearInterval(svSongT); svSongT = null; return; }
@@ -6555,7 +6556,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var now = performance.now(), t = (now - t0) / 1000, fl = Math.max(0, 1 - (now - st.beatAt) / 420), p = st.pal;
       for (var i = 0; i < C * R; i++) {   // the tiles: a pattern that shifts every beat, bright on the beat and fading after
         var x = i % C, y = Math.floor(i / C), sn = Math.floor(st.n / 4), on = (x + y + sn) % 2 === 0;
-        var mk = st.mk[i]; if (mk) col.set(mk).multiplyScalar(.75 + fl * .4); else col.set(p[(x + y + sn) % 2]).multiplyScalar(on ? .2 + fl * .06 : .1 + fl * .03); tiles.setColorAt(i, col);
+        var mk = st.mk[i]; if (mk) col.set(mk).multiplyScalar(.75 + fl * .4); else col.set(x < C / 2 ? (on ? '#ff2d4a' : '#5a0a1e') : (on ? '#2f8cff' : '#0a2560')).multiplyScalar(on ? .34 + fl * .06 : .5 + fl * .05); tiles.setColorAt(i, col);   /* (the red team's half and the blue team's half) */
       }
       tiles.instanceColor.needsUpdate = true;
       for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C), mkl = st.mkL[i]; if (mkl) col.set(mkl).multiplyScalar(.8 + fl * .4); else col.set((lx + ly) % 2 ? '#ffc93c' : '#e0102a').multiplyScalar((lx + ly) % 2 ? .22 + fl * .05 : .32 + fl * .06); ltiles.setColorAt(i, col); }
@@ -6709,9 +6710,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var el = ov.querySelector('.svaf[data-p="' + k + '"]'); if (!el) return;
       var h = g.home[k], p = players[k], f = g.fall[k], myN = null, myI = -1;
       g.chart.forEach(function (n, i) { if (n[0] <= b + .02 && svMineN(g, k, n)) { myN = n; myI = i; } });
-      var off = !g.entAt || now < g.entAt ? [g.grp[k] === 'B' ? 9 : -9, 0] : f && f.off ? f.off : bph === 'hop' ? [0, 1] : myN && g.st === 'play' ? svOff(g, k, myN[3], b + .02, now) : [0, 0], c = h[0] + off[0], r = h[1] + off[1]; place(el, c, r);
+      var off = !g.entAt || now < g.entAt ? [g.grp[k] === 'B' ? 13 : -13, 0] : f && f.off ? f.off : bph === 'hop' ? [0, 1] : myN && g.st === 'play' ? svOff(g, k, myN[3], b + .02, now) : [0, 0], c = h[0] + off[0], r = h[1] + off[1]; place(el, c, r);
       var nb = ov.querySelector('.svnb[data-b="' + k + '"]'); if (nb) place(nb, h[0], h[1] + 1);
-      el.classList.toggle('walkin', !!g.entAt && now >= g.entAt && now < g.entAt + 4200); el.classList.toggle('offst', !g.entAt || now < g.entAt);
+      el.classList.toggle('walkin', !!g.entAt && now >= g.entAt && now < g.entAt + SV_WALKIN + 300); el.classList.toggle('offst', !g.entAt || now < g.entAt);
       if (myN && el._mi !== myI && g.st === 'play' && !f) { el._mi = myI; var q0 = g.got[k][myI]; if (q0 == null || q0 > 0) { el.classList.remove('ok', 'oops', 'p0', 'p1', 'p2'); void el.offsetWidth; el.classList.add('ok', 'p' + (myI % 3)); } }   /* (the hop: on the beat, all together) */
       el.classList.toggle('fall', !!f); if (f && el._fa !== f.at) { el._fa = f.at; el.classList.remove('bump'); if (f.bump) { var dv = SV_DV[f.d] || [0, 0], P0 = svProj(ov, c, r), P1 = svProj(ov, c + dv[0], r + dv[1]); el.style.setProperty('--bx', ((P1.x - P0.x) * .45).toFixed(0) + 'px'); el.style.setProperty('--by', ((P1.y - P0.y) * .45).toFixed(0) + 'px'); void el.offsetWidth; el.classList.add('bump'); } var qe0 = el.querySelector('.svq'); qe0.textContent = f.bump ? 'BUMP! 💥' : 'FELL! 🕳️'; qe0.className = 'svq q0'; el._lk = (g.last[k] || {}).at; }
       marks.push({ c: c, r: r, col: f ? '#000000' : p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#ffffff' });
