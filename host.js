@@ -4619,7 +4619,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     // the chairs (five colours)
     h += '<g class="edchairs"></g>';   // (a marker: the strolling duo walks behind the chairs)
-    var SX = [214, 318, 422, 526, 630];
+    var SX = [248, 344, 440, 536, 632];   // (the first chair clear of the fridge)
     s.seats.forEach(function (c, i) {
       var x = SX[i], col = ED_COL[c];
       h += '<path d="M' + (x - 42) + ' 390 L' + (x - 42) + ' 334 Q' + (x - 42) + ' 300 ' + x + ' 300 Q' + (x + 42) + ' 300 ' + (x + 42) + ' 334 L' + (x + 42) + ' 390 Z" fill="' + col + '"' + K + '/><rect x="' + (x - 38) + '" y="360" width="76" height="30" rx="12" fill="' + col + '"' + K + '/><ellipse cx="' + (x - 18) + '" cy="320" rx="10" ry="6" fill="#fff" opacity=".35"/>' +
