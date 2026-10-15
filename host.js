@@ -6306,22 +6306,37 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   net.on('zg', zgMsg);
   // ---------- Serving! (TEST ONLY: not in the party game picker) ----------
-  // A skippy-ball race to "Serving" (Malta 2025). Everyone bounces along their own lane. On your phone a ring closes
-  // in on the bounce button: tap right on the beat. Perfect: a big bounce, good: a small one, miss: you wobble. Every
-  // eighth bounce is a golden SERVE: double distance. The leader's ball slowly inflates, so their bounces get shorter.
-  // Furthest at the end wins. The beat is 122 BPM (a bounce every two beats), locked to the song's own clock.
-  var SV_VID = 'sLVSwfRRvMA', SV_S = 17, SV_BT = 60000 / 122 * 2, SV_PHASE = 0.25, SV_HOPS = 56, SV_GOLD = 8, svLoop = null, svTimer = null, svSongT = null;
+  // A DDR-style dance-off to "Serving" (Malta 2025), in three stages:
+  //  1 The dance floor: single arrows on the beat; everyone dances on a disco floor.
+  //  2 Double trouble: some arrows come in between the beats, and some come in pairs (hit both pads).
+  //  3 Skippy balls! Everyone hops onto a skippy ball and it becomes a race: every hit bounces you forward; golden
+  //    arrows are a SERVE (double); the leader's ball inflates, so their bounces get shorter.
+  // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
+  // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
+  var SV_VID = 'sLVSwfRRvMA', SV_S = 17, SV_BT = 60000 / 122 * 2, SV_PHASE = 0.25, svLoop = null, svTimer = null, svSongT = null;
+  var SV_STAGES = [{ n: 1, t: 'The dance floor', from: 0, to: 19 }, { n: 2, t: 'Double trouble', from: 22, to: 41 }, { n: 3, t: 'Skippy balls!', from: 44, to: 67 }], SV_END = 68;
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
+  function svStageAt(t) { for (var i = 0; i < SV_STAGES.length; i++) if (t < SV_STAGES[i].to + 1.5) return SV_STAGES[i]; return SV_STAGES[SV_STAGES.length - 1]; }
+  function svChart() {   // the notes: [time in bounces, arrow 0–3 (left, down, up, right), gold]
+    var N = [], prev = -1, rnd = function (not) { var d; do { d = Math.floor(Math.random() * 4); } while ((d === prev || d === not) && Math.random() < .75); prev = d; return d; };
+    for (var t = 0; t <= 19; t++) N.push([t, rnd(), 0]);   // stage 1: one arrow per bounce
+    for (t = 22; t <= 41; t++) {   // stage 2: pairs and in-between arrows
+      var a = rnd(); N.push([t, a, 0]);
+      if (t % 4 === 1) N.push([t, rnd(a), 0]);   // (a pair: both pads at once)
+      else if (t % 4 === 3 && t < 41) N.push([t + .5, rnd(), 0]);   // (one in between the beats)
+    }
+    for (t = 44; t <= 67; t++) { var b2 = rnd(); N.push([t, b2, t % 8 === 7 ? 1 : 0]); if (t % 3 === 2 && t < 67) N.push([t + .5, rnd(), 0]); }   // stage 3: steady, a few in between, every 8th golden
+    return N;
+  }
   function svAll() {
     var act = list().filter(function (p) { return !p.off; }); if (!act.length) { startRound(); return; }
     stopTimers(); G.q = null; G.song = null; G.best = null; try { yt.pauseVideo(); } catch (e) {}
     var order = act.map(function (p) { return p.pid; });
-    var chart = [], prev = -1; for (var ci = 0; ci < SV_HOPS; ci++) { var d0; do { d0 = Math.floor(Math.random() * 4); } while (d0 === prev && Math.random() < .7); chart.push(d0); prev = d0; }   // (the arrows: left, down, up, right; not too often the same twice)
-    G.sv = { id: 'sv' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', order: order, dist: {}, got: {}, last: {}, t0: 0, win: [], done: false, chart: chart };
+    G.sv = { id: 'sv' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', order: order, dist: {}, got: {}, last: {}, t0: 0, win: [], done: false, chart: svChart(), stage: 1 };
     order.forEach(function (k) { G.sv.dist[k] = 0; G.sv.got[k] = {}; });
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, t = 1600;
-    [['him', 'Grab your skippy balls, Europe! 🏐 It’s time to get Serving!'], ['her', 'Arrows scroll up on your phone. Hit the same arrow the moment it reaches the top. Perfect timing, big bounce!'], ['him', 'Every golden ring is a SERVE: double the bounce! And careful, leader… your ball gets bigger.']].forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3600, talkLen(l[0], l[1], 2400)); });
+    [['him', 'Welcome to the dance-off, Europe! 🪩 Tonight we’re Serving!'], ['her', 'Arrows scroll up on your phone. Hit the same arrow the moment it reaches the top!'], ['him', 'Three stages: the dance floor, double trouble… and then, the skippy balls! 🏐']].forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3600, talkLen(l[0], l[1], 2400)); });
     svTimer = setTimeout(function () { if (G.sv !== g) return; svSay(''); g.st = 'ready'; push(); svSong(true); }, t);
   }
   function svSay(who, txt) { var ov = $('svov'); if (!ov) return; [].forEach.call(ov.querySelectorAll('.svbub'), function (x) { x.classList.remove('on'); }); if (!who) return; var b = ov.querySelector('.svbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); }
@@ -6335,37 +6350,41 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.phase !== 'sv' || G.sv !== g) { clearInterval(svSongT); svSongT = null; return; }
       try {
         var st = yt.getPlayerState(), ct = yt.getCurrentTime();
-        if (st === 1 && ct > 0) {   // the beat grid follows the song: hop k is at song time SV_S + 3 + SV_PHASE + k × SV_BT
+        if (st === 1 && ct > 0) {   // the beat grid follows the song: bounce t is at song time SV_S + 3 + SV_PHASE + t × SV_BT
           var t0 = Date.now() - (ct - SV_S - 3 - SV_PHASE) * 1000;
           if (!g.t0) { clearTimeout(fb); svGo(g, t0); } else if (Math.abs(t0 - g.t0) > 60 && g.st === 'play') g.t0 = t0;
         } else if (st === 2 || st === 5) yt.playVideo();
       } catch (e) {}
     }, 250);
   }
-  function svGo(g, t0) {   // a 3-2-1 on the big screen (the song is playing), then the bouncing starts
-    g.t0 = t0; g.st = 'ready'; g.goAt = t0; push();
-    clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv !== g) return; g.st = 'play'; g.ends = g.t0 + SV_HOPS * SV_BT + 400; push(); clearInterval(svLoop); svLoop = setInterval(svTick, 40); }, Math.max(0, t0 - Date.now() - 200));
+  function svGo(g, t0) {   // a 3-2-1 on the big screen (the song is playing), then the dancing starts
+    g.t0 = t0; g.st = 'ready'; push();
+    clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv !== g) return; g.st = 'play'; g.ends = g.t0 + SV_END * SV_BT + 400; push(); }, Math.max(0, t0 - Date.now() - 200));
     clearInterval(svLoop); svLoop = setInterval(svTick, 40);
   }
-  function svBeat(g, now) { return (now - g.t0) / SV_BT; }   // (in hops: 3.0 is exactly the fourth bounce)
-  function svLead(g) { var best = -1, k0 = null; g.order.forEach(function (k) { if (g.dist[k] > best) { best = g.dist[k]; k0 = k; } }); var second = Math.max.apply(null, g.order.filter(function (k) { return k !== k0; }).map(function (k) { return g.dist[k]; }).concat([0])); return best - second >= 4 ? k0 : null; }
+  function svBeat(g, now) { return (now - g.t0) / SV_BT; }   // (in bounces)
+  function svLead(g) { if (g.stage < 3) return null; var best = -1, k0 = null; g.order.forEach(function (k) { if (g.dist[k] > best) { best = g.dist[k]; k0 = k; } }); var second = Math.max.apply(null, g.order.filter(function (k) { return k !== k0; }).map(function (k) { return g.dist[k]; }).concat([0])); return best - second >= 4 ? k0 : null; }
   function svMsg(m) {
     var g = G.sv; if (!g || G.phase !== 'sv' || g.st !== 'play' || !m || m.id !== g.id || g.order.indexOf(m.pid) < 0) return;
-    var k = Math.round(Number(m.k)), q = Math.max(0, Math.min(2, Math.round(Number(m.q)))); if (!(k >= 0 && k < SV_HOPS) || g.got[m.pid][k] != null) return;
-    if (m.d != null && Number(m.d) !== g.chart[k]) q = 0;   // (the wrong arrow: a miss)
-    if (Math.abs(svBeat(g, Date.now()) - k) > 1.6) return;   // (too far from that bounce: ignore)
-    g.got[m.pid][k] = q;
-    var gold = k % SV_GOLD === SV_GOLD - 1, step = [0, 2, 3][q] * (gold ? 2 : 1) * (svLead(g) === m.pid ? .8 : 1);
-    g.dist[m.pid] = Math.round((g.dist[m.pid] + step) * 10) / 10; g.last[m.pid] = { q: q, k: k, at: Date.now(), gold: gold && q > 0 };
-    if (!REMOTE && gold && q === 2) Music.ping(); push();
+    var i = Math.round(Number(m.i)), q = Math.max(0, Math.min(2, Math.round(Number(m.q)))), n = g.chart[i]; if (!n || g.got[m.pid][i] != null) return;
+    if (m.d != null && Number(m.d) !== n[1]) q = 0;   // (the wrong arrow: a miss)
+    if (Math.abs(svBeat(g, Date.now()) - n[0]) > 1.6) return;   // (too far from that arrow: ignore)
+    g.got[m.pid][i] = q;
+    var st3 = n[0] >= SV_STAGES[2].from, step = [0, 2, 3][q] * (n[2] ? 2 : 1) * (svLead(g) === m.pid ? .8 : 1);
+    g.dist[m.pid] = Math.round((g.dist[m.pid] + step) * 10) / 10; g.last[m.pid] = { q: q, i: i, at: Date.now(), gold: n[2] && q > 0, ball: st3 };
+    if (!REMOTE && n[2] && q === 2) Music.ping(); push();
   }
   function svTick() {
     var g = G.sv; if (!g || G.phase !== 'sv') { clearInterval(svLoop); return; }
     var now = Date.now();
     if (g.st === 'play') {
-      var b = svBeat(g, now), k = Math.floor(b + .25);
-      if (k !== g.kk && k >= 0 && k < SV_HOPS) { g.kk = k; if (!REMOTE) { if (k % SV_GOLD === SV_GOLD - 1) Music.discoTick(true); else Music.discoTick(); }   // (the beat, softly)
-        g.order.forEach(function (pk) { var p = players[pk]; if (!p || !p.bot) return; var sk = (p.pid.charCodeAt(1) % 5) / 10 + .45, r = Math.random(); setTimeout(function () { svMsg({ pid: pk, id: g.id, k: k, d: g.chart[k], q: r < sk * .6 ? 2 : r < sk + .15 ? 1 : 0 }); }, 150 + Math.random() * 250); }); }
+      var b = svBeat(g, now), sg = svStageAt(Math.max(0, b)).n;
+      if (sg !== g.stage) { g.stage = sg; g.stageAt = now; if (sg === 3) g.lo = Math.min.apply(null, g.order.map(function (k) { return g.dist[k]; })); push(); if (!REMOTE) { Music.douze(); whooshes([0, 250]); } }   // (a new stage!)
+      g.chart.forEach(function (n, i) {   // the soft beat tick, and the bots, once per arrow
+        if (n[0] > b + .05 || n[0] < b - .5 || (g.tk || (g.tk = {}))[i]) return; g.tk[i] = 1;
+        if (!REMOTE && (n[0] % 1 === 0) && !(i > 0 && g.chart[i - 1][0] === n[0])) { if (n[2]) Music.discoTick(true); else Music.discoTick(); }
+        g.order.forEach(function (pk) { var p = players[pk]; if (!p || !p.bot) return; var sk = (p.pid.charCodeAt(1) % 5) / 10 + .45, r = Math.random(); setTimeout(function () { svMsg({ pid: pk, id: g.id, i: i, d: n[1], q: r < sk * .6 ? 2 : r < sk + .15 ? 1 : 0 }); }, 60 + Math.random() * 200); });
+      });
       if (now >= g.ends) { svEnd(g); return; }
     }
     svShow();
@@ -6380,37 +6399,43 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function svSnap() {
     var g = G.sv, now = Date.now(), nk = g.t0 ? Math.max(0, Math.ceil(svBeat(g, now))) : 0;
-    return { id: g.id, st: g.st, order: g.order, dist: g.dist, win: g.win, chart: g.chart, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, hops: SV_HOPS, gold: SV_GOLD, lead: svLead(g), got: (function () { var o = {}; g.order.forEach(function (k) { o[k] = Object.keys(g.got[k]).length; }); return o; })() };
+    return { id: g.id, st: g.st, stage: g.stage, order: g.order, dist: g.dist, win: g.win, chart: g.chart, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, lead: svLead(g), lo: g.lo || 0 };
   }
-  // the skippy ball: an original drawing in the player's colour, with two little horn handles and a smiley
+  // the skippy ball (stage 3): an original drawing in the player's colour, with two little horn handles and a smiley
   function svBall(c, d) { return '<svg viewBox="0 0 100 100" class="svball"><ellipse cx="50" cy="96" rx="34" ry="4" fill="rgba(0,0,0,.25)"/><path d="M34 22 Q30 6 40 6 Q44 12 42 24 M66 22 Q70 6 60 6 Q56 12 58 24" stroke="' + d + '" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="50" cy="56" r="38" fill="' + c + '" stroke="' + d + '" stroke-width="3"/><ellipse cx="36" cy="40" rx="12" ry="7" fill="#fff" opacity=".35" transform="rotate(-30 36 40)"/><circle cx="40" cy="58" r="3.5" fill="' + d + '"/><circle cx="60" cy="58" r="3.5" fill="' + d + '"/><path d="M40 70 Q50 78 60 70" stroke="' + d + '" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>'; }
+  // the dancer (stages 1 and 2): a little body in the player's colour, arms that pose on every hit
+  function svDancer(c, d) { return '<svg viewBox="0 0 100 100" class="svdancer"><ellipse cx="50" cy="97" rx="22" ry="3" fill="rgba(0,0,0,.25)"/><g class="svlegs"><path d="M44 66 L38 94 M56 66 L62 94" stroke="' + d + '" stroke-width="9" stroke-linecap="round"/></g><path d="M36 36 Q50 30 64 36 L62 70 L38 70 Z" fill="' + c + '" stroke="' + d + '" stroke-width="3" stroke-linejoin="round"/><g class="svarms"><path class="al" d="M38 40 L22 26" stroke="' + c + '" stroke-width="8" stroke-linecap="round"/><path class="ar" d="M62 40 L78 26" stroke="' + c + '" stroke-width="8" stroke-linecap="round"/></g></svg>'; }
   function svShow() {
     var g = G.sv; if (!g) return;
     var ov = $('svov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'svov'; ov.className = 'svov enter';
-      ov.innerHTML = '<div class="svsky"></div><div class="svsign">🏐 Serving! <small>dance-off · test</small></div><div class="svbeat"><i></i><b></b></div><div class="svchart">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (d, k) { return '<i class="svn c' + d + (k % SV_GOLD === SV_GOLD - 1 ? ' gold' : '') + '" data-k="' + k + '">' + SV_ARROW + '</i>'; }).join('') + '</div><div class="svlanes"></div><div class="svmsg"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
+      ov.innerHTML = '<div class="svsky"></div><div class="svfloor"></div><div class="svsign">🪩 Serving! <small>dance-off · test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div><div class="svchart">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div><div class="svlanes"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       var ln = ov.querySelector('.svlanes');
-      ln.innerHTML = g.order.map(function (k, i) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svlane" style="--i:' + i + '"><div class="svtrack"></div><div class="svp" data-p="' + esc(k) + '">' + svBall(col[0], col[1]) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span><em class="svq"></em></div><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svd"></i></div>'; }).join('');
+      ln.innerHTML = g.order.map(function (k, i) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svlane" style="--i:' + i + '"><div class="svtrack"></div><div class="svp" data-p="' + esc(k) + '">' + svBall(col[0], col[1]) + svDancer(col[0], col[1]) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span><em class="svq"></em></div><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svd"></i></div>'; }).join('');
     }
-    var now = Date.now(), maxD = Math.max(30, Math.max.apply(null, g.order.map(function (k) { return g.dist[k]; })) * 1.15);
-    ov.setAttribute('data-st', g.st);
+    var now = Date.now(), lo = g.lo || 0, maxD = Math.max(45, (Math.max.apply(null, g.order.map(function (k) { return g.dist[k]; })) - lo) * 1.12);   /* (the race starts at the stage-3 line; earlier points give a small head start) */
+    ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1);
     var lead = svLead(g), b = g.t0 ? svBeat(g, now) : -9;
     g.order.forEach(function (k) {
       var el = ov.querySelector('.svp[data-p="' + k + '"]'); if (!el) return;
-      el.style.setProperty('--x', Math.min(92, g.dist[k] / maxD * 92).toFixed(2));
+      el.style.setProperty('--x', g.stage >= 3 ? Math.max(0, Math.min(92, (g.dist[k] - lo) / maxD * 92)).toFixed(2) : '0');   // (stages 1–2: dancing in place; stage 3: racing)
       el.classList.toggle('big', lead === k);
-      var L = g.last[k]; if (L && el._lk !== L.at) { el._lk = L.at; el.classList.remove('hop', 'wob', 'gold'); void el.offsetWidth; el.classList.add(L.q ? 'hop' : 'wob'); if (L.gold) el.classList.add('gold'); el.querySelector('.svq').textContent = L.q === 2 ? (L.gold ? 'SERVE!' : 'PERFECT') : L.q ? 'GOOD' : 'MISS'; el.querySelector('.svq').className = 'svq q' + L.q; }
-      var d = el.parentNode.querySelector('.svd'), dt = g.dist[k].toFixed(1).replace('.0', '') + ' m'; if (d.textContent !== dt) d.textContent = dt;
+      var L = g.last[k]; if (L && el._lk !== L.at) { el._lk = L.at; el.classList.remove('hop', 'wob', 'gold', 'p0', 'p1', 'p2'); void el.offsetWidth; el.classList.add(L.q ? 'hop' : 'wob', 'p' + (L.i % 3)); if (L.gold) el.classList.add('gold'); el.querySelector('.svq').textContent = L.q === 2 ? (L.gold ? 'SERVE!' : 'PERFECT') : L.q ? 'GOOD' : 'MISS'; el.querySelector('.svq').className = 'svq q' + L.q; }
+      var d = el.parentNode.querySelector('.svd'), dt = g.dist[k].toFixed(1).replace('.0', '') + ' pts'; if (d.textContent !== dt) d.textContent = dt;
     });
-    if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = +n.getAttribute('data-k') - b; if (dk < -.6 || dk > 5.2) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 12).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
+    if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk < -.6 || dk > 5.2) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 12).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
     var bt = ov.querySelector('.svbeat'), bk = Math.floor(b + .5);
-    if (g.st === 'play' && bt._k !== bk && b > -.5) { bt._k = bk; bt.classList.remove('pulse', 'gold'); void bt.offsetWidth; bt.classList.add('pulse'); if (bk % SV_GOLD === SV_GOLD - 1) bt.classList.add('gold'); }
+    if (g.st === 'play' && bt._k !== bk && b > -.5) { bt._k = bk; bt.classList.remove('pulse'); void bt.offsetWidth; bt.classList.add('pulse'); }
     var cd = g.st === 'ready' && g.t0 ? Math.max(1, Math.ceil((g.t0 - now) / 1000)) : 0;
-    bt.querySelector('b').textContent = cd ? String(cd) : g.st === 'play' ? Math.max(0, SV_HOPS - Math.max(0, Math.floor(b))) + '' : '';
+    bt.querySelector('b').textContent = cd ? String(cd) : '';
+    var S = svStageAt(Math.max(0, b)), stx = g.st === 'play' || g.st === 'ready' ? 'Stage ' + S.n + ' of 3 · ' + S.t : '';
+    var se = ov.querySelector('.svstage'); if (se.textContent !== stx) se.textContent = stx;
+    var bn = ov.querySelector('.svbanner'), showB = g.st === 'play' && g.stageAt && now - g.stageAt < 2600, bh = showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Pairs: hit both arrows!</em>' : g.stage === 3 ? '<em>Hop on, and race! 🏐</em>' : '') : '';
+    if (bn._h !== bh) { bn._h = bh; bn.innerHTML = bh; bn.classList.toggle('on', !!bh); }
     var nm = function (k) { return players[k] ? esc(players[k].name) : ''; };
-    var msg = g.st === 'intro' ? '' : g.st === 'ready' ? 'Get ready to bounce… tap on the beat! 📱' : g.st === 'play' ? (b >= 0 && Math.floor(b + .25) % SV_GOLD === SV_GOLD - 1 ? '✨ SERVE! Hit this one for double!' : 'Hit the arrows! ⬅️⬇️⬆️➡️') : g.win.length ? '🏆 ' + g.win.map(nm).join(' & ') + (g.win.length > 1 ? ' win' : ' wins') + '! +' + g.prize : 'The end!';
+    var msg = g.st === 'intro' ? '' : g.st === 'ready' ? 'Get ready… hit the arrows on your phone! 📱' : g.st === 'play' ? 'Hit the arrows! ⬅️⬇️⬆️➡️' : g.win.length ? '🏆 ' + g.win.map(nm).join(' & ') + (g.win.length > 1 ? ' win' : ' wins') + '! +' + g.prize : 'The end!';
     var me = ov.querySelector('.svmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('sv', svMsg);
@@ -7954,8 +7979,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ['her', 'The closest prediction wins, but if her note lasts longer than your guess, you’re out! Ladies and gentlemen… our diva! 💃']
     ];
     var t = 1800;
-    lines.forEach(function (l, i) { (function (l, t0) { at(t0, function () { noteSay(l[0], l[1]); }); if (i === lines.length - 1) at(t0 + 4800, function () { $('noteov').classList.add('diva-on'); Music.douze(); whooshes([0, 300]); }); })(l, t); t += Math.max(3800, talkLen(l[0], l[1], 2400)); });   // (the diva appears as Sofia says “diva”)
-    at(t + 800, function () { noteGuess(); });
+    lines.forEach(function (l, i) { (function (l, t0) { at(t0, function () { noteSay(l[0], l[1]); }); if (i === lines.length - 1) at(t0 + 10000, function () { $('noteov').classList.add('diva-on'); Music.douze(); whooshes([0, 300]); }); })(l, t); t += Math.max(3800, talkLen(l[0], l[1], 2400)); });   // (the diva appears 2 s after Sofia says “diva”: the word comes at about 8 s into her line)
+    at(Math.max(t + 800, t - Math.max(3800, talkLen(lines[2][0], lines[2][1], 2400)) + 10800), function () { noteGuess(); });
   }
   // The diva's note: a recording of over two minutes, played from the start and stopped dead when the equipment breaks down.
   var ntAudio = null;

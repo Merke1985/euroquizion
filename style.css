@@ -5386,3 +5386,29 @@ body.rufrozen #waittitle{color:#0b3a66}
 .clsentc.ok::after{content:'✔';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1.6rem;font-weight:900;color:#3ddc84}
 .clsentc.bad{background:linear-gradient(135deg,rgba(255,77,77,.35),rgba(255,77,77,.12));box-shadow:0 0 0 3px #ff4d4d}
 .clsentc.bad::after{content:'✖';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1.6rem;font-weight:900;color:#ff4d4d}
+/* Serving: three stages (dance floor, double trouble, skippy balls) */
+.svfloor{position:absolute;left:0;right:0;bottom:0;height:62vh;opacity:0;transition:opacity 1s;pointer-events:none;background:repeating-conic-gradient(from 45deg at 50% 50%,rgba(255,95,168,.35) 0 25%,rgba(63,216,255,.28) 0 50%) 0 0/12vh 12vh;transform:perspective(60vh) rotateX(38deg);transform-origin:50% 100%}
+.svov[data-stage="1"] .svfloor,.svov[data-stage="2"] .svfloor{opacity:1}
+.svov[data-stage="2"] .svfloor{background:repeating-conic-gradient(from 45deg at 50% 50%,rgba(166,255,77,.32) 0 25%,rgba(255,162,63,.32) 0 50%) 0 0/12vh 12vh;animation:svfl 1s steps(2) infinite}
+@keyframes svfl{50%{filter:hue-rotate(90deg)}}
+.svov[data-stage="3"]{background:linear-gradient(180deg,#0f3a6a 0%,#1a7a8a 40%,#42e0a0 72%,#ffe047 100%)}
+.svov{transition:background 1s}
+.svp .svdancer{position:absolute;inset:0;width:100%;height:100%;display:none}
+.svov:not([data-stage="3"]) .svp .svball{display:none}
+.svov:not([data-stage="3"]) .svp .svdancer{display:block}
+.svov:not([data-stage="3"]) .svp .svhead{top:-3.4vh}
+.svov:not([data-stage="3"]) .svtrack{opacity:.25}
+.svov:not([data-stage="3"]) .svp{left:40%}
+.svdancer .al,.svdancer .ar{transform-box:fill-box;transition:transform .15s}
+.svdancer .al{transform-origin:100% 100%}.svdancer .ar{transform-origin:0 100%}
+.svp.p0 .svdancer .al{transform:rotate(-70deg)}.svp.p1 .svdancer .ar{transform:rotate(70deg)}
+.svp.p2 .svdancer .al{transform:rotate(60deg)}.svp.p2 .svdancer .ar{transform:rotate(-60deg)}
+.svov:not([data-stage="3"]) .svp.hop{animation:svdh .3s ease-out}
+@keyframes svdh{40%{transform:translateY(-1.4vh) rotate(-6deg)}}
+.svstage{position:absolute;left:50%;top:9.5vh;transform:translateX(-50%);color:#fff;font-weight:900;font-size:clamp(.9rem,1.6vw,1.4rem);padding:.3vh 1.4vw;border-radius:999px;background:rgba(0,0,0,.35);white-space:nowrap;z-index:3}
+.svstage:empty{display:none}
+.svbanner{position:absolute;left:50%;top:40vh;z-index:6;transform:translate(-50%,-50%) scale(.3);opacity:0;pointer-events:none;text-align:center;color:#fff;font-weight:900;font-size:clamp(2rem,6vw,5.5rem);text-shadow:0 0 30px #ff5fa8,0 6px 0 #6a0a3a;white-space:nowrap}
+.svbanner small{display:block;font-size:.35em;letter-spacing:.3em;text-transform:uppercase;color:#ffd23f}
+.svbanner em{display:block;font-style:normal;font-size:.32em;margin-top:.4em}
+.svbanner.on{animation:svbn 2.6s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes svbn{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.08) rotate(2deg)}28%,82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
