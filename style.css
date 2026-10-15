@@ -5066,3 +5066,19 @@ body.hasdock main{padding-bottom:84px}
 .edlobroom{transition:filter .8s}
 .edov2 .edlobroom.dark{filter:brightness(.32) saturate(.55)}
 .edov2.edbrief:not(.go) .edlobroom{filter:none}
+
+/* Rules the World: the little countdowns above the heads */
+.rut .rutime{position:absolute;left:0;top:-18vh;transform:translate(-50%,-50%);min-width:3.4vh;padding:.15vh .8vh;border-radius:1.2vh;font:900 2.6vh/1.25 system-ui,sans-serif;text-align:center;color:#fff;background:rgba(10,6,24,.82);box-shadow:0 2px 6px rgba(0,0,0,.5);display:none;pointer-events:none}
+.rut .rutime[data-k="stn"]{display:block;background:#ff1744}
+.rut .rutime[data-k="frz"]{display:block;background:#2f9bff;box-shadow:0 0 10px #7fd8ff}
+.rut .rutime[data-k="str"]{display:block;background:linear-gradient(#ffe066,#ffb300);color:#3a2400;box-shadow:0 0 12px #ffd23f}
+.rut.fast .rutime{top:-19.5vh}
+/* the phone when frozen: everything turns to ice, a big countdown over the arrows */
+#ruui .rufrz{display:none}
+#ruui.frz{position:relative}
+#ruui.frz .rufrz{display:flex;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:-1vh;z-index:5;border-radius:24px;background:linear-gradient(160deg,rgba(225,247,255,.92),rgba(140,210,255,.88) 55%,rgba(90,170,240,.9));border:3px solid #e8f8ff;box-shadow:inset 0 0 30px rgba(255,255,255,.9),0 0 30px rgba(120,210,255,.8);color:#0b3a66;font-size:4.5rem;animation:rufrzin .35s cubic-bezier(.3,1.5,.5,1)}
+#ruui.frz .rufrz b{font-size:2.2rem;letter-spacing:.12em;margin-top:.2em}
+#ruui.frz .rufrz span{font-size:3.4rem;font-weight:900;line-height:1}
+@keyframes rufrzin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+body.rufrozen{background:linear-gradient(#bfe9ff,#6fb8ef)!important}
+body.rufrozen #waittitle{color:#0b3a66}

@@ -195,7 +195,7 @@
     if (s.phase !== 'carpet' || !s.carpet) $('carpetui').classList.add('hidden');
     if (s.phase !== 'finale' || !s.fin || s.fin.st !== 'pick' || s.fin.pid !== pid) { $('finui').classList.add('hidden'); $('finui').removeAttribute('data-k'); }
     if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
-    if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); }
+    if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); document.body.classList.remove('rufrozen'); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
     if (s.phase !== 'fake' || !s.fake) $('fkui').classList.add('hidden');
     if (s.phase !== 'clueacc' && s.phase !== 'cluerooms' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
@@ -866,9 +866,11 @@
     var rLeft = Math.max((r.fast || {})[pid] || 0, (r.frz || {})[pid] || 0); clearTimeout(ruView._t); if (rLeft) ruView._t = setTimeout(function () { var st0 = state; if (st0 && st0.rule) { if (st0.rule.fast) delete st0.rule.fast[pid]; if (st0.rule.frz) delete st0.rule.frz[pid]; ruView(st0); } }, rLeft + 100);   // (back to normal when it wears off)
     $('waittitle').textContent = r.st === 'play' ? ((r.frz || {})[pid] ? '🧊 Frozen solid!' : (r.fast || {})[pid] ? '⭐ Star power! Triple speed, unstoppable!' : '🪩 Claim the floor!') : r.st === 'rise' ? '✨ Here comes the star…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow and you keep dancing that way. Tap it again to stop. Close a loop of your tiles: everything inside is yours!';
     box.classList.remove('hidden'); box.style.setProperty('--c', col);
+    var frzMs = r.st === 'play' ? (r.frz || {})[pid] || 0 : 0; box.classList.toggle('frz', !!frzMs); document.body.classList.toggle('rufrozen', !!frzMs);   // (frozen: the whole phone turns to ice, with a countdown)
+    clearInterval(ruView._ft); if (frzMs) { var fEnd = Date.now() + frzMs, fTick = function () { var sec = Math.max(0, Math.ceil((fEnd - Date.now()) / 1000)), fe = box.querySelector('.rufrz'); if (fe) fe.innerHTML = '🧊<b>FROZEN!</b><span>' + sec + '</span>'; if (!sec) { clearInterval(ruView._ft); box.classList.remove('frz'); document.body.classList.remove('rufrozen'); } }; setTimeout(fTick, 0); ruView._ft = setInterval(fTick, 250); }
     if (box.getAttribute('data-id') !== r.id) {
       box.setAttribute('data-id', r.id); ruD = ''; clearInterval(ruDT); ruStunEnd = 0;
-      box.innerHTML = '<div class="rupad"><button type="button" class="rub u" data-d="u">▲</button><button type="button" class="rub l" data-d="l">◀</button><span class="ruc"></span><button type="button" class="rub r" data-d="r">▶</button><button type="button" class="rub d" data-d="d">▼</button></div>';
+      box.innerHTML = '<div class="rupad"><button type="button" class="rub u" data-d="u">▲</button><button type="button" class="rub l" data-d="l">◀</button><span class="ruc"></span><button type="button" class="rub r" data-d="r">▶</button><button type="button" class="rub d" data-d="d">▼</button></div><div class="rufrz"></div>';
       [].forEach.call(box.querySelectorAll('.rub'), function (b) {
         var d = b.getAttribute('data-d');
         b.addEventListener('pointerdown', function (e) { e.preventDefault(); var stop = ruD === d; [].forEach.call(box.querySelectorAll('.rub'), function (x) { x.classList.toggle('on', !stop && x === b); }); b.classList.remove('tap'); void b.offsetWidth; b.classList.add('tap'); ruSet(stop ? '' : d); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} });

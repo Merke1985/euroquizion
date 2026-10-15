@@ -6191,7 +6191,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.item = null; g.itemAt = now + 12000 + Math.random() * 8000;
     if (kind === 'freeze') {
       g.order.forEach(function (o) { if (o !== k) { g.stun[o] = Math.max(g.stun[o] || 0, now + RU_FREEZE); (g.frz = g.frz || {})[o] = now + RU_FREEZE; } });
-      g.fx = { k: k, t: 'freeze', at: now }; if (!REMOTE) { itemSfx('sounds/ice.mp3?v=1', Music.zap); whooshes([0, 200]); } ruBeat(); return;
+      g.fx = { k: k, t: 'freeze', at: now }; if (!REMOTE) { itemSfx('sounds/ice.mp3?v=1', Music.zap); whooshes([0, 200]); } push(); ruBeat(); return;
     }
     (g.fast = g.fast || {})[k] = now + RU_STAR; g.fx = { k: k, t: 'star', at: now };
     if (!REMOTE) { Music.starGet(); whooshes([0, 120, 240]); setTimeout(function () { Music.starRun(RU_STAR - 500); }, 500); }
@@ -6204,7 +6204,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var open = function (x2, y2) { var j = y2 * n + x2; if (seen[j] || g.own[j] === k) return; seen[j] = 1; q.push(j); };
     for (i = 0; i < n; i++) { open(i, 0); open(i, n - 1); open(0, i); open(n - 1, i); }
     while (q.length) { var c = q.pop(); x = c % n; y = (c / n) | 0; if (x > 0) open(x - 1, y); if (x < n - 1) open(x + 1, y); if (y > 0) open(x, y - 1); if (y < n - 1) open(x, y + 1); }
-    var got = 0, stg = 0; for (i = 0; i < n * n; i++) { x = i % n; y = (i / n) | 0; if (!seen[i] && g.own[i] !== k) { g.own[i] = k; got++; if (ruStage(g, x, y)) stg++; } }
+    var got = 0, stg = 0, inside = []; for (i = 0; i < n * n; i++) { x = i % n; y = (i / n) | 0; if (!seen[i] && g.own[i] !== k) { g.own[i] = k; got++; inside.push(i); if (ruStage(g, x, y)) stg++; } }
+    if (got) {   // the whole loop lights up: the tiles inside, and the ring of the player's own tiles around them
+      var ring = {}; inside.forEach(function (j) { var jx = j % n, jy = (j / n) | 0; for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) { var ax = jx + dx, ay = jy + dy; if (ax < 0 || ay < 0 || ax >= n || ay >= n) continue; var a2 = ay * n + ax; if (g.own[a2] === k) ring[a2] = 1; } });
+      g.loopFx = { at: Date.now(), tiles: Object.keys(ring).map(Number) }; if (!REMOTE) Music.loopClose();
+    }
     if (stg) { g.fx = { k: k, t: 'stage', n: got, at: Date.now() }; if (!REMOTE) { Music.douze(); itemSfx('sounds/applause.mp3?v=1'); setTimeout(function () { hostVoice('ru_stage', 'her'); }, 600); } }
     else if (got) { g.fx = { k: k, t: 'fill', n: got, at: Date.now() }; if (!REMOTE) { Music.douze(); } }
     return got;
@@ -6409,7 +6413,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, dur);
     var tick = setInterval(function () { if (G.rule !== g || (g.st !== 'count' && g.st !== 'end')) { clearInterval(tick); return; } ruShow(); if (g.st === 'end' && Date.now() - g.countAt > dur + 200) clearInterval(tick); }, Math.min(g.cstep, 120));
   }
-  function ruCol(k) { var p = players[k]; return p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#888'; }
+  // The colours on the floor: nobody gets a colour close to the floor itself (purple and very dark on the purple floor;
+  // yellow, lime, orange and brown on the neon-yellow one). Those players get another, free colour for this game only.
+  var RU_CLASH = [['#9b51e0', '#2b2b3a'], ['#f2c12e', '#a3e635', '#f2994a', '#8d6e63']];
+  var RU_SPARE = [['#e53950', '#2f80ed', '#27ae60', '#ff6fb5', '#1fc8c8', '#ffffff', '#f2c12e', '#f2994a', '#a3e635', '#8d6e63', '#00ffa3', '#ff5e00'], ['#e53950', '#2f80ed', '#27ae60', '#ff6fb5', '#1fc8c8', '#ffffff', '#9b51e0', '#2b2b3a', '#3d5afe', '#ff00a8', '#00c853', '#00e5ff']];
+  function ruCol(k) {
+    var p = players[k], own = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#888', g = G.rule; if (!g) return own;
+    var a = (g.act || 0) ? 1 : 0, cm = (g.cmap = g.cmap || {}), key = 'a' + a;
+    if (!cm[key]) {   // (worked out once per act, for everyone at once: keep your own colour if it's fine, otherwise the first free spare)
+      var map = {}, used = {}, base = function (q) { var pq = players[q]; return pq && pq.col != null && PCOLS[pq.col] ? PCOLS[pq.col][0] : '#888'; };
+      g.order.forEach(function (q) { var c = base(q); if (RU_CLASH[a].indexOf(c) < 0 && !used[c]) { map[q] = c; used[c] = 1; } });
+      g.order.forEach(function (q) { if (map[q]) return; var c = RU_SPARE[a].filter(function (x) { return !used[x] && RU_CLASH[a].indexOf(x) < 0; })[0] || base(q); map[q] = c; used[c] = 1; });
+      cm[key] = map;
+    }
+    return cm[key][k] || own;
+  }
   function ruSnap() {
     var g = G.rule, cols = {}; g.order.forEach(function (k) { cols[k] = ruCol(k); });
     var nowS = Date.now(), left = function (m) { var o = {}; Object.keys(m || {}).forEach(function (k) { if (m[k] > nowS) o[k] = m[k] - nowS; }); return o; };   // (time left, not clock times: the phone's clock differs)
@@ -6549,10 +6567,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the edge of the dance floor, glowing
     var rim = new T.Mesh(new T.BoxGeometry(n + .5, .16, n + .5), new T.MeshStandardMaterial({ color: '#2a1050', emissive: '#b04dff', emissiveIntensity: .45 })); rim.position.y = .02; sc.add(rim);
     // the tiles
-    var tiles = [], geo = new T.BoxGeometry(.94, .14, .94);
+    var tiles = [], geo = new T.BoxGeometry(.94, .14, .94), envT = null;
+    try {   // (what the glossy tiles reflect: a dark club with coloured spots of light)
+      var ec = document.createElement('canvas'); ec.width = 512; ec.height = 256; var ex = ec.getContext('2d'); ex.fillStyle = '#0c0418'; ex.fillRect(0, 0, 512, 256);
+      [['#ff3fd0', 60, 70], ['#7a5cff', 190, 50], ['#ffffff', 300, 40], ['#30e3ff', 400, 80], ['#ffd23f', 120, 120], ['#ff6fb5', 460, 30], ['#ffffff', 250, 90]].forEach(function (sp) { var gr = ex.createRadialGradient(sp[1], sp[2], 0, sp[1], sp[2], 46); gr.addColorStop(0, sp[0]); gr.addColorStop(1, 'rgba(0,0,0,0)'); ex.fillStyle = gr; ex.fillRect(0, 0, 512, 256); });
+      var etx = new T.CanvasTexture(ec); etx.mapping = T.EquirectangularReflectionMapping; var pm = new T.PMREMGenerator(rn); envT = pm.fromEquirectangular(etx).texture; pm.dispose();
+    } catch (e) { envT = null; }
     for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
       if (ruStage(g, x, y)) { tiles.push(null); continue; }
-      var m = new T.Mesh(geo, new T.MeshStandardMaterial({ color: '#241040', roughness: .85, metalness: 0, emissive: '#000000' }));
+      var m = new T.Mesh(geo, new T.MeshPhysicalMaterial({ color: '#241040', roughness: .32, metalness: .1, clearcoat: 1, clearcoatRoughness: .08, envMap: envT, envMapIntensity: .55, emissive: '#000000' }));
       m.position.set(x - n / 2 + .5, .12, y - n / 2 + .5); m.receiveShadow = true; sc.add(m); tiles.push(m);
     }
     // the hole in the middle: a deep shaft with glowing walls and haze at the bottom; the lift platform with the singer
@@ -6693,10 +6716,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     requestAnimationFrame(frame);
     st.flash = [];
+    st.flashAll = function (ix) { var nw = Date.now(); ix.forEach(function (i) { var m = tiles[i]; if (!m || !m.userData.own) return; m.userData.fl = nw; if (st.flash.indexOf(i) < 0) st.flash.push(i); }); };
     st.paint = function (own, trail, col) {
       var a0 = (n - s) / 2, so = own[(a0 + 1) * n + a0 + 1] || own[a0 * n + a0] || '';   // (the stage: all one owner)
       if (st.stOwn !== so) { st.stOwn = so; if (so) { var sc0 = col(so); stM.color.set(sc0); stM.emissive.set(sc0); stM.emissiveIntensity = .3; stM.metalness = .1; } else { stM.color.set('#08080c'); stM.emissive.set('#000000'); stM.metalness = .4; } }
-      own.forEach(function (k, i) { var m = tiles[i]; if (!m) return; var v = k || ''; if (m.userData.v === v) return; m.userData.v = v; m.userData.own = k;
+      own.forEach(function (k, i) { var m = tiles[i]; if (!m) return; var v = k ? k + '|' + col(k) : ''; if (m.userData.v === v) return; m.userData.v = v; m.userData.own = k;
         if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = .18; m.userData.c = c; m.userData.fl = Date.now(); st.flash.push(i); } else { m.material.color.set(st.act ? '#544800' : '#241040'); } });   /* (no lighter trail behind the players) */
     };
     return st;
@@ -6722,7 +6746,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         g.order.forEach(function (k, i) {
           var p = players[k]; if (!p) return;
           var el = document.createElement('div'); el.className = 'rut' + (g.st === 'intro' ? ' pre' : g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', Math.round(i * 4400 / Math.max(1, g.order.length - 1)) + 'ms'); el.style.setProperty('--c', ruCol(k));
-          el.innerHTML = '<div class="jmt" style="' + bodyOutfit(k) + '"><div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div><span class="rustar"><i>⭐</i><i>💫</i><i>⭐</i></span><span class="rustarglow"></span>';
+          el.innerHTML = '<div class="jmt" style="' + bodyOutfit(k) + '"><div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div><span class="rustar"><i>⭐</i><i>💫</i><i>⭐</i></span><span class="rustarglow"></span><span class="rutime"></span>';
           ov.querySelector('.rutoks3').appendChild(el);
           var c = g.pos[k]; ov._3.toks[k] = { el: el, j: el.firstChild, front: ov.querySelector('.rutoks3'), fx: c[0], fy: c[1], tx: c[0], ty: c[1], t0: 0 };
         });
@@ -6744,11 +6768,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ov._3) {
       var s3 = ov._3; s3.riseAt = g.riseAt || 0; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true;
       s3.paint(g.own, tr, ruCol);
+      if (g.loopFx && s3.lfAt !== g.loopFx.at) { s3.lfAt = g.loopFx.at; s3.flashAll(g.loopFx.tiles); }
       g.order.forEach(function (k) {
         var o = s3.toks[k], p = g.pos[k]; if (!o || !p) return;
         if (o.tx !== p[0] || o.ty !== p[1]) { var kk = o.t0 ? Math.min(1, (now - o.t0) / 330) : 1; o.fx = o.fx + (o.tx - o.fx) * kk; o.fy = o.fy + (o.ty - o.fy) * kk; o.tx = p[0]; o.ty = p[1]; o.t0 = now; }
         var bm = (g.bmp || {})[k]; if (bm && bm.at !== o.bat && now - bm.at < 600) { o.bat = bm.at; o.bx = bm.x; o.by = bm.y; o.bt0 = now; if (bm.hit) { o.el.classList.remove('hit'); void o.el.offsetWidth; o.el.classList.add('hit'); clearTimeout(o.hitT); o.hitT = setTimeout(function () { o.el.classList.remove('hit'); }, 650); } }   // (run into the other one, then bounce back)
-        o.el.classList.toggle('stun', g.stun[k] > now); o.el.classList.toggle('frz', (g.frz || {})[k] > now); o.el.classList.toggle('fast', (g.fast || {})[k] > now); o.el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
+        var cc = ruCol(k); if (o.cc !== cc) { o.cc = cc; o.el.style.setProperty('--c', cc); }
+        var fz = (g.frz || {})[k] > now, fs = (g.fast || {})[k] > now, sn = g.stun[k] > now, tl = fz ? g.frz[k] : sn ? g.stun[k] : fs ? g.fast[k] : 0, tt = tl && g.st === 'play' ? String(Math.ceil((tl - now) / 1000)) : '', tk = tt ? (fz ? 'frz' : sn ? 'stn' : 'str') : '';   // (a little countdown above their head)
+        if (!o.tm) o.tm = o.el.querySelector('.rutime'); if (o.tm && (o.tm.textContent !== tt || o.tm.getAttribute('data-k') !== tk)) { o.tm.textContent = tt; o.tm.setAttribute('data-k', tk); } o.el.classList.toggle('stun', g.stun[k] > now); o.el.classList.toggle('frz', (g.frz || {})[k] > now); o.el.classList.toggle('fast', (g.fast || {})[k] > now); o.el.classList.toggle('win', g.st === 'end' && g.win.indexOf(k) >= 0);
         if (g.st === 'drop' && o.el.classList.contains('pre')) { o.el.classList.remove('pre'); o.el.classList.add('drop'); }
         if (g.st !== 'drop' && g.st !== 'intro') o.el.classList.remove('drop', 'pre');
       });
