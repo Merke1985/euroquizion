@@ -3017,7 +3017,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var vf = !REMOTE && voice ? voiceFile(voice, text) : null, spoken = !!vf; if (vf) hostVoice(vf, voice);   // (a recorded line: spoken out loud as well)
     var chars = Array.from(text), n = 0;
     // the letters appear at the pace of the voice: the whole line in about the time the recording takes (durMs: a voice played separately)
-    var vms = durMs || (vf ? VOICE_MS[vf] : 0), step = vms ? Math.max(18, Math.min(110, vms * .92 / Math.max(1, chars.length))) : TALK_MS;
+    var vms = durMs || (vf ? VOICE_MS[vf] : 0), step = vms ? Math.max(16, Math.min(100, vms * .74 / Math.max(1, chars.length))) : TALK_MS;   // (a little ahead of the voice: it reads better)
     clearInterval(el._typeT);
     var draw = function () { el.innerHTML = '<span>' + esc(chars.slice(0, n).join('')) + '</span><span class="unsaid">' + esc(chars.slice(n).join('')) + '</span>'; };
     draw();
@@ -5222,86 +5222,209 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // question (on the phones, 4 options, 20 seconds). Most right answers wins; a tie goes to the fastest (only the
   // time of right answers counts). "Because of You" plays from the first step to the winner.
   var TC_COLORS = [['Red', '#e0283a', '#a31424'], ['Blue', '#2f6ff0', '#1d47a8'], ['Gold', '#f2b821', '#b8860b'], ['Green', '#2fb35a', '#1d7a3b'], ['Pink', '#ff5fa8', '#c2347a'], ['Purple', '#8b4fe0', '#5a2aa8'], ['Orange', '#ff8a2a', '#c25a10'], ['Silver', '#c8ccd8', '#8a90a0'], ['Black', '#121218', '#050508']];
-  var TC_SHOES = ['High heels', 'Boots', 'Flats'];
+  var TC_SHOES = ['High heels', 'Boots', 'Flats', 'Sneakers'];
   var TC_SKIN = ['#f6d2b8', '#e6b38f', '#c68a5e', '#8d5a3b', '#5e3a26'], TC_HAIR = ['#e9c060', '#6b3a1e', '#1d1410', '#cfd3dc', '#ff8fc8', '#b0602a'];
   var TC_SIZES = [[1, 1], [2, 5], [2, 5], [2, 5], [2, 5]], TC_Q_MS = 20000, tcTimer = null, tcFadeT = null;
   var TC_ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'], TC_POSES = ['hips', 'wave', 'up', 'kneel', 'point', 'lean', 'kneel'];
   function tcGirl() {
     var m = Math.random() < .4 ? 1 : 0;
-    var w = { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * TC_COLORS.length), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? pick([3, 3, 7, 8, 5]) : pick([0, 1, 2, 4, 5, 6]), d: Math.floor(Math.random() * 3), v: Math.random() < .35 ? 1 : 0 };
+    var w = { m: m, o: m ? 'suit' : pick(['dress', 'dress', 'jumpsuit', 'suit']), c: Math.floor(Math.random() * TC_COLORS.length), h: Math.random() < .5 ? 0 : 1 + Math.floor(Math.random() * 6), g: Math.random() < .45 ? 1 : 0, s: m ? 1 + Math.floor(Math.random() * 3) : Math.floor(Math.random() * 4), k: Math.floor(Math.random() * TC_SKIN.length), r: Math.floor(Math.random() * (m ? 4 : TC_HAIR.length)), y: m ? pick([3, 3, 7, 8, 5]) : pick([0, 1, 2, 4, 5, 6]), d: Math.floor(Math.random() * 3), v: Math.random() < .35 ? 1 : 0 };
     if (w.h && [2, 4, 8].indexOf(w.y) >= 0) w.y = w.m ? 3 : 1;   // (a bun or a ponytail would poke through a hat: short hair or a bob instead)
+    // the little details, just for the look (no questions about them): neckline, pattern, tie, beard, earrings, necklace,
+    // the shape of the sunglasses, the colour of the shoes and of the eyes, lipstick
+    w.nk = Math.floor(Math.random() * 3); w.pt = Math.floor(Math.random() * 3); w.ti = Math.floor(Math.random() * 3); w.bd = m && Math.random() < .45 ? 1 + Math.floor(Math.random() * 2) : 0;
+    w.e = !m || Math.random() < .25 ? Math.floor(Math.random() * 3) : 0; w.n = !m && Math.random() < .5 ? 1 : 0; w.gs = Math.floor(Math.random() * 3); w.sc = Math.floor(Math.random() * 4); w.ec = Math.floor(Math.random() * 3); w.lip = !m && Math.random() < .7 ? 1 : 0;
     return w;   // (hair: 0 long, 1 bob, 2 bun, 3 short, 4 high ponytail, 5 afro, 6 long braid, 7 quiff, 8 man bun; d: dress length (knee, mini, gown); v: a suit with a turtleneck)
   }
-  // A contestant, side-on, walking to the right (an original drawing). o: dress/jumpsuit/suit, c: colour, h: hat (0 none, 1 top hat,
-  // 2 sun hat, 3 beret), g: sunglasses, s: shoes, k: skin, r: hair colour, y: hairstyle (0 long, 1 bob, 2 bun).
+  var TC_INK = '#2a1a2e', TC_K = ' stroke="#2a1a2e" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
+  var TC_SHOEC = [['#d9dce6', '#8a8fa0'], ['#f2c14e', '#a87d1a'], ['#1d1d24', '#55556a'], ['#e0283a', '#8a1020']];
+  function tcShade(hex, f) { var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; var m = function (v) { return Math.max(0, Math.min(255, Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f)))); }; return '#' + ((1 << 24) + (m(r) << 16) + (m(g) << 8) + m(b)).toString(16).slice(1); }
+  // a pattern on the outfit, in its own colour family (so the colour question stays easy): plain, sequins, or a soft sheen
+  function tcFill(w, id, c, cd) {
+    if (w.pt === 1) return { defs: '<pattern id="' + id + '" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="' + c + '"/><circle cx="2.5" cy="2.5" r="2" fill="' + tcShade(c, .45) + '"/><circle cx="7" cy="7" r="2" fill="' + cd + '"/></pattern>', f: 'url(#' + id + ')' };
+    if (w.pt === 2) return { defs: '<linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + tcShade(c, .3) + '"/><stop offset=".45" stop-color="' + c + '"/><stop offset="1" stop-color="' + cd + '"/></linearGradient>', f: 'url(#' + id + ')' };
+    return { defs: '', f: c };
+  }
+  var tcUid = 0;
+  // ---- the head, from the front ----
+  function tcHairBackF(w, hr, hd) {
+    var y = w.y, s = '';
+    if (w.h && (y === 0 || y === 6 || y === 5)) y = y === 5 ? 5 : 1;   // (under a hat: long hair shows as a bob, an afro stays)
+    if (y === 0) s = '<path d="M66 92 Q60 48 100 42 Q140 48 134 92 Q140 150 138 196 Q128 206 116 198 Q118 160 112 130 L88 130 Q82 160 84 198 Q72 206 62 196 Q60 150 66 92 Z" fill="' + hr + '"' + TC_K + '/><path d="M72 120 Q70 160 72 190 M128 120 Q130 160 128 190" stroke="' + hd + '" stroke-width="2" fill="none"/>';
+    else if (y === 1) s = '<path d="M66 92 Q62 46 100 42 Q138 46 134 92 L136 130 Q126 138 116 132 L84 132 Q74 138 64 130 Z" fill="' + hr + '"' + TC_K + '/>';
+    else if (y === 2) s = '<circle cx="100" cy="40" r="17" fill="' + hr + '"' + TC_K + '/><path d="M88 34 Q100 28 112 34" stroke="' + hd + '" stroke-width="2" fill="none"/>';
+    else if (y === 4) s = '<path d="M118 48 Q150 50 148 96 Q146 140 132 160 Q140 120 130 84 Z" fill="' + hr + '"' + TC_K + '/><rect x="116" y="44" width="10" height="9" rx="3" fill="#e0283a"/>';
+    else if (y === 5) s = [[100, 52, 40], [70, 70, 26], [130, 70, 26], [64, 100, 22], [136, 100, 22], [82, 46, 24], [118, 46, 24]].map(function (q) { return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + hr + '"' + TC_K + '/>'; }).join('') + '<circle cx="100" cy="66" r="44" fill="' + hr + '"/>';
+    else if (y === 6) s = '<path d="M68 92 Q64 48 100 44 Q136 48 132 92 L132 120 L68 120 Z" fill="' + hr + '"' + TC_K + '/>';
+    else if (y === 8) s = '<circle cx="100" cy="44" r="11" fill="' + hr + '"' + TC_K + '/>';
+    return s;
+  }
+  function tcHairFrontF(w, hr, hd) {
+    var y = w.y, hl = tcShade(hr, .35);
+    if (w.h) return '<path d="M71 86 Q74 70 86 66 L114 66 Q126 70 129 86 Q118 76 100 76 Q82 76 71 86 Z" fill="' + hr + '"' + TC_K + '/>';   // (just a strip of hair under the hat)
+    if (y === 3) return '<path d="M70 92 Q66 58 98 54 Q132 54 131 90 Q126 74 116 70 L112 78 L106 70 L100 78 L94 70 L88 78 L84 70 Q74 76 70 92 Z" fill="' + hr + '"' + TC_K + '/><path d="M70 92 L72 104 M130 92 L128 104" stroke="' + hr + '" stroke-width="5" stroke-linecap="round"/>';
+    if (y === 7) return '<path d="M70 94 Q64 58 92 48 Q118 30 140 50 Q128 48 124 56 Q132 70 130 92 Q124 72 108 70 Q86 70 70 94 Z" fill="' + hr + '"' + TC_K + '/><path d="M96 50 Q114 40 132 48" stroke="' + hl + '" stroke-width="2.4" fill="none"/>';
+    if (y === 8) return '<path d="M70 92 Q68 60 100 56 Q132 60 130 92 Q120 70 100 70 Q80 70 70 92 Z" fill="' + hr + '"' + TC_K + '/><path d="M86 62 L84 70 M100 58 L100 68 M114 62 L116 70" stroke="' + hd + '" stroke-width="1.6"/>';
+    if (y === 5) return '<path d="M70 86 Q76 64 100 62 Q124 64 130 86 Q116 74 100 76 Q84 74 70 86 Z" fill="' + hr + '"/>';
+    if (y === 1) return '<path d="M68 96 Q66 56 100 54 Q134 56 132 96 L126 96 L124 84 L118 92 L114 80 L106 90 L100 80 L94 90 L86 80 L82 92 L76 84 L74 96 Z" fill="' + hr + '"' + TC_K + '/><path d="M84 62 Q100 58 116 62" stroke="' + hl + '" stroke-width="2.4" fill="none"/>';
+    if (y === 2 || y === 4 || y === 6) return '<path d="M70 92 Q68 56 100 54 Q132 56 130 92 Q124 70 104 66 L100 74 L96 66 Q76 70 70 92 Z" fill="' + hr + '"' + TC_K + '/><path d="M86 62 Q92 58 98 60 M104 60 Q110 58 116 62" stroke="' + hl + '" stroke-width="2" fill="none"/>' +
+      (y === 6 ? '<g>' + [0, 1, 2, 3, 4, 5, 6].map(function (i) { return '<ellipse cx="' + (126 + (i % 2) * 3) + '" cy="' + (112 + i * 16) + '" rx="8" ry="10" fill="' + hr + '"' + TC_K + '/>'; }).join('') + '<rect x="122" y="222" width="12" height="6" rx="2" fill="#ff5fa8"/></g>' : '');
+    // long: a side parting, waves past the face
+    return '<path d="M68 104 Q62 56 102 52 Q138 56 132 100 Q128 76 112 68 Q96 80 76 82 Q72 92 74 112 Z" fill="' + hr + '"' + TC_K + '/><path d="M82 70 Q96 62 110 64 M78 80 Q90 76 100 74" stroke="' + hl + '" stroke-width="2" fill="none"/>';
+  }
+  function tcFaceF(w, sk) {
+    var EYE = ['#3a2a1a', '#2f6ff0', '#2fb35a'][w.ec || 0], s = '';
+    s += '<ellipse cx="70" cy="96" rx="6" ry="9" fill="' + sk + '"' + TC_K + '/><ellipse cx="130" cy="96" rx="6" ry="9" fill="' + sk + '"' + TC_K + '/>';
+    s += '<circle cx="100" cy="92" r="30" fill="' + sk + '"' + TC_K + '/>';
+    if (w.bd) s += w.bd === 1 ? '<path d="M74 100 Q76 124 100 126 Q124 124 126 100 Q122 116 112 116 Q100 112 88 116 Q78 116 74 100 Z" fill="' + TC_HAIR[w.r] + '" opacity=".9"/>' : '<path d="M88 114 Q100 108 112 114 L110 122 Q100 128 90 122 Z" fill="' + TC_HAIR[w.r] + '" opacity=".9"/>';
+    if (w.g) {
+      var gs = w.gs || 0;
+      s += gs === 0 ? '<circle cx="88" cy="91" r="9" fill="#141418" stroke="#c9a227" stroke-width="2"/><circle cx="112" cy="91" r="9" fill="#141418" stroke="#c9a227" stroke-width="2"/><path d="M97 90 L103 90" stroke="#c9a227" stroke-width="2"/><path d="M84 87 L88 85" stroke="#fff" stroke-width="2" opacity=".6"/><path d="M108 87 L112 85" stroke="#fff" stroke-width="2" opacity=".6"/>'
+        : gs === 1 ? '<path d="M74 84 L97 86 Q96 98 86 98 Q76 96 74 84 Z M126 84 L103 86 Q104 98 114 98 Q124 96 126 84 Z" fill="#141418"/><path d="M97 88 L103 88" stroke="#141418" stroke-width="3"/><path d="M80 88 L86 87" stroke="#fff" stroke-width="2" opacity=".55"/>'
+        : '<path d="M76 86 Q86 82 97 86 Q96 100 86 100 Q76 98 76 86 Z M124 86 Q114 82 103 86 Q104 100 114 100 Q124 98 124 86 Z" fill="#5a3a1a" opacity=".85" stroke="#d9b45a" stroke-width="1.6"/><path d="M97 86 L103 86" stroke="#d9b45a" stroke-width="2"/>';
+    } else {
+      s += '<ellipse cx="88" cy="92" rx="5.6" ry="4.4" fill="#fff"' + TC_K.replace('2.4', '1.4') + '/><ellipse cx="112" cy="92" rx="5.6" ry="4.4" fill="#fff"' + TC_K.replace('2.4', '1.4') + '/><circle cx="89" cy="92.6" r="2.8" fill="' + EYE + '"/><circle cx="113" cy="92.6" r="2.8" fill="' + EYE + '"/><circle cx="90" cy="91.6" r="1" fill="#fff"/><circle cx="114" cy="91.6" r="1" fill="#fff"/>';
+      if (!w.m) s += '<path d="M82 89 L80 86 M85 87.6 L84 84.6 M118 89 L120 86 M115 87.6 L116 84.6" stroke="' + TC_INK + '" stroke-width="1.4" stroke-linecap="round"/>';   // (lashes)
+    }
+    s += '<path d="M80 ' + (w.g ? 79 : 82) + ' Q88 ' + (w.g ? 76 : 79) + ' 95 82 M105 82 Q112 ' + (w.g ? 76 : 79) + ' 120 ' + (w.g ? 79 : 82) + '" stroke="' + tcShade(TC_HAIR[w.r], -.2) + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>';   // (eyebrows)
+    s += '<path d="M99 96 Q97 104 101 105" stroke="' + tcShade(sk, -.25) + '" stroke-width="2" fill="none" stroke-linecap="round"/>';   // (the nose)
+    s += '<ellipse cx="82" cy="104" rx="5.5" ry="3" fill="#ff8fa3" opacity=".42"/><ellipse cx="118" cy="104" rx="5.5" ry="3" fill="#ff8fa3" opacity=".42"/>';
+    s += '<path d="M89 110 Q100 121 111 110 Q100 114 89 110 Z" fill="#fff" stroke="' + (w.lip ? '#c2185b' : '#9a3040') + '" stroke-width="' + (w.lip ? 3.2 : 2.4) + '" stroke-linejoin="round"/>';   // (a big red-carpet smile)
+    if (w.e) s += w.e === 1 ? '<circle cx="70" cy="108" r="3.4" fill="none" stroke="#f2c14e" stroke-width="2"/><circle cx="130" cy="108" r="3.4" fill="none" stroke="#f2c14e" stroke-width="2"/>' : '<path d="M70 105 L70 114 M130 105 L130 114" stroke="#cfd5e4" stroke-width="1.4"/><circle cx="70" cy="116" r="3" fill="#9fe7ff" stroke="#fff" stroke-width="1"/><circle cx="130" cy="116" r="3" fill="#9fe7ff" stroke="#fff" stroke-width="1"/>';
+    return s;
+  }
+  function tcHatF(w) {
+    var h = w.h;
+    if (h === 1) return '<rect x="78" y="14" width="44" height="48" rx="3" fill="#15151c"' + TC_K + '/><rect x="78" y="46" width="44" height="8" fill="#e0283a"/><path d="M84 18 L84 44" stroke="#3a3a48" stroke-width="4"/><ellipse cx="100" cy="62" rx="36" ry="6.5" fill="#15151c"' + TC_K + '/>';
+    if (h === 2) return '<ellipse cx="100" cy="64" rx="60" ry="11" fill="#efdcab"' + TC_K + '/><path d="M74 64 Q76 30 100 30 Q124 30 126 64 Z" fill="#f4e4b8"' + TC_K + '/><path d="M75 56 Q100 50 125 56" stroke="#8b5cf6" stroke-width="7" fill="none"/><path d="M120 54 Q136 60 132 76 M122 56 Q142 52 146 66" stroke="#8b5cf6" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50 64 Q100 70 150 64" stroke="#c9b27a" stroke-width="1.4" fill="none"/>';
+    if (h === 3) return '<path d="M64 64 Q60 40 100 36 Q144 38 138 60 Q120 70 98 68 Q76 70 64 64 Z" fill="#6d3cc0"' + TC_K + '/><path d="M72 62 Q100 70 134 60" stroke="#4a2490" stroke-width="5" fill="none"/><path d="M100 36 L102 28" stroke="#4a2490" stroke-width="4" stroke-linecap="round"/>';
+    if (h === 4) return '<path d="M40 60 Q60 74 100 72 Q140 74 160 60 Q150 76 100 78 Q50 76 40 60 Z" fill="#8a5222"' + TC_K + '/><path d="M74 66 Q74 30 90 34 Q100 40 110 34 Q126 30 126 66 Q100 72 74 66 Z" fill="#b8763a"' + TC_K + '/><path d="M75 58 Q100 64 125 58" stroke="#5a3010" stroke-width="5" fill="none"/>';
+    if (h === 5) return '<path d="M72 68 Q72 34 100 34 Q128 34 128 68 Z" fill="#e0283a"' + TC_K + '/><path d="M74 66 Q100 74 126 66 Q122 82 100 84 Q78 82 74 66 Z" fill="#a31424"' + TC_K + '/><circle cx="100" cy="35" r="3" fill="#a31424"/><path d="M100 36 L100 66 M86 40 L82 66 M114 40 L118 66" stroke="#c01c30" stroke-width="1.4"/>';
+    if (h === 6) return '<ellipse cx="100" cy="62" rx="44" ry="8" fill="#3a3a48"' + TC_K + '/><path d="M76 62 Q78 34 100 32 Q122 34 124 62 Q100 66 76 62 Z" fill="#4a4a5a"' + TC_K + '/><path d="M92 34 Q100 42 108 34" stroke="#2a2a36" stroke-width="2.4" fill="none"/><rect x="77" y="52" width="46" height="7" fill="#d9a520"/>';
+    return '';
+  }
+  // ---- the body, from the front ----
+  function tcOutfitF(w, sk, c, cd, F) {
+    var s = '', dress = w.o === 'dress';
+    if (dress) {
+      var hem = [366, 300, 446][w.d || 0], flare = [38, 26, 50][w.d || 0];
+      s += '<path d="M76 146 Q100 136 124 146 Q130 186 120 224 Q' + (140 + flare / 2) + ' ' + (hem - 70) + ' ' + (100 + flare + 26) + ' ' + hem + ' Q100 ' + (hem + 14) + ' ' + (100 - flare - 26) + ' ' + hem + ' Q' + (60 - flare / 2) + ' ' + (hem - 70) + ' 80 224 Q70 186 76 146 Z" fill="' + F + '"' + TC_K + '/>';
+      s += (w.nk === 0 ? '<path d="M78 146 Q88 160 100 150 Q112 160 122 146 Q112 140 100 142 Q88 140 78 146 Z" fill="' + sk + '"/>' : w.nk === 1 ? '<path d="M86 142 L100 166 L114 142 Z" fill="' + sk + '"/><path d="M86 142 L94 120 M114 142 L106 120" stroke="' + cd + '" stroke-width="4"/>' : '<path d="M76 146 L124 146 L122 156 Q100 148 78 156 Z" fill="' + sk + '"/>');
+      s += '<path d="M81 224 Q100 232 119 224" stroke="' + cd + '" stroke-width="7" fill="none"/><circle cx="100" cy="229" r="4.5" fill="#fff4c0" stroke="' + cd + '" stroke-width="1.5"/>';
+      s += '<path d="M92 234 Q86 ' + (hem - 60) + ' ' + (82 - flare / 2) + ' ' + (hem - 4) + ' M108 234 Q114 ' + (hem - 60) + ' ' + (118 + flare / 2) + ' ' + (hem - 4) + '" stroke="' + cd + '" stroke-width="2" fill="none" opacity=".6"/>';   // (the folds of the skirt)
+      if (w.n) s += '<path d="M88 132 Q100 146 112 132" stroke="#f2c14e" stroke-width="2" fill="none"/><path d="M100 141 L96 147 L100 153 L104 147 Z" fill="#9fe7ff" stroke="#fff" stroke-width="1"/>';
+    } else if (w.o === 'jumpsuit') {
+      s += '<path d="M76 146 Q100 136 124 146 Q130 186 122 222 L128 268 L140 456 L106 456 L100 290 L94 456 L60 456 L72 268 L78 222 Q70 186 76 146 Z" fill="' + F + '"' + TC_K + '/>';
+      s += '<path d="M86 144 L100 176 L114 144" stroke="' + cd + '" stroke-width="3" fill="' + sk + '"/><path d="M78 222 Q100 230 122 222" stroke="' + cd + '" stroke-width="9" fill="none"/><rect x="94" y="219" width="12" height="11" rx="2" fill="none" stroke="#f2c14e" stroke-width="2.4"/>';
+      s += '<path d="M84 300 L76 452 M116 300 L124 452" stroke="' + cd + '" stroke-width="2" opacity=".6"/>';
+      if (w.n) s += '<path d="M90 134 Q100 144 110 134" stroke="#f2c14e" stroke-width="2" fill="none"/>';
+    } else {
+      // the suit: trousers, shirt (tie, bow tie or open collar) or a turtleneck, jacket with lapels and a pocket square
+      s += '<path d="M70 270 L130 270 L134 458 L104 458 L100 300 L96 458 L66 458 Z" fill="' + F + '"' + TC_K + '/><path d="M82 290 L80 450 M118 290 L120 450" stroke="' + cd + '" stroke-width="2" opacity=".55"/>';
+      s += w.v ? '<path d="M84 140 L116 140 L118 270 L82 270 Z" fill="' + cd + '"/><path d="M86 130 L114 130 L116 146 L84 146 Z" fill="' + cd + '"' + TC_K + '/><path d="M88 135 L112 135 M88 140 L112 140" stroke="' + tcShade(cd, -.25) + '" stroke-width="1.4"/>'
+        : '<path d="M84 140 L116 140 L118 270 L82 270 Z" fill="#fbfbfd"/><path d="M88 136 L100 150 L112 136" stroke="#c9ccd6" stroke-width="2.4" fill="#fbfbfd"/>' + (w.ti === 0 ? '<path d="M100 150 L95 160 L100 222 L105 160 Z" fill="' + cd + '"' + TC_K.replace('2.4', '1.6') + '/>' : w.ti === 1 ? '<path d="M88 144 L100 150 L88 156 Z M112 144 L100 150 L112 156 Z" fill="#15151c"/><circle cx="100" cy="150" r="3" fill="#15151c"/>' : '');
+      s += '<path d="M70 144 Q84 138 92 140 L98 214 L96 280 L66 280 Q62 210 70 144 Z" fill="' + F + '"' + TC_K + '/><path d="M130 144 Q116 138 108 140 L102 214 L104 280 L134 280 Q138 210 130 144 Z" fill="' + F + '"' + TC_K + '/>';
+      s += '<path d="M92 140 L84 176 L98 200 M108 140 L116 176 L102 200" stroke="' + cd + '" stroke-width="3" fill="none" stroke-linejoin="round"/><circle cx="99" cy="236" r="3" fill="' + cd + '"/><circle cx="101" cy="256" r="3" fill="' + cd + '"/>';
+      s += '<path d="M112 186 L124 186 L122 190 L113 190 Z" fill="' + (w.c === 6 ? '#fff' : '#ffd23f') + '"/>';   // (a pocket square)
+    }
+    return s;
+  }
+  function tcShoeF(w, cx, y) {
+    var C = TC_SHOEC[w.sc || 0];
+    if (w.s === 0) return '<path d="M' + (cx - 11) + ' ' + (y - 4) + ' Q' + cx + ' ' + (y - 12) + ' ' + (cx + 11) + ' ' + (y - 4) + ' L' + (cx + 8) + ' ' + (y + 10) + ' L' + (cx - 8) + ' ' + (y + 10) + ' Z" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/><rect x="' + (cx - 2.5) + '" y="' + (y + 2) + '" width="5" height="10" fill="' + C[1] + '"/>';
+    if (w.s === 1) return '<path d="M' + (cx - 15) + ' ' + (y - 70) + ' L' + (cx + 15) + ' ' + (y - 70) + ' L' + (cx + 15) + ' ' + (y + 6) + ' Q' + cx + ' ' + (y + 12) + ' ' + (cx - 15) + ' ' + (y + 6) + ' Z" fill="#6b3b1f"' + TC_K + '/><path d="M' + (cx - 15) + ' ' + (y - 62) + ' L' + (cx + 15) + ' ' + (y - 62) + '" stroke="#3b1f0f" stroke-width="3"/><path d="M' + (cx - 9) + ' ' + (y - 50) + ' L' + (cx - 9) + ' ' + y + '" stroke="#8a5530" stroke-width="2"/>';
+    if (w.s === 3) return '<path d="M' + (cx - 15) + ' ' + (y + 10) + ' Q' + (cx - 16) + ' ' + (y - 8) + ' ' + cx + ' ' + (y - 9) + ' Q' + (cx + 16) + ' ' + (y - 8) + ' ' + (cx + 15) + ' ' + (y + 10) + ' Z" fill="#fbfbfd"' + TC_K + '/><path d="M' + (cx - 16) + ' ' + (y + 9) + ' L' + (cx + 16) + ' ' + (y + 9) + '" stroke="' + C[1] + '" stroke-width="4" stroke-linecap="round"/><path d="M' + (cx - 6) + ' ' + (y - 4) + ' L' + (cx + 6) + ' ' + (y - 4) + ' M' + (cx - 7) + ' ' + y + ' L' + (cx + 7) + ' ' + y + '" stroke="#9aa0ad" stroke-width="1.6"/><path d="M' + (cx - 12) + ' ' + (y + 4) + ' Q' + cx + ' ' + (y + 1) + ' ' + (cx + 12) + ' ' + (y + 4) + '" stroke="' + C[0] + '" stroke-width="2.4" fill="none"/>';   // (sneakers: white, laces, a coloured stripe)
+    return '<ellipse cx="' + cx + '" cy="' + (y + 4) + '" rx="15" ry="7.5" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/><path d="M' + (cx - 10) + ' ' + (y + 1) + ' Q' + cx + ' ' + (y - 3) + ' ' + (cx + 10) + ' ' + (y + 1) + '" stroke="' + C[1] + '" stroke-width="1.6" fill="none"/>';
+  }
+  // an arm from the front: shoulder → elbow → hand, in the sleeve colour (bare arms in a dress)
+  function tcArmF(pts, col, sk, flag) {
+    var d = 'M' + pts[0] + ' ' + pts[1] + ' Q' + pts[2] + ' ' + pts[3] + ' ' + pts[4] + ' ' + pts[5];
+    return '<path d="' + d + '" stroke="' + TC_INK + '" stroke-width="20" fill="none" stroke-linecap="round"/><path d="' + d + '" stroke="' + col + '" stroke-width="15" fill="none" stroke-linecap="round"/>' +
+      (flag ? '<rect x="' + (pts[4] - 2) + '" y="' + (pts[5] - 90) + '" width="5" height="250" rx="2" fill="#d9c08a" stroke="#8a6a30" stroke-width="1"/><image href="' + tcFlagUrl(flag) + '" x="' + (pts[4] + 3) + '" y="' + (pts[5] - 88) + '" width="72" height="48" preserveAspectRatio="none"/>' : '') +
+      '<circle cx="' + pts[4] + '" cy="' + pts[5] + '" r="9.5" fill="' + sk + '"' + TC_K + '/>';
+  }
+  // The same contestant from the front, for when they stop and pose for the cameras (each in their own pose)
+  function tcSvgFront(w) {
+    var sk = TC_SKIN[w.k], hr = TC_HAIR[w.r], hd = tcShade(hr, -.3), c = TC_COLORS[w.c][1], cd = TC_COLORS[w.c][2], dress = w.o === 'dress';
+    var id = 'tcf' + (++tcUid), P = tcFill(w, id, c, cd), sleeve = w.o === 'suit' ? P.f : w.o === 'jumpsuit' && w.d === 2 ? P.f : sk;
+    var kneel = w.p === 'kneel', h = '<defs>' + P.defs + '</defs>';
+    h += tcHairBackF(w, hr, hd);
+    // the arms: the pose decides (hips, a wave, both up, pointing at the cameras, a hand behind the head, holding up a flag)
+    var p = w.p || 'hips', L = [74, 150, 48, 196, 70, 232], R = [126, 150, 152, 196, 130, 232];
+    if (p === 'wave' || p === 'flag') R = [126, 150, 150, 108, 140, 52];
+    if (p === 'up') { L = [74, 150, 54, 104, 62, 50]; R = [126, 150, 146, 104, 138, 50]; }
+    if (p === 'point') R = [126, 150, 160, 150, 178, 128];
+    if (p === 'lean') R = [126, 150, 158, 100, 122, 66];
+    if (kneel) { L = [74, 150, 56, 200, 84, 236]; R = [126, 150, 150, 120, 146, 66]; }
+    // the legs and shoes (kneeling: one knee down, a little lower)
+    var dy = kneel ? 40 : 0, legC = dress ? sk : P.f;
+    if (!(w.o === 'jumpsuit')) {
+      var lx = dress ? [84, 104] : [74, 100], lw = dress ? 16 : 26;
+      lx.forEach(function (x, i) {
+        var top = dress ? 300 : 266, bot = 458;
+        if (kneel && i === 0) h += '<path d="M' + (x + lw / 2) + ' ' + top + ' L' + (x + lw / 2 - 18) + ' 400 L' + (x + lw / 2 - 18) + ' 462" stroke="' + TC_INK + '" stroke-width="' + (lw + 4) + '" fill="none" stroke-linecap="round"/><path d="M' + (x + lw / 2) + ' ' + top + ' L' + (x + lw / 2 - 18) + ' 400 L' + (x + lw / 2 - 18) + ' 462" stroke="' + legC + '" stroke-width="' + lw + '" fill="none" stroke-linecap="round"/>';
+        else h += '<rect x="' + x + '" y="' + top + '" width="' + lw + '" height="' + (bot - top) + '" rx="8" fill="' + legC + '"' + TC_K + '/>';
+        h += tcShoeF(w, x + lw / 2 - (kneel && i === 0 ? 18 : 0), 460);
+      });
+    } else [83, 117].forEach(function (cx) { h += tcShoeF(w, cx, 460); });
+    h += tcArmF(L, sleeve, sk);
+    h += tcOutfitF(w, sk, c, cd, P.f);
+    h += '<rect x="91" y="110" width="18" height="34" rx="7" fill="' + sk + '"' + TC_K + '/>';
+    h += tcFaceF(w, sk) + tcHairFrontF(w, hr, hd) + tcHatF(w);
+    h += tcArmF(R, sleeve, sk, p === 'flag' || (w.f && p !== 'point') ? w.f : null);
+    return '<svg class="tcgirl tcfront" viewBox="0 0 200 490" overflow="visible" aria-hidden="true"><g transform="translate(0 ' + dy + ')">' + h + '</g></svg>';
+  }
+  // ---- side-on, walking to the right ----
   function tcSvg(w) {
-    var sk = TC_SKIN[w.k], hr = TC_HAIR[w.r], c = TC_COLORS[w.c][1], cd = TC_COLORS[w.c][2], legC = w.o === 'dress' ? sk : c, legD = w.o === 'dress' ? sk : cd;
+    var sk = TC_SKIN[w.k], hr = TC_HAIR[w.r], hd = tcShade(hr, -.3), hl = tcShade(hr, .35), c = TC_COLORS[w.c][1], cd = TC_COLORS[w.c][2], dress = w.o === 'dress';
+    var id = 'tcs' + (++tcUid), P = tcFill(w, id, c, cd), legC = dress ? sk : P.f, legD = dress ? tcShade(sk, -.12) : cd, C = TC_SHOEC[w.sc || 0];
     var shoe = function () {
-      if (w.s === 0) return '<path d="M98 452 L128 458 Q140 462 140 470 L112 470 L104 466 L102 482 L98 482 Z" fill="#d9dce6" stroke="#8a8fa0" stroke-width="2"/>';
-      if (w.s === 1) return '<path d="M96 396 L120 396 L122 452 Q142 456 144 470 L96 470 Z" fill="#6b3b1f" stroke="#3b1f0f" stroke-width="2"/>';
-      return '<path d="M98 456 L126 456 Q140 460 140 468 L98 468 Z" fill="#1d1d24"/>';
+      if (w.s === 0) return '<path d="M98 452 L128 458 Q142 462 142 470 L112 470 L104 466 L102 484 L98 484 Z" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/>';
+      if (w.s === 1) return '<path d="M94 392 L122 392 L122 450 Q142 454 146 470 L94 470 Z" fill="#6b3b1f"' + TC_K + '/><path d="M94 400 L122 400" stroke="#3b1f0f" stroke-width="3"/>';
+      if (w.s === 3) return '<path d="M94 446 L120 446 Q130 448 136 456 Q146 460 146 470 L94 472 Z" fill="#fbfbfd"' + TC_K + '/><path d="M94 466 L146 466" stroke="' + C[1] + '" stroke-width="5"/><path d="M104 452 Q118 448 130 456" stroke="' + C[0] + '" stroke-width="3" fill="none"/><path d="M118 448 L122 456 M124 450 L127 457" stroke="#9aa0ad" stroke-width="1.6"/>';
+      return '<path d="M96 454 L124 454 Q142 458 142 468 L96 468 Z" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/>';
     };
-    var leg = function (cls, col) { return '<g class="tcleg ' + cls + '"><rect x="' + (w.o === 'dress' ? 97 : 94) + '" y="246" width="' + (w.o === 'dress' ? 22 : 28) + '" height="212" rx="10" fill="' + col + '"/>' + shoe() + '</g>'; };
-    var arm = function (cls, col) { return '<g class="tcarm ' + cls + '"><rect x="100" y="146" width="18" height="118" rx="9" fill="' + col + '"/>' + (cls === 'f' && w.f ? '<rect x="108" y="14" width="5" height="290" rx="2" fill="#d9c08a" stroke="#8a6a30" stroke-width="1"/><image href="' + tcFlagUrl(w.f) + '" x="113" y="16" width="72" height="48" preserveAspectRatio="none"/>' : '') + '<circle cx="109" cy="267" r="10" fill="' + sk + '"/></g>'; };
-    var sleeve = w.o === 'suit' ? c : sk, sleeveD = w.o === 'suit' ? cd : sk;
-    var body = w.o === 'dress' ? '<path d="M82 144 Q108 130 134 144 Q138 186 128 224 Q156 300 170 366 Q110 384 46 366 Q62 300 88 224 Q78 186 82 144 Z" fill="' + c + '"/><path d="M88 224 Q108 230 128 224" stroke="' + cd + '" stroke-width="6" fill="none"/>'
-      : w.o === 'jumpsuit' ? '<path d="M82 144 Q108 130 134 144 Q138 186 130 222 Q138 244 134 266 L82 266 Q78 244 86 222 Q78 186 82 144 Z" fill="' + c + '"/><path d="M86 222 Q108 228 130 222" stroke="' + cd + '" stroke-width="8" fill="none"/>'
-      : '<path d="M80 142 Q108 128 136 142 L140 284 L78 284 Z" fill="' + c + '"/><path d="M106 136 L118 182 L130 140 Z" fill="#fff"/><path d="M118 182 L130 140 M118 182 L112 270" stroke="' + cd + '" stroke-width="3" fill="none"/><circle cx="124" cy="214" r="3" fill="' + cd + '"/><circle cx="124" cy="240" r="3" fill="' + cd + '"/>';
-    var hairBack = w.y === 0 ? '<path d="M84 80 Q80 50 110 50 Q132 52 132 78 L118 76 Q112 120 100 196 Q80 190 78 150 Q74 110 84 80 Z" fill="' + hr + '"/>' : w.y === 1 ? '<path d="M82 82 Q80 50 112 50 Q136 54 134 80 L124 80 Q118 104 108 126 Q84 124 82 82 Z" fill="' + hr + '"/>' : '<circle cx="80" cy="70" r="17" fill="' + hr + '"/><path d="M84 84 Q82 52 112 50 Q134 52 134 78 Q112 64 92 92 Z" fill="' + hr + '"/>';
-    var hairFront = '<path d="M86 78 Q92 54 116 54 Q132 56 136 74 Q120 64 104 70 Q96 74 92 92 Z" fill="' + hr + '"/>';
-    var face = '<rect x="102" y="112" width="16" height="30" rx="6" fill="' + sk + '"/><circle cx="112" cy="92" r="30" fill="' + sk + '"/><path d="M140 88 Q148 96 141 100" fill="' + sk + '" stroke="' + sk + '" stroke-width="2"/>' +
-      '<path d="M130 109 Q136 112 140 108" stroke="#b0303a" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="126" cy="99" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/>' +
-      (w.g ? '<path d="M104 86 L118 84" stroke="#111" stroke-width="3"/><path d="M118 80 L144 80 Q146 92 138 95 L124 95 Q118 92 118 80 Z" fill="#111"/><path d="M122 83 L130 83" stroke="#5a6a8a" stroke-width="2"/>' : '<circle cx="129" cy="87" r="3.2" fill="#2a1a10"/><path d="M124 81 Q129 78 134 81" stroke="#2a1a10" stroke-width="2" fill="none"/>');
-    var hat = w.h === 1 ? '<rect x="92" y="18" width="42" height="44" rx="3" fill="#15151c"/><rect x="92" y="48" width="42" height="7" fill="#3a3a48"/><ellipse cx="113" cy="62" rx="34" ry="6" fill="#15151c"/>'
-      : w.h === 2 ? '<ellipse cx="112" cy="64" rx="56" ry="10" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M88 64 Q90 34 112 34 Q136 34 138 64 Z" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M89 58 Q112 52 137 58" stroke="#8b5cf6" stroke-width="6" fill="none"/>'
-      : w.h === 3 ? '<ellipse cx="104" cy="60" rx="36" ry="14" fill="#6d3cc0" transform="rotate(-10 104 60)"/><circle cx="104" cy="45" r="4" fill="#6d3cc0"/>'
-      : w.h === 4 ? '<path d="M54 62 Q112 80 170 58 Q150 70 112 70 Q74 70 54 62 Z" fill="#a0642c"/><path d="M86 64 Q88 30 104 36 Q112 42 120 36 Q136 30 138 64 Z" fill="#b8763a"/>'
-      : w.h === 5 ? '<path d="M86 66 Q86 36 112 36 Q138 36 138 66 Z" fill="#e0283a"/><path d="M130 64 L170 66 Q168 72 132 70 Z" fill="#a31424"/>'
-      : w.h === 6 ? '<ellipse cx="112" cy="62" rx="40" ry="7" fill="#3a3a48"/><path d="M90 62 Q92 34 112 32 Q132 34 134 62 Z" fill="#4a4a5a"/><rect x="90" y="52" width="44" height="6" fill="#d9a520"/>' : '';
-    return '<svg class="tcgirl" viewBox="0 0 200 490" aria-hidden="true">' + hairBack + leg('b', legD) + arm('b', sleeveD) + leg('f', legC) + body + face + hairFront + hat + arm('f', sleeve) + '</svg>';
+    var wide = w.o === 'jumpsuit';
+    var leg = function (cls, col) { return '<g class="tcleg ' + cls + '">' + (wide ? '<path d="M94 246 L122 246 L132 458 L88 458 Z" fill="' + col + '"' + TC_K + '/>' : '<rect x="' + (dress ? 97 : 94) + '" y="246" width="' + (dress ? 22 : 28) + '" height="212" rx="10" fill="' + col + '"' + TC_K + '/>') + shoe() + '</g>'; };
+    var arm = function (cls, col) { return '<g class="tcarm ' + cls + '"><rect x="100" y="146" width="18" height="118" rx="9" fill="' + col + '"' + TC_K + '/>' + (cls === 'f' && w.f ? '<rect x="108" y="14" width="5" height="290" rx="2" fill="#d9c08a" stroke="#8a6a30" stroke-width="1"/><image href="' + tcFlagUrl(w.f) + '" x="113" y="16" width="72" height="48" preserveAspectRatio="none"/>' : '') + '<circle cx="109" cy="267" r="10" fill="' + sk + '"' + TC_K + '/></g>'; };
+    var sleeve = w.o === 'suit' ? P.f : sk, sleeveD = w.o === 'suit' ? cd : tcShade(sk, -.12);
+    var hem = [366, 300, 446][w.d || 0], fl = [38, 26, 50][w.d || 0];
+    var body = dress ? '<path d="M82 144 Q108 130 134 144 Q138 186 128 224 Q' + (150 + fl / 2) + ' ' + (hem - 70) + ' ' + (134 + fl) + ' ' + hem + ' Q108 ' + (hem + 14) + ' ' + (82 - fl) + ' ' + hem + ' Q' + (66 - fl / 2) + ' ' + (hem - 70) + ' 88 224 Q78 186 82 144 Z" fill="' + P.f + '"' + TC_K + '/><path d="M88 224 Q108 232 128 224" stroke="' + cd + '" stroke-width="6" fill="none"/><path d="M110 236 Q122 ' + (hem - 60) + ' ' + (128 + fl / 2) + ' ' + (hem - 4) + '" stroke="' + cd + '" stroke-width="2" fill="none" opacity=".6"/>' + (w.n ? '<path d="M112 128 Q126 140 132 132" stroke="#f2c14e" stroke-width="2" fill="none"/>' : '')
+      : w.o === 'jumpsuit' ? '<path d="M82 144 Q108 130 134 144 Q138 186 130 222 Q138 244 134 266 L82 266 Q78 244 86 222 Q78 186 82 144 Z" fill="' + P.f + '"' + TC_K + '/><path d="M86 222 Q108 230 130 222" stroke="' + cd + '" stroke-width="8" fill="none"/><rect x="118" y="219" width="10" height="10" rx="2" fill="none" stroke="#f2c14e" stroke-width="2"/>'
+      : '<path d="M80 142 Q108 128 136 142 L140 284 L78 284 Z" fill="' + P.f + '"' + TC_K + '/>' + (w.v ? '<path d="M110 132 L128 132 L130 150 L112 150 Z" fill="' + cd + '"' + TC_K.replace('2.4', '1.6') + '/>' : '<path d="M108 136 L120 182 L132 140 Z" fill="#fbfbfd"/>' + (w.ti === 0 ? '<path d="M128 146 L124 156 L130 210 L134 156 Z" fill="' + cd + '"/>' : w.ti === 1 ? '<path d="M126 142 L136 138 L136 150 Z" fill="#15151c"/>' : '')) + '<path d="M120 182 L132 140 M120 182 L114 270" stroke="' + cd + '" stroke-width="3" fill="none"/><circle cx="126" cy="214" r="3" fill="' + cd + '"/><circle cx="126" cy="240" r="3" fill="' + cd + '"/>';
+    // the hair, side-on
+    var y = w.y; if (w.h && (y === 0 || y === 6)) y = 1;
+    var hairBack = y === 0 ? '<path d="M84 80 Q78 48 112 48 Q136 52 134 80 L120 78 Q116 130 104 200 Q86 196 80 160 Q74 116 84 80 Z" fill="' + hr + '"' + TC_K + '/><path d="M92 110 Q90 150 96 186" stroke="' + hd + '" stroke-width="2" fill="none"/>'
+      : y === 1 ? '<path d="M82 84 Q80 48 112 48 Q138 52 136 82 L124 82 Q120 108 110 130 Q84 128 82 84 Z" fill="' + hr + '"' + TC_K + '/>'
+      : y === 2 ? '<circle cx="80" cy="68" r="17" fill="' + hr + '"' + TC_K + '/>'
+      : y === 4 ? '<path d="M90 56 Q60 50 58 90 Q56 130 70 152 Q66 116 80 84 Z" fill="' + hr + '"' + TC_K + '/><rect x="84" y="52" width="9" height="10" rx="3" fill="#e0283a"/>'
+      : y === 5 ? [[100, 58, 30], [78, 76, 24], [84, 50, 22], [110, 40, 22], [128, 50, 20], [76, 100, 20], [92, 104, 18]].map(function (q) { return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + q[2] + '" fill="' + hr + '"' + TC_K + '/>'; }).join('') + '<circle cx="98" cy="70" r="36" fill="' + hr + '"/><path d="M84 56 Q90 50 96 54 M100 44 Q106 40 112 44 M78 84 Q82 80 88 82" stroke="' + hl + '" stroke-width="2" fill="none"/>'
+      : y === 6 ? '<path d="M86 84 Q84 52 112 50 Q134 52 134 78 L96 104 Z" fill="' + hr + '"' + TC_K + '/>' + [0, 1, 2, 3, 4, 5].map(function (i) { return '<ellipse cx="' + (88 - i * 1.5) + '" cy="' + (112 + i * 17) + '" rx="8" ry="10" fill="' + hr + '"' + TC_K + '/>'; }).join('')
+      : y === 8 ? '<circle cx="90" cy="54" r="11" fill="' + hr + '"' + TC_K + '/>' : '';
+    var hairFront = w.h ? '<path d="M84 84 Q86 70 98 66 L128 66 Q134 70 134 78 Q118 72 100 74 Q90 78 88 92 Z" fill="' + hr + '"' + TC_K + '/>'
+      : y === 3 ? '<path d="M82 92 Q78 56 112 54 Q138 56 138 76 L130 72 L128 80 L122 70 L118 78 L112 68 L106 76 Q96 72 90 96 Z" fill="' + hr + '"' + TC_K + '/>'
+      : y === 7 ? '<path d="M82 94 Q76 58 106 50 Q132 38 150 60 Q138 58 134 64 Q138 72 136 80 Q122 66 104 70 Q92 74 88 96 Z" fill="' + hr + '"' + TC_K + '/><path d="M104 54 Q124 46 142 56" stroke="' + hl + '" stroke-width="2.4" fill="none"/>'
+      : y === 5 ? '<path d="M90 80 Q98 64 120 64 Q132 66 136 78 Q120 70 100 76 Z" fill="' + hr + '"/>'
+      : y === 1 ? '<path d="M84 84 Q86 52 116 52 Q138 56 138 84 L132 82 L130 74 L124 80 L120 70 L112 78 L106 70 Q94 74 90 96 Z" fill="' + hr + '"' + TC_K + '/>'
+      : '<path d="M84 86 Q88 52 116 52 Q136 56 138 76 Q122 64 104 70 Q94 74 90 96 Z" fill="' + hr + '"' + TC_K + '/><path d="M100 60 Q114 56 128 62" stroke="' + hl + '" stroke-width="2" fill="none"/>';
+    var EYE = ['#3a2a10', '#2f6ff0', '#2fb35a'][w.ec || 0];
+    var face = '<rect x="102" y="112" width="16" height="32" rx="6" fill="' + sk + '"' + TC_K + '/><circle cx="112" cy="92" r="30" fill="' + sk + '"' + TC_K + '/><path d="M140 86 Q150 96 141 102" fill="' + sk + '"' + TC_K.replace('2.4', '2') + '/>' +
+      '<path d="M100 88 Q94 96 101 104 Q106 100 104 92 Z" fill="' + tcShade(sk, -.08) + '" stroke="' + tcShade(sk, -.35) + '" stroke-width="1.6"/>' +
+      (w.bd ? '<path d="M108 116 Q120 126 138 112 Q136 104 130 112 Q118 116 108 108 Z" fill="' + hr + '" opacity=".9"/>' : '') +
+      '<path d="M127 110 Q133 113 138 109" stroke="' + (w.lip ? '#c2185b' : '#b0303a') + '" stroke-width="' + (w.lip ? 4.2 : 3.4) + '" fill="none" stroke-linecap="round"/><ellipse cx="126" cy="100" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/>' +
+      (w.g ? '<path d="M104 86 L118 84" stroke="#141418" stroke-width="3"/>' + (w.gs === 2 ? '<path d="M118 82 Q132 78 144 82 Q144 96 134 96 Q120 96 118 82 Z" fill="#5a3a1a" opacity=".9" stroke="#d9b45a" stroke-width="1.6"/>' : '<path d="M118 80 L144 80 Q146 92 138 95 L124 95 Q118 92 118 80 Z" fill="#141418"/>') + '<path d="M124 84 L132 83" stroke="#fff" stroke-width="2" opacity=".5"/>'
+        : '<ellipse cx="130" cy="88" rx="3.6" ry="4" fill="#fff"' + TC_K.replace('2.4', '1.2') + '/><circle cx="131.4" cy="88.4" r="2.4" fill="' + EYE + '"/>' + (!w.m ? '<path d="M133 85 L137 82" stroke="' + TC_INK + '" stroke-width="1.4" stroke-linecap="round"/>' : '')) +
+      '<path d="M122 ' + (w.g ? 76 : 80) + ' Q130 ' + (w.g ? 73 : 77) + ' 137 ' + (w.g ? 77 : 80) + '" stroke="' + tcShade(hr, -.2) + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      (w.e ? '<circle cx="104" cy="108" r="3" fill="' + (w.e === 1 ? 'none' : '#9fe7ff') + '" stroke="' + (w.e === 1 ? '#f2c14e' : '#fff') + '" stroke-width="1.8"/>' : '');
+    var H = w.h, hat = H === 1 ? '<rect x="92" y="16" width="44" height="46" rx="3" fill="#15151c"' + TC_K + '/><rect x="92" y="46" width="44" height="8" fill="#e0283a"/><ellipse cx="113" cy="62" rx="36" ry="6" fill="#15151c"' + TC_K + '/>'
+      : H === 2 ? '<ellipse cx="112" cy="64" rx="60" ry="10" fill="#efdcab"' + TC_K + '/><path d="M86 64 Q88 32 112 32 Q138 32 140 64 Z" fill="#f4e4b8"' + TC_K + '/><path d="M87 56 Q112 50 139 56" stroke="#8b5cf6" stroke-width="7" fill="none"/><path d="M88 58 Q72 66 70 80" stroke="#8b5cf6" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      : H === 3 ? '<path d="M70 64 Q66 40 106 36 Q150 40 144 60 Q124 70 104 68 Q82 70 70 64 Z" fill="#6d3cc0"' + TC_K + '/><path d="M106 36 L108 28" stroke="#4a2490" stroke-width="4" stroke-linecap="round"/>'
+      : H === 4 ? '<path d="M52 60 Q72 74 112 72 Q152 74 172 58 Q160 76 112 78 Q62 76 52 60 Z" fill="#8a5222"' + TC_K + '/><path d="M86 66 Q86 30 102 34 Q112 40 122 34 Q138 30 138 66 Q112 72 86 66 Z" fill="#b8763a"' + TC_K + '/><path d="M87 58 Q112 64 137 58" stroke="#5a3010" stroke-width="5" fill="none"/>'
+      : H === 5 ? '<path d="M84 68 Q84 36 112 36 Q140 36 140 68 Z" fill="#e0283a"' + TC_K + '/><path d="M134 64 L176 66 Q174 74 136 72 Z" fill="#a31424"' + TC_K + '/>'
+      : H === 6 ? '<ellipse cx="112" cy="62" rx="44" ry="8" fill="#3a3a48"' + TC_K + '/><path d="M88 62 Q90 34 112 32 Q134 34 136 62 Q112 66 88 62 Z" fill="#4a4a5a"' + TC_K + '/><rect x="89" y="52" width="46" height="7" fill="#d9a520"/>' : '';
+    return '<svg class="tcgirl" viewBox="0 0 200 490" aria-hidden="true"><defs>' + P.defs + '</defs>' + hairBack + leg('b', legD) + arm('b', sleeveD) + leg('f', legC) + body + face + hairFront + hat + arm('f', sleeve) + '</svg>';
   }
   function tcFlagUrl(f) { return f === 'pride' ? 'images/flag_pride.png' : 'https://flagcdn.com/w160/' + f + '.png'; }
-  // The same contestant from the front, for when they stop and pose for the cameras (one arm up, the other on the hip)
-  function tcSvgFront(w) {
-    var sk = TC_SKIN[w.k], hr = TC_HAIR[w.r], c = TC_COLORS[w.c][1], cd = TC_COLORS[w.c][2], dress = w.o === 'dress', legC = dress ? sk : c, legD = dress ? sk : cd;
-    var sleeve = w.o === 'suit' ? c : sk, h = '';
-    // the hair behind the head
-    h += w.y === 0 ? '<path d="M68 86 Q66 46 100 44 Q134 46 132 86 L136 196 Q100 206 64 196 Z" fill="' + hr + '"/>' : w.y === 1 ? '<path d="M68 88 Q66 46 100 44 Q134 46 132 88 L134 128 Q100 136 66 128 Z" fill="' + hr + '"/>' : '<circle cx="100" cy="42" r="17" fill="' + hr + '"/><path d="M70 86 Q68 50 100 48 Q132 50 130 86 Z" fill="' + hr + '"/>';
-    // the legs and shoes
-    [[dress ? 81 : 75, legD], [dress ? 101 : 99, legC]].forEach(function (L) {
-      var x = L[0], wd = dress ? 18 : 26;
-      h += '<rect x="' + x + '" y="' + (dress ? 300 : 246) + '" width="' + wd + '" height="' + (dress ? 160 : 214) + '" rx="9" fill="' + L[1] + '"/>';
-      var cx = x + wd / 2;
-      h += w.s === 0 ? '<path d="M' + (cx - 10) + ' 458 Q' + cx + ' 452 ' + (cx + 10) + ' 458 L' + (cx + 8) + ' 470 L' + (cx - 8) + ' 470 Z" fill="#d9dce6" stroke="#8a8fa0" stroke-width="2"/>'
-        : w.s === 1 ? '<rect x="' + (cx - 15) + '" y="396" width="30" height="74" rx="8" fill="#6b3b1f" stroke="#3b1f0f" stroke-width="2"/>'
-        : '<ellipse cx="' + cx + '" cy="464" rx="15" ry="7" fill="#1d1d24"/>';
-    });
-    // the arm on the hip (behind the body)
-    h += '<path d="M76 152 Q50 196 70 232" stroke="' + sleeve + '" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="74" cy="234" r="10" fill="' + sk + '"/>';
-    // the body
-    h += dress ? '<path d="M74 144 Q100 132 126 144 Q130 186 120 224 Q150 300 164 366 Q100 384 36 366 Q50 300 80 224 Q70 186 74 144 Z" fill="' + c + '"/><path d="M80 224 Q100 230 120 224" stroke="' + cd + '" stroke-width="6" fill="none"/>'
-      : w.o === 'jumpsuit' ? '<path d="M74 144 Q100 132 126 144 Q130 186 122 222 Q130 244 126 266 L74 266 Q70 244 78 222 Q70 186 74 144 Z" fill="' + c + '"/><path d="M78 222 Q100 228 122 222" stroke="' + cd + '" stroke-width="8" fill="none"/>'
-      : '<path d="M70 142 Q100 128 130 142 L134 284 L66 284 Z" fill="' + c + '"/><path d="M90 136 L100 186 L110 136 Z" fill="#fff"/><path d="M90 136 L100 186 L110 136 M100 186 L100 282" stroke="' + cd + '" stroke-width="3" fill="none"/><circle cx="106" cy="214" r="3" fill="' + cd + '"/><circle cx="106" cy="240" r="3" fill="' + cd + '"/>';
-    // the neck, the head and the face
-    h += '<rect x="92" y="112" width="16" height="30" rx="6" fill="' + sk + '"/><circle cx="100" cy="92" r="30" fill="' + sk + '"/>' +
-      '<path d="M70 90 Q70 56 100 56 Q130 56 130 90 Q118 70 100 72 Q82 70 70 90 Z" fill="' + hr + '"/>' +
-      '<ellipse cx="84" cy="104" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/><ellipse cx="116" cy="104" rx="5" ry="3" fill="#ff8fa3" opacity=".45"/>' +
-      '<path d="M90 108 Q100 117 110 108" stroke="#b0303a" stroke-width="3.5" fill="none" stroke-linecap="round"/>' +
-      (w.g ? '<path d="M78 86 L122 86" stroke="#111" stroke-width="3"/><rect x="80" y="84" width="17" height="12" rx="5" fill="#111"/><rect x="103" y="84" width="17" height="12" rx="5" fill="#111"/>'
-        : '<circle cx="89" cy="91" r="3.2" fill="#2a1a10"/><circle cx="111" cy="91" r="3.2" fill="#2a1a10"/><path d="M84 84 Q89 81 94 84 M106 84 Q111 81 116 84" stroke="#2a1a10" stroke-width="2" fill="none"/>');
-    // the hat
-    h += w.h === 1 ? '<rect x="79" y="18" width="42" height="44" rx="3" fill="#15151c"/><rect x="79" y="48" width="42" height="7" fill="#3a3a48"/><ellipse cx="100" cy="62" rx="34" ry="6" fill="#15151c"/>'
-      : w.h === 2 ? '<ellipse cx="100" cy="64" rx="56" ry="10" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M76 64 Q78 34 100 34 Q122 34 124 64 Z" fill="#efdcab" stroke="#c9b27a" stroke-width="2"/><path d="M77 58 Q100 52 123 58" stroke="#8b5cf6" stroke-width="6" fill="none"/>'
-      : w.h === 3 ? '<ellipse cx="100" cy="58" rx="36" ry="13" fill="#6d3cc0"/><circle cx="100" cy="44" r="4" fill="#6d3cc0"/>'
-      : w.h === 4 ? '<path d="M44 62 Q100 80 156 62 Q140 70 100 70 Q60 70 44 62 Z" fill="#a0642c"/><path d="M76 64 Q78 30 92 36 Q100 42 108 36 Q122 30 124 64 Z" fill="#b8763a"/>'
-      : w.h === 5 ? '<path d="M74 66 Q74 36 100 36 Q126 36 126 66 Z" fill="#e0283a"/><ellipse cx="100" cy="67" rx="30" ry="6" fill="#a31424"/>'
-      : w.h === 6 ? '<ellipse cx="100" cy="62" rx="40" ry="7" fill="#3a3a48"/><path d="M78 62 Q80 34 100 32 Q120 34 122 62 Z" fill="#4a4a5a"/><rect x="78" y="52" width="44" height="6" fill="#d9a520"/>' : '';
-    // the other arm up in the air (waving, or holding up the flag)
-    h += '<path d="M124 152 Q144 110 138 50" stroke="' + sleeve + '" stroke-width="18" fill="none" stroke-linecap="round"/>' +
-      (w.f ? '<rect x="136" y="-30" width="5" height="250" rx="2" fill="#d9c08a" stroke="#8a6a30" stroke-width="1"/><image href="' + tcFlagUrl(w.f) + '" x="141" y="-28" width="72" height="48" preserveAspectRatio="none"/>' : '') +
-      '<circle cx="138" cy="46" r="10" fill="' + sk + '"/>';
-    return '<svg class="tcgirl tcfront" viewBox="0 0 200 490" overflow="visible" aria-hidden="true">' + h + '</svg>';
-  }
   var TC_FLAGN = { eu: 'Europe', pride: 'The Pride flag' };   // (flags that aren't a country's)
   function tcQuestion(girls, used) {
     var n = girls.length, ALL = n === 1 ? ['color', 'hatyn', 'glassyn', 'shoes'] : ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'];   // (one star alone: no counting, just what they wore)
