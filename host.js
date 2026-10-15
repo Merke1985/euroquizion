@@ -6659,7 +6659,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ruTimer = setTimeout(function () { if (G.rule !== g) return; if (REMOTE) drop(); else ruVote(g, drop); }, REMOTE ? 1000 : t);
   }
   // Before the dancers land: everyone votes for the act (and so the song): the singer in silver, or the act in yellow
-  var RU_ACTS = [{ t: 'We Will Rule the World', v: 'sjb2wMJXeuw', s: 0 }, { t: 'Discoteque', v: 'CWqrdzNoBKA', s: 74 }], RU_VOTE_MS = 15000;   // (s: where the song starts; the game lasts just as long with either)
+  var RU_ACTS = [{ t: 'We Will Rule the World', v: 'sjb2wMJXeuw', s: 0, top: 9 }, { t: 'Discoteque', v: 'CWqrdzNoBKA', s: 74, top: 82 }]   /* (top: the song time at which the singer is all the way up) */, RU_VOTE_MS = 15000;   // (s: where the song starts; the game lasts just as long with either)
   var RU_VOTE_LINE = 'But first: which song do we dance to? Vote on your phone! 🗳️';
   function ruVote(g, then) {
     g.vote = { on: true, votes: {}, ends: Date.now() + RU_VOTE_MS }; push(); ruShow(); Music.ding();
@@ -6695,7 +6695,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (G.phase !== 'rule' || !G.rule) { clearInterval(ruSongT); ruSongT = null; return; }
         try {
           var st = yt.getPlayerState(), ct = yt.getCurrentTime();
-          if (st === 1 && ct > 0 && g.st === 'rise' && (!g.riseAt || synced)) { synced = true; g.riseAt = Date.now() - Math.max(0, Math.min(RU_RISE / 1000, ct - ra.s)) * 1000;   /* (the rise follows the song's own clock: the stage is at the top 8 s in, at 1:22 for Discoteque) */ var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
+          if (st === 1 && ct > 0 && g.st === 'rise' && (!g.riseAt || synced)) { synced = true; var off = ((ra.top || ra.s + RU_RISE / 1000) - ra.s) * 1000 - RU_RISE; g.riseAt = Date.now() - Math.min(RU_RISE, (ct - ra.s) * 1000 - off);   /* (the stage starts rising so it's at the top exactly at the act's moment: 0:09, 1:22) */   /* (the rise follows the song's own clock: the stage is at the top 8 s in, at 1:22 for Discoteque) */ var ov = $('ruov'); if (ov && ov._3) ov._3.riseAt = g.riseAt; }   // (the rise follows the song itself)
           if (st === 0) { yt.seekTo(ra.s, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo();
         } catch (e) {}
       }, 250);
@@ -6708,7 +6708,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruCount(g) { var c = {}; g.order.forEach(function (k) { c[k] = 0; }); g.own.forEach(function (k) { if (k && c[k] != null) c[k]++; }); return c; }
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
-    g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP + (RU_ACTS[g.act || 0].lag || 0) : g.t0 + RU_MS; g.itemAt = Date.now() + 12000 + Math.random() * 8000; g.item = null; push(); Music.ding();   // (the first star turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
+    g.st = 'play'; g.t0 = Date.now(); var ra0 = RU_ACTS[g.act || 0]; g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP - (((ra0.top || ra0.s + RU_RISE / 1000) - ra0.s) * 1000 - RU_RISE) : g.t0 + RU_MS; g.itemAt = Date.now() + 12000 + Math.random() * 8000; g.item = null; push(); Music.ding();   // (the first star turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
     if (G.mgTest && G.ruForce != null) { var lb = g.order.filter(function (k) { return players[k] && players[k].bot; })[0]; if (lb) g.bot[lb].loop = {}; }   // (the test buttons: one bot always takes the stage with a loop)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
@@ -7204,7 +7204,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var w2 = hostEl.clientWidth, h2 = hostEl.clientHeight; if (w2 && h2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
       var t = now / 1000;
       // the stage: in the hole, rising over 10 seconds, then up
-      var k = st.risen ? 1 : st.riseAt ? Math.min(1, (Date.now() - st.riseAt) / RU_RISE) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      var k = st.risen ? 1 : st.riseAt ? Math.max(0, Math.min(1, (Date.now() - st.riseAt) / RU_RISE)) : 0, e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       stage.position.y = -11 + e * 11.3; sLight.intensity = Math.max(0, e * 1.6 - .5); haze.intensity = 3 * (1 - e * .6);
       var singer = st.singer, u = singer.userData, dance = e >= 1 ? 1 : 0;
       if (u.robot) { u.move(t, dance);   // the yellow act: disco poses on the beat
