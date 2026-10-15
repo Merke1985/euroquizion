@@ -6706,7 +6706,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M138 92 Q132 40 178 36 Q214 38 214 76 Q200 54 172 56 Q150 60 146 96 Z" fill="url(#svhair)"/>' +
       '<path d="M146 70 Q140 130 134 176 Q146 178 150 172 Q152 120 158 80 Z" fill="url(#svhair)"/>' +
       // the arm with the microphone, at her lips
-      '<g class="svsarm f">' + sleeve('M180 180 Q206 214 214 198 Q220 170 214 136') + '<circle cx="214" cy="136" r="8.5" fill="#f0c8b2"/><g transform="rotate(-62 216 130)"><rect x="211" y="100" width="11" height="40" rx="4" fill="#161616"/><ellipse cx="216.5" cy="98" rx="10" ry="12" fill="#2b2b2b"/></g></g>' +
+      // the arm with the microphone: the fist under her chin, the mic head right in front of her lips
+      '<g class="svsarm f">' + sleeve('M180 180 Q204 214 216 196 Q222 178 220 160') +
+      '<path d="M219 166 L224 128" stroke="#161616" stroke-width="10" stroke-linecap="round"/>' +
+      '<g transform="rotate(8 225 118)"><ellipse cx="225" cy="118" rx="10" ry="11.5" fill="#2b2b2b"/><path d="M216 113 h18 M215 118 h20 M216 123 h18 M225 107 v22" stroke="#6a6a6a" stroke-width="1.2"/><rect x="216" y="127" width="18" height="4" rx="1.5" fill="#888"/></g>' +
+      '<path d="M212 158 Q212 146 221 146 Q229 147 228 156 Q227 166 219 167 Q212 166 212 158 Z" fill="#f0c8b2"/><path d="M214 151 q6 -2 12 1 M214 156 q6 -2 12 1 M214 161 q5 -2 11 1" stroke="#d9a688" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>' +
       '</g></svg>').replace(/url\(#sv/g, 'url(#svS');
   })();
   // The stage: the 3D floor is a board of 14 × 9 tiles. The red team stands on the left half, the blue team on the right
