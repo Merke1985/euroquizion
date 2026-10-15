@@ -474,6 +474,19 @@ var Music = (function () {
       for (var k = 0; k < 10; k++) (function (at) { var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 3000 + Math.random() * 3000; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.05, at + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.12); o.connect(g); g.connect(fxOut()); o.start(at); o.stop(at + 0.14); })(t + 0.35 + Math.random() * 0.7);
     } catch (e) {}
   }
+  function starRun(ms) {   // while the star lasts: a fast, bright, twinkling run of notes going round and round
+    if (!ac()) return;
+    try {
+      var t0 = ctx.currentTime + 0.02, end = t0 + (ms || 5000) / 1000, step = 0.075, seq = [72, 76, 79, 84, 79, 76, 74, 77, 81, 86, 81, 77], i = 0;
+      for (var t = t0; t < end; t += step, i++) {
+        var o = ctx.createOscillator(), g = ctx.createGain(), m = seq[i % seq.length] + (Math.floor(i / seq.length) % 2 ? 2 : 0), fade = Math.min(1, (end - t) / 0.6);
+        o.type = i % 2 ? 'square' : 'triangle'; o.frequency.value = hz(m);
+        var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.045 * fade + 0.0002, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + step * 0.9);
+        o.connect(lp); lp.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + step);
+      }
+    } catch (e) {}
+  }
   function starHit() {   // smashing into someone with the star: a punchy "pow" with a sparkle
     if (!ac()) return;
     try {
@@ -706,5 +719,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { bonk: bonk, dizzy: dizzy, starGet: starGet, starHit: starHit, darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
+  return { starRun: starRun, bonk: bonk, dizzy: dizzy, starGet: starGet, starHit: starHit, darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();
