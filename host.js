@@ -6366,6 +6366,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
     setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, 1400);
+    [300, 1500].forEach(function (t) { setTimeout(function () { if (G.sv === g) svShow(); }, t); });   // (she walks on to the middle while he talks)
     setTimeout(function () { if (G.sv === g) svSong(true); }, 1400 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (she cuts him off)   // (and the song cuts in already: the presenters talk over its intro)
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
@@ -6727,9 +6728,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var bph = g.stage === 3 ? (g.st === 'end' ? 'on' : b < SV_BALL ? 'none' : b < SV_HOP ? 'rise' : b < SV_HOP + 2 ? 'hop' : 'on') : 'none';   // (the skippy balls come up out of the tile in front of everyone; they hop on, and back)
     ov.setAttribute('data-bph', bph);
     var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 4 : 10 + Math.round(r * 2)); };
-    var ins = ov.querySelector('.svins');
-    if (ins._act !== act) { if (ins._act && g.st === 'play') { var wd = Math.max(2.2, Math.min(7, ((nx ? nx[0] : b + 7) - b) * SV_BT / 1000 - .6)), lx2 = (solo || act === '*' ? 12.5 : act === 'A' ? 6 : 19) < (ins._lc || 12.5); ins.style.setProperty('--wd', wd.toFixed(2) + 's'); ins.classList.remove('wl', 'wr'); ins.classList.add('walk', lx2 ? 'wl' : 'wr'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk', 'wl', 'wr'); }, wd * 1000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
-    var lc = solo || act === '*' ? 12.5 : act === 'A' ? 6 : 19;
+    var ins = ov.querySelector('.svins'), f00 = g.chart[0][0];
+    if (g.st !== 'end' && (!g.t0 || b < f00 - 10)) act = g.st === 'intro' && !g.t0 && !ins._act ? 'off' : 'mid';   // (the intro: she walks on to the middle; ten bounces before the red team she goes over to them)
+    var LC = function (a) { return a === 'off' ? 29 : solo || a === '*' || a === 'mid' ? 12.5 : a === 'A' ? 6 : 19; };
+    if (ins._act !== act) { if (ins._act && g.st !== 'end') { var wd = ins._act === 'off' ? 4.5 : act === 'A' && b < f00 ? 4 : Math.max(2.2, Math.min(7, ((nx ? nx[0] : b + 7) - b) * SV_BT / 1000 - .6)), lx2 = LC(act) < (ins._lc || 12.5); ins.style.setProperty('--wd', wd.toFixed(2) + 's'); ins.classList.remove('wl', 'wr'); ins.classList.add('walk', lx2 ? 'wl' : 'wr'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk', 'wl', 'wr'); }, wd * 1000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
+    var lc = LC(act);
     ins._lc = lc;
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }   /* (the hop class first, then the move: so it never slides) */
     var lcx = lc + ix, lry = bph === 'hop' ? 2 : Math.max(0, Math.min(2, SV_LROW + iy)); place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
