@@ -753,11 +753,13 @@
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🏐 Serving!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
     $('waittitle').textContent = z.st === 'play' ? '🏐 Bounce on the beat!' : z.st === 'ready' ? '🏐 Get ready…' : '🏐 Serving!';
-    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : 'Tap the ball when the ring closes in. Golden ring = SERVE (double)!';
+    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : 'Hit the same arrow when it reaches the top. Gold = SERVE (double)!';
     box.classList.remove('hidden');
-    if (!box.firstChild) {
-      box.innerHTML = '<div class="svpad"><div class="svring"></div><button type="button" class="svbtn">🏐<b>BOUNCE!</b></button></div><div class="svfb"></div><div class="svme"></div>';
-      box.querySelector('.svbtn').addEventListener('pointerdown', function (e) { e.preventDefault(); svTap(); });
+    if (box.getAttribute('data-id') !== z.id) {   // (a DDR-style chart: the arrows scroll up to the receptors; four big pads below)
+      box.setAttribute('data-id', z.id); S.chart = z.chart || [];
+      var A = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';
+      box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (d, k) { return '<i class="svn c' + d + (k % (z.gold || 8) === (z.gold || 8) - 1 ? ' gold' : '') + '" data-k="' + k + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
+      [].forEach.call(box.querySelectorAll('.svpadb'), function (bt) { bt.addEventListener('pointerdown', function (e) { e.preventDefault(); svTap(+bt.getAttribute('data-d')); bt.classList.remove('hit'); void bt.offsetWidth; bt.classList.add('hit'); }); bt.addEventListener('contextmenu', function (e) { e.preventDefault(); }); });
     }
     box.querySelector('.svme').textContent = ((z.dist || {})[pid] || 0) + ' m' + (z.lead === pid ? ' · you lead: your ball is bigger! 🎈' : '');
     S.st = z.st; S.hops = z.hops; S.gold = z.gold;
@@ -766,21 +768,20 @@
   function svStop() { if (svS && svS.raf) cancelAnimationFrame(svS.raf); if (svS) svS.raf = 0; }
   function svFrame() {
     var S = svS, box = $('svui'); if (!S || !box || !S.t0) return;
-    var ring = box.querySelector('.svring'); if (!ring) return;
-    var b = (Date.now() - S.t0) / S.bt, k = Math.ceil(b - .25), f = k - b;   // f: 0 = right on the beat
-    if (S.st !== 'play' && S.st !== 'ready' || k < 0 || k >= S.hops) { ring.style.opacity = 0; return; }
-    ring.style.opacity = 1; ring.style.transform = 'scale(' + (1 + Math.max(0, f) * 1.4).toFixed(3) + ')';
-    ring.classList.toggle('gold', k % S.gold === S.gold - 1);
+    var b = (Date.now() - S.t0) / S.bt, on = S.st === 'play' || S.st === 'ready';
+    if (!S.notes) S.notes = [].slice.call(box.querySelectorAll('.svn'));
+    S.notes.forEach(function (n) { var k = +n.getAttribute('data-k'), dk = k - b; if (!on || S.done[k] || dk < -.5 || dk > 4.2) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = 1; n.style.transform = 'translateY(' + (dk * 15).toFixed(2) + 'vh)'; });   // (15vh per bounce: up to the receptors)
     var fb = box.querySelector('.svfb'); if (S.fbAt && Date.now() - S.fbAt > 700) { fb.textContent = ''; S.fbAt = 0; }
   }
-  function svTap() {
+  function svTap(d) {
     var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || z.st !== 'play') return;
     var now = Date.now(), b = (now - S.t0) / S.bt, k = Math.round(b), dt = (b - k) * S.bt;
     if (k < 0 || k >= S.hops || S.done[k]) return;
-    var q = Math.abs(dt) < 110 ? 2 : Math.abs(dt) < 230 ? 1 : 0; S.done[k] = 1;
-    if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, k: k, q: q });
+    var q = Math.abs(dt) < 110 ? 2 : Math.abs(dt) < 230 ? 1 : 0; if (S.chart && S.chart[k] !== d) q = 0; S.done[k] = 1;
+    if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, k: k, d: d, q: q });
+    var rec = $('svui').querySelector('.svrec.c' + d); if (rec) { rec.classList.remove('flash', 'f0', 'f1', 'f2'); void rec.offsetWidth; rec.classList.add('flash', 'f' + q); }
     var gold = k % S.gold === S.gold - 1, fb = $('svui').querySelector('.svfb');
-    fb.textContent = q === 2 ? (gold ? '✨ SERVE!' : 'PERFECT!') : q ? 'Good' : (dt < 0 ? 'Too early!' : 'Too late!'); fb.className = 'svfb q' + q; S.fbAt = now;
+    fb.textContent = q === 2 ? (gold ? '✨ SERVE!' : 'PERFECT!') : q ? 'Good' : S.chart && S.chart[k] !== d ? 'Wrong arrow!' : (dt < 0 ? 'Too early!' : 'Too late!'); fb.className = 'svfb q' + q; S.fbAt = now;
     try { navigator.vibrate && navigator.vibrate(q === 2 ? 25 : 12); } catch (x) {}
   }
 
@@ -1334,11 +1335,11 @@
     if (n.st === 'intro') { box.classList.add('hidden'); cb.classList.add('hidden'); $('waittitle').textContent = '🎤 Hold That Note!'; $('waitsub').textContent = 'Watch the big screen: the diva is getting ready…'; return; }
     if (n.st === 'guess' && !mine) {
       cb.classList.add('hidden'); box.classList.remove('hidden');
-      $('waittitle').textContent = '🎤 How long will the note last?'; $('waitsub').textContent = 'Between 10 seconds and one minute. The closest guess wins!';
+      $('waittitle').textContent = '🎤 How long will the note last?'; $('waitsub').textContent = 'Between 10 seconds and one minute. The closest guess wins, but if her note lasts longer than your guess, you lose!';
       return;
     }
     box.classList.add('hidden');
-    if (n.st === 'guess') { cb.classList.add('hidden'); $('waittitle').textContent = '🔒 Locked in: ' + (g != null ? ntTime(g) : ''); $('waitsub').textContent = 'Waiting for the others… then she sings! 🎤'; return; }
+    if (n.st === 'guess') { cb.classList.add('hidden'); $('waittitle').textContent = '🔒 Locked in: ' + (g != null ? ntTime(g) : ''); $('waitsub').textContent = 'Waiting for the others… then she sings! 🎤 Remember: if her note lasts longer than your guess, you lose.'; return; }
     if (n.st === 'ctl' && false) {
       cb.classList.remove('hidden');
       $('waittitle').textContent = '🎛️ Your prediction: ' + (g != null ? ntTime(g) : '🔒'); $('waitsub').textContent = 'Steer the singer! More power and the boost break it sooner, the fan keeps it going longer.';
@@ -1347,11 +1348,11 @@
     }
     cb.classList.add('hidden');
     if (n.st === 'ctl') { $('waittitle').textContent = '🎤 Here she goes…'; $('waitsub').textContent = g != null ? 'Your prediction: ' + ntTime(g) + '.' : 'Watch the big screen!'; return; }
-    if (n.st === 'sing') { $('waittitle').textContent = '🎶 Hold it… hold it…'; $('waitsub').textContent = g != null ? 'Your prediction: ' + ntTime(g) + '.' : 'Watch the big screen!'; return; }
+    if (n.st === 'sing') { $('waittitle').textContent = '🎶 Hold it… hold it…'; $('waitsub').textContent = g != null ? 'Your prediction: ' + ntTime(g) + '. If she holds it longer than that, you lose!' : 'Watch the big screen!'; return; }
     var gg = n.guess && n.guess[pid] != null ? n.guess[pid] : g;
     var won = n.win && n.win.indexOf(pid) >= 0;
     $('waittitle').textContent = won ? '🏆 Closest prediction!' : '💥 Kaboom at ' + ntTime(n.len, true);
-    $('waitsub').textContent = gg != null ? 'The note lasted ' + ntTime(n.len, true) + '. You predicted ' + ntTime(gg) + ': ' + Math.abs(gg - n.len).toFixed(1) + ' seconds off.' : 'The note lasted ' + ntTime(n.len, true) + '.';
+    $('waitsub').textContent = gg != null ? 'The note lasted ' + ntTime(n.len, true) + '. You predicted ' + ntTime(gg) + (gg < n.len - .05 ? ': her note lasted longer, so you’re out!' : ': ' + Math.abs(gg - n.len).toFixed(1) + ' seconds off.') : 'The note lasted ' + ntTime(n.len, true) + '.';
   }
 
   // ---------- Lost in Verona (Juliet's maze) ----------

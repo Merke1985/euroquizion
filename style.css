@@ -5341,3 +5341,34 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svme{font-weight:800;opacity:.85}
 .pl.i{color:#d9e4ff;font-family:Georgia,serif;font-style:italic;font-weight:700;text-shadow:0 0 8px rgba(190,210,255,.8)}
 .pl.j{color:#f4e2b0;font-family:Georgia,serif;font-weight:700;letter-spacing:.22em;font-size:clamp(.5rem,.95vw,.9rem)}
+/* Serving!: a DDR-style chart. Arrows: left (pink), down (cyan), up (lime), right (orange); gold = SERVE */
+.svrec,.svn,.svpadb{--c:#ff5fa8}
+.c1.svrec,.c1.svn,.c1.svpadb{--c:#3fd8ff}.c2.svrec,.c2.svn,.c2.svpadb{--c:#a6ff4d}.c3.svrec,.c3.svn,.c3.svpadb{--c:#ffa23f}
+.svrec svg,.svn svg,.svpadb svg{width:100%;height:100%;display:block}
+.c0 svg{rotate:-90deg}.c1 svg{rotate:180deg}.c3 svg{rotate:90deg}
+.svrec svg path{fill:rgba(255,255,255,.08);stroke:rgba(255,255,255,.75)}
+.svn svg path{fill:var(--c);stroke:#fff;filter:drop-shadow(0 0 6px var(--c))}
+.svn.gold svg path{fill:#ffd23f;stroke:#fff8d0;filter:drop-shadow(0 0 10px #ffd23f)}
+.svchart{position:absolute;left:3vw;top:24vh;width:24vw;bottom:4vh;z-index:2;background:rgba(30,6,40,.45);border-radius:18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15);overflow:hidden}
+.svchart .svrec,.svchart .svn{position:absolute;top:1.5vh;width:9vh;height:9vh;margin-left:-4.5vh}
+.svchart .c0{left:14%}.svchart .c1{left:38%}.svchart .c2{left:62%}.svchart .c3{left:86%}
+.svchart .svn{opacity:0;will-change:transform}
+.svov .svlanes{left:30vw}
+.svov .svbeat{left:15vw;top:12vh}
+/* the phone */
+.svfield{position:relative;height:50vh;max-width:420px;margin:0 auto;border-radius:18px;background:linear-gradient(#2a0838,#4a1050);overflow:hidden;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+.svfield .svrec,.svfield .svn{position:absolute;top:1.2vh;width:11vh;height:11vh;margin-left:-5.5vh}
+.svfield .c0{left:13%}.svfield .c1{left:38%}.svfield .c2{left:62%}.svfield .c3{left:87%}
+.svfield .svn{opacity:0;will-change:transform}
+.svrec.flash.f2 svg path{fill:#ffd23f}.svrec.flash.f1 svg path{fill:#9fe7ff}.svrec.flash.f0 svg path{fill:#ff4d4d}
+.svrec.flash{animation:svrecf .3s ease-out}
+@keyframes svrecf{0%{transform:scale(1.25)}100%{transform:scale(1)}}
+.svfield .svfb{position:absolute;left:0;right:0;top:15vh;height:auto;margin:0;text-align:center;pointer-events:none}
+.svpads{display:grid;grid-template-columns:repeat(4,1fr);gap:2vw;max-width:420px;margin:1.6vh auto 0}
+.svpadb{aspect-ratio:1;border:0;border-radius:18px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 3px var(--c),0 6px 0 rgba(0,0,0,.3);padding:12%;touch-action:manipulation}
+.svpadb svg path{fill:var(--c);stroke:#fff}
+.svpadb.hit{animation:svpadh .18s ease-out}
+@keyframes svpadh{0%{transform:translateY(4px) scale(.94);filter:brightness(1.6)}100%{transform:none}}
+/* Hold That Note: a prediction the note has outlasted is out */
+.ntpin.out{opacity:.38;filter:grayscale(1);transition:opacity .4s,filter .4s}
+.ntpin.out b{text-decoration:line-through}
