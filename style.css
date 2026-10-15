@@ -5709,3 +5709,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svins.svdan.d1 .svlbody,.svins.svdan.d3 .svlbody{animation-delay:-.49s}
 .svpump.done em{visibility:hidden}.svpump.done .svpn{color:#ffd23f}
 .svph{top:calc(var(--p) * 38%)}.svpcyl{top:24%}
+/* Serving: no arrow buttons while it's the other team's turn (the pump gets the room) */
+.svui.pumping .svpads{display:none}
+.svui.pumping .svfield{height:64vh}
