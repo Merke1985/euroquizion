@@ -5123,3 +5123,22 @@ body.rufrozen #waittitle{color:#0b3a66}
 .zgrider.pass{width:24vh;z-index:2;animation-duration:11s;opacity:.92}
 @keyframes zgride{from{transform:translate(-50vh,6vh) rotate(-6deg)}to{transform:translate(calc(100vw + 10vh),-4vh) rotate(4deg)}}
 @keyframes zgridebob{from{translate:0 -.8vh;rotate:-2deg}to{translate:0 .8vh;rotate:2deg}}
+
+/* Zero Gravity: the asteroids turn, have craters and a colour of their own, and a fiery trail behind them */
+.zgsky i{background:none!important;box-shadow:none!important;overflow:visible}
+.zgsky i b{position:absolute;inset:0;border-radius:46% 54% 50% 50% / 52% 46% 54% 48%;background:radial-gradient(circle at 28% 34%,rgba(0,0,0,.35) 0 9%,rgba(255,255,255,.12) 10% 12%,transparent 13%),radial-gradient(circle at 64% 60%,rgba(0,0,0,.32) 0 13%,rgba(255,255,255,.1) 14% 16%,transparent 17%),radial-gradient(circle at 44% 76%,rgba(0,0,0,.3) 0 6%,transparent 7%),radial-gradient(circle at 70% 28%,rgba(0,0,0,.28) 0 5%,transparent 6%),radial-gradient(circle at 34% 30%,var(--r1),var(--r2) 45%,var(--r3) 82%);box-shadow:inset -1.2vh -1.5vh 0 rgba(0,0,0,.3),0 0 4vh rgba(255,140,60,.45);z-index:1}
+.zgsky i[data-v="0"]{--r1:#c9a27a;--r2:#8a6440;--r3:#4a3020}
+.zgsky i[data-v="1"]{--r1:#b8b4ae;--r2:#77736e;--r3:#3a3836}
+.zgsky i[data-v="2"]{--r1:#c98a6a;--r2:#8a4a34;--r3:#4a2418}
+.zgsky i[data-v="3"]{--r1:#a6a8b8;--r2:#5e6274;--r3:#2c2e3c}
+.zgsky i[data-v="4"]{--r1:#d4bc8a;--r2:#9a7e4a;--r3:#54401e}
+.zgsky i::before{content:'';position:absolute;top:18%;height:64%;width:240%;border-radius:50%;filter:blur(.4vh);z-index:0;pointer-events:none}
+.zgsky i[data-d="r"]::before{right:45%;background:linear-gradient(to left,rgba(255,246,190,.95),rgba(255,180,70,.6) 30%,rgba(255,110,30,.25) 65%,transparent)}
+.zgsky i[data-d="l"]::before{left:45%;background:linear-gradient(to right,rgba(255,246,190,.95),rgba(255,180,70,.6) 30%,rgba(255,110,30,.25) 65%,transparent)}
+
+/* Edgar: the dancers in the Euroclub dance: arms down, one arm up, the other arm up */
+.edmoves>g{opacity:0;animation:edmove var(--mt,1.8s) steps(1) infinite;animation-delay:var(--md,0s)}
+.edmoves>.edm0{animation-name:edmove0}.edmoves>.edm1{animation-name:edmove1}.edmoves>.edm2{animation-name:edmove2}
+@keyframes edmove0{0%,100%{opacity:1}33.3%,66.6%{opacity:0}}
+@keyframes edmove1{0%,66.6%,100%{opacity:0}33.3%{opacity:1}}
+@keyframes edmove2{0%,33.3%,100%{opacity:0}66.6%{opacity:1}}
