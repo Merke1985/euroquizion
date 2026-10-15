@@ -5257,3 +5257,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 .jcban,.jclogo,.jcflags{z-index:2}
 .jcban{background:rgba(12,10,40,.75);padding:.4vh .8vw;border-radius:4px}
 .jclogo{background:rgba(12,10,40,.7);padding:.3vh 1vw;border-radius:8px}
+/* the vote cards: standing still, mouths closed (they only start once they're on the stage) */
+.ruvart .rsmouth{transform:scaleY(.22)!important;animation:none!important}
+.ruvart .rsspk{animation:none;opacity:0}
