@@ -6686,7 +6686,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<ellipse cx="166" cy="530" rx="70" ry="8" fill="rgba(0,0,0,.35)"/>' +
       '<g class="svsbody">' +
       // hair streaming back, and the sheer cape fluttering behind her
-      '<path d="M150 58 Q110 70 98 150 Q86 230 60 300 Q96 296 118 250 Q132 200 142 150 Z" fill="url(#svhair)"/>' +
+      '<path d="M172 32 Q118 26 106 84 Q90 150 86 232 Q84 296 100 338 Q128 330 140 280 Q152 220 154 156 Q158 118 150 96 Z" fill="url(#svhair)"/><path d="M118 90 Q104 170 104 250 M132 96 Q122 180 126 290" stroke="#9a0812" stroke-width="2" fill="none" opacity=".5"/>' +   // (big, voluminous red hair down her back)
       '<path class="svscape" d="M134 168 Q84 240 46 400 Q90 404 132 372 Q130 280 150 190 Z" fill="rgba(8,4,10,.78)"/>' +
       '<g class="svsarm b">' + sleeve('M160 176 Q128 220 120 262') + '<circle cx="120" cy="264" r="8.5" fill="#f0c8b2"/></g>' +
       leg('b') +
@@ -6703,8 +6703,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M196 88 Q202 92 208 88" stroke="#0c0c0c" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M194 78 Q202 72 210 78" stroke="#3a0a10" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
       '<ellipse cx="190" cy="104" rx="8" ry="4.5" fill="#ff8f9a" opacity=".45"/>' +
       '<g class="svsmouth"><path d="M204 112 Q214 112 214 118 Q212 126 204 124 Z" fill="#c0102a"/><path d="M206 114 Q211 115 211 118 Q210 122 206 121 Z" fill="#4a0610"/></g>' +
-      '<path d="M138 92 Q132 40 178 36 Q214 38 214 76 Q200 54 172 56 Q150 60 146 96 Z" fill="url(#svhair)"/>' +
-      '<path d="M146 70 Q140 130 134 176 Q146 178 150 172 Q152 120 158 80 Z" fill="url(#svhair)"/>' +
+      '<path d="M132 108 Q116 36 174 26 Q218 26 220 76 Q216 84 208 80 Q198 56 170 58 Q154 64 154 96 Q152 116 140 120 Z" fill="url(#svhair)"/><path d="M146 50 Q170 34 204 46" stroke="#ff7a5a" stroke-width="3" fill="none" opacity=".55"/>' +   // (the crown: covering the top and back of her head)
+      '<path d="M150 74 Q140 140 136 196 Q148 200 154 192 Q156 130 162 84 Z" fill="url(#svhair)"/>' +
       // the arm with the microphone, at her lips
       // the arm with the microphone: the fist under her chin, the mic head right in front of her lips
       '<g class="svsarm f">' + sleeve('M180 180 Q204 214 216 196 Q222 178 220 160') +
@@ -6736,7 +6736,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'svov'; ov.className = 'svov enter' + (solo ? ' solo' : '');
       var chart = function (side) { return '<div class="svchart ' + side + '"><b class="svteam">' + (solo ? 'Your arrows' : side === 'l' ? 'Red team' : 'Black team') + '</b>' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { var gp = n[5] || '*'; if (gp !== '*' && gp !== (side === 'l' ? 'A' : 'B')) return ''; return '<i class="svn c' + n[1] + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div>'; };
-      ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svsign">🪩 Serving! <small>dance-off · test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svres"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
+      ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svsign">🍑 Serving <small>test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svres"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
