@@ -5151,3 +5151,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 .zgsky i .zgsam .zgrsvg{width:100%;height:auto;display:block;filter:drop-shadow(0 0 1vh rgba(255,170,60,.35))}
 .zgsky i .zgsam .zgrmet{display:none}
 .zgsky i[data-d="l"] .zgsam{left:-24%;transform:scaleX(-1)}
+
+/* Turquoise Carpet: flat (2D) contestants walking over the 3D square (TC_FIG2D) */
+.tcov.is3d.fig2d .tcwalk{display:block;z-index:3;bottom:22vh;height:37vh;filter:drop-shadow(0 1.2vh 1vh rgba(0,0,0,.45)) drop-shadow(0 0 2vh rgba(255,255,255,.25))}

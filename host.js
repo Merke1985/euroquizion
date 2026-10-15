@@ -5671,6 +5671,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // The big screen: the runway seen from the side, photographers in front, the contestant of the moment walking by;
   // then the question card with the answers, and at the end the ranking.
+  var TC_FIG2D = true;   // (the contestants as flat drawings on the 3D square; false: the 3D figures, as before)
   function carpetShow() {
     var g = G.carpet; if (!g) return;
     var ov = $('tcov');
@@ -5686,13 +5687,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     }
     if (!ov._3 && window.THREE && !REMOTE) { ov._3 = tc3Init(ov.querySelector('.tc3d')); if (ov._3) ov.classList.add('is3d'); }
-    if (ov._3) tc3Show(ov._3, ov, g);
+    ov.classList.toggle('fig2d', TC_FIG2D && !!ov._3);
+    if (ov._3 && !TC_FIG2D) tc3Show(ov._3, ov, g);
     ov.setAttribute('data-st', g.st);
     ov.querySelector('.tcsec').innerHTML = g.sec ? 'Eurovision act ' + g.sec + ' of 5' : g.st === 'intro' ? '' : 'Get ready…';
     if (ov._3) tcSign(ov._3, g.sec ? 'Eurovision act ' + g.sec + ' of 5' : 'Turquoise Carpet');   // (in 3D the act is on the roof sign)
     // the contestant of the moment: walks on, poses for the flashes, walks off
     var wk = ov.querySelector('.tcwalk'), key = g.sec + ':' + g.cur;
-    if (!ov._3 && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
+    if ((!ov._3 || TC_FIG2D) && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
       wk.setAttribute('data-k', key);
       wk.innerHTML = '<div class="tcg walking">' + g.girls.map(tcSvg).join('') + '</div>';
       var el = wk.firstChild, at = function (ms, f) { setTimeout(function () { if (el.isConnected) f(); }, ms); };
