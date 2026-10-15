@@ -5543,3 +5543,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svsmouth{transform-box:fill-box;transform-origin:0 50%;animation:svlsing .5s ease-in-out infinite alternate}
 .svins.walk .svleadside{animation:none}
 .svins.walk::after{left:30%;right:30%}
+/* Serving: her pop-up when the tempo doubles */
+.svkant{position:absolute;left:50%;bottom:calc(100% + var(--s) * .15);z-index:5;transform:translateX(-50%) scale(0);transform-origin:50% 100%;white-space:nowrap;padding:.35em .8em;border-radius:16px;background:#fff;color:#c8102e;font-weight:900;font-size:calc(var(--s) * .42);box-shadow:0 6px 18px rgba(0,0,0,.45);transition:transform .25s cubic-bezier(.2,1.6,.4,1)}
+.svkant::after{content:'';position:absolute;left:50%;top:100%;margin-left:-8px;border:8px solid transparent;border-top-color:#fff}
+.svkant.on{transform:translateX(-50%) scale(1)}
