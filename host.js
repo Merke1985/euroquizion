@@ -6591,7 +6591,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C); col.set((lx + ly) % 2 ? '#0c0c10' : '#b00c22').convertSRGBToLinear();   /* (her stage: red and black) */ ltiles.setColorAt(i, col); }   // (her stage: deep red and black, fixed)
       ltiles.instanceColor.needsUpdate = true;
       beams.forEach(function (b, j) {   // aim at a spot sweeping across the stage; the cone reaches exactly down to it
-        var tx = b.sd * (3 + 9 * (.5 + .5 * Math.sin(t * .5 + j * 1.3))) * (j % 2 ? -1 : 1), tz = ZL(1) + (ZF(R - 1) - ZL(1)) * (.5 + .5 * Math.sin(t * .37 + j * 2.1)), ty = tz < Z0F - .5 ? YL + .14 : .14;
+        var A = st.aim && st.aim[j % st.aim.length], tx, tz, ty = YL + .14;   // (on the singer and her dancers; with a little wobble)
+        if (A) { tx = (A.c - (C - 1) / 2) * TS + .25 * Math.sin(t * 1.3 + j); tz = ZL(A.r) + .2 * Math.cos(t * 1.1 + j); } else { tx = 0; tz = ZL(1); }
+        if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .12; b.cz += (tz - b.cz) * .12; tx = b.cx; tz = b.cz;
         b.pool.position.set(tx, ty, tz); b.arm.lookAt(tx, ty, tz);
         var L = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L, 1); b.cone.position.set(0, 0, L / 2);
         var c2 = p[(j + st.n) % 3]; b.cone.material.color.set(c2); b.pool.material.color.set(c2); b.cone.material.opacity = .09 + fl * .08; b.pool.material.opacity = .28 + fl * .15;
@@ -6611,6 +6613,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
+      aim: function (L) { st.aim = L; },
       beat: function () { st.beatAt = performance.now(); st.n++; }, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -6850,7 +6853,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var L = g.last[k]; if (L && el._lk !== L.at) { el._lk = L.at; if (!L.q) { el.classList.remove('ok', 'oops', 'p0', 'p1', 'p2'); void el.offsetWidth; el.classList.add('oops'); } var qe = el.querySelector('.svq'); qe.textContent = L.q === 2 ? 'PERFECT' : L.q ? 'GOOD' : 'MISS'; qe.className = 'svq q' + L.q; }
       var pt = el.querySelector('.svpt'), tx = g.st === 'end' ? g.dist[k] + ' pts' : ''; if (pt.textContent !== tx) pt.textContent = tx;   // (the scores only at the end)
     });
-    if (ov._3 && ov._3.mark) ov._3.mark(marks, { c: lcx, r: lry });   // (the tile under every dancer glows in their colour)
+    if (ov._3 && ov._3.mark) ov._3.mark(marks, { c: lcx, r: lry });
+    if (ov._3 && ov._3.aim) ov._3.aim([{ c: lcx, r: lry }, { c: lcx - 2, r: lry }, { c: lcx + 4, r: lry }, { c: lcx, r: lry }, { c: lcx + 2, r: lry }, { c: lcx - 4, r: lry }]);   // (the spotlights follow her and her dancers)   // (the tile under every dancer glows in their colour)
     if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk <= 0 && dk > -.5 && !n._hit && g.st === 'play') { n._hit = 1; var rc = n.parentNode.querySelector('.svrec.c' + g.chart[+n.getAttribute('data-i')][1]); if (rc) { rc.classList.remove('bhit'); void rc.offsetWidth; rc.classList.add('bhit'); } } if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
     var bt = ov.querySelector('.svbeat'), bk = Math.floor(b + .5);
     if (g.st === 'play' && bt._k !== bk && b > -.5) { bt._k = bk; bt.classList.remove('pulse'); void bt.offsetWidth; bt.classList.add('pulse'); if (ov._3) ov._3.beat(); }
