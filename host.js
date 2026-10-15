@@ -6404,7 +6404,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // (hold a direction on the phone's D-pad); every tile you step on becomes your colour. Two players moving into the
   // same tile (or swapping places) both bounce back and are stunned for 3 seconds; walking into a player who stands
   // still stuns only you. When the song ends (2:22), whoever owns the most tiles wins. The host runs all moves at once, per tick.
-  var RU_MS = 68000, RU_TICK = 100, RU_STEP = 800, RU_STUN = 3000, ruLoop = null, ruTimer = null, ruSent = 0;
+  var RU_MS = 88000, RU_TICK = 100, RU_STEP = 800, RU_STUN = 3000, ruLoop = null, ruTimer = null, ruSent = 0;
   var RU_DIRS = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] };
   var RU_ART = [   // the two acts on the vote cards (original characters)
     '<svg viewBox="0 0 120 170" aria-hidden="true"><path d="M60 14 C36 14 32 40 34 62 C30 90 38 104 44 110 L76 110 C82 104 90 90 86 62 C88 40 84 14 60 14Z" fill="#e0b048"/><ellipse cx="60" cy="42" rx="17" ry="20" fill="#f0c8ae"/><circle cx="54" cy="40" r="2.4" fill="#2a4a78"/><circle cx="66" cy="40" r="2.4" fill="#2a4a78"/><path d="M54 50 Q60 55 66 50" stroke="#c0505a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M42 64 Q60 58 78 64 L76 96 L44 96 Z" fill="#dfe0ec"/><path d="M44 96 L36 160 L56 160 L60 116 L64 160 L84 160 L76 96 Z" fill="#cfd0e0"/><path d="M42 66 L26 30 M78 66 L92 98" stroke="#f0c8ae" stroke-width="7" stroke-linecap="round"/><g fill="#fff"><circle cx="50" cy="74" r="1.6"/><circle cx="66" cy="82" r="1.4"/><circle cx="58" cy="120" r="1.6"/><circle cx="72" cy="140" r="1.4"/><circle cx="46" cy="136" r="1.5"/></g></svg>',
@@ -6519,7 +6519,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     };
     g.vote.t = setTimeout(g.vote.done, RU_VOTE_MS);
   }
-  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 76000, ruSongT = null;   // (RU_STOP: the game stops at 1:16 in the song)
+  var RU_RISE = 8000, RU_CSTEP = 110, RU_COUNT = 14000, RU_STOP = 96000, ruSongT = null;   // (RU_STOP: the game stops at 1:36 in the song)
   function ruSay(who, txt) {
     var ov = $('ruov'); if (!ov) return;
     [].forEach.call(ov.querySelectorAll('.rubub'), function (x) { x.classList.remove('on'); });
