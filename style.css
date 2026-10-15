@@ -5345,7 +5345,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svrec,.svn,.svpadb{--c:#ff5fa8}
 .c1.svrec,.c1.svn,.c1.svpadb{--c:#3fd8ff}.c2.svrec,.c2.svn,.c2.svpadb{--c:#a6ff4d}.c3.svrec,.c3.svn,.c3.svpadb{--c:#ffa23f}
 .svrec svg,.svn svg,.svpadb svg{width:100%;height:100%;display:block}
-.c0 svg{rotate:-90deg}.c1 svg{rotate:180deg}.c3 svg{rotate:90deg}
+:is(.svrec,.svn,.svpadb).c0 svg{rotate:-90deg}:is(.svrec,.svn,.svpadb).c1 svg{rotate:180deg}:is(.svrec,.svn,.svpadb).c3 svg{rotate:90deg}
 .svrec svg path{fill:rgba(255,255,255,.08);stroke:rgba(255,255,255,.75)}
 .svn svg path{fill:var(--c);stroke:#fff;filter:drop-shadow(0 0 6px var(--c))}
 .svn.gold svg path{fill:#ffd23f;stroke:#fff8d0;filter:drop-shadow(0 0 10px #ffd23f)}
