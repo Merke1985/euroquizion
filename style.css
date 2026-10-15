@@ -5595,3 +5595,32 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svov .svins.walk.walk{transition:transform var(--wd,6s) linear}
 .svins.ok .svleadsvg{animation:svhop1 .22s ease-out}
 @keyframes svhop1{45%{transform:translateY(-6%)}}
+/* Serving: everyone SITS on their skippy ball (the ball in front of their legs, feet on the floor beside it), and bounces */
+.svov[data-bph="hop"] .svaf .svdancer,.svov[data-bph="on"] .svaf .svdancer{transform:translateY(-6%) scaleY(.82);transform-origin:50% 100%}
+.svov[data-bph="hop"] .svaf .svhead,.svov[data-bph="on"] .svaf .svhead{translate:0 calc(var(--s) * .05)}
+.svov[data-stage="3"] .svaf .svball{z-index:2;bottom:-14%;left:4%;right:4%;width:92%}
+.svov[data-stage="3"] .svaf .svdancer .al{transform:rotate(-115deg)}.svov[data-stage="3"] .svaf .svdancer .ar{transform:rotate(115deg)}
+.svov[data-bph="hop"] .svins .svleadsvg,.svov[data-bph="on"] .svins .svleadsvg{top:auto;bottom:calc(var(--s) * -.04);transform:scaleY(.8);transform-origin:50% 100%}
+.svov[data-stage="3"] .svinsball{z-index:3}
+.svov[data-bph="on"] .svaf .svfb2,.svov[data-bph="on"] .svins{animation:svbounce .49s ease-in-out infinite alternate}
+@keyframes svbounce{0%{translate:0 0}100%{translate:0 calc(var(--s) * -.18)}}
+/* Serving: the results at the end */
+.svres{position:absolute;left:50%;top:50%;z-index:60;transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;min-width:44vw;max-height:84vh;overflow:hidden;padding:2.2vh 2.4vw;border-radius:22px;background:rgba(18,4,20,.94);box-shadow:0 0 0 4px #ff2d4a,0 20px 60px rgba(0,0,0,.6);color:#fff;transition:transform .4s cubic-bezier(.2,1.4,.4,1),opacity .3s}
+.svres.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.svres h3{margin:0 0 1.2vh;text-align:center;font-size:clamp(1.4rem,3vw,2.6rem)}
+.svres table{width:100%;border-collapse:collapse;font-weight:800;font-size:clamp(.8rem,1.6vw,1.4rem)}
+.svres th{opacity:.7;font-size:.75em;text-transform:uppercase;letter-spacing:.08em;padding:.3em .6em}
+.svres td{padding:.32em .6em;text-align:center;border-top:1px solid rgba(255,255,255,.12)}
+.svres td:first-child{text-align:left}
+.svres tr.a td:first-child{border-left:5px solid #ff2d4a}.svres tr.b td:first-child{border-left:5px solid #e8e4ee}
+.svres tr.w td{color:#ffd23f}
+.svres td:nth-child(2){color:#ffd23f}.svres td:nth-child(3){color:#9fe7ff}.svres td:nth-child(4){color:#ff8a8a}
+/* Serving on the phone: four pads that always fit; perfect / good / miss */
+.svui .svpads{grid-template-columns:repeat(4,minmax(0,1fr));gap:2.5vw;max-width:420px;padding:0 3vw;box-sizing:border-box}
+.svui .svpadb{min-width:0;width:100%;padding:14%}
+.svui .svpadb svg{width:100%;height:auto}
+.svui .svme{display:block;position:static;text-align:center;margin:1.4vh auto 0;font-weight:800;opacity:.85}
+.svui .svfield{height:46vh}
+.svfield .svfb{font-size:9vw;font-weight:900;text-shadow:0 3px 10px rgba(0,0,0,.5)}
+.svfb.pop{animation:svfbpop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes svfbpop{0%{transform:scale(.5)}100%{transform:scale(1)}}

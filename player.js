@@ -752,14 +752,18 @@
   function svView(s) {
     var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
-    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, raf: 0, fbAt: 0 }; }
+    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, q: {}, raf: 0, fbAt: 0, sent: false }; }
     svS.g = (z.grp || {})[pid] || 'A';
     var S = svS;
+    if ((z.st === 'count' || z.st === 'end') && mine && !S.sent && S.chart) {   // the song is over: send my results (once)
+      S.sent = true; if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, res: S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join('') });
+    }
+    if (z.st === 'count') { svStop(); box.classList.add('hidden'); $('waittitle').textContent = '🪩 Counting the steps…'; $('waitsub').textContent = 'Look at the big screen!'; return; }
     if (z.st === 'end') {
       svStop(); box.classList.add('hidden');
       var w = (z.win || []).indexOf(pid) >= 0, names = (z.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);
       $('waittitle').textContent = w ? '🏆 You served the most!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'The end!';
-      $('waitsub').textContent = mine ? 'Your score: ' + ((z.dist || {})[pid] || 0) + '.' : '';
+      var R = (z.res || {})[pid]; $('waitsub').textContent = mine && R ? 'Perfect ' + R.p + ' · Good ' + R.g + ' · Miss ' + R.m + ' · ' + R.pts + ' points' : '';
       return;
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 Serving!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
@@ -775,7 +779,8 @@
       box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div><div class="svwt"></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
       [].forEach.call(box.querySelectorAll('.svpadb'), function (bt) { bt.addEventListener('pointerdown', function (e) { e.preventDefault(); svTap(+bt.getAttribute('data-d')); bt.classList.remove('hit'); void bt.offsetWidth; bt.classList.add('hit'); }); bt.addEventListener('contextmenu', function (e) { e.preventDefault(); }); });
     }
-    box.querySelector('.svme').textContent = ((z.dist || {})[pid] || 0) + ' pts';
+    var tally = { 2: 0, 1: 0, 0: 0 }; Object.keys(S.q).forEach(function (i) { tally[S.q[i]]++; });
+    box.querySelector('.svme').textContent = 'Perfect ' + tally[2] + ' · Good ' + tally[1] + ' · Miss ' + tally[0];
     S.st = z.st;
     if (!S.raf) { var loop = function () { if (!svS) return; svFrame(); svS.raf = requestAnimationFrame(loop); }; S.raf = requestAnimationFrame(loop); }
   }
@@ -787,20 +792,20 @@
     if (!S.notes) S.notes = [].slice.call(box.querySelectorAll('.svn'));
     var soon = false; S.chart.forEach(function (n) { if (svMine(n) && n[0] > b - .3 && n[0] < b + 3.2) soon = true; });
     var wt = box.querySelector('.svwt'), nxt = null; S.chart.forEach(function (n) { if (!nxt && n[0] > b) nxt = n; }); var wtx = S.st === 'play' && !soon ? (nxt && nxt[5] && nxt[5] !== '*' && !svMine(nxt) ? '💃 The other team is dancing… you’re next!' : nxt ? '💃 Get ready… watch the big screen!' : '') : ''; if (wt && wt.textContent !== wtx) wt.textContent = wtx;
+    if (S.st === 'play') S.chart.forEach(function (n, i) { if (!S.done[i] && svMine(n) && b - n[0] > .55) { S.done[i] = 1; S.q[i] = 0; svFb(0); } });   // (an arrow that went by: a miss)
     S.notes.forEach(function (n) { var i = +n.getAttribute('data-i'), dk = S.chart[i][0] - b; if (!on || S.done[i] || !svMine(S.chart[i]) || dk < -.5 || dk > 2.4) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = 1; n.style.transform = 'translateY(' + (dk * 22).toFixed(2) + 'vh)'; });   // (22vh per bounce: up to the receptors)
     var fb = box.querySelector('.svfb'); if (S.fbAt && Date.now() - S.fbAt > 700) { fb.textContent = ''; S.fbAt = 0; }
   }
+  function svFb(q) { var S = svS, fb = $('svui').querySelector('.svfb'); if (!fb) return; fb.textContent = q === 2 ? 'PERFECT!' : q ? 'GOOD' : 'MISS'; fb.className = 'svfb q' + q; fb.classList.remove('pop'); void fb.offsetWidth; fb.classList.add('pop'); S.fbAt = Date.now(); }
   function svTap(d) {
     var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || z.st !== 'play' || !S.chart) return;
     var now = Date.now(), b = (now - S.t0) / S.bt, best = -1, bd = 9;
     S.chart.forEach(function (n, i) { if (S.done[i] || n[1] !== d || !svMine(n)) return; var x = Math.abs(n[0] - b); if (x < bd) { bd = x; best = i; } });   // (the nearest open arrow in this column)
     var any = -1, ad = 9; S.chart.forEach(function (n, i) { if (S.done[i] || !svMine(n)) return; var x = Math.abs(n[0] - b); if (x < ad) { ad = x; any = i; } });
     var i = best >= 0 && bd < .4 ? best : any >= 0 && ad < .3 ? any : -1; if (i < 0) return;   // (nothing near: no harm done)
-    var n = S.chart[i], dt = (b - n[0]) * S.bt, q = n[1] !== d ? 0 : Math.abs(dt) < 110 ? 2 : Math.abs(dt) < 230 ? 1 : 0; S.done[i] = 1;
-    if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, i: i, d: d, q: q });
+    var n = S.chart[i], dt = (b - n[0]) * S.bt, q = n[1] !== d ? 0 : Math.abs(dt) < 110 ? 2 : Math.abs(dt) < 230 ? 1 : 0; S.done[i] = 1; S.q[i] = q;   // (kept on the phone, sent at the end)
     var rec = $('svui').querySelector('.svrec.c' + d); if (rec) { rec.classList.remove('flash', 'f0', 'f1', 'f2'); void rec.offsetWidth; rec.classList.add('flash', 'f' + q); }
-    var fb = $('svui').querySelector('.svfb');
-    fb.textContent = q === 2 ? (n[2] ? '✨ SERVE!' : 'PERFECT!') : q ? 'Good' : n[1] !== d ? (n[3] != null && !n[4] ? '💥 Wrong step! You fell!' : 'Wrong arrow!') : (dt < 0 ? 'Too early!' : 'Too late!'); fb.className = 'svfb q' + q; S.fbAt = now;
+    svFb(q);
     try { navigator.vibrate && navigator.vibrate(q === 2 ? 25 : 12); } catch (x) {}
   }
 
