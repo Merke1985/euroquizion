@@ -5412,3 +5412,31 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svbanner em{display:block;font-style:normal;font-size:.32em;margin-top:.4em}
 .svbanner.on{animation:svbn 2.6s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes svbn{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.08) rotate(2deg)}28%,82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+/* Serving: the 3D stage behind everything */
+.sv3d{position:absolute;inset:0;z-index:0}
+.sv3d canvas{display:block;width:100%!important;height:100%!important}
+.svov.is3d{background:#07020f}
+.svov.is3d .svsky,.svov.is3d .svfloor{display:none}
+.svov.is3d .svtrack{opacity:.55}
+.svov.is3d:not([data-stage="3"]) .svtrack{opacity:.12}
+/* Serving stages 1–2: the aerobics class on the stage (a step per arrow, back on your own spot after every phrase) */
+.svclass{position:absolute;left:30vw;right:2vw;top:24vh;bottom:4vh;z-index:2}
+.svov[data-stage="3"] .svclass{display:none}
+.svov:not([data-stage="3"]) .svlanes{display:none}
+.svaf{position:absolute;left:calc(var(--hx) * 1% + var(--dx,0) * 3.6vw);top:calc(38% + var(--dy,0) * 8vh);width:11vh;height:13vh;margin-left:-5.5vh;scale:calc(1 + var(--dy,0) * .09);transition:left .22s cubic-bezier(.3,1.5,.5,1),top .22s cubic-bezier(.3,1.5,.5,1),scale .22s;z-index:calc(5 + var(--dy,0))}
+.svaf .svtile{position:absolute;left:50%;bottom:-1.2vh;width:12vh;height:3.6vh;margin-left:-6vh;border-radius:50%;background:rgba(255,255,255,.16);box-shadow:0 0 0 2px rgba(255,255,255,.4),0 0 18px rgba(255,95,168,.5)}
+.svaf .svfb2{position:absolute;left:0;right:0;bottom:0;height:9vh;animation:svbob .98s ease-in-out infinite}
+@keyframes svbob{50%{transform:translateY(-.8vh) rotate(3deg)}}
+.svaf .svdancer{position:absolute;inset:0;width:100%;height:100%}
+.svaf .svhead{position:absolute;left:50%;top:-4vh;width:5.4vh;height:5.4vh;margin-left:-2.7vh}
+.svaf .svhead .char{width:100%;height:100%}
+.svaf .svdancer .al,.svaf .svdancer .ar{transform-box:fill-box;transition:transform .15s}
+.svaf .svdancer .al{transform-origin:100% 100%}.svaf .svdancer .ar{transform-origin:0 100%}
+.svaf.ok.p0 .svdancer .al{transform:rotate(-70deg)}.svaf.ok.p1 .svdancer .ar{transform:rotate(70deg)}.svaf.ok.p2 .svdancer .al{transform:rotate(-70deg)}.svaf.ok.p2 .svdancer .ar{transform:rotate(70deg)}
+.svaf.ok .svfb2{animation:svstep .25s ease-out}
+@keyframes svstep{40%{transform:translateY(-1.6vh)}}
+.svaf.oops .svfb2{animation:svwob .5s ease-in-out}
+.svaf .svq{position:absolute;left:70%;top:-6vh;font-style:normal;font-weight:900;font-size:1.7vh;white-space:nowrap;opacity:0;padding:.2vh .6vh;border-radius:6px;background:rgba(0,0,0,.45)}
+.svaf.ok .svq,.svaf.oops .svq{animation:svqf 1s ease-out}
+.svaf .svnm{position:absolute;left:50%;bottom:-3.6vh;transform:translateX(-50%);white-space:nowrap;color:#fff;font-weight:900;font-size:1.5vh;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.svaf .svpt{position:absolute;left:50%;bottom:-5.6vh;transform:translateX(-50%);white-space:nowrap;color:#ffd23f;font-style:normal;font-weight:900;font-size:1.4vh;text-shadow:0 1px 3px rgba(0,0,0,.8)}
