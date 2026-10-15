@@ -1049,17 +1049,17 @@
     var fst = c.fast;
     if (fst && fst.pid === pid && edFastSeen !== c.id) {   // the fastest detective: extra clues at the reception
       $('clueui').classList.add('hidden'); box.classList.remove('hidden');
-      $('waittitle').textContent = '🏆 You were the fastest detective!'; $('waitsub').textContent = 'Teya & Salena at the reception have extra clues for you.';
+      $('waittitle').textContent = '🏆 You were the fastest detective!'; $('waitsub').textContent = 'Teya & Salena at the reception have extra clues for you… 🛎️';
       if (box.getAttribute('data-k') !== 'fast') {
-        box.setAttribute('data-k', 'fast');
-        box.innerHTML = '<button type="button" class="btn big edfast">🛎️ Collect my extra clues</button>';
-        box.querySelector('.edfast').onclick = function () {
+        box.setAttribute('data-k', 'fast'); box.innerHTML = '';
+        setTimeout(function () {   // (no button: after the message, the extra clues simply appear)
+          if (box.getAttribute('data-k') !== 'fast' || edFastSeen === c.id) return;
           box.innerHTML = ''; box.removeAttribute('data-k'); box.classList.add('hidden'); edNotes = true;   // (the notes stay open until OK: state updates don't redraw this)
           if (fst.got && fst.got.length) clueNotes({ clue: { id: c.id, n: 'fast', known: c.known, fresh: (function () { var o = {}; o[pid] = fst.got; return o; })() } });
           $('waittitle').textContent = fst.got && fst.got.length ? '🗝️ ' + fst.got.length + ' extra clue' + (fst.got.length > 1 ? 's' : '') + '!' : '🗝️ No new clues left to give…'; $('waitsub').textContent = '';
           var nb = $('clueui'), ob = nb.querySelector('.ednext'); if (ob) ob.remove(); nb.classList.remove('hidden'); nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">✅ OK</button>');
           nb.querySelector('.ednext').onclick = function () { edFastSeen = c.id; edNotes = false; $('clueui').classList.add('hidden'); edView(state); };
-        };
+        }, 3000);
       }
       return;
     }
