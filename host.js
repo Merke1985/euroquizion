@@ -4174,7 +4174,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (g.talk === 7) typeSay(bq, 'Nobody can afford a single thing? Honestly, darlings. The boutique is closed! 🚪', 'lynda');
     else if (g.talk === 4) typeSay(bq, 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course.', 'lynda');
     else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'I’ve selected ' + SHOP_OFFER + ' items for all of you to choose from. Look at your phone and take your pick! 📱', 'lynda');   // (the very first visit)
-    else if (g.line && !g.over && !g.buy) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
+    else if (g.line && !g.over && (!g.buy || g.lineBuy)) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
     else if (g.buy) { var fw = (g.free || []).map(function (k) { return players[k] ? players[k].name : ''; }).filter(Boolean), fn = fw.length > 1 ? fw.slice(0, -1).join(', ') + ' and ' + fw[fw.length - 1] : fw[0], bought = act.some(function (p) { return (g.picks[p.pid] || []).length; }); typeSay(bq, g.over ? (bought ? 'Pleasure doing business, darling' + (one ? '' : 's') + '! 😘' : 'Next time then, darling' + (one ? '' : 's') + '! 😘') : lyWelcome(g, wnames, one), 'lynda'); }
     else if (g.win) typeSay(bq, g.over ? (one ? 'Fabulous choice, darling! Use it wisely. 😘' : 'Fabulous choices, darlings! Use them wisely. 😘') : 'Congratulations, ' + wnames + '! 🛍️ I picked two items just for ' + (one ? 'you' : 'each of you') + '. Choose one on your phone!', 'lynda');
     else typeSay(bq, g.over ? 'Fabulous choice' + (one ? ', darling' : 's, darlings') + '! Enjoy the show. 😘' : 'I picked two items for ' + (one ? 'you' : 'each of you') + '. Choose ' + (g.n > 1 ? g.n : 'one') + ' on your phone! 🛍️', 'lynda');
@@ -4500,7 +4500,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var pr = g.prize;
       if (!pr || !shopOn() || !pr.who.some(function (k) { return players[k] && !players[k].off; })) { clueLeave(done); return; }
       var line = lynda();
-      clueLeave(function () { clueSongStop(); G.clue = null; shopVisit(pr.who, 1, function () { backFromShop(pr.who.length, function () { startRound2(); }); }, true, line); });
+      clueLeave(function () { clueSongStop(); G.clue = null; shopVisit(pr.who, 1, function () { backFromShop(pr.who.length, function () { startRound2(); }); }, true, line, true); if (G.shop) G.shop.lineBuy = true; });   // (Edgar's detectives buy with their points, like every winner: no free items)
     });
   }
   // ---------- Where the Hell Is Edgar?: the four rooms ----------
