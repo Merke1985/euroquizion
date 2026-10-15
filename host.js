@@ -5330,12 +5330,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     return s;
   }
-  function tcShoeF(w, cx, y) {
-    var C = TC_SHOEC[w.sc || 0];
-    if (w.s === 0) return '<path d="M' + (cx - 11) + ' ' + (y - 4) + ' Q' + cx + ' ' + (y - 12) + ' ' + (cx + 11) + ' ' + (y - 4) + ' L' + (cx + 8) + ' ' + (y + 10) + ' L' + (cx - 8) + ' ' + (y + 10) + ' Z" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/><rect x="' + (cx - 2.5) + '" y="' + (y + 2) + '" width="5" height="10" fill="' + C[1] + '"/>';
-    if (w.s === 1) return '<path d="M' + (cx - 15) + ' ' + (y - 70) + ' L' + (cx + 15) + ' ' + (y - 70) + ' L' + (cx + 15) + ' ' + (y + 6) + ' Q' + cx + ' ' + (y + 12) + ' ' + (cx - 15) + ' ' + (y + 6) + ' Z" fill="#6b3b1f"' + TC_K + '/><path d="M' + (cx - 15) + ' ' + (y - 62) + ' L' + (cx + 15) + ' ' + (y - 62) + '" stroke="#3b1f0f" stroke-width="3"/><path d="M' + (cx - 9) + ' ' + (y - 50) + ' L' + (cx - 9) + ' ' + y + '" stroke="#8a5530" stroke-width="2"/>';
-    if (w.s === 3) return '<path d="M' + (cx - 15) + ' ' + (y + 10) + ' Q' + (cx - 16) + ' ' + (y - 8) + ' ' + cx + ' ' + (y - 9) + ' Q' + (cx + 16) + ' ' + (y - 8) + ' ' + (cx + 15) + ' ' + (y + 10) + ' Z" fill="#fbfbfd"' + TC_K + '/><path d="M' + (cx - 16) + ' ' + (y + 9) + ' L' + (cx + 16) + ' ' + (y + 9) + '" stroke="' + C[1] + '" stroke-width="4" stroke-linecap="round"/><path d="M' + (cx - 6) + ' ' + (y - 4) + ' L' + (cx + 6) + ' ' + (y - 4) + ' M' + (cx - 7) + ' ' + y + ' L' + (cx + 7) + ' ' + y + '" stroke="#9aa0ad" stroke-width="1.6"/><path d="M' + (cx - 12) + ' ' + (y + 4) + ' Q' + cx + ' ' + (y + 1) + ' ' + (cx + 12) + ' ' + (y + 4) + '" stroke="' + C[0] + '" stroke-width="2.4" fill="none"/>';   // (sneakers: white, laces, a coloured stripe)
-    return '<ellipse cx="' + cx + '" cy="' + (y + 4) + '" rx="15" ry="7.5" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/><path d="M' + (cx - 10) + ' ' + (y + 1) + ' Q' + cx + ' ' + (y - 3) + ' ' + (cx + 10) + ' ' + (y + 1) + '" stroke="' + C[1] + '" stroke-width="1.6" fill="none"/>';
+  function tcShoeF(w, cx, y) {   // the shoes from the front: big and detailed
+    var C = TC_SHOEC[w.sc || 0], K2 = ' stroke="' + TC_INK + '" stroke-width="2.2" stroke-linejoin="round"';
+    if (w.s === 0) return '<path d="M' + (cx - 13) + ' ' + (y - 6) + ' Q' + cx + ' ' + (y - 16) + ' ' + (cx + 13) + ' ' + (y - 6) + ' L' + (cx + 7) + ' ' + (y + 16) + ' Q' + cx + ' ' + (y + 20) + ' ' + (cx - 7) + ' ' + (y + 16) + ' Z" fill="' + C[0] + '"' + K2 + '/><path d="M' + (cx - 12) + ' ' + (y - 10) + ' Q' + cx + ' ' + (y - 4) + ' ' + (cx + 12) + ' ' + (y - 10) + '" stroke="' + C[1] + '" stroke-width="3" fill="none"/><path d="M' + (cx - 4) + ' ' + (y - 4) + ' L' + (cx - 3) + ' ' + (y + 10) + '" stroke="#fff" stroke-width="2.4" opacity=".55" stroke-linecap="round"/><circle cx="' + cx + '" cy="' + (y - 9) + '" r="2.4" fill="#fff" opacity=".9"/>';   // (pumps with an ankle strap and a little jewel)
+    if (w.s === 1) return '<path d="M' + (cx - 16) + ' ' + (y - 74) + ' L' + (cx + 16) + ' ' + (y - 74) + ' L' + (cx + 17) + ' ' + (y + 8) + ' Q' + cx + ' ' + (y + 16) + ' ' + (cx - 17) + ' ' + (y + 8) + ' Z" fill="#6b3b1f"' + K2 + '/><path d="M' + (cx - 16) + ' ' + (y - 64) + ' L' + (cx + 16) + ' ' + (y - 64) + '" stroke="#3b1f0f" stroke-width="4"/><path d="M' + (cx - 8) + ' ' + (y - 58) + ' L' + (cx - 8) + ' ' + (y + 4) + ' M' + (cx + 8) + ' ' + (y - 58) + ' L' + (cx + 8) + ' ' + (y + 4) + '" stroke="#8a5530" stroke-width="1.6" stroke-dasharray="4 3"/><rect x="' + (cx - 6) + '" y="' + (y - 34) + '" width="12" height="8" rx="2" fill="none" stroke="#d9b45a" stroke-width="2.2"/><path d="M' + (cx - 17) + ' ' + (y + 9) + ' Q' + cx + ' ' + (y + 17) + ' ' + (cx + 17) + ' ' + (y + 9) + '" stroke="#2a1608" stroke-width="4" fill="none"/>';
+    if (w.s === 3) return '<path d="M' + (cx - 17) + ' ' + (y + 12) + ' Q' + (cx - 18) + ' ' + (y - 12) + ' ' + cx + ' ' + (y - 14) + ' Q' + (cx + 18) + ' ' + (y - 12) + ' ' + (cx + 17) + ' ' + (y + 12) + ' Z" fill="#fbfbfd"' + K2 + '/><path d="M' + (cx - 18) + ' ' + (y + 10) + ' L' + (cx + 18) + ' ' + (y + 10) + '" stroke="' + C[1] + '" stroke-width="6" stroke-linecap="round"/><path d="M' + (cx - 7) + ' ' + (y - 8) + ' L' + (cx + 7) + ' ' + (y - 8) + ' M' + (cx - 8) + ' ' + (y - 3) + ' L' + (cx + 8) + ' ' + (y - 3) + ' M' + (cx - 8) + ' ' + (y + 2) + ' L' + (cx + 8) + ' ' + (y + 2) + '" stroke="#9aa0ad" stroke-width="2" stroke-linecap="round"/><path d="M' + (cx - 15) + ' ' + (y + 5) + ' Q' + (cx - 8) + ' ' + (y - 2) + ' ' + (cx - 2) + ' ' + (y + 6) + '" stroke="' + C[0] + '" stroke-width="3" fill="none"/>';
+    return '<path d="M' + (cx - 15) + ' ' + (y + 8) + ' Q' + (cx - 16) + ' ' + (y - 8) + ' ' + cx + ' ' + (y - 9) + ' Q' + (cx + 16) + ' ' + (y - 8) + ' ' + (cx + 15) + ' ' + (y + 8) + ' Q' + cx + ' ' + (y + 14) + ' ' + (cx - 15) + ' ' + (y + 8) + ' Z" fill="' + C[0] + '"' + K2 + '/><path d="M' + (cx - 5) + ' ' + (y - 6) + ' L' + cx + ' ' + (y - 3) + ' L' + (cx + 5) + ' ' + (y - 6) + ' L' + (cx + 5) + ' ' + y + ' L' + cx + ' ' + (y - 3) + ' L' + (cx - 5) + ' ' + y + ' Z" fill="' + C[1] + '"/>';   // (ballet flats with a bow)
   }
   // an arm from the front: shoulder → elbow → hand, in the sleeve colour (bare arms in a dress)
   function tcArmF(pts, col, sk, flag) {
@@ -5358,18 +5358,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (p === 'lean') R = [126, 150, 158, 100, 122, 66];
     if (kneel) { L = [74, 150, 56, 200, 84, 236]; R = [126, 150, 150, 120, 146, 66]; }
     // the legs and shoes (kneeling: one knee down, a little lower)
-    var dy = kneel ? 40 : 0, legC = dress ? sk : P.f;
+    var dy = kneel ? 40 : 0, legC = dress ? sk : P.f, shoesLater = [];
     if (!(w.o === 'jumpsuit')) {
       var lx = dress ? [84, 104] : [74, 100], lw = dress ? 16 : 26;
       lx.forEach(function (x, i) {
         var top = dress ? 300 : 266, bot = 458;
         if (kneel && i === 0) h += '<path d="M' + (x + lw / 2) + ' ' + top + ' L' + (x + lw / 2 - 18) + ' 400 L' + (x + lw / 2 - 18) + ' 462" stroke="' + TC_INK + '" stroke-width="' + (lw + 4) + '" fill="none" stroke-linecap="round"/><path d="M' + (x + lw / 2) + ' ' + top + ' L' + (x + lw / 2 - 18) + ' 400 L' + (x + lw / 2 - 18) + ' 462" stroke="' + legC + '" stroke-width="' + lw + '" fill="none" stroke-linecap="round"/>';
         else h += '<rect x="' + x + '" y="' + top + '" width="' + lw + '" height="' + (bot - top) + '" rx="8" fill="' + legC + '"' + TC_K + '/>';
-        h += tcShoeF(w, x + lw / 2 - (kneel && i === 0 ? 18 : 0), 460);
+        var sx = x + lw / 2 - (kneel && i === 0 ? 18 : 0); if (dress && w.s === 1) h += tcShoeF(w, sx, 460); else shoesLater.push(sx);   // (shoes on top of the trousers, so they always show; boots under a dress go first)
       });
-    } else [83, 117].forEach(function (cx) { h += tcShoeF(w, cx, 460); });
+    } else [83, 117].forEach(function (cx) { shoesLater.push(cx); });
     h += tcArmF(L, sleeve, sk);
     h += tcOutfitF(w, sk, c, cd, P.f);
+    shoesLater.forEach(function (sx) { h += tcShoeF(w, sx, 460); });
     h += '<rect x="91" y="110" width="18" height="34" rx="7" fill="' + sk + '"' + TC_K + '/>';
     h += tcFaceF(w, sk) + tcHairFrontF(w, hr, hd) + tcHatF(w);
     h += tcArmF(R, sleeve, sk, p === 'flag' || (w.f && p !== 'point') ? w.f : null);
@@ -5379,11 +5380,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function tcSvg(w) {
     var sk = TC_SKIN[w.k], hr = TC_HAIR[w.r], hd = tcShade(hr, -.3), hl = tcShade(hr, .35), c = TC_COLORS[w.c][1], cd = TC_COLORS[w.c][2], dress = w.o === 'dress';
     var id = 'tcs' + (++tcUid), P = tcFill(w, id, c, cd), legC = dress ? sk : P.f, legD = dress ? tcShade(sk, -.12) : cd, C = TC_SHOEC[w.sc || 0];
-    var shoe = function () {
-      if (w.s === 0) return '<path d="M98 452 L128 458 Q142 462 142 470 L112 470 L104 466 L102 484 L98 484 Z" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/>';
-      if (w.s === 1) return '<path d="M94 392 L122 392 L122 450 Q142 454 146 470 L94 470 Z" fill="#6b3b1f"' + TC_K + '/><path d="M94 400 L122 400" stroke="#3b1f0f" stroke-width="3"/>';
-      if (w.s === 3) return '<path d="M94 446 L120 446 Q130 448 136 456 Q146 460 146 470 L94 472 Z" fill="#fbfbfd"' + TC_K + '/><path d="M94 466 L146 466" stroke="' + C[1] + '" stroke-width="5"/><path d="M104 452 Q118 448 130 456" stroke="' + C[0] + '" stroke-width="3" fill="none"/><path d="M118 448 L122 456 M124 450 L127 457" stroke="#9aa0ad" stroke-width="1.6"/>';
-      return '<path d="M96 454 L124 454 Q142 458 142 468 L96 468 Z" fill="' + C[0] + '" stroke="' + C[1] + '" stroke-width="2"/>';
+    var shoe = function () {   // big, detailed shoes, so you can really see them on the carpet
+      var K2 = ' stroke="' + TC_INK + '" stroke-width="2.2" stroke-linejoin="round"';
+      if (w.s === 0) return '<path d="M96 446 L118 446 Q134 452 150 462 Q156 468 150 472 L112 472 L104 462 Z" fill="' + C[0] + '"' + K2 + '/><path d="M98 460 L104 462 L102 490 L96 490 Z" fill="' + C[1] + '"' + K2 + '/><path d="M112 472 L150 472" stroke="' + C[1] + '" stroke-width="3"/><path d="M118 452 Q132 456 144 464" stroke="#fff" stroke-width="2.4" fill="none" opacity=".55"/><path d="M100 444 Q108 438 118 446" stroke="' + C[1] + '" stroke-width="3" fill="none"/>';   // (a pointed pump with a stiletto heel and an ankle strap)
+      if (w.s === 1) return '<path d="M92 380 L124 380 L124 448 Q146 452 152 466 L152 474 L92 474 Z" fill="#6b3b1f"' + K2 + '/><path d="M92 474 L152 474" stroke="#2a1608" stroke-width="5"/><path d="M92 474 L104 474 L104 482 L92 482 Z" fill="#2a1608"/><path d="M92 392 L124 392" stroke="#3b1f0f" stroke-width="4"/><path d="M118 384 L118 446" stroke="#8a5530" stroke-width="1.6" stroke-dasharray="4 3"/><rect x="104" y="420" width="12" height="8" rx="2" fill="none" stroke="#d9b45a" stroke-width="2.2"/><path d="M128 452 Q140 456 146 464" stroke="#a0683a" stroke-width="2.4" fill="none"/>';   // (knee boots: stitching, a buckle, a block heel)
+      if (w.s === 3) return '<path d="M92 444 L122 444 Q132 446 138 454 Q154 458 156 470 L156 476 L92 476 Z" fill="#fbfbfd"' + K2 + '/><path d="M92 470 L156 470" stroke="' + C[1] + '" stroke-width="7"/><path d="M100 458 Q124 452 142 462" stroke="' + C[0] + '" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M118 446 L124 456 M124 448 L129 458 M130 451 L134 460" stroke="#9aa0ad" stroke-width="2" stroke-linecap="round"/><circle cx="96" cy="452" r="3" fill="' + C[1] + '"/>';   // (sneakers: a thick sole, laces, a coloured swoosh of our own)
+      return '<path d="M94 450 L122 450 Q144 452 152 464 Q154 472 146 474 L94 474 Z" fill="' + C[0] + '"' + K2 + '/><path d="M94 474 L150 474" stroke="' + C[1] + '" stroke-width="3"/><path d="M132 452 Q138 448 142 454 Q138 458 132 452 Z" fill="' + C[1] + '"/><path d="M104 454 Q118 452 130 456" stroke="#fff" stroke-width="2" fill="none" opacity=".5"/>';   // (ballet flats with a little bow)
     };
     var wide = w.o === 'jumpsuit';
     var leg = function (cls, col) { return '<g class="tcleg ' + cls + '">' + (wide ? '<path d="M94 246 L122 246 L132 458 L88 458 Z" fill="' + col + '"' + TC_K + '/>' : '<rect x="' + (dress ? 97 : 94) + '" y="246" width="' + (dress ? 22 : 28) + '" height="212" rx="10" fill="' + col + '"' + TC_K + '/>') + shoe() + '</g>'; };
@@ -7134,6 +7136,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     slab.position.y = -.2; slab.castShadow = slab.receiveShadow = true; stage.add(slab);
     var piston = new T.Mesh(new T.CylinderGeometry(s * .18, s * .22, 16, 20), new T.MeshStandardMaterial({ color: '#8a8fa8', metalness: .9, roughness: .25 })); piston.position.y = -8.4; stage.add(piston);
     var stM = new T.MeshStandardMaterial({ color: '#08080c', roughness: .35, metalness: .4, emissive: '#000000' });   // the stage floor: the same tiles, in black
+    var sRing = new T.Mesh(new T.TorusGeometry(s * .55, .12, 8, 48), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false })); sRing.rotation.x = -Math.PI / 2; sRing.position.y = .2; sRing.visible = false; stage.add(sRing);   // (the shockwave when someone takes the stage)
     for (var sy = 0; sy < s; sy++) for (var sx = 0; sx < s; sx++) { var tl = new T.Mesh(geo, stM); tl.position.set(sx - s / 2 + .5, .07, sy - s / 2 + .5); tl.receiveShadow = true; stage.add(tl); }
     var sScale = s === 3 ? .95 : 1.4, singer = ru3Singer(); singer.scale.setScalar(sScale); stage.add(singer);
     var sLight = new T.PointLight('#fff0f8', 0, s * 4, 1.8); sLight.position.set(0, 3.5, 1.2); stage.add(sLight);
@@ -7175,11 +7178,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [[0, -.47, .98, .07], [0, .47, .98, .07], [-.47, 0, .07, .98], [.47, 0, .07, .98]].forEach(function (b) { var bx = new T.Mesh(new T.BoxGeometry(b[2], .05, b[3]), mkM); bx.position.set(b[0], 0, b[1]); mkF.add(bx); });
     mkF.visible = false; sc.add(mkF);
     var beams = [0, 1, 2, 3].map(function () { var m = new T.Mesh(new T.BoxGeometry(1, .12, .18), new T.MeshBasicMaterial({ color: '#ff5fe0', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false })); m.visible = false; ipar.add(m); return m; });
-    var balls = []; for (var b = 0; b < 6; b++) {
+    var balls = []; for (var b = 0; b < 8; b++) {
       var a = b / 6 * Math.PI * 2 + .3, r = n * .42, bg = new T.Group();
       var ball = new T.Mesh(new T.IcosahedronGeometry(.4 + n * .04, 2), ballM); bg.add(ball);
       var cord = new T.Mesh(new T.CylinderGeometry(.02, .02, n * 2, 4), new T.MeshBasicMaterial({ color: '#555' })); cord.position.y = n; bg.add(cord);
-      bg.position.set(-n * .3 + b * n * .21, n * .26 + (b % 2) * n * .05, -n * .3 - (b % 2) * n * .08); sc.add(bg); balls.push(ball);
+      bg.position.set(-n * .6 + b * n * .171, n * .26 + (b % 2) * n * .05, -n * .3 - (b % 2) * n * .08);   /* (evenly spread, left to right) */ sc.add(bg); balls.push(ball);
     }
     // purple spotlights sweeping over the floor, with visible beams
     var beamGeo = new T.CylinderGeometry(.05, 1, 1, 20, 1, true); beamGeo.translate(0, -.5, 0);
@@ -7233,6 +7236,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         }
       }
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
+      if (st.sfx) {   // the centre stage taken: 2.6 s of bright blinking in the new owner's colour, a bounce and a shockwave ring
+        var sq = (Date.now() - st.sfx.at) / 2600;
+        if (sq >= 1) { st.sfx.done = true; stM.emissive.copy(st.sfx.c); stM.emissiveIntensity = .35; edgeM.emissive.copy(st.sfx.c); edgeM.emissiveIntensity = .9; sRing.visible = false; stage.scale.setScalar(1); st.sfx = null; }
+        else {
+          var bl2 = Math.sin(sq * Math.PI * 16) > 0 ? 1 : .2;
+          stM.emissive.copy(st.sfx.c); stM.emissiveIntensity = (3.2 * (1 - sq) + .35) * bl2;
+          edgeM.emissive.copy(st.sfx.c).lerp(new THREE.Color('#ffffff'), (1 - sq) * .6); edgeM.emissiveIntensity = 2.4 * (1 - sq) + .9;
+          stage.scale.set(1 + .07 * Math.sin(sq * Math.PI * 8) * (1 - sq), 1, 1 + .07 * Math.sin(sq * Math.PI * 8) * (1 - sq));
+          var rq = (sq * 2) % 1; sRing.scale.setScalar(1 + rq * 5); sRing.material.opacity = .95 * (1 - rq) * (1 - sq * .5);
+        }
+      }
       var gI = G.rule;   // the laser item, and its beams when someone takes it
       if (gI && gI.item && gI.st === 'play' && gI.item[2] === 'freeze') { item.visible = false; flake.visible = true; flake.position.set(gI.item[0] - n / 2 + .5, .7 + Math.sin(t * 2.4) * .025, gI.item[1] - n / 2 + .5); flake.rotation.set(-.35, 0, t * .9); flake.userData.mat.emissiveIntensity = .55 + .35 * (.5 + .5 * Math.sin(t * 5)); var fh = 1.9 + .3 * Math.sin(t * 4); flake.userData.halo.scale.set(fh, fh, 1); } else if (gI && gI.item && gI.st === 'play') { flake.visible = false; item.visible = true; item.material.emissiveIntensity = .9 + .6 * (.5 + .5 * Math.sin(t * 9)); if (item.userData.halo) { var hs = 2.6 + .5 * Math.sin(t * 6); item.userData.halo.scale.set(hs, hs, 1); item.userData.halo.material.opacity = .55 + .3 * Math.sin(t * 6); } (item.userData.spk || []).forEach(function (sp, i) { var a = t * 2.6 + i * Math.PI * 2 / 4; sp.position.set(Math.cos(a) * .9, Math.sin(t * 5 + i) * .35, Math.sin(a) * .9); var sc2 = .25 + .2 * Math.max(0, Math.sin(t * 11 + i * 1.7)); sp.scale.set(sc2, sc2, 1); }); item.position.set(gI.item[0] - n / 2 + .5, .7 + Math.sin(t * 3) * .025, gI.item[1] - n / 2 + .5);   /* (hovering just above the tile, never through it) */ item.rotation.y = t * 2.4; } else { item.visible = false; flake.visible = false; }
       var lz = gI && gI.laser, lk = lz ? (Date.now() - lz.at) / 700 : 2;
@@ -7283,6 +7297,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     requestAnimationFrame(frame);
     st.flash = [];
+    st.stageFx = function (c) { st.sfx = { at: Date.now(), c: new T.Color(c) }; sRing.material.color.copy(st.sfx.c); sRing.visible = true; };   // someone took the centre stage: it blinks extra bright in their colour, with a shockwave
     st.flashAll = function (ix) { var nw = Date.now(); ix.forEach(function (i) { var m = tiles[i]; if (!m || !m.userData.own) return; m.userData.fl = nw; if (st.flash.indexOf(i) < 0) st.flash.push(i); }); };
     st.paint = function (own, trail, col) {
       var a0 = (n - s) / 2, so = own[(a0 + 1) * n + a0 + 1] || own[a0 * n + a0] || '';   // (the stage: all one owner)
@@ -7335,9 +7350,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var now = Date.now(), tr = {};
     g.order.forEach(function (k) { (g.trail[k] || []).forEach(function (i) { if (g.own[i] === k) tr[i] = 1; }); });
     if (ov._3) {
-      var s3 = ov._3; s3.riseAt = g.riseAt || 0; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true; s3.play = g.st === 'play' || g.st === 'count' || g.st === 'end';
+      var s3 = ov._3; s3.riseAt = g.riseAt || 0; if (g.st === 'ready' || g.st === 'play' || g.st === 'count' || g.st === 'end') s3.risen = true; s3.play = g.st === 'play';   // (they stop singing and dancing when the scores are counted)
       s3.paint(g.own, tr, ruCol);
       if (g.loopFx && s3.lfAt !== g.loopFx.at) { s3.lfAt = g.loopFx.at; s3.flashAll(g.loopFx.tiles); }
+      if (g.fx && g.fx.t === 'stage' && s3.sfAt !== g.fx.at && s3.stageFx) { s3.sfAt = g.fx.at; s3.stageFx(ruCol(g.fx.k)); }
       g.order.forEach(function (k) {
         var o = s3.toks[k], p = g.pos[k]; if (!o || !p) return;
         if (o.tx !== p[0] || o.ty !== p[1]) { var kk = o.t0 ? Math.min(1, (now - o.t0) / 330) : 1; o.fx = o.fx + (o.tx - o.fx) * kk; o.fy = o.fy + (o.ty - o.fy) * kk; o.tx = p[0]; o.ty = p[1]; o.t0 = now; }
@@ -8080,7 +8096,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     t += 2000;
     at(t + 2500, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) b.classList.remove('on'); });
     t += 5000;
-    at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // then Juliet steps out
+    at(t - 900, function () { var o = $('qjov'); if (o) o.classList.add('dooropen'); Music.doorOpen(); });   // first the balcony door swings open (with a creak)…
+    at(t, function () { var o = $('qjov'); if (o) o.classList.add('julon'); Music.ding(); whooshes([0]); });   // …then Juliet pops out
     var jl = [
       'Hi guys, I’m Juliet! 🌹 I know this city pretty well.',
       'If you want to find your way back to the studio, just follow my instructions!',
@@ -8419,7 +8436,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
       ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
-        '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div><div class="jmtower jmtop">' + JM_TOWER + '</div><div class="jmtfront jmtop2">' + JM_TFRONT + '</div>' +
+        '<div class="jmbalc"><div class="jmdoor"><i class="jdin"></i><i class="jdl"></i><i class="jdr"></i></div><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div><div class="jmtower jmtop">' + JM_TOWER + '</div><div class="jmtfront jmtop2">' + JM_TFRONT + '</div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmtbar"><i></i></div><div class="jmgbub"></div><div class="jmcount"></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
@@ -8442,7 +8459,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var easy = g.round === 1 && g.st === 'input', si = easy ? 0 : g.show;   /* (round 1: the arrow stays visible while everyone taps it in) */
     var say = ov.querySelector('.jmsay'), sv = (g.st === 'show' && g.show >= 0) || easy ? JM_ARROW[g.seq[si]] : '';
     if (say.getAttribute('data-v') !== (sv ? si + sv : '')) { say.setAttribute('data-v', sv ? si + sv : ''); say.innerHTML = sv ? '<b>' + sv + '</b><small>' + (si + 1) + '</small>' : ''; say.classList.toggle('on', !!sv); }
-    ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show' || g.st === 'input' || g.st === 'run');   // (she waves while she shows the way, while you tap it in, and while you run)
+    ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show' || g.st === 'run');   // (she waves while she shows the way, and while everyone runs)
     // the city: where the group is on the route (it slides the other way)
     var x = 0, y = 0; for (var i = 0; i < (g.pos || 0); i++) { x += JM_DIRS[g.seq[i]][0]; y += JM_DIRS[g.seq[i]][1]; }
     ov.style.setProperty('--near', String(Math.max(0, Math.min(10, -y))));   // (north: the tower comes a little closer)

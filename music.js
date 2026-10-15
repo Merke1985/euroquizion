@@ -410,6 +410,20 @@ var Music = (function () {
   }
   // The monster wheel: a dark tick (a low, hollow knock with a dissonant metal ring) and a demonic hit when it lands
   // A soft disco count-in tick: a gentle kick with an open hi-hat ("tss"); the last one (go!) gets a clap and a little sparkle
+  // A wooden door swinging open: a creaky hinge (a wobbling, scratchy tone) and a soft knock of the latch
+  function doorOpen() {
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01, o = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(260, t); o.frequency.linearRampToValueAtTime(420, t + 0.45); o.frequency.linearRampToValueAtTime(330, t + 0.9);
+      lfo.type = 'square'; lfo.frequency.setValueAtTime(28, t); lfo.frequency.linearRampToValueAtTime(14, t + 0.9); lg.gain.value = 60; lfo.connect(lg); lg.connect(o.frequency);
+      bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 4;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.08); g.gain.setValueAtTime(0.09, t + 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95);
+      o.connect(bp); bp.connect(g); g.connect(fxOut()); o.start(t); lfo.start(t); o.stop(t + 1); lfo.stop(t + 1);
+      var k = ctx.createOscillator(), kg = ctx.createGain(); k.type = 'triangle'; k.frequency.setValueAtTime(180, t); k.frequency.exponentialRampToValueAtTime(70, t + 0.08);
+      kg.gain.setValueAtTime(0.0001, t); kg.gain.exponentialRampToValueAtTime(0.25, t + 0.004); kg.gain.exponentialRampToValueAtTime(0.0001, t + 0.12); k.connect(kg); kg.connect(fxOut()); k.start(t); k.stop(t + 0.14);
+    } catch (e) {}
+  }
   function discoTick(go) {
     if (!ac()) return;
     try {
@@ -751,5 +765,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { discoTick: discoTick, loopClose: loopClose, starRun: starRun, bonk: bonk, dizzy: dizzy, starGet: starGet, starHit: starHit, darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
+  return { doorOpen: doorOpen, discoTick: discoTick, loopClose: loopClose, starRun: starRun, bonk: bonk, dizzy: dizzy, starGet: starGet, starHit: starHit, darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();

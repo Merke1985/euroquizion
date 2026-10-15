@@ -5272,3 +5272,19 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes rucdpop{0%{transform:translate(-50%,1.2vh) scale(.3);opacity:0}25%{transform:translate(-50%,1.2vh) scale(1.25);opacity:1}100%{transform:translate(-50%,1.2vh) scale(1);opacity:.9}}
 /* Verona: Juliet's mouth opens and closes with her voice */
 .jmjul .jmo{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(var(--mo,0));transition:transform .07s ease-out}
+/* Verona: the balcony door behind Juliet swings open before she pops out; her wave is bigger */
+.jmdoor{position:absolute;left:50%;bottom:0;width:62%;height:92%;margin-left:-31%;perspective:300px;z-index:0}
+.jmov.v3 .jmdoor{bottom:.6vh;width:6.6vh;height:9.6vh;margin-left:-3.3vh}
+.jmdoor .jdin{position:absolute;inset:0;border-radius:50% 50% 0 0/30% 30% 0 0;background:radial-gradient(ellipse at 50% 70%,#ffcf7a,#8a4a1a 60%,#2a1208);box-shadow:inset 0 0 0 .4vh #5a3a1a}
+.jmdoor .jdl,.jmdoor .jdr{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#7a4a22,#9a6232 50%,#6a3a18);box-shadow:inset 0 0 0 .25vh #4a2a10;transition:transform .8s cubic-bezier(.3,.7,.3,1)}
+.jmdoor .jdl{left:0;border-radius:100% 0 0 0/30% 0 0 0;transform-origin:0 50%}
+.jmdoor .jdr{right:0;border-radius:0 100% 0 0/0 30% 0 0;transform-origin:100% 50%}
+.jmdoor .jdl::after,.jmdoor .jdr::after{content:'';position:absolute;top:52%;width:.5vh;height:.5vh;border-radius:50%;background:#ffd23f}
+.jmdoor .jdl::after{right:12%}.jmdoor .jdr::after{left:12%}
+.qjov.dooropen .jmdoor .jdl,.jmov.dooropen .jmdoor .jdl{transform:rotateY(78deg)}
+.qjov.dooropen .jmdoor .jdr,.jmov.dooropen .jmdoor .jdr{transform:rotateY(-78deg)}
+.jmjul{z-index:1}
+.jmjul.talk .jarm,.jmjul.talk .jhand{animation:jwave2 .38s ease-in-out infinite alternate}
+@keyframes jwave2{from{transform:rotate(10deg)}to{transform:rotate(-34deg)}}
+/* Rule the World: the singers rise (and stand) with their mouths closed until they start singing */
+.rus2d:not(.dance) .rsmouth{transform:scaleY(.22)}
