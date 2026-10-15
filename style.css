@@ -5192,3 +5192,27 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes rsfr{from{transform:skewX(-10deg)}to{transform:skewX(10deg)}}
 .rus2d .rsspk{transform-box:fill-box;transform-origin:center;animation:rsspk 1.1s ease-in-out infinite}
 @keyframes rsspk{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.1)}}
+/* Turquoise Carpet: the question card a bit smaller and lower, so the act on the roof sign stays readable */
+.tcov.is3d .tcq{top:28vh;left:6vw;right:33vw;padding:1.6vh 1.6vw}
+.tcov.is3d .tcqt{font-size:clamp(1.2rem,2.5vw,2.2rem);margin-bottom:1.8vh}
+.tcov.is3d .tcopts{gap:1.2vh 1.1vw}
+.tcov.is3d .tcopt{padding:1.3vh 1.1vw;font-size:clamp(1rem,1.8vw,1.65rem)}
+/* the group: the back row a little higher, and shifted half a figure when both rows are the same size, so nobody hides behind someone */
+.tcg .tcgrow.back{bottom:14%}
+.tcg.even .tcgrow.front{transform:translateX(calc(-50% + 4.5vh))}
+.tcg.even .tcgrow.back{transform:translateX(calc(-50% - 4.5vh))}
+/* Zero Gravity: a knocked-off player's pole really slides away behind the Earth (this beats the rise-up rule, which stays on) */
+.zgov.intro.rise2 .zgp.out,.zgov.rise2 .zgp.out{translate:0 80vh;transition:translate 2.6s cubic-bezier(.5,0,.8,.6) 4.6s}
+.zgov.intro.rise2 .zgp.out.hit,.zgov.rise2 .zgp.out.hit{transition-delay:1.9s}
+/* the yellow act in 2D: six moves, snapped to the beat */
+.rus2d.yel .rs2svg{filter:drop-shadow(0 0 1.6vh rgba(255,240,120,.4))}
+.rus2d.yel.dance .rspose{animation-duration:2.86s}
+.rus2d.yel.dance .rspose.p0{animation-name:ry0}.rus2d.yel.dance .rspose.p1{animation-name:ry1}.rus2d.yel.dance .rspose.p2{animation-name:ry2}.rus2d.yel.dance .rspose.p3{animation-name:ry3}.rus2d.yel.dance .rspose.p4{animation-name:ry4}.rus2d.yel.dance .rspose.p5{animation-name:ry5}
+.rus2d.yel .rspose.p4,.rus2d.yel .rspose.p5{opacity:0}
+@keyframes ry0{0%{opacity:1}16.66%,100%{opacity:0}}
+@keyframes ry1{0%,16.66%{opacity:0}16.67%{opacity:1}33.33%,100%{opacity:0}}
+@keyframes ry2{0%,33.33%{opacity:0}33.34%{opacity:1}50%,100%{opacity:0}}
+@keyframes ry3{0%,50%{opacity:0}50.01%{opacity:1}66.66%,100%{opacity:0}}
+@keyframes ry4{0%,66.66%{opacity:0}66.67%{opacity:1}83.33%,100%{opacity:0}}
+@keyframes ry5{0%,83.33%{opacity:0}83.34%{opacity:1}100%{opacity:1}}
+.rus2d.yel.dance .rsbody{animation-duration:.48s}

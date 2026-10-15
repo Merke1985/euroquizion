@@ -2540,15 +2540,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
     var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', fake: '☝️ Just One!', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
-    $('onegame').innerHTML = PARTY_KINDS.map(function (k) { return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');
+    $('onegame').innerHTML = PARTY_KINDS.map(function (k) { if (k === 'rule') return ['🪩 We Will Rule the World', '💛 Discoteque'].map(function (t, i) { return '<button class="btn alt small" type="button" data-one="rule" data-act="' + i + '">' + t + '</button>'; }).join(''); return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');   /* (Rule the World: one button per act) */
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
     $('adminbtn').addEventListener('click', function () { if (window.escEditorOpen) window.escEditorOpen(); });   // (⚙️ Admin: songs, minigames, items, trivia and requests, behind the password)
     $('testov').addEventListener('click', function (e) { if (e.target === $('testov')) $('testov').classList.add('hidden'); });
-    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #itemtest, #goldtest, #chasetest, #chasetest2, #chasetest3, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
+    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #shoppoor1, #shoppoor2, #itemtest, #goldtest, #chasetest, #chasetest2, #chasetest3, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
     $('onegame').addEventListener('click', function (e) {
       var b = e.target.closest('[data-one]'); if (!b || REMOTE || G.phase !== 'lobby') return;
-      var k = b.getAttribute('data-one'), nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
+      var k = b.getAttribute('data-one'), fa = b.getAttribute('data-act'); G.ruForce = fa == null ? null : +fa; var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
       $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
       if (beginGame() === false) return;
       G.partyOn = {}; PARTY_KINDS.forEach(function (x) { G.partyOn[x] = x === k; }); G.partyOn.shop = true;   /* (only this game) */
@@ -2573,6 +2573,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase === 'intro') introEnd();
   });
   // Test the boutique: straight into the shop (everyone picks one), then a winner's trip (two items), then the party games.
+  // Testing Lynda with broke winners: 1 = the winner can't pay but someone else can (she invites the richest), 2 = nobody can pay
+  [1, 2].forEach(function (mode) {
+    $('shoppoor' + mode).addEventListener('click', function () {
+      if (REMOTE || G.phase !== 'lobby') return;
+      var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
+      $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
+      G.partyOn = G.partyOn || {}; G.partyOn.shop = true;
+      if (beginGame() === false) return;
+      G.mgTest = true; G.skipOpening = true;
+      clearTimeout(introTimer); fanStop(); stage = 'idle'; try { yt.pauseVideo(); } catch (e) {}   // (no opening, no first round: straight to Lynda)
+      G.shopFirst = true; G.shopTalked = true; G.quizRun = 99; clearTimeout(funTimer); stopTimers();
+      var act = list().filter(function (p) { return !p.off; }), lucky = pick(act);
+      act.forEach(function (p, i) { p.score = mode === 2 || p === lucky ? 0 : 12 + i * 6; });
+      G.mode = G.lastParty = 'shop'; G.afterParty = true; G.mgBase = null;
+      G.fun = null; G.phase = 'loading';   // (the round card that had just started stays away)
+      mgGo([lucky.pid], function () { startRound(); });
+    });
+  });
   $('shoptest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
@@ -2722,7 +2740,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     m_diva: ['her', 'The Diva is coming for the trophy!'],
     m_goblin: ['her', 'The Neon Goblin is coming for the trophy!'],
     m_phoenix: ['her', 'The Phoenix Queen is coming for the trophy!'],
-    m_fiddler: ['her', 'The Phantom Fiddler is coming for the trophy!'],
+    m_fiddler: ['her', 'It’s the Phantom Fiddler!'],
     ready: ['her', 'Answer the questions correctly to beat them to it!'],
     heel: ['her', 'Ouch, a broken heel! No moving on the first question.'],
     heelsafe: ['her', 'Safe! Ice skates beat a broken heel!'],
@@ -2864,7 +2882,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (c.st === 'intro' && c.builtAt && Date.now() < c.builtAt) { big.classList.add('hidden'); setTimeout(function () { if (G.phase === 'chase') render(); }, c.builtAt - Date.now() + 20); }   // (the scene is still being built)
     else if (c.st === 'intro' && (c.heelDone || c.skated)) { big.classList.add('hidden'); }   /* (after an item was used: no welcome again) */
     else if (c.st === 'intro') { chSay(c, 'intro', 'intro'); big.innerHTML = 'You have reached the Grand Final!<small>First, let’s see how many Eurovision points you received: the more points, the further ahead you start.</small>'; big.classList.remove('hidden'); }
-    else if (c.st === 'rise') { chSay(c, 'rise', 'm_' + c.monster.id); big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + esc(mName()) + ' is coming for the trophy!<small>Answer the questions correctly to beat them to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
+    else if (c.st === 'rise') { chSay(c, 'rise', 'm_' + c.monster.id); big.innerHTML = (c.monster.cry ? '<div class="chcry">' + esc(c.monster.cry) + '</div>' : '') + (c.monster.id === 'fiddler' ? 'It’s the Phantom Fiddler!' : esc(mName()) + ' is coming for the trophy!') + '<small>Answer the questions correctly to beat them to it, or risk being destroyed. Tick every song that fits: one space for each one you get right.</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'win') { chSay(c, 'win', 'win'); big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : (c.sd ? 'last one standing on the stage: the trophy is theirs!' : 'jumped onto the stage: the trophy is theirs!')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { c._said = c._said || {}; if (!REMOTE && !c._said['caught' + c.n]) { c._said['caught' + c.n] = 1; hostVoice('mine_' + c.monster.id); }   /* (the monster itself: you're mine!) */ big.innerHTML = '👹 You’re mine!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'nsf' && c.nsf && Date.now() < (c.nsfMsgEnd || 0)) { setTimeout(function () { if (G.phase === 'chase') render(); }, c.nsfMsgEnd - Date.now() + 20);   /* (the message goes once the monster has said it) */ c._said = c._said || {}; if (!REMOTE && !c._said['nsf' + c.n]) { c._said['nsf' + c.n] = 1; hostVoice('nsf_' + c.monster.id); }   /* (the monster itself: not so fast!) */ big.innerHTML = '👹 NOT SO FAST!'; big.classList.remove('hidden'); }
@@ -3417,7 +3435,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|let s see what s first on tonight s menu': 'first_2',
     'her|and our very first round tonight is': 'first_3',
     'her|eyes on the big screen here s our first round': 'first_4',
-    'lynda|oh you don t have enough eurovision points to buy anything stop being poor darling': 'lynda_poor',
+    'lynda|oh you don t have enough eurovision points to buy anything stop being poor darling': 'lynda_poor2',
+    'lynda|nobody can afford a single thing honestly darlings the boutique is closed': 'lynda_closed',
     'lynda|hello eurovision fans my name is lynda woodruff welcome to my shop': 'lynda_hello',
     'lynda|whoever wins a party game gets to shop here so put your best foot forward': 'lynda_rules',
     'lynda|because i m such a nice girl i m giving you all a freebie from the discount shelf of course': 'lynda_freebie',
@@ -3450,7 +3469,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|the diva is coming for the trophy': 'ch_m_diva',
     'her|the neon goblin is coming for the trophy': 'ch_m_goblin',
     'her|the phoenix queen is coming for the trophy': 'ch_m_phoenix',
-    'her|the phantom fiddler is coming for the trophy': 'ch_m_fiddler',
+    'her|it s the phantom fiddler': 'ch_m_fiddler2',
     'her|answer the questions correctly to beat them to it': 'ch_ready4',
     'her|ouch a broken heel no moving on the first question': 'ch_heel',
     'her|safe ice skates beat a broken heel': 'ch_heelsafe',
@@ -3470,7 +3489,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     'her|because in the grand final they can t be used so use them now': 'lastparty3',
     'lynda|see you next time and make sure you bring enough eurovision points': 'lynda_bye'
   };
-  var VOICE_MS = { triv_more1: 4362, triv_more2: 4362, lynda_poor: 5146, lynda_rich: 6844, triv_first: 5146, party_vote: 3161, zg_sam_sp: 4127, ru_loop: 6530, ru_stage: 2847, ed_final: 4048, congrats: 1880, winner_euroquizion: 2847, final_scores: 2925, mine_diva: 2142, mine_phoenix: 2063, mine_fiddler: 3761, mine_goblin: 4231, mon_stole: 3787, mon_wins: 4754, ch_intro2: 8359, fin_pick2: 7079, ch_near2: 3160, ch_ready4: 3160, nsf_diva: 3186, nsf_phoenix: 2847, nsf_fiddler: 4231, nsf_goblin: 3422, come_diva: 2298, come_phoenix: 2455, come_fiddler: 2063, come_goblin: 3996, die_diva: 3500, die_phoenix: 2533, die_fiddler: 4623, die_goblin: 3030, cry_goblin2: 2951, cry_diva: 4310, cry_goblin: 3500, cry_phoenix: 3657, cry_fiddler: 3735, ch_ready3: 3317, ch_intro: 8281, ch_pre: 4598, ch_wheel: 3239, ch_m_diva: 2847, ch_m_goblin: 3474, ch_m_phoenix: 3161, ch_m_fiddler: 3631, ch_ready: 6191, ch_heel: 4598, ch_heelsafe: 3474, ch_skates: 2769, ch_heelpick: 3004, ch_near: 4833, ch_caught: 1071, ch_nsf: 2116, ch_coming: 1306, ch_sudden: 5799, ch_off: 2038, ch_level: 2847, ch_win: 3971, ch_mwin: 4284, ly_guess_b: 8740, ru_vote: 4830, g200_sp: 5773, g201_sp: 8098, g202_sp: 5538, zg_rocks_sp: 6818, lastparty1: 2926, lastparty2: 4519, lastparty3: 5251, ly_b1: 7314, ly_b2: 7628, ly_c1: 8359, ly_c2: 8438, ly_d1: 7393, ly_d2: 7549, ly_e1: 8202, ly_e2: 8516, zg_rocks: 6191, courier: 3640, jul_lost2: 4520, jul_cars2: 7400, jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5880, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
+  var VOICE_MS = { triv_more1: 4362, triv_more2: 4362, lynda_closed: 5251, lynda_poor2: 4362, lynda_rich2: 7079, triv_first: 5146, party_vote: 3161, zg_sam_sp: 4127, ru_loop: 6530, ru_stage: 2847, ed_final: 4048, congrats: 1880, winner_euroquizion: 2847, final_scores: 2925, mine_diva: 2142, mine_phoenix: 2063, mine_fiddler: 3761, mine_goblin: 4231, mon_stole: 3787, mon_wins: 4754, ch_intro2: 8359, fin_pick2: 7079, ch_near2: 3160, ch_ready4: 3160, nsf_diva: 3186, nsf_phoenix: 2847, nsf_fiddler: 4231, nsf_goblin: 3422, come_diva: 2298, come_phoenix: 2455, come_fiddler: 2063, come_goblin: 3996, die_diva: 3500, die_phoenix: 2533, die_fiddler: 4623, die_goblin: 3030, cry_goblin2: 2951, cry_diva: 4310, cry_goblin: 3500, cry_phoenix: 3657, cry_fiddler: 3735, ch_ready3: 3317, ch_intro: 8281, ch_pre: 4598, ch_wheel: 3239, ch_m_diva: 2847, ch_m_goblin: 3474, ch_m_phoenix: 3161, ch_m_fiddler2: 2429, ch_m_fiddler: 2429, ch_ready: 6191, ch_heel: 4598, ch_heelsafe: 3474, ch_skates: 2769, ch_heelpick: 3004, ch_near: 4833, ch_caught: 1071, ch_nsf: 2116, ch_coming: 1306, ch_sudden: 5799, ch_off: 2038, ch_level: 2847, ch_win: 3971, ch_mwin: 4284, ly_guess_b: 8740, ru_vote: 4830, g200_sp: 5773, g201_sp: 8098, g202_sp: 5538, zg_rocks_sp: 6818, lastparty1: 2926, lastparty2: 4519, lastparty3: 5251, ly_b1: 7314, ly_b2: 7628, ly_c1: 8359, ly_c2: 8438, ly_d1: 7393, ly_d2: 7549, ly_e1: 8202, ly_e2: 8516, zg_rocks: 6191, courier: 3640, jul_lost2: 4520, jul_cars2: 7400, jul_lost: 4440, fin_pick: 3550, jul_hi: 4833, jul_follow: 5068, jul_steps2: 5724, jul_visible: 6048, jul_ready: 5878, jul_ciao: 5486, ver_smoke: 2586, ver_air: 5878, ver_better: 5880, ver_nobody: 2691, ver_uber_all: 3082, ver_uber_some: 3082, plan_partymode: 2926, plan_blocks5r: 7471, plan_eras2: 4598, plan_final_star: 5068, but_first_lynda_her: 4754, edgar_news: 3553, edgar_who: 2116, edgar_mascot: 3709, but_first_lynda: 4754, first_1: 3395, first_2: 3004, first_3: 3160, first_4: 3970, first_item: 3970, lynda_bye: 4911, lynda_freebie: 6609, lynda_pick2: 6269, lynda_hello: 5799, lynda_rules: 5328, oliver_hello: 3631, plan_douze: 4127, sofia_hello: 4597 };
   // The rest of the lines (made in one go): exact lines, and lines with a player's name in them (a pattern; the voice says it without the name)
   (function () { var F = {"him|welcome back europe": "g010", "him|and we re back europe": "g011", "him|hello again europe did you miss us": "g012", "him|welcome back to euroquizion": "g013", "him|we re back and the glitter hasn t settled yet": "g014", "him|good to see you again europe": "g015", "her|it s time for a party game let s see what it s going to be": "g016", "her|party time which game will it be this time": "g017", "her|enough thinking for a moment it s time to play": "g018", "her|grab your phones and your sequins party game time": "g019", "her|the jury needs a coffee break so party game": "g020", "her|let s shake things up with a party game": "g021", "her|wind machines on it s party game time": "g022", "her|put down your notes europe it s game time": "g023", "her|who s ready to have some fun party game": "g024", "her|time to get off the sofa party game": "g025", "her|confetti cannons ready it s party game time": "g026", "her|let s see who can keep their cool party game": "g027", "her|fasten your seatbelts here comes a party game": "g028", "her|no more quiz for a bit let the games begin": "g029", "her|warm up your thumbs party game coming up": "g030", "her|disco lights on it s party game time": "g031", "her|let s spin the wheel of chaos party game": "g032", "her|time for something completely different a party game": "g033", "her|hold on to your sequins party game": "g034", "her|and next up on the big screen": "g035", "her|brains on europe because next up is": "g036", "her|let s see what s next": "g037", "her|phones ready next up": "g038", "her|time to sort the fans from the superfans": "g039", "her|ears open europe here comes": "g040", "her|and now back to": "g041", "her|eyes on the big screen": "g042", "him|i hope you got a nice souvenir": "g043", "him|ooh shopping bags i hope you spent wisely": "g044", "him|lynda will be counting her coins tonight": "g045", "him|back from the boutique and looking fabulous": "g046", "him|did anyone buy something dangerous i hope not": "g047", "him|i spotted something shiny in that bag": "g048", "him|let s get on with the show": "g049", "him|on with the show": "g050", "him|the show must go on": "g051", "him|back to business": "g052", "him|where were we ah yes": "g053", "him|let s go and see our beloved lynda": "g054", "him|to the boutique lynda is waiting": "g055", "him|shopping time don t keep lynda waiting": "g056", "him|lynda has opened her doors let s pay her a visit": "g057", "him|wallets out europe off to lynda": "g058", "him|grab your phones let s get this show started": "g059", "her|grab your phones let s get this show started": "g060", "him|and our final game tonight the big five five extra questions at the end all for double points": "g061", "her|and our final game tonight the big five five extra questions at the end all for double points": "g062", "him|no final game tonight whoever has the most points after the last question wins": "g063", "her|no final game tonight whoever has the most points after the last question wins": "g064", "him|tonight it s party mode the grand tour": "g065", "him|tonight it s party mode and the wheel decides": "g066", "him|tonight it s party mode and you vote": "g067", "him|tonight it s party mode and you take turns to choose": "g068", "him|tonight it s party mode": "g069", "him|tonight we play the ladder": "g077", "him|every round a different era of eurovision": "g080", "her|every round a different era of eurovision": "g081", "him|before every block of trivia you vote for the era we play": "g082", "her|before every block of trivia you vote for the era we play": "g083", "him|before every round you vote for the era we play": "g084", "her|before every round you vote for the era we play": "g085", "him|before every block of trivia the wheel picks the era": "g086", "her|before every block of trivia the wheel picks the era": "g087", "him|before every round the wheel picks the era": "g088", "her|before every round the wheel picks the era": "g089", "him|tonight s songs come from the eras you picked": "g092", "her|tonight s songs come from the eras you picked": "g093", "him|and only winners tonight": "g094", "her|and only winners tonight": "g095", "him|and only songs that never made it out of the semi final": "g096", "her|and only songs that never made it out of the semi final": "g097", "him|and only songs that made it to the final": "g098", "her|and only songs that made it to the final": "g099", "him|every right answer takes you a rung higher a wrong one half a rung down first to the top wins": "g100", "her|every right answer takes you a rung higher a wrong one half a rung down first to the top wins": "g101", "him|be quick the first right answer gets 12 points the next 10 then 8 and so on": "g102", "her|be quick the first right answer gets 12 points the next 10 then 8 and so on": "g103", "him|every question is worth a surprise number of points keep an eye on the screen": "g104", "her|every question is worth a surprise number of points keep an eye on the screen": "g105", "him|every round starts from zero and the winner of a round wears a crown in the next one": "g106", "her|every round starts from zero and the winner of a round wears a crown in the next one": "g107", "him|after the last round all your rounds add up": "g108", "her|after the last round all your rounds add up": "g109", "him|it s a tie but only one can go shopping": "g111", "him|nobody won this one": "g114", "him|it s a tie which fake translation was the funniest vote on your phone": "g116", "her|on to the next party game": "g118", "her|it s time to visit woodruff s boutique": "g119", "him|europe before the grand final let s look at the scores": "g122", "him|europe it s time for the final scores": "g123", "her|it looks like the winner is": "g124", "him|wait is somebody knocking": "g125", "him|special delivery from the ebu sign here please": "g126", "him|a brown envelope from the ebu": "g127", "her|let s open it": "g128", "him|oh this could change everything": "g131", "him|and now it s time for the grand final": "g132", "him|what a game europe": "g133", "lynda|pleasure doing business darling": "g134", "lynda|pleasure doing business darlings": "g135", "lynda|next time then darling": "g136", "lynda|next time then darlings": "g137", "lynda|fabulous choice darling use it wisely": "g140", "lynda|fabulous choices darlings use them wisely": "g141", "lynda|fabulous choice darling enjoy the show": "g142", "lynda|fabulous choices darlings enjoy the show": "g143", "lynda|i picked two items for you choose one on your phone": "g144", "lynda|i picked two items for each of you choose one on your phone": "g145", "her|so who took him": "g146", "him|where in the building is he hidden": "g147", "her|and what is he hidden inside that s for you to find out": "g148", "him|time for you to solve it": "g149", "her|your clues are the cards that are not the answer rule them out and pick from what s left on your phone": "g150", "him|where was edgar hidden": "g151", "her|in the green room": "g152", "her|in the euroclub": "g153", "her|backstage": "g154", "her|in woodruff s boutique": "g155", "her|under the arena stage": "g156", "him|and what was he hidden inside": "g157", "her|inside the costume trunk": "g158", "her|inside the grand piano": "g159", "her|inside the giant disco ball": "g160", "her|inside the giant hamster wheel": "g161", "her|inside the ballot box": "g162", "him|and who abducted edgar it was": "g163", "her|oliver you took our own mascot": "g164", "her|me i only wanted a cuddle": "g165", "her|lynda darling edgar is not for sale": "g166", "her|loreen s backup dancer": "g167", "her|the stage manager": "g168", "him|i just wanted a selfie with him": "g169", "him|unfortunately nobody discovered the truth": "g174", "him|edgar s kidnapper left clues all over the building go from room to room on your phone to find them": "g180", "her|the green room where the artists wait for their turn": "g181", "him|the euroclub with dj ohrmeister behind the decks": "g182", "her|backstage full of cables amps and guitars": "g183", "him|and woodruff s boudoir with the dresses and the wigs": "g184", "her|solve puzzles in each room to find the clues": "g185", "him|be careful a wrong answer locks your screen for 10 seconds": "g186", "him|time to get creative europe your phones are about to become sketchbooks": "g187", "her|everyone gets four songs pick one and draw it on your phone all within one minute": "g188", "him|then we show every drawing and the others guess which song it is": "g189", "her|a right guess scores points more the faster you are and the artist scores too for everyone who guessed it": "g190", "him|at the end you give your 12 10 and 8 points to the best drawings pencils ready": "g191", "him|look at this beauty a real dutch barrel organ": "g192", "her|our singer needs your help with her performance and she has given each of you a task check your phone": "g193", "him|when your part breaks fix it fast the best mechanic wins": "g194", "her|welcome to the disco floor in a moment you all land on it": "g195", "him|every tile you step on lights up in your colour": "g196", "her|hold a direction on your phone to keep dancing one tile per second you can steal tiles from others too": "g197", "him|but watch out bump into someone and you re stunned for 3 seconds": "g198", "her|when the song ends whoever owns the most tiles rules the world": "g199", "him|welcome to space europe up here there s no gravity at all": "g200_sp", "her|so you ll need to keep your balance keep your finger in the glowing zone on your phone it moves with the music": "g201_sp", "him|stay in the zone whoever keeps their balance until the end wins": "g202_sp", "him|welcome to the turquoise carpet tonight s stars are arriving for the big party": "g203", "her|they pose for the photographers watch them closely": "g204b", "him|hats sunglasses dresses colours shoes remember everything you can": "g205", "her|after each act comes one question on your phone you have 20 seconds to answer": "g206", "him|five eurovision acts five questions some acts even bring their country s flag": "g207b", "her|most right answers wins a tie then the fastest wins": "g208", "him|welcome to the unlucky draw everyone gets an envelope with a symbol on it": "g209", "her|most envelopes hide a flag but some hide a bomb": "g210", "him|you get 30 seconds to choose on your phone hold your envelope or swap it you can change your mind until the time runs out": "g211", "her|two insiders know exactly where the bombs are trust them or don t": "g212", "him|then all envelopes open at once boom and you re out": "g213", "her|in the ghost finale only the eliminated ghosts know where the last bomb is survive to win": "g214", "him|pencils out everyone is drawing now": "g223", "her|all postcards are in now give your 12 10 and 8 points to the best ones": "g224", "him|welcome to the just one press conference every round one of you takes a seat up here and guesses a secret word": "g234", "her|everyone else is a journalist you see the word on your phone and write one word as a clue": "g235", "her|everyone else is a journalist you see the word on your phone and write one word as a clue with so few of you you each write two": "g236", "him|but careful clues that are the same cancel each other out one journalist checks all the clues first so be clever and different": "g237", "her|a right guess 12 points for the guesser and 6 for every clue that survived everyone gets a turn on stage journalists take your seats": "g238", "him|oh no europe we have technical problems our sound system breaks down in the middle of every big high note": "g239", "her|how long will the next note last before it all goes wrong predict it on your phone between 10 seconds and one minute": "g240", "her|the closest prediction wins ladies and gentlemen our diva": "g241", "her|nobody made a prediction what a shame": "g245", "him|welcome back to the green room what a show of voices": "g253", "her|every vote is in and the winner of key change is": "g254", "him|nobody not a single vote we ll call it a draw": "g257", "her|let s listen one more time to the winning performance": "g258", "him|welcome back to the green room the jury has seen enough": "g259", "her|three titles three bluffs and the winner of united by nonsense is": "g260", "her|three performances three roasts and the winner of disqualivision is": "g261", "him|nobody not a single point what a lot of nonsense": "g266", "him|nobody not a single vote the jury is speechless": "g267", "him|welcome to key change here in the green room the stars are warming up their voices": "g268", "her|first you vote for a song and we listen to the original together": "g269", "him|after that it s your turn sing it into your phone": "g270", "her|finally everyone votes for the best singer douze points for the winner": "g271", "him|welcome to united by nonsense here in the green room the stars are waiting for their results": "g272", "her|three song titles in another language and nobody here speaks it": "g273", "him|make up a fake translation on your phone that fools the others": "g274", "her|and then find the real one most points after three rounds wins": "g275", "him|welcome to disqualivision here in the green room the stars are waiting for their results": "g276", "her|we re going to watch three performances that should never have been allowed on stage": "g277", "him|roast them write the funniest answer you can think of on your phone": "g278", "her|and then everyone votes for the best one most points after three rounds wins": "g279"}, k; for (k in F) VOICE_FILES[k] = F[k];
     var M = {"g000": 1802, "g001": 2586, "g002": 2926, "g003": 2847, "g004": 2847, "g005": 3396, "g006": 3631, "g007": 3631, "g008": 3318, "g009": 3788, "g010": 2273, "g011": 2116, "g012": 2926, "g013": 2926, "g014": 3396, "g015": 2351, "g016": 3866, "g017": 3788, "g018": 3788, "g019": 4049, "g020": 4206, "g021": 2926, "g022": 3318, "g023": 3474, "g024": 3553, "g025": 3474, "g026": 4362, "g027": 3631, "g028": 3631, "g029": 4206, "g030": 3631, "g031": 3709, "g032": 3553, "g033": 4049, "g034": 3396, "g035": 2273, "g036": 3866, "g037": 2194, "g038": 2847, "g039": 3318, "g040": 3474, "g041": 2194, "g042": 2194, "g043": 2194, "g044": 3709, "g045": 3004, "g046": 3553, "g047": 3631, "g048": 3004, "g049": 2116, "g050": 1646, "g051": 2273, "g052": 1646, "g053": 2508, "g054": 3161, "g055": 3004, "g056": 3474, "g057": 3788, "g058": 3318, "g059": 3631, "g060": 3631, "g061": 7471, "g062": 7549, "g063": 5878, "g064": 5956, "g065": 3709, "g066": 3866, "g067": 3553, "g068": 4206, "g069": 2194, "g070": 7079, "g071": 7393, "g072": 5146, "g073": 5146, "g074": 5329, "g075": 4049, "g076": 3788, "g077": 2508, "g078": 3239, "g079": 3553, "g080": 3709, "g081": 3474, "g082": 4206, "g083": 4284, "g084": 3709, "g085": 3866, "g086": 4049, "g087": 4284, "g088": 3553, "g089": 3709, "g090": 4127, "g091": 4049, "g092": 3082, "g093": 3239, "g094": 2429, "g095": 2429, "g096": 4127, "g097": 3788, "g098": 3239, "g099": 2926, "g100": 6922, "g101": 7628, "g102": 6269, "g103": 7314, "g104": 4911, "g105": 5068, "g106": 5799, "g107": 5564, "g108": 3553, "g109": 3474, "g110": 13714, "g111": 3788, "g112": 8516, "g113": 13401, "g114": 2273, "g115": 7706, "g116": 5407, "g117": 4049, "g118": 2273, "g119": 2769, "g120": 2116, "g121": 2586, "g122": 4362, "g123": 3161, "g124": 2847, "g125": 2351, "g126": 4284, "g127": 3239, "g128": 1802, "g129": 6034, "g130": 5146, "g131": 3318, "g132": 3631, "g133": 2194, "g134": 2429, "g135": 2508, "g136": 2508, "g137": 2429, "g138": 10109, "g139": 10684, "g140": 3866, "g141": 4127, "g142": 3631, "g143": 3971, "g144": 3971, "g145": 4284, "g146": 2194, "g147": 2351, "g148": 4598, "g149": 2194, "g150": 7001, "g151": 2116, "g152": 1959, "g153": 1724, "g154": 1881, "g155": 2038, "g156": 2351, "g157": 2273, "g158": 2273, "g159": 2508, "g160": 2691, "g161": 2508, "g162": 2586, "g163": 3082, "g164": 3239, "g165": 2926, "g166": 4362, "g167": 2273, "g168": 1959, "g169": 2351, "g170": 6191, "g171": 5956, "g172": 4754, "g173": 4754, "g174": 3474, "g175": 5799, "g176": 11311, "g177b": 10005, "g178": 10684, "g179": 8829, "g180": 6687, "g181": 3788, "g182": 4284, "g183": 3709, "g184": 4206, "g185": 3082, "g186": 4754, "g187": 4989, "g188": 6844, "g189": 4284, "g190": 7393, "g191": 6113, "g192": 4362, "g193": 7471, "g194": 4911, "g195": 4833, "g196": 3553, "g197": 7628, "g198": 4833, "g199": 4833, "g200": 5146, "g201": 7471, "g202": 4911, "g203": 5956, "g204b": 4049, "g205": 6191, "g206": 5642, "g207b": 5878, "g208": 4519, "g209": 5642, "g210": 4676, "g211": 8281, "g212": 5956, "g213": 4598, "g214": 7158, "g215": 3474, "g216": 3788, "g217": 2847, "g218": 3553, "g219": 2769, "g220": 3082, "g221": 3553, "g222": 3866, "g223": 3239, "g224": 6034, "g225": 3631, "g226": 3866, "g227": 3709, "g228": 3474, "g229": 3971, "g230": 3553, "g231": 2847, "g232": 3474, "g233": 3396, "g234": 7811, "g235": 6034, "g236": 8986, "g237": 9404, "g238": 10449, "g239": 7706, "g240": 7236, "g241": 5799, "g242": 3161, "g243": 2769, "g244": 2586, "g245": 3553, "g246": 7549, "g247": 3082, "g248": 3161, "g249": 4754, "g250": 3161, "g251": 4676, "g252": 3318, "g253": 4519, "g254": 4598, "g255": 4127, "g256": 4127, "g257": 4754, "g258": 3709, "g259": 4362, "g260": 5564, "g261": 5956, "g262": 4049, "g263": 4284, "g264": 4127, "g265": 4362, "g266": 4911, "g267": 4989, "g268": 6034, "g269": 4441, "g270": 3866, "g271": 5329, "g272": 6687, "g273": 4833, "g274": 4206, "g275": 4911, "g276": 6426, "g277": 4989, "g278": 4833, "g279": 5721}; for (k in M) VOICE_MS[k] = M[k]; })();
@@ -3652,16 +3671,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.shop = { id: 'shop' + G.round + '-' + Math.random().toString(36).slice(2, 6), picks: {}, over: false, n: n, who: act.map(function (p) { return p.pid; }), then: then, offer: offer, win: !!win, line: line || '', buy: !!buy, free: Array.isArray(buy) ? buy.slice() : [], paid: {} };
     // Winners who can't afford a single thing: Lynda has words for them, and lets the richest player who CAN pay shop instead
     var canPay = function (p, ids) { return (ids || []).some(function (x) { var it = shopItem(x); return it && shopPrice(it) <= p.score; }); };
+    if (buy) { var payers = act.filter(function (p) { return G.shop.free.indexOf(p.pid) >= 0 || canPay(p, offer[p.pid]); }); if (payers.length && payers.length < act.length) G.shop.who = payers.map(function (p) { return p.pid; }); }   // (a winner who can't afford anything doesn't get the shop on their phone; the others do)
     if (buy && !REMOTE && act.every(function (p) { return G.shop.free.indexOf(p.pid) < 0 && !canPay(p, offer[p.pid]); })) {
-      var gp = G.shop, T1 = Math.max(5200, (VOICE_MS.lynda_poor || 0) + 700);
+      var gp = G.shop, T1 = Math.max(5200, (VOICE_MS.lynda_poor2 || 0) + 700);
       gp.talk = 3; G.phase = 'shop'; G.barMs = 0; push();
       setTimeout(function () { if (G.shop === gp) { gp.talk = 5; push(); render(); } }, 2800);
       setTimeout(function () {
         if (G.shop !== gp) return;
         var rich = list().filter(function (p) { return !p.off && gp.who.indexOf(p.pid) < 0; }).map(function (p) { return { p: p, o: mkBuy(p) }; }).filter(function (x) { return canPay(x.p, x.o); }).sort(function (a, b) { return b.p.score - a.p.score; })[0];
-        if (!rich) { shopDone(); return; }   // nobody at all can pay: after her remark, the visit is simply over
-        gp.who = [rich.p.pid]; gp.offer = {}; gp.offer[rich.p.pid] = rich.o; gp.richName = rich.p.name; gp.talk = 6; push(); render(); hostVoice('lynda_rich', 'lynda');
-        setTimeout(function () { if (G.shop === gp) { gp.talk = 0; shopOpen(); render(); } }, Math.max(5600, (VOICE_MS.lynda_rich || 0) + 700));
+        if (!rich) {   // nobody at all can pay: the boutique closes
+          gp.talk = 7; push(); render(); setTimeout(function () { if (G.shop === gp) shopDone(); }, Math.max(4600, (VOICE_MS.lynda_closed || 0) + 600)); return;
+        }
+        gp.who = [rich.p.pid]; gp.offer = {}; gp.offer[rich.p.pid] = rich.o; gp.richName = rich.p.name; gp.talk = 6; push(); render(); hostVoice('lynda_rich2', 'lynda');
+        setTimeout(function () { if (G.shop === gp) { gp.talk = 0; shopOpen(); render(); } }, Math.max(5600, (VOICE_MS.lynda_rich2 || 0) + 700));
       }, 2800 + T1);
       return;
     }
@@ -4126,6 +4148,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (g.talk === 2) typeSay(bq, 'Whoever wins a party game gets to shop here! So put your best foot forward! 👠', 'lynda');
     else if (g.talk === 5) typeSay(bq, 'Oh, you don’t have enough Eurovision points to buy anything. Stop being poor, darling! 💸', 'lynda');
     else if (g.talk === 6) typeSay(bq, 'Let’s find someone who can actually afford my fabulous merchandise… ' + g.richName + ', darling! Come in, and bring your wallet! 💳', 'lynda');
+    else if (g.talk === 7) typeSay(bq, 'Nobody can afford a single thing? Honestly, darlings. The boutique is closed! 🚪', 'lynda');
     else if (g.talk === 4) typeSay(bq, 'Because I’m such a nice girl, I’m giving you all a freebie! 🎁 From the discount shelf, of course.', 'lynda');
     else if (g.welcome) typeSay(bq, g.over ? 'See you next time, and make sure you bring enough Eurovision points! 😘' : 'I’ve selected ' + SHOP_OFFER + ' items for all of you to choose from. Look at your phone and take your pick! 📱', 'lynda');   // (the very first visit)
     else if (g.line && !g.over && !g.buy) typeSay(bq, g.line, 'lynda');   // (a line of her own: Edgar's game, a tie)
@@ -4227,7 +4250,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!on) { if (clueYtOn) { clueYtOn = false; try { if (stage === 'clue') yt.pauseVideo(); } catch (e) {} } return; }
     try {
       if (!clueYtOn || stage !== 'clue') { stage = 'clue'; yt.loadVideoById({ videoId: CLUE_YT, startSeconds: CLUE_YT_AT }); }
-      yt.unMute(); yt.setVolume(45); clueYtOn = true;
+      yt.unMute(); yt.setVolume(80); clueYtOn = true;
     } catch (e) {}
     clueYtT = setInterval(function () {
       if (!clueYtOn || stage !== 'clue' || (!G.clue && G.mode !== 'clue')) { if (!G.clue && G.mode !== 'clue') clueYt(false); return; }
@@ -4571,10 +4594,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       wrap.getBoundingClientRect();
       if (P.fade) wrap.style.opacity = '1'; else wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + at[k] + 'px,' + P.y + 'px)'; });   // walking in (3 s)
       later(3100, function () { wrap.classList.remove('walk'); wrap.classList.add('act'); if (r === 'boud' || r === 'green') svg.appendChild(wrap); });   // the funny bit (in the Boudoir and the Green Room: in front of the screen)
-      if (r === 'boud' || r === 'green') later(16850, function () { if (behind && behind.parentNode) svg.insertBefore(wrap, behind); });   // (and behind it again to leave)
-      later(16900, function () { if (r === 'boud') wrap.classList.add('shades'); wrap.classList.remove('act'); if (P.fade) { wrap.style.opacity = '0'; return; } wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (Array.isArray(P.from) ? P.from[k] : P.from + k * 30) + 'px,' + (P.fromY || P.y) + 'px)'; }); });   // and off again
-      later(20000, function () { wrap.remove(); });
-      later(25000, visit);   // (gone for 5 seconds, then the next room)
+      // leaving: normally after their bit (17 s), but if the room has been empty for 5 seconds they walk out early (the normal way)
+      var left = false, empty = 0, leave = function () {
+        if (left) return; left = true;
+        if ((r === 'boud' || r === 'green') && behind && behind.parentNode) svg.insertBefore(wrap, behind);   // (behind the chairs / the screen again to leave)
+        later(50, function () { if (r === 'boud') wrap.classList.add('shades'); wrap.classList.remove('act'); if (P.fade) { wrap.style.opacity = '0'; return; } wrap.classList.add('walk'); [].forEach.call(ps, function (p, k) { p.style.transform = 'translate(' + (Array.isArray(P.from) ? P.from[k] : P.from + k * 30) + 'px,' + (P.fromY || P.y) + 'px)'; }); });   // and off again
+        later(3150, function () { wrap.remove(); });
+        later(8150, visit);   // (gone for 5 seconds, then the next room)
+      };
+      var watch = function () {
+        if (left) return;
+        var gc = G.clue, here = Object.keys(gc.rooms || {}).some(function (k) { return players[k] && !players[k].off && (gc.rooms[k].cur || '') === r; });
+        empty = here ? 0 : empty + 1;
+        if (empty >= 5) { leave(); return; }
+        later(1000, watch);
+      };
+      later(1000, watch);
+      later(16850, leave);
     };
     later(2000, visit);
   }
@@ -5300,8 +5336,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.sec++; var sz = TC_SIZES[g.sec - 1], n = sz[0] + Math.floor(Math.random() * (sz[1] - sz[0] + 1));
     g.girls = []; for (var i = 0; i < n; i++) g.girls.push(tcGirl());
     // a group photo in two rows: the bigger half standing at the back, the rest in front (kneeling or standing, at random)
-    var nb = Math.ceil(n / 2), STAND = ['hips', 'wave', 'up', 'point', 'lean'];
-    g.girls.forEach(function (w, i) { var back = i < nb; w.row = back ? 'back' : 'front'; w.col = back ? i : i - nb; w.p = back || Math.random() < .5 ? pick(STAND) : 'kneel'; });
+    var nb = n <= 3 ? 0 : Math.ceil(n / 2), STAND = ['hips', 'wave', 'up', 'point', 'lean'];   // (up to three: side by side in one row, so nobody hides behind anyone)
+    g.girls.forEach(function (w, i) { var back = i < nb; w.row = nb ? (back ? 'back' : 'front') : null; w.col = back ? i : i - nb; w.p = back || !nb || Math.random() < .5 ? pick(STAND) : 'kneel'; });
     if (g.sec >= 2 && Math.random() < .55) { var fb = g.girls[Math.floor(Math.random() * nb)]; fb.f = Math.random() < .2 ? pick(['eu', 'pride']) : pick(FAN_FLAGS); fb.p = 'flag'; }   // (now and then the flag of Europe, or the Progress Pride flag)   // (some acts bring their country's flag)
     g.st = 'walk'; g.cur = -1; g.q = null; push();
     var step = function () {   // the whole group walks on together, poses, and walks off
@@ -5391,8 +5427,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     sc.background = v3Tex(function (x, W, H) { var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b1440'); g.addColorStop(.45, '#2a2a78'); g.addColorStop(.72, '#b04d8f'); g.addColorStop(.86, '#ff9a5a'); g.addColorStop(1, '#ffcf7a'); x.fillStyle = g; x.fillRect(0, 0, W, H); for (var i = 0; i < 160; i++) { x.fillStyle = 'rgba(255,255,255,' + (.3 + Math.random() * .7) + ')'; x.fillRect(Math.random() * W, Math.random() * H * .5, 1.5, 1.5); } }, 512, 512);
     sc.fog = new T.Fog('#4a3070', 40, 120);
     var cam = new T.PerspectiveCamera(34, w / h, 0.3, 300); cam.position.set(0, 3.9, 15.5); cam.lookAt(0, 2.6, 0);
-    sc.add(new T.HemisphereLight('#c8c4ff', '#5a4030', 0.42));
-    var sun = new T.DirectionalLight('#ffe6cc', 0.5); sun.position.set(-12, 14, 10); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+    sc.add(new T.HemisphereLight('#c8c4ff', '#5a4030', 0.32));
+    var sun = new T.DirectionalLight('#ffe6cc', 0.36); sun.position.set(-12, 14, 10); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
     var sh = sun.shadow.camera; sh.left = -20; sh.right = 20; sh.top = 12; sh.bottom = -6; sh.near = 1; sh.far = 60; sun.shadow.bias = -0.0006; sc.add(sun);
     var spot = new T.SpotLight('#ffffff', 0.75, 40, 0.42, 0.5, 1.2); spot.position.set(0, 13, 7); spot.target.position.set(0, 0, 0); spot.castShadow = true; sc.add(spot); sc.add(spot.target);
     var flash = new T.PointLight('#ffffff', 0, 30, 1.6); flash.position.set(0, 2.6, 6); sc.add(flash);
@@ -5411,8 +5447,28 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // trees and lamp posts along the square
     var leaf = new T.MeshStandardMaterial({ color: '#2f6b4a', roughness: .9, flatShading: true }), bark = new T.MeshStandardMaterial({ color: '#3a2516' });
     [-20, -13, 13, 20].forEach(function (x, i) { var t = new T.Group(), tr = new T.Mesh(new T.CylinderGeometry(.25, .35, 3, 8), bark); tr.position.y = 1.5; t.add(tr); var c = new T.Mesh(new T.IcosahedronGeometry(2 + (i % 2) * .5, 1), leaf); c.position.y = 4.2; c.castShadow = true; t.add(c); t.position.set(x * 1.3, 0, -16 - (i % 2) * 4); sc.add(t); });
-    var lampM = new T.MeshStandardMaterial({ color: '#222' }), bulbM = new T.MeshStandardMaterial({ color: '#fff3c0', emissive: '#ffd27a', emissiveIntensity: 1.5 });
-    [-9, 9].forEach(function (x) { var p = new T.Mesh(new T.CylinderGeometry(.1, .14, 5, 8), lampM); p.position.set(x, 2.5, -5); sc.add(p); var b = new T.Mesh(new T.SphereGeometry(.35, 12, 10), bulbM); b.position.set(x, 5.1, -5); sc.add(b); var l = new T.PointLight('#ffcf7a', .8, 12, 2); l.position.set(x, 5, -4.6); sc.add(l); });
+    // stage beamers on tall black stands behind the fans: bright cones of light sweeping over the runway
+    var trussM = new T.MeshStandardMaterial({ color: '#15151c', metalness: .6, roughness: .4 }), lensM = new T.MeshBasicMaterial({ color: '#fffbe8' });
+    var BEAM_COL = ['#fff4d6', '#9ff7ff', '#ffd0f4', '#fff4d6'];
+    var haloTx = v3Tex(function (x, W, H) { var gr = x.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, 'rgba(255,255,255,.7)'); gr.addColorStop(.5, 'rgba(255,255,255,.18)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, W, H); }, 128, 128);
+    var beamers = [-12, -4.2, 4.2, 12].map(function (x, i) {
+      var top = 7.2, base = new T.Vector3(x, top, -6.2);
+      var pole = new T.Mesh(new T.CylinderGeometry(.09, .12, top, 8), trussM); pole.position.set(x, top / 2, -6.2); sc.add(pole);
+      var bar = new T.Mesh(new T.BoxGeometry(.9, .1, .1), trussM); bar.position.copy(base); sc.add(bar);
+      var head = new T.Group(); head.position.copy(base); sc.add(head);
+      var can = new T.Mesh(new T.CylinderGeometry(.26, .2, .55, 14), trussM); can.rotation.x = Math.PI / 2; can.position.z = .1; head.add(can);
+      var lens = new T.Mesh(new T.CircleGeometry(.2, 18), lensM); lens.position.z = .38; head.add(lens);
+      var halo = new T.Sprite(new T.SpriteMaterial({ map: haloTx, color: BEAM_COL[i], transparent: true, opacity: .85, depthWrite: false, blending: T.AdditiveBlending, fog: false })); halo.scale.set(1.6, 1.6, 1); halo.position.z = .45; head.add(halo);   // (no visible beam: just a glow around the lamp, so you can see it's on)
+      var sl = new T.SpotLight(BEAM_COL[i], 1.6, 26, .17, .55, 1.2); sl.position.copy(base); sc.add(sl); sc.add(sl.target);
+      return { head: head, sl: sl, x: x, ph: i * 1.7, sp: .35 + (i % 2) * .12 };
+    });
+    var beamAim = function (t) {   // each beamer slowly sweeps its own stretch of the runway
+      beamers.forEach(function (b) {
+        var tx = b.x * .55 + Math.sin(t * b.sp + b.ph) * 3.2, tz = Math.sin(t * b.sp * .7 + b.ph) * .9;
+        b.head.lookAt(tx, .3, tz); b.sl.target.position.set(tx, .3, tz);
+      });
+    };
+    beamAim(0);
     // searchlights sweeping the sky
     var beamM = new T.MeshBasicMaterial({ color: '#cffff8', transparent: true, opacity: .12, depthWrite: false, side: T.DoubleSide });
     var beams = [-24, 24].map(function (x) { var g = new T.Group(), b = new T.Mesh(new T.ConeGeometry(2.6, 70, 16, 1, true), beamM); b.position.y = 35; g.add(b); g.position.set(x, 0, -46); sc.add(g); return g; });
@@ -5447,7 +5503,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     for (var fv = 0; fv < 20; fv++) fanTex.push([0, 1].map(function (fr) { var tx = new T.Texture(); tx.encoding = T.sRGBEncoding; var im = new Image(); im.onload = function () { tx.image = im; tx.needsUpdate = true; }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tcFanSvg(fv, fr)); return tx; }));
     [-3.4, -4.3].forEach(function (z, row) {
       for (var fx = -21.5 + row * .5; fx <= 21.5; fx += .95) {
-        var v = Math.floor(Math.random() * fanTex.length), mats = fanTex[v].map(function (tx) { return new T.MeshBasicMaterial({ map: tx, transparent: true, alphaTest: .15, color: row ? '#b8b8cc' : '#d8d8e6', depthWrite: true }); });
+        var v = Math.floor(Math.random() * fanTex.length), mats = fanTex[v].map(function (tx) { return new T.MeshBasicMaterial({ map: tx, transparent: true, alphaTest: .15, color: row ? '#0a0a0f' : '#0e0e14', depthWrite: true }); });
         var m = new T.Mesh(new T.PlaneGeometry(1.2, 2.4), mats[0]), sc0 = .82 + Math.random() * .16;
         m.scale.setScalar(sc0); m.position.set(fx + (Math.random() - .5) * .3, 1.2 * sc0, z + (Math.random() - .5) * .15); fanG.add(m);
         fans.push({ g: m, y0: 1.2 * sc0, mats: mats, ph: Math.random() * 6.3, sp: 4 + Math.random() * 4, f: 0 });
@@ -5465,7 +5521,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     function frame(now) {
       if (!host.isConnected) { st.alive = false; rn.dispose(); rn2.dispose(); return; }
       var w2 = host.clientWidth, h2 = host.clientHeight; if (w2 && (w2 !== rn.domElement.width / rn.getPixelRatio() || h2 !== rn.domElement.height / rn.getPixelRatio())) { rn.setSize(w2, h2); cam.aspect = w2 / h2; cam.updateProjectionMatrix(); }
-      var t = now / 1000; beams[0].rotation.z = Math.sin(t * .5) * .45; beams[1].rotation.z = -Math.sin(t * .43 + 1) * .45;
+      var t = now / 1000; beams[0].rotation.z = Math.sin(t * .5) * .45; beams[1].rotation.z = -Math.sin(t * .43 + 1) * .45; beamAim(t);
       fans.forEach(function (f) { var b = Math.max(0, Math.sin(t * f.sp + f.ph)), fr = Math.sin(t * f.sp * .5 + f.ph) > .1 ? 1 : 0; f.g.position.y = f.y0 + b * .1; f.g.rotation.z = Math.sin(t * f.sp * .35 + f.ph) * .04; if (fr !== f.f) { f.f = fr; f.g.material = f.mats[fr]; } });   // (cheering: little jumps, swaying, arms up and down)
       if (st.figs && st.figs.length) tc3Pose(st, Date.now() - st.t0);
       var fk = Math.max(0, 1 - (Date.now() - st.flashAt) / 200); flash.intensity = fk * 2.2;
@@ -5764,7 +5820,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if ((!ov._3 || TC_FIG2D) && g.st === 'walk' && g.cur >= 0 && wk.getAttribute('data-k') !== key) {
       wk.setAttribute('data-k', key);
       var one = function (w) { return '<span class="tcone">' + tcSvg(w) + tcSvgFront(w) + '</span>'; }, bk = g.girls.filter(function (w) { return w.row === 'back'; }), fr = g.girls.filter(function (w) { return w.row !== 'back'; });
-      wk.innerHTML = '<div class="tcg walking' + (g.girls.length > 1 ? ' grp' : '') + '">' + (bk.length ? '<div class="tcgrow back">' + bk.map(one).join('') + '</div>' : '') + '<div class="tcgrow front">' + fr.map(one).join('') + '</div></div>';   // (from the side while walking, from the front while posing)
+      wk.innerHTML = '<div class="tcg walking' + (g.girls.length > 1 ? ' grp' : '') + (bk.length && bk.length === fr.length ? ' even' : '') + '">' + (bk.length ? '<div class="tcgrow back">' + bk.map(one).join('') + '</div>' : '') + '<div class="tcgrow front">' + fr.map(one).join('') + '</div></div>';   // (from the side while walking, from the front while posing)
       var el = wk.firstChild, at = function (ms, f) { setTimeout(function () { if (el.isConnected) f(); }, ms); };
       at(2200, function () { el.classList.remove('walking'); el.classList.add('posing'); });   // she stops, turns to the cameras and poses…
       [2500, 2900, 3400, 3900, 4400, 4900, 5500, 6000].forEach(function (t, n) { at(t, function () { tcFlash(ov, n); }); });
@@ -6436,7 +6492,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.vote.done = function () {
       if (!g.vote.on) return; g.vote.on = false; clearInterval(tick); clearTimeout(g.vote.t);
       var n = [0, 0]; Object.keys(g.vote.votes).forEach(function (k) { n[g.vote.votes[k]]++; });
-      g.act = n[0] === n[1] ? (Math.random() < .5 ? 0 : 1) : n[1] > n[0] ? 1 : 0; g.vote.n = n; g.vote.won = g.act;
+      g.act = G.mgTest && G.ruForce != null ? G.ruForce : n[0] === n[1] ? (Math.random() < .5 ? 0 : 1) : n[1] > n[0] ? 1 : 0; g.vote.n = n; g.vote.won = g.act;
       push(); ruShow(); Music.douze(); ruSay('');
       setTimeout(function () { if (G.rule !== g) return; g.vote = null; push(); ruShow(); then(); }, 3200);
     };
@@ -6610,16 +6666,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var RU_SING2D = true;
   var RU_SING2D_SVG = (function () {
     var K = ' stroke="#3a2340" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"', SK = '#f6d2b8', HA = 'url(#rsHair)', SI = 'url(#rsSilver)';
-    var arm = function (pts, fr) {   // an arm: shoulder → elbow → hand, with the silver fringe hanging from the upper arm
+    var arm = function (pts, fr, mic) {   // an arm: shoulder → elbow → hand, with the sheer silver sleeve draping down from it (like the photo)
       var d = 'M' + pts[0] + ' ' + pts[1] + ' L' + pts[2] + ' ' + pts[3] + ' L' + pts[4] + ' ' + pts[5], o = '<path d="' + d + '" stroke="#3a2340" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" stroke="' + SK + '" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
-      if (fr) { o += '<g class="rsfr">'; for (var i = 0; i <= 5; i++) { var k = i / 5, x = pts[0] + (pts[2] - pts[0]) * k, y = pts[1] + (pts[3] - pts[1]) * k; o += '<path d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + ' l' + (i % 2 ? 2 : -2) + ' 22" stroke="#e8ecf6" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M' + (x + 3).toFixed(1) + ' ' + y.toFixed(1) + ' l' + (i % 2 ? -1 : 1) + ' 17" stroke="#b9c0d4" stroke-width="1.8" fill="none" stroke-linecap="round"/>'; } o += '</g>'; }
-      return o + '<circle cx="' + pts[4] + '" cy="' + pts[5] + '" r="7.5" fill="' + SK + '"' + K + '/>';
+      if (fr) {
+        var sx = pts[0], sy = pts[1], ex = pts[2], ey = pts[3], hx = pts[4], hy = pts[5], low = Math.max(ey, hy), side = hx < sx ? -1 : 1;
+        var dr = 'M' + sx + ' ' + (sy - 4) + ' L' + ex + ' ' + ey + ' L' + hx + ' ' + hy + ' Q' + (hx + side * 10) + ' ' + (hy + 34) + ' ' + (hx + side * 4) + ' ' + (low + 58) + ' Q' + ((ex + hx) / 2) + ' ' + (low + 76) + ' ' + ex + ' ' + (low + 50) + ' Q' + (sx + side * 2) + ' ' + (sy + 52) + ' ' + sx + ' ' + (sy + 20) + ' Z';
+        o += '<g class="rsfr"><path d="' + dr + '" fill="' + SI + '" opacity=".72" stroke="#eef1f8" stroke-width="1.6" stroke-linejoin="round"/><path d="' + dr + '" fill="url(#rsSeq)" opacity=".7"/>';
+        for (var k = 0; k <= 6; k++) { var t = k / 6, fx = hx + side * 4 + (ex - hx - side * 4) * t, fy = low + 58 + (76 - 58) * Math.sin(t * Math.PI) * .9 - (8 * t); o += '<path d="M' + fx.toFixed(1) + ' ' + fy.toFixed(1) + ' l' + (k % 2 ? 2 : -2) + ' 16" stroke="#e8ecf6" stroke-width="2" fill="none" stroke-linecap="round" opacity=".9"/>'; }   // (fringe along the hem)
+        o += '</g>';
+      }
+      if (mic) o += '<path d="M' + (hx - 3) + ' ' + (hy - 14) + ' L' + (hx + 3) + ' ' + (hy + 14) + '" stroke="#1d1824" stroke-width="7" stroke-linecap="round"/>';   // (the microphone's handle, in her hand)
+      o += '<circle cx="' + pts[4] + '" cy="' + pts[5] + '" r="7.5" fill="' + SK + '"' + K + '/>';
+      if (mic) o += '<circle cx="' + (hx - 5) + '" cy="' + (hy - 20) + '" r="8.5" fill="#c9ced8" stroke="#3a2340" stroke-width="2.2"/><path d="M' + (hx - 11) + ' ' + (hy - 22) + ' L' + (hx + 1) + ' ' + (hy - 22) + ' M' + (hx - 10) + ' ' + (hy - 17) + ' L' + hx + ' ' + (hy - 17) + ' M' + (hx - 5) + ' ' + (hy - 28) + ' L' + (hx - 5) + ' ' + (hy - 12) + '" stroke="#7d859c" stroke-width="1.3"/>';   // (its silver mesh head, right by her mouth)
+      return o;
     };
+    var MIC = [148, 150, 172, 182, 140, 132];   // the arm with the microphone: bent, the mic close to her mouth
     var poses = [
-      [[92, 150, 74, 190, 96, 208], [148, 150, 166, 98, 176, 42]],   // point to the sky, the other hand on the hip
-      [[92, 150, 70, 98, 62, 46], [148, 150, 170, 98, 178, 46]],     // both arms up
-      [[92, 150, 88, 198, 142, 186], [148, 150, 152, 198, 98, 178]], // arms crossed in front (like the photo)
-      [[92, 150, 58, 162, 30, 138], [148, 150, 182, 162, 210, 138]]  // arms out wide
+      [92, 150, 74, 190, 96, 208],   // the free hand on her hip
+      [92, 150, 70, 98, 62, 46],     // pointing up to the sky
+      [92, 150, 58, 162, 30, 138],   // out wide
+      [92, 150, 64, 118, 44, 80]     // up and out
     ];
     var s = '<svg class="rs2svg" viewBox="0 0 240 440" overflow="visible" aria-hidden="true"><defs>' +
       '<linearGradient id="rsHair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d39a"/><stop offset=".5" stop-color="#e2b071"/><stop offset="1" stop-color="#c98f52"/></linearGradient>' +
@@ -6627,10 +6693,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<pattern id="rsSeq" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#ffffff" opacity=".8"/><circle cx="6" cy="6" r="1.6" fill="#7d859c" opacity=".55"/></pattern></defs>';
     s += '<g class="rsbody">';
     // the long wavy hair behind her
-    s += '<path d="M86 84 Q78 120 84 160 Q74 190 86 222 Q100 236 112 226 L128 226 Q140 236 154 222 Q166 190 156 160 Q162 120 154 84 Q150 52 120 50 Q90 52 86 84 Z" fill="' + HA + '"' + K + '/>';
+    s += '<g class="rshead"><path d="M86 84 Q78 120 84 160 Q74 190 86 222 Q100 236 112 226 L128 226 Q140 236 154 222 Q166 190 156 160 Q162 120 154 84 Q150 52 120 50 Q90 52 86 84 Z" fill="' + HA + '"' + K + '/></g>';   // (in step with her head: the back of the hair moves with the front)
     // the silver sequin flares (high-waisted, wide at the bottom)
-    s += '<g class="rslegs"><path d="M92 206 L119 206 L117 320 Q112 392 86 434 L46 434 Q70 392 82 320 Z" fill="' + SI + '"' + K + '/><path d="M92 206 L119 206 L117 320 Q112 392 86 434 L46 434 Q70 392 82 320 Z" fill="url(#rsSeq)"/>' +
-      '<path d="M121 206 L148 206 L158 320 Q170 392 194 434 L154 434 Q128 392 123 320 Z" fill="' + SI + '"' + K + '/><path d="M121 206 L148 206 L158 320 Q170 392 194 434 L154 434 Q128 392 123 320 Z" fill="url(#rsSeq)"/>' +
+    // her shoes: silver platform toes just peeking out from under the wide hems
+    [[58, -1], [182, 1]].forEach(function (q) { var x = q[0] + q[1] * 4; s += '<path d="M' + (x - 17) + ' 442 Q' + (x - 16) + ' 425 ' + x + ' 424 Q' + (x + 17) + ' 425 ' + (x + 18) + ' 442 Z" fill="#e9ebf3"' + K + '/><path d="M' + (x - 12) + ' 432 Q' + x + ' 427 ' + (x + 13) + ' 432" stroke="#9aa2b8" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M' + (x - 18) + ' 443 L' + (x + 19) + ' 443" stroke="#2a2232" stroke-width="7" stroke-linecap="round"/>'; });
+    s += '<g class="rslegs"><path d="M92 206 L119 206 L117 320 Q112 390 88 426 Q66 432 46 426 Q70 390 82 320 Z" fill="' + SI + '"' + K + '/><path d="M92 206 L119 206 L117 320 Q112 390 88 426 Q66 432 46 426 Q70 390 82 320 Z" fill="url(#rsSeq)"/>' +
+      '<path d="M121 206 L148 206 L158 320 Q170 390 194 426 Q174 432 152 426 Q128 390 123 320 Z" fill="' + SI + '"' + K + '/><path d="M121 206 L148 206 L158 320 Q170 390 194 426 Q174 432 152 426 Q128 390 123 320 Z" fill="url(#rsSeq)"/>' +
       '<path d="M90 206 L150 206 L152 220 L88 220 Z" fill="#cfd5e4"' + K + '/></g>';
     // a little bare midriff, then the sequin crop top
     s += '<path d="M96 186 L144 186 L148 208 L92 208 Z" fill="' + SK + '"' + K + '/>' +
@@ -6649,11 +6717,67 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M150 90 Q158 112 150 134 Q160 150 152 170 Q146 150 146 132 Q152 112 146 96 Z" fill="' + HA + '"' + K + '/>' +
       '<path d="M98 66 Q112 60 126 64 M104 74 Q114 70 124 72" stroke="#f6dfae" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".8"/></g>';
     // the four dance moves (arms with their fringe)
-    poses.forEach(function (P, i) { s += '<g class="rspose p' + i + '">' + arm(P[0], 1) + arm(P[1], 1) + '</g>'; });
+    poses.forEach(function (P, i) { s += '<g class="rspose p' + i + '">' + arm(P, 1) + '</g>'; });
+    s += arm(MIC, 1, 1);   // (the microphone hand stays put while the other one dances)
     s += '</g>';
     // sparkles on the sequins
     [[70, 380], [168, 300], [104, 250], [178, 410], [130, 170], [60, 330]].forEach(function (q, i) { s += '<path class="rsspk" style="animation-delay:' + (-i * .37).toFixed(2) + 's" d="M' + q[0] + ' ' + (q[1] - 7) + ' L' + (q[0] + 2) + ' ' + (q[1] - 2) + ' L' + (q[0] + 7) + ' ' + q[1] + ' L' + (q[0] + 2) + ' ' + (q[1] + 2) + ' L' + q[0] + ' ' + (q[1] + 7) + ' L' + (q[0] - 2) + ' ' + (q[1] + 2) + ' L' + (q[0] - 7) + ' ' + q[1] + ' L' + (q[0] - 2) + ' ' + (q[1] - 2) + ' Z" fill="#fff"/>'; });
     return s + '</svg>';
+  })();
+  // The yellow act in 2D (an original character, after the reference photos): a shaved head, shouting at full blast, a big
+  // boxy yellow suit (short jacket with wide shoulders, a yellow tee under it, wide high-waisted trousers) and white
+  // sneakers. No microphone: just silly dancing. Six moves, one per beat: the deep squat with claw hands, both hands on
+  // his head with the elbows wide (standing and squatting), the chicken wings, the disco point and the crab.
+  var RU_SING2D_SVG2 = (function () {
+    var INK = '#2a1e10', K = ' stroke="' + INK + '" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"', SK = '#efc09a', YE = 'url(#ryY)', YD = '#e0b000';
+    var limb = function (pts, w, col) {   // a thick sleeve or trouser leg along a polyline, with an outline
+      var d = 'M' + pts.map(function (v, i) { return v + (i % 2 ? ' ' : ' '); }).join('').trim().replace(/(\S+ \S+) /g, '$1 L');
+      return '<path d="' + d + '" stroke="' + INK + '" stroke-width="' + (w + 6) + '" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" stroke="' + (col || '#f7d21e') + '" stroke-width="' + w + '" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+    };
+    var shoe = function (x, y, side) { return '<path d="M' + (x - 16 - side * 4) + ' ' + (y + 10) + ' Q' + (x - 16 - side * 4) + ' ' + (y - 6) + ' ' + x + ' ' + (y - 7) + ' Q' + (x + 18 + side * 6) + ' ' + (y - 4) + ' ' + (x + 20 + side * 6) + ' ' + (y + 10) + ' Z" fill="#fbfbfd"' + K + '/><path d="M' + (x - 17 - side * 4) + ' ' + (y + 10) + ' L' + (x + 21 + side * 6) + ' ' + (y + 10) + '" stroke="#b9bcc8" stroke-width="4" stroke-linecap="round"/>'; };
+    var hand = function (x, y, kind, side) {   // claws: fingers spread wide; flat: a plain hand
+      var o = '';
+      if (kind === 'claw') for (var f = 0; f < 4; f++) { var a = (-70 + f * 28 + (side < 0 ? 0 : 0)) * Math.PI / 180; o += '<path d="M' + x + ' ' + y + ' l' + (Math.cos(a) * 19 * (side < 0 ? -1 : 1)).toFixed(1) + ' ' + (Math.sin(a) * 19 - 4).toFixed(1) + '" stroke="' + INK + '" stroke-width="7" stroke-linecap="round"/><path d="M' + x + ' ' + y + ' l' + (Math.cos(a) * 19 * (side < 0 ? -1 : 1)).toFixed(1) + ' ' + (Math.sin(a) * 19 - 4).toFixed(1) + '" stroke="' + SK + '" stroke-width="3.6" stroke-linecap="round"/>'; }
+      return o + '<circle cx="' + x + '" cy="' + y + '" r="8.5" fill="' + SK + '"' + K + '/>';
+    };
+    var head = function (spin) {   // shaved head, shouting
+      return '<g' + (spin ? ' class="rshead"' : '') + '><path d="M112 118 L128 118 L130 146 L110 146 Z" fill="' + SK + '"' + K + '/>' +
+        '<ellipse cx="91" cy="96" rx="6" ry="9" fill="' + SK + '"' + K + '/><ellipse cx="149" cy="96" rx="6" ry="9" fill="' + SK + '"' + K + '/><circle cx="91" cy="107" r="3.4" fill="none" stroke="#d8dbe4" stroke-width="2"/>' +
+        '<ellipse cx="120" cy="90" rx="28" ry="33" fill="' + SK + '"' + K + '/>' +
+        '<path d="M93 84 Q94 58 120 57 Q146 58 147 84 Q140 66 120 65 Q100 66 93 84 Z" fill="#7b6650" opacity=".38"/>' +   // (the stubble of a shaved head)
+        '<path d="M98 76 L113 83 M142 76 L127 83" stroke="' + INK + '" stroke-width="3.6" stroke-linecap="round"/>' +   // (fierce eyebrows)
+        '<ellipse cx="107" cy="89" rx="5" ry="3.6" fill="#fff" stroke="' + INK + '" stroke-width="1.6"/><ellipse cx="133" cy="89" rx="5" ry="3.6" fill="#fff" stroke="' + INK + '" stroke-width="1.6"/><circle cx="107.5" cy="89.5" r="2" fill="' + INK + '"/><circle cx="132.5" cy="89.5" r="2" fill="' + INK + '"/>' +
+        '<path d="M118 92 Q120 100 124 99" stroke="#c98d6a" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+        '<ellipse cx="120" cy="110" rx="10.5" ry="12" fill="#5a1222" stroke="' + INK + '" stroke-width="2.4"/><path d="M111 104 Q120 100 129 104 L128 107 Q120 104 112 107 Z" fill="#fff"/><ellipse cx="120" cy="116.5" rx="6" ry="3.6" fill="#e0607a"/>' +   // (shouting at full blast)
+        '</g>';
+    };
+    var torso = function () {
+      return '<path d="M90 236 L150 236 L152 262 L88 262 Z" fill="' + YE + '"' + K + '/>' +   // (high-waisted trousers: the waistband)
+        '<path d="M104 146 L136 146 L138 236 L102 236 Z" fill="#ffe14a"' + K + '/>' +   // the yellow tee
+        '<path d="M66 156 Q70 142 104 144 L114 206 L108 252 Q86 254 64 248 Z" fill="' + YE + '"' + K + '/><path d="M174 156 Q170 142 136 144 L126 206 L132 252 Q154 254 176 248 Z" fill="' + YE + '"' + K + '/>' +   // the boxy jacket, open
+        '<path d="M104 144 L96 176 L111 190 M136 144 L144 176 L129 190" stroke="' + YD + '" stroke-width="3" fill="none" stroke-linejoin="round"/>' +   // (the wide lapels)
+        '<path d="M106 148 Q120 158 134 148" stroke="' + YD + '" stroke-width="2.4" fill="none"/>';
+    };
+    var STAND = function () { return limb([102, 256, 96, 336, 92, 410], 40) + limb([138, 256, 146, 336, 150, 410], 40) + '<path d="M96 290 L93 400 M145 290 L149 400" stroke="' + YD + '" stroke-width="2.4"/>' + shoe(90, 420, -1) + shoe(152, 420, 1); };
+    var SQUAT = function () { return limb([104, 290, 50, 330, 58, 410], 40) + limb([136, 290, 190, 330, 182, 410], 40) + shoe(56, 420, -1) + shoe(184, 420, 1); };
+    // the moves: legs, how far down he is, the two arms [shoulder, elbow, hand], the hands, a tilt
+    var onHead = [[80, 158, 38, 104, 104, 54], [160, 158, 202, 104, 136, 54]];
+    var M = [
+      { legs: SQUAT, dy: 40, arms: [[80, 158, 40, 196, 64, 124], [160, 158, 200, 196, 176, 124]], hands: 'claw' },            // the big one: deep squat, claw hands up
+      { legs: STAND, dy: 0, arms: onHead, hands: 'head' },                                                                     // hands on his head, elbows wide
+      { legs: SQUAT, dy: 40, arms: onHead, hands: 'head' },                                                                    // …and down into the squat like that
+      { legs: STAND, dy: 6, arms: [[80, 158, 46, 206, 92, 238], [160, 158, 194, 206, 148, 238]], hands: 'flat', tilt: -6 },     // chicken wings
+      { legs: SQUAT, dy: 26, arms: [[80, 158, 70, 200, 92, 238], [160, 158, 190, 104, 206, 44]], hands: 'flat', tilt: 5 },      // the disco point
+      { legs: SQUAT, dy: 40, arms: [[80, 158, 30, 176, 34, 236], [160, 158, 210, 176, 206, 236]], hands: 'claw' }               // the crab
+    ];
+    var s = '<svg class="rs2svg" viewBox="0 0 240 440" overflow="visible" aria-hidden="true"><defs><linearGradient id="ryY" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff04a"/><stop offset=".55" stop-color="#f7d21e"/><stop offset="1" stop-color="#e6b800"/></linearGradient></defs><g class="rsbody">';
+    M.forEach(function (m, i) {
+      var arms = m.arms.map(function (a, k) { return limb(a, 24) + (m.hands === 'head' ? '' : hand(a[4], a[5], m.hands, k ? 1 : -1)); }).join('');
+      var top = torso() + head(m.hands !== 'head') + arms;
+      if (m.hands === 'head') top += '<circle cx="104" cy="54" r="9" fill="' + SK + '"' + K + '/><circle cx="136" cy="54" r="9" fill="' + SK + '"' + K + '/>' + [108, 114, 120, 126, 132].map(function (x, j) { return '<path d="M' + x + ' ' + (50 - (j % 2) * 2) + ' l0 10" stroke="' + INK + '" stroke-width="7" stroke-linecap="round"/><path d="M' + x + ' ' + (50 - (j % 2) * 2) + ' l0 10" stroke="' + SK + '" stroke-width="3.6" stroke-linecap="round"/>'; }).join('');   // (the fingers laced together on top)
+      s += '<g class="rspose p' + i + '">' + m.legs() + '<g transform="translate(0 ' + m.dy + ')' + (m.tilt ? ' rotate(' + m.tilt + ' 120 250)' : '') + '">' + top + '</g></g>';
+    });
+    return s + '</g></svg>';
   })();
   function ru3Singer() {
     var T = THREE, g = new T.Group(), sp = ru3Sparkle('#b8b8c6'); sp.repeat.set(3, 4);
@@ -6750,8 +6874,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var mo = add(head, new T.SphereGeometry(.045, 12, 10), new T.MeshStandardMaterial({ color: '#5a1a1a' }), 0, -.08, .16); mo.scale.set(1, 1.2, .4);   // singing at full blast
     // the moves, one per beat: [left shoulder, left elbow, right shoulder, right elbow, squat 0–1, turn]. The first is the
     // big one: knees wide, hands up beside the face with the fingers spread, like claws.
-    var POSES = [[-1.15, -2.3, 1.15, 2.3, 1, 0], [-.5, 1.3, 2.75, 0, .3, -.3], [-1.15, -2.3, 1.15, 2.3, 1, .25], [-1, 0, .45, -1.3, .35, .3],
-      [-2.6, 0, 2.6, 0, .6, 0], [-1.45, -1.9, 1.2, 2.1, 1, -.25], [-2.75, 0, .5, -1.3, .3, .3], [-1.15, -2.3, 1.15, 2.3, 1, 0]];
+    // Silly ones too (no microphone, just dancing): both hands on top of his head with the elbows wide, the chicken wings,
+    // one hand on the head and the other on the hip, the deep crab squat.
+    var HEAD = [-2.3, -1.91, 2.3, 1.91];
+    var POSES = [[-1.15, -2.3, 1.15, 2.3, 1, 0], HEAD.concat([.25, 0]), HEAD.concat([.25, .3]), [-.5, 1.3, 2.75, 0, .3, -.3],
+      [-.75, 1.75, .75, -1.75, .7, 0], [-.75, 1.75, .75, -1.75, .2, .35], HEAD.concat([1, 0]), [-1.15, -2.3, 1.15, 2.3, 1, .25],
+      [-2.3, -1.91, .75, -1.75, .3, -.3], [-.75, 1.75, 2.3, 1.91, .3, .3], [-.55, -.9, .55, .9, 1, 0], [-2.6, 0, 2.6, 0, .6, 0],
+      HEAD.concat([.25, -.3]), HEAD.concat([.25, 0]), [-2.75, 0, .5, -1.3, .3, .3], [-1.45, -1.9, 1.2, 2.1, 1, -.25]];
     var cur = [-.15, 0, .15, 0, 0, 0];
     g.userData = { la: L.sh, ra: R.sh, head: head, fr: new T.Group(), robot: true,
       move: function (t, dance) {   // sharp: each pose snaps in fast, then holds
@@ -6888,7 +7017,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       } else { u.la.rotation.z = -(.15 + dance * (.25 + Math.max(0, Math.sin(t * 2.1)) * .5)); u.ra.rotation.z = .15 + dance * (.2 + Math.max(0, Math.cos(t * 1.05)) * 2.3); u.la.rotation.x = -dance * (.3 + Math.sin(t * 4.2) * .2);
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; } u.fr.rotation.y = Math.sin(t * 8) * .15; if (!u.robot) u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       if (s2d) {   // the 2D singer: hide the 3D one and put her drawing exactly where she stands (and only above the floor while rising)
-        var on2 = !u.robot; singer.visible = !on2; s2d.style.display = on2 ? '' : 'none';
+        var on2 = true; singer.visible = false; s2d.style.display = '';
+        if (s2d._act !== (st.act || 0)) { s2d._act = st.act || 0; s2d.innerHTML = s2d._act ? RU_SING2D_SVG2 : RU_SING2D_SVG; s2d.classList.toggle('yel', !!s2d._act); }   // (the act chosen: her, or him in yellow)
+        if (u.robot) { singer.position.y = 0; singer.rotation.y = 0; }   // (his drawing squats by itself: the hidden 3D one stays put, so the drawing doesn't bob)
         if (on2) {
           singer.getWorldPosition(s2v); s2h.copy(s2v); s2h.y += 2.05 * sScale; s2f.set(0, .19, s / 2).applyAxisAngle(up, 0); s2f.y = .19;
           s2v.project(cam); s2h.project(cam); var W3 = hostEl.clientWidth, H3 = hostEl.clientHeight;
