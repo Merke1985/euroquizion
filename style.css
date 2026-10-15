@@ -5013,3 +5013,20 @@ body.hasdock main{padding-bottom:84px}
 .fnov.monwin .fnconf{display:none}
 .fnov.monwin .fnstudio{filter:hue-rotate(-30deg) saturate(.7) brightness(.55)}
 .fnov.monwin .fnback .fnp{filter:saturate(.6) brightness(.8)}
+
+/* Rules the World: the bump (a quick red flash), the stun (stars circling the head, wobbling) and the star power (a golden shine) */
+.rut.hit .jmt{animation:ruhitflash .6s ease-out}
+@keyframes ruhitflash{0%{filter:sepia(1) saturate(8) hue-rotate(-50deg) brightness(1.1) drop-shadow(0 0 12px #ff1744)}35%{filter:sepia(1) saturate(8) hue-rotate(-50deg) brightness(.9) drop-shadow(0 0 8px #ff1744)}100%{filter:none}}
+.rut .rustar{position:absolute;left:50%;top:-14.5vh;width:0;height:0;display:none;font-size:2.2vh;animation:none}
+.rut.stun .rustar{display:block}
+.rut .rustar i{position:absolute;left:0;top:0;font-style:normal;line-height:1;transform:translate(-50%,-50%);animation:ruorbit 1s linear infinite}
+.rut .rustar i:nth-child(2){animation-delay:-.333s}.rut .rustar i:nth-child(3){animation-delay:-.666s}
+@keyframes ruorbit{0%{transform:translate(calc(-50% + 3.2vh),-50%) scale(1);opacity:1;z-index:2}25%{transform:translate(-50%,calc(-50% + 1vh)) scale(1.25);opacity:1;z-index:2}50%{transform:translate(calc(-50% - 3.2vh),-50%) scale(1);opacity:1}75%{transform:translate(-50%,calc(-50% - 1vh)) scale(.7);opacity:.55;z-index:0}100%{transform:translate(calc(-50% + 3.2vh),-50%) scale(1);opacity:1}}
+.rut.stun .jmt{filter:grayscale(.55) brightness(.85);animation:rudizzy .5s ease-in-out infinite alternate;transform-origin:50% 100%}
+.rut.stun.hit .jmt{animation:ruhitflash .6s ease-out,rudizzy .5s ease-in-out infinite alternate}
+@keyframes rudizzy{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
+.rut .rustarglow{display:none}
+.rut.fast .jmt{filter:brightness(1.25) saturate(1.3) drop-shadow(0 0 6px #fff6b0) drop-shadow(0 0 16px #ffd23f) drop-shadow(0 0 28px #ffb300);animation:rushine .25s ease-in-out infinite alternate}
+@keyframes rushine{from{filter:brightness(1.15) saturate(1.2) drop-shadow(0 0 5px #fff6b0) drop-shadow(0 0 12px #ffd23f)}to{filter:brightness(1.45) saturate(1.5) drop-shadow(0 0 9px #fff) drop-shadow(0 0 26px #ffd23f) drop-shadow(0 0 40px #ffb300)}}
+.rut.fast .rustarglow{display:block;position:absolute;left:50%;top:-7vh;width:12vh;height:12vh;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,transparent 0 8%,rgba(255,240,150,.85) 10%,transparent 12% 33%,rgba(255,240,150,.85) 35%,transparent 37% 58%,rgba(255,240,150,.85) 60%,transparent 62% 83%,rgba(255,240,150,.85) 85%,transparent 87%);-webkit-mask:radial-gradient(circle,#000 20%,transparent 70%);mask:radial-gradient(circle,#000 20%,transparent 70%);animation:ruspin 1.2s linear infinite;mix-blend-mode:screen}
+.rugrid > i.ruitem::after{content:'⭐';filter:drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 12px #ffb300)}

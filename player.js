@@ -864,7 +864,7 @@
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 We Will Rule the World'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     var col = (r.cols || {})[pid] || '#888';
     var rLeft = Math.max((r.fast || {})[pid] || 0, (r.frz || {})[pid] || 0); clearTimeout(ruView._t); if (rLeft) ruView._t = setTimeout(function () { var st0 = state; if (st0 && st0.rule) { if (st0.rule.fast) delete st0.rule.fast[pid]; if (st0.rule.frz) delete st0.rule.frz[pid]; ruView(st0); } }, rLeft + 100);   // (back to normal when it wears off)
-    $('waittitle').textContent = r.st === 'play' ? ((r.frz || {})[pid] ? '❄️ Frozen!' : (r.fast || {})[pid] ? '👟 Speed shoes! Twice as fast!' : '🪩 Claim the floor!') : r.st === 'rise' ? '✨ Here comes the star…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow and you keep dancing that way. Tap it again to stop. Close a loop of your tiles: everything inside is yours!';
+    $('waittitle').textContent = r.st === 'play' ? ((r.fast || {})[pid] ? '⭐ Star power! Triple speed, unstoppable!' : '🪩 Claim the floor!') : r.st === 'rise' ? '✨ Here comes the star…' : '🪩 Get ready…'; $('waitsub').textContent = 'Tap an arrow and you keep dancing that way. Tap it again to stop. Close a loop of your tiles: everything inside is yours!';
     box.classList.remove('hidden'); box.style.setProperty('--c', col);
     if (box.getAttribute('data-id') !== r.id) {
       box.setAttribute('data-id', r.id); ruD = ''; clearInterval(ruDT); ruStunEnd = 0;

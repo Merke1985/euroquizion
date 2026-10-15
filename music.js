@@ -426,6 +426,67 @@ var Music = (function () {
     } catch (e) {}
   }
   // While the monster wheel spins: a dark, rising drone (low detuned voices and a rumble), ending as it lands
+  // Rules the World: two dancers bump into each other (a soft body thud with a cartoon "bonk"), the dizzy
+  // twirl of the stun, and the sparkling star (picked up, and smashing into someone with it)
+  function bonk() {
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      var o = ctx.createOscillator(), g = ctx.createGain();   // the thud
+      o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(55, t + 0.12);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.7, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.2);
+      var b = ctx.createOscillator(), bg = ctx.createGain();   // the bonk: a hollow, wobbling pitch drop
+      b.type = 'triangle'; b.frequency.setValueAtTime(620, t + 0.01); b.frequency.exponentialRampToValueAtTime(240, t + 0.16);
+      var w = ctx.createOscillator(), wg = ctx.createGain(); w.frequency.value = 28; wg.gain.value = 40; w.connect(wg); wg.connect(b.frequency);
+      bg.gain.setValueAtTime(0.0001, t + 0.01); bg.gain.exponentialRampToValueAtTime(0.3, t + 0.02); bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      b.connect(bg); bg.connect(fxOut()); [b, w].forEach(function (x) { x.start(t + 0.01); x.stop(t + 0.32); });
+      if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      var s = ctx.createBufferSource(), ng = ctx.createGain(), nf = ctx.createBiquadFilter();   // the slap of the impact
+      s.buffer = noiseBuf; nf.type = 'bandpass'; nf.frequency.value = 1800; nf.Q.value = 0.8;
+      ng.gain.setValueAtTime(0.35, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      s.connect(nf); nf.connect(ng); ng.connect(fxOut()); s.start(t); s.stop(t + 0.06);
+    } catch (e) {}
+  }
+  function dizzy() {   // little birds circling: a fast, high warble that slowly sinks
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.2;
+      [0, 1].forEach(function (k) {
+        var o = ctx.createOscillator(), g = ctx.createGain(), l = ctx.createOscillator(), lg = ctx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(1900 + k * 500, t); o.frequency.exponentialRampToValueAtTime(1100 + k * 300, t + 1.1);
+        l.frequency.value = 11 + k * 3; lg.gain.value = 260; l.connect(lg); lg.connect(o.frequency);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.05); g.gain.setValueAtTime(0.05, t + 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.15);
+        o.connect(g); g.connect(fxOut()); [o, l].forEach(function (x) { x.start(t); x.stop(t + 1.2); });
+      });
+    } catch (e) {}
+  }
+  function starGet() {   // a bright, rising sparkle
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      [72, 76, 79, 84, 88, 91, 96].forEach(function (m, i) {
+        var o = ctx.createOscillator(), g = ctx.createGain(), at = t + i * 0.055;
+        o.type = i % 2 ? 'sine' : 'triangle'; o.frequency.value = hz(m);
+        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16, at + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
+        o.connect(g); g.connect(fxOut()); o.start(at); o.stop(at + 0.55);
+      });
+      for (var k = 0; k < 10; k++) (function (at) { var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 3000 + Math.random() * 3000; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.05, at + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.12); o.connect(g); g.connect(fxOut()); o.start(at); o.stop(at + 0.14); })(t + 0.35 + Math.random() * 0.7);
+    } catch (e) {}
+  }
+  function starHit() {   // smashing into someone with the star: a punchy "pow" with a sparkle
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square'; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(90, t + 0.22);
+      var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      o.connect(lp); lp.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.27);
+      [88, 91, 96].forEach(function (m, i) { var a = ctx.createOscillator(), ag = ctx.createGain(), at = t + 0.08 + i * 0.05; a.type = 'sine'; a.frequency.value = hz(m); ag.gain.setValueAtTime(0.0001, at); ag.gain.exponentialRampToValueAtTime(0.1, at + 0.006); ag.gain.exponentialRampToValueAtTime(0.0001, at + 0.3); a.connect(ag); ag.connect(fxOut()); a.start(at); a.stop(at + 0.32); });
+    } catch (e) {}
+    bonk();
+  }
   function darkDrone(len) {
     if (!ac()) return;
     try {
@@ -645,5 +706,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
+  return { bonk: bonk, dizzy: dizzy, starGet: starGet, starHit: starHit, darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();
