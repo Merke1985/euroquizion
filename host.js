@@ -6550,6 +6550,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     return g;
   }
   var RU_TURN = -0.07;
+  var RU_GLOW = .55;   // (how brightly a claimed tile glows from inside)
   function ru3Init(hostEl, g) {
     if (!window.THREE) return null;
     var T = THREE, w = hostEl.clientWidth || innerWidth, h = hostEl.clientHeight || innerHeight, n = g.n, s = g.s;
@@ -6682,18 +6683,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       led.forEach(function (m, i) { m.material.color.setHSL((t * .08 + i * .33) % 1, 1, .55); });
       // the unclaimed tiles pulse like a disco floor
-      tiles.forEach(function (m, i) { if (!m || m.userData.own || i === st.mk) return; var x = i % n, y = Math.floor(i / n); m.material.emissive.setHSL(((st.act ? .155 : .75) + Math.sin(x * .7 + y * .5 + t) * (st.act ? .012 : .08) + 1) % 1, st.act ? 1 : .9, .5); m.material.emissiveIntensity = st.act ? .2 + .16 * (.5 + .5 * Math.sin(t * 3 + x * .8 + y * 1.1)) : .08 + .1 * (.5 + .5 * Math.sin(t * 3 + x * .8 + y * 1.1)); });   /* (the yellow act: a neon-yellow floor) */
+      tiles.forEach(function (m, i) { if (!m || m.userData.own || i === st.mk) return; var x = i % n, y = Math.floor(i / n); m.material.emissive.setHSL(((st.act ? .155 : .76) + Math.sin(x * .7 + y * .5 + t) * (st.act ? .012 : .07) + 1) % 1, 1, .55); m.material.emissiveIntensity = st.act ? .3 + .22 * (.5 + .5 * Math.sin(t * 3 + x * .8 + y * 1.1)) : .28 + .26 * (.5 + .5 * Math.sin(t * 3 + x * .8 + y * 1.1)); });   /* (lit from inside, like a real disco floor) */   /* (the yellow act: a neon-yellow floor) */
+      tiles.forEach(function (m, i) { if (!m || !m.userData.own || m.userData.fl || i === st.mk) return; m.material.emissiveIntensity = RU_GLOW + .12 * Math.sin(t * 3 + (i % n) * .8 + Math.floor(i / n) * 1.1); });   // (the claimed tiles glow and pulse softly)
       // a tile just claimed: it lights up bright and shiny for a second, then settles into its colour
       var nowF = Date.now(); if (!st.white) st.white = new T.Color('#ffffff');
       st.flash = st.flash.filter(function (i) {
         var m = tiles[i]; if (!m || !m.userData.fl) return false; var el = nowF - m.userData.fl;
-        if (el >= 1000 || !m.userData.own) { m.userData.fl = 0; m.position.y = .12; if (m.userData.own) { m.material.emissive.set(m.userData.c); m.material.emissiveIntensity = .18; } return false; }
-        var f = 1 - el / 1000; m.material.emissive.set(m.userData.c).lerp(st.white, .55 * f); m.material.emissiveIntensity = .18 + 1.3 * f * f; m.position.y = .12 + .05 * Math.sin(Math.PI * Math.min(1, el / 350)) * f;
+        if (el >= 1000 || !m.userData.own) { m.userData.fl = 0; m.position.y = .12; if (m.userData.own) { m.material.emissive.set(m.userData.c); m.material.emissiveIntensity = RU_GLOW; } return false; }
+        var f = 1 - el / 1000; m.material.emissive.set(m.userData.c).lerp(st.white, .55 * f); m.material.emissiveIntensity = RU_GLOW + 1.3 * f * f; m.position.y = .12 + .05 * Math.sin(Math.PI * Math.min(1, el / 350)) * f;
         return true;
       });
       // the tile under an item: it pulses gold (the star) or icy blue (the snowflake)
       var gM = G.rule, mk = gM && gM.item && gM.st === 'play' ? gM.item[1] * n + gM.item[0] : -1;
-      if (st.mk !== mk && st.mk >= 0 && tiles[st.mk]) { var om = tiles[st.mk]; if (om.userData.own) { om.material.emissive.set(om.userData.c); om.material.emissiveIntensity = .18; } }
+      if (st.mk !== mk && st.mk >= 0 && tiles[st.mk]) { var om = tiles[st.mk]; if (om.userData.own) { om.material.emissive.set(om.userData.c); om.material.emissiveIntensity = RU_GLOW; } }
       st.mk = mk;
       if (mk >= 0 && tiles[mk]) { var im = tiles[mk]; im.material.emissive.set(gM.item[2] === 'freeze' ? '#2f9bff' : '#ffd23f'); im.material.emissiveIntensity = .45 + .45 * (.5 + .5 * Math.sin(t * 6)); }
       // the players: drawn over the floor, gliding from tile to tile
@@ -6721,7 +6723,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var a0 = (n - s) / 2, so = own[(a0 + 1) * n + a0 + 1] || own[a0 * n + a0] || '';   // (the stage: all one owner)
       if (st.stOwn !== so) { st.stOwn = so; if (so) { var sc0 = col(so); stM.color.set(sc0); stM.emissive.set(sc0); stM.emissiveIntensity = .3; stM.metalness = .1; } else { stM.color.set('#08080c'); stM.emissive.set('#000000'); stM.metalness = .4; } }
       own.forEach(function (k, i) { var m = tiles[i]; if (!m) return; var v = k ? k + '|' + col(k) : ''; if (m.userData.v === v) return; m.userData.v = v; m.userData.own = k;
-        if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = .18; m.userData.c = c; m.userData.fl = Date.now(); st.flash.push(i); } else { m.material.color.set(st.act ? '#544800' : '#241040'); } });   /* (no lighter trail behind the players) */
+        if (k) { var c = col(k); m.material.color.set(c); m.material.emissive.set(c); m.material.emissiveIntensity = RU_GLOW; m.userData.c = c; m.userData.fl = Date.now(); st.flash.push(i); } else { m.material.color.set(st.act ? '#544800' : '#241040'); } });   /* (no lighter trail behind the players) */
     };
     return st;
   }
@@ -6734,6 +6736,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var a = (n - g.s) / 2;
       ov.innerHTML = '<div class="ru3"></div><div class="rutoks3"></div><div class="ruhosts">' + HOST_HIM + HOST_HER + '</div><div class="tcbub rubub him"></div><div class="tcbub rubub her"></div><div class="rulights"><i></i><i></i><i></i><i></i></div><div class="rusign">🪩 We Will Rule the World</div><div class="ruclock"></div>' +
         '<div class="ruboard" style="--n:' + n + '"><div class="rugrid">' + cells + '<div class="rustage" style="grid-area:' + (a + 1) + '/' + (a + 1) + '/' + (a + g.s + 1) + '/' + (a + g.s + 1) + '"><span class="ruball">🪩</span>' + RU_SINGER + '</div></div><div class="rutoks"></div></div><div class="rulist"></div><div class="rumsg"></div>';
+      if (!window.THREE && !REMOTE) { ov.classList.add('wait3d'); setTimeout(function () { ov.classList.remove('wait3d'); }, 6000); }   // (the flat floor stays hidden while the 3D one is loading: no flash of 2D)
       document.body.appendChild(ov); whooshes([0, 350, 700]);
       ov._cells = {}; [].forEach.call(ov.querySelectorAll('.rugrid > i'), function (c) { var ga = c.style.gridArea.split('/').map(function (v) { return parseInt(v, 10); }); ov._cells[(ga[0] - 1) * n + (ga[1] - 1)] = c; });
       ov.querySelector('.rutoks').innerHTML = g.order.map(function (k) { var p = players[k]; return p ? '<div class="rutok" data-p="' + esc(k) + '" style="--c:' + ruCol(k) + '">' + charSvg(p.char) + '<span class="rustar">💫</span></div>' : ''; }).join('');
@@ -6742,7 +6745,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov._3 && window.THREE && !REMOTE) {
       ov._3 = ru3Init(ov.querySelector('.ru3'), g);
       if (ov._3) {
-        ov.classList.add('is3d'); var rs = n <= 9 ? 1 : n <= 11 ? .9 : n <= 15 ? .74 : .66;
+        ov.classList.add('is3d'); ov.classList.remove('wait3d'); var rs = n <= 9 ? 1 : n <= 11 ? .9 : n <= 15 ? .74 : .66;
         g.order.forEach(function (k, i) {
           var p = players[k]; if (!p) return;
           var el = document.createElement('div'); el.className = 'rut' + (g.st === 'intro' ? ' pre' : g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', '0ms');   /* (everyone drops onto the floor at the same time) */ el.style.setProperty('--c', ruCol(k));
@@ -7721,6 +7724,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var V3 = null, V3_C = 10, V3_B = 6.5;
   function v3Load(done) {
     if (window.THREE) { done(); return; }
+    if (v3Load.q) { v3Load.q.push(done); return; } v3Load.q = [done]; var d0 = done; done = function () { var q = v3Load.q || [d0]; v3Load.q = null; q.forEach(function (f) { try { f(); } catch (e) {} }); };   // (loaded only once, however many ask)
     var sc = document.createElement('script'); sc.src = 'vendor/three.min.js?v=1'; sc.onload = function () { done(); }; sc.onerror = function () { done(); }; document.head.appendChild(sc);
   }
   function v3Tex(draw, w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; return t; }
@@ -9343,6 +9347,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     gameLen();
   }
   setTimeout(pcountShow, 0);
+  if (!REMOTE) setTimeout(function () { v3Load(function () {}); }, 6000);   // (three.js, loaded quietly in the background: the 3D games are ready straight away)
   /* How long the game will take, roughly (from the timings of a real game) */
   function gameLen() {
     var el = $('gamelen'); if (!el) return;

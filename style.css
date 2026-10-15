@@ -5082,3 +5082,4 @@ body.hasdock main{padding-bottom:84px}
 @keyframes rufrzin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
 body.rufrozen{background:linear-gradient(#bfe9ff,#6fb8ef)!important}
 body.rufrozen #waittitle{color:#0b3a66}
+.ruov.wait3d .ruboard,.ruov.wait3d .rutoks{visibility:hidden}
