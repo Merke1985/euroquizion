@@ -577,8 +577,19 @@
     var sol = c.sol || {}, parts = [];
     // the answer comes out: your notebook stays on screen, the right card in each row turns green, a wrong pick gets a red cross
     var pickd = clueSel.id === c.id ? clueSel : {}, rk = 'rev|' + c.id + '|' + known.join(',') + '|' + (sol.where || '') + (sol.what || '') + (sol.who || '') + '|' + (pickd.who || '') + (pickd.where || '') + (pickd.what || '');
-    box.classList.remove('hidden'); box.classList.add('compact');
-    if (box.getAttribute('data-k') !== rk) {
+    box.classList.remove('hidden');
+    if (pickd.who && pickd.where && pickd.what) {   // you accused: your three cards stay on screen, and each turns green or red as the answer comes out
+      box.classList.add('sentacc');
+      if (box.getAttribute('data-k') !== rk) {
+        box.setAttribute('data-k', rk);
+        var lab3 = { where: 'Hidden where?', what: 'Hidden inside?', who: 'Who took him?' };
+        box.innerHTML = '<div class="clsent">' + ['where', 'what', 'who'].map(function (k) {
+          var x = CLUE_SETS[k].filter(function (y) { return y.id === pickd[k]; })[0], open = !!sol[k], ok = open && sol[k] === pickd[k], right = open && !ok ? CLUE_SETS[k].filter(function (y) { return y.id === sol[k]; })[0] : null;
+          return x ? '<div class="clsentc' + (open ? (ok ? ' ok' : ' bad') : '') + '"><small>' + lab3[k] + (right ? ' · it was ' + right.icon + ' ' + esc(right.name) : '') + '</small><i>' + x.icon + '</i><b>' + esc(x.name) + '</b></div>' : '';
+        }).join('') + '</div>';
+      }
+    } else box.classList.add('compact');
+    if (!(pickd.who && pickd.where && pickd.what) && box.getAttribute('data-k') !== rk) {
       box.setAttribute('data-k', rk);
       var labr = { who: 'Who took Edgar?', where: 'Where is he hidden?', what: 'What is he hidden inside?' };
       box.innerHTML = ['where', 'what', 'who'].map(function (k) {
