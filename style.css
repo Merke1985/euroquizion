@@ -5504,3 +5504,25 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svov .svaf.fall .svnm,.svov .svaf.fall .svpt{opacity:.5}
 .svov .svins{width:calc(var(--s) * 2.8 * 320 / 540);height:calc(var(--s) * 2.8);margin:calc(var(--s) * -2.72) 0 0 calc(var(--s) * -1.4 * 320 / 540)}
 .svov .svins.walk.walk{transition:transform 7s ease-in-out}
+/* Serving: the skippy balls come up out of the floor, everyone hops on and back */
+.svnb{position:absolute;left:0;top:0;width:calc(var(--s) * 1.25);height:calc(var(--s) * 1.25);margin:calc(var(--s) * -1.1) 0 0 calc(var(--s) * -.625);pointer-events:none;visibility:hidden;z-index:9}
+.svnb i{display:block;width:100%;height:100%}
+.svnb .svball{width:100%;height:100%}
+.svnb.ins{width:calc(var(--s) * 1.45);height:calc(var(--s) * 1.45);margin:calc(var(--s) * -1.3) 0 0 calc(var(--s) * -.725)}
+.svov[data-bph="rise"] .svnb{visibility:visible}
+.svov[data-bph="rise"] .svnb i{animation:svrise 5.8s cubic-bezier(.2,.8,.3,1) both}
+@keyframes svrise{0%{transform:translateY(55%) scale(.2);opacity:0;filter:brightness(2)}20%{opacity:1}70%{transform:translateY(0) scale(1.08)}85%{transform:scale(.96)}100%{transform:none;filter:none}}
+.svov[data-stage="3"]:not([data-bph="hop"]):not([data-bph="on"]) .svaf .svball,.svov[data-stage="3"]:not([data-bph="hop"]):not([data-bph="on"]) .svinsball{display:none}
+.svov[data-stage="3"]:not([data-bph="hop"]):not([data-bph="on"]) .svaf .svdancer{transform:none}
+.svov[data-stage="3"]:not([data-bph="hop"]):not([data-bph="on"]) .svaf .svhead{translate:none}
+.svov[data-stage="3"]:not([data-bph="hop"]):not([data-bph="on"]) .svins .svleadsvg{top:0;bottom:0}
+.svov[data-bph="hop"] .svaf .svfb2,.svov[data-bph="hop"] .svins .svleadsvg{animation:svhopon .5s ease-out}
+@keyframes svhopon{40%{transform:translateY(calc(var(--s) * -.8))}}
+/* Serving: she stamps across her stage on her heels, leaning the way she goes */
+.svov .svins.walk.walk{transition:transform var(--wd,6s) linear}
+.svins.walk .svleadsvg{animation:svstomp .34s ease-in-out infinite;transform-origin:50% 100%}
+.svins.walk.wl .svleadsvg{--lean:-7deg}.svins.walk.wr .svleadsvg{--lean:7deg}
+@keyframes svstomp{0%,100%{transform:rotate(var(--lean)) translateY(0)}35%{transform:rotate(calc(var(--lean) * 1.4)) translateY(-5%)}60%{transform:rotate(var(--lean)) translateY(0) scaleY(.97)}}
+.svins.walk::after{content:'';position:absolute;left:15%;right:15%;bottom:-3%;height:12%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,220,120,.9),rgba(255,80,60,0));animation:svstompfx .34s ease-out infinite}
+@keyframes svstompfx{0%,50%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.4)}}
+.svins.walk .svlbody{animation:none}

@@ -786,7 +786,7 @@
     var b = (Date.now() - S.t0) / S.bt, on = S.st === 'play' || S.st === 'ready';
     if (!S.notes) S.notes = [].slice.call(box.querySelectorAll('.svn'));
     var soon = false; S.chart.forEach(function (n) { if (svMine(n) && n[0] > b - .3 && n[0] < b + 3.2) soon = true; });
-    var wt = box.querySelector('.svwt'), wtx = S.st === 'play' && !soon ? '💃 The other team is dancing… you’re next!' : ''; if (wt && wt.textContent !== wtx) wt.textContent = wtx;
+    var wt = box.querySelector('.svwt'), nxt = null; S.chart.forEach(function (n) { if (!nxt && n[0] > b) nxt = n; }); var wtx = S.st === 'play' && !soon ? (nxt && nxt[5] && nxt[5] !== '*' && !svMine(nxt) ? '💃 The other team is dancing… you’re next!' : nxt ? '💃 Get ready… watch the big screen!' : '') : ''; if (wt && wt.textContent !== wtx) wt.textContent = wtx;
     S.notes.forEach(function (n) { var i = +n.getAttribute('data-i'), dk = S.chart[i][0] - b; if (!on || S.done[i] || !svMine(S.chart[i]) || dk < -.5 || dk > 2.4) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = 1; n.style.transform = 'translateY(' + (dk * 22).toFixed(2) + 'vh)'; });   // (22vh per bounce: up to the receptors)
     var fb = box.querySelector('.svfb'); if (S.fbAt && Date.now() - S.fbAt > 700) { fb.textContent = ''; S.fbAt = 0; }
   }
