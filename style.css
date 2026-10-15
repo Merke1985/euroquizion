@@ -5708,3 +5708,4 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes svrf2{0%{fill:#ffd23f}}@keyframes svrf1{0%{fill:#9fe7ff}}@keyframes svrf0{0%{fill:#ff4d4d}}
 .svins.svdan.d1 .svlbody,.svins.svdan.d3 .svlbody{animation-delay:-.49s}
 .svpump.done em{visibility:hidden}.svpump.done .svpn{color:#ffd23f}
+.svph{top:calc(var(--p) * 38%)}.svpcyl{top:24%}

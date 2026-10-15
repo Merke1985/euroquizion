@@ -785,9 +785,9 @@
         pu.addEventListener('pointerdown', function (e) { e.preventDefault(); y0 = e.clientY; p0 = svS ? svS.pp : 0; try { pu.setPointerCapture(e.pointerId); } catch (x) {} });
         pu.addEventListener('pointermove', function (e) {
           var S2 = svS; if (!S2 || !(e.buttons || e.pressure)) return;
-          S2.pp = Math.max(0, Math.min(1, p0 + (e.clientY - y0) / (pu.clientHeight * .5)));
-          if (S2.pp > .85 && !S2.pdown && !S2.pdone) { S2.pdown = true; if (!S2.pn) S2.pt0 = Date.now(); S2.pn = (S2.pn || 0) + 1; S2.pf = Math.min(1, S2.pn / 20); try { navigator.vibrate && navigator.vibrate(10); } catch (x) {} if (S2.pn >= 20) { S2.pdone = Math.max(1, Date.now() - S2.pt0); pu.classList.remove('full'); void pu.offsetWidth; pu.classList.add('full'); try { navigator.vibrate && navigator.vibrate([30, 40, 60]); } catch (x) {} } }   // (a full stroke down: a puff of air; 20 to fill the ball, the faster the better)
-          if (S2.pp < .15) S2.pdown = false;
+          S2.pp = Math.max(0, Math.min(1, p0 + (e.clientY - y0) / (pu.clientHeight * .75)));
+          if (S2.pp > .92 && !S2.pdown && !S2.pdone) { S2.pdown = true; if (!S2.pn) S2.pt0 = Date.now(); S2.pn = (S2.pn || 0) + 1; S2.pf = Math.min(1, S2.pn / 20); try { navigator.vibrate && navigator.vibrate(10); } catch (x) {} if (S2.pn >= 20) { S2.pdone = Math.max(1, Date.now() - S2.pt0); pu.classList.remove('full'); void pu.offsetWidth; pu.classList.add('full'); try { navigator.vibrate && navigator.vibrate([30, 40, 60]); } catch (x) {} } }   // (a full stroke down: a puff of air; 20 to fill the ball, the faster the better)
+          if (S2.pp < .08) S2.pdown = false;   // (a long stroke: almost all the way up and down)
           paint();
         });
         paint();
