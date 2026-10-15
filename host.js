@@ -1514,7 +1514,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     shopwin: { icon: '🛍️', title: 'Woodruff’s Boutique', sub: '' },
     clue: { icon: '🔍', title: 'Where the Hell Is Edgar?', sub: 'Edgar, our mascot, has been abducted! Search the four rooms on your phone in two minutes for secret clues, then accuse: who took him, where is he hidden, and what is he hidden inside?' },
     queue: { icon: '🌹', title: 'Lost in Verona', sub: 'Juliet calls out the way through a hidden maze: one step, then two, then three… Tap the whole route from memory on your phone. One wrong step and you are lost. Last one left wins!' },
-    fake: { icon: '🎶', title: 'Say Na Na Na!', sub: 'One player guesses a secret word. Everyone else writes ONE word as a clue. The same clues cancel each other out! Right: 12 points for the guesser, 6 for every clue that survived. Everyone gets a turn.' },
+    fake: { icon: '📰', title: 'Say Na Na Na!', sub: 'One player guesses a secret word. Everyone else writes ONE word as a clue. The same clues cancel each other out! Right: 12 points for the guesser, 6 for every clue that survived. Everyone gets a turn.' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts before the sound system breaks down (10 seconds to one minute). Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Keep your balance in space! Follow the glowing zone on your phone with your finger as it moves with the music. From stage 2, slide up and down to dodge the asteroids. Whoever keeps their balance until the end wins!' },
@@ -2540,7 +2540,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', fake: '🎶 Say Na Na Na!', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', fake: '📰 Say Na Na Na!', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { if (k === 'rule') return ['🪩 We Will Rule the World', '💛 Discoteque'].map(function (t, i) { return '<button class="btn alt small" type="button" data-one="rule" data-act="' + i + '">' + t + '</button>'; }).join(''); return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');   /* (Rule the World: one button per act) */
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -5085,9 +5085,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['him', 'But watch out: bump into someone and you’re stunned for 3 seconds! 💫'],
         ['him', 'Close a loop with your tiles, and every tile inside becomes yours… even the center stage! 🔁'],
         ['her', 'When the song ends, whoever owns the most tiles rules the world! 👑']] },
-    fake: { sign: '🎶 Say Na Na Na!', theme: 'fake',
+    fake: { sign: '📰 Say Na Na Na!', theme: 'fake',
       get art() { return '<div class="hsfake">' + FK_ART + '</div>'; },
-      lines: [['him', 'Time for Say Na Na Na! 🎶 Every round, one of you has to guess a secret word.'],
+      lines: [['him', 'Time for Say Na Na Na! 📰 Every round, one of you has to guess a secret word.'],
         ['her', 'Everyone else sees the word on their phone, and writes ONE word as a clue. All at the same time!'],
         ['him', 'But careful: clues that are the same cancel each other out! So be clever… and different.'],
         ['her', 'A right guess: 12 points for the guesser, and 6 for every clue that survived. Everyone gets a turn to guess!']] },
@@ -6443,9 +6443,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function fkBuild() {   // the press room (built once: the presenters explain the game in it, then the game is played in it)
     var ov = $('fkov'); if (ov) return ov;
     ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov jcov enter';
-      ov.innerHTML = '<div class="jcbg"><div class="jcwall"><div class="jcpress">' + jcPressWall() + '</div><div class="jcban">PRESS CONFERENCE</div><div class="jclogo">🎶 SAY NA NA NA!</div><div class="jcflags">' + ['se', 'fr', 'it', 'ua', 'nl', 'gb', 'de', 'es', 'no', 'fi'].map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div></div><div class="jcfloor"></div><i class="jcspot a"></i><i class="jcspot b"></i></div>' +
+      ov.innerHTML = '<div class="jcbg"><div class="jcwall"><div class="jcpress">' + jcPressWall() + '</div><div class="jcban">PRESS CONFERENCE</div><div class="jclogo">📰 SAY NA NA NA!</div><div class="jcflags">' + ['se', 'fr', 'it', 'ua', 'nl', 'gb', 'de', 'es', 'no', 'fi'].map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div></div><div class="jcfloor"></div><i class="jcspot a"></i><i class="jcspot b"></i></div>' +
       '<div class="jcstage"><div class="jcguest"></div><div class="jclong"><i class="jcmic m1">' + jcMic(-.6) + '</i><i class="jcmic m2">' + jcMic(-.25) + '</i><i class="jcmic m3">' + jcMic(.25) + '</i><i class="jcmic m4">' + jcMic(.6) + '</i><b class="jcnamecard"></b><b class="jcgscore"></b></div></div>' +
-      '<div class="fksign">🎶 Say Na Na Na!<small class="fkrnd"></small></div><div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div><div class="jcflash"></div>';
+      '<div class="fksign">📰 Say Na Na Na!<small class="fkrnd"></small></div><div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div><div class="jcflash"></div>';
     ov.innerHTML += '<div class="jchosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub jcbub2 him"></div><div class="grbub jcbub2 her"></div>';
     document.body.appendChild(ov); whooshes([0, 350]);
     setTimeout(function () { ov.classList.remove('enter'); }, 1600);
@@ -6459,7 +6459,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var old = $('fkov'); if (old) old.remove();
     var ov = fkBuild(); ov.classList.add('intro'); ov.setAttribute('data-st', 'intro'); Music.ding();
     var two = list().filter(function (p) { return !p.off; }).length <= 4;
-    var lines = [['him', 'Welcome to the Say Na Na Na press conference! 🎶 Every round, one of you takes a seat up here and guesses a secret word.'],
+    var lines = [['him', 'Welcome to the Say Na Na Na press conference! 📰 Every round, one of you takes a seat up here and guesses a secret word.'],
       ['her', 'Everyone else is a journalist: you see the word on your phone and write ONE word as a clue.' + (two ? ' With so few of you, you each write two!' : '')],
       ['him', 'But careful: clues that are the same cancel each other out! One journalist checks all the clues first. So be clever… and different.'],
       ['her', 'A right guess: 12 points for the guesser, and 6 for every clue that survived. Everyone gets a turn on stage! Journalists, take your seats! 🎤']];
