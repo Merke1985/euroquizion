@@ -7145,7 +7145,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     ov.setAttribute('data-st', g.st); ov.classList.toggle('act1', (g.act || 0) === 1); var sgn = ov.querySelector('.rusign'), sgt = (g.act || 0) === 1 ? '💛 Discoteque' : '🪩 We Will Rule the World'; if (sgn && sgn.textContent !== sgt) sgn.textContent = sgt;
     if (ov._3 && ov._3.setAct && ov._3.act !== (g.act || 0)) ov._3.setAct(g.act || 0);
-    if (ov._3 && ov._3.setSilver && !ov._3.silver && !(g.act || 0) && (g.vote ? g.vote.won === 0 : g.st !== 'drop')) ov._3.setSilver();   // (her act won: the floor turns silver)
+    if (ov._3 && ov._3.setSilver && !ov._3.silver && !(g.act || 0) && (g.vote ? !g.vote.on && g.vote.won === 0 : ['rise', 'ready', 'play', 'count', 'end'].indexOf(g.st) >= 0)) ov._3.setSilver();   // (her act won: the floor turns silver)
     ov.classList.toggle('voting', !!g.vote);
     var vb = ov.querySelector('.ruvote');
     if (g.vote) {   // the vote for the act: two cards, the voters' faces pop up on the one they chose
