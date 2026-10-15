@@ -5440,3 +5440,27 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svaf.ok .svq,.svaf.oops .svq{animation:svqf 1s ease-out}
 .svaf .svnm{position:absolute;left:50%;bottom:-3.6vh;transform:translateX(-50%);white-space:nowrap;color:#fff;font-weight:900;font-size:1.5vh;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 .svaf .svpt{position:absolute;left:50%;bottom:-5.6vh;transform:translateX(-50%);white-space:nowrap;color:#ffd23f;font-style:normal;font-weight:900;font-size:1.4vh;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+/* Serving: two teams taking turns, the instructor in front of the team whose turn it is */
+.svov .svlanes{display:none!important}
+.svov .svclass{display:block!important;top:22vh}
+.svgl{position:absolute;bottom:4%;width:44%;text-align:center;color:#fff;font-weight:900;font-size:1.8vh;letter-spacing:.1em;text-transform:uppercase;opacity:.5;transition:opacity .3s}
+.svgl b{padding:.3vh 1.2vh;border-radius:99px}
+.svgl.a{left:3%}.svgl.a b{background:#ff3fa4}.svgl.b{right:3%}.svgl.b b{background:#2f8cff}
+.svclass[data-act="A"] .svgl.a,.svclass[data-act="B"] .svgl.b,.svclass[data-act="*"] .svgl{opacity:1}
+.svclass.solo .svgl{display:none}
+.svaf{top:calc(52% + var(--dy,0) * 7vh)}
+.svaf.gA .svtile{box-shadow:0 0 0 2px #ff3fa4,0 0 18px #ff3fa4}.svaf.gB .svtile{box-shadow:0 0 0 2px #2f8cff,0 0 18px #2f8cff}
+.svclass[data-act="A"] .svaf.gB,.svclass[data-act="B"] .svaf.gA{opacity:.55;filter:saturate(.6)}
+.svaf{transition:left .22s cubic-bezier(.3,1.5,.5,1),top .22s cubic-bezier(.3,1.5,.5,1),scale .22s,opacity .4s,filter .4s}
+.svins{position:absolute;left:calc(var(--hx) * 1% + var(--dx,0) * 3.6vw);top:calc(2% + var(--dy,0) * 4vh);width:calc(24vh * 320 / 540);height:24vh;margin-left:calc(-12vh * 320 / 540);transition:left 1.1s cubic-bezier(.4,0,.2,1),top .22s;z-index:4;filter:drop-shadow(0 0 2vh rgba(255,40,60,.5))}
+.svins .svleadsvg{position:absolute;inset:0;width:100%;height:100%}
+.svins.ok .svleadsvg{animation:svstep .25s ease-out}
+.svins.jmp .svleadsvg{animation:svjmp .4s ease-out}
+@keyframes svjmp{40%{transform:translateY(-3vh)}}
+.svinsball,.svaf .svball{display:none}
+.svov[data-stage="3"] .svinsball{display:block;position:absolute;left:8%;right:8%;bottom:-14%;aspect-ratio:1}
+.svov[data-stage="3"] .svins .svleadsvg{top:-30%;bottom:auto}
+.svov[data-stage="3"] .svaf .svball{display:block;position:absolute;left:0;right:0;bottom:-12%;width:100%;height:auto}
+.svov[data-stage="3"] .svaf .svdancer{transform:translateY(-55%)}
+.svov[data-stage="3"] .svaf .svhead{translate:0 -5vh}
+.svwt{position:absolute;left:0;right:0;top:40%;text-align:center;color:#fff;font-weight:900;font-size:5.5vw;padding:0 6vw;pointer-events:none}
