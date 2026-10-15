@@ -5270,3 +5270,5 @@ body.rufrozen #waittitle{color:#0b3a66}
 .rus2d:not(.ruvart)[data-cd=""]::after{display:none}
 .rus2d.cdpop::after{animation:rucdpop .9s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes rucdpop{0%{transform:translate(-50%,1.2vh) scale(.3);opacity:0}25%{transform:translate(-50%,1.2vh) scale(1.25);opacity:1}100%{transform:translate(-50%,1.2vh) scale(1);opacity:.9}}
+/* Verona: Juliet's mouth opens and closes with her voice */
+.jmjul .jmo{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(var(--mo,0));transition:transform .07s ease-out}
