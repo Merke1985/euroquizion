@@ -5100,3 +5100,10 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes hpend{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
 .clueov .clhotel .hchand{transform-origin:800px 0;transform-box:view-box;animation:hchand 5s ease-in-out infinite alternate}
 @keyframes hchand{from{transform:rotate(-1.5deg)}to{transform:rotate(1.5deg)}}
+/* Grand Final: the tiles that break take a dark shade of the monster's own glow (not always dark red) */
+.chtiles{--mk1:#5a1022;--mk2:#2a0610}
+.chtiles[data-mon="goblin"]{--mk1:#1f6a10;--mk2:#082a04}
+.chtiles[data-mon="phoenix"]{--mk1:#7a3a06;--mk2:#2e1402}
+.chtiles[data-mon="fiddler"]{--mk1:#4a1a7a;--mk2:#1c0a32}
+.chtiles i.crumble{background:radial-gradient(circle at 30% 40%,rgba(255,255,255,.25) 0 2px,transparent 3px),linear-gradient(135deg,var(--mk1),var(--mk2))!important}
+.chtiles i.nsfsmash{background:radial-gradient(circle at 30% 40%,rgba(255,255,255,.25) 0 2px,transparent 3px),linear-gradient(135deg,var(--mk1),var(--mk2))!important;box-shadow:inset 0 0 0 2px var(--mg)!important}
