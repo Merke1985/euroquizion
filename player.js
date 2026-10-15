@@ -197,7 +197,7 @@
     if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); document.body.classList.remove('rufrozen'); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
-    if (s.phase !== 'sv' || !s.sv) { if ($('svui')) $('svui').classList.add('hidden'); }
+    if (s.phase !== 'sv' || !s.sv) { if ($('svui')) $('svui').classList.add('hidden'); svStop(); }
     if (s.phase !== 'fake' || !s.fake) $('fkui').classList.add('hidden');
     if (s.phase !== 'clueacc' && s.phase !== 'cluerooms' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (s.phase !== 'cluerooms') { $('edui').classList.add('hidden'); if (edCur) { edCur = ''; edClear(); } }
@@ -747,49 +747,56 @@
   // (0 on target, 1 a bit off, 2 about to fall), when you fall, and your accuracy at the end.
   var zgS = null;
   function zgOnLive() {}
-  // ---------- Serving! (the dance-off test game): copy the captain's step on eight buttons; watch the big screen ----------
+  // ---------- Serving! (the dance-off test game): DDR-style arrows scroll up; hit the matching pad as they reach the top ----------
   var svS = null;
-  var SV_ARR = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';
   function svView(s) {
     var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
-    if (!svS || svS.id !== z.id) svS = { id: z.id, ans: {} };
+    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, raf: 0, fbAt: 0 }; }
     var S = svS;
     if (z.st === 'end') {
-      box.classList.add('hidden');
+      svStop(); box.classList.add('hidden');
       var w = (z.win || []).indexOf(pid) >= 0, names = (z.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);
-      $('waittitle').textContent = w ? '🏆 You copied her best!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'The end!';
-      $('waitsub').textContent = mine ? 'Your score: ' + ((z.dist || {})[pid] || 0) + ' points.' : '';
+      $('waittitle').textContent = w ? '🏆 You served the most!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'The end!';
+      $('waitsub').textContent = mine ? 'Your score: ' + ((z.dist || {})[pid] || 0) + '.' : '';
       return;
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 Serving!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
-    var sg = z.stage || 1, stn = ['', 'Forward, back & sideways', 'All eight directions', 'Skippy balls! 🏐'][sg];
-    $('waittitle').textContent = z.st === 'play' ? 'Stage ' + sg + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🪩 Serving!';
-    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : sg === 3 ? 'You bounce two tiles now, for double points. Copy her within 3 seconds!' : 'Watch the captain on the big screen and take the same step within 3 seconds!';
+    if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
+    var stn = ['', 'The dance floor', 'Double trouble', 'Skippy balls! 🏐'][z.stage || 1];
+    $('waittitle').textContent = z.st === 'play' ? 'Stage ' + (z.stage || 1) + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🪩 Serving!';
+    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : z.stage === 2 ? 'Two arrows at once? Hit both pads!' : 'Hit the same arrow as it reaches the top. Gold = SERVE (double)!';
     box.classList.remove('hidden');
-    if (box.getAttribute('data-id') !== z.id) {
-      box.setAttribute('data-id', z.id);
-      box.innerHTML = '<div class="svgrid">' + [7, 0, 1, 6, -1, 2, 5, 4, 3].map(function (m) { return m < 0 ? '<div class="svcallp"></div>' : '<button type="button" class="svmb' + (m % 2 ? ' diag' : '') + '" data-m="' + m + '" style="--r:' + (m * 45) + 'deg">' + SV_ARR + '</button>'; }).join('') + '</div><div class="svme"></div>';
-      [].forEach.call(box.querySelectorAll('.svmb'), function (bt) { bt.addEventListener('pointerdown', function (e) { e.preventDefault(); svStep(+bt.getAttribute('data-m'), bt); }); bt.addEventListener('contextmenu', function (e) { e.preventDefault(); }); });
+    if (box.getAttribute('data-id') !== z.id) {   // the chart: arrows scroll up to the receptors; four big pads below
+      box.setAttribute('data-id', z.id); S.chart = z.chart || []; S.notes = null;
+      var A = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';
+      box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
+      [].forEach.call(box.querySelectorAll('.svpadb'), function (bt) { bt.addEventListener('pointerdown', function (e) { e.preventDefault(); svTap(+bt.getAttribute('data-d')); bt.classList.remove('hit'); void bt.offsetWidth; bt.classList.add('hit'); }); bt.addEventListener('contextmenu', function (e) { e.preventDefault(); }); });
     }
-    box.className = 'svui st' + sg;
-    box.querySelector('.svme').textContent = ((z.dist || {})[pid] || 0) + ' pts';
-    var cp = box.querySelector('.svcallp'), mine2 = z.mk >= 0 ? S.ans[z.mk] : null, res = z.mi >= 0 && z.rs ? z.rs[pid] : null, tx, cl = '';
-    if (z.st !== 'play') tx = '💃 Watch the captain…';
-    else if (z.mk >= 0) { tx = mine2 ? '👣 Step taken!' : '👀 Copy her step!'; cl = mine2 ? ' done' : ' live'; }
-    else if (res != null) { tx = res ? '✅ Safe! +' + res : '❌ Missed!'; cl = res ? ' ok' : ' bad'; }
-    else tx = '💃 Watch her…';
-    if (cp.textContent !== tx || cp._c !== cl) { cp.textContent = tx; cp._c = cl; cp.className = 'svcallp' + cl; }
-    [].forEach.call(box.querySelectorAll('.svmb'), function (bt) { var m = +bt.getAttribute('data-m'); bt.disabled = !(z.st === 'play' && z.mk >= 0 && !mine2) || (sg === 1 && m % 2 === 1); bt.classList.toggle('pick', !!mine2 && mine2.d === m); });
+    box.querySelector('.svme').textContent = ((z.dist || {})[pid] || 0) + ' pts' + (z.lead === pid ? ' · you lead: your ball is bigger! 🎈' : '');
+    S.st = z.st;
+    if (!S.raf) { var loop = function () { if (!svS) return; svFrame(); svS.raf = requestAnimationFrame(loop); }; S.raf = requestAnimationFrame(loop); }
   }
-  function svStep(d, bt) {   // one step per move
-    var S = svS, z = state && state.sv; if (!S || !z || z.st !== 'play' || z.mk < 0 || S.ans[z.mk]) return;
-    if ((z.stage || 1) === 1 && d % 2) return;   // (stage 1: no diagonals)
-    S.ans[z.mk] = { d: d };
-    if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, k: z.mk, d: d });
-    if (bt) { bt.classList.remove('hit'); void bt.offsetWidth; bt.classList.add('hit'); }
-    try { navigator.vibrate && navigator.vibrate(18); } catch (x) {}
-    svView(state);
+  function svStop() { if (svS && svS.raf) cancelAnimationFrame(svS.raf); if (svS) svS.raf = 0; }
+  function svFrame() {
+    var S = svS, box = $('svui'); if (!S || !box || !S.t0 || !S.chart) return;
+    var b = (Date.now() - S.t0) / S.bt, on = S.st === 'play' || S.st === 'ready';
+    if (!S.notes) S.notes = [].slice.call(box.querySelectorAll('.svn'));
+    S.notes.forEach(function (n) { var i = +n.getAttribute('data-i'), dk = S.chart[i][0] - b; if (!on || S.done[i] || dk < -.5 || dk > 4.2) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = 1; n.style.transform = 'translateY(' + (dk * 15).toFixed(2) + 'vh)'; });   // (15vh per bounce: up to the receptors)
+    var fb = box.querySelector('.svfb'); if (S.fbAt && Date.now() - S.fbAt > 700) { fb.textContent = ''; S.fbAt = 0; }
+  }
+  function svTap(d) {
+    var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || z.st !== 'play' || !S.chart) return;
+    var now = Date.now(), b = (now - S.t0) / S.bt, best = -1, bd = 9;
+    S.chart.forEach(function (n, i) { if (S.done[i] || n[1] !== d) return; var x = Math.abs(n[0] - b); if (x < bd) { bd = x; best = i; } });   // (the nearest open arrow in this column)
+    var any = -1, ad = 9; S.chart.forEach(function (n, i) { if (S.done[i]) return; var x = Math.abs(n[0] - b); if (x < ad) { ad = x; any = i; } });
+    var i = best >= 0 && bd < .4 ? best : any >= 0 && ad < .3 ? any : -1; if (i < 0) return;   // (nothing near: no harm done)
+    var n = S.chart[i], dt = (b - n[0]) * S.bt, q = n[1] !== d ? 0 : Math.abs(dt) < 110 ? 2 : Math.abs(dt) < 230 ? 1 : 0; S.done[i] = 1;
+    if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, i: i, d: d, q: q });
+    var rec = $('svui').querySelector('.svrec.c' + d); if (rec) { rec.classList.remove('flash', 'f0', 'f1', 'f2'); void rec.offsetWidth; rec.classList.add('flash', 'f' + q); }
+    var fb = $('svui').querySelector('.svfb');
+    fb.textContent = q === 2 ? (n[2] ? '✨ SERVE!' : 'PERFECT!') : q ? 'Good' : n[1] !== d ? 'Wrong arrow!' : (dt < 0 ? 'Too early!' : 'Too late!'); fb.className = 'svfb q' + q; S.fbAt = now;
+    try { navigator.vibrate && navigator.vibrate(q === 2 ? 25 : 12); } catch (x) {}
   }
 
   function zgStop() { if (zgS) { cancelAnimationFrame(zgS.raf); zgS.raf = 0; } }
