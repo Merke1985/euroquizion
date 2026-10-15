@@ -262,6 +262,7 @@
     if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.sv && G.phase === 'sv') s.sv = svSnap();
+    if (G.cal) s.cal = { id: G.cal.id, dt: G.cal.t0 - Date.now(), n: G.cal.n, gap: G.cal.gap, done: !!G.cal.done };
     if (G.rule && G.phase === 'rule') s.rule = ruSnap();
     if (G.organ && G.phase === 'organ') s.organ = orSnap();
     if (G.atype === 'party' && list().some(function (p) { return (p.inv || []).indexOf('golden') >= 0; })) s.pgames = partyGames().map(function (k) { return { k: k, icon: FUN[k].icon, title: FUN[k].title }; });   // (for the Golden Ticket's choice)
@@ -6876,6 +6877,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var me = ov.querySelector('.svmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('sv', svMsg);
+  // Syncing online players (who watch through a stream, so everything reaches them a little later): the big screen
+  // plays 8 clicks with a flash; they tap their phone on every one; each phone works out its own delay from that.
+  function calStart() {
+    if (REMOTE || G.phase !== 'lobby' || G.cal) return;
+    var g = G.cal = { id: 'cal' + Date.now().toString(36), t0: Date.now() + 4500, n: 8, gap: 1000, res: {} };
+    var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing online players</h2><p>Online players: tap your phone on every flash and click!</p><div class="calfl"><b></b></div><div class="calres"></div></div>'; document.body.appendChild(ov);
+    push(); [1000, 2500].forEach(function (t) { setTimeout(function () { if (G.cal === g) push(); }, t); });   // (a few updates: the phones take the best timing)
+    var fl = ov.querySelector('.calfl'), b = fl.querySelector('b');
+    var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
+    for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
+    setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 600 - Date.now());
+    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } ov.remove(); }, g.t0 + g.n * g.gap + 9000 - Date.now());
+  }
+  function calShow() {
+    var g = G.cal, ov = $('calov'); if (!g || !ov) return;
+    var ks = Object.keys(g.res); ov.querySelector('.calres').innerHTML = ks.length ? ks.map(function (k) { var p = players[k], d = g.res[k]; return '<span>' + esc(p ? p.name : '?') + ': ' + (d < 0 ? 'in the room' : (d / 1000).toFixed(2) + 's') + '</span>'; }).join('') : '';
+  }
+  net.on('cal', function (m) { var g = G.cal; if (!g || !m || m.id !== g.id || !players[m.pid]) return; g.res[m.pid] = Math.round(+m.d); calShow(); });
+  if ($('calbtn')) $('calbtn').addEventListener('click', calStart);
 
   // ---------- Say Na Na Na! (formerly The Fake Fan: the id is still 'fake') ----------
   // Everyone's phone shows the same secret Eurovision song, except one player: the fake fan, who sees "You're the

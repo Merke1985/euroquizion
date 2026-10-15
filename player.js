@@ -198,6 +198,7 @@
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); document.body.classList.remove('rufrozen'); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
     if (s.phase !== 'sv' || !s.sv) { if ($('svui')) $('svui').classList.add('hidden'); svStop(); }
+    calView(s);
     if (s.phase !== 'fake' || !s.fake) $('fkui').classList.add('hidden');
     if (s.phase !== 'clueacc' && s.phase !== 'cluerooms' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (s.phase !== 'cluerooms') { $('edui').classList.add('hidden'); if (edCur) { edCur = ''; edClear(); } }
@@ -748,10 +749,10 @@
   var zgS = null;
   function zgOnLive() {}
   // ---------- Serving! (the dance-off test game): DDR-style arrows scroll up; hit the matching pad as they reach the top ----------
-  var svS = null, SV_STREAM = 0;   // (watching online, via a stream: the arrows a quarter of a second later, in step with the music as it comes through)
+  var svS = null, SV_STREAM = 0, SV_WHERE = 'local';   // (watching online, via a stream: the arrows later, in step with the music as it comes through; measured with the host's sync, or a quarter of a second)
   (function () {   // where you watch: in the room (no delay) or online (a stream: a little delay); remembered
     var w = 'local'; try { w = localStorage.getItem('eq_where') || 'local'; } catch (e) {}
-    var set = function (v) { w = v; SV_STREAM = v === 'online' ? 250 : 0; try { localStorage.setItem('eq_where', v); } catch (e) {} };
+    var set = function (v) { w = v; SV_WHERE = v; var md = null; try { md = localStorage.getItem('eq_delay'); } catch (e) {} SV_STREAM = v === 'online' ? (md != null ? +md : 250) : 0; try { localStorage.setItem('eq_where', v); } catch (e) {} };
     set(w);
     var init = function () { [].forEach.call(document.querySelectorAll('input[name="where"]'), function (r) { r.checked = r.value === w; r.addEventListener('change', function () { if (r.checked) set(r.value); }); }); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
@@ -807,6 +808,27 @@
     box.querySelector('.svme').textContent = 'Perfect ' + tally[2] + ' · Good ' + tally[1] + ' · Miss ' + tally[0];
     S.st = z.st;
     if (!S.raf) { var loop = function () { if (!svS) return; svFrame(); svS.raf = requestAnimationFrame(loop); }; S.raf = requestAnimationFrame(loop); }
+  }
+  // the host's sync for online players: tap on every flash and click as it comes through the stream
+  var calS = null;
+  function calView(s) {
+    var c = s.cal, ov = $('calui');
+    if (!c) { if (ov) { if (calS && calS.res && !calS.shown) { calS.shown = true; setTimeout(function () { var o = $('calui'); if (o) o.remove(); }, 2500); } else ov.remove(); } if (!ov) calS = null; return; }
+    if (!calS || calS.id !== c.id) calS = { id: c.id, t0: 0, taps: [], res: null };
+    var est = Date.now() + c.dt; if (!calS.t0 || est < calS.t0) calS.t0 = est;   // (the earliest estimate: the least network delay)
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'calui'; document.body.appendChild(ov);
+      if (SV_WHERE === 'online') { ov.innerHTML = '<div class="calp"><b>🌐 Sync</b><p>Tap anywhere on every flash and click you see and hear on the stream!</p><i class="calpad">TAP</i><em></em></div>'; ov.addEventListener('pointerdown', function (e) { e.preventDefault(); if (!calS || calS.res) return; calS.taps.push(Date.now()); var pd = ov.querySelector('.calpad'); pd.classList.remove('hit'); void pd.offsetWidth; pd.classList.add('hit'); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} }); }
+      else ov.innerHTML = '<div class="calp"><b>📺 In the room</b><p>No sync needed for you. Online players are syncing now…</p></div>';
+    }
+    if (c.done && !calS.res) {
+      if (SV_WHERE === 'online') {
+        var offs = []; calS.taps.forEach(function (tt) { var k = Math.floor((tt - calS.t0 + 250) / c.gap); if (k < 0 || k >= c.n) return; var o = tt - (calS.t0 + k * c.gap); if (o > -250 && o < 1500) offs.push(o); });
+        offs.sort(function (a, b) { return a - b; });
+        if (offs.length >= 3) { var d = Math.max(0, Math.min(1500, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: d }); }
+        else { calS.res = -2; ov.querySelector('em').textContent = 'Not enough taps: ask the host to sync again.'; }
+      } else { calS.res = -1; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -1 }); }
+    }
   }
   function svMine(n) { return !n[5] || n[5] === '*' || (svS && svS.g) === n[5]; }   // (the arrows for my team, or for everyone)
   function svStop() { if (svS && svS.raf) cancelAnimationFrame(svS.raf); if (svS) svS.raf = 0; }

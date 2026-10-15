@@ -5747,3 +5747,19 @@ body.rufrozen #waittitle{color:#0b3a66}
 .wherebox input{position:absolute;opacity:0;pointer-events:none}
 .wherebox span{display:block;text-align:center;padding:10px 6px;border-radius:12px;border:2px solid var(--line,rgba(255,255,255,.2));font-weight:800;font-size:.95rem}
 .wherebox input:checked+span{border-color:#ff3fa4;background:rgba(255,63,164,.15)}
+/* syncing online players */
+#calov{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(10,4,20,.88)}
+#calov .calbox{text-align:center;color:#fff}
+#calov h2{margin:0 0 1vh;font-size:clamp(1.6rem,4vw,3.4rem)}
+#calov p{margin:0 0 4vh;font-size:clamp(1rem,2vw,1.8rem);opacity:.85}
+#calov .calfl{width:30vh;height:30vh;margin:0 auto;border-radius:50%;border:8px solid #ff3fa4;display:flex;align-items:center;justify-content:center;font-size:12vh;font-weight:900}
+#calov .calfl.on{animation:calfl .5s ease-out}
+@keyframes calfl{0%{background:#fff;color:#ff3fa4;transform:scale(1.15)}100%{background:transparent;transform:scale(1)}}
+#calov .calres{margin-top:4vh;display:flex;flex-wrap:wrap;gap:1vh 2vw;justify-content:center;font-weight:800;font-size:clamp(.9rem,1.8vw,1.5rem)}
+#calui{position:fixed;inset:0;z-index:300;background:linear-gradient(#2a0838,#120420);display:flex;align-items:center;justify-content:center;touch-action:none}
+#calui .calp{text-align:center;color:#fff;padding:6vw}
+#calui b{font-size:8vw}
+#calui p{font-size:4.6vw;opacity:.85}
+#calui .calpad{display:flex;align-items:center;justify-content:center;width:56vw;height:56vw;margin:4vh auto;border-radius:50%;border:6px solid #ff3fa4;font-style:normal;font-weight:900;font-size:9vw}
+#calui .calpad.hit{animation:calfl .3s ease-out}
+#calui em{display:block;font-style:normal;font-weight:900;font-size:5.6vw;color:#ffd23f;min-height:1.4em}
