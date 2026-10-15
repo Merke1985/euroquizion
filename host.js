@@ -6592,7 +6592,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // The press wall behind the table: rows of made-up sponsor logos, staggered like a real step-and-repeat banner
   function jcPressWall() {
-    var L = ['<b class="pl a">EuroQuizion<i>♥</i></b>', '<b class="pl b">DOUZE<span>TV</span></b>', '<b class="pl c">✦ Glitterbank</b>', '<b class="pl d">SEQUIN<span>&amp;CO</span></b>', '<b class="pl e">◆◆ Windmachine</b>', '<b class="pl f">NUL POINTS</b>', '<b class="pl g">Say Na Na Na</b>', '<b class="pl h">≋ Confetti FM</b>', '<b class="pl i">☾ The Whispering Moon</b>'], h = '';
+    var L = ['<b class="pl a">EuroQuizion<i>♥</i></b>', '<b class="pl b">DOUZE<span>TV</span></b>', '<b class="pl c">✦ Glitterbank</b>', '<b class="pl d">SEQUIN<span>&amp;CO</span></b>', '<b class="pl e">◆◆ Windmachine</b>', '<b class="pl f">NUL POINTS</b>', '<b class="pl g">Say Na Na Na</b>', '<b class="pl h">≋ Confetti FM</b>', '<b class="pl i">☾ The Whispering Moon</b>', '<b class="pl j">GROSVENOR HOUSE</b>'], h = '';
     for (var r = 0; r < 7; r++) { h += '<div class="plrow" style="--o:' + (r % 2 ? '-6vw' : '0vw') + '">'; for (var c = 0; c < 12; c++) h += L[(c * 3 + r * 5) % L.length]; h += '</div>'; }
     return h;
   }
