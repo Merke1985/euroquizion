@@ -764,7 +764,7 @@
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🪩 Serving!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
     if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
-    var stn = ['', 'Red team', 'Black team', 'Skippy balls! 🏐'][z.stage || 1];
+    var stn = ['', 'Red team', 'Black team', 'Everyone together'][z.stage || 1];
     $('waittitle').textContent = z.st === 'play' ? 'Stage ' + (z.stage || 1) + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🪩 Serving!';
     var tm = svS.g === 'B' ? 'black' : 'red';
     $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : (z.order.length > 1 ? 'You’re in the ' + tm + ' team. ' : '') + (z.stage !== 3 ? 'First a step every four beats, then every two. Every arrow is a step!' : z.stage === 3 ? 'A step on every beat, double points!' : 'Hit the arrow as it reaches the top: every hit is a step!');
