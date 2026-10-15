@@ -5191,6 +5191,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       : w.h === 6 ? '<ellipse cx="112" cy="62" rx="40" ry="7" fill="#3a3a48"/><path d="M90 62 Q92 34 112 32 Q132 34 134 62 Z" fill="#4a4a5a"/><rect x="90" y="52" width="44" height="6" fill="#d9a520"/>' : '';
     return '<svg class="tcgirl" viewBox="0 0 200 490" aria-hidden="true">' + hairBack + leg('b', legD) + arm('b', sleeveD) + leg('f', legC) + body + face + hairFront + hat + arm('f', sleeve) + '</svg>';
   }
+  var TC_FLAGN = { eu: 'Europe', pride: 'The Pride flag' };   // (flags that aren't a country's)
   function tcQuestion(girls, used) {
     var n = girls.length, ALL = n === 1 ? ['color', 'hatyn', 'glassyn', 'shoes'] : ['hat', 'glasses', 'dress', 'red', 'color', 'shoes'];   // (one star alone: no counting, just what they wore)
     var types = ALL.filter(function (t) { return used.indexOf(t) < 0; }); if (!types.length) types = ALL;
@@ -5199,7 +5200,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nums = function (ans) { var hi = Math.max(3, n), lo = Math.max(0, Math.min(ans - Math.floor(Math.random() * 4), hi - 3)); var o = []; for (var i = lo; i < lo + 4; i++) o.push(String(i)); return { opts: o, ans: ans - lo }; };
     var q;
     var who = function (w) { var inRow = girls.filter(function (x) { return x.row === w.row; }).length; return girls.length === 1 ? 'the contestant' : w.row ? (inRow === 1 ? 'the contestant in the ' + w.row + ' row' : 'the ' + TC_ORD[w.col] + ' contestant from the left in the ' + w.row + ' row') : 'the ' + TC_ORD[girls.indexOf(w)] + ' contestant from the left'; };
-    if (t === 'flagq') { var fo = shuffle([fl.f].concat(shuffle(FAN_FLAGS.filter(function (c) { return c !== fl.f; })).slice(0, 3))); q = { opts: fo.map(function (c) { return countries[c] || c.toUpperCase(); }), ans: fo.indexOf(fl.f), text: 'Which country’s flag did this act carry?' }; }
+    if (t === 'flagq') { var fo = shuffle([fl.f].concat(shuffle(FAN_FLAGS.concat(['eu', 'pride']).filter(function (c) { return c !== fl.f; })).slice(0, 3))); q = { opts: fo.map(function (c) { return TC_FLAGN[c] || countries[c] || c.toUpperCase(); }), ans: fo.indexOf(fl.f), text: TC_FLAGN[fl.f] ? 'Which flag did this act carry?' : 'Which country’s flag did this act carry?' }; }
     else if (t === 'hatyn') q = { opts: ['Yes', 'No'], ans: girls[0].h > 0 ? 0 : 1, text: 'Was the contestant wearing a hat?' };
     else if (t === 'glassyn') q = { opts: ['Yes', 'No'], ans: girls[0].g ? 0 : 1, text: 'Was the contestant wearing sunglasses?' };
     else if (t === 'hat') q = nums(cnt(function (w) { return w.h > 0; })), q.text = 'How many contestants wore a hat?';
@@ -5234,7 +5235,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // a group photo in two rows: the bigger half standing at the back, the rest in front (kneeling or standing, at random)
     var nb = Math.ceil(n / 2), STAND = ['hips', 'wave', 'up', 'point', 'lean'];
     g.girls.forEach(function (w, i) { var back = i < nb; w.row = back ? 'back' : 'front'; w.col = back ? i : i - nb; w.p = back || Math.random() < .5 ? pick(STAND) : 'kneel'; });
-    if (g.sec >= 2 && Math.random() < .55) { var fb = g.girls[Math.floor(Math.random() * nb)]; fb.f = pick(FAN_FLAGS); fb.p = 'flag'; }   // (some acts bring their country's flag)
+    if (g.sec >= 2 && Math.random() < .55) { var fb = g.girls[Math.floor(Math.random() * nb)]; fb.f = Math.random() < .2 ? pick(['eu', 'pride']) : pick(FAN_FLAGS); fb.p = 'flag'; }   // (now and then the flag of Europe, or the Progress Pride flag)   // (some acts bring their country's flag)
     g.st = 'walk'; g.cur = -1; g.q = null; push();
     var step = function () {   // the whole group walks on together, poses, and walks off
       if (G.carpet !== g) return;
@@ -5603,7 +5604,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var pole = add(g, new T.CylinderGeometry(.025, .025, 3.6, 8), M('#d9a520', { metalness: .6, roughness: .3 }), .62, 2.2, .1);
       add(g, new T.SphereGeometry(.06, 10, 8), M('#d9a520', { metalness: .6, roughness: .3 }), .62, 4.02, .1);
       var tx = new T.TextureLoader(); tx.setCrossOrigin('anonymous');
-      var ft = tx.load('https://flagcdn.com/w320/' + w.f + '.png'); ft.encoding = T.sRGBEncoding;
+      var ft = tx.load(w.f === 'pride' ? 'images/flag_pride.png' : 'https://flagcdn.com/w320/' + w.f + '.png'); ft.encoding = T.sRGBEncoding;
       var piv = new T.Group(); piv.position.set(.62, 3.52, .1); g.add(piv);   // (the flag turns on the pole: towards the cameras, trailing behind while walking)
       var flag = add(piv, new T.PlaneGeometry(1.2, .8, 12, 4), new T.MeshStandardMaterial({ map: ft, side: T.DoubleSide, roughness: .8 }), .61, 0, 0);
       g.userData.flag = flag; g.userData.fpiv = piv; g.userData.flagPos = flag.geometry.attributes.position.array.slice();
