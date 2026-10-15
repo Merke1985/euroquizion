@@ -5288,3 +5288,55 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes jwave2{from{transform:rotate(10deg)}to{transform:rotate(-34deg)}}
 /* Rule the World: the singers rise (and stand) with their mouths closed until they start singing */
 .rus2d:not(.dance) .rsmouth{transform:scaleY(.22)}
+/* ---------- Serving! (skippy-ball test game) ---------- */
+.svov{position:fixed;inset:0;z-index:55;overflow:hidden;background:linear-gradient(180deg,#3a0f4a 0%,#7a1a6a 38%,#e0428a 70%,#ffb347 100%)}
+.svov.enter{animation:inBottom .9s cubic-bezier(.2,.9,.3,1.08) both}
+.svsky{position:absolute;inset:0;background-image:radial-gradient(circle at 15% 20%,rgba(255,255,255,.5) 0 2px,transparent 3px),radial-gradient(circle at 70% 12%,rgba(255,255,255,.45) 0 2px,transparent 3px),radial-gradient(circle at 40% 8%,rgba(255,220,120,.6) 0 3px,transparent 4px),repeating-linear-gradient(115deg,rgba(255,255,255,.05) 0 40px,transparent 40px 90px);pointer-events:none}
+.svsign{position:absolute;left:50%;top:2vh;transform:translateX(-50%);padding:.6vh 2vw;border-radius:16px;background:rgba(40,8,50,.75);box-shadow:0 0 0 3px #ffd23f,0 0 30px #ff5fa8;color:#fff;font-weight:900;font-size:clamp(1.2rem,2.6vw,2.4rem);white-space:nowrap;z-index:3}
+.svsign small{font-size:.45em;opacity:.7;margin-left:.6em}
+.svbeat{position:absolute;left:50%;top:11vh;width:10vh;height:10vh;margin-left:-5vh;z-index:3}
+.svbeat i{position:absolute;inset:0;border-radius:50%;border:.7vh solid #fff;box-shadow:0 0 2vh #ff5fa8;opacity:.85}
+.svbeat b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:4.4vh;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.svbeat.pulse i{animation:svpulse .45s ease-out}
+.svbeat.gold i{border-color:#ffd23f;box-shadow:0 0 4vh #ffd23f}
+@keyframes svpulse{0%{transform:scale(1.35);opacity:1}100%{transform:scale(1);opacity:.85}}
+.svlanes{position:absolute;left:4vw;right:4vw;top:24vh;bottom:6vh;display:flex;flex-direction:column;justify-content:space-around}
+.svlane{position:relative;flex:1;max-height:16vh}
+.svtrack{position:absolute;left:0;right:0;bottom:8%;height:18%;border-radius:999px;background:linear-gradient(#ffe7f2,#ffb3d4);box-shadow:inset 0 -.4vh 0 rgba(0,0,0,.12),0 .4vh 1vh rgba(0,0,0,.25)}
+.svtrack::after{content:'';position:absolute;right:2%;top:-60%;bottom:-60%;width:.5vh;background:repeating-linear-gradient(#111 0 6px,#fff 6px 12px);border-radius:2px}
+.svp{position:absolute;bottom:4%;left:calc(var(--x,0) * 1%);width:9vh;height:9vh;transition:left .35s cubic-bezier(.3,1.4,.5,1)}
+.svp .svball{position:absolute;inset:0;width:100%;height:100%;transition:transform .5s}
+.svp.big .svball{transform:scale(1.35);transform-origin:50% 100%}
+.svp .svhead{position:absolute;left:50%;top:-4.6vh;width:5.4vh;height:5.4vh;margin-left:-2.7vh}
+.svp .svhead .char{width:100%;height:100%}
+.svp.hop{animation:svhop .42s cubic-bezier(.3,.6,.4,1)}
+.svp.hop.gold{animation:svhop2 .5s cubic-bezier(.3,.6,.4,1)}
+.svp.wob{animation:svwob .5s ease-in-out}
+@keyframes svhop{0%,100%{translate:0 0}45%{translate:0 -5vh}}
+@keyframes svhop2{0%,100%{translate:0 0;filter:none}45%{translate:0 -9vh;filter:drop-shadow(0 0 2vh #ffd23f)}}
+@keyframes svwob{0%,100%{rotate:0deg}25%{rotate:-14deg}75%{rotate:12deg}}
+.svq{position:absolute;left:100%;top:-3vh;font-style:normal;font-weight:900;font-size:1.8vh;white-space:nowrap;opacity:0;padding:.2vh .6vh;border-radius:6px;background:rgba(0,0,0,.45)}
+.svp.hop .svq,.svp.wob .svq{animation:svqf 1s ease-out}
+.svq.q2{color:#ffd23f}.svq.q1{color:#9fe7ff}.svq.q0{color:#ff8a8a}
+@keyframes svqf{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-2vh)}}
+.svnm{position:absolute;left:0;bottom:-1.2vh;color:#fff;font-weight:900;font-size:1.6vh;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.svd{position:absolute;right:0;bottom:-1.2vh;color:#fff;font-style:normal;font-weight:900;font-size:1.8vh;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.svmsg{position:absolute;left:50%;bottom:1vh;transform:translateX(-50%);color:#fff;font-weight:900;font-size:clamp(1rem,2vw,1.8rem);text-shadow:0 2px 8px rgba(0,0,0,.6);white-space:nowrap}
+.svhosts{position:absolute;inset:0;pointer-events:none;z-index:4}
+.svhosts .ehost{position:absolute;bottom:4vh;height:46vh;width:auto;transition:translate 1s,opacity 1s;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}
+.svhosts .him{left:18vw}.svhosts .her{right:18vw}
+.svov:not([data-st="intro"]) .svhosts .him{translate:-60vw 0;opacity:0}.svov:not([data-st="intro"]) .svhosts .her{translate:60vw 0;opacity:0}
+.svbub{position:absolute;top:26vh;max-width:30vw;z-index:5;background:#fff;color:#1a1147;font-weight:900;font-size:clamp(1rem,1.9vw,1.5rem);padding:.65em 1em;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .3s}
+.svbub.on{opacity:1}.svbub.him{left:4vw}.svbub.her{right:4vw}
+/* the phone */
+.svui{margin:1.5vh auto 0;text-align:center}
+.svpad{position:relative;width:62vw;max-width:300px;aspect-ratio:1;margin:0 auto}
+.svring{position:absolute;inset:0;border-radius:50%;border:6px solid #fff;box-shadow:0 0 18px #ff5fa8;pointer-events:none}
+.svring.gold{border-color:#ffd23f;box-shadow:0 0 26px #ffd23f}
+.svbtn{position:absolute;inset:8%;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#ffb3d4,#e0428a 60%,#9a1a5a);color:#fff;font-size:15vw;font-weight:900;box-shadow:0 10px 0 #6a0a3a,0 14px 24px rgba(0,0,0,.4);touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.svbtn b{font-size:5vw}
+.svbtn:active{transform:translateY(6px);box-shadow:0 4px 0 #6a0a3a}
+.svfb{height:5vh;margin-top:2vh;font-weight:900;font-size:6vw}
+.svfb.q2{color:#ffd23f}.svfb.q1{color:#9fe7ff}.svfb.q0{color:#ff8a8a}
+.svme{font-weight:800;opacity:.85}
+.pl.i{color:#d9e4ff;font-family:Georgia,serif;font-style:italic;font-weight:700;text-shadow:0 0 8px rgba(190,210,255,.8)}

@@ -197,6 +197,7 @@
     if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); document.body.classList.remove('rufrozen'); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
+    if (s.phase !== 'sv' || !s.sv) { if ($('svui')) $('svui').classList.add('hidden'); svStop(); }
     if (s.phase !== 'fake' || !s.fake) $('fkui').classList.add('hidden');
     if (s.phase !== 'clueacc' && s.phase !== 'cluerooms' && !(s.phase === 'reveal' && s.clue && s.clue.st === 'ask')) $('clueui').classList.add('hidden');
     if (s.phase !== 'cluerooms') { $('edui').classList.add('hidden'); if (edCur) { edCur = ''; edClear(); } }
@@ -210,7 +211,7 @@
     document.querySelector('main').classList.toggle('ingame', ing);
     // In the host's own page the lobby view shrinks to a pill around avatar, name and Edit.
     document.querySelector('main').classList.toggle('compact', document.body.classList.contains('embed') && !!me() && s.phase === 'lobby' && !picking);
-    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'fake' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'rule' && s.phase !== 'organ' && s.phase !== 'cluerooms' && s.phase !== 'clueacc' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
+    $('waitlabel').textContent = ing && s.round && s.phase !== 'bomb' && s.phase !== 'fake' && s.phase !== 'note' && s.phase !== 'carpet' && s.phase !== 'zg' && s.phase !== 'sv' && s.phase !== 'rule' && s.phase !== 'organ' && s.phase !== 'cluerooms' && s.phase !== 'clueacc' ? 'Song ' + s.round + (s.total >= 9999 ? '' : ' of ' + s.total) : '';
     if (s.phase !== 'end') endShown = false;
     revealAt = (s.phase === 'guess' || s.phase === 'svote' || s.phase === 'sbest') && s.reveal_in ? Date.now() + s.reveal_in : 0;
     nextAt = s.phase === 'reveal' && s.next_in ? Date.now() + s.next_in : 0;
@@ -302,6 +303,7 @@
     else if (s.phase === 'note' && s.note) noteView(s);
     else if (s.phase === 'carpet' && s.carpet) carpetView(s);
     else if (s.phase === 'zg' && s.zg) zgView(s);
+    else if (s.phase === 'sv' && s.sv) svView(s);
     else if (s.phase === 'fake' && s.fake) fkView(s);
     else if (s.phase === 'rule' && s.rule) ruView(s);
     else if (s.phase === 'organ' && s.organ) orView(s);
@@ -734,6 +736,54 @@
   // (0 on target, 1 a bit off, 2 about to fall), when you fall, and your accuracy at the end.
   var zgS = null;
   function zgOnLive() {}
+  // ---------- Serving! (the skippy-ball test game): tap the big ball right on the beat ----------
+  var svS = null;
+  function svView(s) {
+    var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
+    show('v-wait');
+    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, raf: 0, fb: '', fbAt: 0 }; }
+    var S = svS;
+    if (z.st === 'end') {
+      svStop(); box.classList.add('hidden');
+      var w = (z.win || []).indexOf(pid) >= 0, names = (z.win || []).map(function (k) { var p = s.players.filter(function (x) { return x.pid === k; })[0]; return p ? p.name : ''; }).filter(Boolean);
+      $('waittitle').textContent = w ? '🏆 You served the most!' : names.length ? '🏆 ' + names.join(' & ') + (names.length > 1 ? ' win!' : ' wins!') : 'The end!';
+      $('waitsub').textContent = mine ? 'You bounced ' + ((z.dist || {})[pid] || 0) + ' m.' : '';
+      return;
+    }
+    if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🏐 Serving!'; $('waitsub').textContent = 'Watch the big screen!'; return; }
+    if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
+    $('waittitle').textContent = z.st === 'play' ? '🏐 Bounce on the beat!' : z.st === 'ready' ? '🏐 Get ready…' : '🏐 Serving!';
+    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : 'Tap the ball when the ring closes in. Golden ring = SERVE (double)!';
+    box.classList.remove('hidden');
+    if (!box.firstChild) {
+      box.innerHTML = '<div class="svpad"><div class="svring"></div><button type="button" class="svbtn">🏐<b>BOUNCE!</b></button></div><div class="svfb"></div><div class="svme"></div>';
+      box.querySelector('.svbtn').addEventListener('pointerdown', function (e) { e.preventDefault(); svTap(); });
+    }
+    box.querySelector('.svme').textContent = ((z.dist || {})[pid] || 0) + ' m' + (z.lead === pid ? ' · you lead: your ball is bigger! 🎈' : '');
+    S.st = z.st; S.hops = z.hops; S.gold = z.gold;
+    if (!S.raf) { var loop = function () { if (!svS) return; svFrame(); svS.raf = requestAnimationFrame(loop); }; S.raf = requestAnimationFrame(loop); }
+  }
+  function svStop() { if (svS && svS.raf) cancelAnimationFrame(svS.raf); if (svS) svS.raf = 0; }
+  function svFrame() {
+    var S = svS, box = $('svui'); if (!S || !box || !S.t0) return;
+    var ring = box.querySelector('.svring'); if (!ring) return;
+    var b = (Date.now() - S.t0) / S.bt, k = Math.ceil(b - .25), f = k - b;   // f: 0 = right on the beat
+    if (S.st !== 'play' && S.st !== 'ready' || k < 0 || k >= S.hops) { ring.style.opacity = 0; return; }
+    ring.style.opacity = 1; ring.style.transform = 'scale(' + (1 + Math.max(0, f) * 1.4).toFixed(3) + ')';
+    ring.classList.toggle('gold', k % S.gold === S.gold - 1);
+    var fb = box.querySelector('.svfb'); if (S.fbAt && Date.now() - S.fbAt > 700) { fb.textContent = ''; S.fbAt = 0; }
+  }
+  function svTap() {
+    var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || z.st !== 'play') return;
+    var now = Date.now(), b = (now - S.t0) / S.bt, k = Math.round(b), dt = (b - k) * S.bt;
+    if (k < 0 || k >= S.hops || S.done[k]) return;
+    var q = Math.abs(dt) < 110 ? 2 : Math.abs(dt) < 230 ? 1 : 0; S.done[k] = 1;
+    if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, k: k, q: q });
+    var gold = k % S.gold === S.gold - 1, fb = $('svui').querySelector('.svfb');
+    fb.textContent = q === 2 ? (gold ? '✨ SERVE!' : 'PERFECT!') : q ? 'Good' : (dt < 0 ? 'Too early!' : 'Too late!'); fb.className = 'svfb q' + q; S.fbAt = now;
+    try { navigator.vibrate && navigator.vibrate(q === 2 ? 25 : 12); } catch (x) {}
+  }
+
   function zgStop() { if (zgS) { cancelAnimationFrame(zgS.raf); zgS.raf = 0; } }
   function zgTell(o) { var z = state && state.zg; if (!net || !z) return; o.pid = pid; o.id = z.id; (net.toHost || net.send)('zg', o); }
   function zgAcc() { return zgS && zgS.tot > 0 ? Math.round(100 * zgS.inT / zgS.tot) : 100; }
