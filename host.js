@@ -6578,6 +6578,58 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The players are the same little characters as in Lost in Verona, drawn over the 3D floor.
   function ru3Sparkle(base) { return v3Tex(function (x, W, H) { x.fillStyle = base; x.fillRect(0, 0, W, H); for (var i = 0; i < 700; i++) { var v = Math.random(); x.fillStyle = v < .5 ? 'rgba(255,255,255,' + (.4 + v) + ')' : 'rgba(120,120,140,.6)'; x.fillRect(Math.random() * W, Math.random() * H, 2, 2); } }, 128, 128); }
   // The singer (an original character): long wavy blonde hair, a sparkly silver outfit with flared trousers and a fringed top.
+  // The silver singer of We Will Rule the World, drawn in 2D (an original cartoon after the reference photo: long wavy
+  // strawberry-blonde hair, a silver sequinned crop top with fringed shawl sleeves, high-waisted silver sequin flares,
+  // a necklace, a big warm smile). She dances in four moves on the beat: point to the sky, both arms up, arms crossed in
+  // front, arms wide. RU_SING2D = false brings back the 3D singer.
+  var RU_SING2D = true;
+  var RU_SING2D_SVG = (function () {
+    var K = ' stroke="#3a2340" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"', SK = '#f6d2b8', HA = 'url(#rsHair)', SI = 'url(#rsSilver)';
+    var arm = function (pts, fr) {   // an arm: shoulder → elbow → hand, with the silver fringe hanging from the upper arm
+      var d = 'M' + pts[0] + ' ' + pts[1] + ' L' + pts[2] + ' ' + pts[3] + ' L' + pts[4] + ' ' + pts[5], o = '<path d="' + d + '" stroke="#3a2340" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" stroke="' + SK + '" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+      if (fr) { o += '<g class="rsfr">'; for (var i = 0; i <= 5; i++) { var k = i / 5, x = pts[0] + (pts[2] - pts[0]) * k, y = pts[1] + (pts[3] - pts[1]) * k; o += '<path d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + ' l' + (i % 2 ? 2 : -2) + ' 22" stroke="#e8ecf6" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M' + (x + 3).toFixed(1) + ' ' + y.toFixed(1) + ' l' + (i % 2 ? -1 : 1) + ' 17" stroke="#b9c0d4" stroke-width="1.8" fill="none" stroke-linecap="round"/>'; } o += '</g>'; }
+      return o + '<circle cx="' + pts[4] + '" cy="' + pts[5] + '" r="7.5" fill="' + SK + '"' + K + '/>';
+    };
+    var poses = [
+      [[92, 150, 74, 190, 96, 208], [148, 150, 166, 98, 176, 42]],   // point to the sky, the other hand on the hip
+      [[92, 150, 70, 98, 62, 46], [148, 150, 170, 98, 178, 46]],     // both arms up
+      [[92, 150, 88, 198, 142, 186], [148, 150, 152, 198, 98, 178]], // arms crossed in front (like the photo)
+      [[92, 150, 58, 162, 30, 138], [148, 150, 182, 162, 210, 138]]  // arms out wide
+    ];
+    var s = '<svg class="rs2svg" viewBox="0 0 240 440" overflow="visible" aria-hidden="true"><defs>' +
+      '<linearGradient id="rsHair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d39a"/><stop offset=".5" stop-color="#e2b071"/><stop offset="1" stop-color="#c98f52"/></linearGradient>' +
+      '<linearGradient id="rsSilver" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9aa2b8"/><stop offset=".3" stop-color="#eef1f8"/><stop offset=".55" stop-color="#b8bfd2"/><stop offset=".8" stop-color="#f6f8fc"/><stop offset="1" stop-color="#8e96ac"/></linearGradient>' +
+      '<pattern id="rsSeq" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#ffffff" opacity=".8"/><circle cx="6" cy="6" r="1.6" fill="#7d859c" opacity=".55"/></pattern></defs>';
+    s += '<g class="rsbody">';
+    // the long wavy hair behind her
+    s += '<path d="M86 84 Q78 120 84 160 Q74 190 86 222 Q100 236 112 226 L128 226 Q140 236 154 222 Q166 190 156 160 Q162 120 154 84 Q150 52 120 50 Q90 52 86 84 Z" fill="' + HA + '"' + K + '/>';
+    // the silver sequin flares (high-waisted, wide at the bottom)
+    s += '<g class="rslegs"><path d="M92 206 L119 206 L117 320 Q112 392 86 434 L46 434 Q70 392 82 320 Z" fill="' + SI + '"' + K + '/><path d="M92 206 L119 206 L117 320 Q112 392 86 434 L46 434 Q70 392 82 320 Z" fill="url(#rsSeq)"/>' +
+      '<path d="M121 206 L148 206 L158 320 Q170 392 194 434 L154 434 Q128 392 123 320 Z" fill="' + SI + '"' + K + '/><path d="M121 206 L148 206 L158 320 Q170 392 194 434 L154 434 Q128 392 123 320 Z" fill="url(#rsSeq)"/>' +
+      '<path d="M90 206 L150 206 L152 220 L88 220 Z" fill="#cfd5e4"' + K + '/></g>';
+    // a little bare midriff, then the sequin crop top
+    s += '<path d="M96 186 L144 186 L148 208 L92 208 Z" fill="' + SK + '"' + K + '/>' +
+      '<path d="M90 148 Q120 138 150 148 L148 186 Q134 194 120 190 Q106 194 92 186 Z" fill="' + SI + '"' + K + '/><path d="M90 148 Q120 138 150 148 L148 186 Q134 194 120 190 Q106 194 92 186 Z" fill="url(#rsSeq)"/>' +
+      '<path d="M100 150 Q110 168 120 158 Q130 168 140 150" stroke="#8e96ac" stroke-width="2" fill="none"/>';
+    // the neck, the necklace, the head
+    s += '<path d="M111 120 L129 120 L130 146 L110 146 Z" fill="' + SK + '"' + K + '/><path d="M108 140 Q120 152 132 140" stroke="#d9b45a" stroke-width="2" fill="none"/><path d="M120 147 L116 153 L120 159 L124 153 Z" fill="#f2d27a" stroke="#a07a20" stroke-width="1.2"/>' +
+      '<g class="rshead"><ellipse cx="120" cy="92" rx="29" ry="33" fill="' + SK + '"' + K + '/>' +
+      '<path d="M101 88 Q106 82 111 88" stroke="#3a2340" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M129 88 Q134 82 139 88" stroke="#3a2340" stroke-width="3" fill="none" stroke-linecap="round"/>' +   // (happy, smiling eyes)
+      '<path d="M100 79 Q106 75 112 78 M128 78 Q134 75 140 79" stroke="#b07a40" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="102" cy="101" rx="6" ry="3.6" fill="#ff8fa3" opacity=".55"/><ellipse cx="138" cy="101" rx="6" ry="3.6" fill="#ff8fa3" opacity=".55"/>' +
+      '<path d="M118 92 Q120 98 123 97" stroke="#d9a080" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '<path d="M107 106 Q120 122 133 106 Q120 111 107 106 Z" fill="#fff" stroke="#3a2340" stroke-width="2.2" stroke-linejoin="round"/><path d="M110 108 Q120 118 130 108" stroke="#e05a6a" stroke-width="2" fill="none"/>' +
+      // the hair in front: a side parting, waves falling past the face
+      '<path d="M90 92 Q88 60 118 56 Q150 56 152 94 Q146 74 128 70 Q112 76 100 74 Q94 82 92 104 Q86 118 90 132 Q80 118 84 100 Z" fill="' + HA + '"' + K + '/>' +
+      '<path d="M150 90 Q158 112 150 134 Q160 150 152 170 Q146 150 146 132 Q152 112 146 96 Z" fill="' + HA + '"' + K + '/>' +
+      '<path d="M98 66 Q112 60 126 64 M104 74 Q114 70 124 72" stroke="#f6dfae" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".8"/></g>';
+    // the four dance moves (arms with their fringe)
+    poses.forEach(function (P, i) { s += '<g class="rspose p' + i + '">' + arm(P[0], 1) + arm(P[1], 1) + '</g>'; });
+    s += '</g>';
+    // sparkles on the sequins
+    [[70, 380], [168, 300], [104, 250], [178, 410], [130, 170], [60, 330]].forEach(function (q, i) { s += '<path class="rsspk" style="animation-delay:' + (-i * .37).toFixed(2) + 's" d="M' + q[0] + ' ' + (q[1] - 7) + ' L' + (q[0] + 2) + ' ' + (q[1] - 2) + ' L' + (q[0] + 7) + ' ' + q[1] + ' L' + (q[0] + 2) + ' ' + (q[1] + 2) + ' L' + q[0] + ' ' + (q[1] + 7) + ' L' + (q[0] - 2) + ' ' + (q[1] + 2) + ' L' + (q[0] - 7) + ' ' + q[1] + ' L' + (q[0] - 2) + ' ' + (q[1] - 2) + ' Z" fill="#fff"/>'; });
+    return s + '</svg>';
+  })();
   function ru3Singer() {
     var T = THREE, g = new T.Group(), sp = ru3Sparkle('#b8b8c6'); sp.repeat.set(3, 4);
     var silver = new T.MeshStandardMaterial({ color: '#eeeef6', map: sp, metalness: .3, roughness: .32, emissive: '#9a9ab4', emissiveMap: sp, emissiveIntensity: .75, side: T.DoubleSide });   /* (not too metallic: with nothing around to reflect, metal looks black) */
@@ -6795,6 +6847,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rn2 = new T.WebGLRenderer({ antialias: true, alpha: true }); rn2.setPixelRatio(rn.getPixelRatio()); rn2.setSize(w, h); rn2.setClearColor(0x000000, 0); rn2.outputEncoding = T.sRGBEncoding; rn2.toneMapping = T.NoToneMapping;
     var over = document.createElement('div'); over.className = 'ru3front'; over.appendChild(rn2.domElement); hostEl.parentNode.insertBefore(over, back.nextSibling);
     var cam2 = cam.clone(); cam2.layers.set(1); st.back = back;
+    var s2d = null; if (RU_SING2D) { s2d = document.createElement('div'); s2d.className = 'rus2d'; s2d.innerHTML = RU_SING2D_SVG; over.appendChild(s2d); }
+    var s2v = new T.Vector3(), s2h = new T.Vector3(), s2f = new T.Vector3();
     var sPos = new T.Vector3();
     var up = new T.Vector3(0, 1, 0), tmp = new T.Vector3();
     function frame(now) {
@@ -6808,6 +6862,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (u.robot) { u.move(t, dance);   // the yellow act: disco poses on the beat
       } else { u.la.rotation.z = -(.15 + dance * (.25 + Math.max(0, Math.sin(t * 2.1)) * .5)); u.ra.rotation.z = .15 + dance * (.2 + Math.max(0, Math.cos(t * 1.05)) * 2.3); u.la.rotation.x = -dance * (.3 + Math.sin(t * 4.2) * .2);
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; } u.fr.rotation.y = Math.sin(t * 8) * .15; if (!u.robot) u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
+      if (s2d) {   // the 2D singer: hide the 3D one and put her drawing exactly where she stands (and only above the floor while rising)
+        var on2 = !u.robot; singer.visible = !on2; s2d.style.display = on2 ? '' : 'none';
+        if (on2) {
+          singer.getWorldPosition(s2v); s2h.copy(s2v); s2h.y += 2.05 * sScale; s2f.set(0, .19, s / 2).applyAxisAngle(up, 0); s2f.y = .19;
+          s2v.project(cam); s2h.project(cam); var W3 = hostEl.clientWidth, H3 = hostEl.clientHeight;
+          var fx = (s2v.x + 1) / 2 * W3, fy = (1 - s2v.y) / 2 * H3, hy = (1 - s2h.y) / 2 * H3, ph = Math.max(10, fy - hy) * 1.75;
+          s2f.applyMatrix4(sc.matrixWorld).project(cam); var floorY = (1 - s2f.y) / 2 * H3;
+          s2d.style.left = fx.toFixed(1) + 'px'; s2d.style.top = fy.toFixed(1) + 'px'; s2d.style.height = ph.toFixed(1) + 'px';
+          var cut = Math.max(0, fy - floorY); s2d.style.clipPath = e < 1 ? 'inset(0 0 ' + (cut / ph * 100).toFixed(1) + '% 0)' : 'none';
+          s2d.classList.toggle('dance', !!dance);
+        }
+      }
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
       var gI = G.rule;   // the laser item, and its beams when someone takes it
       if (gI && gI.item && gI.st === 'play' && gI.item[2] === 'freeze') { item.visible = false; flake.visible = true; flake.position.set(gI.item[0] - n / 2 + .5, .7 + Math.sin(t * 2.4) * .025, gI.item[1] - n / 2 + .5); flake.rotation.set(-.35, 0, t * .9); flake.userData.mat.emissiveIntensity = .55 + .35 * (.5 + .5 * Math.sin(t * 5)); var fh = 1.9 + .3 * Math.sin(t * 4); flake.userData.halo.scale.set(fh, fh, 1); } else if (gI && gI.item && gI.st === 'play') { flake.visible = false; item.visible = true; item.material.emissiveIntensity = .9 + .6 * (.5 + .5 * Math.sin(t * 9)); if (item.userData.halo) { var hs = 2.6 + .5 * Math.sin(t * 6); item.userData.halo.scale.set(hs, hs, 1); item.userData.halo.material.opacity = .55 + .3 * Math.sin(t * 6); } (item.userData.spk || []).forEach(function (sp, i) { var a = t * 2.6 + i * Math.PI * 2 / 4; sp.position.set(Math.cos(a) * .9, Math.sin(t * 5 + i) * .35, Math.sin(a) * .9); var sc2 = .25 + .2 * Math.max(0, Math.sin(t * 11 + i * 1.7)); sp.scale.set(sc2, sc2, 1); }); item.position.set(gI.item[0] - n / 2 + .5, .7 + Math.sin(t * 3) * .025, gI.item[1] - n / 2 + .5);   /* (hovering just above the tile, never through it) */ item.rotation.y = t * 2.4; } else { item.visible = false; flake.visible = false; }
