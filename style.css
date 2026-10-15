@@ -5564,3 +5564,12 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svaf.walkin .svfb2{animation:svwalkin .34s ease-in-out infinite}
 @keyframes svwalkin{50%{transform:translateY(calc(var(--s) * -.12)) rotate(4deg)}}
 .svaf.offst{opacity:0}
+/* Serving: her backup dancers (same moves); while walking they keep their front view and stamp along */
+.svov .svdan{width:calc(var(--s) * 2.6 * 320 / 540);height:calc(var(--s) * 2.6);margin:calc(var(--s) * -2.52) 0 0 calc(var(--s) * -1.3 * 320 / 540)}
+.svdan .svkant{display:none}
+.svins.svdan.walk .svleadsvg{display:block}
+.svins.svdan.walk.wl .svleadsvg{--lean:-7deg}.svins.svdan.walk.wr .svleadsvg{--lean:7deg}
+/* Serving: the black team (right half) */
+.svchart.r .svteam{color:#e8e4ee}.svchart.r{box-shadow:inset 0 0 0 2px rgba(230,226,240,.6);background:rgba(8,6,10,.6)}
+.svaf.gB .svtile{box-shadow:0 0 0 2px #e8e4ee,0 0 18px rgba(255,255,255,.5)}
+.svready.b b{color:#fff;text-shadow:0 0 30px #000}.svready.b{background:rgba(6,4,8,.9);box-shadow:0 0 0 4px #e8e4ee,0 0 50px rgba(255,255,255,.35)}

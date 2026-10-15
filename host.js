@@ -6314,7 +6314,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
   var SV_VID = 'WPfV96fRvW0', SV_S = 0, SV_BT = 60000 / 122 * 2, SV_PHASE = -3, SV_LAG = 90,   /* (measured: exactly 122 BPM, and in the video the beat starts right at 0:00: bounce 0 = 0:00; the song plays from the start, under the presenters. SV_LAG: the sound reaches the room a little after the player reports its time) */ svLoop = null, svTimer = null, svSongT = null;
-  var SV_STAGES = [{ n: 1, t: 'Red team', from: 34, to: 74, at: 0 }, { n: 2, t: 'Blue team', from: 86, to: 126, at: 78 }, { n: 3, t: 'Skippy balls!', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 144, SV_HOP = 152, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
+  var SV_STAGES = [{ n: 1, t: 'Red team', from: 34, to: 74, at: 0 }, { n: 2, t: 'Black team', from: 86, to: 126, at: 78 }, { n: 3, t: 'Skippy balls!', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 144, SV_HOP = 152, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { var S = SV_STAGES[0]; SV_STAGES.forEach(function (x) { if (t >= x.at) S = x; }); return S; }
   // Stages 1 and 2 are an aerobics class: every arrow you hit is a step on the stage (left, forward, back, right), and the
@@ -6587,29 +6587,29 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var spark = ''; for (i = 0; i < 14; i++) spark += '<circle cx="' + (150 + (i * 37 % 21)) + '" cy="' + (266 + (i * 13 % 24)) + '" r="' + (1 + i % 2) + '" fill="#fff"/>';
     return '<svg viewBox="0 0 320 540" class="svleadsvg" aria-hidden="true"><defs>' +
       '<pattern id="svleo" width="30" height="28" patternUnits="userSpaceOnUse"><rect width="30" height="28" fill="#c20e1c"/><g fill="#1e0204"><path d="M3 6 q2 -3 5 -2 l-1 2 q-2 0 -4 2z M10 4 q3 0 4 3 l-2 0 q-1 -2 -2 -1z M13 9 q0 3 -3 4 l0 -2 q2 -1 1 -2z M4 11 q2 2 5 2 l-1 1 q-3 0 -4 -2z"/><path d="M18 17 q3 -2 6 0 l-1 1 q-2 -1 -4 0z M25 19 q1 3 -1 5 l-1 -1 q1 -2 0 -3z M17 22 q2 3 5 3 l0 -1 q-3 -1 -4 -3z"/><circle cx="26" cy="5" r="1.5"/><circle cx="6" cy="22" r="1.7"/><circle cx="20" cy="9" r="1.1"/></g><circle cx="8.5" cy="8.5" r="2.4" fill="#86101a"/><circle cx="21" cy="21" r="2.2" fill="#86101a"/></pattern>' +
-      '<linearGradient id="svhair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a1a2c"/><stop offset=".5" stop-color="#6a0e1e"/><stop offset="1" stop-color="#3e0610"/></linearGradient>' +
+      '<linearGradient id="svhair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3a2e"/><stop offset=".55" stop-color="#e3141e"/><stop offset="1" stop-color="#9a0812"/></linearGradient>' +
       '<radialGradient id="svskin" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#f6dccb"/><stop offset="1" stop-color="#e2b296"/></radialGradient>' +
       '<linearGradient id="svsilv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f4fb"/><stop offset=".5" stop-color="#a9acc0"/><stop offset="1" stop-color="#e6e7f2"/></linearGradient></defs>' +
       '<ellipse cx="160" cy="528" rx="96" ry="9" fill="rgba(0,0,0,.35)"/>' +
       '<g class="svlbody">' +
       // back hair: long, straight, dark red, past the waist
-      '<path d="M106 84 Q104 26 160 22 Q216 26 214 84 L224 200 Q232 290 214 336 Q186 346 160 342 Q134 346 106 336 Q88 290 96 200 Z" fill="url(#svhair)"/>' +
+      '<path d="M92 92 Q84 14 160 8 Q236 14 228 92 Q246 150 238 210 Q232 260 214 300 Q186 316 160 312 Q134 316 106 300 Q88 260 82 210 Q74 150 92 92 Z" fill="url(#svhair)"/>' +
       '<g stroke="#2a040a" stroke-width="1.5" opacity=".5" fill="none"><path d="M104 140 Q98 240 112 332"/><path d="M216 140 Q222 240 208 332"/><path d="M122 150 Q118 250 128 336"/><path d="M198 150 Q202 250 192 336"/></g>' +
       // a sheer black cape from the shoulders
       '<path d="M100 168 Q60 270 76 410 Q100 396 122 372 Q108 270 118 182 Z M220 168 Q260 270 244 410 Q220 396 198 372 Q212 270 202 182 Z" fill="rgba(8,4,10,.78)"/>' +
       '<path d="M96 200 Q74 300 84 400 M224 200 Q246 300 236 400" stroke="rgba(255,255,255,.12)" stroke-width="2" fill="none"/>' +
       // fitted leopard trousers and leopard platform boots
-      '<path d="M106 290 L214 290 Q222 380 216 446 Q214 482 222 502 L174 504 Q170 420 160 350 Q150 420 146 504 L98 502 Q106 482 104 446 Q98 380 106 290 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2.2" stroke-linejoin="round"/>' +
+      '<path d="M100 286 L220 286 Q244 330 236 392 Q228 446 222 486 L174 490 Q172 420 160 360 Q148 420 146 490 L98 486 Q92 446 84 392 Q76 330 100 286 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2.2" stroke-linejoin="round"/>' +
       '<path d="M160 350 L160 296" stroke="#3e0206" stroke-width="1.5" opacity=".7"/>' +
-      '<path d="M96 496 Q92 518 104 522 L148 522 Q154 512 148 496 Z M172 496 Q166 512 172 522 L216 522 Q228 518 224 496 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><rect x="100" y="520" width="50" height="8" rx="3" fill="#a00c18"/><rect x="170" y="520" width="50" height="8" rx="3" fill="#a00c18"/>' +
+      '<path d="M94 482 Q88 504 96 512 L150 512 Q156 500 150 482 Z M170 482 Q164 500 170 512 L224 512 Q232 504 226 482 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><rect x="92" y="510" width="62" height="18" rx="4" fill="#c20e1c" stroke="#3e0206" stroke-width="2"/><rect x="166" y="510" width="62" height="18" rx="4" fill="#c20e1c" stroke="#3e0206" stroke-width="2"/><path d="M96 519 h54 M170 519 h54" stroke="#1e0204" stroke-width="2" stroke-dasharray="5 4"/>' +
       // torso: a fuller figure; sheer black top over skin, a leopard corset, a sparkly silver panel
       '<path d="M146 124 L174 124 L176 152 L144 152 Z" fill="url(#svskin)"/>' +
-      '<path d="M98 168 Q112 148 160 146 Q208 148 222 168 L216 236 Q206 268 216 300 L104 300 Q114 268 104 236 Z" fill="url(#svskin)"/>' +
-      '<path d="M98 168 Q112 148 160 146 Q208 148 222 168 L216 236 Q206 268 216 300 L104 300 Q114 268 104 236 Z M144 122 L176 122 L178 154 L142 154 Z" fill="rgba(12,8,12,.82)"/>' +
-      '<path d="M108 196 Q132 180 160 196 Q188 180 212 196 L210 236 Q202 268 212 298 L108 298 Q118 268 110 236 Z" fill="url(#svleo)" stroke="#1e0204" stroke-width="2"/>' +
+      '<path d="M92 168 Q110 146 160 144 Q210 146 228 168 L222 232 Q212 262 226 300 L94 300 Q108 262 98 232 Z" fill="url(#svskin)"/>' +
+      '<path d="M92 168 Q110 146 160 144 Q210 146 228 168 L222 232 Q212 262 226 300 L94 300 Q108 262 98 232 Z M144 122 L176 122 L178 154 L142 154 Z" fill="rgba(12,8,12,.82)"/>' +
+      '<path d="M102 196 Q130 178 160 196 Q190 178 218 196 L216 236 Q206 266 222 298 L98 298 Q114 266 104 236 Z" fill="url(#svleo)" stroke="#1e0204" stroke-width="2"/>' +
       '<path d="M108 196 Q132 218 160 200 Q188 218 212 196" stroke="#111" stroke-width="5" fill="none"/>' +
       '<path d="M130 216 L134 296 M190 216 L186 296 M160 204 L160 258" stroke="#3e0206" stroke-width="1.8" opacity=".7"/>' +
-      '<path d="M146 260 L174 260 L170 296 L150 296 Z" fill="url(#svsilv)" stroke="#8a8ca0" stroke-width="1"/>' + spark +
+      '<path d="M146 260 L174 260 L170 296 L150 296 Z" fill="url(#svsilv)" stroke="#8a8ca0" stroke-width="1"/>' + spark + '<g class="svfringe" stroke="#0a0608" stroke-width="2.2" stroke-linecap="round">' + [104, 110, 116, 204, 210, 216].map(function (x, k) { return '<path d="M' + x + ' 196 Q' + (x + (k < 3 ? -4 : 4)) + ' 250 ' + (x + (k < 3 ? -2 : 2)) + ' ' + (300 + k % 3 * 14) + '" fill="none"/>'; }).join('') + '</g>' +
       // the open hand, out to the side
       '<g class="svlarm r">' + sleeve('M212 172 Q242 206 266 228', 19) + '<path d="M266 228 l14 -2 M266 228 l15 4 M266 228 l12 10 M266 228 l6 13 M266 228 l10 -10" stroke="#f0c8b2" stroke-width="4.5" stroke-linecap="round"/><circle cx="266" cy="228" r="9" fill="#f0c8b2"/></g>' +
       // head: a round face, eyes closed in the moment, big red lips singing
@@ -6620,13 +6620,42 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M158 96 Q155 105 160 107" stroke="#c99080" stroke-width="2" fill="none"/>' +
       '<g class="svlmouth"><path d="M143 114 Q160 109 177 114 Q175 134 160 135 Q145 134 143 114 Z" fill="#c0102a"/><path d="M146 116 Q160 113 174 116 Q172 130 160 131 Q148 130 146 116 Z" fill="#4a0610"/><path d="M147 116 Q160 115 173 116 L172 121 Q160 120 148 121 Z" fill="#fff"/><ellipse cx="160" cy="127" rx="7" ry="2.8" fill="#e05570"/></g>' +
       // front hair: a middle parting, long strands over the shoulders
-      '<path d="M120 98 Q114 38 160 34 Q206 38 200 98 Q194 60 166 50 L160 56 L154 50 Q126 60 120 98 Z" fill="url(#svhair)"/>' +
-      '<path d="M122 74 Q108 150 116 250 Q126 256 134 250 Q126 160 132 94 Z M198 74 Q212 150 204 250 Q194 256 186 250 Q194 160 188 94 Z" fill="url(#svhair)"/>' +
+      '<path d="M112 104 Q98 30 160 24 Q222 30 208 104 Q200 60 168 50 L160 58 L152 50 Q120 60 112 104 Z" fill="url(#svhair)"/><path d="M118 40 Q140 22 160 24 M202 40 Q180 22 160 24" stroke="#ff7a5a" stroke-width="3" fill="none" opacity=".6"/>' +
+      '<path d="M116 70 Q92 140 104 240 Q118 252 132 244 Q122 160 130 96 Z M204 70 Q228 140 216 240 Q202 252 188 244 Q198 160 190 96 Z" fill="url(#svhair)"/>' +
       '<path d="M124 104 Q118 170 122 244 M196 104 Q202 170 198 244 M160 38 Q148 46 136 62 M160 38 Q172 46 184 62" stroke="#2a040a" stroke-width="1.4" fill="none" opacity=".6"/></g>' +
       // the arm with the microphone, the mic at her mouth
       '<g class="svlarm l">' + sleeve('M108 172 Q74 218 98 242 Q124 214 138 152', 19) + '<circle cx="138" cy="152" r="9" fill="#f0c8b2"/><g transform="rotate(-30 140 148)"><rect x="135" y="118" width="11" height="42" rx="4" fill="#161616"/><ellipse cx="140.5" cy="116" rx="10" ry="12" fill="#2b2b2b"/><path d="M132 112 h17 M131 118 h19" stroke="#5a5a5a" stroke-width="1.5"/></g><path d="M131 148 q8 -4 14 2" stroke="#e2b296" stroke-width="5" fill="none" stroke-linecap="round"/></g>' +
       '</g></svg>';
   })();
+  // her two backup dancers: red fluffy cropped jackets, red fishnets, black briefs, black thigh-high boots, a black fan
+  var SV_BACKUP = function (hair, skin) {
+    var fur = '', i; for (i = 0; i < 70; i++) { var a = i * 2.39996, rr = (i * 7 % 13) + 4; fur += '<circle cx="' + (160 + Math.cos(a) * (36 + rr)).toFixed(1) + '" cy="' + (190 + Math.sin(a) * (40 + rr * .6)).toFixed(1) + '" r="' + (9 + i % 4 * 2) + '" fill="' + ['#e3142a', '#ff3a46', '#b80c1e', '#f0202f'][i % 4] + '"/>'; }
+    var furArm = function (x1, y1, x2, y2) { var o = ''; for (var k = 0; k <= 6; k++) { var t = k / 6; o += '<circle cx="' + (x1 + (x2 - x1) * t).toFixed(1) + '" cy="' + (y1 + (y2 - y1) * t).toFixed(1) + '" r="' + (18 - k) + '" fill="' + (k % 2 ? '#e3142a' : '#ff3a46') + '"/>'; } return o; };
+    var net = '<pattern id="svnet" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="' + skin + '"/><path d="M0 0 H8 M0 0 V8" stroke="#d0101e" stroke-width="1.8"/></pattern>';
+    return '<svg viewBox="0 0 320 540" class="svleadsvg svbackup" aria-hidden="true"><defs>' + net + '</defs>' +
+      '<ellipse cx="160" cy="528" rx="70" ry="8" fill="rgba(0,0,0,.35)"/><g class="svlbody">' +
+      '<path d="M138 60 Q130 20 162 18 Q196 22 188 70 Q200 120 186 150 L176 120 Q182 80 160 70 Z" fill="' + hair + '"/>' +   // (a high ponytail)
+      // legs in red fishnets, black thigh-high boots with heels
+      '<path d="M126 300 L156 300 L152 400 L130 400 Z M164 300 L194 300 L190 400 L168 400 Z" fill="url(#svnet)"/>' +
+      '<path d="M126 392 L154 392 L150 508 L134 508 Z M166 392 L194 392 L188 508 L172 508 Z" fill="#141014" stroke="#000" stroke-width="2"/>' +
+      '<path d="M128 506 L156 506 L158 520 L130 520 Z M170 506 L198 506 L200 520 L172 520 Z" fill="#141014"/><path d="M132 520 L134 530 M196 520 L194 530" stroke="#141014" stroke-width="4"/>' +
+      '<path d="M128 398 L154 398 M168 398 L194 398" stroke="#2a2a30" stroke-width="3"/>' +
+      // black briefs with straps, fishnet body
+      '<path d="M128 220 Q160 214 192 220 L194 300 L126 300 Z" fill="url(#svnet)"/>' +
+      '<path d="M124 282 L196 282 L190 312 Q160 326 130 312 Z" fill="#141014"/><path d="M122 292 L198 292 M126 302 L194 302" stroke="#141014" stroke-width="3"/>' +
+      // the fluffy jacket
+      fur + furArm(118, 170, 92, 238) + furArm(202, 170, 228, 238) +
+      '<path d="M146 130 L174 130 L176 150 L144 150 Z" fill="' + skin + '"/>' +
+      '<circle cx="90" cy="244" r="8" fill="' + skin + '"/><circle cx="230" cy="244" r="8" fill="' + skin + '"/>' +
+      '<g class="svlarm r"><path d="M232 244 L270 214 L262 252 Z" fill="#141014"/><path d="M232 244 L270 214 M232 244 L268 228 M232 244 L264 242" stroke="#3a3a40" stroke-width="1.5"/></g>' +   // (a black fan)
+      // the head
+      '<g class="svlhead"><ellipse cx="160" cy="98" rx="27" ry="31" fill="' + skin + '"/>' +
+      '<path d="M134 92 Q132 64 160 62 Q190 64 186 92 Q180 74 160 74 Q140 74 134 92 Z" fill="' + hair + '"/>' +
+      '<path d="M144 96 Q150 92 156 96 M164 96 Q170 92 176 96" stroke="#111" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      '<g class="svlmouth"><path d="M152 112 Q160 110 168 112 Q166 120 160 120 Q154 120 152 112 Z" fill="#a00c18"/></g>' +
+      '<circle cx="133" cy="104" r="3" fill="#d0101e"/><circle cx="187" cy="104" r="3" fill="#d0101e"/></g>' +
+      '</g></svg>';
+  };
   // her side view (facing right; mirrored to walk left): for crossing her stage, stamping on her heels
   var SV_LEAD_SIDE = (function () {
     var leg = function (cls) { return '<g class="svsleg ' + cls + '"><path d="M150 296 Q138 360 146 420 Q150 470 144 500 L178 500 Q182 466 178 420 Q186 360 182 296 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><path d="M140 496 Q138 516 150 522 L200 522 Q206 512 194 500 Q180 494 172 494 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><rect x="142" y="519" width="56" height="8" rx="3" fill="#a00c18"/><path d="M146 527 L146 538 L152 538 L152 527 Z" fill="#a00c18"/></g>'; };
@@ -6681,12 +6710,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('svov'), solo = g.order.length < 2;
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'svov'; ov.className = 'svov enter' + (solo ? ' solo' : '');
-      var chart = function (side) { return '<div class="svchart ' + side + '"><b class="svteam">' + (solo ? 'Your arrows' : side === 'l' ? 'Red team' : 'Blue team') + '</b>' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { var gp = n[5] || '*'; if (gp !== '*' && gp !== (side === 'l' ? 'A' : 'B')) return ''; return '<i class="svn c' + n[1] + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div>'; };
+      var chart = function (side) { return '<div class="svchart ' + side + '"><b class="svteam">' + (solo ? 'Your arrows' : side === 'l' ? 'Red team' : 'Black team') + '</b>' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { var gp = n[5] || '*'; if (gp !== '*' && gp !== (side === 'l' ? 'A' : 'B')) return ''; return '<i class="svn c' + n[1] + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div>'; };
       ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svsign">🪩 Serving! <small>dance-off · test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
-      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall(col[0], col[1]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + '</div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall(col[0], col[1]) + svDancer(col[0], col[1]) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
+      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall(col[0], col[1]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + '</div>' + [['#2a1810', '#e8b896'], ['#1a1214', '#c98a62']].map(function (d, j) { return '<div class="svins svdan d' + j + '"><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_BACKUP(d[0], d[1]).replace(/svnet/g, 'svnet' + j) + '</div><div class="svnb insd d' + j + '"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>'; }).join('') + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall(col[0], col[1]) + svDancer(col[0], col[1]) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
     }
     if (!g.home) g.home = svHomes(g);
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
@@ -6704,6 +6733,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lc = solo || act === '*' ? 11.5 : act === 'A' ? 6 : 17;
     ins._lc = lc;
     var lcx = lc + ix, lry = bph === 'hop' ? 2 : Math.max(0, Math.min(2, SV_LROW + iy)); place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
+    [-3, 3].forEach(function (dx, j) {   // her two backup dancers: one tile free on either side, doing exactly what she does
+      var dn = ov.querySelector('.svdan.d' + j), db = ov.querySelector('.svnb.insd.d' + j); if (!dn) return;
+      place(dn, lcx + dx, lry, true); if (db) place(db, lc + dx, 2, true);
+      var cl = 'svins svdan d' + j + ' ' + ins.className.replace(/\bsvins\b/, '').trim(); if (dn.className !== cl) dn.className = cl;
+      dn.style.setProperty('--wd', ins.style.getPropertyValue('--wd'));
+    });
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }
     var marks = [];
     g.order.forEach(function (k) {
@@ -6731,7 +6766,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var swB = '';
     if (!g.starts) { g.starts = []; g.chart.forEach(function (n, i) { if (!i || g.chart[i - 1][5] !== n[5] || n[0] - g.chart[i - 1][0] > 6) g.starts.push(n[0]); }); }   // (where a team's turn begins)
     var rdyN = null; if ((g.st === 'play' || g.st === 'ready') && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= 5000) rdyN = x; });   // (5 seconds before a team's turn: their name and 'Get ready!' in the middle)
-    var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Red team' : 'Blue team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
+    var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Red team' : 'Black team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
     var kant = g.st === 'play' && SV_FAST.some(function (x, ki) { var e = ki ? 500 / SV_BT : 0; return b >= x - .5 - e && b < x + 2.5 - e; })   /* (the second one half a second earlier) */, ktx = kant ? 'Serving kant!' : '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
     if (kb && kb._t !== ktx) { kb._t = ktx; if (ktx) kb.textContent = ktx; kb.classList.toggle('on', !!ktx); }
