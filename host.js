@@ -6172,12 +6172,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.item || now < (g.itemAt || Infinity)) return;
     var occ = {}; g.order.forEach(function (k) { occ[g.pos[k][0] + ',' + g.pos[k][1]] = 1; });
     var free = []; for (var y = 0; y < g.n; y++) for (var x = 0; x < g.n; x++) if (!ruStage(g, x, y) && !occ[x + ',' + y]) free.push([x, y]);
-    if (!free.length) return; var it = pick(free); g.item = [it[0], it[1], 'star']; push(); if (!REMOTE) Music.blip();
+    if (!free.length) return; var it = pick(free); g.item = [it[0], it[1], Math.random() < .5 ? 'star' : 'freeze']; push(); if (!REMOTE) Music.blip();
   }
   var RU_STAR = 6000;   // the star: triple speed for 6 seconds, and nobody can stun you (whoever you touch is stunned instead)
+  var RU_FREEZE = 10000;   // the snowflake: everyone else is frozen solid for 10 seconds
   function ruItemTake(g, k) {
-    var now = Date.now();
+    var now = Date.now(), kind = g.item[2] || 'star';
     g.item = null; g.itemAt = now + 12000 + Math.random() * 8000;
+    if (kind === 'freeze') {
+      g.order.forEach(function (o) { if (o !== k) { g.stun[o] = Math.max(g.stun[o] || 0, now + RU_FREEZE); (g.frz = g.frz || {})[o] = now + RU_FREEZE; } });
+      g.fx = { k: k, t: 'freeze', at: now }; if (!REMOTE) { itemSfx('sounds/ice.mp3?v=1', Music.zap); whooshes([0, 200]); } ruBeat(); return;
+    }
     (g.fast = g.fast || {})[k] = now + RU_STAR; g.fx = { k: k, t: 'star', at: now };
     if (!REMOTE) { Music.starGet(); whooshes([0, 120, 240]); }
   }
@@ -6577,6 +6582,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       m.userData.spk = [0, 1, 2, 3].map(function () { var sp = new T.Sprite(glow('rgba(255,255,255,1)', 'rgba(255,255,255,.6)')); m.add(sp); return sp; });
       return m;
     })(); item.visible = false; ipar.add(item);
+    var flake = (function () {   // the snowflake: six icy arms with little branches, a cold blue glow around it
+      var grp = new T.Group(), mat = new T.MeshStandardMaterial({ color: '#dff6ff', emissive: '#7fd8ff', emissiveIntensity: 1.1, metalness: .2, roughness: .15 });
+      for (var q = 0; q < 6; q++) {
+        var arm = new T.Group(); arm.rotation.z = q * Math.PI / 3;
+        var bar = new T.Mesh(new T.BoxGeometry(.09, 1.25, .07), mat); arm.add(bar);
+        [.28, .46].forEach(function (yy, bi) { [-1, 1].forEach(function (sd) { var br = new T.Mesh(new T.BoxGeometry(.06, bi ? .2 : .3, .06), mat); br.position.set(sd * (bi ? .06 : .09), yy, 0); br.rotation.z = sd * -.85; arm.add(br); arm.add(br.clone()); br.position.y = -yy; br.rotation.z = sd * .85; }); });
+        grp.add(arm);
+      }
+      grp.add(new T.Mesh(new T.CylinderGeometry(.13, .13, .09, 6).rotateX(Math.PI / 2), mat));
+      var cv = document.createElement('canvas'); cv.width = cv.height = 64; var x = cv.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(230,250,255,1)'); gr.addColorStop(.35, 'rgba(120,210,255,.55)'); gr.addColorStop(1, 'rgba(120,210,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+      var halo = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(cv), transparent: true, depthWrite: false, blending: T.AdditiveBlending })); halo.scale.set(2.4, 2.4, 1); grp.add(halo); grp.userData.halo = halo; grp.userData.mat = mat;
+      return grp;
+    })(); flake.visible = false; ipar.add(flake);
     var beams = [0, 1, 2, 3].map(function () { var m = new T.Mesh(new T.BoxGeometry(1, .12, .18), new T.MeshBasicMaterial({ color: '#ff5fe0', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false })); m.visible = false; ipar.add(m); return m; });
     var balls = []; for (var b = 0; b < 6; b++) {
       var a = b / 6 * Math.PI * 2 + .3, r = n * .42, bg = new T.Group();
@@ -6617,7 +6635,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       singer.rotation.y = dance ? Math.sin(t * 1.1) * .5 : 0; singer.position.y = dance ? Math.abs(Math.sin(t * 4.2)) * .06 : 0; } u.fr.rotation.y = Math.sin(t * 8) * .15; if (!u.robot) u.head.rotation.z = Math.sin(t * 2.1) * .12 * dance;
       balls.forEach(function (bl, i) { bl.rotation.y = t * (.4 + i * .05); });
       var gI = G.rule;   // the laser item, and its beams when someone takes it
-      if (gI && gI.item && gI.st === 'play') { item.visible = true; item.material.emissiveIntensity = .9 + .6 * (.5 + .5 * Math.sin(t * 9)); if (item.userData.halo) { var hs = 2.6 + .5 * Math.sin(t * 6); item.userData.halo.scale.set(hs, hs, 1); item.userData.halo.material.opacity = .55 + .3 * Math.sin(t * 6); } (item.userData.spk || []).forEach(function (sp, i) { var a = t * 2.6 + i * Math.PI * 2 / 4; sp.position.set(Math.cos(a) * .9, Math.sin(t * 5 + i) * .35, Math.sin(a) * .9); var sc2 = .25 + .2 * Math.max(0, Math.sin(t * 11 + i * 1.7)); sp.scale.set(sc2, sc2, 1); }); item.position.set(gI.item[0] - n / 2 + .5, .75 + Math.sin(t * 3) * .12, gI.item[1] - n / 2 + .5); item.rotation.y = t * 2.4; } else item.visible = false;
+      if (gI && gI.item && gI.st === 'play' && gI.item[2] === 'freeze') { item.visible = false; flake.visible = true; flake.position.set(gI.item[0] - n / 2 + .5, .8 + Math.sin(t * 2.4) * .12, gI.item[1] - n / 2 + .5); flake.rotation.y = t * 1.6; flake.rotation.z = t * .8; flake.userData.mat.emissiveIntensity = .9 + .5 * (.5 + .5 * Math.sin(t * 5)); var fh = 2.4 + .4 * Math.sin(t * 4); flake.userData.halo.scale.set(fh, fh, 1); } else if (gI && gI.item && gI.st === 'play') { flake.visible = false; item.visible = true; item.material.emissiveIntensity = .9 + .6 * (.5 + .5 * Math.sin(t * 9)); if (item.userData.halo) { var hs = 2.6 + .5 * Math.sin(t * 6); item.userData.halo.scale.set(hs, hs, 1); item.userData.halo.material.opacity = .55 + .3 * Math.sin(t * 6); } (item.userData.spk || []).forEach(function (sp, i) { var a = t * 2.6 + i * Math.PI * 2 / 4; sp.position.set(Math.cos(a) * .9, Math.sin(t * 5 + i) * .35, Math.sin(a) * .9); var sc2 = .25 + .2 * Math.max(0, Math.sin(t * 11 + i * 1.7)); sp.scale.set(sc2, sc2, 1); }); item.position.set(gI.item[0] - n / 2 + .5, .75 + Math.sin(t * 3) * .12, gI.item[1] - n / 2 + .5); item.rotation.y = t * 2.4; } else { item.visible = false; flake.visible = false; }
       var lz = gI && gI.laser, lk = lz ? (Date.now() - lz.at) / 700 : 2;
       beams.forEach(function (bm, i) {
         if (lk >= 1) { bm.visible = false; return; }
@@ -6712,7 +6730,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
     } else {
       var itI = g.item && g.st === 'play' ? g.item[1] * g.n + g.item[0] : -1;   // (the laser item on the flat board)
-      Object.keys(ov._cells).forEach(function (i) { ov._cells[i].classList.toggle('ruitem', +i === itI); });
+      Object.keys(ov._cells).forEach(function (i) { ov._cells[i].classList.toggle('ruitem', +i === itI); if (+i === itI) ov._cells[i].setAttribute('data-it', g.item[2]); });
       var a1 = (g.n - g.s) / 2, so1 = g.own[a1 * g.n + a1] || '', sd = ov.querySelector('.rustage'); if (sd && sd._o !== so1) { sd._o = so1; sd.style.background = so1 ? ruCol(so1) : ''; }   // (a stage taken with a loop)
       g.own.forEach(function (k, i) { var c = ov._cells[i]; if (!c) return; var v = (k ? k : '') + (tr[i] ? '*' : ''); if (c._v === v) return; c._v = v; c.style.background = k ? ruCol(k) : ''; c.className = k ? (tr[i] ? 'own trail' : 'own') : ''; });
       [].forEach.call(ov.querySelectorAll('.rutok'), function (el) {
@@ -6751,7 +6769,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (g.st === 'count' && k0 > 0 && k0 <= best && lb._k !== k0) { lb._k = k0; Music.climb(best ? k0 / best : 0, running <= 1 ? 1 : .8); }   // (a sound for every square counted, higher and higher)
       ov.classList.add('counting');
     } else { if (lb.innerHTML) { lb.innerHTML = ''; lb.removeAttribute('data-id'); } ov.classList.remove('counting'); }
-    var fxn = g.fx && players[g.fx.k] ? esc(players[g.fx.k].name) : '', msg = g.st === 'play' && g.fx && Date.now() - g.fx.at < 3000 ? (g.fx.t === 'star' ? '⭐ ' + fxn + ' grabbed the star! Triple speed, and unstoppable!' : g.fx.t === 'stage' ? '👑 ' + fxn + ' takes the stage! ' + g.fx.n + ' tiles at once!' : '🔁 ' + fxn + ' closes a loop: ' + g.fx.n + ' tiles at once!') : g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here comes the star… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
+    var fxn = g.fx && players[g.fx.k] ? esc(players[g.fx.k].name) : '', msg = g.st === 'play' && g.fx && Date.now() - g.fx.at < 3000 ? (g.fx.t === 'star' ? '⭐ ' + fxn + ' grabbed the star! Triple speed, and unstoppable!' : g.fx.t === 'freeze' ? '❄️ ' + fxn + ' freezes everyone else for 10 seconds!' : g.fx.t === 'stage' ? '👑 ' + fxn + ' takes the stage! ' + g.fx.n + ' tiles at once!' : '🔁 ' + fxn + ' closes a loop: ' + g.fx.n + ' tiles at once!') : g.st === 'intro' || g.st === 'count' || g.st === 'end' ? '' : g.st === 'drop' ? 'Here come the dancers… 🪩' : g.st === 'rise' ? 'Here comes the star… ✨' : g.st === 'ready' ? 'Hold a direction on your phone: every tile you step on becomes yours! 🪩' : g.st === 'end' ? (g.win.length ? '👑 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' rule the world!' : ' rules the world!') + (shopOn() ? '' : ' +' + g.prize) : '') : '';
     var me = ov.querySelector('.rumsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
   }
   net.on('rule', ruMsg);
