@@ -6715,7 +6715,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var S = svStageAt(Math.max(0, b)), stx = g.st === 'play' || g.st === 'ready' ? 'Stage ' + S.n + ' of 3 · ' + S.t : '';
     var se = ov.querySelector('.svstage'); if (se.textContent !== stx) se.textContent = stx;
     var swB = !solo && g.st === 'play' && g.swAt && now - g.swAt < 3200 && !(g.stageAt && now - g.stageAt < 2600) ? '<small>Switch!</small>' + (g.swTo === 'A' ? 'Pink team' : 'Blue team') + '<em>Your turn next! 💃</em>' : '';
-    var kant = g.st === 'play' && SV_FAST.some(function (x) { return b >= x - .5 && b < x + 2.5; }), kb = ov.querySelector('.svkant'); if (kb && kb._on !== kant) { kb._on = kant; kb.classList.toggle('on', kant); }   // (double time: she shouts it)
+    if (!g.starts) { g.starts = []; g.chart.forEach(function (n, i) { if (!i || g.chart[i - 1][5] !== n[5] || n[0] - g.chart[i - 1][0] > 6) g.starts.push(n[0]); }); }   // (where a team's turn begins)
+    var rdy = (g.st === 'play' || g.st === 'ready') && g.t0 && g.starts.some(function (x) { var ms = (x - b) * SV_BT; return ms > 0 && ms <= 3000; });
+    var kant = g.st === 'play' && SV_FAST.some(function (x) { return b >= x - .5 && b < x + 2.5; }), ktx = rdy ? 'Get ready!' : kant ? 'Serving kant!' : '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
+    if (kb && kb._t !== ktx) { kb._t = ktx; if (ktx) kb.textContent = ktx; kb.classList.toggle('on', !!ktx); }
     if (g.st === 'play' && b >= SV_BRK && b < SV_BRK + 3.5) swB = '<small>Breather!</small>Everyone ready?<em>Something’s coming up out of the floor… 👀</em>';
     var bn = ov.querySelector('.svbanner'), showB = g.st === 'play' && g.stageAt && now - g.stageAt < 2600, bh = swB ? swB : showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Your turn! Nice and slow first…</em>' : g.stage === 3 ? '<em>Everyone together! A step on every beat, double points 🏐</em>' : '') : '';
     if (bn._h !== bh) { bn._h = bh; bn.innerHTML = bh; bn.classList.toggle('on', !!bh); }
