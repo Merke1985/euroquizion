@@ -5142,3 +5142,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes edmove0{0%,100%{opacity:1}33.3%,66.6%{opacity:0}}
 @keyframes edmove1{0%,66.6%,100%{opacity:0}33.3%{opacity:1}}
 @keyframes edmove2{0%,33.3%,100%{opacity:0}66.6%{opacity:1}}
+/* Zero Gravity: once a player is out, their pole slides down out of view, behind the Earth */
+.zgov .zgp.out{translate:0 80vh;transition:translate 2.6s cubic-bezier(.5,0,.8,.6) 4.6s}
+.zgov .zgp.out.hit{transition-delay:1.9s}
