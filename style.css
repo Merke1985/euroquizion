@@ -5653,3 +5653,10 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svov .svins .svrider{position:absolute;inset:0;width:100%;height:100%}
 .svov[data-bph="on"] .svrider .svrm{transform-box:fill-box;transform-origin:50% 0;animation:svlsing .49s ease-in-out infinite alternate}
 .svov[data-bph="hop"] .svnb{visibility:hidden}
+/* Serving: on the skippy balls every step is a bounce from tile centre to tile centre (no sliding) */
+.svov[data-bph="on"] .svaf,.svov[data-bph="on"] .svins{transition:transform .26s cubic-bezier(.45,0,.55,1)!important}
+.svov[data-bph="on"] .svaf .svfb2,.svov[data-bph="on"] .svins{animation:none}
+.svov .svaf .svrider{bottom:0}
+.svov[data-bph="on"] .svaf.ok .svfb2,.svov[data-bph="on"] .svins.ok .svrider,.svov[data-bph="on"] .svins.jmp .svrider{animation:svballhop .44s cubic-bezier(.3,0,.7,1)}
+@keyframes svballhop{0%{transform:translateY(0) scaleY(.9)}12%{transform:translateY(0) scaleY(1.04)}50%{transform:translateY(calc(var(--s) * -.45))}88%{transform:translateY(0) scaleY(1)}100%{transform:translateY(0) scaleY(.92)}}
+.svov[data-bph="on"] .svrider{transform-origin:50% 100%}
