@@ -752,7 +752,7 @@
   function svView(s) {
     var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
-    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, raf: 0, fbAt: 0 }; }
+    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, ans: {}, raf: 0, fbAt: 0 }; }
     var S = svS;
     if (z.st === 'end') {
       svStop(); box.classList.add('hidden');
@@ -765,16 +765,22 @@
     if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
     var stn = ['', 'The dance floor', 'Double trouble', 'Skippy balls! 🏐'][z.stage || 1];
     $('waittitle').textContent = z.st === 'play' ? 'Stage ' + (z.stage || 1) + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🪩 Serving!';
-    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : z.stage === 2 ? 'Two arrows at once? Hit both pads!' : 'Hit the same arrow as it reaches the top. Gold = SERVE (double)!';
+    $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : (z.stage || 1) === 1 ? 'Follow the dance captain: tap her move within one second!' : z.stage === 2 ? 'Two arrows at once? Hit both pads!' : 'Hit the same arrow as it reaches the top. Gold = SERVE (double)!';
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id) {   // the chart: arrows scroll up to the receptors; four big pads below
       box.setAttribute('data-id', z.id); S.chart = z.chart || []; S.notes = null;
       var A = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';
-      box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
+      box.innerHTML = '<div class="svcallp"></div><div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
       [].forEach.call(box.querySelectorAll('.svpadb'), function (bt) { bt.addEventListener('pointerdown', function (e) { e.preventDefault(); svTap(+bt.getAttribute('data-d')); bt.classList.remove('hit'); void bt.offsetWidth; bt.classList.add('hit'); }); bt.addEventListener('contextmenu', function (e) { e.preventDefault(); }); });
     }
     box.querySelector('.svme').textContent = ((z.dist || {})[pid] || 0) + ' pts' + (z.lead === pid ? ' · you lead: your ball is bigger! 🎈' : '');
-    S.st = z.st;
+    S.st = z.st; S.z = z;
+    var one = (z.stage || 1) === 1; box.classList.toggle('st1', one);
+    if (one) {   // stage 1: no arrows scrolling, just the captain's call
+      var cp = box.querySelector('.svcallp'), ans = z.ck >= 0 ? S.ans[z.ck] : null;
+      var tx = z.st !== 'play' ? '💃 Watch the dance captain…' : z.ck >= 0 ? (ans ? ans : z.cx) : '💃 Get ready for the next move…';
+      if (cp.textContent !== tx) { cp.textContent = tx; cp.className = 'svcallp' + (z.ck >= 0 && !ans ? ' live' : ans ? ' done' : ''); }
+    }
     if (!S.raf) { var loop = function () { if (!svS) return; svFrame(); svS.raf = requestAnimationFrame(loop); }; S.raf = requestAnimationFrame(loop); }
   }
   function svStop() { if (svS && svS.raf) cancelAnimationFrame(svS.raf); if (svS) svS.raf = 0; }
@@ -786,7 +792,17 @@
     var fb = box.querySelector('.svfb'); if (S.fbAt && Date.now() - S.fbAt > 700) { fb.textContent = ''; S.fbAt = 0; }
   }
   function svTap(d) {
-    var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || z.st !== 'play' || !S.chart) return;
+    var S = svS, z = state && state.sv; if (!S || !z || z.st !== 'play') return;
+    if ((z.stage || 1) === 1) {   // follow the captain: one tap per call
+      if (z.ck < 0 || S.ans[z.ck]) return;
+      var okm = z.cd !== 4 && d === z.cd;
+      S.ans[z.ck] = z.cd === 4 ? '🙈 You moved! It was freeze!' : okm ? '✅ Nice move!' : '❌ Wrong way!';
+      if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, k: z.ck, d: d });
+      var cp = $('svui').querySelector('.svcallp'); cp.textContent = S.ans[z.ck]; cp.className = 'svcallp done';
+      try { navigator.vibrate && navigator.vibrate(okm ? 25 : 12); } catch (x) {}
+      return;
+    }
+    if (!S.t0 || !S.chart) return;
     var now = Date.now(), b = (now - S.t0) / S.bt, best = -1, bd = 9;
     S.chart.forEach(function (n, i) { if (S.done[i] || n[1] !== d) return; var x = Math.abs(n[0] - b); if (x < bd) { bd = x; best = i; } });   // (the nearest open arrow in this column)
     var any = -1, ad = 9; S.chart.forEach(function (n, i) { if (S.done[i]) return; var x = Math.abs(n[0] - b); if (x < ad) { ad = x; any = i; } });

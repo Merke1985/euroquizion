@@ -6313,13 +6313,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   //    arrows are a SERVE (double); the leader's ball inflates, so their bounces get shorter.
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
-  var SV_VID = 'sLVSwfRRvMA', SV_S = 17, SV_BT = 60000 / 122 * 2, SV_PHASE = 0.25, svLoop = null, svTimer = null, svSongT = null;
+  var SV_VID = 'WPfV96fRvW0', SV_S = 0, SV_BT = 60000 / 122 * 2, SV_PHASE = 0.25, svLoop = null, svTimer = null, svSongT = null;
   var SV_STAGES = [{ n: 1, t: 'The dance floor', from: 0, to: 19 }, { n: 2, t: 'Double trouble', from: 22, to: 41 }, { n: 3, t: 'Skippy balls!', from: 44, to: 67 }], SV_END = 68;
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { for (var i = 0; i < SV_STAGES.length; i++) if (t < SV_STAGES[i].to + 1.5) return SV_STAGES[i]; return SV_STAGES[SV_STAGES.length - 1]; }
   function svChart() {   // the notes: [time in bounces, arrow 0–3 (left, down, up, right), gold]
     var N = [], prev = -1, rnd = function (not) { var d; do { d = Math.floor(Math.random() * 4); } while ((d === prev || d === not) && Math.random() < .75); prev = d; return d; };
-    for (var t = 0; t <= 19; t++) N.push([t, rnd(), 0]);   // stage 1: one arrow per bounce
+    var t;   // (stage 1 has no arrows: the dance captain calls the moves, see svCalls)
     for (t = 22; t <= 41; t++) {   // stage 2: pairs and in-between arrows
       var a = rnd(); N.push([t, a, 0]);
       if (t % 4 === 1) N.push([t, rnd(a), 0]);   // (a pair: both pads at once)
@@ -6328,15 +6328,71 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     for (t = 44; t <= 67; t++) { var b2 = rnd(); N.push([t, b2, t % 8 === 7 ? 1 : 0]); if (t % 3 === 2 && t < 67) N.push([t + .5, rnd(), 0]); }   // stage 3: steady, a few in between, every 8th golden
     return N;
   }
+  // stage 1: the dance captain calls a move every two bounces; everyone has one second to follow, then all step back home
+  var SV_CALLX = [['Dance left!', 'Shimmy left!', 'To the left, darlings!'], ['Step forward!', 'Come to me!', 'Step to the front!'], ['Step back!', 'Back it up!', 'One step back!'], ['Dance right!', 'Shimmy right!', 'To the right, darlings!'], ['Freeze! 🧊', 'Don’t move! 🧊', 'Freeze, darlings! 🧊']];
+  var SV_DX = [[-1, 0], [0, 1], [0, -1], [1, 0], [0, 0]];
+  function svCalls() {
+    var C = [], prev = -1, fz = 0;
+    for (var t = 0; t <= 18; t += 2) { var d; do { d = Math.floor(Math.random() * 4); } while (d === prev); if (t >= 6 && fz < 2 && Math.random() < .22) { d = 4; fz++; } prev = d; C.push({ t: t, d: d, x: SV_CALLX[d][Math.floor(Math.random() * 3)] }); }
+    return C;
+  }
+  // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
+  // leopard-print outfit with flared trousers, a microphone in one hand and a big red fluffy pom-pom in the other
+  var SV_LEAD = (function () {
+    var fluff = '', i, a, r2;
+    for (i = 0; i < 60; i++) { a = i * 2.39996; r2 = 12 + (i * 7 % 15); fluff += '<path d="M0 0 L' + (Math.cos(a) * (r2 + 16)).toFixed(1) + ' ' + (Math.sin(a) * (r2 + 16)).toFixed(1) + '" stroke="' + ['#ff2a3d', '#c90a1d', '#ff5a68', '#e3142a'][i % 4] + '" stroke-width="' + (2.5 + i % 3) + '" stroke-linecap="round"/>'; }
+    var pom = '<g class="svpom"><circle r="26" fill="#d80c22"/>' + fluff + '<circle cx="-7" cy="-9" r="10" fill="#ff6a78" opacity=".5"/></g>';
+    var sleeve = function (d) { return '<path d="' + d + '" stroke="#f0c8b2" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" stroke="rgba(14,10,14,.8)" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" stroke="rgba(255,255,255,.16)" stroke-width="2" fill="none" stroke-dasharray="2 6"/>'; };
+    var beads = ''; for (i = 0; i < 9; i++) beads += '<circle cx="' + (130 + i * 7.5) + '" cy="' + (176 + Math.abs(i - 4) * 2.2) + '" r="2.3"/><circle cx="' + (133.5 + i * 7.5) + '" cy="' + (186 + Math.abs(i - 4) * 1.6) + '" r="1.7"/>';
+    return '<svg viewBox="0 0 320 540" class="svleadsvg" aria-hidden="true"><defs>' +
+      '<pattern id="svleo" width="30" height="28" patternUnits="userSpaceOnUse"><rect width="30" height="28" fill="#cf0f1f"/><g fill="#1e0204"><path d="M3 6 q2 -3 5 -2 l-1 2 q-2 0 -4 2z M10 4 q3 0 4 3 l-2 0 q-1 -2 -2 -1z M13 9 q0 3 -3 4 l0 -2 q2 -1 1 -2z M4 11 q2 2 5 2 l-1 1 q-3 0 -4 -2z"/><path d="M18 17 q3 -2 6 0 l-1 1 q-2 -1 -4 0z M25 19 q1 3 -1 5 l-1 -1 q1 -2 0 -3z M17 22 q2 3 5 3 l0 -1 q-3 -1 -4 -3z"/><circle cx="26" cy="5" r="1.5"/><circle cx="6" cy="22" r="1.7"/><circle cx="20" cy="9" r="1.1"/></g><circle cx="8.5" cy="8.5" r="2.4" fill="#8e0914"/><circle cx="21" cy="21" r="2.2" fill="#8e0914"/></pattern>' +
+      '<linearGradient id="svhair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff2b1c"/><stop offset=".6" stop-color="#e01414"/><stop offset="1" stop-color="#a90c12"/></linearGradient>' +
+      '<radialGradient id="svskin" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#fbe1d2"/><stop offset="1" stop-color="#e8b8a0"/></radialGradient></defs>' +
+      '<ellipse cx="160" cy="528" rx="92" ry="9" fill="rgba(0,0,0,.35)"/>' +
+      '<g class="svlbody">' +
+      // back hair: one long straight sheet behind the shoulders, down to the waist
+      '<path d="M114 84 Q112 30 160 26 Q208 30 206 84 L214 190 Q220 262 206 300 Q184 312 160 308 Q136 312 114 300 Q100 262 106 190 Z" fill="url(#svhair)"/>' +
+      '<g stroke="#9a0a10" stroke-width="1.5" opacity=".5" fill="none"><path d="M112 140 Q108 230 118 296"/><path d="M208 140 Q212 230 202 296"/></g>' +
+      // trousers: wide flares in leopard, a peek of the platform shoes
+      '<path d="M122 290 L198 290 Q206 400 230 500 Q206 508 172 504 Q166 420 160 340 Q154 420 148 504 Q114 508 90 500 Q114 400 122 290 Z" fill="url(#svleo)" stroke="#4a0306" stroke-width="2.2" stroke-linejoin="round"/>' +
+      '<path d="M160 340 L160 296 M136 330 Q128 420 118 498 M184 330 Q192 420 202 498" stroke="#4a0306" stroke-width="1.3" fill="none" opacity=".6"/>' +
+      '<path d="M104 502 Q100 516 112 520 L144 520 Q150 512 146 504 Z" fill="#e0102a" stroke="#4a0306" stroke-width="2"/><path d="M174 504 Q170 512 176 520 L208 520 Q220 516 216 502 Z" fill="#e0102a" stroke="#4a0306" stroke-width="2"/><rect x="108" y="519" width="38" height="7" rx="2" fill="#141414"/><rect x="174" y="519" width="38" height="7" rx="2" fill="#141414"/>' +
+      // torso: sheer black top over skin, a leopard bodice, black beading and a beaded belt
+      '<path d="M148 126 L172 126 L174 152 L146 152 Z" fill="url(#svskin)"/>' +
+      '<path d="M108 164 Q118 150 160 148 Q202 150 212 164 L198 232 Q190 262 196 296 L124 296 Q130 262 122 232 Z" fill="url(#svskin)"/>' +
+      '<path d="M108 164 Q118 150 160 148 Q202 150 212 164 L198 232 Q190 262 196 296 L124 296 Q130 262 122 232 Z M146 124 L174 124 L176 154 L144 154 Z" fill="rgba(12,8,12,.82)"/>' +
+      '<path d="M124 196 Q142 186 160 196 Q178 186 196 196 L192 236 Q186 262 194 294 L126 294 Q134 262 128 236 Z" fill="url(#svleo)" stroke="#1e0204" stroke-width="2"/>' +
+      '<path d="M124 196 Q142 212 160 200 Q178 212 196 196" stroke="#111" stroke-width="5" fill="none"/>' +
+      '<g fill="#0c0c0c" stroke="#3a3a3a" stroke-width=".6">' + beads + '</g>' +
+      '<g fill="#161616" stroke="#666" stroke-width=".8">' + [128, 137, 146, 155, 164, 173, 182, 191].map(function (x) { return '<circle cx="' + x + '" cy="' + (272 + Math.abs(x - 160) * .05) + '" r="3.6"/>'; }).join('') + '</g>' +
+      '<path d="M150 276 L146 304 M160 278 L160 310 M170 276 L174 304" stroke="#161616" stroke-width="2.2"/>' +
+      // the arm with the pom-pom, up in the air
+      '<g class="svlarm r">' + sleeve('M204 168 Q240 152 244 112 Q246 86 252 66') + '<circle cx="252" cy="66" r="8.5" fill="#f0c8b2"/><g transform="translate(256 52)">' + pom + '</g></g>' +
+      // head
+      '<g class="svlhead"><ellipse cx="160" cy="88" rx="34" ry="40" fill="url(#svskin)"/>' +
+      '<path d="M136 78 Q146 70 156 76 M164 76 Q174 70 184 78" stroke="#7a1a10" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
+      '<path d="M137 90 Q146 84 155 90 Q146 94 137 90 Z M165 90 Q174 84 183 90 Q174 94 165 90 Z" fill="#fff"/><circle cx="146" cy="89.5" r="3.2" fill="#3a2418"/><circle cx="174" cy="89.5" r="3.2" fill="#3a2418"/><circle cx="147" cy="88.5" r="1" fill="#fff"/><circle cx="175" cy="88.5" r="1" fill="#fff"/>' +
+      '<path d="M135 89 Q146 81 157 89 L162 84 M163 89 Q174 81 185 89 L190 83" stroke="#0c0c0c" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<ellipse cx="138" cy="106" rx="8" ry="4.5" fill="#ff8f9a" opacity=".45"/><ellipse cx="182" cy="106" rx="8" ry="4.5" fill="#ff8f9a" opacity=".45"/>' +
+      '<path d="M158 94 Q155 103 160 105" stroke="#c99080" stroke-width="2" fill="none"/>' +
+      '<g class="svlmouth"><path d="M144 112 Q160 108 176 112 Q174 132 160 133 Q146 132 144 112 Z" fill="#c8102e"/><path d="M147 114 Q160 112 173 114 Q171 128 160 129 Q149 128 147 114 Z" fill="#4a0610"/><path d="M148 114 Q160 113 172 114 L171 119 Q160 118 149 119 Z" fill="#fff"/><ellipse cx="160" cy="125" rx="6.5" ry="2.8" fill="#e05570"/></g>' +
+      // front hair: a middle parting and long straight strands over the shoulders
+      '<path d="M124 96 Q118 40 160 36 Q202 40 196 96 Q190 60 164 52 L160 58 L156 52 Q130 60 124 96 Z" fill="url(#svhair)"/>' +
+      '<path d="M126 74 Q114 140 120 226 Q128 232 134 226 Q128 150 134 92 Z M194 74 Q206 140 200 226 Q192 232 186 226 Q192 150 186 92 Z" fill="url(#svhair)"/>' +
+      '<path d="M128 100 Q122 160 126 222 M192 100 Q198 160 194 222 M160 40 Q150 46 140 60 M160 40 Q170 46 180 60" stroke="#a00a10" stroke-width="1.4" fill="none" opacity=".6"/></g>' +
+      // the arm with the microphone, the mic close to her mouth
+      '<g class="svlarm l">' + sleeve('M116 168 Q86 214 104 238 Q124 210 138 150') + '<circle cx="138" cy="150" r="8.5" fill="#f0c8b2"/><g transform="rotate(-30 140 146)"><rect x="135" y="116" width="11" height="42" rx="4" fill="#161616"/><ellipse cx="140.5" cy="114" rx="10" ry="12" fill="#2b2b2b"/><path d="M132 110 h17 M131 116 h19" stroke="#5a5a5a" stroke-width="1.5"/></g><path d="M131 146 q8 -4 14 2" stroke="#e8b8a0" stroke-width="5" fill="none" stroke-linecap="round"/></g>' +
+      '</g></svg>';
+  })();
   function svAll() {
     var act = list().filter(function (p) { return !p.off; }); if (!act.length) { startRound(); return; }
     stopTimers(); G.q = null; G.song = null; G.best = null; try { yt.pauseVideo(); } catch (e) {}
     var order = act.map(function (p) { return p.pid; });
-    G.sv = { id: 'sv' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', order: order, dist: {}, got: {}, last: {}, t0: 0, win: [], done: false, chart: svChart(), stage: 1 };
-    order.forEach(function (k) { G.sv.dist[k] = 0; G.sv.got[k] = {}; });
+    G.sv = { id: 'sv' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', order: order, dist: {}, got: {}, last: {}, t0: 0, win: [], done: false, chart: svChart(), calls: svCalls(), ck: -1, cAt: {}, cg: {}, stage: 1 };
+    order.forEach(function (k) { G.sv.dist[k] = 0; G.sv.got[k] = {}; G.sv.cg[k] = {}; });
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, t = 1600;
-    [['him', 'Welcome to the dance-off, Europe! 🪩 Tonight we’re Serving!'], ['her', 'Arrows scroll up on your phone. Hit the same arrow the moment it reaches the top!'], ['him', 'Three stages: the dance floor, double trouble… and then, the skippy balls! 🏐']].forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3600, talkLen(l[0], l[1], 2400)); });
+    [['him', 'Welcome to the dance-off, Europe! 🪩 Tonight we’re Serving!'], ['her', 'First, follow our dance captain! When she calls a move, tap it on your phone. You have one second!'], ['him', 'Then come the arrows… and then, the skippy balls! 🏐']].forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3600, talkLen(l[0], l[1], 2400)); });
     svTimer = setTimeout(function () { if (G.sv !== g) return; svSay(''); g.st = 'ready'; push(); svSong(true); }, t);
   }
   function svSay(who, txt) { var ov = $('svov'); if (!ov) return; [].forEach.call(ov.querySelectorAll('.svbub'), function (x) { x.classList.remove('on'); }); if (!who) return; var b = ov.querySelector('.svbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); }
@@ -6366,6 +6422,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function svLead(g) { if (g.stage < 3) return null; var best = -1, k0 = null; g.order.forEach(function (k) { if (g.dist[k] > best) { best = g.dist[k]; k0 = k; } }); var second = Math.max.apply(null, g.order.filter(function (k) { return k !== k0; }).map(function (k) { return g.dist[k]; }).concat([0])); return best - second >= 4 ? k0 : null; }
   function svMsg(m) {
     var g = G.sv; if (!g || G.phase !== 'sv' || g.st !== 'play' || !m || m.id !== g.id || g.order.indexOf(m.pid) < 0) return;
+    if (m.k != null) {   // stage 1: following the dance captain (judged here: the window is a whole second)
+      var k = Math.round(Number(m.k)), c = g.calls[k], at = g.cAt[k], now0 = Date.now(); if (!c || !at || g.cg[m.pid][k] != null || now0 - at > 1350) return;
+      var qq = c.d === 4 ? 0 : Number(m.d) === c.d ? (now0 - at < 650 ? 3 : 2) : 0;
+      g.cg[m.pid][k] = qq; g.dist[m.pid] += qq; g.last[m.pid] = { q: qq, k: k, mv: 1, at: now0 }; push(); return;
+    }
     var i = Math.round(Number(m.i)), q = Math.max(0, Math.min(2, Math.round(Number(m.q)))), n = g.chart[i]; if (!n || g.got[m.pid][i] != null) return;
     if (m.d != null && Number(m.d) !== n[1]) q = 0;   // (the wrong arrow: a miss)
     if (Math.abs(svBeat(g, Date.now()) - n[0]) > 1.6) return;   // (too far from that arrow: ignore)
@@ -6380,6 +6441,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.st === 'play') {
       var b = svBeat(g, now), sg = svStageAt(Math.max(0, b)).n;
       if (sg !== g.stage) { g.stage = sg; g.stageAt = now; if (sg === 3) g.lo = Math.min.apply(null, g.order.map(function (k) { return g.dist[k]; })); push(); if (!REMOTE) { Music.douze(); whooshes([0, 250]); } }   // (a new stage!)
+      g.calls.forEach(function (c, i) {   // stage 1: open a call on its beat, close it a second later
+        if (!g.cAt[i] && b >= c.t) {
+          g.cAt[i] = now; g.ck = i; push(); if (!REMOTE) Music.discoTick(c.d === 4);
+          g.order.forEach(function (pk) { var p = players[pk]; if (!p || !p.bot) return; var r = Math.random(); if (c.d === 4 && r > .25) return; setTimeout(function () { svMsg({ pid: pk, id: g.id, k: i, d: r < .82 ? c.d : (c.d + 1) % 4 }); }, 250 + Math.random() * 700); });
+        }
+        if (g.ck === i && now - g.cAt[i] >= 1000) {
+          g.ck = -1;
+          if (c.d === 4) g.order.forEach(function (pk) { if (g.cg[pk][i] == null) { g.cg[pk][i] = 2; g.dist[pk] += 2; g.last[pk] = { q: 2, k: i, mv: 1, at: now }; } });   // (frozen: well done)
+          push();
+        }
+      });
       g.chart.forEach(function (n, i) {   // the soft beat tick, and the bots, once per arrow
         if (n[0] > b + .05 || n[0] < b - .5 || (g.tk || (g.tk = {}))[i]) return; g.tk[i] = 1;
         if (!REMOTE && (n[0] % 1 === 0) && !(i > 0 && g.chart[i - 1][0] === n[0])) { if (n[2]) Music.discoTick(true); else Music.discoTick(); }
@@ -6399,7 +6471,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function svSnap() {
     var g = G.sv, now = Date.now(), nk = g.t0 ? Math.max(0, Math.ceil(svBeat(g, now))) : 0;
-    return { id: g.id, st: g.st, stage: g.stage, order: g.order, dist: g.dist, win: g.win, chart: g.chart, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, lead: svLead(g), lo: g.lo || 0 };
+    return { id: g.id, st: g.st, stage: g.stage, order: g.order, dist: g.dist, win: g.win, chart: g.chart, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, lead: svLead(g), lo: g.lo || 0, ck: g.ck, cx: g.ck >= 0 ? g.calls[g.ck].x : '', cd: g.ck >= 0 ? g.calls[g.ck].d : -1, cg: g.cg };
   }
   // the skippy ball (stage 3): an original drawing in the player's colour, with two little horn handles and a smiley
   function svBall(c, d) { return '<svg viewBox="0 0 100 100" class="svball"><ellipse cx="50" cy="96" rx="34" ry="4" fill="rgba(0,0,0,.25)"/><path d="M34 22 Q30 6 40 6 Q44 12 42 24 M66 22 Q70 6 60 6 Q56 12 58 24" stroke="' + d + '" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="50" cy="56" r="38" fill="' + c + '" stroke="' + d + '" stroke-width="3"/><ellipse cx="36" cy="40" rx="12" ry="7" fill="#fff" opacity=".35" transform="rotate(-30 36 40)"/><circle cx="40" cy="58" r="3.5" fill="' + d + '"/><circle cx="60" cy="58" r="3.5" fill="' + d + '"/><path d="M40 70 Q50 78 60 70" stroke="' + d + '" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>'; }
@@ -6410,14 +6482,27 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('svov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'svov'; ov.className = 'svov enter';
-      ov.innerHTML = '<div class="svsky"></div><div class="svfloor"></div><div class="svsign">🪩 Serving! <small>dance-off · test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div><div class="svchart">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div><div class="svlanes"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
+      ov.innerHTML = '<div class="svsky"></div><div class="svfloor"></div><div class="svsign">🪩 Serving! <small>dance-off · test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div><div class="svchart">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div><div class="svboard"></div><div class="svlead">' + SV_LEAD + '</div><div class="svcall"></div><div class="svlanes"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
+      var bd = ov.querySelector('.svboard'), nn = g.order.length;
+      bd.innerHTML = g.order.map(function (k, i) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555'], row = nn > 6 ? i % 2 : 0, x = nn > 6 ? 10 + (i / (nn - 1)) * 80 : 50 + (i - (nn - 1) / 2) * Math.min(16, 76 / Math.max(1, nn - 1)); return '<div class="svf" data-p="' + esc(k) + '" style="--hx:' + x.toFixed(1) + ';--hr:' + row + '"><i class="svtile"></i><div class="svfb2">' + svDancer(col[0], col[1]) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b></div>'; }).join('');
       var ln = ov.querySelector('.svlanes');
       ln.innerHTML = g.order.map(function (k, i) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svlane" style="--i:' + i + '"><div class="svtrack"></div><div class="svp" data-p="' + esc(k) + '">' + svBall(col[0], col[1]) + svDancer(col[0], col[1]) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span><em class="svq"></em></div><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svd"></i></div>'; }).join('');
     }
     var now = Date.now(), lo = g.lo || 0, maxD = Math.max(45, (Math.max.apply(null, g.order.map(function (k) { return g.dist[k]; })) - lo) * 1.12);   /* (the race starts at the stage-3 line; earlier points give a small head start) */
     ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1);
     var lead = svLead(g), b = g.t0 ? svBeat(g, now) : -9;
+    if (g.stage === 1) {   // the dance floor: everyone on their own tile; follow the captain, then back home
+      var cl = g.ck >= 0 ? g.calls[g.ck] : null, ld = ov.querySelector('.svlead'), lp = cl ? 'p' + cl.d : '';
+      if (ld._p !== lp) { ld._p = lp; ld.className = 'svlead' + (lp ? ' ' + lp : ''); }
+      var ce = ov.querySelector('.svcall'), cx = cl ? esc(cl.x) : ''; if (ce._x !== cx) { ce._x = cx; ce.innerHTML = cx; ce.classList.toggle('on', !!cx); if (cx) { ce.classList.remove('pop'); void ce.offsetWidth; ce.classList.add('pop'); } }
+      g.order.forEach(function (k) {
+        var el = ov.querySelector('.svf[data-p="' + k + '"]'); if (!el) return;
+        var gq = cl ? g.cg[k][g.ck] : null, mv = cl && gq != null && gq > 0 && cl.d !== 4 ? SV_DX[cl.d] : [0, 0];
+        el.style.setProperty('--dx', mv[0]); el.style.setProperty('--dy', mv[1]);
+        var L = g.last[k]; if (L && L.mv && el._lk !== L.at) { el._lk = L.at; el.classList.remove('ok', 'oops'); void el.offsetWidth; el.classList.add(L.q ? 'ok' : 'oops'); var qe = el.querySelector('.svq'); qe.textContent = L.q === 3 ? 'PERFECT' : L.q ? 'GOOD' : 'OOPS'; qe.className = 'svq q' + Math.min(2, L.q); }
+      });
+    }
     g.order.forEach(function (k) {
       var el = ov.querySelector('.svp[data-p="' + k + '"]'); if (!el) return;
       el.style.setProperty('--x', g.stage >= 3 ? Math.max(0, Math.min(92, (g.dist[k] - lo) / maxD * 92)).toFixed(2) : '0');   // (stages 1–2: dancing in place; stage 3: racing)
