@@ -748,7 +748,7 @@
   var zgS = null;
   function zgOnLive() {}
   // ---------- Serving! (the dance-off test game): DDR-style arrows scroll up; hit the matching pad as they reach the top ----------
-  var svS = null;
+  var svS = null, SV_STREAM = 250;   // (the arrows a quarter of a second later: in step with the music as it comes through a stream)
   function svView(s) {
     var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
@@ -769,7 +769,7 @@
       return;
     }
     if (!mine) { box.classList.add('hidden'); $('waittitle').textContent = '🍑 Serving'; $('waitsub').textContent = 'Watch the big screen!'; return; }
-    if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
+    if (z.nb || z.nk) { var est = Date.now() + z.nb - z.nk * z.bt + SV_STREAM; if (!S.t0 || est < S.t0 || est - S.t0 > 400) S.t0 = est; }   // (the earliest estimate: the least network delay)
     var stn = ['', 'Blue team', 'Yellow team', 'Everyone together'][z.stage || 1];
     $('waittitle').textContent = z.st === 'play' ? 'Stage ' + (z.stage || 1) + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🍑 Serving';
     var tm = svS.g === 'B' ? 'yellow' : 'blue';
