@@ -5636,3 +5636,10 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes svbhit{0%{transform:scale(1.35)}100%{transform:scale(1)}}
 @keyframes svbhitf{0%{fill:var(--c);stroke:#fff;filter:drop-shadow(0 0 14px var(--c))}100%{fill:rgba(255,255,255,.08)}}
 @keyframes svbring{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
+/* Serving: bigger hit animations on the big screen */
+@keyframes svbhit{0%{transform:scale(1.75)}60%{transform:scale(.92)}100%{transform:scale(1)}}
+@keyframes svbhitf{0%{fill:#fff;stroke:#fff;filter:drop-shadow(0 0 26px var(--c)) drop-shadow(0 0 12px #fff)}40%{fill:var(--c);filter:drop-shadow(0 0 20px var(--c))}100%{fill:rgba(255,255,255,.08)}}
+@keyframes svbring{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(2.6)}}
+.svchart .svrec::after{border-width:6px;box-shadow:0 0 18px var(--c)}
+.svchart .svrec.bhit,.svchart .svrec.bhit svg path{animation-duration:.6s}
+.svchart .svrec.bhit::after{animation-duration:.65s}

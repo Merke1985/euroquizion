@@ -6365,7 +6365,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
     setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, 1400);
-    [300, 1500].forEach(function (t) { setTimeout(function () { if (G.sv === g) svShow(); }, t); });   // (she walks on to the middle while he talks)
+    var iv = setInterval(function () { if (G.sv !== g || g.t0) { clearInterval(iv); return; } svShow(); }, 200);   // (until the song plays: she walks on to the middle while he talks)   // (she walks on to the middle while he talks)
     setTimeout(function () { if (G.sv === g) svSong(true); }, 1400 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (she cuts him off)   // (and the song cuts in already: the presenters talk over its intro)
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
@@ -6640,7 +6640,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M128 220 Q160 214 192 220 L194 300 L126 300 Z" fill="url(#svnet)"/>' +
       '<path d="M124 282 L196 282 L190 312 Q160 326 130 312 Z" fill="#141014"/><path d="M122 292 L198 292 M126 302 L194 302" stroke="#141014" stroke-width="3"/>' +
       // the fluffy jacket
-      fur + furArm(118, 170, 92, 238) + furArm(202, 170, 228, 238) +
+      '<ellipse cx="160" cy="190" rx="46" ry="50" fill="#c20e1c"/>' + fur + '<path d="M146 150 Q160 146 174 150 L182 232 Q160 240 138 232 Z" fill="url(#svnet)"/>' + furArm(118, 170, 92, 238) + furArm(202, 170, 228, 238) +   /* (a full jacket, open at the front over a fishnet top) */
       '<path d="M146 130 L174 130 L176 150 L144 150 Z" fill="' + skin + '"/>' +
       '<circle cx="90" cy="244" r="8" fill="' + skin + '"/><circle cx="230" cy="244" r="8" fill="' + skin + '"/>' +
       '<g class="svlarm r"><path d="M232 244 L270 214 L262 252 Z" fill="#141014"/><path d="M232 244 L270 214 M232 244 L268 228 M232 244 L264 242" stroke="#3a3a40" stroke-width="1.5"/></g>' +   // (a black fan)
@@ -6723,20 +6723,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.setAttribute('data-act', act);
     var bph = g.stage === 3 ? (g.st === 'end' ? 'on' : b < SV_BALL ? 'none' : b < SV_HOP ? 'rise' : b < SV_HOP + 2 ? 'hop' : 'on') : 'none';   // (the skippy balls come up out of the tile in front of everyone; they hop on, and back)
     ov.setAttribute('data-bph', bph);
-    var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 4 : 10 + Math.round(r * 2)); };
+    var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 4 : 10 + Math.round(r * 2)); var p3 = !!(ov._3 && ov._3.proj); if (!el._pl || (p3 && el._p3 === false)) { el._pl = 1; el._p3 = p3; el.style.transition = 'none'; void el.offsetWidth; el.style.transition = ''; } el._p3 = p3; };   /* (the very first placement: straight there, no slide in from the corner) */
     var ins = ov.querySelector('.svins'), f00 = g.chart[0][0];
-    if (g.st !== 'end' && (!g.t0 || b < f00 - 10)) act = g.st === 'intro' && !g.t0 && !ins._act ? 'off' : 'mid';   // (the intro: she walks on to the middle; ten bounces before the red team she goes over to them)
+    if (g.st !== 'end' && (!g.t0 || b < f00 - 10)) act = g.st === 'intro' && !g.t0 && (!ins._act || (ins._act === 'off' && (!ov._3 || !ins._p3) && now - (ins._at0 || (ins._at0 = now)) < 3000)) ? 'off' : 'mid';   /* (she waits off stage until the 3D stage is there: then her walk on is straight) */   // (the intro: she walks on to the middle; ten bounces before the red team she goes over to them)
     var LC = function (a) { return a === 'off' ? 29 : solo || a === '*' || a === 'mid' ? 12.5 : a === 'A' ? 6 : 19; };
     if (ins._act !== act) { if (ins._act && g.st !== 'end') { var wd = ins._act === 'off' ? 4.5 : act === 'A' && b < f00 ? 4 : Math.max(2.2, Math.min(7, ((nx ? nx[0] : b + 7) - b) * SV_BT / 1000 - .6)), lx2 = LC(act) < (ins._lc || 12.5); ins.style.setProperty('--wd', wd.toFixed(2) + 's'); ins.classList.remove('wl', 'wr'); ins.classList.add('walk', lx2 ? 'wl' : 'wr'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk', 'wl', 'wr'); }, wd * 1000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
     var lc = LC(act);
     ins._lc = lc;
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }   /* (the hop class first, then the move: so it never slides) */
-    var wk = ins.classList.contains('walk'), lcx = lc + (wk ? 0 : ix), lry = bph === 'hop' ? 2 : wk ? SV_LROW : Math.max(0, Math.min(2, SV_LROW + iy));   /* (walking: straight along her row) */ place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
+    var wk = ins.classList.contains('walk'); if (wk && ins._wr == null) ins._wr = SV_LROW; if (!wk) ins._wr = null;
+    var lcx = lc + (wk ? 0 : ix), lry = bph === 'hop' ? 2 : wk ? ins._wr : Math.max(0, Math.min(2, SV_LROW + iy)); ins._ry = lry;   /* (walking: straight along the row she's on) */   /* (walking: straight along her row) */ place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
     [-3, 3].forEach(function (dx, j) {   // her two backup dancers: one tile free on either side, doing exactly what she does
       var dn = ov.querySelector('.svdan.d' + j), db = ov.querySelector('.svnb.insd.d' + j); if (!dn) return;
-      place(dn, lcx + dx, lry, true); if (db) place(db, lc + dx, 2, true);
-      var cl = 'svins svdan d' + j + ' ' + ins.className.replace(/\bsvins\b/, '').trim(); if (dn.className !== cl) dn.className = cl;
+      var cl = 'svins svdan d' + j + ' ' + ins.className.replace(/\bsvins\b/, '').trim(); if (dn.className !== cl) dn.className = cl;   /* (the walk class first, then the move: so they walk too, not slide) */
       dn.style.setProperty('--wd', ins.style.getPropertyValue('--wd'));
+      place(dn, lcx + dx, lry, true); if (db) place(db, lc + dx, 2, true);
     });
     var marks = [];
     g.order.forEach(function (k) {
