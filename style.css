@@ -5216,3 +5216,20 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes ry4{0%,66.66%{opacity:0}66.67%{opacity:1}83.33%,100%{opacity:0}}
 @keyframes ry5{0%,83.33%{opacity:0}83.34%{opacity:1}100%{opacity:1}}
 .rus2d.yel.dance .rsbody{animation-duration:.48s}
+/* the finale: Sofia's "pick your victory song" balloon shows, also while the final scores are still up */
+.fnov.scores.picking .fnbub.on{opacity:1;transform:none;z-index:12}
+/* the act vote: the two acts as their 2D drawings, dancing */
+.ruvart.rus2d{position:relative;left:auto;top:auto;transform:none;z-index:auto;height:26vh}
+.ruvart.rus2d .rs2svg{height:100%;width:auto}
+/* the singers on the stage: their mouths open and close while they perform */
+.rus2d .rsmouth{transform-box:fill-box;transform-origin:50% 15%}
+.rus2d.dance .rsmouth{animation:rsmouth .3s ease-in-out infinite alternate}
+.rus2d.yel.dance .rsmouth{animation-duration:.24s}
+@keyframes rsmouth{0%{transform:scaleY(.35)}60%{transform:scaleY(1)}100%{transform:scaleY(1.15)}}
+/* Turquoise Carpet (2D figures): walking at half the speed, posing 2 seconds longer, a little more room between them */
+.tcov.fig2d .tcg{animation:tcpass2 15.3s linear both}
+@keyframes tcpass2{0%{translate:-78vw 0;animation-timing-function:cubic-bezier(.2,.6,.4,1)}28.76%{translate:0 0}69.93%{translate:0 0;animation-timing-function:cubic-bezier(.6,0,.8,.5)}100%{translate:80vw 0}}
+.tcov.fig2d .tcg.walking .tcleg.f,.tcov.fig2d .tcg.walking .tcarm.b{animation-duration:.6s}
+.tcov.fig2d .tcg.walking .tcleg.b,.tcov.fig2d .tcg.walking .tcarm.f{animation-duration:.6s}
+.tcov.fig2d .tcg.walking .tcgirl{animation-duration:.6s}
+.tcov.fig2d .tcone{margin:0 .8vh}

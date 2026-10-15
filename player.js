@@ -850,7 +850,7 @@
     }
     if (r.vote) {   // first the vote: which act (and song) do we dance to?
       var my = (r.vote.votes || {})[pid];
-      $('waittitle').textContent = r.vote.on ? '🗳️ Which act do we dance to?' : '🎶 ' + (r.vote.won ? 'Discoteque' : 'We Will Rule the World') + '!'; $('waitsub').textContent = r.vote.on ? (my != null ? 'Vote sent! You can still change your mind. ⏱️ ' + Math.ceil((r.vote.left || 0) / 1000) + 's' : 'Tap your favourite act.') : 'Get ready to dance…';
+      $('waittitle').textContent = r.vote.on ? '🗳️ Which song do we dance to?' : '🎶 ' + (r.vote.won ? 'Discoteque' : 'We Will Rule the World') + '!'; $('waitsub').textContent = r.vote.on ? (my != null ? 'Vote sent! You can still change your mind. ⏱️ ' + Math.ceil((r.vote.left || 0) / 1000) + 's' : 'Tap your favourite act.') : 'Get ready to dance…';
       if (!mine || !r.vote.on) { box.classList.add('hidden'); return; }
       box.classList.remove('hidden');
       if (box.getAttribute('data-id') !== r.id + 'v') {
