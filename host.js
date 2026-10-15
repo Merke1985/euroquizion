@@ -4759,12 +4759,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var g3 = G.clue, ov = $('edov'); if (!g3 || g3.id !== id || g3.st !== 'brief') return;
       if (!ov) { edGo(); return; }
       edEnter(g3);   // first the lobby lights up and everyone walks in; 2 seconds later the countdown to the search
-      setTimeout(function () { var g5 = G.clue, ov5 = $('edov'); if (!g5 || g5.id !== id || g5.st !== 'brief') return; if (!ov5) { edGo(); return; } edCount(ov5); }, ED_ENTER + 2000);
+      setTimeout(function () { var g5 = G.clue, ov5 = $('edov'); if (!g5 || g5.id !== id || g5.st !== 'brief') return; if (!ov5) { edGo(); return; } edCount(ov5); }, ED_ENTER);   // (the countdown starts as soon as everyone is in the lobby)
     }, t);
     function edCount(ov) {
       ov.classList.add('cd'); [].forEach.call(ov.querySelectorAll('.edbrbub'), function (x) { x.classList.remove('on'); });
       var el = document.createElement('div'); el.className = 'edcd'; ov.appendChild(el); whooshes([0, 300]);
-      [3, 2, 1, 0].forEach(function (n, i) { setTimeout(function () {
+      [5, 4, 3, 2, 1, 0].forEach(function (n, i) { setTimeout(function () {   // (5, 4, 3, 2, 1… go)
         var g4 = G.clue; if (!g4 || g4.id !== id || g4.st !== 'brief') return;
         el.innerHTML = '<b>' + n + '</b>'; Music.plop(i * 2 + 2);
         if (n === 0) setTimeout(function () { el.remove(); edGo(); }, 700);
