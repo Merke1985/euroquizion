@@ -3000,7 +3000,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!el.isConnected) { clearInterval(el._typeT); return; }
       n++; draw();
       var c = chars[n - 1];
-      if (!REMOTE && c && /[A-Za-zÀ-ÿ0-9]/.test(c) && n % 3 === 1) Music.talk(voice);
+      /* (no more ticking while the text appears: the presenters have real voices now) */
       if (!spoken && voice && n % 2 === 0) mouth(voice, c && /[A-Za-zÀ-ÿ]/.test(c) ? 0.35 + Math.random() * 0.6 : 0);   // (no recording: the mouth moves with the letters)
       if (n >= chars.length) { clearInterval(el._typeT); if (!spoken && voice) mouth(voice, 0); }
     }, TALK_MS);
@@ -4492,7 +4492,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   ];
   var ED_DUO = [{ hair: '#16121a', hairStyle: 'pony', top: '#141418', legs: '#141418', shoes: '#141418' }, { hair: '#ecd79a', hairStyle: 'long', top: '#f4f4f6', legs: '#f4f4f6', shoes: '#f4f4f6' }];
   var ED_DUO_AT = {   // per room: where they come in (x), where they stand (two x's), the floor (y), the size, and whether a screen hides them
-    green: { from: 742, at: [712, 768], y: 404, s: .82, screen: true }, club: { from: [282, 518], at: [282, 518], y: 266, s: .85, fade: true },
+    green: { from: 742, at: [712, 768], y: 404, s: .82, screen: true }, club: { from: [318, 482], at: [318, 482], y: 266, s: .85, fade: true },
     boud: { from: 344, at: [470, 530], y: 426, s: 1.05, screen: true }, back: { from: -70, at: [140, 200], y: 436, s: .95 }
   };
   function edDuoGuitar(col) { return '<g class="ddgt"><path d="M-30 -52 L22 -82" stroke="#5a3a1a" stroke-width="5" stroke-linecap="round"/><ellipse cx="-22" cy="-48" rx="16" ry="12" fill="' + col + '" stroke="' + ED_INK + '" stroke-width="2.4" transform="rotate(-30 -22 -48)"/><circle cx="-22" cy="-48" r="4" fill="' + ED_INK + '"/><rect x="18" y="-90" width="10" height="12" rx="3" fill="#3a2a1a" transform="rotate(-30 23 -84)"/></g>'; }
@@ -4831,7 +4831,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = $('edov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'edov'; ov.className = 'edov2 enter';
-      ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom duo"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g class="edrecduo">' + edPerson(62, 108, { s: .7, hair: 'black', hairStyle: 'long', top: 'teal', dress: 1 }) + edPerson(138, 108, { s: .7, hair: '#f3dc8a', hairStyle: 'pony', top: 'pink', dress: 1, flip: 1 }) + '</g><rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><text x="62" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">TEYA</text><text x="138" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">SALENA</text><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg><div class="edrecbub">🗝️ Someone solved all the puzzles and gets the final clue!</div></div></div>' +
+      ov.innerHTML = '<div class="edlob"><div class="edlobhd"><span>🔍 Where the Hell Is Edgar?</span><div class="edclock"></div></div><div class="edlobroom duo"><b>🛎️ LOBBY</b><svg class="edlobart" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g class="edrecduo">' + edPerson(62, 94, { s: .7, hair: 'black', hairStyle: 'long', top: 'teal', dress: 1 }) + edPerson(138, 94, { s: .7, hair: '#f3dc8a', hairStyle: 'pony', top: 'pink', dress: 1, flip: 1 }) + '</g><rect x="20" y="64" width="160" height="50" rx="8" fill="#8a4a2a" stroke="#2b1830" stroke-width="3"/><text x="62" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">TEYA</text><text x="138" y="80" text-anchor="middle" font-size="7" font-weight="900" fill="#ffd8a8">SALENA</text><rect x="14" y="56" width="172" height="14" rx="6" fill="#c8864a" stroke="#2b1830" stroke-width="3"/><path d="M92 54 Q100 40 108 54 Z" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><rect x="88" y="52" width="24" height="5" rx="2" fill="#f2c14e" stroke="#2b1830" stroke-width="2"/><text x="100" y="98" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd8a8" letter-spacing="2">RECEPTION</text></svg><div class="edrecbub">🗝️ Someone solved all the puzzles and gets the final clue!</div></div></div>' +
         ED_ROOMS.map(function (r) { return '<div class="edr2 ' + r.id + '"><svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">' + ED_SVG[r.id](g.scene[r.id]) + '</svg></div>'; }).join('') + '<div class="edtoks"></div>' +
         '<div class="edbrhosts">' + HOST_HIM + HOST_HER + '</div><div class="edbrbub him"></div><div class="edbrbub her"></div>';
       if (g.st === 'brief') ov.classList.add('edbrief');
@@ -4918,8 +4918,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     s += '<g transform="translate(1180 170)"><rect x="-8" y="-8" width="196" height="246" rx="10" fill="#6a4a1a" stroke="#2a1a08" stroke-width="6"/><rect x="10" y="10" width="160" height="210" fill="#140c14"/>' +
       '<path d="M40 220 Q40 150 90 140 Q140 150 140 220 Z" fill="#241622"/><ellipse cx="90" cy="105" rx="34" ry="42" fill="#2a1a26"/><path d="M56 92 Q90 40 124 92 Q118 60 90 56 Q62 60 56 92 Z" fill="#160c14"/>' +
       '<g class="hpeyes"><ellipse cx="76" cy="104" rx="6" ry="3.2" fill="#ffdd55"/><ellipse cx="104" cy="104" rx="6" ry="3.2" fill="#ffdd55"/></g></g>';
-    // a second, crooked painting: a dark landscape
-    s += '<g transform="translate(470 210) rotate(-4)"><rect x="-6" y="-6" width="172" height="122" rx="6" fill="#5a3e18" stroke="#2a1a08" stroke-width="5"/><rect x="6" y="6" width="148" height="98" fill="#0f1426"/><path d="M6 90 L50 50 L80 74 L118 38 L154 82 L154 104 L6 104 Z" fill="#1a1a22"/><circle cx="124" cy="28" r="10" fill="#d8d0a0" opacity=".7"/></g>';
+    // (the photo of Teya & Salena hangs on this wall too: in its own frame, see .clframe)
     // the grandfather clock on the right
     s += '<g transform="translate(1440 300)"><rect x="0" y="0" width="90" height="300" rx="10" fill="#2a120a" stroke="#120604" stroke-width="5"/><circle cx="45" cy="55" r="32" fill="#e8dcb8" stroke="#6a4a1a" stroke-width="5"/><path d="M45 55 L45 32 M45 55 L60 64" stroke="#1a0c08" stroke-width="4" stroke-linecap="round"/><rect x="20" y="110" width="50" height="150" rx="6" fill="#140806"/><g class="hpend"><path d="M45 112 L45 220" stroke="#b08a3a" stroke-width="3"/><circle cx="45" cy="226" r="14" fill="#c9a24a"/></g></g>';
     // wall lamps that flicker
