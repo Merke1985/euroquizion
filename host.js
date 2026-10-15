@@ -6441,18 +6441,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.outputEncoding = T.sRGBEncoding;
     el.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#07020f'); sc.fog = new T.Fog('#12051f', 30, 70);
-    var cam = new T.PerspectiveCamera(40, w / h, .3, 200); cam.position.set(0, 10.5, 29); cam.lookAt(0, 2.6, -.5);
+    var cam = new T.PerspectiveCamera(40, w / h, .3, 200); cam.position.set(0, 17, 31); cam.lookAt(0, 4, -.5);
     sc.add(new T.HemisphereLight('#8a6aff', '#1a0630', .55));
     var key = new T.DirectionalLight('#ffffff', .4); key.position.set(4, 12, 10); sc.add(key);
-    // the floor: 14 × 7 LED tiles in a dark glossy frame
-    var C = SV_BC, R = SV_BR, TS = 1.6;
-    var base = new T.Mesh(new T.BoxGeometry(C * TS + 1, .5, R * TS + 1), new T.MeshStandardMaterial({ color: '#16082a', roughness: .3, metalness: .6 })); base.position.y = -.25; sc.add(base);
+    // the players' floor in front (24 × 5 LED tiles); behind it the singer's raised stage (24 × 3), then the set
+    var C = SV_BC, R = SV_BR, TS = 1.6, LR = 3, Z0L = -5, Z0F = Z0L + (LR - 1) * TS + TS + 1, ZF = function (j) { return Z0F + j * TS; }, ZL = function (j) { return Z0L + j * TS; }, YL = .7;
+    var base = new T.Mesh(new T.BoxGeometry(C * TS + 1, .5, R * TS + 1), new T.MeshStandardMaterial({ color: '#16082a', roughness: .3, metalness: .6 })); base.position.set(0, -.25, ZF((R - 1) / 2)); sc.add(base);
     var tiles = new T.InstancedMesh(new T.BoxGeometry(TS * .94, .12, TS * .94), new T.MeshBasicMaterial({ color: '#ffffff' }), C * R), m4 = new T.Matrix4(), col = new T.Color();
-    for (var i = 0; i < C * R; i++) { m4.makeTranslation((i % C - (C - 1) / 2) * TS, .06, (Math.floor(i / C) - (R - 1) / 2) * TS); tiles.setMatrixAt(i, m4); tiles.setColorAt(i, col.set('#20102e')); }
+    for (var i = 0; i < C * R; i++) { m4.makeTranslation((i % C - (C - 1) / 2) * TS, .06, ZF(Math.floor(i / C))); tiles.setMatrixAt(i, m4); tiles.setColorAt(i, col.set('#20102e')); }
     sc.add(tiles);
-    // the singer's own stage in front: a raised strip of 14 × 3 tiles
-    var LR = 3, ZL = function (j) { return (R / 2 + .8 + j) * TS; }, YL = .7;
-    var lbase = new T.Mesh(new T.BoxGeometry(C * TS + .6, YL + .2, LR * TS + .5), new T.MeshStandardMaterial({ color: '#22093a', roughness: .3, metalness: .6 })); lbase.position.set(0, (YL - .2) / 2 - .1, ZL(1)); sc.add(lbase);
+    // the singer's own stage, raised, between the players and the lips
+    var lbase = new T.Mesh(new T.BoxGeometry(C * TS + .6, YL + .2, LR * TS + .5), new T.MeshStandardMaterial({ color: '#22093a', roughness: .3, metalness: .6 })); lbase.position.set(0, (YL - .2) / 2 - .1, ZL((LR - 1) / 2)); sc.add(lbase);
     var ledge = new T.Mesh(new T.BoxGeometry(C * TS + .7, .12, .12), new T.MeshBasicMaterial({ color: '#ffd23f' })); ledge.position.set(0, YL - .05, ZL(LR - 1) + TS / 2 + .25); sc.add(ledge);
     var ltiles = new T.InstancedMesh(new T.BoxGeometry(TS * .94, .12, TS * .94), new T.MeshBasicMaterial({ color: '#ffffff' }), C * LR);
     for (i = 0; i < C * LR; i++) { m4.makeTranslation((i % C - (C - 1) / 2) * TS, YL + .06, ZL(Math.floor(i / C))); ltiles.setMatrixAt(i, m4); ltiles.setColorAt(i, col.set('#20102e')); }
@@ -6460,9 +6459,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the set behind her: a red LED wall with rays turning slowly, tiers of blue arcades with golden arches and red
     // windows on both sides, a huge heart of golden bulbs in the middle with a golden ornament on top, and a giant pair of
     // red lips with a mirror-ball mouth at the back of the stage
-    var ZB = -R * TS / 2 - 2.2;
+    var ZB = Z0L - TS / 2 - 1.6;
     var cv = document.createElement('canvas'); cv.width = 512; cv.height = 256; var cx = cv.getContext('2d'), wtex = new T.CanvasTexture(cv); wtex.encoding = T.sRGBEncoding;
-    var wall = new T.Mesh(new T.PlaneGeometry(46, 23), new T.MeshBasicMaterial({ map: wtex })); wall.position.set(0, 8, ZB - 3.5); sc.add(wall);
+    var wall = new T.Mesh(new T.PlaneGeometry(C * TS + 6, 23), new T.MeshBasicMaterial({ map: wtex })); wall.position.set(0, 8, ZB - 3.5); sc.add(wall);
     var arch = document.createElement('canvas'); arch.width = 128; arch.height = 128; (function (x) {
       var gr = x.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, '#5f86d8'); gr.addColorStop(1, '#2b4a9a'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
       x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(0, 0, 8, 128); x.fillRect(120, 0, 8, 128);
@@ -6473,7 +6472,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     })(arch.getContext('2d'));
     var archT = function (n, m) { var t = new T.CanvasTexture(arch); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(n, m); t.encoding = T.sRGBEncoding; return t; };
     [-1, 1].forEach(function (sd) {   // three tiers of arcades on each side, stepping up towards the outside
-      [[12, 4, 15.5, 2], [9, 3.6, 17, 5.8], [6, 3.6, 18.5, 9.4]].forEach(function (tr) {
+      [[12, 4, C * TS / 2 - 6, 2], [9, 3.6, C * TS / 2 - 4.5, 5.8], [6, 3.6, C * TS / 2 - 3, 9.4]].forEach(function (tr) {
         var bx = new T.Mesh(new T.BoxGeometry(tr[0], tr[1], 1.4), [new T.MeshStandardMaterial({ color: '#3b5cb0' }), new T.MeshStandardMaterial({ color: '#3b5cb0' }), new T.MeshStandardMaterial({ color: '#8aa8f0' }), new T.MeshStandardMaterial({ color: '#3b5cb0' }), new T.MeshBasicMaterial({ map: archT(Math.round(tr[0] / 2.4), 1) }), new T.MeshStandardMaterial({ color: '#3b5cb0' })]);
         bx.position.set(sd * tr[2], tr[3], ZB - 1); sc.add(bx);
         var cap = new T.Mesh(new T.BoxGeometry(tr[0] + .3, .25, 1.6), new T.MeshStandardMaterial({ color: '#c8d8ff', metalness: .3 })); cap.position.set(sd * tr[2], tr[3] + tr[1] / 2 + .12, ZB - 1); sc.add(cap);
@@ -6494,15 +6493,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var mh = new T.Path(); mh.absellipse(0, -.35, 2.4, 1.55, 0, Math.PI * 2, true); ls.holes.push(mh);
     var lips = new T.Mesh(new T.ExtrudeGeometry(ls, { depth: .9, bevelEnabled: true, bevelThickness: .35, bevelSize: .3, bevelSegments: 4, curveSegments: 24 }), new T.MeshStandardMaterial({ color: '#d0102a', roughness: .25, metalness: .2, emissive: '#3a0008' }));
     lips.position.set(0, 3.1, ZB + .2); sc.add(lips);
-    var mouth = new T.Mesh(new T.CircleGeometry(1.5, 32), new T.MeshStandardMaterial({ color: '#2a2a3a', metalness: 1, roughness: .2, emissive: '#120612', flatShading: true })); mouth.scale.set(1.55, 1, 1); mouth.position.set(0, 2.75, ZB + .1); sc.add(mouth);
+    var dark = new T.Mesh(new T.CircleGeometry(1.5, 32), new T.MeshBasicMaterial({ color: '#12040c' })); dark.scale.set(1.55, 1, 1); dark.position.set(0, 2.75, ZB + .05); sc.add(dark);
+    var mouth = new T.Mesh(new T.IcosahedronGeometry(1.3, 2), new T.MeshStandardMaterial({ color: '#e8ecff', metalness: 1, roughness: .12, emissive: '#3a2a4a', flatShading: true })); mouth.position.set(0, 2.75, ZB + .7); sc.add(mouth);   // (a disco ball in her mouth)
+    var mlight = new T.PointLight('#ffffff', .9, 8); mlight.position.set(0, 3.4, ZB + 3); sc.add(mlight);
     var spot = new T.PointLight('#ff5a7a', 1.2, 30); spot.position.set(0, 6, ZB + 5); sc.add(spot);
     var ball = { rotation: {} };   // (no disco ball on this set)
     // truss towers with moving heads: soft additive cones
     var truss = new T.MeshStandardMaterial({ color: '#9aa0b0', metalness: .8, roughness: .35 }), beams = [];
     [-1, 1].forEach(function (sd) {
-      var tw = new T.Mesh(new T.BoxGeometry(.7, 12, .7), truss); tw.position.set(sd * (C * TS / 2 + 5.5), 6, -R * TS / 2 + 3); sc.add(tw);
+      var tw = new T.Mesh(new T.BoxGeometry(.7, 12, .7), truss); tw.position.set(sd * (C * TS / 2 + 2.5), 6, ZB + 2); sc.add(tw);
       for (var k = 0; k < 3; k++) {
-        var pivot = new T.Group(); pivot.position.set(sd * (C * TS / 2 + 4.9), 3.5 + k * 3.2, -R * TS / 2 + 3); sc.add(pivot);
+        var pivot = new T.Group(); pivot.position.set(sd * (C * TS / 2 + 1.9), 3.5 + k * 3.2, ZB + 2); sc.add(pivot);
         var head = new T.Mesh(new T.CylinderGeometry(.35, .45, .7, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); head.rotation.z = Math.PI / 2; pivot.add(head);
         var cone = new T.Mesh(new T.ConeGeometry(2.2, 18, 24, 1, true), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .14, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         cone.position.y = -9; var arm = new T.Group(); arm.add(cone); pivot.add(arm);
@@ -6511,7 +6512,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     // the crowd: glow sticks at the front edge, swaying
     var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 60), sk = [];
-    for (i = 0; i < 60; i++) { sk.push({ x: (Math.random() - .5) * 34, z: ZL(LR - 1) + TS + .6 + Math.random() * 1.6, ph: Math.random() * 6.28 }); sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
+    for (i = 0; i < 60; i++) { sk.push({ x: (Math.random() - .5) * 34, z: ZF(R - 1) + TS + .6 + Math.random() * 1.6, ph: Math.random() * 6.28 }); sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
     sc.add(sticks);
     var st = { mk: {}, mkL: {}, stage: 1, beatAt: 0, pal: SV3_PAL[0], q: new T.Quaternion(), e: new T.Euler(), s: new T.Vector3(1, 1, 1), p: new T.Vector3() };
     function drawWall(t) {   // red rays turning slowly round a point low in the middle, a little brighter on the beat
@@ -6527,15 +6528,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       raf = requestAnimationFrame(frame2); if (!el.isConnected) { cancelAnimationFrame(raf); rn.dispose(); return; }
       var now = performance.now(), t = (now - t0) / 1000, fl = Math.max(0, 1 - (now - st.beatAt) / 420), p = st.pal;
       for (var i = 0; i < C * R; i++) {   // the tiles: a pattern that shifts every beat, bright on the beat and fading after
-        var x = i % C, y = Math.floor(i / C), on = ((x + y + st.n) % 3 === 0) || ((x * 7 + y * 3 + st.n * 5) % 11 === 0);
-        var mk = st.mk[i]; if (mk) col.set(mk).multiplyScalar(.75 + fl * .4); else col.set(p[(x + y + st.n) % 3]).multiplyScalar(on ? .22 + fl * .6 : .06 + fl * .06); tiles.setColorAt(i, col);
+        var x = i % C, y = Math.floor(i / C), sn = Math.floor(st.n / 4), on = (x + y + sn) % 2 === 0;
+        var mk = st.mk[i]; if (mk) col.set(mk).multiplyScalar(.75 + fl * .4); else col.set(p[(x + y + sn) % 2]).multiplyScalar(on ? .2 + fl * .06 : .1 + fl * .03); tiles.setColorAt(i, col);
       }
       tiles.instanceColor.needsUpdate = true;
-      for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C), mkl = st.mkL[i]; if (mkl) col.set(mkl).multiplyScalar(.8 + fl * .4); else col.set((lx + ly + st.n) % 2 ? '#ffc93c' : '#e0102a').multiplyScalar((lx + ly) % 2 ? .18 + fl * .3 : .35 + fl * .5); ltiles.setColorAt(i, col); }
+      for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C), mkl = st.mkL[i]; if (mkl) col.set(mkl).multiplyScalar(.8 + fl * .4); else col.set((lx + ly) % 2 ? '#ffc93c' : '#e0102a').multiplyScalar((lx + ly) % 2 ? .22 + fl * .05 : .32 + fl * .06); ltiles.setColorAt(i, col); }
       ltiles.instanceColor.needsUpdate = true;
       beams.forEach(function (b, j) { b.arm.rotation.z = b.sd * (.55 + .35 * Math.sin(t * .9 + j)) ; b.arm.rotation.x = .25 * Math.sin(t * .7 + j * 1.7); b.cone.material.color.set(p[(j + st.n) % 3]); b.cone.material.opacity = .1 + fl * .12; });
       for (var bi = 0; bi < 44; bi++) bulbs.setColorAt(bi, col.set((bi + st.n) % 2 ? '#fff6d0' : '#ff9a30').multiplyScalar((bi + st.n) % 2 ? 1 : .55 + fl * .4)); bulbs.instanceColor.needsUpdate = true;
-      mouth.rotation.z = t * .4;
+      mouth.rotation.y = t * .7;
       sk.forEach(function (s, j) { st.e.set(0, 0, .5 * Math.sin(t * 4.1 + s.ph)); st.q.setFromEuler(st.e); st.p.set(s.x, -.2 + .2 * Math.sin(t * 4.1 + s.ph), s.z); m4.compose(st.p, st.q, st.s); sticks.setMatrixAt(j, m4); });
       sticks.instanceMatrix.needsUpdate = true;
       if (now - lastW > 50) { lastW = now; drawWall(t); }
@@ -6545,7 +6546,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     st.n = 0; frame2();
     var pv = new T.Vector3();
     return { proj: function (c, r, lead) {   // a tile → screen pixels (its centre), and the size of a tile there (lead: on the singer's stage)
-        var X = (c - (C - 1) / 2) * TS, Z = lead ? ZL(r) : (r - (R - 1) / 2) * TS, Y = lead ? YL + .12 : .12; pv.set(X, Y, Z).project(cam); var x = (pv.x + 1) / 2 * w, y = (1 - pv.y) / 2 * h;
+        var X = (c - (C - 1) / 2) * TS, Z = lead ? ZL(r) : ZF(r), Y = lead ? YL + .12 : .12; pv.set(X, Y, Z).project(cam); var x = (pv.x + 1) / 2 * w, y = (1 - pv.y) / 2 * h;
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
@@ -6602,19 +6603,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The stage: the 3D floor is a board of 14 × 9 tiles. The pink team stands on the left half, the blue team on the right
   // half, everyone two tiles apart; every step is exactly one tile. The instructor stands at the front of the team whose
   // turn it is and does the steps with them. Their arrows scroll on their own side of the screen: pink left, blue right.
-  var SV_BC = 14, SV_BR = 7, SV_HROW = 2, SV_LROW = 1;   /* (the singer: row 1 of the 3 rows of her own stage) */
+  var SV_BC = 24, SV_BR = 5, SV_HROW = 2, SV_LROW = 1;   /* (the singer: row 1 of the 3 rows of her own stage) */
   function svHomes(g) {
     var H = {}, solo = g.order.length < 2, ga = g.order.filter(function (k) { return g.grp[k] === 'A'; }), gb = g.order.filter(function (k) { return g.grp[k] === 'B'; });
-    if (solo) { H[g.order[0]] = [6.5, SV_HROW]; return H; }
-    ga.forEach(function (k, j) { H[k] = [3 - (ga.length - 1) + j * 2, SV_HROW]; });
-    gb.forEach(function (k, j) { H[k] = [10 - (gb.length - 1) + j * 2, SV_HROW]; });
+    if (solo) { H[g.order[0]] = [11.5, SV_HROW]; return H; }
+    ga.forEach(function (k, j) { H[k] = [6 - (ga.length - 1) + j * 2, SV_HROW]; });
+    gb.forEach(function (k, j) { H[k] = [17 - (gb.length - 1) + j * 2, SV_HROW]; });
     return H;
   }
   function svProj(ov, c, r, lead) {   // a tile (column, row; fractions allowed) → the point on the screen, and how big things are there
     if (ov._3 && ov._3.proj) return ov._3.proj(c, r, lead);
-    if (lead) r = SV_BR + .5 + r;
-    var W = ov.clientWidth, H = ov.clientHeight, f = .7 + .3 * r / (SV_BR + 3);   // (no 3D: a flat trapezoid)
-    return { x: W / 2 + (c - (SV_BC - 1) / 2) * W * .052 * f, y: H * (.36 + .58 * r / (SV_BR + 3)), s: W * .052 * f };
+    r = lead ? r : r + 4;
+    var W = ov.clientWidth, H = ov.clientHeight, f = .7 + .3 * r / (SV_BR + 3);   // (no 3D: a flat trapezoid: her stage at the back, then the players)
+    return { x: W / 2 + (c - (SV_BC - 1) / 2) * W * .036 * f, y: H * (.4 + .5 * r / (SV_BR + 3)), s: W * .036 * f };
   }
   function svShow() {
     var g = G.sv; if (!g) return;
@@ -6636,8 +6637,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var act = nx ? nx[5] || '*' : '*', ix = 0, iy = 0;
     if (cur && cur[3] != null && g.st === 'play') g.chart.forEach(function (n) { if (n[3] === cur[3] && !n[4] && n[0] <= b + .02) { ix += SV_DV[n[1]][0]; iy += SV_DV[n[1]][1]; } });
     ov.setAttribute('data-act', act);
-    var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(10 + Math.round(r * 2) + (lead ? 40 : 0)); };
-    var ins = ov.querySelector('.svins'), lc = solo || act === '*' ? 6.5 : act === 'A' ? 3 : 10;
+    var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 4 : 10 + Math.round(r * 2)); };
+    var ins = ov.querySelector('.svins'), lc = solo || act === '*' ? 11.5 : act === 'A' ? 6 : 17;
     var lcx = lc + ix, lry = Math.max(0, Math.min(2, SV_LROW + iy)); place(ins, lcx, lry, true);
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }
     var marks = [];
