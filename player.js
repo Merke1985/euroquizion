@@ -752,11 +752,11 @@
   function svView(s) {
     var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
-    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, q: {}, raf: 0, fbAt: 0, sent: false }; }
+    if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, q: {}, raf: 0, fbAt: 0, sent: false, pf: 0, balls: 0, pp: 0, pdown: false }; }
     svS.g = (z.grp || {})[pid] || 'A';
     var S = svS;
     if ((z.st === 'count' || z.st === 'end') && mine && !S.sent && S.chart) {   // the song is over: send my results (once)
-      S.sent = true; var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''), zid = z.id, send = function () { if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res }); };
+      S.sent = true; var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''), zid = z.id, send = function () { if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res, pump: S.balls }); };
       send(); clearInterval(S.rs); S.rs = setInterval(function () { var z2 = state && state.sv; if (!z2 || z2.id !== zid || z2.st === 'end' || (z2.rcv || []).indexOf(pid) >= 0) { clearInterval(S.rs); return; } send(); }, 900);   // (sent again until the big screen has it: a message can get lost)
     }
     if (z.st === 'count') { svStop(); box.classList.add('hidden'); $('waittitle').textContent = '🪩 Counting the steps…'; $('waitsub').textContent = 'Look at the big screen!'; return; }
@@ -778,7 +778,20 @@
     if (box.getAttribute('data-id') !== z.id) {   // the chart: arrows scroll up to the receptors; four big pads below
       box.setAttribute('data-id', z.id); S.chart = z.chart || []; S.notes = null;
       var A = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';
-      box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div><div class="svwt"></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
+      box.innerHTML = '<div class="svfield">' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + A + '</i>'; }).join('') + S.chart.map(function (n, i) { return '<i class="svn c' + n[1] + (n[2] ? ' gold' : '') + '" data-i="' + i + '">' + A + '</i>'; }).join('') + '<div class="svfb"></div><div class="svwt"></div><div class="svpump"><div class="svpball"><i></i></div><div class="svpump2"><i class="svph"></i><i class="svpcyl"></i></div><b class="svpn"></b><em>Slide up and down to pump!</em></div></div><div class="svpads">' + [0, 1, 2, 3].map(function (c) { return '<button type="button" class="svpadb c' + c + '" data-d="' + c + '">' + A + '</button>'; }).join('') + '</div><div class="svme"></div>';
+      (function () {   // while the other team dances: pump up a skippy ball (slide a finger up and down); every full ball is a bonus
+        var pu = box.querySelector('.svpump'), y0 = 0, p0 = 0;
+        var paint = function () { var S2 = svS; if (!S2) return; pu.style.setProperty('--p', S2.pp.toFixed(3)); pu.style.setProperty('--f', S2.pf.toFixed(3)); pu.querySelector('.svpn').textContent = S2.balls ? '🎈 × ' + S2.balls : ''; };
+        pu.addEventListener('pointerdown', function (e) { e.preventDefault(); y0 = e.clientY; p0 = svS ? svS.pp : 0; try { pu.setPointerCapture(e.pointerId); } catch (x) {} });
+        pu.addEventListener('pointermove', function (e) {
+          var S2 = svS; if (!S2 || !(e.buttons || e.pressure)) return;
+          S2.pp = Math.max(0, Math.min(1, p0 + (e.clientY - y0) / (pu.clientHeight * .5)));
+          if (S2.pp > .85 && !S2.pdown) { S2.pdown = true; S2.pf = Math.min(1, S2.pf + .1); try { navigator.vibrate && navigator.vibrate(10); } catch (x) {} if (S2.pf >= 1) { S2.balls++; S2.pf = 0; pu.classList.remove('full'); void pu.offsetWidth; pu.classList.add('full'); } }   // (a full stroke down: a puff of air)
+          if (S2.pp < .15) S2.pdown = false;
+          paint();
+        });
+        paint();
+      })();
       [].forEach.call(box.querySelectorAll('.svpadb'), function (bt) { bt.addEventListener('pointerdown', function (e) { e.preventDefault(); svTap(+bt.getAttribute('data-d')); bt.classList.remove('hit'); void bt.offsetWidth; bt.classList.add('hit'); }); bt.addEventListener('contextmenu', function (e) { e.preventDefault(); }); });
     }
     var tally = { 2: 0, 1: 0, 0: 0 }; Object.keys(S.q).forEach(function (i) { tally[S.q[i]]++; });
@@ -793,12 +806,12 @@
     var b = (Date.now() - S.t0) / S.bt, on = S.st === 'play' || S.st === 'ready';
     if (!S.notes) S.notes = [].slice.call(box.querySelectorAll('.svn'));
     var soon = false; S.chart.forEach(function (n) { if (svMine(n) && n[0] > b - .3 && n[0] < b + 3.2) soon = true; });
-    var wt = box.querySelector('.svwt'), nxt = null; S.chart.forEach(function (n) { if (!nxt && n[0] > b) nxt = n; }); var wtx = S.st === 'play' && !soon ? (nxt && nxt[5] && nxt[5] !== '*' && !svMine(nxt) ? '💃 The other team is dancing… you’re next!' : nxt ? '💃 Get ready… watch the big screen!' : '') : ''; if (wt && wt.textContent !== wtx) wt.textContent = wtx;
+    var wt = box.querySelector('.svwt'), nxt = null; S.chart.forEach(function (n) { if (!nxt && n[0] > b) nxt = n; }); var pumping = S.st === 'play' && !soon && !!(nxt && nxt[5] && nxt[5] !== '*' && !svMine(nxt)), wtx = S.st === 'play' && !soon && !pumping ? (nxt ? '💃 Get ready… watch the big screen!' : '') : ''; if (wt && wt.textContent !== wtx) wt.textContent = wtx; box.classList.toggle('pumping', pumping);   // (the other team's turn: pump!)
     if (S.st === 'play') S.chart.forEach(function (n, i) { if (!S.done[i] && svMine(n) && b - n[0] > .55) { S.done[i] = 1; S.q[i] = 0; svFb(0); } });   // (an arrow that went by: a miss)
-    S.notes.forEach(function (n) { var i = +n.getAttribute('data-i'), dk = S.chart[i][0] - b; if (!on || S.done[i] || !svMine(S.chart[i]) || dk < -.5 || dk > 2.4) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = 1; n.style.transform = 'translateY(' + (dk * 22).toFixed(2) + 'vh)'; });   // (22vh per bounce: up to the receptors)
+    S.notes.forEach(function (n) { var i = +n.getAttribute('data-i'), dk = S.chart[i][0] - b; if (!on || S.done[i] || !svMine(S.chart[i]) || dk < -.5 || dk > 3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = 1; n.style.transform = 'translateY(' + (dk * 22).toFixed(2) + 'vh)'; });   // (22vh per bounce: up to the receptors)
     var fb = box.querySelector('.svfb'); if (S.fbAt && Date.now() - S.fbAt > 700) { fb.textContent = ''; S.fbAt = 0; }
   }
-  function svFb(q) { var S = svS, fb = $('svui').querySelector('.svfb'); if (!fb) return; fb.textContent = q === 2 ? 'PERFECT!' : q ? 'GOOD' : 'MISS'; fb.className = 'svfb q' + q; fb.classList.remove('pop'); void fb.offsetWidth; fb.classList.add('pop'); S.fbAt = Date.now(); }
+  function svFb(q) { var S = svS, fb = $('svui').querySelector('.svfb'); if (!fb) return; fb.textContent = q === 2 ? 'PERFECT!' : q ? 'GOOD' : 'MISS'; fb.className = 'svfb q' + q; fb.classList.remove('pop'); void fb.offsetWidth; fb.classList.add('pop'); S.fbAt = Date.now(); var t = { 2: 0, 1: 0, 0: 0 }; Object.keys(S.q).forEach(function (i) { t[S.q[i]]++; }); var me = $('svui').querySelector('.svme'); if (me) me.textContent = 'Perfect ' + t[2] + ' · Good ' + t[1] + ' · Miss ' + t[0]; }   // (the tally right away)
   function svTap(d) {
     var S = svS, z = state && state.sv; if (!S || !z || !S.t0 || z.st !== 'play' || !S.chart) return;
     var now = Date.now(), b = (now - S.t0) / S.bt, best = -1, bd = 9;

@@ -6414,6 +6414,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.sv; if (!g || G.phase !== 'sv' || !m || m.id !== g.id || g.order.indexOf(m.pid) < 0 || g.res[m.pid] || typeof m.res !== 'string') return;
     var R = { p: 0, g: 0, m: 0, pts: 0 };
     g.chart.forEach(function (n, i) { if (!svMineN(g, m.pid, n)) return; var q = Math.max(0, Math.min(2, +m.res.charAt(i) || 0)); R[q === 2 ? 'p' : q ? 'g' : 'm']++; R.pts += SV_PTS[q] * (n[0] >= SV_STAGES[2].from ? 2 : 1); });
+    R.pump = Math.max(0, Math.min(40, Math.round(+m.pump || 0))); R.pts += R.pump * 2;   // (every skippy ball pumped up while waiting: 2 points)
     g.res[m.pid] = R; push();
     if (g.st === 'count' && g.order.every(function (k) { return g.res[k]; })) svEnd(g);
   }
@@ -6803,7 +6804,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var nm = function (k) { return players[k] ? esc(players[k].name) : ''; };
     var rs = ov.querySelector('.svres'), rh = '';   // the results: everyone's perfects, goods and misses
     if (g.st === 'count') rh = '<h3>🪩 Counting the steps…</h3>';
-    else if (g.st === 'end') rh = '<h3>🪩 The results</h3><table><tr><th></th><th>Perfect</th><th>Good</th><th>Miss</th><th>Points</th></tr>' + g.order.slice().sort(function (a, c) { return g.dist[c] - g.dist[a]; }).map(function (k) { var R = g.res[k] || { p: 0, g: 0, m: 0, pts: 0 }, w = g.win.indexOf(k) >= 0; return '<tr class="' + (w ? 'w' : '') + (g.grp[k] === 'B' ? ' b' : ' a') + '"><td>' + (w ? '🏆 ' : '') + nm(k) + '</td><td>' + R.p + '</td><td>' + R.g + '</td><td>' + R.m + '</td><td><b>' + R.pts + '</b></td></tr>'; }).join('') + '</table>';
+    else if (g.st === 'end') rh = '<h3>🪩 The results</h3><table><tr><th></th><th>Perfect</th><th>Good</th><th>Miss</th><th>🎈</th><th>Points</th></tr>' + g.order.slice().sort(function (a, c) { return g.dist[c] - g.dist[a]; }).map(function (k) { var R = g.res[k] || { p: 0, g: 0, m: 0, pts: 0 }, w = g.win.indexOf(k) >= 0; return '<tr class="' + (w ? 'w' : '') + (g.grp[k] === 'B' ? ' b' : ' a') + '"><td>' + (w ? '🏆 ' : '') + nm(k) + '</td><td>' + R.p + '</td><td>' + R.g + '</td><td>' + R.m + '</td><td>' + (R.pump || 0) + '</td><td><b>' + R.pts + '</b></td></tr>'; }).join('') + '</table>';
     if (rs._h !== rh) { rs._h = rh; rs.innerHTML = rh; rs.classList.toggle('on', !!rh); }
     var msg = g.st === 'intro' || g.st === 'play' ? '' : g.st === 'ready' ? '' : g.win.length ? '🏆 ' + g.win.map(nm).join(' & ') + (g.win.length > 1 ? ' win' : ' wins') + '! +' + g.prize : 'The end!';
     var me = ov.querySelector('.svmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
