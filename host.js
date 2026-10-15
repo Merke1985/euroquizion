@@ -6620,7 +6620,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M116 70 Q92 140 104 240 Q118 252 132 244 Q122 160 130 96 Z M204 70 Q228 140 216 240 Q202 252 188 244 Q198 160 190 96 Z" fill="url(#svhair)"/>' +
       '<path d="M124 104 Q118 170 122 244 M196 104 Q202 170 198 244 M160 38 Q148 46 136 62 M160 38 Q172 46 184 62" stroke="#2a040a" stroke-width="1.4" fill="none" opacity=".6"/></g>' +
       // the arm with the microphone, the mic at her mouth
-      '<g class="svlarm l">' + sleeve('M108 172 Q74 218 98 242 Q124 214 138 152', 19) + '<circle cx="138" cy="152" r="9" fill="#f0c8b2"/><g transform="rotate(-30 140 148)"><rect x="135" y="118" width="11" height="42" rx="4" fill="#161616"/><ellipse cx="140.5" cy="116" rx="10" ry="12" fill="#2b2b2b"/><path d="M132 112 h17 M131 118 h19" stroke="#5a5a5a" stroke-width="1.5"/></g><path d="M131 148 q8 -4 14 2" stroke="#e2b296" stroke-width="5" fill="none" stroke-linecap="round"/></g>' +
+      // the arm with the microphone: elbow down at her side, the fist under her chin, the mic head right at her lips
+      '<g class="svlarm l">' + sleeve('M108 172 Q86 222 114 232 Q138 214 141 166', 19) +
+      '<path d="M139 176 L149 132" stroke="#161616" stroke-width="10" stroke-linecap="round"/><path d="M140 170 L147 140" stroke="#3a3a3a" stroke-width="2"/>' +
+      '<g transform="rotate(14 151 124)"><ellipse cx="151" cy="124" rx="10.5" ry="12" fill="#2b2b2b"/><path d="M142 119 h18 M141 124 h20 M142 129 h18 M151 113 v22" stroke="#6a6a6a" stroke-width="1.2"/><rect x="142" y="133" width="18" height="4" rx="1.5" fill="#888"/></g>' +
+      '<path d="M134 162 Q134 150 144 150 Q152 151 151 160 Q150 170 141 171 Q134 170 134 162 Z" fill="#f0c8b2"/><path d="M137 154 q6 -2 13 1 M136 159 q7 -2 14 1 M136 164 q6 -2 12 1" stroke="#d9a688" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>' +
       '</g></svg>';
   })();
   // her two backup dancers: red fluffy cropped jackets, red fishnets, black briefs, black thigh-high boots, a black fan
