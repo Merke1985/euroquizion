@@ -5115,3 +5115,11 @@ body.rufrozen #waittitle{color:#0b3a66}
 .clueov .clframe::before{content:'';position:absolute;left:50%;top:-6vh;width:9vh;height:5vh;transform:translateX(-50%);background:linear-gradient(to bottom right,transparent calc(50% - 1px),#2a1a10 calc(50% - 1px),#2a1a10 calc(50% + 1px),transparent calc(50% + 1px)) left/50% 100% no-repeat,linear-gradient(to bottom left,transparent calc(50% - 1px),#2a1a10 calc(50% - 1px),#2a1a10 calc(50% + 1px),transparent calc(50% + 1px)) right/50% 100% no-repeat;pointer-events:none}
 .clueov .clframe::after{content:'';position:absolute;left:50%;top:-6.6vh;width:1.2vh;height:1.2vh;margin-left:-.6vh;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d8b060,#5a3a0c);box-shadow:0 2px 3px rgba(0,0,0,.6)}
 .clueov.noframe .clframe{opacity:0;transform:rotate(-2.5deg) scale(.6)}
+
+/* Zero Gravity: the space crooner on his meteor */
+.zgrider{position:absolute;left:0;top:var(--y,20vh);pointer-events:none;z-index:5;animation:zgride 7s linear forwards}
+.zgrider .zgrsvg{width:100%;height:auto;display:block;filter:drop-shadow(0 0 2vh rgba(255,170,60,.45));animation:zgridebob 1.4s ease-in-out infinite alternate}
+.zgrider.intro{width:58vh}
+.zgrider.pass{width:24vh;z-index:2;animation-duration:11s;opacity:.92}
+@keyframes zgride{from{transform:translate(-50vh,6vh) rotate(-6deg)}to{transform:translate(calc(100vw + 10vh),-4vh) rotate(4deg)}}
+@keyframes zgridebob{from{translate:0 -.8vh;rotate:-2deg}to{translate:0 .8vh;rotate:2deg}}
