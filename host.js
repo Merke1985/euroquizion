@@ -6649,9 +6649,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var up = function () {   // and once she is all the way up: a 5-second countdown
           if (G.rule !== g) return;
           if (!g.riseAt || Date.now() < g.riseAt + RU_RISE + 300) { ruTimer = setTimeout(up, 100); return; }
-          g.st = 'ready'; g.goAt = Date.now() + 5000; push();
-          [1000, 2000, 3000, 4000].forEach(function (t2) { setTimeout(function () { if (G.rule === g && g.st === 'ready') { ruShow(); Music.blip(); } }, t2); });
-          ruTimer = setTimeout(ruGo, 5000);
+          g.st = 'ready'; g.goAt = Date.now() + 3000; push(); if (!REMOTE) Music.discoTick();   // (a 3-second count-in, right below the singer, with soft disco ticks)
+          [1000, 2000].forEach(function (t2) { setTimeout(function () { if (G.rule === g && g.st === 'ready') { ruShow(); if (!REMOTE) Music.discoTick(); } }, t2); });
+          ruTimer = setTimeout(function () { if (!REMOTE) Music.discoTick(true); ruGo(); }, 3000);
         };
         ruTimer = setTimeout(up, 500);
       }, 2200);   // (they all land at once: a short pause, then the song)
@@ -7352,7 +7352,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
     }
     var ck = ov.querySelector('.ruclock'), sec = g.st === 'play' ? Math.max(0, Math.ceil((g.ends - now) / 1000)) : g.st === 'ready' ? Math.max(1, Math.ceil((g.goAt - now) / 1000)) : 0;
-    var txt = g.st === 'play' ? Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2) : g.st === 'ready' ? String(sec) : ''; if (ck.textContent !== txt) ck.textContent = txt;
+    var txt = g.st === 'play' ? Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2) : ''; if (ck.textContent !== txt) ck.textContent = txt;
+    var s2c = ov.querySelector('.rus2d:not(.ruvart)'), cdv = g.st === 'ready' ? String(sec) : ''; if (s2c && s2c.getAttribute('data-cd') !== cdv) { s2c.setAttribute('data-cd', cdv); s2c.classList.remove('cdpop'); void s2c.offsetWidth; if (cdv) s2c.classList.add('cdpop'); }   // (the count-in, right below the singer)
     var cnt = g.cnt && Object.keys(g.cnt).length ? g.cnt : ruCount(g), lb = ov.querySelector('.rulist');
     if ((g.st === 'count' && now >= g.countAt - 600) || g.st === 'end') {
       var best = Math.max.apply(null, g.order.map(function (k) { return cnt[k] || 0; })), k0 = Math.max(0, Math.floor((now - (g.countAt || now)) / (g.cstep || RU_CSTEP)) + 1);

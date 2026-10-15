@@ -409,6 +409,20 @@ var Music = (function () {
     } catch (e) {}
   }
   // The monster wheel: a dark tick (a low, hollow knock with a dissonant metal ring) and a demonic hit when it lands
+  // A soft disco count-in tick: a gentle kick with an open hi-hat ("tss"); the last one (go!) gets a clap and a little sparkle
+  function discoTick(go) {
+    if (!ac()) return;
+    try {
+      var t = ctx.currentTime + 0.01, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.14);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(go ? 0.22 : 0.14, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      o.connect(g); g.connect(fxOut()); o.start(t); o.stop(t + 0.22);
+      if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      var hat = function (at, len, vol, hp) { var s2 = ctx.createBufferSource(), g2 = ctx.createGain(), f = ctx.createBiquadFilter(); s2.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = hp; g2.gain.setValueAtTime(vol, at); g2.gain.exponentialRampToValueAtTime(0.0001, at + len); s2.connect(f); f.connect(g2); g2.connect(fxOut()); s2.start(at); s2.stop(at + len + 0.02); };
+      hat(t + 0.24, 0.22, 0.05, 7500);   // (the off-beat "tss")
+      if (go) { hat(t, 0.12, 0.09, 1600); hat(t + 0.02, 0.1, 0.06, 2200); [1568, 2093, 2637].forEach(function (f2, k) { var m = ctx.createOscillator(), mg = ctx.createGain(); m.type = 'triangle'; m.frequency.value = f2; mg.gain.setValueAtTime(0.0001, t + k * 0.05); mg.gain.exponentialRampToValueAtTime(0.03, t + k * 0.05 + 0.01); mg.gain.exponentialRampToValueAtTime(0.0001, t + k * 0.05 + 0.3); m.connect(mg); mg.connect(fxOut()); m.start(t + k * 0.05); m.stop(t + k * 0.05 + 0.32); }); }
+    } catch (e) {}
+  }
   function darkTick(n) {
     if (!ac()) return;
     try {
@@ -737,5 +751,5 @@ var Music = (function () {
     try { if (fxNode) fxNode.gain.value = vol.fx; if (playing && master) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(musicLevel(), ctx.currentTime); } if (loopNode && loopGain) { loopGain.gain.cancelScheduledValues(ctx.currentTime); loopGain.gain.setValueAtTime(loopLevel(), ctx.currentTime); } } catch (e) {}
     if (window.onVolume) window.onVolume(vol);
   }
-  return { loopClose: loopClose, starRun: starRun, bonk: bonk, dizzy: dizzy, starGet: starGet, starHit: starHit, darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
+  return { discoTick: discoTick, loopClose: loopClose, starRun: starRun, bonk: bonk, dizzy: dizzy, starGet: starGet, starHit: starHit, darkDrone: darkDrone, darkTick: darkTick, darkHit: darkHit, roll: roll, crash: crash, climb: climb, space: space, laser: laser, cheer: cheer, mystery: mystery, vol: vol, setVol: setVol, dread: dread, creep: creep, chomp: chomp, soft: soft, scream: scream, short: short, woosh: woosh, buzz: buzz, defeat: defeat, crumble: crumble, step: stepSnd, blip: blip, talk: talk, diva: diva, zap: zap, micdrop: micdrop, plop: plop, clock: clock, snap: snap, ding: ding, douze: douze, ping: ping, menuOn: function () { return !muted; }, setMenu: function (on) { muted = !on; try { localStorage.setItem('esc-music', muted ? '0' : '1'); } catch (x) {} if (muted) stop(); else start(); draw(); }, useLoop: function (src, len) { loopSrc = src || ''; loopLen = +len || 0; }, loopReset: function () { loopAt = 0; }, want: function (on, synth) { on = !!on; synth = !!synth; if (on === wanted && (!on || synth === wantSynth)) return; if (on && wanted) stop(); wanted = on; wantSynth = synth; if (on) start(); else stop(); draw(); } };
 })();

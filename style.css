@@ -5265,3 +5265,8 @@ body.rufrozen #waittitle{color:#0b3a66}
 .rus2d.yel.dance .rsmouth{animation-duration:.65s}
 /* Turquoise Carpet: the presenters walk in at half the speed (walking off stays as it was) */
 .tcov[data-st="intro"] .tchosts .ehost{transition:translate 2.4s cubic-bezier(.25,.6,.4,1),opacity 1.6s}
+/* Rule the World: the 3-second count-in sits right below the singer on the stage */
+.rus2d:not(.ruvart)::after{content:attr(data-cd);position:absolute;left:50%;top:100%;transform:translate(-50%,1.2vh);font-weight:900;font-size:7vh;line-height:1;color:#fff;text-shadow:0 0 2vh #ff3fd0,0 0 4vh #b04dff,0 .4vh 0 rgba(0,0,0,.5);pointer-events:none}
+.rus2d:not(.ruvart)[data-cd=""]::after{display:none}
+.rus2d.cdpop::after{animation:rucdpop .9s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes rucdpop{0%{transform:translate(-50%,1.2vh) scale(.3);opacity:0}25%{transform:translate(-50%,1.2vh) scale(1.25);opacity:1}100%{transform:translate(-50%,1.2vh) scale(1);opacity:.9}}
