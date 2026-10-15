@@ -5741,3 +5741,9 @@ body.rufrozen #waittitle{color:#0b3a66}
 /* Serving: the results at the top of the screen */
 .svres{top:2vh;transform:translate(-50%,0) scale(.6);transform-origin:50% 0}
 .svres.on{transform:translate(-50%,0) scale(1)}
+/* join: in the room or online */
+.wherebox{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wherebox label{display:block;cursor:pointer;margin:0}
+.wherebox input{position:absolute;opacity:0;pointer-events:none}
+.wherebox span{display:block;text-align:center;padding:10px 6px;border-radius:12px;border:2px solid var(--line,rgba(255,255,255,.2));font-weight:800;font-size:.95rem}
+.wherebox input:checked+span{border-color:#ff3fa4;background:rgba(255,63,164,.15)}

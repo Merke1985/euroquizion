@@ -748,7 +748,14 @@
   var zgS = null;
   function zgOnLive() {}
   // ---------- Serving! (the dance-off test game): DDR-style arrows scroll up; hit the matching pad as they reach the top ----------
-  var svS = null, SV_STREAM = 250;   // (the arrows a quarter of a second later: in step with the music as it comes through a stream)
+  var svS = null, SV_STREAM = 0;   // (watching online, via a stream: the arrows a quarter of a second later, in step with the music as it comes through)
+  (function () {   // where you watch: in the room (no delay) or online (a stream: a little delay); remembered
+    var w = 'local'; try { w = localStorage.getItem('eq_where') || 'local'; } catch (e) {}
+    var set = function (v) { w = v; SV_STREAM = v === 'online' ? 250 : 0; try { localStorage.setItem('eq_where', v); } catch (e) {} };
+    set(w);
+    var init = function () { [].forEach.call(document.querySelectorAll('input[name="where"]'), function (r) { r.checked = r.value === w; r.addEventListener('change', function () { if (r.checked) set(r.value); }); }); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  })();
   function svView(s) {
     var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
