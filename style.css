@@ -5233,3 +5233,27 @@ body.rufrozen #waittitle{color:#0b3a66}
 .tcov.fig2d .tcg.walking .tcleg.b,.tcov.fig2d .tcg.walking .tcarm.f{animation-duration:.6s}
 .tcov.fig2d .tcg.walking .tcgirl{animation-duration:.6s}
 .tcov.fig2d .tcone{margin:0 .8vh}
+/* Say Na Na Na: real gooseneck microphones */
+.jcmic,.jcdmic{background:none!important;border-radius:0;width:2.4vh!important}
+.jcmic::before,.jcmic::after,.jcdmic::before,.jcdmic::after{display:none!important}
+.jcmic{height:6.4vh!important;bottom:8.6vh!important;margin-left:-1.2vh}
+.jcmic.m1,.jcmic.m2,.jcmic.m3,.jcmic.m4{transform:none!important}
+.jcdmic{height:5.8vh!important;top:-5.2vh!important;transform:none!important}
+.jcmic svg,.jcdmic svg{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+/* the press wall: a step-and-repeat banner full of made-up logos */
+.jcwall{background:linear-gradient(180deg,#241a6a,#2c1670 60%,#3a1a78)!important}
+.jcwall::before{opacity:.35}
+.jcpress{position:absolute;inset:-1vh -4vw 5vh;display:flex;flex-direction:column;justify-content:space-around;transform:rotate(-1.2deg);opacity:.92}
+.plrow{display:flex;gap:2.6vw;white-space:nowrap;transform:translateX(var(--o))}
+.pl{flex:none;font-weight:900;font-size:clamp(.55rem,1.05vw,1rem);letter-spacing:.02em;line-height:1;display:inline-flex;align-items:center;gap:.25em;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.pl.a{color:#fff}.pl.a i{font-style:normal;color:#ff4fa8}
+.pl.b{color:#ffd23f;letter-spacing:.12em}.pl.b span{font-size:.7em;background:#ffd23f;color:#2c1670;padding:.1em .3em;border-radius:3px}
+.pl.c{color:#7ee6ff;font-style:italic}
+.pl.d{color:#fff;letter-spacing:.18em}.pl.d span{color:#ff8a3d}
+.pl.e{color:#c3ff5a}
+.pl.f{color:#fff;font-size:clamp(.7rem,1.3vw,1.25rem);letter-spacing:.06em;border:2px solid #fff;padding:.05em .3em;border-radius:3px}
+.pl.g{color:#ff7ad9;font-family:Georgia,serif;font-style:italic;font-weight:700}
+.pl.h{color:#ffb547}
+.jcban,.jclogo,.jcflags{z-index:2}
+.jcban{background:rgba(12,10,40,.75);padding:.4vh .8vw;border-radius:4px}
+.jclogo{background:rgba(12,10,40,.7);padding:.3vh 1vw;border-radius:8px}

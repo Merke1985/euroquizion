@@ -668,7 +668,7 @@
     if (c.st === 'ask') { var tick = function () { var e = box.querySelector('.tccount'); if (!e) return; var sec = Math.max(0, Math.ceil((tcEnd - Date.now()) / 1000)); e.textContent = sec; e.classList.toggle('hot', sec <= 5); }; tick(); tcTimerT = setInterval(function () { if (!state || state.phase !== 'carpet') { clearInterval(tcTimerT); return; } tick(); }, 250); }
   }
 
-  // ---------- Just One! ----------
+  // ---------- Say Na Na Na! ----------
   // My card comes privately: the secret word (or "you're guessing"). Then: my one-word clue, or (if I'm guessing) my guess,
   // and judging a guess that wasn't spelled quite right.
   var fkMe = null, fkAsked = '', fkSent = {};
@@ -691,7 +691,7 @@
     var key = f.id + '|' + f.st + '|' + (me ? me.role : '') + '|' + JSON.stringify(f.clues) + '|' + (f.guess || '') + '|' + (f.done ? 1 : 0) + '|' + JSON.stringify(f.judged || {}) + '|' + JSON.stringify(me && me.check ? me.check.out : null);
     if (box.getAttribute('data-k') === key) return; box.setAttribute('data-k', key);
     var body = '';
-    if (!mine) { $('waittitle').textContent = '☝️ Just One!'; $('waitsub').textContent = 'Watch the big screen!'; }
+    if (!mine) { $('waittitle').textContent = '🎶 Say Na Na Na!'; $('waitsub').textContent = 'Watch the big screen!'; }
     else if (f.st === 'secret') { $('waittitle').textContent = isG ? '☝️ Your turn to guess!' : '🤫 The secret word'; $('waitsub').textContent = isG ? 'Get ready…' : 'Keep it to yourself!'; }
     else if (f.st === 'clues') {
       if (isG) { $('waittitle').textContent = '⏳ They’re writing clues…'; $('waitsub').textContent = 'The same clues cancel each other out!'; }
@@ -714,7 +714,7 @@
       else { $('waittitle').textContent = nm(f.guesser) + ' says:'; $('waitsub').textContent = 'Close enough to the secret word?'; body = '<div class="fkguess">“' + esc(f.guess) + '”</div><div class="fkjudge"><button type="button" class="btn big fkj" data-v="1">✅ Right</button><button type="button" class="btn big alt fkj" data-v="0">❌ Wrong</button></div>'; }
     } else if (f.st === 'end') {
       var won = (f.win || []).indexOf(pid) >= 0, pts = (f.res || {})[pid] || 0;
-      if (f.done) { $('waittitle').textContent = won ? '🏆 You win Just One!' : '☝️ Just One! is over!'; $('waitsub').textContent = 'Your total: ' + ((f.tot || {})[pid] || 0) + ' points over ' + f.of + ' rounds.'; box.innerHTML = ''; return; }
+      if (f.done) { $('waittitle').textContent = won ? '🏆 You win Say Na Na Na!' : '🎶 Say Na Na Na! is over!'; $('waitsub').textContent = 'Your total: ' + ((f.tot || {})[pid] || 0) + ' points over ' + f.of + ' rounds.'; box.innerHTML = ''; return; }
       var c = f.clues[pid + '#0'] && f.clues[pid + '#0'].x ? f.clues[pid + '#0'] : f.clues[pid + '#1'];
       $('waittitle').textContent = (pts ? '⭐ +' + pts + ' points' : f.right ? '🎉 Right!' : '😅 Not this time') + (f.rnd < f.of ? ' · next round coming up!' : '');
       $('waitsub').textContent = (f.song ? 'The word was: ' + f.song.t + '. ' : '') + (c && c.x === 'twin' ? 'Your clue was cancelled: someone wrote the same!' : c && c.x === 'title' ? 'Your clue gave the word away, so it didn’t count.' : '');
