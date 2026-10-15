@@ -6363,6 +6363,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.sv = { id: 'sv' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', order: order, dist: {}, got: {}, last: {}, ap: {}, fall: {}, phd: {}, t0: 0, win: [], done: false, chart: svChart(order.length < 2), grp: {}, stage: 1 };
     order.forEach(function (k) { G.sv.dist[k] = 0; G.sv.got[k] = {}; G.sv.ap[k] = [0, 0]; });
     order.forEach(function (k, i) { G.sv.grp[k] = i % 2 ? 'B' : 'A'; });   // (two groups, taking turns)
+    SV_BR = order.length > 8 ? 7 : 5;   // (more than 4 per team: two rows, so the floor is two rows deeper)
     G.sv.home = svHomes(G.sv);
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
@@ -6695,8 +6696,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function svHomes(g) {
     var H = {}, solo = g.order.length < 2, ga = g.order.filter(function (k) { return g.grp[k] === 'A'; }), gb = g.order.filter(function (k) { return g.grp[k] === 'B'; });
     if (solo) { H[g.order[0]] = [11.5, SV_HROW]; return H; }
-    ga.forEach(function (k, j) { H[k] = [6 - (ga.length - 1) + j * 2, SV_HROW]; });
-    gb.forEach(function (k, j) { H[k] = [17 - (gb.length - 1) + j * 2, SV_HROW]; });
+    var put = function (L, cx) {   // up to 4 in a row, two tiles apart; more: two rows (the back row half a step aside), so nobody steps off their half
+      if (L.length <= 4) { L.forEach(function (k, j) { H[k] = [cx - (L.length - 1) + j * 2, SV_HROW]; }); return; }
+      var n1 = Math.ceil(L.length / 2);
+      L.forEach(function (k, j) { var b = j >= n1, m = b ? L.length - n1 : n1, i = b ? j - n1 : j; H[k] = [cx - (m - 1) + i * 2 + (b ? 1 : 0), b ? SV_HROW + 2 : SV_HROW]; });
+    };
+    put(ga, 6); put(gb, 17);
     return H;
   }
   function svProj(ov, c, r, lead) {   // a tile (column, row; fractions allowed) → the point on the screen, and how big things are there

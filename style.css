@@ -5573,3 +5573,18 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svchart.r .svteam{color:#e8e4ee}.svchart.r{box-shadow:inset 0 0 0 2px rgba(230,226,240,.6);background:rgba(8,6,10,.6)}
 .svaf.gB .svtile{box-shadow:0 0 0 2px #e8e4ee,0 0 18px rgba(255,255,255,.5)}
 .svready.b b{color:#fff;text-shadow:0 0 30px #000}.svready.b{background:rgba(6,4,8,.9);box-shadow:0 0 0 4px #e8e4ee,0 0 50px rgba(255,255,255,.35)}
+/* Serving: she sings (not while she walks across), and she and her dancers dance to the beat (122 BPM: .98s = two beats) */
+.svins .svlmouth{transform-box:fill-box;transform-origin:50% 15%;animation:svlsing .49s ease-in-out infinite alternate}
+@keyframes svlsing{0%{transform:scaleY(1)}100%{transform:scaleY(.45)}}
+.svins.svdan .svlmouth{animation:none}
+.svins.walk .svlmouth,.svins.walk .svsmouth{animation:none;transform:scaleY(.45)}
+.svins .svlbody{transform-box:view-box;transform-origin:160px 520px;animation:svgroove .98s ease-in-out infinite}
+@keyframes svgroove{0%,100%{transform:rotate(-3deg) translateY(0)}25%{transform:rotate(0) translateY(-8px)}50%{transform:rotate(3deg) translateY(0)}75%{transform:rotate(0) translateY(-8px)}}
+.svins .svlhead{transform-box:view-box;transform-origin:160px 130px;animation:svnod .49s ease-in-out infinite alternate}
+@keyframes svnod{to{transform:rotate(4deg)}}
+.svins .svlarm.r{transform-box:view-box;transform-origin:212px 172px;animation:svarmpump .98s ease-in-out infinite}
+@keyframes svarmpump{0%,100%{transform:rotate(0)}50%{transform:rotate(-38deg)}}
+.svins.svdan .svlarm.r{transform-origin:230px 244px;animation:svfan .49s ease-in-out infinite alternate}
+@keyframes svfan{0%{transform:rotate(10deg)}100%{transform:rotate(-55deg) translateY(-30px)}}
+.svins.svdan.d1 .svlbody{animation-delay:-.49s}
+.svins.walk .svlbody,.svins.walk .svlhead,.svins.walk .svlarm{animation:none}
