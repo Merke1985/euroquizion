@@ -5718,3 +5718,26 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svready.a b{color:#4d9bff;text-shadow:0 0 30px #1f5fd8}.svready.a{box-shadow:0 0 0 4px #1f5fd8,0 0 50px rgba(31,95,216,.6)}
 .svready.b b{color:#ffd23f;text-shadow:0 0 30px #c89a10}.svready.b{background:rgba(20,4,30,.72);box-shadow:0 0 0 4px #ffd23f,0 0 50px rgba(255,210,63,.5)}
 .svres tr.a td:first-child{border-left-color:#1f5fd8}.svres tr.b td:first-child{border-left-color:#ffd23f}
+.svpball i{background:radial-gradient(circle at 35% 30%,#8ab8ff,#1f6fe8 55%,#0a2a6a)}
+.svpball i::before,.svpball i::after{border-color:#0a2a6a}
+.svui.tB .svpball i{background:radial-gradient(circle at 35% 30%,#fff0a0,#ffc61a 55%,#8a6400)}
+.svui.tB .svpball i::before,.svui.tB .svpball i::after{border-color:#8a6400}
+/* Serving phone: pick a colour, then pump */
+.svpick{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;padding:4vw;text-align:center;background:linear-gradient(#2a0838,#4a1050);border-radius:18px}
+.svpick b{color:#fff;font-size:5.4vw;font-weight:900}
+.svpick div{display:grid;grid-template-columns:repeat(4,1fr);gap:4vw}
+.svpick button{width:15vw;height:15vw;border-radius:50%;border:3px solid rgba(255,255,255,.7);background:radial-gradient(circle at 35% 30%,#fff8,var(--bc) 55%);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.svpump.picked .svpick{display:none}
+.svpump.picked .svpball i,.svui.tB .svpump.picked .svpball i{background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.65),var(--bc) 55%,rgba(0,0,0,.55))}
+.svpump.picked .svpball i::before,.svpump.picked .svpball i::after{border-color:var(--bc);filter:brightness(.55)}
+/* Serving phone: pick a colour, then pump */
+.svpick{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;padding:4vw;text-align:center;background:linear-gradient(#2a0838,#4a1050);border-radius:18px}
+.svpick b{color:#fff;font-size:5.4vw;font-weight:900}
+.svpick div{display:grid;grid-template-columns:repeat(4,1fr);gap:4vw}
+.svpick button{width:15vw;height:15vw;border-radius:50%;border:3px solid rgba(255,255,255,.7);background:radial-gradient(circle at 35% 30%,#fff8,var(--bc) 55%);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.svpump.picked .svpick{display:none}
+.svpump.picked .svpball i,.svui.tB .svpump.picked .svpball i{background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.65),var(--bc) 55%,rgba(0,0,0,.55))}
+.svpump.picked .svpball i::before,.svpump.picked .svpball i::after{border-color:var(--bc);filter:brightness(.55)}
+/* Serving: the results at the top of the screen */
+.svres{top:2vh;transform:translate(-50%,0) scale(.6);transform-origin:50% 0}
+.svres.on{transform:translate(-50%,0) scale(1)}
