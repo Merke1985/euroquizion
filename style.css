@@ -5038,3 +5038,18 @@ body.hasdock main{padding-bottom:84px}
 @keyframes ruice{from{opacity:0;transform:translate(-50%,-50%) scale(.3)}to{opacity:1;transform:translate(-50%,-50%)}}
 .rut.frz .rustar{display:block}.rut.frz .rustar::after{content:'❄️';position:absolute;left:0;top:-1vh;transform:translate(-50%,-50%);font-size:2.4vh}
 .rugrid > i.ruitem[data-it="freeze"]::after{content:'❄️';filter:drop-shadow(0 0 6px #7fd8ff) drop-shadow(0 0 12px #5cc8ff)}
+
+/* Edgar: Teya & Salena only come to the reception once the first detective is done: they pop up from behind the desk */
+.edlobart .edrecduo{transform:translateY(110px);transition:transform .55s cubic-bezier(.3,1.6,.5,1)}
+.edlobroom.duo .edlobart .edrecduo{transform:translateY(0)}
+
+/* Edgar's lobby: the reception desk on the north side (top), Teya & Salena behind it; the players with bodies, starting on the south side */
+.edlobart{top:4.5vh;bottom:auto}
+.edlobroom .edrecbub{bottom:auto;top:calc(4.5vh + 24% + 10.5vh)}
+.edtok .edbody{display:none}
+.edtok.lob .edbody{display:block;position:relative;width:3vh;height:4.2vh;margin-top:-.4vh}
+.edtok.lob .edbody b{position:absolute;left:0;top:0;width:3vh;height:2.6vh;border-radius:40% 40% 18% 18%;background:var(--o1);box-shadow:inset 0 -.5vh 0 var(--o2),0 2px 5px rgba(0,0,0,.45)}
+.edtok.lob .edbody i{position:absolute;top:2.3vh;width:1vh;height:1.9vh;border-radius:.5vh;background:var(--ol)}
+.edtok.lob .edbody i:nth-of-type(1){left:.4vh}.edtok.lob .edbody i:nth-of-type(2){right:.4vh}
+.edtok.lob em{margin-top:-.2vh}
+.edlobart{overflow:hidden}
