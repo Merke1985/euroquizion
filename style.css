@@ -5463,3 +5463,65 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svlead{height:50vh;margin-left:-14.8vh}
 .svcall{left:calc(50% + 13vh);top:56vh}
 .svcall{top:66vh}
+/* Serving stage 1 (v2): a checkerboard; the captain at the back in her own zone, everyone else in front; copy her step */
+.svov[data-stage="1"] .svfloor{opacity:0}
+.svboard{left:50%;right:auto;top:20vh;transform:translateX(-50%);border-radius:10px;background:repeating-conic-gradient(#ff5fa8 0 25%,#7a2cc8 0 50%) 0 0/calc(2 * var(--u,60px)) calc(2 * var(--u,60px));box-shadow:0 0 0 4px rgba(255,255,255,.35),0 0 50px rgba(255,95,168,.6),inset 0 0 0 2000px rgba(20,4,30,.18)}
+.svzone{position:absolute;left:calc(var(--c) * var(--u));top:0;width:calc(5 * var(--u));height:calc(3 * var(--u));box-shadow:inset 0 0 0 3px #ffd23f,inset 0 0 30px rgba(255,210,63,.6);background:rgba(255,210,63,.12);border-radius:6px}
+.svf,.svcap{position:absolute;left:calc((var(--hx) + var(--dx,0) + .5) * var(--u));top:calc((var(--hy) + var(--dy,0) + .5) * var(--u));margin:0;scale:1;transform:translate(-50%,-82%);transition:left .3s cubic-bezier(.3,1.5,.5,1),top .3s cubic-bezier(.3,1.5,.5,1);z-index:calc(10 + var(--hy) + var(--dy,0))}
+.svf{width:calc(1.3 * var(--u));height:calc(1.6 * var(--u))}
+.svf .svtile{left:50%;bottom:calc(-.25 * var(--u));width:calc(.95 * var(--u));height:calc(.4 * var(--u));margin-left:calc(-.475 * var(--u))}
+.svf .svfb2{height:calc(1.1 * var(--u))}
+.svf .svhead{top:calc(-.05 * var(--u));width:calc(.62 * var(--u));height:calc(.62 * var(--u));margin-left:calc(-.31 * var(--u))}
+.svf .svnm{bottom:calc(-.55 * var(--u));font-size:calc(.2 * var(--u))}
+.svf .svq{top:calc(-.4 * var(--u));left:60%;font-size:calc(.22 * var(--u))}
+.svcap{width:calc(2.9 * var(--u) * 320 / 540);height:calc(2.9 * var(--u));transform:translate(-50%,-88%);z-index:9;filter:drop-shadow(0 0 12px rgba(255,40,60,.7))}
+.svcap.step{animation:svcapst .45s ease-out}
+@keyframes svcapst{0%{translate:0 0}40%{translate:0 calc(-.35 * var(--u))}100%{translate:0 0}}
+.svmtime{position:absolute;left:50%;top:15.2vh;width:30vw;margin-left:-15vw;height:1.2vh;border-radius:99px;background:rgba(255,255,255,.2);opacity:0;transition:opacity .2s;z-index:3}
+.svmtime.on{opacity:1}.svmtime i{display:block;height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,#ffd23f,#ff5fa8)}
+.svov:not([data-stage="1"]) .svmtime{display:none}
+/* phone: eight step buttons around the status */
+.svgrid{display:none}
+.svui.st1 .svgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5vw;max-width:400px;margin:0 auto}
+.svui.st1 .svpads{display:none}
+.svui.st1 .svgrid .svcallp{display:flex;min-height:0;aspect-ratio:1;font-size:4.2vw;padding:1vw;border-radius:50%;text-align:center;line-height:1.15;position:relative;overflow:hidden}
+.svui.st1 .svgrid .svcallp.live{font-size:4.6vw}
+.svui.st1 .svgrid .svcallp.live::after{content:'';position:absolute;left:0;bottom:0;height:8%;width:100%;background:#ffd23f;animation:svcd 3s linear forwards}
+@keyframes svcd{to{width:0}}
+.svui.st1 .svgrid .svcallp.ok{background:linear-gradient(#1f9d55,#0d5c30)}.svui.st1 .svgrid .svcallp.bad{background:linear-gradient(#b3122a,#5c0714)}
+.svmb{aspect-ratio:1;border:0;border-radius:20px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 3px #ff5fa8,0 6px 0 rgba(0,0,0,.3);padding:18%;touch-action:manipulation}
+.svmb svg{width:100%;height:100%;display:block;rotate:var(--r)}
+.svmb svg path{fill:#ff5fa8;stroke:#fff}
+.svmb:disabled{opacity:.45}
+.svmb.pick{box-shadow:inset 0 0 0 4px #ffd23f,0 0 18px #ffd23f;opacity:1}
+.svmb.hit{animation:svpadh .18s ease-out}
+/* Serving v3: the whole game is copy-the-captain, in three stages */
+.svov .svboard{display:block;top:22vh}
+.svov[data-st="intro"] .svboard{opacity:.35}
+.svzone{width:calc(var(--w) * var(--u));height:calc(var(--h) * var(--u))}
+.svcap{height:calc(2.3 * var(--u));width:calc(2.3 * var(--u) * 320 / 540)}
+.svcap .svleadsvg{position:absolute;inset:0;width:100%;height:100%}
+.svcapball,.svf .svball{display:none}
+.svov[data-stage="3"] .svcapball{display:block;position:absolute;left:50%;bottom:-6%;width:85%;margin-left:-42.5%;aspect-ratio:1}
+.svov[data-stage="3"] .svcap .svleadsvg{bottom:auto;top:-40%}
+.svov[data-stage="3"] .svf .svball{display:block;position:absolute;left:5%;right:5%;bottom:-10%;width:90%;height:auto}
+.svov[data-stage="3"] .svf .svdancer{transform:translateY(-55%)}
+.svov[data-stage="3"] .svf .svhead{translate:0 calc(-.6 * var(--u))}
+.svov[data-stage="3"] .svf.ok .svfb2,.svov[data-stage="3"] .svcap{animation:svhopb .49s ease-in-out infinite alternate}
+@keyframes svhopb{to{translate:0 calc(-.25 * var(--u))}}
+.svpt{position:absolute;left:50%;bottom:calc(-.85 * var(--u));transform:translateX(-50%);font-style:normal;font-weight:900;color:#ffd23f;font-size:calc(.2 * var(--u));white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.svov[data-stage="3"] .svboard{background:repeating-conic-gradient(#3fd8ff 0 25%,#1a7a8a 0 50%) 0 0/calc(2 * var(--u,60px)) calc(2 * var(--u,60px))}
+.svov[data-stage="2"] .svboard{background:repeating-conic-gradient(#a6ff4d 0 25%,#c8325a 0 50%) 0 0/calc(2 * var(--u,60px)) calc(2 * var(--u,60px))}
+.svbanner{top:50vh}
+/* phone */
+.svui .svgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5vw;max-width:400px;margin:0 auto}
+.svui .svgrid .svcallp{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:50%;background:linear-gradient(#2a0838,#4a1050);color:#fff;font-weight:900;font-size:4.2vw;padding:1vw;text-align:center;line-height:1.15;position:relative;overflow:hidden;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+.svui .svgrid .svcallp.live{background:linear-gradient(#c8102e,#7a0616);font-size:4.6vw}
+.svui .svgrid .svcallp.live::after{content:'';position:absolute;left:0;bottom:0;height:8%;width:100%;background:#ffd23f;animation:svcd 3s linear forwards}
+.svui .svgrid .svcallp.ok{background:linear-gradient(#1f9d55,#0d5c30)}.svui .svgrid .svcallp.bad{background:linear-gradient(#b3122a,#5c0714)}
+.svui.st1 .svmb.diag{visibility:hidden}
+.svui.st3 .svmb{box-shadow:inset 0 0 0 3px #3fd8ff,0 6px 0 rgba(0,0,0,.3)}.svui.st3 .svmb svg path{fill:#3fd8ff}
+.svui .svme{margin-top:1.5vh}
+.svov .svboard{top:25vh}
+.svcap{height:calc(2.9 * var(--u));width:calc(2.9 * var(--u) * 320 / 540)}
+.svov[data-stage="3"] .svcap .svleadsvg{top:-27%}
