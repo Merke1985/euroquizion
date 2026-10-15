@@ -6313,7 +6313,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   //    arrows are a SERVE (double); the leader's ball inflates, so their bounces get shorter.
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
-  var SV_VID = 'WPfV96fRvW0', SV_S = 32, SV_BT = 60000 / 122 * 2, SV_PHASE = 7.001, SV_LAG = 90,   /* (measured: exactly 122 BPM; in the YouTube video the music starts at about 0:32 and the beat drops at about 0:42: that's bounce 0. SV_LAG: the sound reaches the room a little after the player reports its time) */ svLoop = null, svTimer = null, svSongT = null;
+  var SV_VID = 'WPfV96fRvW0', SV_S = 44, SV_BT = 60000 / 122 * 2, SV_PHASE = 1.0645, SV_LAG = 90,   /* (measured from the official video: exactly 122 BPM, bar 1 at 0:42.165; the song starts at 0:44 after the hosts, and the first step is on the bar at 0:48.06 (bounce 0). SV_LAG: the sound reaches the room a little after the player reports its time) */ svLoop = null, svTimer = null, svSongT = null;
   var SV_STAGES = [{ n: 1, t: 'The dance floor', from: 0, to: 56 }, { n: 2, t: 'Double time', from: 62, to: 83 }, { n: 3, t: 'Skippy balls!', from: 87, to: 110 }], SV_END = 111;
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { for (var i = 0; i < SV_STAGES.length; i++) if (t < SV_STAGES[i].to + 1.5) return SV_STAGES[i]; return SV_STAGES[SV_STAGES.length - 1]; }
