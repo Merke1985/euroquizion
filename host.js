@@ -4817,7 +4817,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var ED_SVG = { green: edGreenSvg, club: edClubSvg, back: edBackSvg, boud: edBoudSvg };
   function edStart() {
     var g = G.clue; if (!g) return;
-    g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = ''; g.duo = edDuoPick(); g.duoQ = null;
+    g.st = 'brief'; g.rooms = {}; g.fin = []; g.last = {}; g.ends = Date.now() + ED_MS; g.scene = edScene(); g.lit = ''; g.duo = null; g.duoQ = null;   /* (Teya & Salena wear just their own outfits: no random extra item any more) */
     list().filter(function (p) { return !p.off; }).forEach(function (p) { g.rooms[p.pid] = { done: [], cur: '', score: {} }; });
     G.phase = 'cluerooms'; G.q = null; G.song = null; G.clip = null; G.barMs = 0;
     cover(true, '', '', false); masks(true); hostsAway(); push(); if (!REMOTE) { Music.want(false); edBox(true); } edShow();
