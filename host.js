@@ -6585,7 +6585,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var now = performance.now(), t = (now - t0) / 1000, fl = Math.max(0, 1 - (now - st.beatAt) / 420), p = st.pal;
       for (var i = 0; i < C * R; i++) {   // the tiles: a pattern that shifts every beat, bright on the beat and fading after
         var x = i % C, y = Math.floor(i / C), on = (x + y) % 2 === 0;   // (a fixed checkerboard, no flashing: the red team's half and the black team's half)
-        col.set(on ? '#b00c22' : '#0c0c10').convertSRGBToLinear();   /* (all the stage: red and black) */   /* (blue team: blue and black; yellow team: yellow and black) */ tiles.setColorAt(i, col);
+        col.set(x < C / 2 ? (on ? '#1f5fd8' : '#06080e') : (on ? '#e8b812' : '#06080e')).convertSRGBToLinear();   /* (blue team: blue and black; yellow team: yellow and black) */   /* (blue team: blue and black; yellow team: yellow and black) */ tiles.setColorAt(i, col);
       }
       tiles.instanceColor.needsUpdate = true;
       for (i = 0; i < C * LR; i++) { var lx = i % C, ly = Math.floor(i / C); col.set((lx + ly) % 2 ? '#0c0c10' : '#b00c22').convertSRGBToLinear();   /* (her stage: red and black) */ ltiles.setColorAt(i, col); }   // (her stage: deep red and black, fixed)
