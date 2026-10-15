@@ -6472,7 +6472,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     sc.add(new T.HemisphereLight('#8a6aff', '#1a0630', .55));
     var key = new T.DirectionalLight('#ffffff', .4); key.position.set(4, 12, 10); sc.add(key);
     // the players' floor in front (24 × 5 LED tiles); behind it the singer's raised stage (24 × 3), then the set
-    var C = SV_BC, R = SV_BR, TS = 1.6, LR = 3, Z0L = -5, Z0F = Z0L + (LR - 1) * TS + TS + 1, ZF = function (j) { return Z0F + j * TS; }, ZL = function (j) { return Z0L + j * TS; }, YL = .7;
+    var C = SV_BC, R = SV_BR, TS = 1.6, LR = 3, Z0F = -5, Z0L = Z0F + (R - 1) * TS + TS + 1,   /* (the players at the back as her background dancers; her stage in front) */ ZF = function (j) { return Z0F + j * TS; }, ZL = function (j) { return Z0L + j * TS; }, YL = .7;
     var base = new T.Mesh(new T.BoxGeometry(C * TS + 1, .5, R * TS + 1), new T.MeshStandardMaterial({ color: '#16082a', roughness: .3, metalness: .6 })); base.position.set(0, -.25, ZF((R - 1) / 2)); sc.add(base);
     var tiles = new T.InstancedMesh(new T.BoxGeometry(TS * .94, .12, TS * .94), new T.MeshBasicMaterial({ color: '#ffffff' }), C * R), m4 = new T.Matrix4(), col = new T.Color();
     for (var i = 0; i < C * R; i++) { m4.makeTranslation((i % C - (C - 1) / 2) * TS, .06, ZF(Math.floor(i / C))); tiles.setMatrixAt(i, m4); tiles.setColorAt(i, col.set('#20102e')); }
@@ -6486,7 +6486,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the set behind her: a red LED wall with rays turning slowly, tiers of blue arcades with golden arches and red
     // windows on both sides, a huge heart of golden bulbs in the middle with a golden ornament on top, and a giant pair of
     // red lips with a mirror-ball mouth at the back of the stage
-    var ZB = Z0L - TS / 2 - 1.6;
+    var ZB = Z0F - TS / 2 - 1.6;
     var cv = document.createElement('canvas'); cv.width = 512; cv.height = 256; var cx = cv.getContext('2d'), wtex = new T.CanvasTexture(cv); wtex.encoding = T.sRGBEncoding;
     var wall = new T.Mesh(new T.PlaneGeometry(C * TS + 6, 23), new T.MeshBasicMaterial({ map: wtex })); wall.position.set(0, 8, ZB - 3.5); sc.add(wall);
     var arch = document.createElement('canvas'); arch.width = 128; arch.height = 128; (function (x) {
@@ -6539,7 +6539,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     // the crowd: glow sticks at the front edge, swaying
     var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 60), sk = [];
-    for (i = 0; i < 60; i++) { sk.push({ x: (Math.random() - .5) * 34, z: ZF(R - 1) + TS + .6 + Math.random() * 1.6, ph: Math.random() * 6.28 }); sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
+    for (i = 0; i < 60; i++) { sk.push({ x: (Math.random() - .5) * 34, z: ZL(LR - 1) + TS + .6 + Math.random() * 1.6, ph: Math.random() * 6.28 }); sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
     sc.add(sticks);
     var st = { mk: {}, mkL: {}, stage: 1, beatAt: 0, pal: SV3_PAL[0], q: new T.Quaternion(), e: new T.Euler(), s: new T.Vector3(1, 1, 1), p: new T.Vector3() };
     function drawWall(t) {   // red rays turning slowly round a point low in the middle, a little brighter on the beat
@@ -6701,7 +6701,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function svProj(ov, c, r, lead) {   // a tile (column, row; fractions allowed) → the point on the screen, and how big things are there
     if (ov._3 && ov._3.proj) return ov._3.proj(c, r, lead);
-    r = lead ? r : r + 4;
+    r = lead ? SV_BR + 1 + r : r;
     var W = ov.clientWidth, H = ov.clientHeight, f = .7 + .3 * r / (SV_BR + 3);   // (no 3D: a flat trapezoid: her stage at the back, then the players)
     return { x: W / 2 + (c - (SV_BC - 1) / 2) * W * .036 * f, y: H * (.4 + .5 * r / (SV_BR + 3)), s: W * .036 * f };
   }
@@ -6727,7 +6727,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.setAttribute('data-act', act);
     var bph = g.stage === 3 ? (g.st === 'end' ? 'on' : b < SV_BALL ? 'none' : b < SV_HOP ? 'rise' : b < SV_HOP + 2 ? 'hop' : 'on') : 'none';   // (the skippy balls come up out of the tile in front of everyone; they hop on, and back)
     ov.setAttribute('data-bph', bph);
-    var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 4 : 10 + Math.round(r * 2)); };
+    var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 40 + Math.round(r * 2) : 10 + Math.round(r * 2)); };
     var ins = ov.querySelector('.svins'), f00 = g.chart[0][0];
     if (g.st !== 'end' && (!g.t0 || b < f00 - 10)) act = g.st === 'intro' && !g.t0 && !ins._act ? 'off' : 'mid';   // (the intro: she walks on to the middle; ten bounces before the red team she goes over to them)
     var LC = function (a) { return a === 'off' ? 29 : solo || a === '*' || a === 'mid' ? 12.5 : a === 'A' ? 6 : 19; };
@@ -6735,7 +6735,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lc = LC(act);
     ins._lc = lc;
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }   /* (the hop class first, then the move: so it never slides) */
-    var lcx = lc + ix, lry = bph === 'hop' ? 2 : Math.max(0, Math.min(2, SV_LROW + iy)); place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
+    var wk = ins.classList.contains('walk'), lcx = lc + (wk ? 0 : ix), lry = bph === 'hop' ? 2 : wk ? SV_LROW : Math.max(0, Math.min(2, SV_LROW + iy));   /* (walking: straight along her row) */ place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
     [-3, 3].forEach(function (dx, j) {   // her two backup dancers: one tile free on either side, doing exactly what she does
       var dn = ov.querySelector('.svdan.d' + j), db = ov.querySelector('.svnb.insd.d' + j); if (!dn) return;
       place(dn, lcx + dx, lry, true); if (db) place(db, lc + dx, 2, true);
