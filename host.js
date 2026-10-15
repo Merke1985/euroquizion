@@ -6753,7 +6753,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var pt = el.querySelector('.svpt'), tx = g.st === 'end' ? g.dist[k] + ' pts' : ''; if (pt.textContent !== tx) pt.textContent = tx;   // (the scores only at the end)
     });
     if (ov._3 && ov._3.mark) ov._3.mark(marks, { c: lcx, r: lry });   // (the tile under every dancer glows in their colour)
-    if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
+    if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk <= 0 && dk > -.5 && !n._hit && g.st === 'play') { n._hit = 1; var rc = n.parentNode.querySelector('.svrec.c' + g.chart[+n.getAttribute('data-i')][1]); if (rc) { rc.classList.remove('bhit'); void rc.offsetWidth; rc.classList.add('bhit'); } } if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
     var bt = ov.querySelector('.svbeat'), bk = Math.floor(b + .5);
     if (g.st === 'play' && bt._k !== bk && b > -.5) { bt._k = bk; bt.classList.remove('pulse'); void bt.offsetWidth; bt.classList.add('pulse'); if (ov._3) ov._3.beat(); }
     if (ov._3) ov._3.stage(g.stage || 1);

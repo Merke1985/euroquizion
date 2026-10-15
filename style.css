@@ -5627,3 +5627,12 @@ body.rufrozen #waittitle{color:#0b3a66}
 /* Serving: the arrow panels only appear when the presenters are done */
 .svov .svchart{transition:opacity .6s}
 .svov[data-st="intro"] .svchart{opacity:0!important}
+/* Serving: an arrow reaching its shape on the big screen: the shape lights up and a ring bursts out */
+.svchart .svrec{transition:none}
+.svchart .svrec.bhit{animation:svbhit .45s ease-out}
+.svchart .svrec.bhit svg path{animation:svbhitf .45s ease-out}
+.svchart .svrec::after{content:'';position:absolute;inset:-10%;border-radius:50%;border:4px solid var(--c);opacity:0;pointer-events:none}
+.svchart .svrec.bhit::after{animation:svbring .5s ease-out}
+@keyframes svbhit{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes svbhitf{0%{fill:var(--c);stroke:#fff;filter:drop-shadow(0 0 14px var(--c))}100%{fill:rgba(255,255,255,.08)}}
+@keyframes svbring{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
