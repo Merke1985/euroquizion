@@ -5763,3 +5763,4 @@ body.rufrozen #waittitle{color:#0b3a66}
 #calui .calpad{display:flex;align-items:center;justify-content:center;width:56vw;height:56vw;margin:4vh auto;border-radius:50%;border:6px solid #ff3fa4;font-style:normal;font-weight:900;font-size:9vw}
 #calui .calpad.hit{animation:calfl .3s ease-out}
 #calui em{display:block;font-style:normal;font-weight:900;font-size:5.6vw;color:#ffd23f;min-height:1.4em}
+.svpick{display:none!important}

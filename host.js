@@ -6819,7 +6819,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var bph = g.stage === 3 ? (g.st === 'end' ? 'on' : b < SV_BALL ? 'none' : b < SV_HOP ? 'rise' : b < SV_HOP + 2 ? 'hop' : 'on') : 'none';   // (the skippy balls come up out of the tile in front of everyone; they hop on, and back)
     ov.setAttribute('data-bph', bph);
     if (bph !== 'none' && !ov._bcd) { ov._bcd = 1; g.order.forEach(function (k) {   // the skippy balls come up: in the colour everyone picked (bots and late ones: a random one)
-      if (g.bcol[k] == null) g.bcol[k] = Math.floor(Math.random() * SV_BCOLS.length); var bc = SV_BCOLS[g.bcol[k]], p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555'];
+      var bc = g.bcol[k] != null ? SV_BCOLS[g.bcol[k]] : SV_TBALL[g.grp[k] === 'B' && g.order.length > 1 ? 1 : 0],   /* (the team colour) */ p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555'];
       var nb = ov.querySelector('.svnb[data-b="' + k + '"] i'); if (nb) nb.innerHTML = svBall(bc[0], bc[1]);
       var af = ov.querySelector('.svaf[data-p="' + k + '"] .svfb2'); if (af) { var ob = af.querySelector('.svball'), orr = af.querySelector('.svrider'), tmp = document.createElement('div'); var tc = SV_TBALL[g.grp[k] === 'B' && g.order.length > 1 ? 1 : 0]; tmp.innerHTML = svBall(bc[0], bc[1]) + svRider({ ball: bc[0], ballS: bc[1], top: tc[0], legs: tc[1], boots: '#1a1a22' });   /* (their team outfit, their own ball colour) */ if (ob) af.replaceChild(tmp.firstChild, ob); else tmp.removeChild(tmp.firstChild); if (orr) af.replaceChild(tmp.firstChild, orr); }
     }); }

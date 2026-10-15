@@ -792,9 +792,9 @@
         var pu = box.querySelector('.svpump'), y0 = 0, p0 = 0;
         var paint = function () { var S2 = svS; if (!S2) return; pu.style.setProperty('--p', S2.pp.toFixed(3)); pu.style.setProperty('--f', S2.pf.toFixed(3)); pu.querySelector('.svpn').textContent = S2.pdone ? '🎈 Full in ' + (S2.pdone / 1000).toFixed(1) + 's!' : S2.pn ? S2.pn + ' / 20' : ''; pu.classList.toggle('done', !!S2.pdone); };
         [].forEach.call(pu.querySelectorAll('.svpick button'), function (bt) { bt.addEventListener('click', function (e) { e.stopPropagation(); var S2 = svS, z2 = state && state.sv; if (!S2 || !z2) return; S2.bc = +bt.getAttribute('data-bc'); pu.style.setProperty('--bc', bt.style.getPropertyValue('--bc')); pu.classList.add('picked'); if (net) (net.toHost || net.send)('sv', { pid: pid, id: z2.id, bc: S2.bc }); }); });   // (first a colour, then pump)
-        pu.addEventListener('pointerdown', function (e) { if (!pu.classList.contains('picked') || e.target.closest('.svpick')) return; e.preventDefault(); y0 = e.clientY; p0 = svS ? svS.pp : 0; try { pu.setPointerCapture(e.pointerId); } catch (x) {} });
+        pu.addEventListener('pointerdown', function (e) { e.preventDefault(); y0 = e.clientY; p0 = svS ? svS.pp : 0; try { pu.setPointerCapture(e.pointerId); } catch (x) {} });
         pu.addEventListener('pointermove', function (e) {
-          var S2 = svS; if (!S2 || S2.bc == null || !(e.buttons || e.pressure)) return;
+          var S2 = svS; if (!S2 || !(e.buttons || e.pressure)) return;
           S2.pp = Math.max(0, Math.min(1, p0 + (e.clientY - y0) / (pu.clientHeight * .75)));
           if (S2.pp > .92 && !S2.pdown && !S2.pdone) { S2.pdown = true; if (!S2.pn) S2.pt0 = Date.now(); S2.pn = (S2.pn || 0) + 1; S2.pf = Math.min(1, S2.pn / 20); try { navigator.vibrate && navigator.vibrate(10); } catch (x) {} if (S2.pn >= 20) { S2.pdone = Math.max(1, Date.now() - S2.pt0); pu.classList.remove('full'); void pu.offsetWidth; pu.classList.add('full'); try { navigator.vibrate && navigator.vibrate([30, 40, 60]); } catch (x) {} } }   // (a full stroke down: a puff of air; 20 to fill the ball, the faster the better)
           if (S2.pp < .08) S2.pdown = false;   // (a long stroke: almost all the way up and down)
