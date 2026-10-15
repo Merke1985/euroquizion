@@ -5660,3 +5660,12 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svov[data-bph="on"] .svaf.ok .svfb2,.svov[data-bph="on"] .svins.ok .svrider,.svov[data-bph="on"] .svins.jmp .svrider{animation:svballhop .44s cubic-bezier(.3,0,.7,1)}
 @keyframes svballhop{0%{transform:translateY(0) scaleY(.9)}12%{transform:translateY(0) scaleY(1.04)}50%{transform:translateY(calc(var(--s) * -.45))}88%{transform:translateY(0) scaleY(1)}100%{transform:translateY(0) scaleY(.92)}}
 .svov[data-bph="on"] .svrider{transform-origin:50% 100%}
+/* Serving: the flag in the hand, not on the avatar */
+.svov .svaf .chflag{display:none}
+.svov .svaf .svdancer{overflow:visible}
+/* Serving: the avatar head on the shoulders (above the body, not over it), the arms free in front */
+.svov .svaf .svhead{top:calc(var(--s) * -.12);width:calc(var(--s) * .62);height:calc(var(--s) * .62);margin-left:calc(var(--s) * -.31)}
+.svov:not([data-bph="hop"]):not([data-bph="on"]) .svaf .svhead{top:calc(var(--s) * -.14)}
+.svov .svaf .svdancer{z-index:2}
+.svov .svaf .svdancer > path,.svov .svaf .svdancer .svlegs{visibility:visible}
+.svkant{font-size:calc(var(--s) * .66)}
