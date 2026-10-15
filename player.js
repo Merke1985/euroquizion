@@ -800,7 +800,7 @@
     if (net) (net.toHost || net.send)('sv', { pid: pid, id: z.id, i: i, d: d, q: q });
     var rec = $('svui').querySelector('.svrec.c' + d); if (rec) { rec.classList.remove('flash', 'f0', 'f1', 'f2'); void rec.offsetWidth; rec.classList.add('flash', 'f' + q); }
     var fb = $('svui').querySelector('.svfb');
-    fb.textContent = q === 2 ? (n[2] ? '✨ SERVE!' : 'PERFECT!') : q ? 'Good' : n[1] !== d ? 'Wrong arrow!' : (dt < 0 ? 'Too early!' : 'Too late!'); fb.className = 'svfb q' + q; S.fbAt = now;
+    fb.textContent = q === 2 ? (n[2] ? '✨ SERVE!' : 'PERFECT!') : q ? 'Good' : n[1] !== d ? (n[3] != null && !n[4] ? '💥 Wrong step! You fell!' : 'Wrong arrow!') : (dt < 0 ? 'Too early!' : 'Too late!'); fb.className = 'svfb q' + q; S.fbAt = now;
     try { navigator.vibrate && navigator.vibrate(q === 2 ? 25 : 12); } catch (x) {}
   }
 
