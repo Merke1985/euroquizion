@@ -5643,3 +5643,13 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svchart .svrec::after{border-width:6px;box-shadow:0 0 18px var(--c)}
 .svchart .svrec.bhit,.svchart .svrec.bhit svg path{animation-duration:.6s}
 .svchart .svrec.bhit::after{animation-duration:.65s}
+/* Serving: sitting on the skippy balls (a drawing of their own: legs over the ball, hands on the handles) */
+.svrider{display:none}
+.svov[data-bph="hop"] .svrider,.svov[data-bph="on"] .svrider{display:block}
+.svov[data-bph="hop"] .svaf .svball,.svov[data-bph="on"] .svaf .svball,.svov[data-bph="hop"] .svaf .svdancer,.svov[data-bph="on"] .svaf .svdancer{display:none}
+.svov .svaf .svrider{position:absolute;left:0;width:100%;height:auto;bottom:calc(var(--s) * -.25)}
+.svov[data-bph="hop"] .svaf .svhead,.svov[data-bph="on"] .svaf .svhead{top:calc(var(--s) * -.45);width:calc(var(--s) * .62);height:calc(var(--s) * .62);margin-left:calc(var(--s) * -.31);translate:none}
+.svov[data-bph="hop"] .svins .svinsball,.svov[data-bph="on"] .svins .svinsball,.svov[data-bph="hop"] .svins .svleadsvg,.svov[data-bph="on"] .svins .svleadsvg,.svov[data-bph="hop"] .svins .svleadside,.svov[data-bph="on"] .svins .svleadside{display:none!important}
+.svov .svins .svrider{position:absolute;inset:0;width:100%;height:100%}
+.svov[data-bph="on"] .svrider .svrm{transform-box:fill-box;transform-origin:50% 0;animation:svlsing .49s ease-in-out infinite alternate}
+.svov[data-bph="hop"] .svnb{visibility:hidden}

@@ -6656,6 +6656,27 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<circle cx="133" cy="104" r="3" fill="#d0101e"/><circle cx="187" cy="104" r="3" fill="#d0101e"/></g>' +
       '</g></svg>';
   };
+  // sitting on a skippy ball, facing the crowd: the ball between the legs, the thighs over its sides, the feet on the
+  // floor, both hands on the two handles. o: ball, ballS (outline), top (body), legs, boots, skin, head (extra markup)
+  function svRider(o, big) {
+    var L = o.legs, sk = o.skin || '#f0c8b2';
+    return '<svg viewBox="' + (big ? '0 -40 100 169' : '0 0 100 130') + '" class="svrider" aria-hidden="true">' + (o.defs || '') +
+      '<ellipse cx="50" cy="124" rx="38" ry="4" fill="rgba(0,0,0,.3)"/>' + (o.back || '') +
+      '<path d="M37 64 Q34 46 39 36 Q50 31 61 36 Q66 46 63 64 Z" fill="' + o.top + '" stroke="rgba(0,0,0,.35)" stroke-width="1.2"/>' +   // (the body, sitting up straight behind the handles)
+      '<circle cx="50" cy="92" r="29" fill="' + o.ball + '" stroke="' + o.ballS + '" stroke-width="2"/><ellipse cx="40" cy="80" rx="9" ry="5" fill="#fff" opacity=".35" transform="rotate(-30 40 80)"/>' +
+      '<path d="M43 64 Q38 54 41 48 M57 64 Q62 54 59 48" stroke="' + o.ballS + '" stroke-width="5" fill="none" stroke-linecap="round"/>' +   // (the two handles)
+      '<path d="M42 64 Q26 68 20 84 L18 112 M58 64 Q74 68 80 84 L82 112" stroke="' + L + '" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +   // (thighs over the ball, shins down)
+      '<path d="M11 110 L24 110 Q26 118 22 120 L10 120 Q8 114 11 110 Z M89 110 L76 110 Q74 118 78 120 L90 120 Q92 114 89 110 Z" fill="' + (o.boots || o.ballS) + '"/>' +
+      '<path d="M39 40 Q30 46 40 50 M61 40 Q70 46 60 50" stroke="' + (o.arms || o.top) + '" stroke-width="6" fill="none" stroke-linecap="round"/>' +   // (arms down to the handles)
+      '<circle cx="41" cy="49" r="3.6" fill="' + sk + '"/><circle cx="59" cy="49" r="3.6" fill="' + sk + '"/>' +
+      (o.head || '') + '</svg>';
+  }
+  var SV_RIDE_LEAD = svRider({ ball: '#e0102a', ballS: '#6a0614', top: '#1a0e12', legs: '#c20e1c', boots: '#8a0a16', arms: 'rgba(20,12,16,.9)', skin: '#f0c8b2',
+    back: '<path d="M33 30 Q30 2 50 0 Q70 2 67 30 Q72 52 66 62 L34 62 Q28 52 33 30 Z" fill="#e3141e"/>',
+    head: '<ellipse cx="50" cy="20" rx="10" ry="11.5" fill="#f6dccb"/><path d="M44 19 q3 2 6 0 M51 19 q3 2 6 0" stroke="#111" stroke-width="1.2" fill="none"/><ellipse class="svrm" cx="50" cy="26" rx="3" ry="2.4" fill="#c0102a"/><path d="M39 22 Q36 4 50 3 Q64 4 61 22 Q58 9 50 9 Q42 9 39 22 Z" fill="#ff3a2e"/><path d="M40 16 Q36 34 38 52 L42 52 Q41 34 43 18 Z M60 16 Q64 34 62 52 L58 52 Q59 34 57 18 Z" fill="#ff3a2e"/>' }, true);
+  var SV_RIDE_DAN = function (hair, skin) { return svRider({ ball: '#e0102a', ballS: '#6a0614', top: '#e3141e', legs: '#8a1a24', boots: '#141014', arms: '#e3141e', skin: skin,
+    back: '<path d="M44 6 Q50 -6 58 4 Q62 18 56 24 Z" fill="' + hair + '"/>',
+    head: '<ellipse cx="50" cy="21" rx="9" ry="10.5" fill="' + skin + '"/><path d="M41 19 Q41 9 50 9 Q59 9 59 19 Q55 13 50 13 Q45 13 41 19 Z" fill="' + hair + '"/><path d="M45 21 h3 M52 21 h3" stroke="#111" stroke-width="1.2"/><ellipse cx="50" cy="26" rx="2.4" ry="1.4" fill="#a00c18"/>' }, true); };
   // her side view (facing right; mirrored to walk left): for crossing her stage, stamping on her heels
   var SV_LEAD_SIDE = (function () {
     var leg = function (cls) { return '<g class="svsleg ' + cls + '"><path d="M150 296 Q138 360 146 420 Q150 470 144 500 L178 500 Q182 466 178 420 Q186 360 182 296 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><path d="M140 496 Q138 516 150 522 L200 522 Q206 512 194 500 Q180 494 172 494 Z" fill="url(#svleo)" stroke="#3e0206" stroke-width="2"/><rect x="142" y="519" width="56" height="8" rx="3" fill="#a00c18"/><path d="M146 527 L146 538 L152 538 L152 527 Z" fill="#a00c18"/></g>'; };
@@ -6715,7 +6736,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
-      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall(col[0], col[1]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + '</div>' + [['#2a1810', '#e8b896'], ['#1a1214', '#c98a62']].map(function (d, j) { return '<div class="svins svdan d' + j + '"><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_BACKUP(d[0], d[1]).replace(/svnet/g, 'svnet' + j) + '</div><div class="svnb insd d' + j + '"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>'; }).join('') + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall(col[0], col[1]) + svDancer(col[0], col[1]) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
+      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall(col[0], col[1]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + SV_RIDE_LEAD + '</div>' + [['#2a1810', '#e8b896'], ['#1a1214', '#c98a62']].map(function (d, j) { return '<div class="svins svdan d' + j + '"><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_BACKUP(d[0], d[1]).replace(/svnet/g, 'svnet' + j) + SV_RIDE_DAN(d[0], d[1]) + '</div><div class="svnb insd d' + j + '"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>'; }).join('') + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall(col[0], col[1]) + svDancer(col[0], col[1]) + svRider({ ball: col[0], ballS: col[1], top: col[0], legs: col[1], boots: '#1a1a22' }) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
     }
     if (!g.home) g.home = svHomes(g);
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
