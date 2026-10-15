@@ -4766,7 +4766,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var el = document.createElement('div'); el.className = 'edcd'; ov.appendChild(el); whooshes([0, 300]);
       [5, 4, 3, 2, 1, 0].forEach(function (n, i) { setTimeout(function () {   // (5, 4, 3, 2, 1… go)
         var g4 = G.clue; if (!g4 || g4.id !== id || g4.st !== 'brief') return;
-        el.innerHTML = '<b>' + n + '</b>'; Music.plop(i * 2 + 2);
+        el.innerHTML = '<b>' + n + '</b>'; Music.plop(i * 2 + 2); if (n === 2 && !REMOTE) setTimeout(function () { if (G.clue === g4 && g4.st === 'brief') clueSong(); }, 700);   // (Edgar's tune starts 2 seconds before the search)
         if (n === 0) setTimeout(function () { el.remove(); edGo(); }, 700);
       }, 700 + i * 1000); });
     }
@@ -4786,7 +4786,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!REMOTE) { var t0e = Date.now(), dTry = 0, dT = setInterval(function () {   // the search lasts as long as the song (from 0:14 to its end), once YouTube knows its length
       if (G.clue !== g || g.st !== 'rooms' || ++dTry > 30) { clearInterval(dT); return; }
       var d = 0; try { d = yt.getDuration() || 0; } catch (e) {}
-      if (d > 60) { clearInterval(dT); g.ends = t0e + Math.max(ED_MS, Math.min(300000, (d - CLUE_YT_AT - 1) * 1000)); push(); }
+      if (d > 60) { clearInterval(dT); g.ends = t0e + Math.max(ED_MS, Math.min(300000, (d - CLUE_YT_AT - 1) * 1000 - 2000)); push(); }   // (the tune started 2 seconds before the clock)
     }, 500); }
     // the bots take their time: the four rooms spread over the whole search, the last one done just before the clock runs out
     bots.forEach(function (b) {
@@ -5027,8 +5027,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       lines: [['him', 'Welcome to space, Europe! 🌌 Up here, there’s no gravity at all…'],
         ['her', 'So you’ll need to keep your balance! Keep your finger in the glowing zone on your phone: it moves with the music.'],
         ['him', 'Stay in the zone! Whoever keeps their balance until the end wins. 🌟'],
-        ['her', 'And watch out: from stage two, asteroids! Slide up and down to dodge them. ☄️'],
-        ['him', 'Don’t worry, the one Sam is riding can’t hurt you! 😄']] },
+        ['her', 'And watch out: from stage two, asteroids! Slide up and down to dodge them. ☄️']] },
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
       lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
@@ -5789,9 +5788,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var s = '<svg class="zgrsvg" viewBox="0 0 340 250" aria-hidden="true"><defs><linearGradient id="zgrtail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7a1a" stop-opacity="0"/><stop offset=".6" stop-color="#ffb347" stop-opacity=".6"/><stop offset="1" stop-color="#fff2b0" stop-opacity=".95"/></linearGradient>' +
       '<radialGradient id="zgrrock" cx=".38" cy=".32"><stop offset="0" stop-color="#b08a68"/><stop offset=".55" stop-color="#7a5a40"/><stop offset="1" stop-color="#3e2a1c"/></radialGradient></defs>';
     // the fiery tail and the meteor
-    s += '<path d="M0 196 Q90 160 172 158 L178 226 Q90 222 0 196 Z" fill="url(#zgrtail)"/><path d="M30 196 Q100 176 170 174 L172 210 Q100 210 30 196 Z" fill="#fff6c8" opacity=".55"/>';
+    s += '<g class="zgrmet"><path d="M0 196 Q90 160 172 158 L178 226 Q90 222 0 196 Z" fill="url(#zgrtail)"/><path d="M30 196 Q100 176 170 174 L172 210 Q100 210 30 196 Z" fill="#fff6c8" opacity=".55"/>';
     s += '<path d="M168 168 Q180 140 230 140 Q290 138 312 168 Q328 200 300 222 Q262 244 214 238 Q170 232 160 206 Q154 186 168 168 Z" fill="url(#zgrrock)"' + K + '/>' +
-      '<ellipse cx="206" cy="196" rx="14" ry="9" fill="#4a3424" opacity=".7"/><ellipse cx="262" cy="214" rx="10" ry="6" fill="#4a3424" opacity=".7"/><ellipse cx="282" cy="176" rx="8" ry="5" fill="#4a3424" opacity=".6"/><ellipse cx="236" cy="222" rx="6" ry="4" fill="#4a3424" opacity=".6"/>';
+      '<ellipse cx="206" cy="196" rx="14" ry="9" fill="#4a3424" opacity=".7"/><ellipse cx="262" cy="214" rx="10" ry="6" fill="#4a3424" opacity=".7"/><ellipse cx="282" cy="176" rx="8" ry="5" fill="#4a3424" opacity=".6"/><ellipse cx="236" cy="222" rx="6" ry="4" fill="#4a3424" opacity=".6"/></g>';
     // the legs: sitting on top of the meteor, shins dangling over the front
     s += '<path d="M218 140 L262 136 L268 176 L252 178 L246 152 L220 156 Z" fill="' + BL + '"' + K + '/>' + pat([[234, 146], [256, 146], [258, 166]]);
     s += '<path d="M250 176 Q252 190 270 190 L274 180 L268 174 Z" fill="#f4f4f8"' + K + '/><path d="M254 186 L272 186" stroke="#2b1830" stroke-width="2"/>';
@@ -5928,12 +5927,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     a.innerHTML = html; a.classList.remove('on'); void a.offsetWidth; a.classList.add('on'); a._t = setTimeout(function () { a.classList.remove('on'); }, 4000);
   }
   // The asteroids on the big screen: the same waves as on the phones, flying across space behind the poles.
+  function zgSam(seed, w) { var h = (seed ^ Math.round(w.t0 * 1000)) >>> 0; h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0; return (h % 100) < 25; }   // (1 wave in 4: Sam rides one of the rocks; it hurts just the same)
   function zgSky(ov, g, t) {
     var box = ov.querySelector('.zgsky'); if (!box) { box = document.createElement('div'); box.className = 'zgsky'; for (var i = 0; i < 6; i++) { var ri = document.createElement('i'); ri.setAttribute('data-v', i % 5); ri.innerHTML = '<b></b>'; box.appendChild(ri); } var mid = ov.querySelector('.zgmid'); ov.insertBefore(box, mid); }
     var el = box.children, n = 0;
     if (g.st === 'play' && zgBreak(t) < 0) zgRocks(g.seed).forEach(function (w) {
       var ax = zgWaveX(w, t); if (ax == null) return;
-      w.rocks.forEach(function (k, j) { var e = el[n++]; if (!e) return; e.style.display = 'block'; e.style.left = ((ax + 1) / 2 * 100).toFixed(2) + '%'; e.style.top = (12 + k.y * 56).toFixed(2) + 'vh'; e.style.width = e.style.height = (k.r * 2 * 56).toFixed(2) + 'vh'; e.firstChild.style.rotate = ((t * 60 * w.dir + j * 70) % 360).toFixed(1) + 'deg'; e.setAttribute('data-d', w.dir > 0 ? 'r' : 'l'); });
+      var sam = zgSam(g.seed, w); w.rocks.forEach(function (k, j) { var e = el[n++]; if (!e) return; e.style.display = 'block'; var sj = sam && j === 0; if (e._sam !== sj) { e._sam = sj; var rd = e.querySelector('.zgsam'); if (sj && !rd) { rd = document.createElement('span'); rd.className = 'zgsam'; rd.innerHTML = ZG_RIDER; e.appendChild(rd); } if (rd) rd.style.display = sj ? '' : 'none'; } e.style.left = ((ax + 1) / 2 * 100).toFixed(2) + '%'; e.style.top = (12 + k.y * 56).toFixed(2) + 'vh'; e.style.width = e.style.height = (k.r * 2 * 56).toFixed(2) + 'vh'; e.firstChild.style.rotate = ((t * 60 * w.dir + j * 70) % 360).toFixed(1) + 'deg'; e.setAttribute('data-d', w.dir > 0 ? 'r' : 'l'); });
       if (!w._wh && t >= w.t0) { w._wh = 1; whooshes([0]); }
     });
     for (; n < el.length; n++) if (el[n].style.display !== 'none') el[n].style.display = 'none';
@@ -5948,7 +5948,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!bk) { bk = document.createElement('div'); bk.className = 'zgbrk'; bk.innerHTML = '<b>☕ Break time!</b><small>Relax your fingers…</small><strong></strong><i><em></em></i>'; ov.appendChild(bk); }
     bk.classList.toggle('on', bi >= 0); var wn = bk.querySelector('strong'), wt = ''; if (wn.textContent !== wt) wn.textContent = wt; if (bi >= 0) bk.querySelector('em').style.width = (100 * (t - ZG_BRK[bi][0]) / (ZG_BRK[bi][1] - ZG_BRK[bi][0])).toFixed(1) + '%';
     zgSky(ov, g, t);
-    if (g.st === 'play' && bi < 0 && t > (ov._rideT || 22)) { ov._rideT = t + 32 + Math.random() * 18; zgRide(ov, 'pass'); }   // (now and then the space crooner flies by on a meteor)
     ov.style.setProperty('--sw', (px * [14, 30, 52][g.st === 'play' ? zgStage((Date.now() - g.t0) / 1000) : 0]).toFixed(2) + 'deg');   // (the swing reaches further each stage: wider in stage 2, much wider in stage 3)
     var sing = g.st === 'play' && t >= 9 || g.st === 'end'; if (ov.classList.contains('sing') !== sing) ov.classList.toggle('sing', sing);   // (she starts singing at 0:09 in the song)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
