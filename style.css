@@ -5712,3 +5712,9 @@ body.rufrozen #waittitle{color:#0b3a66}
 /* Serving: no arrow buttons while it's the other team's turn (the pump gets the room) */
 .svui.pumping .svpads{display:none}
 .svui.pumping .svfield{height:64vh}
+/* Serving: blue team (left) and yellow team (right) */
+.svchart.l .svteam{color:#6aa8ff}.svchart.l{box-shadow:inset 0 0 0 2px rgba(47,120,255,.75)}
+.svchart.r .svteam{color:#ffd23f}.svchart.r{box-shadow:inset 0 0 0 2px rgba(255,210,63,.75);background:rgba(30,6,40,.28)}
+.svready.a b{color:#4d9bff;text-shadow:0 0 30px #1f5fd8}.svready.a{box-shadow:0 0 0 4px #1f5fd8,0 0 50px rgba(31,95,216,.6)}
+.svready.b b{color:#ffd23f;text-shadow:0 0 30px #c89a10}.svready.b{background:rgba(20,4,30,.72);box-shadow:0 0 0 4px #ffd23f,0 0 50px rgba(255,210,63,.5)}
+.svres tr.a td:first-child{border-left-color:#1f5fd8}.svres tr.b td:first-child{border-left-color:#ffd23f}
