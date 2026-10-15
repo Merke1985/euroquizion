@@ -5548,6 +5548,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // golden posts and red ropes, and photographers in front. Each contestant (built from simple shapes, an original
   // design) walks in from the left, turns to face the cameras, poses while the flashes go off, turns back and walks on.
   var TC3_T = { inEnd: 3400, turn1: 4000, poseEnd: 9200, turn2: 9700, outEnd: 12200 }, TC_FIRST = 16;   // (TC_FIRST: the first photo of the first contestant, in seconds into the song)   // the timeline of one contestant (ms)
+  // A tree as a flat drawing (for the 3D square): v 0–1 a big leafy one, 2–3 a tall poplar, 4–5 a dark fir. Layered leaf
+  // clusters, lighter on the top left (the evening sun), darker underneath; a trunk with branches peeking out.
+  function tcTreeSvg(v) {
+    var R = function (n) { v = (v * 9301 + 49297) % 233280; return v / 233280 * n; }, kind = Math.floor(v / 2), seed = v, h = '<svg xmlns="http://www.w3.org/2000/svg" width="310" height="500" viewBox="0 0 310 500">';
+    var G = [['#1f4a34', '#2f6b4a', '#4f8f5a', '#7fb46a'], ['#24503a', '#356f45', '#58964f', '#8cc06a'], ['#16302a', '#1f4436', '#2f5e48', '#4f7f5e']][kind];
+    h += '<path d="M146 500 L150 300 Q140 250 118 222 M150 330 Q170 270 196 246 M150 300 L156 220" stroke="#3a2516" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M140 500 L146 360 L160 360 L166 500 Z" fill="#4a2f1c"/><path d="M150 370 L152 498" stroke="#6a4a30" stroke-width="3"/>';
+    var blob = function (cx, cy, r, c) { var d = ''; for (var k = 0; k <= 12; k++) { var a = k / 12 * Math.PI * 2, rr = r * (.85 + R(.3)); d += (k ? ' L' : 'M') + (cx + Math.cos(a) * rr).toFixed(1) + ' ' + (cy + Math.sin(a) * rr * .9).toFixed(1); } return '<path d="' + d + ' Z" fill="' + c + '" stroke="' + G[0] + '" stroke-width="2" stroke-linejoin="round"/>'; };
+    if (kind === 0) {
+      [[150, 210, 110, 0], [96, 230, 70, 1], [204, 226, 72, 1], [150, 150, 92, 1], [110, 160, 62, 2], [196, 168, 60, 1], [140, 104, 64, 2], [118, 140, 38, 3], [176, 120, 34, 2], [100, 210, 30, 3], [150, 80, 36, 3]].forEach(function (b) { h += blob(b[0], b[1], b[2], G[b[3]]); });
+    } else if (kind === 1) {
+      [[150, 260, 54, 0], [150, 200, 62, 1], [150, 140, 56, 1], [150, 86, 44, 2], [150, 40, 28, 2], [134, 170, 26, 3], [136, 100, 20, 3], [168, 230, 24, 2]].forEach(function (b) { h += blob(b[0], b[1], b[2], G[b[3]]); });
+    } else {
+      for (var t = 0; t < 6; t++) { var y = 300 - t * 46, w2 = 120 - t * 18; h += '<path d="M' + (150 - w2) + ' ' + y + ' Q150 ' + (y - 30) + ' 150 ' + (y - 80) + ' Q150 ' + (y - 30) + ' ' + (150 + w2) + ' ' + y + ' Q150 ' + (y - 14) + ' ' + (150 - w2) + ' ' + y + ' Z" fill="' + G[t % 2 ? 1 : 2] + '" stroke="' + G[0] + '" stroke-width="2"/>'; }
+    }
+    for (var k2 = 0; k2 < 26; k2++) { var lx = 70 + R(160), ly = (kind === 1 ? 30 : 70) + R(kind === 1 ? 240 : 190); h += '<ellipse cx="' + lx.toFixed(1) + '" cy="' + ly.toFixed(1) + '" rx="' + (3 + R(4)).toFixed(1) + '" ry="' + (2 + R(2)).toFixed(1) + '" fill="' + G[2 + (k2 % 2)] + '" opacity=".8"/>'; }   // (single leaves catching the light)
+    return h + '</svg>';
+  }
   function tc3Init(host) {
     if (!window.THREE) return null;
     var T = THREE, w = host.clientWidth || innerWidth, h = host.clientHeight || innerHeight;
@@ -5575,9 +5592,25 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var signCv = document.createElement('canvas'); signCv.width = 1024; signCv.height = 128; var signTx = new T.CanvasTexture(signCv); signTx.encoding = T.sRGBEncoding; signTx.anisotropy = 4;
     var signM = new T.MeshStandardMaterial({ color: '#40e0d0', emissive: '#40e0d0', emissiveIntensity: .8 }), signF = new T.MeshBasicMaterial({ map: signTx });
     var roofSign = new T.Mesh(new T.BoxGeometry(18, 2.2, .6), [signM, signM, signM, signM, signF, signM]); roofSign.position.set(0, 9.8, -41.5); sc.add(roofSign);
-    // trees and lamp posts along the square
-    var leaf = new T.MeshStandardMaterial({ color: '#2f6b4a', roughness: .9, flatShading: true }), bark = new T.MeshStandardMaterial({ color: '#3a2516' });
-    [-20, -13, 13, 20].forEach(function (x, i) { var t = new T.Group(), tr = new T.Mesh(new T.CylinderGeometry(.25, .35, 3, 8), bark); tr.position.y = 1.5; t.add(tr); var c = new T.Mesh(new T.IcosahedronGeometry(2 + (i % 2) * .5, 1), leaf); c.position.y = 4.2; c.castShadow = true; t.add(c); t.position.set(x * 1.3, 0, -16 - (i % 2) * 4); sc.add(t); });
+    // trees along the square: flat drawings (leafy ones, tall poplars, a few dark firs), lit by the evening, at different depths
+    var treeTex = [0, 1, 2, 3, 4, 5].map(function (v) { var tx = new T.Texture(); tx.encoding = T.sRGBEncoding; var im = new Image(); im.onload = function () { tx.image = im; tx.needsUpdate = true; }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(tcTreeSvg(v)); return tx; });
+    [[-30, -20, 0, 10], [-23.5, -15, 3, 8.5], [-17, -21, 1, 9.5], [-12.5, -16.5, 4, 7.5], [-36, -25, 2, 11], [-27, -27, 5, 10], [12.5, -16.5, 1, 8], [17.5, -21, 0, 10], [23.5, -15, 4, 8], [30, -20, 3, 11], [36, -25, 5, 10], [27, -27, 2, 9.5], [-44, -30, 0, 12], [44, -30, 1, 12]].forEach(function (q) {
+      var tm = new T.MeshBasicMaterial({ map: treeTex[q[2]], transparent: true, alphaTest: .2, color: '#a6a2c4', depthWrite: true });
+      var pl = new T.Mesh(new T.PlaneGeometry(q[3] * .62, q[3]), tm); pl.position.set(q[0], q[3] / 2 - .05, q[1]); sc.add(pl);
+      var shM = new T.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .28, depthWrite: false }), shd = new T.Mesh(new T.CircleGeometry(q[3] * .2, 20), shM); shd.rotation.x = -Math.PI / 2; shd.scale.y = .45; shd.position.set(q[0], .02, q[1] + .3); sc.add(shd);   // (a soft shadow under each tree)
+    });
+    // a city skyline far behind the venue, with lit windows and a few blinking red lights on the roofs
+    var cityTex = v3Tex(function (x, W, H) { x.clearRect(0, 0, W, H); var bx = 0; while (bx < W) { var bw = 30 + Math.random() * 70, bh = H * (.25 + Math.random() * .7); x.fillStyle = 'rgba(' + (34 + Math.random() * 14 | 0) + ',' + (26 + Math.random() * 12 | 0) + ',' + (70 + Math.random() * 30 | 0) + ',1)'; x.fillRect(bx, H - bh, bw, bh); for (var wy = H - bh + 8; wy < H - 6; wy += 11) for (var wx = bx + 5; wx < bx + bw - 6; wx += 9) if (Math.random() < .35) { x.fillStyle = 'rgba(255,' + (200 + Math.random() * 50 | 0) + ',120,' + (.5 + Math.random() * .5) + ')'; x.fillRect(wx, wy, 4, 5); } if (Math.random() < .3) { x.fillStyle = '#ff3a3a'; x.fillRect(bx + bw / 2 - 2, H - bh - 6, 4, 4); } bx += bw + Math.random() * 6; } }, 2048, 256);
+    var city = new T.Mesh(new T.PlaneGeometry(220, 26), new T.MeshBasicMaterial({ map: cityTex, transparent: true, fog: false })); city.position.set(0, 13, -75); sc.add(city);
+    // the venue's front: tall banners with stars, a glowing canopy over the door, and a string of lights along the roof
+    var banTex = v3Tex(function (x, W, H) { var gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#ff3fa4'); gr.addColorStop(1, '#6a2ad8'); x.fillStyle = gr; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.9)'; [[.5, .22, 34], [.5, .5, 22], [.5, .74, 14]].forEach(function (st) { var cx = st[0] * W, cy = st[1] * H, r = st[2]; x.beginPath(); for (var k = 0; k < 10; k++) { var a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.closePath(); x.fill(); }); x.fillStyle = '#ffd23f'; x.fillRect(0, H - 14, W, 14); }, 128, 512);
+    [-34, -24, -14, 14, 24, 34].forEach(function (bxp) { var bn = new T.Mesh(new T.PlaneGeometry(2.4, 7.2), new T.MeshBasicMaterial({ map: banTex, color: '#c8c0dc' })); bn.position.set(bxp, 4.6, -39.85); sc.add(bn); var rod = new T.Mesh(new T.CylinderGeometry(.06, .06, 2.8, 6), new T.MeshStandardMaterial({ color: '#d9d9e6', metalness: .7, roughness: .3 })); rod.rotation.z = Math.PI / 2; rod.position.set(bxp, 8.25, -39.8); sc.add(rod); });
+    var can = new T.Mesh(new T.BoxGeometry(12, .45, 3.2), new T.MeshStandardMaterial({ color: '#40e0d0', emissive: '#1fb8a8', emissiveIntensity: .9 })); can.position.set(0, 4.4, -38.6); sc.add(can);
+    var bulbs = new T.MeshBasicMaterial({ color: '#fff1b8' }), bulbG = new T.SphereGeometry(.13, 8, 6);
+    for (var bl = -41; bl <= 41; bl += 1.6) { var bm2 = new T.Mesh(bulbG, bulbs); bm2.position.set(bl, 8.75 - Math.abs(Math.sin(bl * .4)) * .25, -39.7); sc.add(bm2); }
+    // planters with flowers along the carpet's far side
+    var potM = new T.MeshStandardMaterial({ color: '#2a2a36', roughness: .6 }), flM = [new T.MeshStandardMaterial({ color: '#ff5fa8', emissive: '#7a1048', emissiveIntensity: .3 }), new T.MeshStandardMaterial({ color: '#ffd23f', emissive: '#7a5a00', emissiveIntensity: .3 }), new T.MeshStandardMaterial({ color: '#ffffff', emissive: '#444455', emissiveIntensity: .3 })];
+    [-26, -18, 18, 26].forEach(function (px, pi) { var pot = new T.Mesh(new T.CylinderGeometry(.55, .45, .8, 14), potM); pot.position.set(px, .4, -5.2); sc.add(pot); for (var f = 0; f < 9; f++) { var fl2 = new T.Mesh(new T.SphereGeometry(.16, 8, 6), flM[(f + pi) % 3]); fl2.position.set(px + (Math.random() - .5) * .8, .9 + Math.random() * .25, -5.2 + (Math.random() - .5) * .8); sc.add(fl2); } var bush = new T.Mesh(new T.SphereGeometry(.5, 10, 8), new T.MeshStandardMaterial({ color: '#2f6b4a', roughness: .9 })); bush.scale.y = .6; bush.position.set(px, .85, -5.2); sc.add(bush); });
     // stage beamers on tall black stands behind the fans: bright cones of light sweeping over the runway
     var trussM = new T.MeshStandardMaterial({ color: '#15151c', metalness: .6, roughness: .4 }), lensM = new T.MeshBasicMaterial({ color: '#fffbe8' });
     var BEAM_COL = ['#fff4d6', '#9ff7ff', '#ffd0f4', '#fff4d6'];
