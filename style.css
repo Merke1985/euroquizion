@@ -5263,3 +5263,5 @@ body.rufrozen #waittitle{color:#0b3a66}
 /* the singing mouths: a calmer pace */
 .rus2d.dance .rsmouth{animation-duration:.75s}
 .rus2d.yel.dance .rsmouth{animation-duration:.65s}
+/* Turquoise Carpet: the presenters walk in at half the speed (walking off stays as it was) */
+.tcov[data-st="intro"] .tchosts .ehost{transition:translate 2.4s cubic-bezier(.25,.6,.4,1),opacity 1.6s}
