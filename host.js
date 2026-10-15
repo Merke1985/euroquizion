@@ -6367,8 +6367,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, t = 1600;
     [['him', 'Welcome to the dance-off, Europe! 🪩 Tonight we’re Serving!'], ['her', 'It’s an aerobics class! Hit the arrows on your phone as they reach the top, and you take a step. Pink team first, then blue team: nice and slow, then double time!'], ['him', 'And at the end… everyone together, on skippy balls! 🏐']].forEach(function (l) { (function (l, t0) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, t0); })(l, t); t += Math.max(3600, talkLen(l[0], l[1], 2400)); });
-    setTimeout(function () { if (G.sv === g) svSong(true); }, 900);   // (the song starts right away, under the presenters)
-    setTimeout(function () { if (G.sv === g) svSay(''); }, t);
+    setTimeout(function () { if (G.sv !== g) return; svSay(''); g.st = 'ready'; push(); svSong(true); }, t);   // (the song starts from 0:00 when the presenters are done: that's where the game starts)
   }
   function svSay(who, txt) { var ov = $('svov'); if (!ov) return; [].forEach.call(ov.querySelectorAll('.svbub'), function (x) { x.classList.remove('on'); }); if (!who) return; var b = ov.querySelector('.svbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); }
   function svSong(on) {
@@ -6390,8 +6389,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function svGo(g, t0) {   // a 3-2-1 on the big screen (the song is playing), then the dancing starts
     g.t0 = t0; push();
-    var first = t0 + g.chart[0][0] * SV_BT;   // (a 3-2-1 before the first arrow; the dancing starts there)
-    clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv !== g) return; svSay(''); g.st = 'ready'; push(); svTimer = setTimeout(function () { if (G.sv !== g) return; g.st = 'play'; g.ends = g.t0 + SV_END * SV_BT + 400; push(); }, Math.max(0, first - Date.now() - 200)); }, Math.max(0, first - Date.now() - 4500));
+    var first = t0 + g.chart[0][0] * SV_BT;   // (the song's intro first, a 3-2-1 before the first arrow)
+    g.st = 'ready'; push();
+    clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv !== g) return; g.st = 'play'; g.ends = g.t0 + SV_END * SV_BT + 400; push(); }, Math.max(0, first - Date.now() - 200));
     clearInterval(svLoop); svLoop = setInterval(svTick, 40);
   }
   function svBeat(g, now) { return (now - g.t0) / SV_BT; }   // (in bounces)
