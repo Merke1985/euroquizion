@@ -6676,10 +6676,23 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function ruGo() {
     var g = G.rule; if (!g || G.phase !== 'rule') return;
     g.st = 'play'; g.t0 = Date.now(); g.ends = g.riseAt && !REMOTE ? g.riseAt + RU_STOP + (RU_ACTS[g.act || 0].lag || 0) : g.t0 + RU_MS; g.itemAt = Date.now() + 12000 + Math.random() * 8000; g.item = null; push(); Music.ding();   // (the first star turns up after 20–30 seconds)   // (the game ends at 2:22 in the song)
+    if (G.mgTest && G.ruForce != null) { var lb = g.order.filter(function (k) { return players[k] && players[k].bot; })[0]; if (lb) g.bot[lb].loop = {}; }   // (the test buttons: one bot always takes the stage with a loop)
     clearInterval(ruLoop); ruLoop = setInterval(ruTick, RU_TICK);
   }
   function ruBot(g, k) {   // a bot: walks in straight lines for a while, preferring tiles that aren't its own
     var b = g.bot[k], p = g.pos[k];
+    if (b.loop) {   // (testing: this bot walks a ring around the stage until the stage is theirs)
+      var a = (g.n - g.s) / 2, lo = a - 1, hi = a + g.s, C = [[lo, lo], [hi, lo], [hi, hi], [lo, hi]], mine = true;
+      for (var sy = a; sy < a + g.s; sy++) for (var sx = a; sx < a + g.s; sx++) if (g.own[sy * g.n + sx] !== k) mine = false;
+      if (mine) b.loop = null;
+      else {
+        if (b.loop.i == null) { var bi = 0, bd = 99; C.forEach(function (c, i) { var dd = Math.abs(c[0] - p[0]) + Math.abs(c[1] - p[1]); if (dd < bd) { bd = dd; bi = i; } }); b.loop.i = bi; }
+        var w = C[b.loop.i]; if (p[0] === w[0] && p[1] === w[1]) { b.loop.i = (b.loop.i + 1) % 4; w = C[b.loop.i]; }
+        var opts = []; if (w[0] !== p[0]) opts.push(w[0] > p[0] ? 'r' : 'l'); if (w[1] !== p[1]) opts.push(w[1] > p[1] ? 'd' : 'u');
+        opts = opts.concat(Object.keys(RU_DIRS));
+        for (var oi = 0; oi < opts.length; oi++) { var od = opts[oi], ox = p[0] + RU_DIRS[od][0], oy = p[1] + RU_DIRS[od][1]; if (ox >= 0 && oy >= 0 && ox < g.n && oy < g.n && !ruStage(g, ox, oy)) return od; }
+      }
+    }
     if (b.left > 0 && b.d) { b.left--; var t = [p[0] + RU_DIRS[b.d][0], p[1] + RU_DIRS[b.d][1]]; if (t[0] >= 0 && t[1] >= 0 && t[0] < g.n && t[1] < g.n && !ruStage(g, t[0], t[1])) return b.d; }
     var best = [], bs = -9;
     Object.keys(RU_DIRS).forEach(function (d) {
