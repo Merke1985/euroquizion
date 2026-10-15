@@ -5588,3 +5588,10 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes svfan{0%{transform:rotate(10deg)}100%{transform:rotate(-55deg) translateY(-30px)}}
 .svins.svdan.d1 .svlbody{animation-delay:-.49s}
 .svins.walk .svlbody,.svins.walk .svlhead,.svins.walk .svlarm{animation:none}
+.svov .svchart{width:15vw;background:rgba(30,6,40,.28)}
+.svov .svchart .svrec,.svov .svchart .svn{width:6.2vh;height:6.2vh;margin-left:-3.1vh}
+/* Serving: her steps land right on the tile (a quick hop, no slide); only walking across is slow */
+.svov .svins,.svov .svins.ok,.svov .svins.jmp{transition:transform .18s ease-out}
+.svov .svins.walk.walk{transition:transform var(--wd,6s) linear}
+.svins.ok .svleadsvg{animation:svhop1 .22s ease-out}
+@keyframes svhop1{45%{transform:translateY(-6%)}}

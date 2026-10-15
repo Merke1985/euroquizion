@@ -6323,8 +6323,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var SV_DV = [[-1, 0], [0, 1], [0, -1], [1, 0]];   // (left, down = towards us, up = to the back, right)
   var SV_PHR = [[0, 3, 3, 0], [2, 1, 1, 2], [0, 2, 3, 1], [0, 1, 3, 2], [3, 2, 0, 1], [3, 1, 0, 2], [0, 3, 2, 1], [1, 2, 3, 0]];   // (side to side, back and forth, little squares)
   function svPhrase() {   // a phrase of four steps that ends where it began: from the list, or two steps and the same way back
-    if (Math.random() < .6) { var P = SV_PHR[Math.floor(Math.random() * SV_PHR.length)].slice(); if (Math.random() < .5) P = P.map(function (d) { return d === 0 ? 3 : d === 3 ? 0 : d; }); return P; }
-    var h = []; for (var k = 0; k < 2; k++) h.push(Math.floor(Math.random() * 4)); return h.concat(h.slice().reverse().map(function (d) { return 3 - d; }));
+    var P = SV_PHR[Math.floor(Math.random() * SV_PHR.length)].slice(); if (Math.random() < .5) P = P.map(function (d) { return d === 0 ? 3 : d === 3 ? 0 : d; }); return P;   // (never more than one tile away from your spot)
   }
   // The class is split in two groups (pink and blue) that take turns; the instructor goes and stands in front of the group
   // whose turn it is. Stage 1: a step every four beats. Then every two beats; one arrow at a time.
@@ -6363,7 +6362,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.sv = { id: 'sv' + G.round + '-' + Math.random().toString(36).slice(2, 6), st: 'intro', order: order, dist: {}, got: {}, last: {}, ap: {}, fall: {}, phd: {}, t0: 0, win: [], done: false, chart: svChart(order.length < 2), grp: {}, stage: 1 };
     order.forEach(function (k) { G.sv.dist[k] = 0; G.sv.got[k] = {}; G.sv.ap[k] = [0, 0]; });
     order.forEach(function (k, i) { G.sv.grp[k] = i % 2 ? 'B' : 'A'; });   // (two groups, taking turns)
-    SV_BR = order.length > 8 ? 7 : 5;   // (more than 4 per team: two rows, so the floor is two rows deeper)
     G.sv.home = svHomes(G.sv);
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
@@ -6469,7 +6467,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rn = new T.WebGLRenderer({ antialias: true }); rn.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); rn.setSize(w, h); rn.outputEncoding = T.sRGBEncoding;
     el.appendChild(rn.domElement);
     var sc = new T.Scene(); sc.background = new T.Color('#07020f'); sc.fog = new T.Fog('#12051f', 30, 70);
-    var cam = new T.PerspectiveCamera(40, w / h, .3, 200); cam.position.set(0, 17, 31); cam.lookAt(0, 4, -.5);
+    var cam = new T.PerspectiveCamera(40, w / h, .3, 200); cam.position.set(0, 18.5, 34); cam.lookAt(0, 4, -.5);
     sc.add(new T.HemisphereLight('#8a6aff', '#1a0630', .55));
     var key = new T.DirectionalLight('#ffffff', .4); key.position.set(4, 12, 10); sc.add(key);
     // the players' floor in front (24 × 5 LED tiles); behind it the singer's raised stage (24 × 3), then the set
@@ -6692,16 +6690,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The stage: the 3D floor is a board of 14 × 9 tiles. The red team stands on the left half, the blue team on the right
   // half, everyone two tiles apart; every step is exactly one tile. The instructor stands at the front of the team whose
   // turn it is and does the steps with them. Their arrows scroll on their own side of the screen: pink left, blue right.
-  var SV_BC = 24, SV_BR = 5, SV_HROW = 2, SV_LROW = 1;   /* (the singer: row 1 of the 3 rows of her own stage) */
+  var SV_BC = 26, SV_BR = 5, SV_HROW = 2, SV_LROW = 1;   /* (the singer: row 1 of the 3 rows of her own stage) */
   function svHomes(g) {
     var H = {}, solo = g.order.length < 2, ga = g.order.filter(function (k) { return g.grp[k] === 'A'; }), gb = g.order.filter(function (k) { return g.grp[k] === 'B'; });
-    if (solo) { H[g.order[0]] = [11.5, SV_HROW]; return H; }
-    var put = function (L, cx) {   // up to 4 in a row, two tiles apart; more: two rows (the back row half a step aside), so nobody steps off their half
-      if (L.length <= 4) { L.forEach(function (k, j) { H[k] = [cx - (L.length - 1) + j * 2, SV_HROW]; }); return; }
-      var n1 = Math.ceil(L.length / 2);
-      L.forEach(function (k, j) { var b = j >= n1, m = b ? L.length - n1 : n1, i = b ? j - n1 : j; H[k] = [cx - (m - 1) + i * 2 + (b ? 1 : 0), b ? SV_HROW + 2 : SV_HROW]; });
-    };
-    put(ga, 6); put(gb, 17);
+    if (solo) { H[g.order[0]] = [12.5, SV_HROW]; return H; }
+    ga.forEach(function (k, j) { H[k] = [6 - (ga.length - 1) + j * 2, SV_HROW]; });   // (one row per team, a tile free in between: up to 6 fit on a half)
+    gb.forEach(function (k, j) { H[k] = [19 - (gb.length - 1) + j * 2, SV_HROW]; });
     return H;
   }
   function svProj(ov, c, r, lead) {   // a tile (column, row; fractions allowed) → the point on the screen, and how big things are there
@@ -6734,9 +6728,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.setAttribute('data-bph', bph);
     var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 4 : 10 + Math.round(r * 2)); };
     var ins = ov.querySelector('.svins');
-    if (ins._act !== act) { if (ins._act && g.st === 'play') { var wd = Math.max(2.2, Math.min(7, ((nx ? nx[0] : b + 7) - b) * SV_BT / 1000 - .6)), lx2 = (solo || act === '*' ? 11.5 : act === 'A' ? 6 : 17) < (ins._lc || 11.5); ins.style.setProperty('--wd', wd.toFixed(2) + 's'); ins.classList.remove('wl', 'wr'); ins.classList.add('walk', lx2 ? 'wl' : 'wr'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk', 'wl', 'wr'); }, wd * 1000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
-    var lc = solo || act === '*' ? 11.5 : act === 'A' ? 6 : 17;
+    if (ins._act !== act) { if (ins._act && g.st === 'play') { var wd = Math.max(2.2, Math.min(7, ((nx ? nx[0] : b + 7) - b) * SV_BT / 1000 - .6)), lx2 = (solo || act === '*' ? 12.5 : act === 'A' ? 6 : 19) < (ins._lc || 12.5); ins.style.setProperty('--wd', wd.toFixed(2) + 's'); ins.classList.remove('wl', 'wr'); ins.classList.add('walk', lx2 ? 'wl' : 'wr'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk', 'wl', 'wr'); }, wd * 1000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
+    var lc = solo || act === '*' ? 12.5 : act === 'A' ? 6 : 19;
     ins._lc = lc;
+    if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }   /* (the hop class first, then the move: so it never slides) */
     var lcx = lc + ix, lry = bph === 'hop' ? 2 : Math.max(0, Math.min(2, SV_LROW + iy)); place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
     [-3, 3].forEach(function (dx, j) {   // her two backup dancers: one tile free on either side, doing exactly what she does
       var dn = ov.querySelector('.svdan.d' + j), db = ov.querySelector('.svnb.insd.d' + j); if (!dn) return;
@@ -6744,7 +6739,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var cl = 'svins svdan d' + j + ' ' + ins.className.replace(/\bsvins\b/, '').trim(); if (dn.className !== cl) dn.className = cl;
       dn.style.setProperty('--wd', ins.style.getPropertyValue('--wd'));
     });
-    if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }
     var marks = [];
     g.order.forEach(function (k) {
       var el = ov.querySelector('.svaf[data-p="' + k + '"]'); if (!el) return;
