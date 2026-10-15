@@ -6243,7 +6243,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var drop = function () {   // first, over 5 seconds, the dancers land on the floor
       if (G.rule !== g) return; ruSay(''); g.st = 'drop'; g.dropAt = Date.now();
       if (!REMOTE) g.order.forEach(function (k, i) {   // a whistle as each dancer falls
-        var d = Math.round(i * 4400 / Math.max(1, g.order.length - 1)), fx = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)), w = null;
+        if (i) return; var d = 0, fx = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)), w = null;
         setTimeout(function () { if (G.rule !== g) return; try { w = new Audio('sounds/ru_whistle.mp3'); w.volume = fx * .7; var pr = w.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }, d);
       });
       g.order.forEach(function (k) { var c = g.pos[k]; ruClaim(g, k, c[0], c[1]); }); g.cnt = ruCount(g); push();
@@ -6258,7 +6258,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
           ruTimer = setTimeout(ruGo, 5000);
         };
         ruTimer = setTimeout(up, 500);
-      }, 5600);
+      }, 2200);   // (they all land at once: a short pause, then the song)
     };
     ruTimer = setTimeout(function () { if (G.rule !== g) return; if (REMOTE) drop(); else ruVote(g, drop); }, REMOTE ? 1000 : t);
   }
@@ -6745,7 +6745,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ov.classList.add('is3d'); var rs = n <= 9 ? 1 : n <= 11 ? .9 : n <= 15 ? .74 : .66;
         g.order.forEach(function (k, i) {
           var p = players[k]; if (!p) return;
-          var el = document.createElement('div'); el.className = 'rut' + (g.st === 'intro' ? ' pre' : g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', Math.round(i * 4400 / Math.max(1, g.order.length - 1)) + 'ms'); el.style.setProperty('--c', ruCol(k));
+          var el = document.createElement('div'); el.className = 'rut' + (g.st === 'intro' ? ' pre' : g.st === 'drop' ? ' drop' : ''); el.style.setProperty('--rs', rs); el.style.setProperty('--d', '0ms');   /* (everyone drops onto the floor at the same time) */ el.style.setProperty('--c', ruCol(k));
           el.innerHTML = '<div class="jmt" style="' + bodyOutfit(k) + '"><div class="jmlegs"><i></i><i></i></div><div class="jmbody"><i></i><i></i></div>' + handFlag(p) + charSvg(p.char) + '<b>' + esc(p.name) + '</b></div><span class="rustar"><i>⭐</i><i>💫</i><i>⭐</i></span><span class="rustarglow"></span><span class="rutime"></span>';
           ov.querySelector('.rutoks3').appendChild(el);
           var c = g.pos[k]; ov._3.toks[k] = { el: el, j: el.firstChild, front: ov.querySelector('.rutoks3'), fx: c[0], fy: c[1], tx: c[0], ty: c[1], t0: 0 };
