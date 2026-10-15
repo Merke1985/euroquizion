@@ -1056,7 +1056,7 @@
 
   // ---------- Where the Hell Is Edgar?: the four rooms on the phone ----------
   var ED_R = [{ id: 'green', name: 'Green Room', icon: '🛋️', max: 2 }, { id: 'club', name: 'Euroclub', icon: '🪩', max: 3 }, { id: 'back', name: 'Backstage', icon: '🔌', max: 2 }, { id: 'boud', name: 'Woodruff’s Boudoir', icon: '👗', max: 2 }];
-  var edNotes = false, edCur = '', edGame = '', edSeen = '', edFastSeen = '', edT = [], edAc = null;
+  var edNotes = false, edCur = '', edGame = '', edSeen = '', edFastSeen = '', edFinal = '', edT = [], edAc = null;
   function edLater(f, ms) { edT.push(setTimeout(f, ms)); }
   function edClear() { edT.forEach(clearTimeout); edT = []; }
   function edTone(i) {   // a short tone for each sound symbol (its own pitch)
@@ -1089,17 +1089,18 @@
       box.querySelector('.ednext2').onclick = function () { edSeen = 'duo' + dq.st; box.innerHTML = ''; edView(state); };
       return;
     }
-    var last = (c.last || {})[pid];
-    if (last && edSeen !== last.k) {   // just finished a room: the new clues
+    var last = (c.last || {})[pid], fst = c.fast;
+    if (edFinal === c.id && me.done.length >= 4 && !(fst && fst.pid === pid && edFastSeen !== c.id)) { box.classList.add('hidden'); $('clueui').classList.remove('hidden'); var ob0 = $('clueui').querySelector('.ednext'); if (ob0) ob0.remove(); return; }   // (all rooms searched: the screen stays on your clues, no button)
+    if (last && edSeen !== last.k && !(me.done.length >= 4 && fst && fst.pid === pid && edFastSeen !== c.id)) {   // just finished a room: the new clues
       box.classList.add('hidden');
       var fresh = last.c.concat(last.b);
       clueNotes({ clue: { id: c.id, n: last.k, known: c.known, fresh: (function () { var o = {}; o[pid] = fresh; return o; })() } });
       $('waittitle').textContent = fresh.length ? '🔍 ' + fresh.length + ' new clue' + (fresh.length > 1 ? 's' : '') + '!' + (last.b.length ? ' (' + last.b.length + ' bonus!)' : '') : '🔍 No clues this time…';
-      var nb = $('clueui'), lbl = me.done.length >= 4 ? '✅ All rooms searched!' : '🚪 Next room', ob = nb.querySelector('.ednext'); if (ob && ob.textContent !== lbl) { ob.remove(); ob = null; } if (!ob) nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">' + lbl + '</button>');
+      if (me.done.length >= 4) { edFinal = c.id; var ob1 = $('clueui').querySelector('.ednext'); if (ob1) ob1.remove(); $('waitsub').textContent = '✅ All four rooms searched! Study your clues… the accusation comes next.'; return; }   // (the last room: no button, the clues stay on screen)
+      var nb = $('clueui'), lbl = '🚪 Next room', ob = nb.querySelector('.ednext'); if (ob && ob.textContent !== lbl) { ob.remove(); ob = null; } if (!ob) nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">' + lbl + '</button>');
       nb.querySelector('.ednext').onclick = function () { edSeen = last.k; $('clueui').classList.add('hidden'); edView(state); };
       return;
     }
-    var fst = c.fast;
     if (fst && fst.pid === pid && edFastSeen !== c.id) {   // the fastest detective: extra clues at the reception
       $('clueui').classList.add('hidden'); box.classList.remove('hidden');
       $('waittitle').textContent = '🏆 You were the fastest detective!'; $('waitsub').textContent = 'Teya & Salena at the reception have extra clues for you… 🛎️';
@@ -1110,8 +1111,8 @@
           box.innerHTML = ''; box.removeAttribute('data-k'); box.classList.add('hidden'); edNotes = true;   // (the notes stay open until OK: state updates don't redraw this)
           if (fst.got && fst.got.length) clueNotes({ clue: { id: c.id, n: 'fast', known: c.known, fresh: (function () { var o = {}; o[pid] = fst.got; return o; })() } });
           $('waittitle').textContent = fst.got && fst.got.length ? '🗝️ ' + fst.got.length + ' extra clue' + (fst.got.length > 1 ? 's' : '') + '!' : '🗝️ No new clues left to give…'; $('waitsub').textContent = '';
-          var nb = $('clueui'), ob = nb.querySelector('.ednext'); if (ob) ob.remove(); nb.classList.remove('hidden'); nb.insertAdjacentHTML('beforeend', '<button type="button" class="btn big ednext">✅ OK</button>');
-          nb.querySelector('.ednext').onclick = function () { edFastSeen = c.id; edNotes = false; $('clueui').classList.add('hidden'); edView(state); };
+          var nb = $('clueui'), ob = nb.querySelector('.ednext'); if (ob) ob.remove(); nb.classList.remove('hidden');
+          edFastSeen = c.id; edFinal = c.id;   // (no OK button: the screen stays on the clues)
         }, 3000);
       }
       return;
