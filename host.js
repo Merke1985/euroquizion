@@ -9789,12 +9789,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(16300, function () { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); ov.classList.add('leaving'); whooshes([0, 300]); });
     at(17300, function () { ov.remove(); then(); });
   }
+  var QUIP_LAST = 'BbDHAjg0Ku0';   // ("Verona" in the Disqualivision list: the grand closer)
   function quipAll() {
     G.quipLoad = true; G.quips = null; G.draw = null; G.best = null; G.q = null;
     var qr = G.quipRun || (G.quipRun = { kind: 'quip', n: 1, songs: [] }); qr.songs = qr.songs || [];
     var used = G.quipSongsUsed || (G.quipSongsUsed = []);   // (no song comes back in the same game: only once the whole list has been played does it start over)
     var left = QUIP_SONGS.filter(function (s) { return used.indexOf(s.id) < 0 && qr.songs.indexOf(s.id) < 0 && !BAD_VIDEOS[s.id]; }); if (!left.length) { used.length = 0; left = QUIP_SONGS.filter(function (s) { return qr.songs.indexOf(s.id) < 0 && !BAD_VIDEOS[s.id]; }); } if (!left.length) left = QUIP_SONGS.slice();
-    var qs = pick(left); qr.songs.push(qs.id); used.push(qs.id); G.quipStart = qs.s;
+    var isV = function (x) { return x.id === QUIP_LAST || /verona/i.test(x.name || ''); }, vr = QUIP_SONGS.filter(function (x) { return isV(x) && !BAD_VIDEOS[x.id]; })[0];   // Verona: always the third (last) performance, never one of the first two
+    if (vr) { var nv = left.filter(function (x) { return !isV(x); }); if (nv.length) left = nv; else left = QUIP_SONGS.filter(function (x) { return !isV(x) && qr.songs.indexOf(x.id) < 0 && !BAD_VIDEOS[x.id]; }); }
+    var qs = vr && (qr.n || 1) >= 3 ? vr : pick(left.length ? left : QUIP_SONGS); qr.songs.push(qs.id); used.push(qs.id); G.quipStart = qs.s;
     G.phase = 'loading'; push(); loadSong([0, '', '', 'Disqualivision', qs.id, 0, 0, null, null, null, '', '']);   /* (not a song from the list: no title, country or year to show) */
   }
   // The song is ready (called where a quiz question would start): hand out the question and play.
