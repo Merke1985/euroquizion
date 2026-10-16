@@ -6095,3 +6095,10 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .slotov.withwheel>*:not(.whov){transform:scale(.56);margin-bottom:-16vh}
 .whov.under{height:66vh}
 .whov.under .whbox{width:min(60vh,52vw)}
+/* the wheel: the turning part is its own layer (GPU), the rest sits on top, still */
+.whbox .whsvg{position:absolute;inset:0;width:100%;height:100%;filter:none}
+.whbase{position:absolute;inset:2%;border-radius:50%;box-shadow:0 22px 40px rgba(0,0,0,.6),0 0 30px rgba(255,210,63,.35)}
+.whspinw{position:absolute;inset:0;z-index:1;will-change:transform;transform:translateZ(0);backface-visibility:hidden}
+.whbox .whfix{z-index:2;pointer-events:none}
+.whbox .whptr{z-index:3}
+.whbox .whconf,.whbox .whban{z-index:4}

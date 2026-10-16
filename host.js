@@ -1811,7 +1811,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       wedge[i] = d;
       h += '<path d="' + d + '" fill="url(#whg' + i + ')"/>';
       for (var st2 = 1; st2 < 4; st2++) { var sa = a0 + (a1 - a0) * st2 / 4; if (a1 - a0 < .3) break; var sp = P(sa, 80); h += '<circle cx="' + f(sp[0]) + '" cy="' + f(sp[1]) + '" r="1.1" fill="#fff" opacity=".55"/>'; }   // (little sparkles in the slice)
-      h += '<g filter="url(#whsh)" transform="translate(' + f(lp[0]) + ' ' + f(lp[1]) + ') rotate(' + f(up ? deg + 180 : deg) + ')"><text text-anchor="middle" dominant-baseline="middle" font-size="' + f(10 + sz * 10) + '">' + FUN[kinds[i]].icon + '</text>' +
+      h += '<g transform="translate(' + f(lp[0]) + ' ' + f(lp[1]) + ') rotate(' + f(up ? deg + 180 : deg) + ')"><text text-anchor="middle" dominant-baseline="middle" font-size="' + f(10 + sz * 10) + '">' + FUN[kinds[i]].icon + '</text>' +
         (x > .1 ? '<text y="' + f(up ? -(11 + sz * 7) : 11 + sz * 7) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + f(4.6 + sz * 2.2) + '" font-weight="900" fill="#fff" stroke="#1a0f3c" stroke-width="1.6" paint-order="stroke">' + esc(FUN[kinds[i]].title) + '</text>' : '') + '</g>';
       a0 = a1;
     });
@@ -1819,16 +1819,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     h += '<circle r="28" fill="none" stroke="url(#whgold)" stroke-width="2.2"/><circle r="97" fill="none" stroke="#1a0f3c" stroke-width="1.4" opacity=".6"/>';
     var bulbs = ''; for (var bi = 0; bi < 36; bi++) { var bp = P(bi / 36 * Math.PI * 2, 103.5); bulbs += '<circle class="b' + (bi % 2) + '" cx="' + f(bp[0]) + '" cy="' + f(bp[1]) + '" r="2.3"/>'; }
     var star = ''; for (var si = 0; si < 10; si++) { var sr = si % 2 ? 7 : 15, spp = P(si / 10 * Math.PI * 2, sr); star += (si ? 'L' : 'M') + f(spp[0]) + ' ' + f(spp[1]); }
-    var svg = '<svg class="whsvg" viewBox="-116 -116 232 232">' + defs +
-      '<circle r="111" fill="#1a0f3c"/><circle r="108" fill="none" stroke="url(#whgold)" stroke-width="9"/><g class="whbulbs">' + bulbs + '</g>' +
-      '<g class="whrot">' + h + '</g><circle r="97" fill="url(#whgloss)" pointer-events="none"/><path class="whwin" d="" fill="#fff" opacity="0"/>' +
+    // (two layers: the slices turn as one picture on the graphics card, smooth on phones too; the rim, bulbs, gloss and hub stay put on top)
+    var svg = '<div class="whbase"></div><div class="whspinw"><svg class="whsvg" viewBox="-116 -116 232 232">' + defs + '<circle r="111" fill="#1a0f3c"/><g class="whrot">' + h + '</g><path class="whwin" d="" fill="#fff" opacity="0"/></svg></div>' +
+      '<svg class="whsvg whfix" viewBox="-116 -116 232 232"><circle r="108" fill="none" stroke="url(#whgold)" stroke-width="9"/><g class="whbulbs">' + bulbs + '</g><circle r="97" fill="url(#whgloss)"/>' +
       '<circle r="23" fill="#1a0f3c"/><circle r="20" fill="url(#whhubg)" stroke="#7a5206" stroke-width="1"/><path d="' + star + 'Z" fill="#ff2e88" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><circle r="4" fill="#fff" opacity=".9"/><ellipse cx="-6" cy="-9" rx="6" ry="3" fill="#fff" opacity=".45" transform="rotate(-30 -6 -9)"/></svg>';
     var ptr = '<svg class="whptr" viewBox="0 0 60 80"><defs><linearGradient id="whpg" x1="0" x2="1"><stop offset="0" stop-color="#b8860b"/><stop offset=".5" stop-color="#fff3b0"/><stop offset="1" stop-color="#b8860b"/></linearGradient></defs><path d="M30 76 L6 18 Q30 -4 54 18 Z" fill="url(#whpg)" stroke="#7a5206" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="22" r="9" fill="#ff2e88" stroke="#fff" stroke-width="2.5"/><circle cx="27" cy="19" r="2.6" fill="#fff" opacity=".8"/></svg>';
     ov.innerHTML = '<div class="whcol"><div class="whcards">' + kinds.map(function (k, i) {
         return '<div class="whcard" data-i="' + i + '" style="--c:' + PW_COLS[i] + '"><span class="ic">' + FUN[k].icon + '</span><span><b>' + esc(FUN[k].title) + '</b><span class="who">' + (vot[i] || []).map(function (p) { return '<i title="' + esc(p.name) + '">' + charSvg(p.char) + '</i>'; }).join('') + '</span></span><span class="pct">' + Math.round(sh[i] * 100) + '%</span></div>';
       }).join('') + '</div></div><div class="whstage"><div class="whbox"><div class="whrays"></div>' + ptr + svg + '<div class="whconf"></div><div class="whban"></div></div></div>';
     if (under) { under.classList.add('withwheel'); under.appendChild(ov); } else document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 900);
-    var rotG = ov.querySelector('.whrot'), ptrEl = ov.querySelector('.whptr');
+    var rotG = ov.querySelector('.whspinw'), ptrEl = ov.querySelector('.whptr');
     var wi = kinds.indexOf(win), st = 0; for (var k2 = 0; k2 < wi; k2++) st += sh[k2];
     var land = (st + sh[wi] * (.15 + Math.random() * .7)) * 360, to = 360 * (6 + Math.floor(Math.random() * 2)) + (360 - land), T = 7000, t0 = 0, last = 0;
     setTimeout(function () {
@@ -1836,12 +1836,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       (function step() {
         if (!ov.isConnected) return;
         var q = Math.min(1, (performance.now() - t0) / T), e = 1 - Math.pow(1 - q, 4), a = to * e;
-        rotG.setAttribute('transform', 'rotate(' + a.toFixed(2) + ')');
+        rotG.style.transform = 'rotate(' + a.toFixed(2) + 'deg)';
         edges.forEach(function (ed) { var pe = (360 - ed * 180 / Math.PI - last % 360 + 720) % 360; if (a - last > 0 && pe > 0 && pe <= a - last) { Music.plop(2); ptrEl.classList.remove('tick'); void ptrEl.getBoundingClientRect(); ptrEl.classList.add('tick'); } });
         last = a;
         if (q < 1) { requestAnimationFrame(step); return; }
         ov.classList.remove('spinning'); ov.classList.add('done');
-        var ww = ov.querySelector('.whwin'); ww.setAttribute('d', wedge[wi] || ''); ww.setAttribute('transform', 'rotate(' + a.toFixed(2) + ')');   // (the winning slice flashes)
+        var ww = ov.querySelector('.whwin'); ww.setAttribute('d', wedge[wi] || '');   // (the winning slice flashes)
         var cf = ov.querySelector('.whconf'), ch2 = ''; for (var c = 0; c < 40; c++) ch2 += '<i style="--x:' + (Math.random() * 2 - 1).toFixed(2) + ';--y:' + (Math.random() * -1.2 - .2).toFixed(2) + ';--r:' + Math.floor(Math.random() * 720) + 'deg;--d:' + (Math.random() * .3).toFixed(2) + 's;background:' + PW_COLS[c % 4] + '"></i>'; cf.innerHTML = ch2;   // (a burst of confetti)
         [].forEach.call(ov.querySelectorAll('.whcard'), function (c3) { c3.classList.add(+c3.getAttribute('data-i') === wi ? 'won' : 'out'); });
         var bn = ov.querySelector('.whban'); bn.textContent = '🎉 ' + FUN[win].icon + ' ' + FUN[win].title; bn.classList.add('on'); if (!REMOTE) { itemSfx('sounds/fanfare.mp3?v=1', Music.douze); setTimeout(function () { itemSfx('sounds/applause.mp3?v=1'); }, 250); }   // (a fanfare and applause when the wheel stops)
