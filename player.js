@@ -228,7 +228,7 @@
     if (!toldParent && me() && document.body.classList.contains('embed')) { toldParent = true; try { parent.postMessage({ esc: 'joined' }, location.origin); } catch (e) {} }
   }
   function onState2(s) {
-    state = s; clearTimeout(joinTimer);
+    state = s; clearTimeout(joinTimer); if (s && s.phase === 'srec' && s.left != null) srecEnd = Date.now() + s.left;
     endsAt = Date.now() + (s.left || 0);
     var m = me();
     $('me').innerHTML = s.phase === 'lobby' ? '' : (m ? charSvg(m.char) : '') + esc(name + (m && !s.hide ? ' · ' + m.score : ''));   // s.hide: totals stay secret until the end
@@ -1781,6 +1781,13 @@
   $('sredo').addEventListener('click', function () { recReset(); $('slywrap').classList.remove('hidden', 'recording'); $('slywrap').classList.add('dim'); });
   $('sbad').addEventListener('click', function () { if (!net) return; $('sbad').disabled = true; net.send('poll', { pid: pid, reroll: true }); $('sfb').className = 'fb close'; $('sfb').textContent = 'You voted to skip this song.'; });
   $('sskip').addEventListener('click', function () { recReset(); recRelease(); if (net) net.send('clip', { pid: pid, skip: true }); });
+  /* Key Change: a recording that is ready but not sent yet goes off by itself a few seconds before the time runs out (forgetting to press Send no longer loses it) */
+  var srecEnd = 0;
+  setInterval(function () {
+    if (!state || state.phase !== 'srec' || !recBlob || recSent === sKey || !srecEnd) return;
+    var mm = me(); if (mm && mm.in) return;
+    if (srecEnd - Date.now() <= 5000) { $('srecstate').className = 'fb'; $('srecstate').textContent = 'Time’s almost up: sending your recording…'; $('ssend').click(); }
+  }, 500);
   $('ssend').addEventListener('click', function () {
     if (!recBlob || !net || recSent === sKey) return;
     recSent = sKey; $('srecstate').className = 'fb'; $('srecstate').textContent = 'Sending…';
