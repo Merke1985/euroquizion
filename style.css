@@ -5999,3 +5999,4 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .svov[data-st="play"]:not([data-brk]) .svaf:not(.ok):not(.oops):not(.walkin):not(.fall) .svfb2,.svov[data-st="ready"] .svaf:not(.walkin) .svfb2{animation:none}
 /* the shoppers' names: centred under the cabinet, halfway between its bottom and the chequered floor */
 .shopov.boutique .shoppers{left:30.5vw;right:7.5vw;bottom:10.2vh;justify-content:center}
+.rdyrow.empty .calok{display:none}.rdyrow.empty{padding-right:1em}
