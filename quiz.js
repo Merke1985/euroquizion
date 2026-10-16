@@ -257,13 +257,13 @@ function peelSeen(k) { try { return JSON.parse(localStorage.getItem(k) || '{}') 
 function peelNote(k, ids) { try { var m = peelSeen(k), n = Date.now(); ids.forEach(function (id) { m[id] = n; }); localStorage.setItem(k, JSON.stringify(m)); } catch (e) {} }
 function peelOldest(list, seen) { return shuffle(list.slice()).sort(function (a, b) { return (seen[a[4]] || 0) - (seen[b[4]] || 0); }); }   // (shuffled first: equals stay in random order)
 function makePeel(song, allSongs, countries, opt) {
-  // always the song itself: four bars with title and artist, the other three winners too
-  // Only winners, on the screen and on the bars: a song that did not win makes way for a winner (from the years in play, if there is one).
-  // Only winners of the last fifteen contests (the newest year in the song list and the fourteen before it): recent enough to recognise by sight.
+  // always the song itself: four bars with title and artist, the other three from the same set
+  // Only the top five of each of the last fifteen contests (the newest year in the song list and the fourteen before it), on the
+  // screen and on the bars: recent and big enough to recognise by sight. Any other song makes way for one of those (from the years in play, if there are some).
   var top = allSongs.reduce(function (m, s) { return Math.max(m, s[0]); }, 0);
-  var wins = allSongs.filter(function (s) { return s[5] === 2 && s[0] >= top - 14; }), swap = null, seenA = peelSeen('eq_peel'), seenO = peelSeen('eq_peelo');
+  var wins = allSongs.filter(function (s) { return s[0] >= top - 14 && s[6] != null && s[6] <= 5 && s[8] == null; }), swap = null, seenA = peelSeen('eq_peel'), seenO = peelSeen('eq_peelo');
   if (wins.length < 4) return null;
-  if (wins.indexOf(song) < 0) {   // (not one of those winners: one of them takes its place, the one that was the answer longest ago)
+  if (wins.indexOf(song) < 0) {   // (not one of those: one of them takes its place, one that was the answer longest ago)
     var yrs = {}, used = (opt && opt.used) || {}; ((opt && opt.pool) || []).forEach(function (s) { yrs[s[0]] = 1; });
     var fresh = wins.filter(function (s) { return !used[s[4]]; }); if (!fresh.length) fresh = wins;   // (not yet in this game)
     var near = fresh.filter(function (s) { return yrs[s[0]]; }); if (near.length < 3) near = fresh;   // (from the years in play, when there is some choice there)
@@ -272,7 +272,10 @@ function makePeel(song, allSongs, countries, opt) {
   }
   var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}, ids = []; seen[song[4]] = 1;
   var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); ids.push(s[4]); } };
-  var duo = duoAct(song[2]); peelOldest(wins.filter(function (s) { return duoAct(s[2]) === duo; }), seenO).forEach(add); peelOldest(wins, seenO).forEach(add);   // (a duo next to duos first, when there are any)   // the other bars: the winners that were on a bar longest ago
+  var duo = duoAct(song[2]), close = function (s) { return Math.abs(s[0] - song[0]) <= 4; };   // the other bars: from about the same years, a duo next to duos, the ones that were on a bar longest ago first
+  peelOldest(wins.filter(function (s) { return close(s) && duoAct(s[2]) === duo; }), seenO).forEach(add);
+  peelOldest(wins.filter(function (s) { return duoAct(s[2]) === duo; }), seenO).forEach(add);
+  peelOldest(wins, seenO).forEach(add);   // the other bars: the winners that were on a bar longest ago
   if (opts.length < 4) return null;
   peelNote('eq_peel', [song[4]]); peelNote('eq_peelo', ids.concat([song[4]]));
   shuffle(opts);

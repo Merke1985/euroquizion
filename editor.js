@@ -213,8 +213,8 @@
     ['higher', '📈 Higher or lower', 'Two clips: which finished higher?', 'made from the song list'],
     ['newer', '📅 Which came out later', 'Two clips: which song came out later?', 'made from the song list'],
     ['lost', '🗣️ Language barrier', 'A translated title: which song is it?', 'uses the translations: see 🗣️ Language barrier'],
-    ['peel', '🎭 Behind the curtain', 'A winner, silent, uncovered bit by bit', 'made from the winners'],
-    ['blur', '🌫️ Out of focus', 'A winner, silent, starts blurred and sharpens', 'made from the winners'],
+    ['peel', '🎭 Behind the curtain', 'A top-5 song, silent, uncovered bit by bit', 'made from the top 5s of the last 15 years'],
+    ['blur', '🌫️ Out of focus', 'A top-5 song, silent, starts blurred and sharpens', 'made from the top 5s of the last 15 years'],
     ['flag', '🚩 Whose flag?', 'A flag on the screen: which song did that country send?', 'made from the song list'],
     ['host', '🏙️ Host city', 'A dot on the map: which city held the contest?', 'made from the host cities'],
     ['trivia', '💡 Did you know?', 'Obscure Eurovision facts', 'the questions in 💡 Did you know?']];
