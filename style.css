@@ -5968,12 +5968,8 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 /* while the song plays, no idle floating up and down: they only move on their steps */
 .svov[data-st="play"]:not([data-brk]) .svaf:not(.ok):not(.oops):not(.walkin):not(.fall) .svfb2,.svov[data-st="ready"] .svaf:not(.walkin) .svfb2{animation:none}
 /* the shoppers' names: centred under the cabinet, halfway between its bottom and the chequered floor */
-.shopov.boutique .shoppers{left:30.5vw;right:7.5vw;bottom:13.6vh;justify-content:center}
+.shopov.boutique .shoppers{left:30.5vw;right:7.5vw;bottom:10.2vh;justify-content:center}
 .rdyrow.empty .calok{display:none}.rdyrow.empty{padding-right:1em}
-/* the bunting a little higher, and the cabinet with it: its bottom just above the wood panelling */
-.shopov.boutique .bqbunting{top:12.5vh}
-.shopov.boutique .bqcase{top:20vh}
-.shopov.boutique .bqsale{top:17.5vh}
 /* the final scores: on the same stage as the winner's screen; the scores on its LED wall, everyone standing on the stage */
 .fsov .grwall,.fsov .grfloor,.fsov .hsspot{display:none}
 .fsov .fsstudio{position:absolute;inset:0;overflow:hidden;display:block;z-index:0}
@@ -6010,5 +6006,3 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .svov[data-act="B"] .svchart.r,.svov[data-act="*"] .svchart.r{box-shadow:inset 0 0 0 3px #b06bff,inset 0 0 26px rgba(176,107,255,.35),0 0 26px rgba(176,107,255,.6)}
 /* the singer keeps singing while she walks across her stage (side view): her mouth moves */
 .svov:not([data-st="end"]) .svins.walk:not(.svdan) .svsmouth{transform-box:fill-box;transform-origin:20% 30%;animation:svlsing .49s ease-in-out infinite alternate}
-.shopov.boutique .bqcase{top:22.6vh}
-.bqroom .bqcurt.r b{display:none}
