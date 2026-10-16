@@ -1989,8 +1989,10 @@
     var ccName = mine ? (countries[mine] || mine.toUpperCase()) : '', ccH = mine ? '<img src="https://flagcdn.com/w160/' + mine + '.png" alt=""><span><small>Your country</small><b>' + esc(ccName) + '</b></span>' : '<span class="ccnone">👇 Tap a flag below to choose your country</span>';
     if ($('ccsel')._h !== ccH) { $('ccsel')._h = ccH; $('ccsel').innerHTML = ccH; }
     $('v-pick').classList.toggle('flagmode', pickMode === 'flag');
-    var pdT = pickMode === 'flag' ? (mine ? '✅ Confirm ' + ccName : 'Choose a country first') : 'Done';
+    var avNow = want || (m && m.char), avJoin = pickMode === 'avatar' && joinFlow === 1;
+    var pdT = pickMode === 'flag' ? (mine ? '✅ Confirm ' + ccName : 'Choose a country first') : avJoin ? 'Next: your country ➜' : 'Done';
     if ($('pickdone').textContent !== pdT) $('pickdone').textContent = pdT; $('pickdone').classList.toggle('dim', pickMode === 'flag' && !mine);
+    $('pickdone').classList.toggle('hidden', avJoin && !avNow);   // (joining: no button until you've taken a photo or picked an avatar; the three options above are the choice)
     var selNow = Date.now() < pickUntil ? want : (m && m.char), usePic = !!myPic && selNow === 'u:' + pid, pv = usePic ? '<img src="' + myPic + '" alt=""><span>✅ This is you!</span>' : '';
     if ($('mypicprev')._h !== pv) { $('mypicprev')._h = pv; $('mypicprev').innerHTML = pv; } $('mypicprev').classList.toggle('hidden', !usePic);
     pickAvVis();
