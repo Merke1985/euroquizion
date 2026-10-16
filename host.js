@@ -6799,12 +6799,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     var pflash = new T.PointLight('#ffffff', 0, 40); pflash.position.set(0, 9, ZB + 8); sc.add(pflash);
     // the crowd: glow sticks at the front edge, swaying
-    var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 126), sk = [];
-    for (i = 0; i < 126; i++) { var crw = Math.floor(i / 42), cri = i % 42; sk.push({ x: -20 + cri * (40 / 41) + (crw % 2 ? .48 : 0) + (Math.random() - .5) * .35, z: ZF(R - 1) + TS + .55 + crw * .8 + Math.random() * .25, ph: Math.random() * 6.28 });   /* (the audience: three full rows, no gaps) */ sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
+    var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 96), sk = [];
+    for (i = 0; i < 96; i++) { var crw = Math.floor(i / 32), cri = i % 32; sk.push({ x: -20 + cri * (40 / 31) + (crw % 2 ? .64 : 0) + (Math.random() - .5) * .35, z: ZF(R - 1) + TS + .55 + crw * .8 + Math.random() * .25, ph: Math.random() * 6.28 });   /* (the audience: three full rows, no gaps) */ sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
     sc.add(sticks);
     // the fans holding them: real people seen from behind (clothes, neck, hair), one arm up to the stick, the other down; dimly lit
-    var CN = 126, cGeo = { t: new T.CylinderGeometry(.36, .27, 1.05, 10), n: new T.CylinderGeometry(.09, .1, .2, 8), h: new T.SphereGeometry(.22, 14, 10), hr: new T.SphereGeometry(.235, 14, 10, 0, Math.PI * 2, 0, Math.PI * .62), a: new T.CylinderGeometry(.075, .065, 1, 7), d: new T.CylinderGeometry(.08, .07, 1, 7), hd: new T.SphereGeometry(.075, 8, 6) }, crowd = {}, cQ = new T.Quaternion(), cQ0 = new T.Quaternion(), cUp = new T.Vector3(0, 1, 0), cD = new T.Vector3(), cS = new T.Vector3(1, 1, 1), cP = new T.Vector3();
-    var cMat = new T.MeshBasicMaterial({ color: '#4a4452', fog: false });   /* (flat and dark, like 2D cut-outs: they don't steal the show) */
+    var CN = 96, cGeo = { t: new T.CylinderGeometry(.36, .27, 1.05, 10), n: new T.CylinderGeometry(.09, .1, .2, 8), h: new T.SphereGeometry(.22, 14, 10), hr: new T.SphereGeometry(.235, 14, 10, 0, Math.PI * 2, 0, Math.PI * .62), a: new T.CylinderGeometry(.075, .065, 1, 7), d: new T.CylinderGeometry(.08, .07, 1, 7), hd: new T.SphereGeometry(.075, 8, 6) }, crowd = {}, cQ = new T.Quaternion(), cQ0 = new T.Quaternion(), cUp = new T.Vector3(0, 1, 0), cD = new T.Vector3(), cS = new T.Vector3(1, 1, 1), cP = new T.Vector3();
+    var cMat = new T.MeshBasicMaterial({ color: '#221e28', fog: false });   /* (flat and dark, like 2D cut-outs: they don't steal the show) */
     Object.keys(cGeo).forEach(function (k) { crowd[k] = new T.InstancedMesh(cGeo[k], cMat, CN); sc.add(crowd[k]); });
     var cloth = ['#2a2440', '#3a1830', '#1c2a3a', '#40202a', '#232323', '#5a1840', '#173a3a', '#3a3418', '#2a1a4a', '#442a1a'], hairC = ['#120c0a', '#2a1a10', '#4a2c16', '#8a6a3a', '#b8902a', '#6a1a12', '#1a1a1e', '#5a5a5a'], skinC = ['#e8bca0', '#c8946e', '#8a5a3a', '#5a3a26', '#f0d0b8'];
     for (i = 0; i < CN; i++) {
