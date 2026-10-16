@@ -2979,6 +2979,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<circle cx="74" cy="100" r="3" fill="#ffd23f"/><circle cx="126" cy="100" r="3" fill="#ffd23f"/>' +
     '</svg>';
 
+  // The presenters walk wherever they move across the screen (in every game): while a host slides sideways, the side view
+  // shows, facing the way they go, legs and arms swinging; once they stand still, the front view is back
+  (function () {
+    var track = function (el) {
+      if (el._walkT) return; var lastX = null, still = 0, t0 = Date.now();
+      el._walkT = setInterval(function () {   // (a timer, not animation frames: those can stall while the big screen is busy)
+        if (!el.isConnected) { clearInterval(el._walkT); el._walkT = 0; return; }
+        var r = el.getBoundingClientRect(), x = r.left + r.width / 2, dx = lastX == null ? 0 : x - lastX; lastX = x;
+        if (Math.abs(dx) > .6 && r.width > 0) { still = 0; el.classList.add('walk'); el.classList.toggle('wl', dx < 0); el.classList.toggle('wr', dx > 0); }
+        else if (++still > 3) { el.classList.remove('walk', 'wl', 'wr'); if (Date.now() - t0 > 400) { clearInterval(el._walkT); el._walkT = 0; } }
+      }, 60);
+    };
+    var on = function (e) { var el = e.target; if (el && el.classList && el.classList.contains('ehost')) track(el); else if (el && el.querySelectorAll) [].forEach.call(el.querySelectorAll('.ehost'), track); };
+    document.addEventListener('transitionrun', on, true); document.addEventListener('animationstart', on, true);
+  })();
   var bombTimer = null;
   // ---------- things slide in, with a whoosh ----------
   function whooshes(times) { if (REMOTE) return; times.forEach(function (t) { setTimeout(function () { Music.woosh(); }, t); }); }
@@ -6370,7 +6385,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.sv.home = svHomes(G.sv);
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
-    var l00 = ['her', 'Thank you for coming to help us during this rehearsal show!'], t00 = 1500 + Math.max(3000, talkLen(l00[0], l00[1], 2400));
+    var l00 = ['her', 'Thank you for coming to help us during this rehearsal show!'], t00 = 4100 + Math.max(3000, talkLen(l00[0], l00[1], 2400));   // (they walk in first, slowly; then they talk)
     var iv = setInterval(function () { if (G.sv !== g || g.t0) { clearInterval(iv); return; } svShow(); }, 200);   // (until the song plays)
     // First everything loads (the 3D stage); then the presenters walk in to the front of the stage, in the middle, and talk
     // there; only after that the song cuts in (cutting him off) and the singer comes on
@@ -6378,7 +6393,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (G.sv !== g) { clearInterval(wt); return; }
       var ov = $('svov'), el = Date.now() - w0; if (el < 2000 || (!(ov && ov._3) && el < 8000)) return;
       clearInterval(wt); g.hin = true; svShow();
-      setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l00[0], l00[1]); }, 1500);
+      setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l00[0], l00[1]); }, 4100);
       setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, t00);
       setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
     }, 150);
@@ -8813,11 +8828,42 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // goes wrong in the same round, whoever got furthest that round wins.
   var JM_COLS = 7, JM_ROWS = 6, JM_MAX = 10, JM_PTS = [12, 8, 4], JM_DIRS = [[-1, 0], [0, -1], [1, 0], [0, 1], [0, 0]], JM_ARROW = ['⬅️', '⬆️', '➡️', '⬇️', '🚗'], JM_CAR = 4, JM_WALK = 1650, qjTimer = null, qjTick = null;
   var JULIET = '<svg class="juliet" viewBox="0 0 200 300" aria-hidden="true"><path d="M58 58 Q60 14 100 12 Q140 14 142 58 L150 150 Q100 162 50 150 Z" fill="#3a1a14"/><rect x="88" y="94" width="24" height="22" rx="8" fill="#f2c9a8"/><ellipse cx="100" cy="68" rx="32" ry="36" fill="#f2c9a8"/><path d="M68 56 Q72 26 100 26 Q128 26 132 56 Q118 40 100 42 Q82 40 68 56 Z" fill="#3a1a14"/><circle cx="88" cy="70" r="4" fill="#2a1410"/><circle cx="112" cy="70" r="4" fill="#2a1410"/><path d="M84 62 q4 -3 8 0 M108 62 q4 -3 8 0" stroke="#2a1410" stroke-width="2" fill="none"/><path d="M90 86 Q100 94 110 86" stroke="#b0303a" stroke-width="4" fill="none" stroke-linecap="round"/><g class="jmo"><path d="M90 86 Q100 104 110 86 Q100 90 90 86 Z" fill="#6a1424" stroke="#b0303a" stroke-width="2.4" stroke-linejoin="round"/><ellipse cx="100" cy="96" rx="5" ry="2.6" fill="#e0607a"/></g><ellipse cx="80" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><ellipse cx="120" cy="80" rx="6" ry="3.5" fill="#ff8f9f" opacity=".5"/><circle cx="100" cy="30" r="5" fill="#ffd23f"/><circle cx="90" cy="33" r="3" fill="#fff"/><circle cx="110" cy="33" r="3" fill="#fff"/><path d="M66 118 Q100 104 134 118 L150 240 Q100 252 50 240 Z" fill="#c2185b"/><path d="M80 116 Q100 126 120 116 L118 132 Q100 140 82 132 Z" fill="#ffd6e6"/><path d="M66 122 Q40 150 46 176" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="46" cy="180" r="8" fill="#f2c9a8"/><path class="jarm" d="M134 122 Q166 104 172 70" stroke="#c2185b" stroke-width="16" fill="none" stroke-linecap="round"/><circle class="jhand" cx="172" cy="64" r="8" fill="#f2c9a8"/><circle cx="168" cy="52" r="7" fill="#e0245e"/><path d="M168 59 l0 14" stroke="#2f7a3a" stroke-width="3"/></svg>';   // (an original character: Juliet with a rose)
+  // The presenters from the side, for walking (they face right; flipped when walking left): legs and arms swing
+  var HOST_HIM_SIDE = '<g class="ehside">' +
+    '<ellipse cx="102" cy="410" rx="46" ry="8" fill="rgba(0,0,0,.45)"/>' +
+    '<g class="eharm b"><path d="M100 160 Q96 210 98 258" stroke="#121640" stroke-width="19" fill="none" stroke-linecap="round"/><circle cx="98" cy="264" r="8.5" fill="url(#ehskin)"/></g>' +
+    '<g class="ehleg b"><path d="M92 298 L89 400 L109 400 L111 298 Z" fill="#0a0c2a"/><path d="M86 398 L112 398 Q122 400 124 408 L124 412 L86 412 Z" fill="#050510"/></g>' +
+    '<path d="M80 150 Q100 134 122 146 Q128 200 126 310 Q104 320 80 310 Q76 230 80 150 Z" fill="url(#ehsuit)"/>' +
+    '<path d="M114 146 L125 150 L124 214 L112 200 Z" fill="#fff"/><path d="M117 154 L123 156 L121 196 L116 190 Z" fill="#e0234a"/>' +
+    '<g class="ehleg f"><path d="M92 298 L89 400 L109 400 L111 298 Z" fill="#0d1033"/><path d="M86 398 L112 398 Q122 400 124 408 L124 412 L86 412 Z" fill="#050510"/></g>' +
+    '<rect x="96" y="118" width="16" height="24" fill="#d89b72"/>' +
+    '<path d="M78 92 Q76 54 106 52 Q134 54 132 92 Q132 104 136 110 Q131 114 130 116 Q128 128 118 130 Q104 134 92 126 Q78 116 78 92 Z" fill="url(#ehskin)"/>' +
+    '<ellipse cx="117" cy="91" rx="2.8" ry="3.6" fill="#2a1a10"/><path d="M111 82 q6 -3 12 0" stroke="#2b1d14" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M116 112 Q124 118 130 112" stroke="#7a3b2a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M76 92 Q72 52 104 50 Q132 50 133 74 Q122 62 104 64 Q92 68 90 92 Q88 104 84 112 Q78 104 76 92 Z" fill="#2b1d14"/><ellipse cx="92" cy="98" rx="5" ry="7" fill="#d89b72"/>' +
+    '<g class="eharm f"><path d="M104 162 Q110 214 112 256" stroke="url(#ehsuit)" stroke-width="20" fill="none" stroke-linecap="round"/><rect x="104" y="248" width="34" height="24" rx="3" fill="#ffd23f" transform="rotate(-8 121 260)"/><circle cx="112" cy="262" r="9" fill="url(#ehskin)"/></g>' +
+    '</g>';
+  var HOST_HER_SIDE = '<g class="ehside">' +
+    '<ellipse cx="102" cy="410" rx="58" ry="9" fill="rgba(0,0,0,.45)"/>' +
+    '<path d="M80 74 Q72 38 106 38 Q134 40 132 76 Q138 128 126 168 L88 176 Q74 128 80 74 Z" fill="#6b2a12"/>' +   // (her long hair, down her back)
+    '<g class="eharm b"><path d="M98 156 Q94 200 96 240" stroke="#b9805a" stroke-width="13" fill="none" stroke-linecap="round"/><circle cx="96" cy="244" r="7.5" fill="url(#ehskin2)"/></g>' +
+    '<g class="ehleg b"><path d="M90 396 L114 396 Q122 400 122 408 L90 408 Z" fill="#ffd23f"/></g>' +
+    '<g class="ehgown"><path d="M86 150 Q104 140 120 150 L124 232 Q150 330 158 408 Q104 418 52 408 Q66 330 84 232 Z" fill="url(#ehgown)"/><path d="M86 150 Q104 140 120 150 L124 232 Q150 330 158 408 Q104 418 52 408 Q66 330 84 232 Z" fill="url(#ehsparkle)"/><path d="M84 232 Q104 240 124 232" stroke="#ffd23f" stroke-width="4" fill="none"/></g>' +
+    '<g class="ehleg f"><path d="M100 400 L126 400 Q134 404 134 410 L100 410 Z" fill="#ffd23f"/></g>' +
+    '<rect x="96" y="118" width="14" height="26" fill="#b9805a"/>' +
+    '<path d="M82 90 Q80 56 108 56 Q132 58 132 90 Q132 100 136 106 Q131 110 130 112 Q128 124 118 126 Q104 130 94 122 Q82 112 82 90 Z" fill="url(#ehskin2)"/>' +
+    '<ellipse cx="118" cy="89" rx="2.6" ry="3.4" fill="#2a1a10"/><path d="M121 85 l3 -3" stroke="#2a1a10" stroke-width="2" stroke-linecap="round"/>' +
+    '<path d="M117 109 Q124 114 129 108" stroke="#c0204a" stroke-width="3.5" fill="none" stroke-linecap="round"/>' +
+    '<path d="M80 92 Q76 52 106 50 Q134 52 133 78 Q120 64 104 66 Q92 70 92 96 Q90 110 86 118 Z" fill="#6b2a12"/><circle cx="94" cy="104" r="3" fill="#ffd23f"/>' +
+    '<g class="eharm f"><path d="M106 158 Q112 196 122 214" stroke="#b9805a" stroke-width="13" fill="none" stroke-linecap="round"/><rect x="122" y="192" width="7" height="28" rx="3" fill="#222" transform="rotate(20 125 206)"/><circle cx="121" cy="192" r="7.5" fill="#9aa0b4"/><circle cx="124" cy="216" r="7.5" fill="url(#ehskin2)"/></g>' +
+    '</g>';
   // The characters' gradients (skin, suit, gown…) live once in a hidden-but-rendered <svg> on the page. Inside each drawing
   // they went missing whenever the first copy of a drawing sat in a hidden screen: the copies on show lost their colours.
   (function () {
     var defs = '', strip = function (str) { return str.replace(/<defs>([\s\S]*?)<\/defs>/g, function (m, d) { defs += d; return ''; }); };
-    HOST_HIM = strip(HOST_HIM); HOST_HER = strip(HOST_HER); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
+    HOST_HIM = strip(HOST_HIM); HOST_HER = strip(HOST_HER);
+    HOST_HIM = HOST_HIM.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HIM_SIDE + '</svg>'; });   // (front and side view in one drawing: the side view while walking)
+    HOST_HER = HOST_HER.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HER_SIDE + '</svg>'; }); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
     try { var box = document.createElement('div'); box.innerHTML = '<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"><defs>' + defs + '</defs></svg>'; document.body.appendChild(box.firstChild); } catch (e) {}
   })();
   function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards

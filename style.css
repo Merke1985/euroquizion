@@ -5874,3 +5874,23 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svmp3row{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
 .svmp3row small{color:var(--mute);font-size:.8rem}
 .svmp3row .linkbtn{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer;font:inherit;font-size:.8rem}
+/* The presenters walking: the side view (legs and arms swinging, a little bob), facing the way they go */
+.ehost .ehside{display:none}
+.ehost.walk .ehfront{display:none}.ehost.walk .ehside{display:inline}
+.ehost .ehside{transform-box:view-box;transform-origin:102px 0}
+.ehost.walk.wl .ehside{transform:scaleX(-1)}
+.ehost .ehleg,.ehost .eharm{transform-box:view-box}
+.ehost .ehleg{transform-origin:100px 298px;animation:ehstep .62s ease-in-out infinite}
+.ehost .ehleg.b{animation-delay:-.31s}
+.ehost .eharm{transform-origin:102px 160px;animation:ehswing .62s ease-in-out infinite}
+.ehost .eharm.f{animation-delay:-.31s}
+.ehost.her .ehleg{transform-origin:110px 404px;animation-name:ehstep2}
+.ehost.her .ehgown{transform-box:view-box;transform-origin:104px 150px;animation:ehgown .62s ease-in-out infinite}
+.ehost.walk .ehside{animation:ehbob .31s ease-in-out infinite alternate}
+@keyframes ehstep{0%,100%{transform:rotate(16deg)}50%{transform:rotate(-16deg)}}
+@keyframes ehstep2{0%,100%{transform:translateX(12px)}50%{transform:translateX(-12px)}}
+@keyframes ehswing{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+@keyframes ehgown{0%,100%{transform:skewX(2.5deg)}50%{transform:skewX(-2.5deg)}}
+@keyframes ehbob{from{translate:0 0}to{translate:0 -5px}}
+/* Serving: the presenters take their time walking in */
+.svov .svhosts .ehost{transition:translate 3.4s cubic-bezier(.35,.1,.4,1),opacity .8s}
