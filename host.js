@@ -1709,8 +1709,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var nVoted = vs.filter(function (x) { return x > 0; }).length;
         if (nVoted === 1) { win = kinds4[vs.indexOf(top)]; M.ov.querySelector('.slsub').textContent = 'Everyone agrees: a done deal! 🤝'; slotT = setTimeout(land, 1400 + pop * 350); return; }   // (all votes on one game: no spin needed)
         slotT = setTimeout(function () {   // the votes are split: the slot machine slides away and the fortune wheel comes in (more votes = a bigger slice)
-          var sb = M.ov.querySelector('.slsub'); if (sb) sb.textContent = 'The votes are split… spin the wheel! 🎡'; M.ov.classList.remove('voting');
-          partyWheel(kinds4, vs, vot, ch, function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(ch, 2500); }, 600); }, M.ov);   // (the slot machine stays, moving up; the wheel appears below it)
+          var sb = M.ov.querySelector('.slsub'); if (sb) sb.textContent = ''; M.ov.classList.remove('voting');
+          var sp = document.createElement('div'); sp.className = 'slsplit'; sp.innerHTML = '<b>The votes are split… 🎲</b><span>Time to spin again!</span>'; M.ov.appendChild(sp); Music.ding();   // (first the message; then the wheel)
+          setTimeout(function () { sp.classList.add('gone'); }, 2600);
+          setTimeout(function () { sp.remove(); partyWheel(kinds4, vs, vot, ch, function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(ch, 2500); }, 600); }, M.ov); }, 3100);   // (the slot machine stays, moving up; the wheel appears below it)
         }, 1600 + pop * 350);
         return;
         M.ov.querySelector('.slsub').textContent = 'A tie! 🎲'; var hops = 12 + Math.floor(Math.random() * tied.length), st0 = (tied.indexOf(win) - hops % tied.length + tied.length * 8) % tied.length, hn = 0;
@@ -1788,42 +1790,64 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var LAND = 700;   // a spin: how long the light rests on the winner before that tile turns green
   // The fortune wheel: each game gets a slice the size of its share of the votes (no votes at all: equal slices; a game
   // without votes: no slice). The winner was drawn with exactly those chances; the wheel slows down and lands in its slice.
-  var PW_COLS = ['#ff2e88', '#2de2e6', '#ffd60a', '#a77bff'];
+  var PW_COLS = ['#ff2e88', '#2de2e6', '#ffd60a', '#a77bff'], PW_DARK = ['#a3104f', '#0f8a95', '#b8860b', '#5a2fc0'];
   function partyWheel(kinds, vs, vot, win, then, under) {
     var total = vs.reduce(function (a, b) { return a + b; }, 0), sh = vs.map(function (v) { return total ? v / total : 1 / vs.length; });
     var old = $('whov'); if (old) old.remove();
     var ov = document.createElement('div'); ov.id = 'whov'; ov.className = 'whov enter' + (under ? ' under' : '');
-    ov.innerHTML = '<div class="whcol"><div class="whcards">' + kinds.map(function (k, i) {
-        return '<div class="whcard" data-i="' + i + '" style="--c:' + PW_COLS[i] + '"><span class="ic">' + FUN[k].icon + '</span><span><b>' + esc(FUN[k].title) + '</b><span class="who">' + (vot[i] || []).map(function (p) { return '<i title="' + esc(p.name) + '">' + charSvg(p.char) + '</i>'; }).join('') + '</span></span><span class="pct">' + Math.round(sh[i] * 100) + '%</span></div>';
-      }).join('') + '</div></div><div class="whstage"><div class="whbox"><svg class="whptr" viewBox="0 0 40 50"><path d="M20 48 L3 8 Q20 -6 37 8 Z" fill="#fff" stroke="#ff2e88" stroke-width="4" stroke-linejoin="round"/></svg><svg class="whsvg" viewBox="-110 -110 220 220"><g class="whrot"></g><circle r="104" fill="none" stroke="#ffd60a" stroke-width="5"/><g class="whbulbs"></g></svg><div class="whhub">🎲</div><div class="whban"></div></div></div>';
-    if (under) { under.classList.add('withwheel'); under.appendChild(ov); } else document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 900);
-    var P = function (a, r) { return [Math.sin(a) * r, -Math.cos(a) * r]; }, h = '', a0 = 0, edges = [];
+    var P = function (a, r) { return [Math.sin(a) * r, -Math.cos(a) * r]; }, f = function (n) { return n.toFixed(2); };
+    // the wheel, in layers: rays behind it; a gold rim with chasing bulbs; the slices (lit from the middle, gold edges, pins
+    // on the rim that the pointer flicks over); the game in each slice; a glossy sheen on top; a jewelled hub
+    var defs = '<defs>' + PW_COLS.map(function (c, i) { return '<radialGradient id="whg' + i + '" cx="0" cy="0" r="100" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".25" stop-color="' + c + '"/><stop offset=".85" stop-color="' + c + '"/><stop offset="1" stop-color="' + PW_DARK[i] + '"/></radialGradient>'; }).join('') +
+      '<linearGradient id="whgold" x1="0" y1="-1" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".35" stop-color="#ffd23f"/><stop offset=".6" stop-color="#b8860b"/><stop offset=".85" stop-color="#ffd23f"/><stop offset="1" stop-color="#7a5206"/></linearGradient>' +
+      '<radialGradient id="whgloss" cx=".3" cy=".22" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="whhubg" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#ffe680"/><stop offset=".75" stop-color="#d4a00b"/><stop offset="1" stop-color="#7a5206"/></radialGradient>' +
+      '<filter id="whsh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#000" flood-opacity=".55"/></filter></defs>';
+    var h = '', a0 = 0, edges = [], wedge = {};
     sh.forEach(function (x, i) {
       if (x <= 0) return; edges.push(a0);
-      var a1 = a0 + x * Math.PI * 2, p0 = P(a0, 100), p1 = P(a1, 100), mid = (a0 + a1) / 2, deg = mid * 180 / Math.PI, lp = P(mid, 60), sz = Math.min(1, x * 4);
-      h += x > .9995 ? '<circle r="100" fill="' + PW_COLS[i] + '"/>' : '<path d="M0 0 L' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + ' A100 100 0 ' + (a1 - a0 > Math.PI ? 1 : 0) + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) + ' Z" fill="' + PW_COLS[i] + '" stroke="#1a0f5c" stroke-width="1.6"/>';
-      h += '<g transform="translate(' + lp[0].toFixed(1) + ' ' + lp[1].toFixed(1) + ') rotate(' + (deg > 90 && deg < 270 ? deg + 180 : deg).toFixed(1) + ')"><text text-anchor="middle" dominant-baseline="middle" font-size="' + (9 + sz * 9).toFixed(1) + '">' + FUN[kinds[i]].icon + '</text>' + (x > .12 ? '<text y="' + (10 + sz * 6).toFixed(1) + '" text-anchor="middle" font-size="' + (4.5 + sz * 2).toFixed(1) + '" font-weight="800" fill="#160b38">' + esc(FUN[kinds[i]].title) + '</text>' : '') + '</g>';
+      var a1 = a0 + x * Math.PI * 2, p0 = P(a0, 97), p1 = P(a1, 97), mid = (a0 + a1) / 2, deg = mid * 180 / Math.PI, lp = P(mid, 58), sz = Math.min(1, x * 3.5), up = deg > 90 && deg < 270;
+      var d = x > .9995 ? 'M0 -97 A97 97 0 1 1 -.01 -97 Z' : 'M0 0 L' + f(p0[0]) + ' ' + f(p0[1]) + ' A97 97 0 ' + (a1 - a0 > Math.PI ? 1 : 0) + ' 1 ' + f(p1[0]) + ' ' + f(p1[1]) + ' Z';
+      wedge[i] = d;
+      h += '<path d="' + d + '" fill="url(#whg' + i + ')"/>';
+      for (var st2 = 1; st2 < 4; st2++) { var sa = a0 + (a1 - a0) * st2 / 4; if (a1 - a0 < .3) break; var sp = P(sa, 80); h += '<circle cx="' + f(sp[0]) + '" cy="' + f(sp[1]) + '" r="1.1" fill="#fff" opacity=".55"/>'; }   // (little sparkles in the slice)
+      h += '<g filter="url(#whsh)" transform="translate(' + f(lp[0]) + ' ' + f(lp[1]) + ') rotate(' + f(up ? deg + 180 : deg) + ')"><text text-anchor="middle" dominant-baseline="middle" font-size="' + f(10 + sz * 10) + '">' + FUN[kinds[i]].icon + '</text>' +
+        (x > .1 ? '<text y="' + f(up ? -(11 + sz * 7) : 11 + sz * 7) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + f(4.6 + sz * 2.2) + '" font-weight="900" fill="#fff" stroke="#1a0f3c" stroke-width="1.6" paint-order="stroke">' + esc(FUN[kinds[i]].title) + '</text>' : '') + '</g>';
       a0 = a1;
     });
-    var rotG = ov.querySelector('.whrot'); rotG.innerHTML = h;
-    var bl = ''; for (var bi = 0; bi < 24; bi++) { var bp = P(bi / 24 * Math.PI * 2, 104); bl += '<circle cx="' + bp[0].toFixed(1) + '" cy="' + bp[1].toFixed(1) + '" r="2.6" fill="#fff6c8"/>'; } ov.querySelector('.whbulbs').innerHTML = bl;
+    if (edges.length > 1) edges.forEach(function (ed) { var e0 = P(ed, 28), e1 = P(ed, 97), pg = P(ed, 92); var ln = 'x1="' + f(e0[0]) + '" y1="' + f(e0[1]) + '" x2="' + f(e1[0]) + '" y2="' + f(e1[1]) + '"'; h += '<line ' + ln + ' stroke="#7a5206" stroke-width="3.6"/><line ' + ln + ' stroke="#ffe680" stroke-width="1.5"/><circle cx="' + f(pg[0]) + '" cy="' + f(pg[1]) + '" r="2.6" fill="url(#whhubg)" stroke="#7a5206" stroke-width=".6"/>'; });   // (gold dividers, a pin at the rim)
+    h += '<circle r="28" fill="none" stroke="url(#whgold)" stroke-width="2.2"/><circle r="97" fill="none" stroke="#1a0f3c" stroke-width="1.4" opacity=".6"/>';
+    var bulbs = ''; for (var bi = 0; bi < 36; bi++) { var bp = P(bi / 36 * Math.PI * 2, 103.5); bulbs += '<circle class="b' + (bi % 2) + '" cx="' + f(bp[0]) + '" cy="' + f(bp[1]) + '" r="2.3"/>'; }
+    var star = ''; for (var si = 0; si < 10; si++) { var sr = si % 2 ? 7 : 15, spp = P(si / 10 * Math.PI * 2, sr); star += (si ? 'L' : 'M') + f(spp[0]) + ' ' + f(spp[1]); }
+    var svg = '<svg class="whsvg" viewBox="-116 -116 232 232">' + defs +
+      '<circle r="111" fill="#1a0f3c"/><circle r="108" fill="none" stroke="url(#whgold)" stroke-width="9"/><g class="whbulbs">' + bulbs + '</g>' +
+      '<g class="whrot">' + h + '</g><circle r="97" fill="url(#whgloss)" pointer-events="none"/><path class="whwin" d="" fill="#fff" opacity="0"/>' +
+      '<circle r="23" fill="#1a0f3c"/><circle r="20" fill="url(#whhubg)" stroke="#7a5206" stroke-width="1"/><path d="' + star + 'Z" fill="#ff2e88" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><circle r="4" fill="#fff" opacity=".9"/><ellipse cx="-6" cy="-9" rx="6" ry="3" fill="#fff" opacity=".45" transform="rotate(-30 -6 -9)"/></svg>';
+    var ptr = '<svg class="whptr" viewBox="0 0 60 80"><defs><linearGradient id="whpg" x1="0" x2="1"><stop offset="0" stop-color="#b8860b"/><stop offset=".5" stop-color="#fff3b0"/><stop offset="1" stop-color="#b8860b"/></linearGradient></defs><path d="M30 76 L6 18 Q30 -4 54 18 Z" fill="url(#whpg)" stroke="#7a5206" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="22" r="9" fill="#ff2e88" stroke="#fff" stroke-width="2.5"/><circle cx="27" cy="19" r="2.6" fill="#fff" opacity=".8"/></svg>';
+    ov.innerHTML = '<div class="whcol"><div class="whcards">' + kinds.map(function (k, i) {
+        return '<div class="whcard" data-i="' + i + '" style="--c:' + PW_COLS[i] + '"><span class="ic">' + FUN[k].icon + '</span><span><b>' + esc(FUN[k].title) + '</b><span class="who">' + (vot[i] || []).map(function (p) { return '<i title="' + esc(p.name) + '">' + charSvg(p.char) + '</i>'; }).join('') + '</span></span><span class="pct">' + Math.round(sh[i] * 100) + '%</span></div>';
+      }).join('') + '</div></div><div class="whstage"><div class="whbox"><div class="whrays"></div>' + ptr + svg + '<div class="whconf"></div><div class="whban"></div></div></div>';
+    if (under) { under.classList.add('withwheel'); under.appendChild(ov); } else document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 900);
+    var rotG = ov.querySelector('.whrot'), ptrEl = ov.querySelector('.whptr');
     var wi = kinds.indexOf(win), st = 0; for (var k2 = 0; k2 < wi; k2++) st += sh[k2];
-    var land = (st + sh[wi] * (.15 + Math.random() * .7)) * 360, to = 360 * (6 + Math.floor(Math.random() * 2)) + (360 - land), T = 6500, t0 = 0, last = 0, ptr = ov.querySelector('.whptr');
+    var land = (st + sh[wi] * (.15 + Math.random() * .7)) * 360, to = 360 * (6 + Math.floor(Math.random() * 2)) + (360 - land), T = 7000, t0 = 0, last = 0;
     setTimeout(function () {
       ov.classList.add('spinning'); t0 = performance.now();
       (function step() {
         if (!ov.isConnected) return;
         var q = Math.min(1, (performance.now() - t0) / T), e = 1 - Math.pow(1 - q, 4), a = to * e;
         rotG.setAttribute('transform', 'rotate(' + a.toFixed(2) + ')');
-        edges.forEach(function (ed) { var pe = (360 - ed * 180 / Math.PI - last % 360 + 720) % 360; if (a - last > 0 && pe > 0 && pe <= a - last) { Music.plop(2); ptr.classList.remove('tick'); void ptr.getBoundingClientRect(); ptr.classList.add('tick'); } });
+        edges.forEach(function (ed) { var pe = (360 - ed * 180 / Math.PI - last % 360 + 720) % 360; if (a - last > 0 && pe > 0 && pe <= a - last) { Music.plop(2); ptrEl.classList.remove('tick'); void ptrEl.getBoundingClientRect(); ptrEl.classList.add('tick'); } });
         last = a;
         if (q < 1) { requestAnimationFrame(step); return; }
         ov.classList.remove('spinning'); ov.classList.add('done');
-        [].forEach.call(ov.querySelectorAll('.whcard'), function (c) { c.classList.add(+c.getAttribute('data-i') === wi ? 'won' : 'out'); });
+        var ww = ov.querySelector('.whwin'); ww.setAttribute('d', wedge[wi] || ''); ww.setAttribute('transform', 'rotate(' + a.toFixed(2) + ')');   // (the winning slice flashes)
+        var cf = ov.querySelector('.whconf'), ch2 = ''; for (var c = 0; c < 40; c++) ch2 += '<i style="--x:' + (Math.random() * 2 - 1).toFixed(2) + ';--y:' + (Math.random() * -1.2 - .2).toFixed(2) + ';--r:' + Math.floor(Math.random() * 720) + 'deg;--d:' + (Math.random() * .3).toFixed(2) + 's;background:' + PW_COLS[c % 4] + '"></i>'; cf.innerHTML = ch2;   // (a burst of confetti)
+        [].forEach.call(ov.querySelectorAll('.whcard'), function (c3) { c3.classList.add(+c3.getAttribute('data-i') === wi ? 'won' : 'out'); });
         var bn = ov.querySelector('.whban'); bn.textContent = '🎉 ' + FUN[win].icon + ' ' + FUN[win].title; bn.classList.add('on'); Music.douze();
-        setTimeout(function () { if (under) { then(); return; } ov.classList.add('leaving'); setTimeout(function () { ov.remove(); then(); }, 600); }, 3200);
+        setTimeout(function () { if (under) { then(); return; } ov.classList.add('leaving'); setTimeout(function () { ov.remove(); then(); }, 600); }, 3400);
       })();
-    }, 1600);
+    }, 1500);
   }
   function partySpin(games, chosen, then, only) {
     G.phase = 'pspin'; G.barMs = 0;
