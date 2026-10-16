@@ -6513,7 +6513,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   setTimeout(svMp3Show, 0);
   function svVol(v) { try { (svAudP && svAudP._on ? svAudP : yt).setVolume(v); } catch (e) {} }   // (the music volume setting scales it, like YouTube)
   var SV_BALLS_AT = 159;   // (2:39: the last part)
-  var SV_WORD = [56, 64.1, 109.1, 117.2];   // (song time in seconds: 0:56, 1:04.1, 1:49.1 and 1:57.2)
+  var SV_WORD = [56, 64.1, 109.1, 117.1];   // (song time in seconds: 0:56, 1:04.1, 1:49.1 and 1:57.1)
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
     if (!on) { try { yt.pauseVideo(); } catch (e) {} if (svAud) { svAud.pause(); } if (svAudP) svAudP._on = false; return; }
