@@ -813,11 +813,12 @@
     var c = s.cal, ov = $('calui');
     if (!c) { if (ov) { if (calS && calS.res && !calS.shown) { calS.shown = true; setTimeout(function () { var o = $('calui'); if (o) o.remove(); }, 2500); } else ov.remove(); } if (!ov) calS = null; return; }
     if (!calS || calS.id !== c.id) calS = { id: c.id, t0: 0, taps: [], res: null };
-    var est = Date.now() + c.dt; if (!calS.t0 || est < calS.t0) calS.t0 = est;   // (the earliest estimate: the least network delay)
+    if (!c.wait) { var est = Date.now() + c.dt; if (!calS.t0 || est < calS.t0) calS.t0 = est; }   // (the earliest estimate: the least network delay)
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'calui'; document.body.appendChild(ov);
       { ov.innerHTML = '<div class="calp"><b>🌐 Sync</b><p>Tap anywhere on every flash and click, the moment you see and hear it (on the TV or on the stream)!</p><i class="calpad">TAP</i><em></em></div>'; ov.addEventListener('pointerdown', function (e) { e.preventDefault(); if (!calS || calS.res) return; calS.taps.push(Date.now()); var pd = ov.querySelector('.calpad'); pd.classList.remove('hit'); void pd.offsetWidth; pd.classList.add('hit'); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} }); }
     }
+    var em0 = ov.querySelector('.calp em'); if (em0 && !calS.res) { var emx = c.wait ? 'Get ready… the countdown starts in a moment!' : ''; if (em0.textContent !== emx) em0.textContent = emx; }   // (waiting for the host to press Sync)
     if (c.done && !calS.res) {
       {
         var taps = calS.taps.filter(function (tt) { return tt > calS.t0 - 300; }), offs = [];   // (the 1st tap goes with the 1st click, the 2nd with the 2nd…: so even a delay of seconds is measured right)

@@ -264,7 +264,7 @@
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.sv && G.phase === 'sv') s.sv = svSnap();
     if (G.syncOn) s.sync_on = 1;   // (the stream delay: on once the host has run a sync)
-    if (G.cal) s.cal = { id: G.cal.id, dt: G.cal.t0 - Date.now(), n: G.cal.n, gap: G.cal.gap, done: !!G.cal.done };
+    if (G.cal) s.cal = G.cal.wait ? { id: G.cal.id, wait: 1, n: G.cal.n, gap: G.cal.gap } : { id: G.cal.id, dt: G.cal.t0 - Date.now(), n: G.cal.n, gap: G.cal.gap, done: !!G.cal.done };   // (waiting: the phones show what to do; then the timing)
     if (G.rule && G.phase === 'rule') s.rule = ruSnap();
     if (G.organ && G.phase === 'organ') s.organ = orSnap();
     if (G.atype === 'party' && list().some(function (p) { return (p.inv || []).indexOf('golden') >= 0; })) s.pgames = partyGames().map(function (k) { return { k: k, icon: FUN[k].icon, title: FUN[k].title }; });   // (for the Golden Ticket's choice)
@@ -6960,11 +6960,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // plays 8 clicks with a flash; they tap their phone on every one; each phone works out its own delay from that.
   function calStart() {
     if (REMOTE || G.phase !== 'lobby' || G.cal || !list().some(function (p) { return !p.off; })) return;
-    G.syncOn = true;   // (syncing turns the stream delay on: from now on every phone plays with its own measured delay)
-    var g = G.cal = { id: 'cal' + Date.now().toString(36), t0: Date.now() + 4500, n: 8, gap: 1000, res: {} };
-    var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing everyone</h2><p>Everyone: tap your phone on every flash and click!</p><div class="calfl"><b></b></div><div class="calres"></div></div>'; document.body.appendChild(ov);
+    var was = !!G.syncOn; G.syncOn = true;   // (syncing turns the stream delay on: from now on every phone plays with its own measured delay)
+    // First the screen with a big 'Sync' button filling the circle (the phones already show what to do); the countdown
+    // and the eight flashes only start when the host presses it
+    var g = G.cal = { id: 'cal' + Date.now().toString(36), wait: true, n: 8, gap: 1000, res: {} };
+    var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing everyone</h2><p>Everyone: tap your phone on every flash and click!</p><button type="button" class="calfl calgo"><b>Sync</b></button><button type="button" class="calcancel">Cancel</button><div class="calres"></div></div>'; document.body.appendChild(ov);
+    push();
+    ov.querySelector('.calcancel').addEventListener('click', function () { if (G.cal !== g || !g.wait) return; G.cal = null; G.syncOn = was; ov.remove(); render(); push(); });
+    ov.querySelector('.calgo').addEventListener('click', function () { if (G.cal === g && g.wait) calRun(ov, g); });
+  }
+  function calRun(ov, g) {
+    g.wait = false; g.t0 = Date.now() + 3500;
+    var cc = ov.querySelector('.calcancel'); if (cc) cc.remove();
+    var fl = ov.querySelector('.calfl'), b = fl.querySelector('b'); fl.classList.remove('calgo'); fl.disabled = true;
     push(); [1000, 2500].forEach(function (t) { setTimeout(function () { if (G.cal === g) push(); }, t); });   // (a few updates: the phones take the best timing)
-    var fl = ov.querySelector('.calfl'), b = fl.querySelector('b');
     var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
     for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
     // after the 8th flash: 'Calculating…' in the circle, and a ring that goes round once, like a timer, until the results
