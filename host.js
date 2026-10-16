@@ -6386,7 +6386,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
   var SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!'], ['him', 'When it’s your turn, look at your phones!']], SV_WALKIN = 6000;
   function svIntro(g) {
-    if (!REMOTE) [52, 44, 36, 28].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) try { yt.setVolume(v); } catch (e) {} }, Math.max(0, g.t0 + 500 - Date.now()) + i * 150); });   // (the music dips under the explanations)
+    if (!REMOTE) [52, 44, 36, 28].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) svVol(v); }, Math.max(0, g.t0 + 500 - Date.now()) + i * 150); });   // (the music dips under the explanations)
     var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
     SV_LINES.forEach(function (l, li) {
       var len = Math.max(3000, talkLen(l[0], l[1], 2400)); if (at + len > first - 5000 + 1500) return;
@@ -6395,18 +6395,33 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!li) { g.entAt = at - 200; at += SV_WALKIN + 300; }   // (after 'hurry': everyone walks slowly onto their spot, red from the left, blue from the right)
     });
     if (!g.entAt) g.entAt = g.t0 + 2600;
-    setTimeout(function () { if (G.sv !== g) return; svSay(''); if (!REMOTE) [36, 44, 52, 60].forEach(function (v, i) { setTimeout(function () { try { yt.setVolume(v); } catch (e) {} }, i * 250); }); }, Math.max(0, first - 5000 - Date.now()));   // (they're done: the music comes up)
+    setTimeout(function () { if (G.sv !== g) return; svSay(''); if (!REMOTE) [36, 44, 52, 60].forEach(function (v, i) { setTimeout(function () { svVol(v); }, i * 250); }); }, Math.max(0, first - 5000 - Date.now()));   // (they're done: the music comes up)
   }
   function svSay(who, txt) { var ov = $('svov'); if (!ov) return; [].forEach.call(ov.querySelectorAll('.svbub'), function (x) { x.classList.remove('on'); }); if (!who) return; var b = ov.querySelector('.svbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); }
+  // The song can also come from an mp3 on this computer (picked once, kept in this browser; it never leaves the computer):
+  // then it plays from that file instead of YouTube. Measured: 122 BPM, the first beat at 0.108 s.
+  var SV_MP3_OFF = .108, SV_MP3_LAG = 40, svBlob = null, svAud = null, svAudP = null, svAudUrl = '';
+  function svDb(fn) { try { var rq = indexedDB.open('eq-media', 1); rq.onupgradeneeded = function () { rq.result.createObjectStore('f'); }; rq.onsuccess = function () { try { fn(rq.result.transaction('f', 'readwrite').objectStore('f')); } catch (e) {} }; } catch (e) {} }
+  function svMp3Show() { var s = $('svmp3st'); if (s) s.textContent = svBlob ? '✅ ' + (svBlob.name || 'mp3') + ' (plays instead of YouTube)' : 'No file: the song comes from YouTube'; var x = $('svmp3x'); if (x) x.classList.toggle('hidden', !svBlob); }
+  svDb(function (os) { var q = os.get('serving'); q.onsuccess = function () { if (q.result) { svBlob = q.result; svMp3Show(); } }; });
+  if ($('svmp3')) $('svmp3').addEventListener('change', function () { var f = this.files && this.files[0]; this.value = ''; if (!f) return; svBlob = f; svDb(function (os) { os.put(f, 'serving'); }); svMp3Show(); });
+  if ($('svmp3x')) $('svmp3x').addEventListener('click', function () { svBlob = null; svDb(function (os) { os.delete('serving'); }); svMp3Show(); });
+  setTimeout(svMp3Show, 0);
+  function svVol(v) { try { (svAudP && svAudP._on ? svAudP : yt).setVolume(v); } catch (e) {} }   // (the music volume setting scales it, like YouTube)
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
-    if (!on) { try { yt.pauseVideo(); } catch (e) {} return; }
+    if (!on) { try { yt.pauseVideo(); } catch (e) {} if (svAud) { svAud.pause(); } if (svAudP) svAudP._on = false; return; }
     var g = G.sv; Music.want(false); stage = 'sv';
-    try { yt.loadVideoById({ videoId: SV_VID, startSeconds: SV_S }); yt.unMute(); yt.setVolume(60); } catch (e) {}   // (the song cuts in at full volume, cutting him off; it dips once they explain the rest)
+    if (svBlob) {   // from the mp3
+      if (!svAud) { svAud = new Audio(); svAud.preload = 'auto'; svAudP = ytVolWrap({ setVolume: function (v) { svAud.volume = Math.max(0, Math.min(1, v / 100)); } }); }
+      if (svAudUrl) URL.revokeObjectURL(svAudUrl); svAudUrl = URL.createObjectURL(svBlob); svAud.src = svAudUrl; svAud.currentTime = 0; svAudP._on = true; g.mp3 = true;
+      try { yt.pauseVideo(); } catch (e) {} svVol(60); var pr = svAud.play(); if (pr && pr.catch) pr.catch(function () {});
+    } else try { yt.loadVideoById({ videoId: SV_VID, startSeconds: SV_S }); yt.unMute(); yt.setVolume(60); } catch (e) {}   // (the song cuts in at full volume, cutting him off; it dips once they explain the rest)
     var fb = setTimeout(function () { if (G.sv === g && !g.t0) svGo(g, Date.now() + 3000); }, 6000);   // (no song: go anyway)
     svSongT = setInterval(function () {
       if (G.phase !== 'sv' || G.sv !== g) { clearInterval(svSongT); svSongT = null; return; }
       try {
+        if (g.mp3) { var act0 = svAud.currentTime; if (!svAud.paused && act0 > 0) { var t1 = Date.now() - (act0 - SV_MP3_OFF) * 1000 + SV_MP3_LAG; if (!g.t0) { clearTimeout(fb); svGo(g, t1); } else if (Math.abs(t1 - g.t0) > 60 && g.st === 'play') g.t0 = t1; } else if (svAud.paused && !svAud.ended) { var pr2 = svAud.play(); if (pr2 && pr2.catch) pr2.catch(function () {}); } return; }   // (the mp3: the grid follows the file)
         var st = yt.getPlayerState(), ct = yt.getCurrentTime();
         if (st === 1 && ct > 0) {   // the beat grid follows the song: bounce t is at song time SV_S + 3 + SV_PHASE + t × SV_BT
           var t0 = Date.now() - (ct - SV_S - 3 - SV_PHASE) * 1000 + SV_LAG;

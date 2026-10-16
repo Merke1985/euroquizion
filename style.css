@@ -5871,3 +5871,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svsrow span{grid-column:1;grid-row:1;font-size:1.8vh}
 .svsrow em{grid-column:1;grid-row:2;font-size:1.35vh}
 .svsrow i{grid-column:2;grid-row:1 / 3}
+.svmp3row{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.svmp3row small{color:var(--mute);font-size:.8rem}
+.svmp3row .linkbtn{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer;font:inherit;font-size:.8rem}
