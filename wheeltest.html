@@ -31,6 +31,7 @@
   .btn{border:0;border-radius:999px;padding:.75em 1.3em;font:inherit;font-weight:800;background:var(--pink);color:#fff;cursor:pointer;box-shadow:0 5px 0 #a3104f}
   .btn.alt{background:rgba(255,255,255,.12);box-shadow:0 5px 0 rgba(0,0,0,.35)}
   .btn:disabled{opacity:.45;cursor:default}
+  .btn.gone{display:none}
   label.tg{display:flex;align-items:center;gap:.5em;margin-top:1.8vh;color:var(--mute);font-weight:700;font-size:.95rem;cursor:pointer}
   .note{color:var(--mute);font-size:.9rem;margin-top:1.6vh;line-height:1.35}
   .stage{position:relative;display:grid;place-items:center;min-height:0}
@@ -39,7 +40,7 @@
   .pointer{position:absolute;left:50%;top:-3.2%;width:7%;aspect-ratio:.8;transform:translateX(-50%);z-index:3;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
   .pointer.tick{animation:tk .12s ease-out}
   @keyframes tk{30%{transform:translateX(-50%) rotate(-14deg)}}
-  .hub{position:absolute;left:50%;top:50%;width:17%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff6c8,#ffd60a 45%,#b8860b);box-shadow:0 0 0 6px #1a0f5c,0 0 30px rgba(255,214,10,.6);display:grid;place-items:center;font-size:clamp(1.2rem,3vw,2.6rem);z-index:2}
+  .hub{position:absolute;left:50%;top:50%;width:17%;height:17%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff6c8,#ffd60a 45%,#b8860b);box-shadow:0 0 0 6px #1a0f5c,0 0 30px rgba(255,214,10,.6);display:grid;place-items:center;font-size:clamp(1.2rem,3vw,2.6rem);z-index:2}
   .banner{position:absolute;left:50%;bottom:-1vh;transform:translate(-50%,40%) scale(.6);opacity:0;padding:.5em 1.2em;border-radius:20px;background:rgba(10,4,30,.9);border:3px solid var(--yellow);font-weight:900;font-size:clamp(1.2rem,2.6vw,2.4rem);white-space:nowrap;transition:all .5s cubic-bezier(.3,1.5,.5,1);z-index:4}
   .banner.on{opacity:1;transform:translate(-50%,40%) scale(1)}
   .slice-label{font-weight:800;pointer-events:none}
@@ -132,7 +133,7 @@
   var ac = null; function click(f) { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); var o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.value = f || 1400; g.gain.setValueAtTime(.08, ac.currentTime); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + .05); o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .06); } catch (e) {} }
   function ta(notes) { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); notes.forEach(function (f, i) { var o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * .12; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.12, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + .35); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + .4); }); } catch (e) {} }
 
-  function clearWin() { $('banner').classList.remove('on'); [].forEach.call(document.querySelectorAll('.card'), function (c) { c.classList.remove('out', 'won'); }); }
+  function clearWin() { $('spin').classList.remove('gone'); $('banner').classList.remove('on'); [].forEach.call(document.querySelectorAll('.card'), function (c) { c.classList.remove('out', 'won'); }); }
 
   // the spin: the winner is drawn with exactly those chances; the wheel turns so the pointer lands somewhere inside its slice
   function spin() {
@@ -142,7 +143,7 @@
     var land = (start + sh[i] * (0.15 + Math.random() * 0.7)) * 360;   // (somewhere in the winner's slice, not on an edge)
     var from = rot % 360, to = from + 360 * (5 + Math.floor(Math.random() * 3)) + ((360 - land) - from % 360 + 720) % 360;
     var edges = []; var acc = 0; sh.forEach(function (s) { if (s > 0) edges.push(acc * 360); acc += s; });
-    spinning = true; $('spin').disabled = true;
+    spinning = true; $('spin').classList.add('gone');   // (the Spin button disappears once the wheel turns)
     var T = 6500, t0 = performance.now(), lastA = from, g = $('rot');
     (function step() {
       var q = Math.min(1, (performance.now() - t0) / T), e = 1 - Math.pow(1 - q, 4), a = from + (to - from) * e;
@@ -150,7 +151,7 @@
       edges.forEach(function (ed) { var p0 = ((360 - ed) - lastA % 360 + 720) % 360, d = a - lastA; if (d > 0 && p0 > 0 && p0 <= d) { click(1200 + Math.random() * 300); var pt = $('ptr'); pt.classList.remove('tick'); void pt.getBoundingClientRect(); pt.classList.add('tick'); } });
       lastA = a;
       if (q < 1) { requestAnimationFrame(step); return; }
-      rot = a; spinning = false; $('spin').disabled = false;
+      rot = a; spinning = false;
       [].forEach.call(document.querySelectorAll('.card'), function (c) { c.classList.add(+c.getAttribute('data-i') === i ? 'won' : 'out'); });
       $('banner').textContent = '🎉 ' + GAMES[i].icon + ' ' + GAMES[i].name + (/!$/.test(GAMES[i].name) ? '' : '!'); $('banner').classList.add('on'); ta([523, 659, 784, 1047]);
     })();
