@@ -5981,3 +5981,8 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .fsstep.two{left:34%;right:34%;height:2.4vh}
 .fsov .grwall{opacity:.6}
 .fsov .grfloor{opacity:.55}
+/* the final scores are shown ON the studio's LED wall, with the wall's pixel grid over them (like the victory song) */
+.fsov .fsboard{left:18.8vw;right:18.8vw;top:9.8vh;bottom:auto;height:50.4vh;border-radius:6px;overflow:hidden;align-items:stretch}
+.fsov .fsboard ol{border:0;border-radius:6px;box-shadow:none;height:100%;justify-content:center;background:radial-gradient(ellipse at 50% 0%,rgba(120,60,220,.35),transparent 70%),linear-gradient(rgba(14,8,40,.86),rgba(8,4,24,.92))}
+.fsov .fsboard::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:6px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.3));z-index:3}
+.fsov .fsboard li{position:relative;z-index:2}

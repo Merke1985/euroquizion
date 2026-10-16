@@ -3987,7 +3987,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var old = $('fsov'); if (old) old.remove();
     var ov = document.createElement('div'); ov.id = 'fsov'; ov.className = 'grov hsov hs-scores fsov enter';
     var ps = list().slice().sort(function (a, b) { return b.score - a.score; }), n = ps.length;
-    ov.style.setProperty('--rh', Math.min(7.5, 66 / Math.max(1, n)).toFixed(2) + 'vh');
+    ov.style.setProperty('--rh', Math.min(7, 42 / Math.max(1, n)).toFixed(2) + 'vh');   // (the board is shown on the LED wall of the studio)
     ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div>' + FS_SET + '<div class="hsspot"></div><div class="fssiren"></div><div class="grsign hssign">🏆 The Final Scores</div>' +
       '<div class="fsboard"><ol>' + ps.map(function (p, i) { return '<li data-pid="' + esc(p.pid) + '"><b class="rk">' + (i + 1) + '</b><span class="who">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></span><span class="gain"></span><span class="tot">' + p.score + '</span></li>'; }).join('') + '</ol></div>' +
       '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>' +
