@@ -6941,7 +6941,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 5500 - Date.now());   // (a stream can be seconds behind: wait for the last taps)
     setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } calDone(ov, g); }, g.t0 + g.n * g.gap + 8000 - Date.now());   // (then a screen with everyone's delay: OK, or try again)
   }
+  var calLast = null;
   function calDone(ov, g) {
+    calLast = g; ov._g = g;
     if (!ov.parentNode) return;
     var hum = list().filter(function (p) { return !p.bot && String(p.pid).indexOf('bot') !== 0; });
     var row = function (p) {
@@ -6961,7 +6963,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.cal, ov = $('calov'); if (!g || !ov) return;
     var ks = Object.keys(g.res); ov.querySelector('.calres').innerHTML = ks.length ? ks.map(function (k) { var p = players[k], d = g.res[k]; return '<span>' + esc(p ? p.name : '?') + ': ' + (d < 0 ? 'in the room' : (d / 1000).toFixed(2) + 's') + '</span>'; }).join('') : '';
   }
-  net.on('cal', function (m) { var g = G.cal; if (!g || !m || m.id !== g.id || !players[m.pid]) return; g.res[m.pid] = Math.round(+m.d); var p = players[m.pid]; if (g.res[m.pid] >= 0) { p.wh = 'online'; p.sync = g.res[m.pid]; } else if (g.res[m.pid] === -1) p.wh = 'local'; else if (g.res[m.pid] === -2) { p.wh = 'online'; p.sync = null; } calShow(); render(); push(); });
+  net.on('cal', function (m) { var g = G.cal && m && m.id === G.cal.id ? G.cal : calLast && m && m.id === calLast.id ? calLast : null; if (!g || !players[m.pid]) return;   /* (a late result still counts, and updates the results screen) */ g.res[m.pid] = Math.round(+m.d); var p = players[m.pid]; if (g.res[m.pid] >= 0) { p.wh = 'online'; p.sync = g.res[m.pid]; } else if (g.res[m.pid] === -1) p.wh = 'local'; else if (g.res[m.pid] === -2) { p.wh = 'online'; p.sync = null; } calShow(); var cov = $('calov'); if (cov && cov._g === g && cov.querySelector('.caldone')) calDone(cov, g); render(); push(); });
   net.on('where', function (m) { var p = m && players[m.pid]; if (!p || (m.w !== 'online' && m.w !== 'local')) return; p.wh = m.w; render(); push(); });
   // Under every player in the lobby: a little sync box. In the room: ticked (no sync needed); online: ticked once their delay is measured
   function syncTag(p) {
