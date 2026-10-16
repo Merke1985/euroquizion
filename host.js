@@ -2934,49 +2934,76 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // of envelopes comes out. The last one standing wins.
   // The two presenters of the envelope show (original characters): a man in a sharp suit and a woman in a gown.
   var HOST_HIM = '<svg class="ehost him" viewBox="0 0 200 420" aria-hidden="true"><defs>' +
-    '<linearGradient id="ehsuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#28306e"/><stop offset="1" stop-color="#121640"/></linearGradient>' +
-    '<radialGradient id="ehskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f3c9a4"/><stop offset="1" stop-color="#d89b72"/></radialGradient></defs>' +
+    '<linearGradient id="ehsuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c3578"/><stop offset=".55" stop-color="#1a2058"/><stop offset="1" stop-color="#0f1238"/></linearGradient>' +
+    '<linearGradient id="ehlapel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4594"/><stop offset=".5" stop-color="#151a4a"/><stop offset="1" stop-color="#2a3380"/></linearGradient>' +
+    '<linearGradient id="ehhair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3222"/><stop offset=".5" stop-color="#2b1d14"/><stop offset="1" stop-color="#1a110b"/></linearGradient>' +
+    '<radialGradient id="ehskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f5d0ae"/><stop offset="1" stop-color="#d89b72"/></radialGradient></defs>' +
     '<ellipse cx="100" cy="410" rx="62" ry="9" fill="rgba(0,0,0,.45)"/>' +
-    '<path d="M74 300 L70 405 L94 405 L100 320 L106 405 L130 405 L126 300 Z" fill="#0d1033"/>' +
-    '<path d="M68 404 h28 v8 h-30 z M104 404 h28 v8 h-30 z" fill="#050510"/>' +
-    '<path d="M52 150 Q100 128 148 150 L140 310 Q100 322 60 310 Z" fill="url(#ehsuit)"/>' +
-    '<path d="M86 140 L100 210 L114 140 Z" fill="#fff"/>' +
-    '<path d="M86 140 L78 150 L96 215 L100 210 Z M114 140 L122 150 L104 215 L100 210 Z" fill="#1a1f55"/>' +
-    '<path d="M91 146 L100 152 L109 146 L109 158 L100 153 L91 158 Z" fill="#e0234a"/>' +
-    '<circle cx="100" cy="232" r="3" fill="#c9a34a"/><circle cx="100" cy="258" r="3" fill="#c9a34a"/>' +
-    '<path d="M126 168 l6 0 l-2 14 l-8 0 z" fill="#ffd23f"/>' +
-    '<path d="M52 152 Q38 200 44 262 L60 262 Q58 210 66 170 Z" fill="url(#ehsuit)"/>' +
-    '<path d="M148 152 Q166 186 160 232 L146 236 Q148 200 136 172 Z" fill="url(#ehsuit)"/>' +
-    '<circle cx="52" cy="266" r="9" fill="url(#ehskin)"/>' +
-    '<g class="ecard"><rect x="140" y="206" width="38" height="26" rx="3" fill="#ffd23f" transform="rotate(-12 159 219)"/><circle cx="154" cy="236" r="9" fill="url(#ehskin)"/></g>' +
-    '<rect x="92" y="118" width="16" height="22" fill="#d89b72"/>' +
-    '<ellipse cx="100" cy="92" rx="30" ry="36" fill="url(#ehskin)"/>' +
-    '<path d="M70 86 Q68 50 100 50 Q134 50 131 84 Q124 66 104 66 Q88 70 76 66 Z" fill="#2b1d14"/>' +
-    '<ellipse cx="89" cy="94" rx="3.2" ry="4" fill="#2a1a10"/><ellipse cx="111" cy="94" rx="3.2" ry="4" fill="#2a1a10"/>' +
-    '<path d="M83 84 q6 -4 12 0 M105 84 q6 -4 12 0" stroke="#2b1d14" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    // trousers with a crease, glossy shoes
+    '<path d="M74 300 L70 400 L95 400 L100 322 L105 400 L130 400 L126 300 Z" fill="#10143a"/><path d="M82 312 L81 398 M118 312 L119 398" stroke="#222a6a" stroke-width="1.4"/>' +
+    '<path d="M66 398 Q66 392 74 392 L96 392 L97 404 Q97 410 90 410 L66 410 Q61 404 66 398 Z M104 392 L126 392 Q134 392 134 398 Q139 404 134 410 L110 410 Q103 410 103 404 Z" fill="#07070d"/><path d="M70 397 Q78 394 88 395 M110 395 Q120 394 130 397" stroke="rgba(255,255,255,.45)" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+    // the tuxedo: satin peak lapels, white shirt, red bow tie, gold pocket square and buttons
+    '<path d="M50 150 Q100 128 150 150 L144 312 Q100 326 56 312 Z" fill="url(#ehsuit)"/><path d="M100 222 L100 318" stroke="#0b0e2c" stroke-width="1.5"/>' +
+    '<path d="M84 138 L100 216 L116 138 Z" fill="#fff"/><path d="M92 150 L100 214 M108 150 L100 214" stroke="#e4e6f0" stroke-width="1"/><circle cx="100" cy="176" r="1.4" fill="#c9ccd8"/><circle cx="100" cy="194" r="1.4" fill="#c9ccd8"/>' +
+    '<path d="M84 138 L73 148 L81 172 L70 177 L96 224 L100 216 Z" fill="url(#ehlapel)"/><path d="M116 138 L127 148 L119 172 L130 177 L104 224 L100 216 Z" fill="url(#ehlapel)"/><path d="M74 149 L82 172 M126 149 L118 172" stroke="rgba(255,255,255,.18)" stroke-width="1.2"/>' +
+    '<path d="M87 145 L99 151 L87 158 Q84 151 87 145 Z M113 145 L101 151 L113 158 Q116 151 113 145 Z" fill="#d81e45"/><rect x="97" y="147.5" width="6" height="7" rx="2" fill="#a8122f"/><path d="M89 148 L95 151" stroke="rgba(255,255,255,.35)" stroke-width="1"/>' +
+    '<path d="M117 182 L132 179 L131 187 L118 188 Z" fill="#0f1238"/><path d="M118 182 L121 175 L124 181 L127 174 L130 180 L131 182 Z" fill="#ffd23f"/>' +
+    '<circle cx="94" cy="244" r="3.2" fill="#d9b04a"/><circle cx="94" cy="270" r="3.2" fill="#d9b04a"/><circle cx="93.4" cy="243.3" r="1" fill="#fff6c8"/><circle cx="93.4" cy="269.3" r="1" fill="#fff6c8"/>' +
+    '<path d="M60 260 Q76 268 90 264 M140 260 Q124 268 110 264" stroke="#0b0e2c" stroke-width="1.4" fill="none"/>' +
+    // arms: sleeves with white cuffs
+    '<path d="M50 152 Q36 200 42 262 L60 262 Q58 210 66 170 Z" fill="url(#ehsuit)"/><path d="M42 257 L60 257 L60 264 L42 264 Z" fill="#fff"/><circle cx="51" cy="260.5" r="1.6" fill="#ffd23f"/>' +
+    '<path d="M150 152 Q168 186 162 230 L148 236 Q150 200 138 172 Z" fill="url(#ehsuit)"/>' +
+    '<circle cx="52" cy="270" r="9" fill="url(#ehskin)"/>' +
+    '<g class="ecard"><rect x="140" y="206" width="38" height="26" rx="3" fill="#ffd23f" transform="rotate(-12 159 219)"/><path d="M146 212 l22 -5 M147 218 l18 -4" stroke="#c99a1a" stroke-width="1.5" transform="rotate(-2 159 219)"/><circle cx="154" cy="236" r="9" fill="url(#ehskin)"/></g>' +
+    // head: ears, a proper face with a nose, bright eyes, strong brows, a styled quiff with a shine
+    '<rect x="91" y="116" width="18" height="24" fill="#d89b72"/><path d="M91 128 Q100 134 109 128 L109 140 L91 140 Z" fill="#c7895f"/>' +
+    '<ellipse cx="70" cy="96" rx="6" ry="9" fill="#e7b48c"/><ellipse cx="130" cy="96" rx="6" ry="9" fill="#e7b48c"/><path d="M71 92 Q68 96 71 101 M129 92 Q132 96 129 101" stroke="#c4875e" stroke-width="1.5" fill="none"/>' +
+    '<path d="M70 88 Q70 52 100 52 Q130 52 130 88 Q130 112 118 122 Q108 130 100 130 Q92 130 82 122 Q70 112 70 88 Z" fill="url(#ehskin)"/>' +
+    '<path d="M76 108 Q84 124 100 128 Q116 124 124 108" stroke="rgba(160,100,60,.18)" stroke-width="3" fill="none"/>' +
+    '<ellipse cx="89" cy="93" rx="5.4" ry="4" fill="#fff"/><ellipse cx="111" cy="93" rx="5.4" ry="4" fill="#fff"/><circle cx="89.6" cy="93.4" r="3" fill="#4a2a16"/><circle cx="110.4" cy="93.4" r="3" fill="#4a2a16"/><circle cx="89.6" cy="93.4" r="1.4" fill="#120804"/><circle cx="110.4" cy="93.4" r="1.4" fill="#120804"/><circle cx="90.6" cy="92.3" r="1" fill="#fff"/><circle cx="111.4" cy="92.3" r="1" fill="#fff"/>' +
+    '<path d="M83.6 90 Q89 88 94.6 90 M105.4 90 Q111 88 116.4 90" stroke="#5a3a26" stroke-width="1" fill="none"/>' +
+    '<path d="M80 83 Q88 77 97 81 M103 81 Q112 77 120 83" stroke="#2b1d14" stroke-width="3.6" fill="none" stroke-linecap="round"/>' +
+    '<path d="M100 94 Q97.5 103 95 106.5 Q98 109 100.5 108 M100.5 108 Q103 109 105.5 106.5" stroke="#b07448" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M101.5 96 Q100.8 101 101.6 104" stroke="rgba(255,255,255,.35)" stroke-width="1.4" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="82" cy="107" rx="6" ry="3.2" fill="#f08a80" opacity=".22"/><ellipse cx="118" cy="107" rx="6" ry="3.2" fill="#f08a80" opacity=".22"/>' +
+    '<path d="M68 92 Q62 52 92 42 Q112 36 128 48 Q139 60 132 88 Q129 72 118 65 Q100 60 86 68 Q74 75 72 94 Z" fill="url(#ehhair)"/>' +
+    '<path d="M84 54 Q102 34 128 50 Q114 45 100 50 Q90 54 84 62 Z" fill="#5a3e2a"/><path d="M92 46 Q108 38 124 47 M88 56 Q100 46 116 50" stroke="#8a6a4a" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".7"/>' +
+    '<path d="M69 86 L71 100 L74 100 L73 84 Z M131 86 L129 100 L126 100 L127 84 Z" fill="#2b1d14"/>' +
     '<path d="M88 110 Q100 122 112 110" stroke="#7a3b2a" stroke-width="3.5" fill="#fff" stroke-linecap="round"/>' +
     '<g class="emouth"><g class="emin"><path d="M92 111 Q100 110 108 111 Q108 121 100 121 Q92 121 92 111 Z" fill="#7a2e26"/><rect x="93.6" y="111" width="12.8" height="2.3" rx="1.1" fill="#fff"/><ellipse cx="100" cy="119.2" rx="4.8" ry="2" fill="#d9706e"/></g><path class="elip" style="--lh:7.5px" d="M92.5 111.5 Q100 116 107.5 111.5" stroke="#7a3b2a" stroke-width="3.2" fill="none" stroke-linecap="round"/></g>' +   // (opens when he talks)
     '</svg>';
   var HOST_HER = '<svg class="ehost her" viewBox="0 0 200 420" aria-hidden="true"><defs>' +
-    '<linearGradient id="ehgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3fa4"/><stop offset=".55" stop-color="#b0208a"/><stop offset="1" stop-color="#5a1170"/></linearGradient>' +
-    '<radialGradient id="ehskin2" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#e8b48c"/><stop offset="1" stop-color="#b9805a"/></radialGradient>' +
+    '<linearGradient id="ehgown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff4fae"/><stop offset=".55" stop-color="#b0208a"/><stop offset="1" stop-color="#5a1170"/></linearGradient>' +
+    '<linearGradient id="ehhair2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a4420"/><stop offset=".5" stop-color="#6b2a12"/><stop offset="1" stop-color="#4a1a08"/></linearGradient>' +
+    '<radialGradient id="ehskin2" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#eebc94"/><stop offset="1" stop-color="#b9805a"/></radialGradient>' +
     '<pattern id="ehsparkle" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.3" fill="#fff" opacity=".85"/><circle cx="12" cy="11" r="1" fill="#ffd23f" opacity=".9"/></pattern></defs>' +
     '<ellipse cx="100" cy="410" rx="74" ry="10" fill="rgba(0,0,0,.45)"/>' +
-    '<path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehgown)"/>' +
-    '<path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehsparkle)" class="esparkle"/>' +
-    '<path d="M70 232 Q100 244 130 232" stroke="#ffd23f" stroke-width="4" fill="none"/>' +
+    // big wavy hair behind her shoulders
+    '<path d="M58 96 Q46 32 100 28 Q156 32 142 98 Q158 150 146 196 Q138 206 128 198 Q132 170 124 142 L76 142 Q68 170 72 198 Q62 206 54 196 Q42 150 58 96 Z" fill="url(#ehhair2)"/>' +
+    // the gown: strapless, sparkling, with folds and a jewelled gold belt
+    '<path d="M74 150 Q100 142 126 150 L132 232 Q166 326 178 408 Q100 422 22 408 Q34 326 68 232 Z" fill="url(#ehgown)"/>' +
+    '<path d="M74 150 Q100 142 126 150 L132 232 Q166 326 178 408 Q100 422 22 408 Q34 326 68 232 Z" fill="url(#ehsparkle)" class="esparkle"/>' +
+    '<path d="M86 246 Q76 330 60 404 M100 248 Q100 330 100 412 M114 246 Q124 330 140 404" stroke="rgba(255,255,255,.14)" stroke-width="3" fill="none"/><path d="M93 248 Q88 330 80 408 M107 248 Q112 330 120 408" stroke="rgba(60,0,60,.18)" stroke-width="3" fill="none"/>' +
+    '<path d="M70 230 Q100 242 130 230 L131 238 Q100 250 69 238 Z" fill="#ffd23f"/><path d="M95 234 L100 229 L105 234 L100 245 Z" fill="#ff9ad0" stroke="#fff6c8" stroke-width="1"/>' +
+    '<path d="M66 152 Q100 136 134 152 L126 160 Q114 151 100 164 Q86 151 74 160 Z" fill="url(#ehskin2)"/><path d="M74 158 Q86 150 100 163 Q114 150 126 158" stroke="#ff9ad0" stroke-width="2.2" fill="none"/>' +
+    // arms (this one can point at the big screen), a gold bracelet, the mic
     '<path d="M126 152 Q146 180 144 214 L132 218 Q134 192 118 164 Z" fill="url(#ehskin2)"/>' +
-    '<g class="earm"><path d="M74 152 Q60 196 64 236 L76 236 Q76 200 84 160 Z" fill="url(#ehskin2)"/><circle cx="70" cy="240" r="8" fill="url(#ehskin2)"/></g>' +   // (this arm can point at the big screen)
-    '<g class="emic"><rect x="134" y="196" width="7" height="30" rx="3" fill="#222" transform="rotate(18 137 211)"/><circle cx="133" cy="194" r="8" fill="#9aa0b4"/><circle cx="140" cy="220" r="8" fill="url(#ehskin2)"/></g>' +
-    '<rect x="93" y="118" width="14" height="26" fill="#b9805a"/>' +
-    '<path d="M64 96 Q58 40 100 38 Q144 40 138 98 Q146 150 128 176 Q132 128 122 106 L78 106 Q68 128 72 176 Q54 150 64 96 Z" fill="#6b2a12"/>' +
-    '<ellipse cx="100" cy="90" rx="27" ry="33" fill="url(#ehskin2)"/>' +
-    '<path d="M73 84 Q76 54 104 56 Q128 58 128 82 Q114 66 94 70 Q80 74 73 84 Z" fill="#6b2a12"/>' +
-    '<ellipse cx="90" cy="92" rx="3" ry="3.8" fill="#2a1a10"/><ellipse cx="110" cy="92" rx="3" ry="3.8" fill="#2a1a10"/>' +
-    '<path d="M85 86 l-3 -3 M115 86 l3 -3" stroke="#2a1a10" stroke-width="2" stroke-linecap="round"/>' +
+    '<g class="earm"><path d="M74 152 Q60 196 64 236 L76 236 Q76 200 84 160 Z" fill="url(#ehskin2)"/><rect x="63" y="226" width="14" height="4" rx="2" fill="#ffd23f"/><circle cx="70" cy="240" r="8" fill="url(#ehskin2)"/></g>' +
+    '<g class="emic"><rect x="134" y="196" width="7" height="30" rx="3" fill="#222" transform="rotate(18 137 211)"/><circle cx="133" cy="194" r="8" fill="#9aa0b4"/><path d="M128 190 h10 M127 194 h12 M128 198 h10" stroke="#6a7084" stroke-width="1"/><circle cx="140" cy="220" r="8" fill="url(#ehskin2)"/></g>' +
+    // neck, necklace, face: made-up eyes with lashes, a nose, blush; side-swept waves and drop earrings
+    '<rect x="93" y="116" width="14" height="28" fill="#b9805a"/><path d="M93 126 Q100 132 107 126 L107 140 L93 140 Z" fill="#a8704c"/>' +
+    '<path d="M88 140 Q100 152 112 140" stroke="#ffd23f" stroke-width="1.6" fill="none"/><path d="M100 150 L97 154 L100 160 L103 154 Z" fill="#ff9ad0" stroke="#fff6c8" stroke-width=".8"/>' +
+    '<path d="M74 88 Q74 56 100 56 Q126 56 126 88 Q126 110 114 120 Q106 126 100 126 Q94 126 86 120 Q74 110 74 88 Z" fill="url(#ehskin2)"/>' +
+    '<ellipse cx="89" cy="87" rx="7" ry="3.5" fill="#c060a0" opacity=".28"/><ellipse cx="111" cy="87" rx="7" ry="3.5" fill="#c060a0" opacity=".28"/>' +
+    '<path d="M83 92 Q90 86.5 97 92 Q90 96 83 92 Z M103 92 Q110 86.5 117 92 Q110 96 103 92 Z" fill="#fff"/><circle cx="90" cy="92" r="2.8" fill="#4a2410"/><circle cx="110" cy="92" r="2.8" fill="#4a2410"/><circle cx="91" cy="91" r=".9" fill="#fff"/><circle cx="111" cy="91" r=".9" fill="#fff"/>' +
+    '<path d="M82.5 91.5 Q90 85.5 97.5 91.5 M102.5 91.5 Q110 85.5 117.5 91.5" stroke="#1a0a06" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M83 91 L79.5 88 M85 88.6 L82.6 85.4 M115 88.6 L117.4 85.4 M117 91 L120.5 88" stroke="#1a0a06" stroke-width="1.3" stroke-linecap="round"/>' +
+    '<path d="M83 81 Q90 76 97 80 M103 80 Q110 76 117 81" stroke="#4a1a08" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+    '<path d="M100 93 Q98 101 96.4 103.6 Q99 106 100.6 105 M100.6 105 Q102.4 106 104 103.6" stroke="#9a6040" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="84" cy="104" rx="6.5" ry="3.4" fill="#ff7a8a" opacity=".32"/><ellipse cx="116" cy="104" rx="6.5" ry="3.4" fill="#ff7a8a" opacity=".32"/>' +
     '<path d="M90 107 Q100 116 110 107" stroke="#c0204a" stroke-width="4" fill="#fff" stroke-linecap="round"/>' +
     '<g class="emouth"><g class="emin"><path d="M92.5 108.5 Q100 107.5 107.5 108.5 Q107.5 118 100 118 Q92.5 118 92.5 108.5 Z" fill="#8a2a36"/><rect x="94.1" y="108.5" width="11.8" height="2.3" rx="1.1" fill="#fff"/><ellipse cx="100" cy="116.2" rx="4.5" ry="2" fill="#e07a80"/></g><path class="elip" style="--lh:7px" d="M93 109 Q100 113.5 107 109" stroke="#c0204a" stroke-width="3.6" fill="none" stroke-linecap="round"/></g>' +   // (opens when she talks)
-    '<circle cx="74" cy="100" r="3" fill="#ffd23f"/><circle cx="126" cy="100" r="3" fill="#ffd23f"/>' +
+    '<path d="M72 94 Q66 46 104 44 Q136 46 132 84 Q124 62 104 62 Q90 64 84 72 Q78 80 77 96 Z" fill="url(#ehhair2)"/><path d="M84 52 Q100 42 124 52" stroke="#c46a3a" stroke-width="2" fill="none" stroke-linecap="round" opacity=".75"/>' +
+    '<path d="M73 86 Q56 140 64 190 Q70 196 75 186 Q68 150 76 104 Z M127 86 Q144 140 136 190 Q130 196 125 186 Q132 150 124 104 Z" fill="url(#ehhair2)"/><path d="M68 112 Q62 150 68 182 M132 112 Q138 150 132 182" stroke="#c46a3a" stroke-width="1.6" fill="none" opacity=".6"/>' +
+    '<circle cx="75.5" cy="103" r="2.4" fill="#ffd23f"/><path d="M75.5 105 L73.3 111 L75.5 116 L77.7 111 Z" fill="#ff9ad0" stroke="#ffd23f" stroke-width=".8"/><circle cx="124.5" cy="103" r="2.4" fill="#ffd23f"/><path d="M124.5 105 L122.3 111 L124.5 116 L126.7 111 Z" fill="#ff9ad0" stroke="#ffd23f" stroke-width=".8"/>' +
     '</svg>';
 
   // The presenters walk wherever they move across the screen (in every game): while a host slides sideways, the side view
