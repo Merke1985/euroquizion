@@ -1710,7 +1710,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         if (nVoted === 1) { win = kinds4[vs.indexOf(top)]; M.ov.querySelector('.slsub').textContent = 'Everyone agrees: a done deal! 🤝'; slotT = setTimeout(land, 1400 + pop * 350); return; }   // (all votes on one game: no spin needed)
         slotT = setTimeout(function () {   // the votes are split: the slot machine slides away and the fortune wheel comes in (more votes = a bigger slice)
           var sb = M.ov.querySelector('.slsub'); if (sb) sb.textContent = ''; M.ov.classList.remove('voting');
-          var sp = document.createElement('div'); sp.className = 'slsplit'; sp.innerHTML = '<b>The votes are split… 🎲</b><span>Time to spin again!</span>'; M.ov.appendChild(sp); Music.ding();   // (first the message; then the wheel)
+          var sp = document.createElement('div'); sp.className = 'slsplit'; sp.innerHTML = '<b>The votes are split… 🎲</b><span>Time to spin the wheel!</span>'; M.ov.appendChild(sp); Music.ding();   // (first the message; then the wheel)
           setTimeout(function () { sp.classList.add('gone'); }, 2600);
           setTimeout(function () { sp.remove(); partyWheel(kinds4, vs, vot, ch, function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(ch, 2500); }, 600); }, M.ov); }, 3100);   // (the slot machine stays, moving up; the wheel appears below it)
         }, 1600 + pop * 350);
