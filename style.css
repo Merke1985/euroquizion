@@ -5272,17 +5272,10 @@ body.rufrozen #waittitle{color:#0b3a66}
 @keyframes rucdpop{0%{transform:translate(-50%,1.2vh) scale(.3);opacity:0}25%{transform:translate(-50%,1.2vh) scale(1.25);opacity:1}100%{transform:translate(-50%,1.2vh) scale(1);opacity:.9}}
 /* Verona: Juliet's mouth opens and closes with her voice */
 .jmjul .jmo{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(var(--mo,0));transition:transform .07s ease-out}
-/* Verona: the balcony door behind Juliet swings open before she pops out; her wave is bigger */
-.jmdoor{position:absolute;left:50%;bottom:0;width:62%;height:92%;margin-left:-31%;perspective:300px;z-index:0}
-.jmov.v3 .jmdoor{bottom:.6vh;width:6.6vh;height:9.6vh;margin-left:-3.3vh}
-.jmdoor .jdin{position:absolute;inset:0;border-radius:50% 50% 0 0/30% 30% 0 0;background:radial-gradient(ellipse at 50% 70%,#ffcf7a,#8a4a1a 60%,#2a1208);box-shadow:inset 0 0 0 .4vh #5a3a1a}
-.jmdoor .jdl,.jmdoor .jdr{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#7a4a22,#9a6232 50%,#6a3a18);box-shadow:inset 0 0 0 .25vh #4a2a10;transition:transform .8s cubic-bezier(.3,.7,.3,1)}
-.jmdoor .jdl{left:0;border-radius:100% 0 0 0/30% 0 0 0;transform-origin:0 50%}
-.jmdoor .jdr{right:0;border-radius:0 100% 0 0/0 30% 0 0;transform-origin:100% 50%}
-.jmdoor .jdl::after,.jmdoor .jdr::after{content:'';position:absolute;top:52%;width:.5vh;height:.5vh;border-radius:50%;background:#ffd23f}
-.jmdoor .jdl::after{right:12%}.jmdoor .jdr::after{left:12%}
-.qjov.dooropen .jmdoor .jdl,.jmov.dooropen .jmdoor .jdl{transform:rotateY(78deg)}
-.qjov.dooropen .jmdoor .jdr,.jmov.dooropen .jmdoor .jdr{transform:rotateY(-78deg)}
+/* Verona: the tower's own green shutters swing open (to where they always were) before Juliet pops out */
+.jwl,.jwr{transform-box:view-box;transition:transform .9s cubic-bezier(.3,.7,.3,1)}
+.jwl{transform-origin:36.5px 0}.jwr{transform-origin:63.5px 0}
+.dooropen .jwl,.dooropen .jwr{transform:scaleX(-.62)}
 .jmjul{z-index:1}
 .jmjul.talk .jarm,.jmjul.talk .jhand{animation:jwave2 .38s ease-in-out infinite alternate}
 @keyframes jwave2{from{transform:rotate(10deg)}to{transform:rotate(-34deg)}}
@@ -5886,12 +5879,12 @@ body.rufrozen #waittitle{color:#0b3a66}
 .ehost .eharm.f{animation-delay:-.45s}
 .ehost.her .ehleg{transform-origin:110px 404px;animation-name:ehstep2}
 .ehost.her .ehgown{transform-box:view-box;transform-origin:104px 150px;animation:ehgown .9s ease-in-out infinite}
-.ehost.walk .ehside{animation:ehbob .45s ease-in-out infinite alternate}
+.ehost.walk .ehside{animation:ehwbob .45s ease-in-out infinite alternate}
 @keyframes ehstep{0%,100%{transform:rotate(16deg)}50%{transform:rotate(-16deg)}}
 @keyframes ehstep2{0%,100%{transform:translateX(12px)}50%{transform:translateX(-12px)}}
 @keyframes ehswing{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
 @keyframes ehgown{0%,100%{transform:skewX(2.5deg)}50%{transform:skewX(-2.5deg)}}
-@keyframes ehbob{from{translate:0 0}to{translate:0 -5px}}
+@keyframes ehwbob{from{translate:0 0}to{translate:0 -5px}}
 /* Serving: the presenters take their time walking in */
 .svov .svhosts .ehost{transition:translate 4.6s cubic-bezier(.35,.1,.4,1),opacity .8s}
 /* Serving phone: the vote for extra arrows (while your team isn't dancing) */
@@ -5905,3 +5898,16 @@ body.rufrozen #waittitle{color:#0b3a66}
 /* the big screen: who got the extra arrows, in their team's panel */
 .svxtra{position:absolute;left:4%;right:4%;bottom:2vh;z-index:3;text-align:center;padding:.8vh .6vw;border-radius:10px;background:rgba(255,210,63,.18);border:1.5px solid rgba(255,210,63,.6);color:#ffd23f;font-weight:900;font-size:1.7vh;opacity:0;transition:opacity .4s}
 .svxtra.on{opacity:1}
+
+/* Verona: her hand stays on her arm while she waves (both turn round the shoulder) */
+.jmjul .jarm,.jmjul .jhand{transform-box:view-box!important;transform-origin:134px 122px!important}
+
+/* The presenters from the back (Verona: they turn round, then walk off into the distance) */
+.ehost .ehback{display:none}
+.hoststurn .grhosts .ehost .ehfront,.hoststurn .grhosts .ehost .ehside{display:none!important}
+.hoststurn .grhosts .ehost .ehback{display:inline;transform-box:view-box;transform-origin:100px 0;animation:ehturn .5s ease-in-out}
+@keyframes ehturn{0%{transform:scaleX(.12)}100%{transform:none}}
+.ehback .ehbl{transform-box:view-box}
+.hostsgone .grhosts .ehost .ehback .ehbl{animation:ehbstep .42s ease-in-out infinite alternate}
+.hostsgone .grhosts .ehost .ehback .ehbl.r{animation-delay:-.42s}
+@keyframes ehbstep{from{transform:translateY(0)}to{transform:translateY(-14px)}}

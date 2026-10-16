@@ -8878,13 +8878,30 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path d="M80 96 Q76 54 108 50 Q134 52 134 78 Q124 64 108 66 Q98 70 98 92 Q98 106 94 118 Q84 112 80 96 Z" fill="#6b2a12"/><path d="M86 66 Q102 54 126 60" stroke="#8a3e1e" stroke-width="2.5" fill="none" opacity=".7"/><ellipse cx="99" cy="98" rx="4" ry="6" fill="#b9805a"/><circle cx="99" cy="106" r="3" fill="#ffd23f"/>' +   // (the hair: top and back of the head, the ear and earring just showing)
     '<g class="eharm f"><path d="M106 158 Q112 196 122 214" stroke="#b9805a" stroke-width="13" fill="none" stroke-linecap="round"/><rect x="122" y="192" width="7" height="28" rx="3" fill="#222" transform="rotate(20 125 206)"/><circle cx="121" cy="192" r="7.5" fill="#9aa0b4"/><circle cx="124" cy="216" r="7.5" fill="url(#ehskin2)"/></g>' +
     '</g>';
+  // The presenters from the back (turning round and walking away into the distance)
+  var HOST_HIM_BACK = '<g class="ehback"><ellipse cx="100" cy="410" rx="62" ry="9" fill="rgba(0,0,0,.45)"/>' +
+    '<g class="ehbl"><path d="M74 300 L70 405 L94 405 L100 300 Z" fill="#0d1033"/><path d="M68 404 h28 v8 h-30 z" fill="#050510"/></g><g class="ehbl r"><path d="M100 300 L106 405 L130 405 L126 300 Z" fill="#0d1033"/><path d="M104 404 h28 v8 h-30 z" fill="#050510"/></g>' +
+    '<path d="M52 150 Q100 130 148 150 L140 310 Q100 320 60 310 Z" fill="url(#ehsuit)"/><path d="M100 152 L100 306" stroke="#0e1236" stroke-width="2"/>' +
+    '<path d="M52 152 Q38 200 44 262 L60 262 Q58 210 66 170 Z M148 152 Q162 200 156 262 L140 262 Q142 210 134 170 Z" fill="url(#ehsuit)"/><circle cx="52" cy="266" r="9" fill="url(#ehskin)"/><circle cx="148" cy="266" r="9" fill="url(#ehskin)"/>' +
+    '<rect x="91" y="116" width="18" height="26" fill="#d89b72"/><path d="M80 138 Q100 132 120 138 L120 150 Q100 146 80 150 Z" fill="#fff"/>' +
+    '<ellipse cx="100" cy="92" rx="30" ry="36" fill="#2b1d14"/><ellipse cx="69" cy="96" rx="4" ry="7" fill="#d89b72"/><ellipse cx="131" cy="96" rx="4" ry="7" fill="#d89b72"/><path d="M78 70 Q100 58 122 70" stroke="#4a3220" stroke-width="2.5" fill="none" opacity=".7"/>' +
+    '</g>';
+  var HOST_HER_BACK = '<g class="ehback"><ellipse cx="100" cy="410" rx="74" ry="10" fill="rgba(0,0,0,.45)"/>' +
+    '<g class="ehbl"><path d="M76 398 h22 v10 h-22 z" fill="#ffd23f"/></g><g class="ehbl r"><path d="M102 398 h22 v10 h-22 z" fill="#ffd23f"/></g>' +
+    '<path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehgown)"/><path d="M74 150 Q100 140 126 150 L132 232 Q168 330 176 408 Q100 420 24 408 Q34 330 68 232 Z" fill="url(#ehsparkle)"/>' +
+    '<path d="M70 232 Q100 244 130 232" stroke="#ffd23f" stroke-width="4" fill="none"/>' +
+    '<path d="M74 152 Q60 196 64 236 L76 236 Q76 200 84 160 Z M126 152 Q140 196 136 236 L124 236 Q124 200 116 160 Z" fill="url(#ehskin2)"/><circle cx="70" cy="240" r="8" fill="url(#ehskin2)"/><circle cx="130" cy="240" r="8" fill="url(#ehskin2)"/>' +
+    '<rect x="93" y="118" width="14" height="26" fill="#b9805a"/>' +
+    '<path d="M64 96 Q58 40 100 38 Q142 40 136 96 Q146 172 130 206 Q100 216 70 206 Q54 172 64 96 Z" fill="#6b2a12"/><path d="M84 70 Q80 140 86 200 M100 50 Q98 130 100 208 M116 70 Q120 140 114 200" stroke="#4a1a08" stroke-width="2" fill="none" opacity=".6"/>' +
+    '<circle cx="66" cy="102" r="3" fill="#ffd23f"/><circle cx="134" cy="102" r="3" fill="#ffd23f"/>' +
+    '</g>';
   // The characters' gradients (skin, suit, gown…) live once in a hidden-but-rendered <svg> on the page. Inside each drawing
   // they went missing whenever the first copy of a drawing sat in a hidden screen: the copies on show lost their colours.
   (function () {
     var defs = '', strip = function (str) { return str.replace(/<defs>([\s\S]*?)<\/defs>/g, function (m, d) { defs += d; return ''; }); };
     HOST_HIM = strip(HOST_HIM); HOST_HER = strip(HOST_HER);
-    HOST_HIM = HOST_HIM.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HIM_SIDE + '</svg>'; });   // (front and side view in one drawing: the side view while walking)
-    HOST_HER = HOST_HER.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HER_SIDE + '</svg>'; }); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
+    HOST_HIM = HOST_HIM.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HIM_SIDE + HOST_HIM_BACK + '</svg>'; });   // (front and side view in one drawing: the side view while walking)
+    HOST_HER = HOST_HER.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HER_SIDE + HOST_HER_BACK + '</svg>'; }); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
     try { var box = document.createElement('div'); box.innerHTML = '<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"><defs>' + defs + '</defs></svg>'; document.body.appendChild(box.firstChild); } catch (e) {}
   })();
   function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards
@@ -8980,7 +8997,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     at(5600, function () { var o = $('qjov'); if (o) o.classList.remove('puff'); });
     at(5900, function () { qjSay('her', l0); });
     var t = 5900 + Math.max(Array.from(l0).length * TALK_MS + 1800, voiceMs('her', l0) + 700);
-    at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); runSnd(2400); });   // (the presenters run off: the same footsteps as the players)   // Sofia and Oliver run off north, into the clouds
+    at(t - 900, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hoststurn'); });   // (first they turn round, their backs to us…)
+    at(t, function () { qjSay(''); var o = $('qjov'); if (o) o.classList.add('hostsgone'); whooshes([0, 250]); runSnd(2400); });   // (…then they walk off)   // (the presenters run off: the same footsteps as the players)   // Sofia and Oliver run off north, into the clouds
     /* the players are on their own: five seconds of nothing, then "Now what…?", two seconds later the song, five seconds later Juliet */
     t += 2400 + 4000;
     at(t, function () { var o = $('qjov'), b = o && o.querySelector('.jmgbub'); if (b) { b.innerHTML = '<i class="e">🤔</i><span class="t"></span>'; b.classList.add('on'); typeSay(b.querySelector('.t'), 'Now what…?', 'him'); Music.plop(5); setTimeout(function () { Music.plop(2); }, 200); } });   /* a puzzled "huh?" */
@@ -9052,7 +9070,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     })(i);
     at(CD + 1200 + g.seq.length * STEP + 300, function () {
       g.show = -1; g.st = 'input'; var ms = 4500 + g.seq.length * 1300; g.ends = Date.now() + ms; push(); qjShow(); Music.ding();
-      g.botMiss = {}; bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; if (Math.random() < 0.1) g.botMiss[b.pid] = Math.floor(Math.random() * g.seq.length) + 1; });   /* bots: 9 times out of 10 they get the whole route right */
+      g.botMiss = {};   /* bots: always the whole route right */
       bots.forEach(function (b) { if (g.alive.indexOf(b.pid) < 0) return; var n = 0, step = function () {
         if (G.qj !== g || g.st !== 'input' || g.fail[b.pid] || (g.prog[b.pid] || 0) >= g.seq.length) return;
         var ok = (g.botMiss || {})[b.pid] !== (g.prog[b.pid] || 0) + 1, d = ok ? g.seq[g.prog[b.pid] || 0] : (g.seq[g.prog[b.pid] || 0] + 1 + Math.floor(Math.random() * 3)) % 4;
@@ -9175,7 +9193,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path d="M14 26 L50 4 L86 26 Z" fill="#b4532f"/><path d="M14 26 L50 4 L86 26" stroke="#7a3418" stroke-width="2" fill="none"/><rect x="18" y="25" width="64" height="4" fill="#efe2c8"/>' +
     '<rect x="20" y="29" width="60" height="131" fill="url(#jmtw)"/><g stroke="rgba(90,60,30,.18)" stroke-width=".8">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(function (i) { return '<path d="M20 ' + (34 + i * 7.6) + ' h60"/>'; }).join('') + '</g>' +
     '<path d="M36 74 V48 Q50 30 64 48 V74 Z" fill="#5a3a26"/><path d="M38.5 74 V49 Q50 34 61.5 49 V74 Z" fill="url(#jmwin)"/><path d="M50 36 V74 M38.5 58 H61.5" stroke="#6a4428" stroke-width="1.4"/>' +
-    '<rect x="27" y="49" width="7" height="25" fill="#2f6a42"/><rect x="66" y="49" width="7" height="25" fill="#2f6a42"/>' +
+    '<g class="jwl"><rect x="38.5" y="49" width="11.5" height="25" fill="#2f6a42"/><path d="M40.5 52 h7.5 v19 h-7.5 z" fill="none" stroke="#24543a" stroke-width=".8"/></g><g class="jwr"><rect x="50" y="49" width="11.5" height="25" fill="#2f6a42"/><path d="M52 52 h7.5 v19 h-7.5 z" fill="none" stroke="#24543a" stroke-width=".8"/></g>' +   // (the green shutters: closed over the window, they swing open to the sides, where they always were)
     '<path d="M28 98 h10 v14 h-10 z M62 98 h10 v14 h-10 z" fill="#ffcf7a" stroke="#5a3a26" stroke-width="1.5"/><path d="M29 120 h9 v12 h-9 z M62 120 h9 v12 h-9 z" fill="#3a3550" stroke="#5a3a26" stroke-width="1.5"/>' +
     '<g fill="#3f7a3a">' + [[22, 30], [24, 38], [21, 46], [25, 55], [22, 64], [26, 72], [23, 82], [78, 34], [76, 44], [79, 53], [77, 62], [75, 90], [78, 98]].map(function (q) { return '<ellipse cx="' + q[0] + '" cy="' + q[1] + '" rx="3.6" ry="2.6"/>'; }).join('') + '</g>' +
     '<path d="M22 30 Q26 52 22 84 M78 34 Q74 62 78 100" stroke="#2d5a2a" stroke-width="1.2" fill="none"/>' +
@@ -9327,7 +9345,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'qjov'; ov.className = 'grov qjov jmov enter';
       ov.innerHTML = '<div class="jm3h"></div><div class="jmsky"><i class="cb"></i></div><div class="jmtower">' + JM_TOWER + '</div><div class="jmsky front"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div><div class="jmholes"></div><div class="jmgroup"></div><div class="jm3o"></div><div class="jmmist"></div>' +
-        '<div class="jmbalc"><div class="jmdoor"><i class="jdin"></i><i class="jdl"></i><i class="jdr"></i></div><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div><div class="jmtower jmtop">' + JM_TOWER + '</div><div class="jmtfront jmtop2">' + JM_TFRONT + '</div>' +
+        '<div class="jmbalc"><div class="jmjul">' + JULIET + '</div><div class="jmrail"></div><div class="jmsay"></div></div><div class="jmjbub"></div><div class="jmtfront">' + JM_TFRONT + '</div><div class="jmtower jmtop">' + JM_TOWER + '</div><div class="jmtfront jmtop2">' + JM_TFRONT + '</div>' +
         '<div class="grsign qjsign vrsign">🌹 Lost in Verona</div><div class="sfhall vrno"></div><div class="qjmsg jmmsg"></div><div class="jmtbar"><i></i></div><div class="jmgbub"></div><div class="jmcount"></div><div class="jmnews"></div><div class="jmpuff"><i></i><i></i><i></i><i></i></div>' +
         '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
@@ -9350,7 +9368,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var easy = g.round === 1 && g.st === 'input', si = easy ? 0 : g.show;   /* (round 1: the arrow stays visible while everyone taps it in) */
     var say = ov.querySelector('.jmsay'), sv = (g.st === 'show' && g.show >= 0) || easy ? JM_ARROW[g.seq[si]] : '';
     if (say.getAttribute('data-v') !== (sv ? si + sv : '')) { say.setAttribute('data-v', sv ? si + sv : ''); say.innerHTML = sv ? '<b>' + sv + '</b><small>' + (si + 1) + '</small>' : ''; say.classList.toggle('on', !!sv); }
-    ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show' || g.st === 'run');   // (she waves while she shows the way, and while everyone runs)
+    ov.querySelector('.jmjul').classList.toggle('talk', g.st === 'show' || g.st === 'input' || g.st === 'run');   // (she waves while she shows the way, while you tap it in, and while everyone runs)
     // the city: where the group is on the route (it slides the other way)
     var x = 0, y = 0; for (var i = 0; i < (g.pos || 0); i++) { x += JM_DIRS[g.seq[i]][0]; y += JM_DIRS[g.seq[i]][1]; }
     ov.style.setProperty('--near', String(Math.max(0, Math.min(10, -y))));   // (north: the tower comes a little closer)
