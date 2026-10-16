@@ -5940,3 +5940,9 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .shopov.boutique .bqi .si::after{content:'';position:absolute;left:8%;right:8%;bottom:-.18em;height:.2em;border-radius:50%;background:radial-gradient(ellipse at 50% 30%,#ffe9a8,#a8741a 70%);box-shadow:0 .1em .15em rgba(0,0,0,.5);z-index:-1}
 /* Serving: when the dancing is about to start the presenters walk off the stage (him left, her right) as the music comes up, fading only at the edge */
 .svov:not([data-st="intro"]) .svhosts .ehost{transition:translate 4.4s cubic-bezier(.4,0,.6,1),opacity .5s 3.9s}
+/* the boutique's cabinet stays clear of the right-hand curtain (items a little closer together), and the names sit clear of the little gold stands */
+.shopov.boutique .bqcase{left:30.5vw;right:7.5vw}
+.shopov.boutique .bqshelf{padding-left:.3vw;padding-right:.3vw}
+.shopov.boutique .bqi{width:auto;flex:1 1 0;min-width:0}
+.shopov.boutique .bqi .si{margin-bottom:.4em}
+.shopov.boutique .bqsale{right:5vw}
