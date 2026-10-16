@@ -6428,7 +6428,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 150);
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
-  var SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!'], ['him', 'When it’s your turn, look at your phones!']], SV_WALKIN = 6000;
+  var SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!']], SV_WALKIN = 6000;
   function svIntro(g) {
     if (!REMOTE) [52, 44, 36, 28].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) svVol(v); }, Math.max(0, g.t0 + 500 - Date.now()) + i * 150); });   // (the music dips under the explanations)
     var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
