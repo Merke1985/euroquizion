@@ -7170,7 +7170,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ov._3 && ov._3.word) ov._3.word(word);
     if (ov._3 && ov._3.balls) ov._3.balls(songT >= SV_BALLS_AT);   // (from 2:53: the ball rings on the wall)
     if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
-    if (ov._3 && ov._3.party) ov._3.party(g.st === 'play' && g.t0 && (now - g.t0) / SV_BT >= SV_STAGES[2].from - .5 && (now - g.t0) / SV_BT < SV_END);   // (the hard bit on the balls: the big light show)
     if (SV_VOTE && g.order.length > 1 && g.t0 && g.extra) ['A', 'B'].forEach(function (T) { if (!g.extra[T] && b >= SV_VLOCK[T]) svLock(g, T); });
     ['l', 'r'].forEach(function (sd, si) {   // the voted player, in their team's panel, until their double time is over
       var ch = ov.querySelector('.svchart.' + sd); if (!ch || g.order.length < 2) return; var T = si ? 'B' : 'A', k = g.extra && g.extra[T], show = !!k && b < (si ? 126 : 74), xe = ch.querySelector('.svxtra');
