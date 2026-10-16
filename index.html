@@ -6,7 +6,7 @@
 <title>EuroQuizion – join</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
-<link rel="stylesheet" href="style.css?v=1195">
+<link rel="stylesheet" href="style.css?v=1196">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – only works between tabs in this browser</div>
@@ -41,12 +41,15 @@
             <button class="btn big" style="width:100%">Join</button>
       <p id="joinerr" class="fb no" style="margin:14px 0 0"></p>
     </form>
-    <div class="or"><span>or</span></div>
-    <div id="hostlinks">
+    <div class="or hidden" id="hostor"><span>or</span></div>
+    <div id="hostlinks" class="hidden">
     <a class="btn alt big" href="host.html" style="display:block;text-align:center;text-decoration:none">📺 Host a game</a>
     <a class="btn alt big" href="solo.html" style="display:block;text-align:center;text-decoration:none;margin-top:12px">🎤 Play solo</a>
     <p class="mute" style="margin:14px 0 0;font-size:.9rem"><strong style="color:var(--ink)">Host a game:</strong> open it on a TV or laptop that everyone can see; it plays the videos for everyone, and the players join with their phones. Also works when streaming through Discord.</p>
     </div>
+    <script>/* Hosting and solo play only show on a device that has hosted here before (or opened ?host once): friends who open the link just see Join */
+      (function () { try { var q = new URLSearchParams(location.search); if (q.has('host')) localStorage.setItem('eq_host', '1'); if (localStorage.getItem('eq_host') === '1') { document.getElementById('hostlinks').classList.remove('hidden'); document.getElementById('hostor').classList.remove('hidden'); } } catch (e) {} })();
+    </script>
     <button type="button" class="btn alt" id="fbbtn" style="display:block;width:100%;margin-top:18px">💬 Feedback</button>
   </section>
 
@@ -179,13 +182,13 @@
   </form>
 </div>
 <button type="button" id="bagbtn" class="bagbtn hidden" aria-label="My items">🛍️<b id="bagn"></b></button><div id="bagpanel" class="bagpanel hidden"></div><div id="ptoast" class="ptoast hidden"></div>
-<script src="vendor/supabase.js?v=1195"></script>
-<script src="config.js?v=1195"></script>
-<script src="match.js?v=1195"></script>
-<script src="quiz.js?v=1195"></script>
-<script src="net.js?v=1195"></script>
-<script src="music.js?v=1195"></script>
-<script src="chars.js?v=1195"></script>
-<script src="player.js?v=1195"></script>
+<script src="vendor/supabase.js?v=1196"></script>
+<script src="config.js?v=1196"></script>
+<script src="match.js?v=1196"></script>
+<script src="quiz.js?v=1196"></script>
+<script src="net.js?v=1196"></script>
+<script src="music.js?v=1196"></script>
+<script src="chars.js?v=1196"></script>
+<script src="player.js?v=1196"></script>
 </body>
 </html>

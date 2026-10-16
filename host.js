@@ -7400,6 +7400,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     b.title = !G.syncOn ? 'Stream delay is off: sync to turn it on' : ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
   }
   // Streaming (some players watch through a stream: the sync button) or local play (everyone in the room: no stream delay at all); remembered on this computer
+  try { localStorage.setItem('eq_host', '1'); } catch (e) {}   // (this device hosts: the join page shows 'Host a game' and 'Play solo' here)
   var playMode = 'stream'; try { playMode = localStorage.getItem('eq_playmode') === 'local' ? 'local' : 'stream'; } catch (e) {}
   function playModeSet(m) {
     if (G.cal) return;
