@@ -6448,18 +6448,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }, 150);
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
-  var SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!']], SV_WALKIN = 6000;
+  var SV_HOFF = 13500, SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!']], SV_WALKIN = 6000;
   function svIntro(g) {
     if (!REMOTE) [52, 44, 36, 28].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) svVol(v); }, Math.max(0, g.t0 + 500 - Date.now()) + i * 150); });   // (the music dips under the explanations)
     var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
     SV_LINES.forEach(function (l, li) {
-      var len = Math.max(3000, talkLen(l[0], l[1], 2400)); if (at + len > first - 5000 + 1500) return;
+      var len = Math.max(3000, talkLen(l[0], l[1], 2400)); if (at + len > first - SV_HOFF) return;
       (function (l, when) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, Math.max(0, when - Date.now())); })(l, at);
       at += len + 400;
       if (!li) { g.entAt = at - 200; at += SV_WALKIN + 300; }   // (after 'hurry': everyone walks slowly onto their spot, red from the left, blue from the right)
     });
     if (!g.entAt) g.entAt = g.t0 + 2600;
-    setTimeout(function () { if (G.sv !== g) return; svSay(''); if (!REMOTE) [36, 44, 52, 60].forEach(function (v, i) { setTimeout(function () { svVol(v); }, i * 250); }); }, Math.max(0, first - 5000 - Date.now()));   // (they're done: the music comes up)
+    var off = Math.min(at + 600, first - SV_HOFF);   // (they're done: they walk off, the music comes up, and then the first team gets ready)
+    setTimeout(function () { if (G.sv !== g) return; svSay(''); g.hout = true; svShow(); push(); if (!REMOTE) [36, 44, 52, 60].forEach(function (v, i) { setTimeout(function () { svVol(v); }, i * 250); }); }, Math.max(0, off - Date.now()));
   }
   function svSay(who, txt) { var ov = $('svov'); if (!ov) return; [].forEach.call(ov.querySelectorAll('.svbub'), function (x) { x.classList.remove('on'); }); if (!who) return; var b = ov.querySelector('.svbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); }
   // The song can also come from an mp3 on this computer (picked once, kept in this browser; it never leaves the computer):
@@ -7044,7 +7045,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (!g.home) g.home = svHomes(g);
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
-    ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1); ov.toggleAttribute('data-hin', !!g.hin);   /* (the presenters: in once everything has loaded) */
+    ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1); ov.toggleAttribute('data-hin', !!g.hin); ov.toggleAttribute('data-hout', !!g.hout);   /* (the presenters: in once everything has loaded) */
     // whose turn: the team of the next arrow; the instructor's steps: everything in the current phrase so far
     var nx = null, cur = null; g.chart.forEach(function (n) { if (n[6]) return; if (!nx && n[0] >= b - .3) nx = n; if (n[0] <= b + .02) cur = n; });
     var act = nx ? nx[5] || '*' : '*', ix = 0, iy = 0;
@@ -7109,7 +7110,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var se = ov.querySelector('.svstage'); if (se.textContent !== stx) se.textContent = stx;
     var swB = '';
     if (!g.starts) { g.starts = []; g.chart.forEach(function (n, i) { if (!i || g.chart[i - 1][5] !== n[5] || n[0] - g.chart[i - 1][0] > 6) g.starts.push(n[0]); }); }   // (where a team's turn begins)
-    var rdyN = null; if ((g.st === 'play' || g.st === 'ready') && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= 5000) rdyN = x; });   // (5 seconds before a team's turn: their name and 'Get ready!' in the middle)
+    var rdyN = null; if ((g.st === 'play' || g.st === 'ready' || g.hout) && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= (x === g.starts[0] ? 9000 : 5000)) rdyN = x; });   // (the first one 9 seconds ahead, once the presenters are gone; else 5 seconds before a team's turn: their name and 'Get ready!' in the middle)
     var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Green team' : 'Purple team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
     var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
