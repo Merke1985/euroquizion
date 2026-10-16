@@ -6042,3 +6042,15 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 @keyframes whbl{50%{opacity:.25}}
 .whban{position:absolute;left:50%;bottom:-1vh;transform:translate(-50%,40%) scale(.6);opacity:0;padding:.5em 1.2em;border-radius:20px;background:rgba(10,4,30,.92);border:3px solid #ffd60a;font-weight:900;font-size:clamp(1.2rem,2.6vw,2.4rem);white-space:nowrap;transition:all .5s cubic-bezier(.3,1.5,.5,1);z-index:4}
 .whban.on{opacity:1;transform:translate(-50%,40%) scale(1)}
+/* split votes: the slot machine stays (moved up, a little smaller) and the wheel appears below it */
+.slotov.withwheel{justify-content:flex-start;padding-top:1vh;gap:1vh}
+.slotov.withwheel>*:not(.whov){transform:scale(.62);transform-origin:50% 0;margin-bottom:-14vh;transition:transform .7s cubic-bezier(.2,.9,.3,1.05),margin .7s}
+.whov.under{position:absolute;inset:auto 0 0 0;height:56vh;display:block;padding:0;background:none;transition:transform .8s cubic-bezier(.2,.9,.3,1.05),opacity .5s}
+.whov.under.enter{transform:translateY(60vh);opacity:0}
+.whov.under .whcol{display:none}
+.whov.under .whstage{height:100%}
+.whov.under .whbox{width:min(50vh,46vw)}
+.whov.under .whban{bottom:auto;top:50%;transform:translate(-50%,-50%) scale(.6)}
+.whov.under .whban.on{transform:translate(-50%,-50%) scale(1)}
+.slotov.withwheel .slbtn,.slotov.withwheel .slsign{display:none}
+.slotov.withwheel{padding-top:4vh}

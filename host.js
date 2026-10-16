@@ -1709,7 +1709,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var nVoted = vs.filter(function (x) { return x > 0; }).length;
         if (nVoted === 1) { win = kinds4[vs.indexOf(top)]; M.ov.querySelector('.slsub').textContent = 'Everyone agrees: a done deal! 🤝'; slotT = setTimeout(land, 1400 + pop * 350); return; }   // (all votes on one game: no spin needed)
         slotT = setTimeout(function () {   // the votes are split: the slot machine slides away and the fortune wheel comes in (more votes = a bigger slice)
-          M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyWheel(kinds4, vs, vot, ch, function () { partyGo(ch, 2500); }); }, 600);
+          var sb = M.ov.querySelector('.slsub'); if (sb) sb.textContent = 'The votes are split… spin the wheel! 🎡'; M.ov.classList.remove('voting');
+          partyWheel(kinds4, vs, vot, ch, function () { M.ov.classList.add('leaving'); setTimeout(function () { M.ov.remove(); G.slot = null; partyGo(ch, 2500); }, 600); }, M.ov);   // (the slot machine stays, moving up; the wheel appears below it)
         }, 1600 + pop * 350);
         return;
         M.ov.querySelector('.slsub').textContent = 'A tie! 🎲'; var hops = 12 + Math.floor(Math.random() * tied.length), st0 = (tied.indexOf(win) - hops % tied.length + tied.length * 8) % tied.length, hn = 0;
@@ -1788,14 +1789,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The fortune wheel: each game gets a slice the size of its share of the votes (no votes at all: equal slices; a game
   // without votes: no slice). The winner was drawn with exactly those chances; the wheel slows down and lands in its slice.
   var PW_COLS = ['#ff2e88', '#2de2e6', '#ffd60a', '#a77bff'];
-  function partyWheel(kinds, vs, vot, win, then) {
+  function partyWheel(kinds, vs, vot, win, then, under) {
     var total = vs.reduce(function (a, b) { return a + b; }, 0), sh = vs.map(function (v) { return total ? v / total : 1 / vs.length; });
     var old = $('whov'); if (old) old.remove();
-    var ov = document.createElement('div'); ov.id = 'whov'; ov.className = 'whov enter';
+    var ov = document.createElement('div'); ov.id = 'whov'; ov.className = 'whov enter' + (under ? ' under' : '');
     ov.innerHTML = '<div class="whcol"><div class="whcards">' + kinds.map(function (k, i) {
         return '<div class="whcard" data-i="' + i + '" style="--c:' + PW_COLS[i] + '"><span class="ic">' + FUN[k].icon + '</span><span><b>' + esc(FUN[k].title) + '</b><span class="who">' + (vot[i] || []).map(function (p) { return '<i title="' + esc(p.name) + '">' + charSvg(p.char) + '</i>'; }).join('') + '</span></span><span class="pct">' + Math.round(sh[i] * 100) + '%</span></div>';
       }).join('') + '</div></div><div class="whstage"><div class="whbox"><svg class="whptr" viewBox="0 0 40 50"><path d="M20 48 L3 8 Q20 -6 37 8 Z" fill="#fff" stroke="#ff2e88" stroke-width="4" stroke-linejoin="round"/></svg><svg class="whsvg" viewBox="-110 -110 220 220"><g class="whrot"></g><circle r="104" fill="none" stroke="#ffd60a" stroke-width="5"/><g class="whbulbs"></g></svg><div class="whhub">🎲</div><div class="whban"></div></div></div>';
-    document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 900);
+    if (under) { under.classList.add('withwheel'); under.appendChild(ov); } else document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 900);
     var P = function (a, r) { return [Math.sin(a) * r, -Math.cos(a) * r]; }, h = '', a0 = 0, edges = [];
     sh.forEach(function (x, i) {
       if (x <= 0) return; edges.push(a0);
@@ -1820,7 +1821,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ov.classList.remove('spinning'); ov.classList.add('done');
         [].forEach.call(ov.querySelectorAll('.whcard'), function (c) { c.classList.add(+c.getAttribute('data-i') === wi ? 'won' : 'out'); });
         var bn = ov.querySelector('.whban'); bn.textContent = '🎉 ' + FUN[win].icon + ' ' + FUN[win].title; bn.classList.add('on'); Music.douze();
-        setTimeout(function () { ov.classList.add('leaving'); setTimeout(function () { ov.remove(); then(); }, 600); }, 3200);
+        setTimeout(function () { if (under) { then(); return; } ov.classList.add('leaving'); setTimeout(function () { ov.remove(); then(); }, 600); }, 3200);
       })();
     }, 1600);
   }
@@ -2600,7 +2601,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
     $('adminbtn').addEventListener('click', function () { if (window.escEditorOpen) window.escEditorOpen(); });   // (⚙️ Admin: songs, minigames, items, trivia and requests, behind the password)
     $('testov').addEventListener('click', function (e) { if (e.target === $('testov')) $('testov').classList.add('hidden'); });
-    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #shoppoor1, #shoppoor2, #svtest, #itemtest, #goldtest, #chasetest, #chasetest2, #chasetest3, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
+    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #shoppoor1, #shoppoor2, #svtest, #wheeltest, #itemtest, #goldtest, #chasetest, #chasetest2, #chasetest3, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
     $('onegame').addEventListener('click', function (e) {
       var b = e.target.closest('[data-one]'); if (!b || REMOTE || G.phase !== 'lobby') return;
       var k = b.getAttribute('data-one'), fa = b.getAttribute('data-act'); G.ruForce = fa == null ? null : +fa; var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
@@ -2629,6 +2630,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   });
   // Test the boutique: straight into the shop (everyone picks one), then a winner's trip (two items), then the party games.
   // Testing the skippy-ball game (Serving): it's not in the party game picker yet
+  // Testing the party game vote: the slot machine lands on four games, the bots vote at random; split votes: the wheel
+  if ($('wheeltest')) $('wheeltest').addEventListener('click', function () {
+    if (REMOTE || G.phase !== 'lobby') return;
+    var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 4 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
+    $('s-atype').value = 'party'; $('s-atype').dispatchEvent(new Event('change'));
+    if (beginGame() === false) return;
+    G.mgTest = true; G.skipOpening = true; clearTimeout(introTimer); fanStop(); stage = 'idle'; try { yt.pauseVideo(); } catch (e) {}
+    G.shopFirst = false; G.quizRun = 99; clearTimeout(funTimer); stopTimers(); G.fun = null;
+    partyVote4(partyGames());
+  });
   $('svtest').addEventListener('click', function () {
     if (REMOTE || G.phase !== 'lobby') return;
     var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
