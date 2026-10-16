@@ -7341,14 +7341,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var was = !!G.syncOn; G.syncOn = true;   // (syncing turns the stream delay on: from now on every phone plays with its own measured delay)
     // First the screen with a big 'Sync' button filling the circle (the phones already show what to do); the countdown
     // and the eight flashes only start when the host presses it
+    [].forEach.call(document.querySelectorAll('#calov'), function (x) { x.remove(); });   // (an old results screen still open, from a sync that didn't work: away with it first, or there would be two)
     var g = G.cal = { id: 'cal' + Date.now().toString(36), wait: true, n: 8, gap: 1000, res: {}, by: by || '' };   // (by: the phone that asked for it; it gets a Sync button too)
-    var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing everyone</h2><p>Everyone: tap your phone on every flash and click!</p><button type="button" class="calfl calgo"><b>Sync</b></button><button type="button" class="calcancel">Cancel</button><div class="calres"></div></div>'; document.body.appendChild(ov);
+    var ov = document.createElement('div'); ov.id = 'calov'; g.ov = ov; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing everyone</h2><p>Everyone: tap your phone on every flash and click!</p><button type="button" class="calfl calgo"><b>Sync</b></button><button type="button" class="calcancel">Cancel</button><div class="calres"></div></div>'; document.body.appendChild(ov);
     push();
-    ov.querySelector('.calcancel').addEventListener('click', function () { if (G.cal !== g || !g.wait) return; G.cal = null; G.syncOn = was; ov.remove(); render(); push(); });
+    ov.querySelector('.calcancel').addEventListener('click', function () { if (G.cal !== g) { ov.remove(); return; } G.cal = null; G.syncOn = was; ov.remove(); render(); push(); });
     ov.querySelector('.calgo').addEventListener('click', function () { if (G.cal === g && g.wait) calRun(ov, g); });
   }
   function calRun(ov, g) {
+    if (g.ov) ov = g.ov; if (!ov || !ov.isConnected || !ov.querySelector('.calfl')) { if (G.cal === g) { G.cal = null; push(); render(); } if (ov && ov.remove) ov.remove(); return; }   // (its own screen only; gone: then the sync is simply off, nothing stuck)
     g.wait = false; g.t0 = Date.now() + 5500;   // (a countdown from 5)
+    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); render(); calDone(ov, g); } }, 5500 + g.n * g.gap + 15000);   // (safety net: whatever happens, after this the sync is over and the buttons work again)
     var cc = ov.querySelector('.calcancel'); if (cc) cc.remove();
     var fl = ov.querySelector('.calfl'), b = fl.querySelector('b'); fl.classList.remove('calgo'); fl.disabled = true;
     push(); [1000, 2500].forEach(function (t) { setTimeout(function () { if (G.cal === g) push(); }, t); });   // (a few updates: the phones take the best timing)
@@ -7385,10 +7388,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var bad = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); }).length;
     ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (all.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div></div>';
     ov.querySelector('[data-a="ok"]').addEventListener('click', function () { ov.remove(); });
-    ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(); });
+    ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(g.by); });
   }
   function calShow() {
-    var g = G.cal, ov = $('calov'); if (!g || !ov) return;
+    var g = G.cal, ov = g && g.ov; if (!g || !ov || !ov.querySelector('.calres')) return;
     var ks = Object.keys(g.res); ov.querySelector('.calres').innerHTML = ks.length ? ks.map(function (k) { var p = players[k], d = g.res[k]; return '<span>' + esc(p ? p.name : '?') + ': ' + (d < 0 ? 'in the room' : (d / 1000).toFixed(2) + 's') + '</span>'; }).join('') : '';
   }
   net.on('cal', function (m) { var g = G.cal && m && m.id === G.cal.id ? G.cal : calLast && m && m.id === calLast.id ? calLast : null; if (!g || !players[m.pid]) return;   /* (a late result still counts, and updates the results screen) */ g.res[m.pid] = Math.round(+m.d); var p = players[m.pid]; if (g.res[m.pid] >= 0) p.sync = g.res[m.pid]; else if (g.res[m.pid] === -2) p.sync = null; calShow(); var cov = $('calov'); if (cov && cov._g === g && cov.querySelector('.caldone')) calDone(cov, g); render(); push(); });
@@ -10125,7 +10128,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (m.off) { delete G.go[p.pid]; push(); return; }   // pressed Ready again: not ready after all
     if ((m.sync || m.start || m.calgo) && leadPid() && p.pid !== leadPid()) return;   // (only the first player who joined can start the sync and the game)
     if (m.sync) { if (allReady() && !G.cal) calStart(p.pid); return; }   // "Sync" on a phone: the sync starts for everyone
-    if (m.calgo) { var cov = $('calov'); if (G.cal && G.cal.wait && G.cal.by === p.pid && cov) calRun(cov, G.cal); return; }   // (that phone's own Sync button: the countdown starts)
+    if (m.calgo) { if (G.cal && G.cal.wait && G.cal.by === p.pid) calRun(G.cal.ov, G.cal); return; }   // (that phone's own Sync button: the countdown starts)
     if (m.start) { if (allReady() && (calAll() || m.force)) { var co = $('calov'); if (co && !G.cal) co.remove(); beginGame(); } else if (allReady() && !G.cal) calStart(); return; }   // "Start game" on a phone, only once everyone is ready
     G.go[p.pid] = 1; push();
   });
