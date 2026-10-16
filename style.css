@@ -6128,3 +6128,6 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 /* the Grand Final on the phone: "None of these" is an answer too */
 .chnone{width:100%;padding:.75em 1em;border-radius:14px;border:2px dashed rgba(255,255,255,.28);background:rgba(255,255,255,.05);color:var(--ink,#fff);font:inherit;font-weight:800;font-size:1rem;cursor:pointer}
 .chnone.on{border-style:solid;border-color:#16a34a;background:rgba(22,163,74,.35)}
+/* the scoreboard during the game: press and hold a row to remove that player (quietly) */
+#board li{position:relative}
+#board li .rmbtn{position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:5;background:#ff4d6a;color:#fff;border:0;border-radius:999px;padding:4px 10px;font-weight:900;font-size:.8rem;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4)}

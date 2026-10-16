@@ -171,21 +171,27 @@
     lh.classList.add('on'); var b = lh.querySelector('.hbub.' + who); b._said = ''; b.classList.add('on'); var t = typeSay(b, line, who);
     setTimeout(function () { b.classList.remove('on'); greetBusy = false; if (greetQ.length) lobbyGreet(); else greetAway = setTimeout(function () { lh.classList.remove('on'); }, 1200); }, Math.max(2600, t + 1500));
   }
-  /* lobby: press and hold a player to remove just that one */
-  (function () {
-    var box = $('players'), hold = null;
+  /* press and hold a player to remove just that one: in the lobby (their figure) and during the game (their row on the scoreboard).
+     Quietly: no message on the screen, their phone is simply sent back to the start. */
+  function rmGo(k) {
+    if (!k || !players[k]) return;
+    net.send('kick', { pid: k }); delete players[k]; bots = bots.filter(function (b) { return b.pid !== k; }); if (G.go) delete G.go[k];
+    var c = G.chase; if (c && c.lanes && c.lanes[k]) { c.lanes[k].out = true; c.lanes[k].at = c.n; c.lanes[k].gone = true; }   // (in the Grand Final: off the runway)
+    push();
+  }
+  [['players', '.chip[data-pid]', function () { return G.phase === 'lobby'; }], ['board', 'li[data-pid]', function () { return G.phase !== 'lobby'; }]].forEach(function (w) {
+    var box = $(w[0]), hold = null; if (!box) return;
     box.addEventListener('pointerdown', function (e) {
-      var ch = e.target.closest('.chip[data-pid]'); if (!ch || G.phase !== 'lobby' || e.target.closest('.rmbtn')) return;
+      var ch = e.target.closest(w[1]); if (!ch || !w[2]() || e.target.closest('.rmbtn')) return;
       clearTimeout(hold); hold = setTimeout(function () { rmPid = ch.getAttribute('data-pid'); clearTimeout(rmT); rmT = setTimeout(function () { rmPid = ''; render(); }, 4000); render(); }, 650);
     });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { box.addEventListener(ev, function () { clearTimeout(hold); }); });
     box.addEventListener('click', function (e) {
-      if (!e.target.closest('.rmbtn')) return;
-      var k = rmPid; rmPid = ''; clearTimeout(rmT); if (!k || !players[k] || G.phase !== 'lobby') { render(); return; }
-      net.send('kick', { pid: k }); delete players[k]; bots = bots.filter(function (b) { return b.pid !== k; }); if (G.go) delete G.go[k];
-      push();
+      if (!e.target.closest('.rmbtn')) return; e.stopPropagation();
+      var k = rmPid; rmPid = ''; clearTimeout(rmT); if (!k || !players[k] || !w[2]()) { render(); return; }
+      rmGo(k);
     });
-  })();
+  });
   function sayHello() { if (recovering || Date.now() - helloAt < 700) return; helloAt = Date.now(); net.send('state', snapshot()); }
   net.on('guess', function (m) {
     var p = m && players[m.pid];
@@ -495,7 +501,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var hide = hideScores();
     var ps = hide ? list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : list();   // no order to read the ranking from
     return ps.map(function (p) {
-      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + '<span class="wtx"><span class="wn">' + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span>' + boardSub(p) + '</span></span><span class="binv"></span><span class="tot">' + (hide ? '?' : p.score) + '</span>' + (!hide && showGot && p.got && p.ccb && G.phase === 'reveal' ? '<span class="ccbonus" title="Their fan-flag country: double points!"><img src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="">Flag bonus ×2</span>' : '') + '<span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
+      return '<li data-pid="' + esc(p.pid) + '" class="' + (showGot && p.got && !hide ? 'got ' : '') + (showGot && p.pts < 0 && !hide ? 'lost ' : '') + (p.off ? 'off' : '') + '"><span class="who">' + charSvg(p.char) + '<span class="wtx"><span class="wn">' + esc(p.name) + (p.rcrown && G.phase !== 'end' ? ' <span class="rcrown" title="Won the last round">👑</span>' : '') + '</span>' + boardSub(p) + '</span></span><span class="binv"></span><span class="tot">' + (hide ? '?' : p.score) + '</span>' + (rmPid === p.pid && G.phase !== 'lobby' ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + (!hide && showGot && p.got && p.ccb && G.phase === 'reveal' ? '<span class="ccbonus" title="Their fan-flag country: double points!"><img src="https://flagcdn.com/w40/' + p.ccb + '.png" alt="">Flag bonus ×2</span>' : '') + '<span class="pts">' + (!hide && showGot && p.pts < 0 ? '−' + (-p.pts) : !hide && showGot && p.got && p.pts ? '+' + p.pts : '') + '</span></li>';   // the +points have their own column, so the totals never shift
     }).join('') || '<li class="mute">No players yet</li>';
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop

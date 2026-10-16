@@ -138,7 +138,7 @@
       if (kicked || (km && km.pid && km.pid !== pid)) return;   /* (the host removed one other player: not me) */
       kicked = true; clearInterval(hiTimer); state = null;
       document.querySelector('main').classList.remove('ingame'); $('pstage').classList.add('hidden'); rowUpdate(); $('chatbar').classList.add('hidden');
-      show('v-join'); $('joinerr').textContent = 'The host removed all players. Join again to play.';
+      show('v-join'); $('joinerr').textContent = km && km.pid ? 'You were removed from the game.' : 'The host removed all players. Join again to play.';
     });
     net.on('chat', chatAdd);
     // A finished drawing comes from the host as packets of lines, when it is that drawing's turn to be guessed.
