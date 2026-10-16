@@ -6694,7 +6694,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var lc = document.createElement('canvas'); lc.width = 256; lc.height = 256; (function (x) { x.fillStyle = '#c99a3a'; x.fillRect(0, 0, 256, 256); for (var k = 0; k < 90; k++) { var px = (k * 73) % 256, py = (k * 151) % 256, rr = 6 + k % 5; x.fillStyle = '#2a1606'; x.beginPath(); x.ellipse(px, py, rr * 1.3, rr, k, 0, 6.28); x.fill(); x.fillStyle = '#8a5a1a'; x.beginPath(); x.ellipse(px, py, rr * .6, rr * .45, k, 0, 6.28); x.fill(); } })(lc.getContext('2d'));
       var lt = new T.CanvasTexture(lc); lt.wrapS = lt.wrapT = T.RepeatWrapping; lt.repeat.set(3, 2); lt.encoding = T.sRGBEncoding;
       var tri = new T.Shape(); tri.moveTo(0, 0); tri.lineTo(7, 0); tri.quadraticCurveTo(2.5, .6, 0, 4.2); tri.lineTo(0, 0);
-      var sl = new T.Mesh(new T.ExtrudeGeometry(tri, { depth: ZL(2) + TS / 2 - (ZB - .4), bevelEnabled: false }), new T.MeshStandardMaterial({ map: lt, roughness: .9 })); sl.scale.x = -sd; sl.position.set(sd * (C * TS / 2 + 1.2), 0, ZB - .4); sc.add(sl);   // (sloping down towards the stage; they end exactly where her stage ends)
+      var sl = new T.Mesh(new T.ExtrudeGeometry(tri, { depth: ZL(0) + TS / 2 - (ZB - .4), bevelEnabled: false }), new T.MeshStandardMaterial({ map: lt, roughness: .9 })); sl.scale.x = -sd; sl.position.set(sd * (C * TS / 2 + 1.2), 0, ZB - .4); sc.add(sl);   // (sloping down towards the stage; they end level with her back row, so she and her dancers can walk on in front of them)
     });
     // From 2:39 the arcades make way for glowing leopard statues, sitting proud on pink pedestals (our own drawing)
     var lv = document.createElement('canvas'); lv.width = 256; lv.height = 320; (function (x) {
@@ -6759,9 +6759,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // truss towers with moving heads: soft additive cones
     var truss = new T.MeshStandardMaterial({ color: '#9aa0b0', metalness: .8, roughness: .35 }), beams = [];
     [-1, 1].forEach(function (sd) {
-      var tw = new T.Mesh(new T.BoxGeometry(.7, 12, .7), truss); tw.position.set(sd * (C * TS / 2 + 1.55), 6, ZL(2) + TS / 2 - .35); sc.add(tw);   // (against the outside of the slope, at the front end)
+      var tw = new T.Mesh(new T.BoxGeometry(.7, 12, .7), truss); tw.position.set(sd * (C * TS / 2 + 1.55), 6, ZL(0) + TS / 2 - .35); sc.add(tw);   // (against the outside of the slope, at the front end)
       for (var k = 0; k < 3; k++) {   // moving heads high up on the tower, each beam landing on the stage as a pool of light
-        var arm = new T.Group(); arm.position.set(sd * (C * TS / 2 + 1.1), 10 + k * .85, ZL(2) + TS / 2 - .35); sc.add(arm);   // (mounted on the tower, at the top)
+        var arm = new T.Group(); arm.position.set(sd * (C * TS / 2 + 1.1), 10 + k * .85, ZL(0) + TS / 2 - .35); sc.add(arm);   // (mounted on the tower, at the top)
         var head = new T.Mesh(new T.CylinderGeometry(.35, .45, .7, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); head.rotation.x = Math.PI / 2; arm.add(head);
         var cone = new T.Mesh(new T.ConeGeometry(1.6, 1, 24, 1, true), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .12, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         cone.rotation.x = -Math.PI / 2; arm.add(cone);
