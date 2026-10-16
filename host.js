@@ -1792,7 +1792,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var total = vs.reduce(function (a, b) { return a + b; }, 0), sh = vs.map(function (v) { return total ? v / total : 1 / vs.length; });
     var old = $('whov'); if (old) old.remove();
     var ov = document.createElement('div'); ov.id = 'whov'; ov.className = 'whov enter';
-    ov.innerHTML = '<div class="whcol"><h2>The votes are split… 🎡</h2><p>More votes, a bigger slice: a bigger chance!</p><div class="whcards">' + kinds.map(function (k, i) {
+    ov.innerHTML = '<div class="whcol"><div class="whcards">' + kinds.map(function (k, i) {
         return '<div class="whcard" data-i="' + i + '" style="--c:' + PW_COLS[i] + '"><span class="ic">' + FUN[k].icon + '</span><span><b>' + esc(FUN[k].title) + '</b><span class="who">' + (vot[i] || []).map(function (p) { return '<i title="' + esc(p.name) + '">' + charSvg(p.char) + '</i>'; }).join('') + '</span></span><span class="pct">' + Math.round(sh[i] * 100) + '%</span></div>';
       }).join('') + '</div></div><div class="whstage"><div class="whbox"><svg class="whptr" viewBox="0 0 40 50"><path d="M20 48 L3 8 Q20 -6 37 8 Z" fill="#fff" stroke="#ff2e88" stroke-width="4" stroke-linejoin="round"/></svg><svg class="whsvg" viewBox="-110 -110 220 220"><g class="whrot"></g><circle r="104" fill="none" stroke="#ffd60a" stroke-width="5"/><g class="whbulbs"></g></svg><div class="whhub">🎲</div><div class="whban"></div></div></div>';
     document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 900);
