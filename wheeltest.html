@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Party Game Wheel (test)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+<style>
+  :root{--bg:#0b0633;--bg2:#1a0f5c;--ink:#fff;--mute:#b9b3e6;--pink:#ff2e88;--yellow:#ffd60a;--cyan:#2de2e6;--line:rgba(255,255,255,.16)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);background:var(--bg);
+    background-image:radial-gradient(60vw 60vw at 110% -10%,rgba(255,46,136,.45),transparent 60%),radial-gradient(50vw 50vw at -10% 110%,rgba(45,226,230,.35),transparent 60%),linear-gradient(160deg,var(--bg),var(--bg2));
+    display:grid;grid-template-columns:minmax(300px,34vw) 1fr;gap:3vw;padding:3vh 3vw;overflow:hidden}
+  h1{margin:0 0 .4em;font-size:clamp(1.4rem,2.6vw,2.6rem);line-height:1.05}
+  h1 small{display:block;font-size:.45em;color:var(--mute);font-weight:600;margin-top:.4em}
+  .cards{display:flex;flex-direction:column;gap:1.4vh}
+  .card{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.8em;padding:1.1vh 1vw;border-radius:16px;background:rgba(255,255,255,.07);border:2px solid var(--line);transition:opacity .4s,transform .4s,border-color .4s,box-shadow .4s}
+  .card .ic{font-size:clamp(1.6rem,2.6vw,2.4rem);width:1.5em;height:1.5em;display:grid;place-items:center;border-radius:12px;background:var(--c)}
+  .card b{display:block;font-size:clamp(.95rem,1.4vw,1.3rem)}
+  .card .who{display:flex;flex-wrap:wrap;gap:4px;margin-top:.4vh;min-height:26px}
+  .card .pct{font-weight:800;font-size:clamp(1rem,1.6vw,1.5rem);color:var(--c);min-width:3.2em;text-align:right}
+  .card .plus{position:absolute;right:-12px;top:-12px;width:30px;height:30px;border-radius:50%;border:0;background:var(--c);color:#111;font-weight:900;font-size:1.1rem;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .card.out{opacity:.35;transform:scale(.97)}
+  .card.won{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 30px var(--c)}
+  .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:800;color:#111;background:var(--a);box-shadow:0 0 0 2px rgba(0,0,0,.35);animation:pop .35s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:2.4vh}
+  .btn{border:0;border-radius:999px;padding:.75em 1.3em;font:inherit;font-weight:800;background:var(--pink);color:#fff;cursor:pointer;box-shadow:0 5px 0 #a3104f}
+  .btn.alt{background:rgba(255,255,255,.12);box-shadow:0 5px 0 rgba(0,0,0,.35)}
+  .btn:disabled{opacity:.45;cursor:default}
+  label.tg{display:flex;align-items:center;gap:.5em;margin-top:1.8vh;color:var(--mute);font-weight:700;font-size:.95rem;cursor:pointer}
+  .note{color:var(--mute);font-size:.9rem;margin-top:1.6vh;line-height:1.35}
+  .stage{position:relative;display:grid;place-items:center;min-height:0}
+  .wheelbox{position:relative;width:min(80vh,58vw);aspect-ratio:1}
+  svg.wheel{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 18px 40px rgba(0,0,0,.55))}
+  .pointer{position:absolute;left:50%;top:-3.2%;width:7%;aspect-ratio:.8;transform:translateX(-50%);z-index:3;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+  .pointer.tick{animation:tk .12s ease-out}
+  @keyframes tk{30%{transform:translateX(-50%) rotate(-14deg)}}
+  .hub{position:absolute;left:50%;top:50%;width:17%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff6c8,#ffd60a 45%,#b8860b);box-shadow:0 0 0 6px #1a0f5c,0 0 30px rgba(255,214,10,.6);display:grid;place-items:center;font-size:clamp(1.2rem,3vw,2.6rem);z-index:2}
+  .banner{position:absolute;left:50%;bottom:-1vh;transform:translate(-50%,40%) scale(.6);opacity:0;padding:.5em 1.2em;border-radius:20px;background:rgba(10,4,30,.9);border:3px solid var(--yellow);font-weight:900;font-size:clamp(1.2rem,2.6vw,2.4rem);white-space:nowrap;transition:all .5s cubic-bezier(.3,1.5,.5,1);z-index:4}
+  .banner.on{opacity:1;transform:translate(-50%,40%) scale(1)}
+  .slice-label{font-weight:800;pointer-events:none}
+  @media (max-width:800px){body{grid-template-columns:1fr;overflow:auto}.wheelbox{width:min(92vw,70vh)}}
+</style>
+</head>
+<body>
+<section>
+  <h1>Which party game is next?<small>Test page: more votes = a bigger slice = a better chance. Any slice can still win.</small></h1>
+  <div class="cards" id="cards"></div>
+  <div class="controls">
+    <button class="btn alt" id="rnd" type="button">+ Random vote</button>
+    <button class="btn alt" id="reset" type="button">Reset</button>
+    <button class="btn" id="spin" type="button">🎡 Spin!</button>
+  </div>
+  <label class="tg"><input type="checkbox" id="under"> Games without votes get a tiny "underdog" slice</label>
+  <p class="note">Tap the + on a game to add a vote for it. With no votes at all, every game gets an equal slice.</p>
+</section>
+<section class="stage">
+  <div class="wheelbox">
+    <svg class="pointer" id="ptr" viewBox="0 0 40 50"><path d="M20 48 L3 8 Q20 -6 37 8 Z" fill="#fff" stroke="#ff2e88" stroke-width="4" stroke-linejoin="round"/></svg>
+    <svg class="wheel" id="wheel" viewBox="-110 -110 220 220"><g id="rot"></g><circle r="104" fill="none" stroke="#ffd60a" stroke-width="5"/><g id="bulbs"></g></svg>
+    <div class="hub">🎲</div>
+    <div class="banner" id="banner"></div>
+  </div>
+</section>
+<script>
+(function () {
+  var GAMES = [
+    { k: 'fake', icon: '📰', name: 'Say Na Na Na!', c: '#ff2e88' },
+    { k: 'zg', icon: '🌌', name: 'Zero Gravity', c: '#2de2e6' },
+    { k: 'queue', icon: '🌹', name: 'Lost in Verona', c: '#ffd60a' },
+    { k: 'carpet', icon: '💎', name: 'Turquoise Carpet', c: '#a77bff' }
+  ];
+  var NAMES = ['Anna', 'Sam', 'Noor', 'Robin', 'Kai', 'Lou', 'Jesse', 'Mika', 'Sasha', 'Femke', 'Tom', 'Iris'];
+  var AV = ['#ffb3c7', '#9ff0c0', '#ffe08a', '#a8d8ff', '#ffc89e', '#d9b8ff', '#b8fff2', '#ffd1f0'];
+  var votes = GAMES.map(function () { return []; }), nameI = 0, spinning = false, rot = 0, cur = GAMES.map(function () { return 0; });
+  var $ = function (id) { return document.getElementById(id); };
+  var under = function () { return $('under').checked; };
+
+  // the share of the wheel for each game: its votes (an underdog slice for 0 votes if switched on); no votes at all: equal
+  function weights() {
+    var total = votes.reduce(function (a, v) { return a + v.length; }, 0);
+    if (!total) return GAMES.map(function () { return 1; });
+    return votes.map(function (v) { return v.length || (under() ? total * 0.06 : 0); });
+  }
+  function shares() { var w = weights(), t = w.reduce(function (a, b) { return a + b; }, 0); return w.map(function (x) { return x / t; }); }
+
+  function renderCards() {
+    var sh = shares();
+    $('cards').innerHTML = GAMES.map(function (g, i) {
+      return '<div class="card" data-i="' + i + '" style="--c:' + g.c + '"><span class="ic">' + g.icon + '</span><span><b>' + g.name + '</b><span class="who">' +
+        votes[i].map(function (p) { return '<span class="av" title="' + p.n + '" style="--a:' + p.a + '">' + p.n[0] + '</span>'; }).join('') + '</span></span>' +
+        '<span class="pct">' + Math.round(sh[i] * 100) + '%</span><button class="plus" type="button" aria-label="Vote for ' + g.name + '">+</button></div>';
+    }).join('');
+  }
+  function addVote(i) {
+    if (spinning) return; var n = NAMES[nameI % NAMES.length]; nameI++;
+    votes[i].push({ n: n, a: AV[nameI % AV.length] }); renderCards(); clearWin();
+  }
+
+  // the wheel: slices animate smoothly to their new size; voters' faces sit inside their slice
+  var P = function (a, r) { return [Math.sin(a) * r, -Math.cos(a) * r]; };
+  function drawWheel(sh) {
+    var g = $('rot'), a0 = 0, h = '';
+    sh.forEach(function (s, i) {
+      if (s < 0.0005) return;
+      var a1 = a0 + s * Math.PI * 2, p0 = P(a0, 100), p1 = P(a1, 100), large = a1 - a0 > Math.PI ? 1 : 0, gm = GAMES[i];
+      h += s > 0.9995 ? '<circle r="100" fill="' + gm.c + '"/>' : '<path d="M0 0 L' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + ' A100 100 0 ' + large + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) + ' Z" fill="' + gm.c + '" stroke="#1a0f5c" stroke-width="1.6"/>';
+      var mid = (a0 + a1) / 2, sz = Math.min(1, s * 4);
+      var lp = P(mid, 62), deg = mid * 180 / Math.PI;
+      h += '<g class="slice-label" transform="translate(' + lp[0].toFixed(1) + ' ' + lp[1].toFixed(1) + ') rotate(' + (deg > 90 && deg < 270 ? deg + 180 : deg).toFixed(1) + ')"><text text-anchor="middle" dominant-baseline="middle" font-size="' + (9 + sz * 9).toFixed(1) + '">' + gm.icon + '</text>' +
+        (s > 0.12 ? '<text y="' + (10 + sz * 6).toFixed(1) + '" text-anchor="middle" font-size="' + (4.5 + sz * 2).toFixed(1) + '" fill="#160b38">' + gm.name + '</text>' : '') + '</g>';
+      var vs = votes[i], span = a1 - a0;   // the faces of the voters, in a little arc near the rim
+      vs.forEach(function (p, k) { var aa = a0 + span * (k + 1) / (vs.length + 1), q = P(aa, 86), r = Math.min(6, span * 86 / (vs.length + 1) * .42); if (r < 2) return; h += '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + p.a + '" stroke="#1a0f5c" stroke-width="1"/><text x="' + q[0].toFixed(1) + '" y="' + (q[1] + r * .38).toFixed(1) + '" text-anchor="middle" font-size="' + (r * 1.05).toFixed(1) + '" font-weight="800" fill="#111">' + p.n[0] + '</text>'; });
+      a0 = a1;
+    });
+    g.innerHTML = h;
+  }
+  (function bulbs() { var h = ''; for (var i = 0; i < 24; i++) { var p = P(i / 24 * Math.PI * 2, 104); h += '<circle class="bl" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="2.6" fill="#fff6c8"/>'; } $('bulbs').innerHTML = h; })();
+  (function anim() {   // the slices glide to their new sizes
+    var tgt = shares(), moved = false;
+    cur = cur.map(function (c, i) { var d = tgt[i] - c; if (Math.abs(d) > 0.0005) { moved = true; return c + d * 0.15; } return tgt[i]; });
+    if (moved || !anim.drawn) { drawWheel(cur); anim.drawn = true; }
+    var t = performance.now() / 300; [].forEach.call(document.querySelectorAll('.bl'), function (b, i) { b.setAttribute('opacity', spinning ? ((i + Math.floor(t * 3)) % 2 ? 1 : .25) : (.55 + .45 * Math.sin(t + i))); });
+    requestAnimationFrame(anim);
+  })();
+
+  // a little click for every slice edge that passes the pointer
+  var ac = null; function click(f) { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); var o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.value = f || 1400; g.gain.setValueAtTime(.08, ac.currentTime); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + .05); o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .06); } catch (e) {} }
+  function ta(notes) { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); notes.forEach(function (f, i) { var o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * .12; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.12, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + .35); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + .4); }); } catch (e) {} }
+
+  function clearWin() { $('banner').classList.remove('on'); [].forEach.call(document.querySelectorAll('.card'), function (c) { c.classList.remove('out', 'won'); }); }
+
+  // the spin: the winner is drawn with exactly those chances; the wheel turns so the pointer lands somewhere inside its slice
+  function spin() {
+    if (spinning) return; clearWin(); cur = shares(); drawWheel(cur);
+    var sh = cur, r = Math.random(), i = 0; while (i < sh.length - 1 && (r -= sh[i]) > 0) i++; while (sh[i] <= 0) i = (i + 1) % sh.length;
+    var start = 0; for (var k = 0; k < i; k++) start += sh[k];
+    var land = (start + sh[i] * (0.15 + Math.random() * 0.7)) * 360;   // (somewhere in the winner's slice, not on an edge)
+    var from = rot % 360, to = from + 360 * (5 + Math.floor(Math.random() * 3)) + ((360 - land) - from % 360 + 720) % 360;
+    var edges = []; var acc = 0; sh.forEach(function (s) { if (s > 0) edges.push(acc * 360); acc += s; });
+    spinning = true; $('spin').disabled = true;
+    var T = 6500, t0 = performance.now(), lastA = from, g = $('rot');
+    (function step() {
+      var q = Math.min(1, (performance.now() - t0) / T), e = 1 - Math.pow(1 - q, 4), a = from + (to - from) * e;
+      g.setAttribute('transform', 'rotate(' + a.toFixed(2) + ')');
+      edges.forEach(function (ed) { var p0 = ((360 - ed) - lastA % 360 + 720) % 360, d = a - lastA; if (d > 0 && p0 > 0 && p0 <= d) { click(1200 + Math.random() * 300); var pt = $('ptr'); pt.classList.remove('tick'); void pt.getBoundingClientRect(); pt.classList.add('tick'); } });
+      lastA = a;
+      if (q < 1) { requestAnimationFrame(step); return; }
+      rot = a; spinning = false; $('spin').disabled = false;
+      [].forEach.call(document.querySelectorAll('.card'), function (c) { c.classList.add(+c.getAttribute('data-i') === i ? 'won' : 'out'); });
+      $('banner').textContent = '🎉 ' + GAMES[i].icon + ' ' + GAMES[i].name + (/!$/.test(GAMES[i].name) ? '' : '!'); $('banner').classList.add('on'); ta([523, 659, 784, 1047]);
+    })();
+  }
+
+  $('cards').addEventListener('click', function (e) { var b = e.target.closest('.plus'); if (b) addVote(+b.closest('.card').getAttribute('data-i')); });
+  $('rnd').addEventListener('click', function () { addVote(Math.floor(Math.random() * GAMES.length)); });
+  $('reset').addEventListener('click', function () { if (spinning) return; votes = GAMES.map(function () { return []; }); nameI = 0; renderCards(); clearWin(); });
+  $('under').addEventListener('change', function () { renderCards(); });
+  $('spin').addEventListener('click', spin);
+  [0, 0, 0, 0, 0, 1, 1, 2].forEach(addVote);   // (an example to start with: 5, 2 and 1 votes, one game none)
+})();
+</script>
+</body>
+</html>
