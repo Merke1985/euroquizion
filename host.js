@@ -6794,8 +6794,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tbm = [];
     ['A', 'B'].forEach(function (TM, ti) {
       for (var q = 0; q < 6; q++) {   // (one beam for every player in the team: up to 6)
-        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.55, 12.5, .55), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .3), 6.25, ZF(1.2)); sc.add(tpole); }   // (a light pole beside the stage, as far towards the audience as can be seen: left of green, right of purple)
-        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .3 - .55), 9.8 + q * .5, ZF(1.2))   /* (at the top of the pole) */; sc.add(tarm);
+        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.55, 12.5, .55), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .3), 6.25, ZF(R - 1)); sc.add(tpole); }   // (a light pole beside the stage, level with the front row of tiles: left of green, right of purple)
+        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .3 - .55), 9.8 + q * .5, ZF(R - 1))   /* (at the top of the pole) */; sc.add(tarm);
         var thead = new T.Mesh(new T.CylinderGeometry(.3, .4, .6, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); thead.rotation.x = Math.PI / 2; tarm.add(thead);
         var tcone = new T.Mesh(new T.ConeGeometry(1.2, 1, 20, 1, true), new T.MeshBasicMaterial({ color: ti ? '#9a3dff' : '#10ff50', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         tcone.rotation.x = -Math.PI / 2; tarm.add(tcone);
