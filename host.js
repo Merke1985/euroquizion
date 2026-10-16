@@ -2216,12 +2216,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     c.n++; var cp = chasePool(); c.q = makeChase(cp, playCountries(), c.used) || makeChase(cp, playCountries(), {});
     c.q.items.forEach(function (it) { c.used[it.id] = 1; });
     c.qkey = c.key + '-' + c.n; c.st = 'ask'; c.endsAt = Date.now() + CHASE_ASK;
-    chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; });
+    chaseActive().forEach(function (k) { var l = c.lanes[k]; l.res = null; l.mask = 0; l.lock = false; l.touched = false; l.seq = 0; });
     // test bots: a random answer after a few seconds, each song judged right a bit more often than not
     chaseActive().forEach(function (k) { if (!players[k] || !players[k].bot) return; var qk = c.qkey;
       setTimeout(function () { if (!G.chase || G.chase.qkey !== qk || G.chase.st !== 'ask') return; var m = 0, one = Math.floor(Math.random() * c.q.items.length); c.q.items.forEach(function (it, i) { var right = c.lose ? false /* test: the bots get everything wrong */ : c.plan ? (k === c.plan || i === one) /* test: one bot all right, the others exactly one */ : Math.random() < (c.face ? (c.sd ? 0.55 : 1) : (window.CHASE_SMART || 0.62));   /* face-off test: perfect until the stage, then a coin toss */ if (it.ok === right) m |= 1 << i; }); H.chase({ pid: k, key: qk, mask: m, lock: true }); }, 1500 + Math.random() * 5000); });
     push();
-    clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, CHASE_ASK + 300);
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(chaseScore, CHASE_ASK + 900);   // (a little grace: a tap in the last moment is still on its way)
   }
   // Before the first question: everyone presses Ready on their phone (test bots after three seconds).
   function chaseReady(c) {
@@ -2287,6 +2287,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (c.st !== 'ask' || m.key !== c.qkey) return;
     var l = c.lanes[m.pid]; if (!l || l.out || l.lock || chaseActive().indexOf(m.pid) < 0) return;
+    if (m.seq != null) { if (m.seq < (l.seq || 0)) return; l.seq = m.seq; }   // (an older message that arrives late doesn't undo a newer tap)
     l.mask = (m.mask | 0) & 7; l.touched = true;   // (no locking in: whatever is ticked when the time is up counts)
     push();
   }
@@ -2840,7 +2841,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var c = G.chase, s = { hp: c.st === 'heelpick' ? c.hp : null, rleft: c.st === 'ready' ? Math.max(0, (c.readyEnds || 0) - Date.now()) : 0, rwait: c.st === 'ready' ? Math.max(0, (c.readyOpen || 0) - Date.now()) : 0, sd: !!c.sd, act: c.sd ? chaseActive() : null, key: c.qkey, rkey: c.key + '-r', ready: c.ready || {}, st: c.st, n: c.n, mon: c.mon, mname: c.monster && c.landed ? c.monster.name : '', /* only once the wheel has picked */ end: CHASE_END, goal: CHASE_GOAL, wake: Math.max(0, 2 - c.n), near: chaseNear().length > 0, left: Math.max(0, c.endsAt - Date.now()), lanes: {}, win: c.win };
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
     var nx = c.monsterDead ? 0 : (c.st === 'ask' || c.st === 'show' || c.st === 'pause' || c.st === 'move') ? divaStep(c.n) : divaStep(c.n + 1);
-    c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { danger: !l.out && !!nx && l.pos <= c.mon + nx && l.pos < CHASE_GOAL, fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock }; });
+    c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { danger: !l.out && !!nx && l.pos <= c.mon + nx && l.pos < CHASE_GOAL, fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock, stuck: (!!l.heel && !l.heelAt) || l.heelAt === c.n }; });
     return s;
   }
   // The big screen: lanes, tokens, the Diva and the trophy; the question in a smaller box in the middle.

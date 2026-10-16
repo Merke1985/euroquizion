@@ -49,10 +49,11 @@
   countries = COUNTRY_NAMES;   /* (built into quiz.js: no need to download the whole song list) */
 
   // ---------- The Grand Final: tick the songs that fit ----------
-  var chReadyKey = '', chKey = '', chMask = 0, chLocked = false, chBarKey = '';
+  var chReadyKey = '', chKey = '', chMask = 0, chLocked = false, chBarKey = '', chNone = false, chSeq = 0, chResend = [];
   function chaseSend(lock) {
     if (!net || !chKey) return; var k = chKey, m = chMask;
-    net.send('chase', { pid: pid, key: k, mask: m, lock: !!lock });
+    net.send('chase', { pid: pid, key: k, mask: m, lock: !!lock, seq: ++chSeq });
+    chResend.forEach(clearTimeout); chResend = [500, 1500, 3000].map(function (ms) { return setTimeout(function () { if (net && chKey === k && state && state.chase && state.chase.st === 'ask') net.send('chase', { pid: pid, key: k, mask: chMask, seq: ++chSeq }); }, ms); });   // (the same ticks again in a moment: a tap that got lost on the way still counts)
     if (lock) [700, 2000].forEach(function (ms) { setTimeout(function () { if (net && chKey === k && state && state.chase && state.chase.st === 'ask') net.send('chase', { pid: pid, key: k, mask: m, lock: true }); }, ms); });
   }
   var heelSent = '';
@@ -91,20 +92,22 @@
     $('chpbar').parentNode.classList.remove('hidden'); $('chready').classList.add('hidden');
     if (c.st === 'intro' || !c.items) { show('v-wait'); $('waittitle').textContent = '🏁 The Grand Final'; $('waitsub').textContent = (c.mname || 'A Eurovision icon') + ' is coming! Get ready: ' + where.toLowerCase() + '.'; return; }
     if (c.st === 'ask') {
-      if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; }
+      if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; chNone = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = c.text;
-      $('chhelp').textContent = l.pos >= (c.goal || c.end) - 3 ? '🏆 You can reach the stage: only a perfect answer (all three right) gets you on it and wins!' : 'Tick every song that fits: none, some or all. When the time runs out, what you ticked counts: one space for each one right.';
+      $('chhelp').textContent = l.pos >= (c.goal || c.end) - 3 ? '🏆 You can reach the stage: only a perfect answer (all three right) gets you on it and wins!' : 'Tick every one that fits, or tap “None of these”. When the time runs out, what you ticked counts: one space for each one you judged right.';
       $('chopts').innerHTML = c.items.map(function (it, i) { return '<button type="button" class="opt' + ((chMask >> i) & 1 ? ' on' : '') + '" data-i="' + i + '"><b>' + ((chMask >> i) & 1 ? '✓' : 'ABC'[i]) + '</b>' + esc(it) + '</button>'; }).join('');
+      $('chnone').classList.toggle('on', chNone && !chMask);
       if (chBarKey !== c.key) { chBarKey = c.key; var b = $('chpbar'); b.style.transition = 'none'; b.style.width = (c.left / 100) + '%'; b.getBoundingClientRect(); b.style.transition = 'width ' + c.left + 'ms linear'; b.style.width = '0%'; }
       return;
     }
     // the answer and the moves
     show('v-wait');
-    $('waittitle').textContent = c.st === 'show' || c.st === 'pause' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A Eurovision icon') + ' moves…' : 'Moving…';
+    $('waittitle').textContent = (c.st === 'show' || c.st === 'pause') && l.stuck ? '👠 Broken heel: you stay put this time' : c.st === 'show' || c.st === 'pause' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A Eurovision icon') + ' moves…' : 'Moving…';
     $('waitsub').textContent = where;
   }
-  $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); if (state && state.chase) chaseView(state.chase); chaseSend(false); });
+  $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); chNone = false; if (state && state.chase) chaseView(state.chase); chaseSend(false); });
+  $('chnone').addEventListener('click', function () { if (chLocked || !chKey) return; chMask = 0; chNone = !chNone; if (state && state.chase) chaseView(state.chase); chaseSend(false); });   // (none of the three fits: that is an answer too)
   var chWaitT = null;
   $('chready').addEventListener('click', function () {
     if ($('chready').disabled) return;

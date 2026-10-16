@@ -6125,3 +6125,6 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 /* the lobby: the first player who joined is the host (starts the sync and the game) */
 .lobbyplayers .chip{position:relative}
 .lobbyplayers .chip .leadtag{position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:3;padding:.15em .6em;border-radius:999px;background:linear-gradient(#ffe08a,#f5b301);color:#3a2300;font-size:.72rem;font-weight:900;letter-spacing:.02em;box-shadow:0 2px 8px rgba(245,179,1,.45);white-space:nowrap}
+/* the Grand Final on the phone: "None of these" is an answer too */
+.chnone{width:100%;padding:.75em 1em;border-radius:14px;border:2px dashed rgba(255,255,255,.28);background:rgba(255,255,255,.05);color:var(--ink,#fff);font:inherit;font-weight:800;font-size:1rem;cursor:pointer}
+.chnone.on{border-style:solid;border-color:#16a34a;background:rgba(22,163,74,.35)}
