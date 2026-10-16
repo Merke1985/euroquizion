@@ -5880,17 +5880,28 @@ body.rufrozen #waittitle{color:#0b3a66}
 .ehost .ehside{transform-box:view-box;transform-origin:102px 0}
 .ehost.walk.wl .ehside{transform:scaleX(-1)}
 .ehost .ehleg,.ehost .eharm{transform-box:view-box}
-.ehost .ehleg{transform-origin:100px 298px;animation:ehstep .62s ease-in-out infinite}
-.ehost .ehleg.b{animation-delay:-.31s}
-.ehost .eharm{transform-origin:102px 160px;animation:ehswing .62s ease-in-out infinite}
-.ehost .eharm.f{animation-delay:-.31s}
+.ehost .ehleg{transform-origin:100px 298px;animation:ehstep .9s ease-in-out infinite}
+.ehost .ehleg.b{animation-delay:-.45s}
+.ehost .eharm{transform-origin:102px 160px;animation:ehswing .9s ease-in-out infinite}
+.ehost .eharm.f{animation-delay:-.45s}
 .ehost.her .ehleg{transform-origin:110px 404px;animation-name:ehstep2}
-.ehost.her .ehgown{transform-box:view-box;transform-origin:104px 150px;animation:ehgown .62s ease-in-out infinite}
-.ehost.walk .ehside{animation:ehbob .31s ease-in-out infinite alternate}
+.ehost.her .ehgown{transform-box:view-box;transform-origin:104px 150px;animation:ehgown .9s ease-in-out infinite}
+.ehost.walk .ehside{animation:ehbob .45s ease-in-out infinite alternate}
 @keyframes ehstep{0%,100%{transform:rotate(16deg)}50%{transform:rotate(-16deg)}}
 @keyframes ehstep2{0%,100%{transform:translateX(12px)}50%{transform:translateX(-12px)}}
 @keyframes ehswing{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
 @keyframes ehgown{0%,100%{transform:skewX(2.5deg)}50%{transform:skewX(-2.5deg)}}
 @keyframes ehbob{from{translate:0 0}to{translate:0 -5px}}
 /* Serving: the presenters take their time walking in */
-.svov .svhosts .ehost{transition:translate 3.4s cubic-bezier(.35,.1,.4,1),opacity .8s}
+.svov .svhosts .ehost{transition:translate 4.6s cubic-bezier(.35,.1,.4,1),opacity .8s}
+/* Serving phone: the vote for extra arrows (while your team isn't dancing) */
+.svvote{margin:1.6vh auto 0;padding:1.6vh 4vw;max-width:92vw;border-radius:16px;background:rgba(255,210,63,.1);border:2px solid rgba(255,210,63,.45);text-align:center}
+.svvote b{display:block;color:#ffd23f;font-size:4.4vw;margin-bottom:1.2vh}
+.svvote div{display:flex;flex-wrap:wrap;gap:2vw;justify-content:center}
+.svvote button{flex:1 1 40%;padding:1.4vh 2vw;border-radius:12px;border:2px solid var(--line,rgba(255,255,255,.2));background:rgba(255,255,255,.06);color:#fff;font:inherit;font-weight:800;font-size:4vw}
+.svvote button.on{border-color:#ffd23f;background:rgba(255,210,63,.25)}
+.svvote button i{font-style:normal;background:#ffd23f;color:#221a00;border-radius:99px;padding:0 .5em;margin-left:.3em;font-size:.85em}
+.svvote small{display:block;color:var(--mute);margin-top:1vh;font-size:3.2vw}
+/* the big screen: who got the extra arrows, in their team's panel */
+.svxtra{position:absolute;left:4%;right:4%;bottom:2vh;z-index:3;text-align:center;padding:.8vh .6vw;border-radius:10px;background:rgba(255,210,63,.18);border:1.5px solid rgba(255,210,63,.6);color:#ffd23f;font-weight:900;font-size:1.7vh;opacity:0;transition:opacity .4s}
+.svxtra.on{opacity:1}
