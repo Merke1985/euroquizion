@@ -6449,14 +6449,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       clearInterval(wt); g.hin = true; svShow();
       setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l00[0], l00[1]); }, 5300);
       setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, t00);
-      setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, voiceMs(l0[0], l0[1]) ? voiceMs(l0[0], l0[1]) - 150 : talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
+      setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, voiceMs(l0[0], l0[1]) ? voiceMs(l0[0], l0[1]) - 750 : talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
     }, 150);
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
   var SV_HOFF = 13500, SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!']], SV_WALKIN = 6000;
   function svIntro(g) {
-    if (!REMOTE) [52, 44, 36, 28].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) svVol(v); }, Math.max(0, g.t0 + 500 - Date.now()) + i * 150); });   // (the music dips under the explanations)
-    var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 900;
+    if (!REMOTE) [52, 44, 36, 28].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) svVol(v); }, Math.max(0, g.t0 + 1700 - Date.now()) + i * 120); });   // (loud at first; it dips as her first line starts)
+    var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 1800;
     SV_LINES.forEach(function (l, li) {
       var len = Math.max(3000, talkLen(l[0], l[1], 2400)); if (at + len > first - SV_HOFF) return;
       (function (l, when) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, Math.max(0, when - Date.now())); })(l, at);
