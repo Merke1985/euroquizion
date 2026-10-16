@@ -7008,16 +7008,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function calCheck() {
     var b = $('calbtn'); if (!b) return;
     var ck = b.querySelector('.calok'); if (!ck) { ck = document.createElement('span'); ck.className = 'calok'; ck.textContent = '✓'; b.appendChild(ck); }
+    var bt = b.querySelector('.calt'), btx = G.cal ? '🌐 Syncing…' : G.syncOn ? '🌐 Stream delay on · press to turn off' : '🌐 Sync players (stream delay)'; if (bt && bt.textContent !== btx) bt.textContent = btx;
+    var rr = $('rdyrow'), ar = allReady(); if (rr) rr.classList.toggle('synced', ar);
+    if (G.phase === 'lobby' && $('start')) $('start').disabled = !(startBase && ar && calAll());   // (Start: only once everyone is ready, and synced when the stream delay is on)
     if (G.phase !== 'lobby' && $('calov') && !G.cal) $('calov').remove();   // (the game started: the sync results go away)
     var hum = list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; });
     var ok = !!G.syncOn && hum.length > 0 && calAll();
-    var off = $('caloff'); if (off) off.classList.toggle('hidden', !G.syncOn);
     b.classList.toggle('synced', ok);
     var need = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); });
     b.title = !G.syncOn ? 'Stream delay is off: sync to turn it on' : ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
   }
-  if ($('calbtn')) $('calbtn').addEventListener('click', calStart);
-  if ($('caloff')) $('caloff').addEventListener('click', function () { if (G.cal) return; G.syncOn = false; render(); push(); });   // (everyone in the room after all: no delay)
+  if ($('calbtn')) $('calbtn').addEventListener('click', function () {   // the first press syncs everyone (stream delay on); the next press turns it off again and forgets the delays
+    if (G.cal) return;
+    if (G.syncOn) { G.syncOn = false; list().forEach(function (p) { p.sync = null; }); render(); push(); return; }
+    calStart();
+  });
 
   // ---------- Say Na Na Na! (formerly The Fake Fan: the id is still 'fake') ----------
   // Everyone's phone shows the same secret Eurovision song, except one player: the fake fan, who sees "You're the
@@ -10269,12 +10274,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.pool = poolFor(playSongs(), G.eraNow || (G.era === 'spin' ? '1956-2100' : G.era), G.cat);   // eraNow: the years this round was dealt by the spin
     return G.pool.length;
   }
+  var startBase = false;
   function ready() {
     if (!songs.length) return;
     var n = buildPool();
     $('songcount').textContent = n ? n + ' songs in this selection.' + (G.cat === 'nq' ? ' Semi-finals started in 2004, so non-qualifiers run from then on.' : '')
       : 'No songs match this combination. Semi-finals only started in 2004, so there are no non-qualifiers before that.';
-    $('start').disabled = !(ytReady && n);
+    startBase = !!(ytReady && n); $('start').disabled = !startBase; try { calCheck(); } catch (e) {}
     $('start').textContent = ytReady ? 'Start game' : 'Loading player…';
     if (G.phase === 'paused') render();
   }

@@ -5821,3 +5821,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .mypicrow.avmode{padding:6px 10px}
 .mypicrow.avmode > :not(#backpic){display:none!important}
 #backpic{background:none;border:0;color:var(--mute);font-weight:700;font-size:.9rem;text-decoration:underline;cursor:pointer;padding:4px;width:100%}
+/* lobby: 'everyone ready' with a checkmark, under the sync button */
+.rdyrow{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 10px;padding:.55em 2.6em .55em 1em;border-radius:14px;border:2px solid var(--line,rgba(255,255,255,.16));font-weight:800;color:var(--mute)}
+.rdyrow .calok{position:absolute;right:.7em;top:50%;transform:translateY(-50%);width:1.5em;height:1.5em;line-height:1.5em;border-radius:50%;text-align:center;font-weight:900;color:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.3);transition:all .3s}
+.rdyrow.synced{color:#fff}.rdyrow.synced .calok{color:#fff;background:#3ddc84;border-color:#3ddc84;box-shadow:0 0 12px rgba(61,220,132,.7)}
