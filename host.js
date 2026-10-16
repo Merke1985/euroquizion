@@ -6485,7 +6485,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       clearInterval(wt); g.hin = true; svShow();
       setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l00[0], l00[1]); }, 5300);
       setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, t00);
-      setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, voiceMs(l0[0], l0[1]) ? voiceMs(l0[0], l0[1]) - 750 : talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
+      setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, voiceMs(l0[0], l0[1]) ? Math.max(1200, voiceMs(l0[0], l0[1]) - 3750) : talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
     }, 150);
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
@@ -6763,7 +6763,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [-1, 1].forEach(function (sd) {
       var tw = new T.Mesh(new T.BoxGeometry(.7, 12, .7), truss); tw.position.set(sd * (C * TS / 2 + 2.5), 6, ZB + 2); sc.add(tw);
       for (var k = 0; k < 3; k++) {   // moving heads high up on the tower, each beam landing on the stage as a pool of light
-        var arm = new T.Group(); arm.position.set(sd * (C * TS / 2 + 1.9), 9 + k * 1.5, ZB + 2 + k * 2.5); sc.add(arm);
+        var arm = new T.Group(); arm.position.set(sd * (C * TS / 2 + 2.05), 10 + k * .85, ZB + 2); sc.add(arm);   // (mounted on the tower, at the top)
         var head = new T.Mesh(new T.CylinderGeometry(.35, .45, .7, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); head.rotation.x = Math.PI / 2; arm.add(head);
         var cone = new T.Mesh(new T.ConeGeometry(1.6, 1, 24, 1, true), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .12, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         cone.rotation.x = -Math.PI / 2; arm.add(cone);
@@ -6790,8 +6790,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tbm = [];
     ['A', 'B'].forEach(function (TM, ti) {
       for (var q = 0; q < 6; q++) {   // (one beam for every player in the team: up to 6)
-        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.5, 12, .5), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .7), 6, ZF(1)); sc.add(tpole); }   // (a light pole beside the floor, left of the green side and right of the purple side)
-        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .25), 8.6 + q * .6, ZF(1) + .35); sc.add(tarm);
+        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.5, 12, .5), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .7), 6, ZF(0) - .4); sc.add(tpole); }   // (a light pole beside the floor, left of the green side and right of the purple side)
+        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .15), 9.4 + q * .45, ZF(0) - .4)   /* (on the pole, at the top) */; sc.add(tarm);
         var thead = new T.Mesh(new T.CylinderGeometry(.3, .4, .6, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); thead.rotation.x = Math.PI / 2; tarm.add(thead);
         var tcone = new T.Mesh(new T.ConeGeometry(1.2, 1, 20, 1, true), new T.MeshBasicMaterial({ color: ti ? '#9a3dff' : '#10ff50', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         tcone.rotation.x = -Math.PI / 2; tarm.add(tcone);
@@ -6910,7 +6910,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      balls: function (on) { st.balls = !!on; }, party: function (on) { st.party = !!on; }, team: function (on, pos) { st.tOn = on; st.tPos = pos; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      balls: function (on) { st.balls = !!on; }, party: function (on) { st.party = !!on; }, team: function (on, pos) { st.tOn = on; st.tPos = pos; }, poles: function () { return [-1, 1].map(function (sd) { var X = sd * (C * TS / 2 + .7), Z = ZF(0) - .4, a = pv.set(X, 0, Z).project(cam), x0 = (a.x + 1) / 2 * w, y0 = (1 - a.y) / 2 * h, b2 = pv.set(X, 12, Z).project(cam), y1 = (1 - b2.y) / 2 * h, c2 = pv.set(X + .5, 0, Z).project(cam), wd = Math.abs((c2.x + 1) / 2 * w - x0); return { x: x0, y0: y0, y1: y1, w: wd }; }); }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -7129,7 +7129,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'svov'; ov.className = 'svov enter' + (solo ? ' solo' : '');
       var chart = function (side) { return '<div class="svchart ' + side + '"><b class="svteam">' + (solo ? 'Your arrows' : side === 'l' ? 'Green team' : 'Purple team') + '</b>' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { if (n[6]) return ''; var gp = n[5] || '*'; if (gp !== '*' && gp !== (side === 'l' ? 'A' : 'B')) return ''; return '<i class="svn c' + n[1] + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div>'; };
-      ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svres"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
+      ov.innerHTML = '<div class="sv3d"></div><div class="svpole l"></div><div class="svpole r"></div><div class="svsky"></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svres"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
@@ -7137,7 +7137,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (!g.home) g.home = svHomes(g);
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
-    ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1); ov.toggleAttribute('data-hin', !!g.hin); ov.toggleAttribute('data-hout', !!g.hout);   /* (the presenters: in once everything has loaded) */
+    ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1); ov.toggleAttribute('data-hin', !!g.hin); ov.toggleAttribute('data-hout', !!g.hout); ov.toggleAttribute('data-brk', g.st === 'play' && b >= SV_STAGES[1].to && b < SV_HOP);   /* (between the purple part and the skippy balls: everyone grooves along) */   /* (the presenters: in once everything has loaded) */
     // whose turn: the team of the next arrow; the instructor's steps: everything in the current phrase so far
     var lb = (g.stage === 3 && b >= SV_HOP + 2 ? 360 : 100) / SV_BT;   // (a step starts a little before its arrow, so everyone lands on the new tile exactly on the beat: on the balls the hop takes longer)
     var nx = null, cur = null; g.chart.forEach(function (n) { if (n[6]) return; if (!nx && n[0] >= b - .3) nx = n; if (n[0] <= b + lb) cur = n; });
@@ -7209,6 +7209,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // each team's own light beams: on from their 'Get ready!' through their turn, and for both teams in the part together
     var tOn = { A: false, B: false }; if (g.t0 && (g.st === 'play' || g.st === 'ready' || g.hout)) ['A', 'B'].forEach(function (T) { tOn[T] = rdyG === T || rdyG === '*' || (g.st === 'play' && !!cur && (cur[5] === T || cur[5] === '*') && b - cur[0] < 3); });
     if (ov._3 && ov._3.team) ov._3.team(tOn, tpos);
+    if (ov._3 && ov._3.poles) ov._3.poles().forEach(function (P, i) { var pe = ov.querySelector('.svpole.' + (i ? 'r' : 'l')); if (!pe) return; pe.style.left = (P.x - P.w / 2).toFixed(1) + 'px'; pe.style.width = P.w.toFixed(1) + 'px'; pe.style.top = P.y1.toFixed(1) + 'px'; pe.style.height = Math.max(0, P.y0 - P.y1).toFixed(1) + 'px'; });   // (the light poles drawn again over the singer and her dancers: they walk on behind them)
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
     var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + .8) word = 'SERVING'; else if (songT >= x + .8 && songT < x + 2.8) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
     if (ov._3 && ov._3.word) ov._3.word(word);
