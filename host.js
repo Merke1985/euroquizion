@@ -6729,6 +6729,22 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         beams.push({ arm: arm, sd: sd, k: k, cone: cone, pool: pool });
       }
     });
+    // the big finale (everyone on the balls): lasers fanning out from the back over the audience, extra moving heads
+    // high above the stage sweeping everywhere in random colours, and coloured flashes; all hidden until then
+    var PCOL = ['#ff2fa4', '#3fd8ff', '#ffd23f', '#a6ff4d', '#ffffff', '#b06bff', '#ff5a3a'], party = { lz: [], bm: [], fl: 0, nextFl: 0, nextC: 0 };
+    for (var lz = 0; lz < 12; lz++) {
+      var lg = new T.Group(); lg.position.set((lz % 2 ? 1 : -1) * (1.5 + (lz >> 1) * 1.1), 3.6 + (lz % 3) * .6, ZB + .4); sc.add(lg);
+      var lm = new T.Mesh(new T.CylinderGeometry(.035, .035, 40, 6, 1, true), new T.MeshBasicMaterial({ color: PCOL[lz % PCOL.length], transparent: true, opacity: .75, blending: T.AdditiveBlending, depthWrite: false }));
+      lm.rotation.x = Math.PI / 2; lm.position.z = 20; lg.add(lm); lg.visible = false; party.lz.push({ g: lg, m: lm, ph: Math.random() * 6.28, sp: .6 + Math.random() * 1.4 });
+    }
+    for (var pb = 0; pb < 6; pb++) {
+      var parm = new T.Group(); parm.position.set((pb - 2.5) * 3.2, 14, ZB + 6 + (pb % 2) * 3); sc.add(parm);
+      var pcone = new T.Mesh(new T.ConeGeometry(1.3, 1, 20, 1, true), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .14, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
+      pcone.rotation.x = -Math.PI / 2; parm.add(pcone);
+      var ppool = new T.Mesh(new T.CircleGeometry(1.4, 28), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .4, blending: T.AdditiveBlending, depthWrite: false })); ppool.rotation.x = -Math.PI / 2; sc.add(ppool);
+      parm.visible = ppool.visible = false; party.bm.push({ arm: parm, cone: pcone, pool: ppool, x: 0, z: ZF(1), tx: 0, tz: ZF(1), nt: 0 });
+    }
+    var pflash = new T.PointLight('#ffffff', 0, 40); pflash.position.set(0, 9, ZB + 8); sc.add(pflash);
     // the crowd: glow sticks at the front edge, swaying
     var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 60), sk = [];
     for (i = 0; i < 60; i++) { sk.push({ x: (Math.random() - .5) * 34, z: ZF(R - 1) + TS + .6 + Math.random() * 1.6, ph: Math.random() * 6.28 }); sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
@@ -6760,6 +6776,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
             cx.fillStyle = bgr; cx.beginPath(); cx.arc(bx, by, bs, 0, Math.PI * 2); cx.fill(); }
         }
       }
+      if (st.party) {   // the finale: coloured bursts sweeping across the wall
+        for (var pz = 0; pz < 3; pz++) { var px0 = (Math.sin(t * (1.3 + pz * .7) + pz * 2) * .5 + .5) * W, pgr = cx.createRadialGradient(px0, H * .45, 4, px0, H * .45, 140); pgr.addColorStop(0, ['rgba(63,216,255,.55)', 'rgba(255,210,63,.5)', 'rgba(176,107,255,.55)'][pz]); pgr.addColorStop(1, 'rgba(0,0,0,0)'); cx.fillStyle = pgr; cx.fillRect(0, 0, W, H); }
+      }
       if (st.word) {   // the word projected on the wall: huge white letters over the whole wall, with a glow (partly hidden behind the stands and the heart)
         cx.fillStyle = '#050307'; cx.fillRect(0, 0, W, H);   // (the wall goes black behind the word)
         cx.save(); cx.font = '900 ' + (st.word.length > 5 ? 200 : 300) + 'px Inter, Arial Black, Arial, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.shadowColor = 'rgba(255,255,255,.9)'; cx.shadowBlur = 24; cx.fillStyle = '#fff';
@@ -6789,6 +6808,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       for (var bi = 0; bi < bulbs.count; bi++) bulbs.setColorAt(bi, col.set((bi + st.n) % 2 ? '#fff6d0' : '#ff9a30').multiplyScalar((bi + st.n) % 2 ? 1 : .55 + fl * .4)); bulbs.instanceColor.needsUpdate = true;
       mouth.rotation.y = t * .7;
+      var pOn = !!st.party;
+      if (pOn && now > party.nextC) { party.nextC = now + 350 + Math.random() * 500; party.lz.forEach(function (l) { if (Math.random() < .5) l.m.material.color.set(PCOL[Math.floor(Math.random() * PCOL.length)]); }); }
+      party.lz.forEach(function (l, j) { l.g.visible = pOn; if (!pOn) return; l.g.rotation.set(-.12 + .16 * Math.sin(t * l.sp + l.ph), (j % 2 ? 1 : -1) * (.2 + .55 * Math.sin(t * l.sp * .7 + l.ph * 2)), 0); l.m.material.opacity = .45 + .35 * Math.abs(Math.sin(t * 3 + j)); });
+      party.bm.forEach(function (b, j) {
+        b.arm.visible = b.pool.visible = pOn; if (!pOn) return;
+        if (now > b.nt) { b.nt = now + 500 + Math.random() * 900; b.tx = (Math.random() - .5) * C * TS * 1.1; b.tz = Math.random() < .3 ? ZF(R - 1) + TS + 1 + Math.random() * 2 : Math.random() < .5 ? ZL(Math.floor(Math.random() * LR)) : ZF(Math.floor(Math.random() * R)); var pc = PCOL[Math.floor(Math.random() * PCOL.length)]; b.cone.material.color.set(pc); b.pool.material.color.set(pc); }
+        b.x += (b.tx - b.x) * .12; b.z += (b.tz - b.z) * .12; var py = b.tz <= ZL(LR - 1) + .01 ? YL + .14 : .14;
+        b.pool.position.set(b.x, py, b.z); b.arm.lookAt(b.x, py, b.z); var L2 = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L2, 1); b.cone.position.set(0, 0, L2 / 2);
+      });
+      if (pOn && now > party.nextFl) { party.nextFl = now + 600 + Math.random() * 1400; party.fl = 1; pflash.color.set(PCOL[Math.floor(Math.random() * PCOL.length)]); }
+      party.fl = pOn ? party.fl * .86 : 0; pflash.intensity = party.fl * 3.5;
       sk.forEach(function (s, j) {
         var ang = .5 * Math.sin(t * 4.1 + s.ph), sy = -.2 + .2 * Math.sin(t * 4.1 + s.ph);
         st.e.set(0, 0, ang); st.q.setFromEuler(st.e); st.p.set(s.x, sy, s.z); m4.compose(st.p, st.q, st.s); sticks.setMatrixAt(j, m4);
@@ -6818,7 +6848,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      balls: function (on) { st.balls = !!on; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      balls: function (on) { st.balls = !!on; }, party: function (on) { st.party = !!on; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -7117,6 +7147,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ov._3 && ov._3.word) ov._3.word(word);
     if (ov._3 && ov._3.balls) ov._3.balls(songT >= SV_BALLS_AT);   // (from 2:53: the ball rings on the wall)
     if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
+    if (ov._3 && ov._3.party) ov._3.party(g.st === 'play' && g.t0 && (now - g.t0) / SV_BT >= SV_STAGES[2].from - .5 && (now - g.t0) / SV_BT < SV_END);   // (the hard bit on the balls: the big light show)
     if (SV_VOTE && g.order.length > 1 && g.t0 && g.extra) ['A', 'B'].forEach(function (T) { if (!g.extra[T] && b >= SV_VLOCK[T]) svLock(g, T); });
     ['l', 'r'].forEach(function (sd, si) {   // the voted player, in their team's panel, until their double time is over
       var ch = ov.querySelector('.svchart.' + sd); if (!ch || g.order.length < 2) return; var T = si ? 'B' : 'A', k = g.extra && g.extra[T], show = !!k && b < (si ? 126 : 74), xe = ch.querySelector('.svxtra');
