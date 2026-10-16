@@ -6760,10 +6760,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
             cx.fillStyle = bgr; cx.beginPath(); cx.arc(bx, by, bs, 0, Math.PI * 2); cx.fill(); }
         }
       }
-      if (st.word) {   // the word projected on the wall: big white letters with a glow
+      if (st.word) {   // the word projected on the wall: huge white letters over the whole wall, with a glow (partly hidden behind the stands and the heart)
         cx.fillStyle = '#050307'; cx.fillRect(0, 0, W, H);   // (the wall goes black behind the word)
-        cx.save(); cx.font = '900 ' + (st.word.length > 5 ? 118 : 150) + 'px Inter, Arial Black, Arial, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.shadowColor = 'rgba(255,255,255,.9)'; cx.shadowBlur = 24; cx.fillStyle = '#fff';
-        cx.fillText(st.word, W / 2, H * .36, W * .94); cx.shadowBlur = 0; cx.fillText(st.word, W / 2, H * .36, W * .94); cx.restore();
+        cx.save(); cx.font = '900 ' + (st.word.length > 5 ? 200 : 300) + 'px Inter, Arial Black, Arial, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.shadowColor = 'rgba(255,255,255,.9)'; cx.shadowBlur = 24; cx.fillStyle = '#fff';
+        cx.fillText(st.word, W / 2, H * .5, W * .98); cx.shadowBlur = 0; cx.fillText(st.word, W / 2, H * .5, W * .98); cx.restore();
       }
       wtex.needsUpdate = true;
     }
