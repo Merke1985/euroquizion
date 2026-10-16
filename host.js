@@ -265,7 +265,7 @@
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.sv && G.phase === 'sv') s.sv = svSnap();
     if (G.syncOn) s.sync_on = 1;   // (the stream delay: on once the host has run a sync)
-    if (G.cal) s.cal = G.cal.wait ? { id: G.cal.id, wait: 1, n: G.cal.n, gap: G.cal.gap } : { id: G.cal.id, dt: G.cal.t0 - Date.now(), n: G.cal.n, gap: G.cal.gap, done: !!G.cal.done };   // (waiting: the phones show what to do; then the timing)
+    if (G.cal) s.cal = G.cal.wait ? { id: G.cal.id, wait: 1, n: G.cal.n, gap: G.cal.gap, by: G.cal.by || '' } : { id: G.cal.id, dt: G.cal.t0 - Date.now(), n: G.cal.n, gap: G.cal.gap, done: !!G.cal.done };   // (waiting: the phones show what to do; then the timing)
     if (G.rule && G.phase === 'rule') s.rule = ruSnap();
     if (G.organ && G.phase === 'organ') s.organ = orSnap();
     if (G.atype === 'party' && list().some(function (p) { return (p.inv || []).indexOf('golden') >= 0; })) s.pgames = partyGames().map(function (k) { return { k: k, icon: FUN[k].icon, title: FUN[k].title }; });   // (for the Golden Ticket's choice)
@@ -7235,12 +7235,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   net.on('sv', svMsg);
   // Syncing online players (who watch through a stream, so everything reaches them a little later): the big screen
   // plays 8 clicks with a flash; they tap their phone on every one; each phone works out its own delay from that.
-  function calStart() {
+  function calStart(by) {
     if (REMOTE || G.phase !== 'lobby' || G.cal || !list().some(function (p) { return !p.off; })) return;
     var was = !!G.syncOn; G.syncOn = true;   // (syncing turns the stream delay on: from now on every phone plays with its own measured delay)
     // First the screen with a big 'Sync' button filling the circle (the phones already show what to do); the countdown
     // and the eight flashes only start when the host presses it
-    var g = G.cal = { id: 'cal' + Date.now().toString(36), wait: true, n: 8, gap: 1000, res: {} };
+    var g = G.cal = { id: 'cal' + Date.now().toString(36), wait: true, n: 8, gap: 1000, res: {}, by: by || '' };   // (by: the phone that asked for it; it gets a Sync button too)
     var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing everyone</h2><p>Everyone: tap your phone on every flash and click!</p><button type="button" class="calfl calgo"><b>Sync</b></button><button type="button" class="calcancel">Cancel</button><div class="calres"></div></div>'; document.body.appendChild(ov);
     push();
     ov.querySelector('.calcancel').addEventListener('click', function () { if (G.cal !== g || !g.wait) return; G.cal = null; G.syncOn = was; ov.remove(); render(); push(); });
@@ -10018,7 +10018,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!p || G.phase !== 'lobby') return;
     if (!G.go) G.go = {};
     if (m.off) { delete G.go[p.pid]; push(); return; }   // pressed Ready again: not ready after all
-    if (m.sync) { if (allReady() && !G.cal) calStart(); return; }   // "Sync" on a phone: the sync starts for everyone
+    if (m.sync) { if (allReady() && !G.cal) calStart(p.pid); return; }   // "Sync" on a phone: the sync starts for everyone
+    if (m.calgo) { var cov = $('calov'); if (G.cal && G.cal.wait && G.cal.by === p.pid && cov) calRun(cov, G.cal); return; }   // (that phone's own Sync button: the countdown starts)
     if (m.start) { if (allReady() && (calAll() || m.force)) { var co = $('calov'); if (co && !G.cal) co.remove(); beginGame(); } else if (allReady() && !G.cal) calStart(); return; }   // "Start game" on a phone, only once everyone is ready
     G.go[p.pid] = 1; push();
   });

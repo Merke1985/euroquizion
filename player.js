@@ -822,7 +822,11 @@
       ov = document.createElement('div'); ov.id = 'calui'; document.body.appendChild(ov);
       { ov.innerHTML = '<div class="calp"><b>🌐 Sync</b><p>Tap anywhere on every flash and click, the moment you see and hear it (on the TV or on the stream)!</p><i class="calpad">TAP</i><em></em></div>'; ov.addEventListener('pointerdown', function (e) { e.preventDefault(); if (!calS || calS.res) return; calS.taps.push(Date.now()); var pd = ov.querySelector('.calpad'); pd.classList.remove('hit'); void pd.offsetWidth; pd.classList.add('hit'); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} }); }
     }
-    var em0 = ov.querySelector('.calp em'); if (em0 && !calS.res) { var emx = c.wait ? 'Get ready… the countdown starts in a moment!' : ''; if (em0.textContent !== emx) em0.textContent = emx; }   // (waiting for the host to press Sync)
+    var mineGo = !!(c.wait && c.by === pid), gb = ov.querySelector('.calgo');   // (I asked for the sync: my own Sync button starts it; after that, the TAP pad)
+    if (mineGo && !gb) { gb = document.createElement('button'); gb.type = 'button'; gb.className = 'calgo'; gb.textContent = '🌐 Start the sync'; ov.querySelector('.calp').appendChild(gb); gb.addEventListener('pointerdown', function (e) { e.stopPropagation(); }); gb.addEventListener('click', function (e) { e.stopPropagation(); gb.disabled = true; gb.textContent = '🌐 Starting…'; if (net) net.send('go', { pid: pid, calgo: true }); }); }
+    if (gb && !mineGo) gb.remove();
+    ov.classList.toggle('mygo', mineGo);
+    var em0 = ov.querySelector('.calp em'); if (em0 && !calS.res) { var emx = c.wait ? (mineGo ? 'Press it when everyone is ready to tap!' : 'Get ready… the countdown starts in a moment!') : ''; if (em0.textContent !== emx) em0.textContent = emx; }   // (waiting for the host to press Sync)
     if (c.done && !calS.res) {
       {
         var taps = calS.taps.filter(function (tt) { return tt > calS.t0 - 300; }), offs = [];   // (the 1st tap goes with the 1st click, the 2nd with the 2nd…: so even a delay of seconds is measured right)
