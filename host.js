@@ -2592,7 +2592,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (beginGame() === false) return;
     G.mgTest = true; G.skipOpening = true; clearTimeout(introTimer); fanStop(); stage = 'idle'; try { yt.pauseVideo(); } catch (e) {}
     G.shopFirst = false; G.quizRun = 99; clearTimeout(funTimer); stopTimers(); G.fun = null;
-    svAll();
+    list().forEach(function (p) { if (!p.off) p.score = Math.max(p.score || 0, 200); }); push();   // (testing: everyone has enough points to buy something in the boutique)
+    G.svTest = true; svAll();
   });
   // Testing Lynda with broke winners: 1 = the winner can't pay but someone else can (she invites the richest), 2 = nobody can pay
   [1, 2].forEach(function (mode) {
@@ -6609,6 +6610,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.order.forEach(function (k) { if (!g.res[k]) g.res[k] = { p: 0, g: 0, m: g.chart.filter(function (n) { return svMineN(g, k, n); }).length, pts: 0 }; g.dist[k] = g.res[k].pts; });
     var best = Math.max.apply(null, g.order.map(function (k) { return g.dist[k]; }));
     g.win = best > 0 ? g.order.filter(function (k) { return g.dist[k] === best; }) : [];
+    if (G.svTest && g.win.length > 1) g.win = [pick(g.win)];   // (testing: always one winner, so the boutique and Lynda's line can be tried)
     var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
     g.prize = big; g.done = true; push(); Music.douze(); svShow();
     clearTimeout(svTimer); var goOn = function () { if (G.sv !== g) return; svSong(false); G.sv = null; startRound(); };
@@ -10805,7 +10807,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.round = 0; G.used = {}; fails = 0; note('');
     // a fresh game: nothing left over from a test run (test settings, test envelopes and heels, items underway)
     readPicks(); G.opened = false; G.openWait = false; G.openMusic = false; G.studioTalk = false; Music.loopReset(); studioYtReset();   // (the party games and the boutique as set in the settings, not as a test left them; and the show opens again)
-    G.quipSongsUsed = []; G.quipUsed = []; G.trivFirst = false; G.goldTest = false; G.mgTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
+    G.quipSongsUsed = []; G.quipUsed = []; G.trivFirst = false; G.goldTest = false; G.mgTest = false; G.svTest = false; G.itemTest = false; G.skipOpening = false; G.shopFirst = false; G.heels = []; G.bribes = []; G.shopQ = []; G.smoke = []; G.standingsShown = false; G.frozenLeft = null; clearInterval(itemTestT);
     list().forEach(function (p) { p.robbed = null; p.loot = null; p.hitMsg = null; p.useKey = ''; });
     list().forEach(function (p) { p.score = 0; p.rs = 0; p.rh = []; p.qbank = 0; p.rcrown = false; p.inv = []; p.sitout = ''; p.sitNow = ''; p.flagged = 0; p.flagNow = false; p.rung = 0; p.moved = ''; p.heel = 0; p.bribed = 0; p.uses = {}; p.halfQ = 0; p.halfNow = false; p.cardQ = 0; p.cardNow = ''; p.cardBy = ''; }); G.heels = []; G.sold = {}; G.mgLive = false; G.shopTalked = false; G.recap = false; G.recapAt = 0; G.ladderWon = false; G.mode = 'mc'; G.gallery = null; G.quips = null; G.quipUsed = []; G.bluffSong = null; G.lastParty = ''; G.pspin = null; list().forEach(function (p) { p.champ = false; }); G.chase = null; G.chaseLost = ''; G.chaseOv = null; G.shop = null; G.shopQ = []; G.bribes = []; G.starterGiven = false; G.bomb = null; G.fake = null; clearTimeout(fkTimer); clearInterval(fkTick); clearInterval(fkPrivT); G.shopFirst = false; G.mgBase = null; G.mgTest = false; G.standingsShown = false; G.opened = false; G.skipOpening = false; G.typeLast = []; G.typeWait = {}; G.battle = null; G.battleQ = null; G.clue = null; clearTimeout(clueTimer); Music.dread(false); G.note = null; clearTimeout(noteTimer); G.carpet = null; clearTimeout(tcTimer); G.zg = null; clearTimeout(zgTimer); clearInterval(zgLoop); G.rule = null; clearTimeout(ruTimer); clearInterval(ruLoop); G.organ = null; clearTimeout(orTimer); clearInterval(orTick); G.qj = null; G.quipRun = null; G.slot = null; G.partySeen = {}; clearTimeout(qjTimer); clearInterval(qjTick); G.partyIdx = 0; G.afterParty = $('s-atype').value === 'party'; G.partyDone = [];   // a Party game opens with the Quiz card too
     G.partyPick = $('s-partypick').value; G.tourLast = false; G.tourN = 0; G.tourFinal = false; G.tourDone = false; G.lastPartySaid = false; G.tourEnd = false; G.bigCard = false; G.tour = G.atype === 'party' && G.partyPick === 'order'; if (G.tour) G.total = ENDLESS; G.tourMax = G.tour && PRESET === 'party' && PCOUNT ? PCOUNT : 0;   // Grand tour: three questions and a minigame, until every minigame has been played
