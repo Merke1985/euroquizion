@@ -2393,27 +2393,28 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ok = function () { return G.chase === c && c.nsf && c.nsf.pid === k; }, t = all && all.indexOf(k) > 0 ? 500 : Math.max(1600, (VOICE_MS['nsf_' + c.monster.id] || 3000) + 400);   /* (first the monster says it, while lining up; then the bite) */   /* (everyone: one after the other, quicker after the first) */
     var at = function (ms, f) { setTimeout(function () { if (ok()) f(); }, ms); };
     // twice: two spaces glow, are smashed, and the lane runs back two spaces with the leader (and their gold space) on it
+    var fast = !!all, F = function (ms) { return fast ? Math.round(ms * 0.55) : ms; };   /* (everyone at once: the same moves, about twice as quick) */
     var bite = function () {
       var m0 = c.mon, gap = parseFloat(getComputedStyle($('chtiles')).columnGap) || 3;
       at(t, function () { tiles(function (r) { return r > m0 && r <= m0 + 2; }).forEach(function (x) { x.classList.add('nsfglow'); }); Music.blip(); });
-      at(t + 1500, function () { tiles(function (r) { return r > m0 && r <= m0 + 2; }).forEach(function (x) { x.classList.remove('nsfglow'); x.classList.add('nsfsmash'); }); chaseSfx('brk', 1, Music.crumble); });
-      at(t + 2300, function () {
+      at(t + F(1500), function () { tiles(function (r) { return r > m0 && r <= m0 + 2; }).forEach(function (x) { x.classList.remove('nsfglow'); x.classList.add('nsfsmash'); }); chaseSfx('brk', 1, Music.crumble); });
+      at(t + F(2300), function () {
         c.nsf.pull = true;   // (the board keeps this lane's marks where they are while it moves)
-        var mv = 'transform 1.3s cubic-bezier(.5,0,.4,1)';
+        var mv = 'transform ' + (fast ? '.8s' : '1.3s') + ' cubic-bezier(.5,0,.4,1)';
         tiles(function (r) { return r > m0 + 2; }).forEach(function (x) { x.style.transition = mv; x.style.transform = 'translateX(calc(-200% - ' + (2 * gap) + 'px))'; });
         ks.forEach(function (k) { var tok = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]');
-        if (tok) { tok.style.transition = 'left 1.3s cubic-bezier(.5,0,.4,1),top 1.4s ease-in-out,opacity .6s'; tok.style.left = chaseX(c.lanes[k].pos - 2 - 0.5) + '%'; } });
+        if (tok) { tok.style.transition = 'left ' + (fast ? '.8s' : '1.3s') + ' cubic-bezier(.5,0,.4,1),top 1.4s ease-in-out,opacity .6s'; tok.style.left = chaseX(c.lanes[k].pos - 2 - 0.5) + '%'; } });
         Music.woosh();
       });
-      at(t + 3700, function () {   // in place: the tiles go back unseen (two spaces: the pattern stays the same), two new ones slide in at the stage end
+      at(t + F(3700), function () {   // in place: the tiles go back unseen (two spaces: the pattern stays the same), two new ones slide in at the stage end
         tiles(function () { return true; }).forEach(function (x) { var r = +x.getAttribute('data-r'); x.style.transition = 'none'; x.style.transform = ''; x.classList.remove('nsfsmash', 'nsfglow', 'occ'); if (r > CHASE_END - 2) { x.classList.remove('nsfnew'); void x.offsetWidth; x.classList.add('nsfnew'); } });
         ks.forEach(function (k) { var l = c.lanes[k]; l.pos = Math.max(c.mon + 1, l.pos - 2); }); c.nsf.pull = false; push();
         ks.forEach(function (k) { var tok = $('chlanes').querySelector('.chtok[data-pid="' + k.replace(/"/g, '') + '"]'); if (tok) setTimeout(function () { tok.style.transition = ''; }, 50); });
       });
-      t += 3700;
+      t += F(3700);
     };
     bite(); if (!all) { t += 1000; bite(); }   /* (everyone: just the one bite) */
-    at(t + 1400, function () { c.nsf = null; c.st = 'diva'; push(); Music.dread(true); then(); });   // (her next spaces blink as usual; she slides back to her place)
+    at(t + F(1400), function () { c.nsf = null; c.st = 'diva'; push(); Music.dread(true); then(); });   // (her next spaces blink as usual; she slides back to her place)
   }
   function chaseDieMs(c) { return (c.monster && VOICE_MS['die_' + c.monster.id] || 2300) + 2000; }   /* (its death scream to the end, then 2 seconds) */
   function chaseDie(c) { c.monsterDead = true; chaseMusic(false); Music.dread(false); Music.short(); if (!REMOTE && c.monster) hostVoice('die_' + c.monster.id);   /* (a cry of agony as it falls) */ setTimeout(function () { Music.defeat(); }, 350); push(); }
