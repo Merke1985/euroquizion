@@ -3965,21 +3965,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path d="M86 88 q10 -6 18 0 M116 88 q10 -6 18 0" stroke="#4a2c16" stroke-width="4" fill="none" stroke-linecap="round"/>' +   /* (eyebrows) */
     '<ellipse cx="96" cy="100" rx="5" ry="6" fill="#222"/><ellipse cx="124" cy="100" rx="5" ry="6" fill="#222"/><circle cx="97.6" cy="98" r="1.6" fill="#fff"/><circle cx="125.6" cy="98" r="1.6" fill="#fff"/>' +
     '<path d="M110 102 q-6 10 0 14 q4 1 6 -1" stroke="#c8906a" stroke-width="3" fill="none" stroke-linecap="round"/>' +   /* (nose) */
-    '<path d="M96 122 Q110 134 124 122" stroke="#7a2a1a" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+    '<path class="csmile" d="M96 122 Q110 134 124 122" stroke="#7a2a1a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse class="cmouth" cx="110" cy="126" rx="9" ry="6" fill="#5a1a10"/>' +
     '<ellipse cx="84" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><ellipse cx="136" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/>' +
     '<path d="M68 84 Q70 48 110 46 Q150 48 152 84 Z" fill="#6b4522"/><path d="M86 52 Q110 44 134 52" stroke="#8a5a2b" stroke-width="4" fill="none"/><path d="M110 46 v36" stroke="#5a3a1c" stroke-width="2" opacity=".6"/>' +
     '<path d="M62 84 h104 q6 0 4 8 q-56 6 -112 0 q-2-8 4-8z" fill="#4a2e14"/><rect x="99" y="58" width="22" height="15" rx="3" fill="#ffd166"/><path d="M104 66 l5 4 l8 -8" stroke="#5a3a1c" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
     '</svg>';
    // (an original character: a courier in a brown uniform)
-  // the studio behind the scores: a big LED wall, a lighting rig with lamps, light beams, a raised stage with
-  // lit edges and steps, and the backstage doorway on the right where the courier comes in
-  var FS_SET = (function () {
-    var lamps = ''; for (var i = 0; i < 9; i++) lamps += '<i style="--i:' + i + '"></i>';
-    var beams = ''; for (i = 0; i < 6; i++) beams += '<i style="--i:' + i + '"></i>';
-    var dots = ''; for (i = 0; i < 28; i++) dots += '<i></i>';
-    return '<div class="fsset" aria-hidden="true"><div class="fsled"><div class="fsledin"></div></div><div class="fsrig">' + lamps + '</div><div class="fstruss l"></div><div class="fstruss r"></div><div class="fsbeams">' + beams + '</div>' +
-      '<div class="fsdoor"><div class="fsdoorlite"></div><b>BACKSTAGE</b></div><div class="fsstage"><div class="fsedge">' + dots + '</div><div class="fsstep"></div><div class="fsstep two"></div></div></div>';
-  })();
+  // the studio behind the scores: the same stage as the winner's screen (the LED wall with the scores on it, the
+  // lighting rig, sweeping beams, the stage floor); the presenters and the courier stand on the stage
+  var FS_SET = '<div class="studio fnstudio fsstudio"><i class="sttruss"></i><i class="stwall"></i><i class="stbeam b1"></i><i class="stbeam b2"></i><i class="stbeam b3"></i><i class="stbeam b4"></i><i class="stbeam b5"></i><i class="stbeam b6"></i><i class="stfloor"></i><i class="sthaze"></i></div>';
   var knockEl = null;
   function knockSnd() { if (REMOTE) { Music.step(); return; } try { if (!knockEl) knockEl = new Audio('sounds/knock.mp3?v=1'); knockEl.currentTime = 0; knockEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = knockEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function partyStandings(then) {
@@ -4022,9 +4016,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       at(Array.from(w0).length * TALK_MS + 700, function () { knockSnd(); });
       var k1 = 'Wait… is somebody knocking? 🚪'; at(1900, function () { say('him', k1); });
       at(lineMs(k1) - 800, function () { ov.classList.add('cin'); var steps = setInterval(function () { if (!ov.isConnected || !ov.classList.contains('cin') || ov.classList.contains('cstop')) { clearInterval(steps); return; } Music.step(); }, 330); });   // the courier runs in
-      at(2600, function () { ov.classList.add('cstop'); var cb = ov.querySelector('.fscbub'); cb.classList.add('on'); typeSay(cb, 'Special delivery from the EBU! 📦 Sign here, please!', 'courier'); });
+      at(2600, function () { ov.classList.add('cstop', 'ctalk'); var cb = ov.querySelector('.fscbub'); cb.classList.add('on'); typeSay(cb, 'Special delivery from the EBU! 📦 Sign here, please!', 'courier'); });
       at(3600, function () { say('him', 'A brown envelope… from the EBU?! 😱'); ov.classList.add('shock'); Music.dread(true); });
-      at(3400, function () { ov.querySelector('.fscbub').classList.remove('on'); ov.classList.add('cgive'); Music.blip(); });   // the envelope changes hands
+      at(3400, function () { ov.querySelector('.fscbub').classList.remove('on'); ov.classList.remove('ctalk'); ov.classList.add('cgive'); Music.blip(); });   // the envelope changes hands
       at(1100, function () { ov.classList.add('cout'); whooshes([0]); });   // and off he goes
       at(1400, function () { ov.classList.add('envbig'); whooshes([0]); var h = 'Let’s open it… 🥁'; say('her', h); });
       at(2600, function () { ov.classList.add('envopen'); Music.ping(); ov.querySelector('.fsletter span').textContent = 'With thanks for the… very generous gifts. 💸 ' + Object.keys(e.got).map(function (k) { return (players[k] ? players[k].name : '') + ' +' + e.got[k]; }).join(' · '); });
@@ -6426,7 +6420,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
   var SV_VID = 'WPfV96fRvW0', SV_S = 0, SV_BT = 60000 / 122 * 2, SV_PHASE = -3, SV_LAG = 90,   /* (measured: exactly 122 BPM, and in the video the beat starts right at 0:00: bounce 0 = 0:00; the song plays from the start, under the presenters. SV_LAG: the sound reaches the room a little after the player reports its time) */ svLoop = null, svTimer = null, svSongT = null;
-  var SV_STAGES = [{ n: 1, t: 'Green team', from: 34, to: 74, at: 0 }, { n: 2, t: 'Purple team', from: 86, to: 126, at: 78 }, { n: 3, t: 'Everyone together', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 149, SV_HOP = 154, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
+  var SV_STAGES = [{ n: 1, t: 'Green team', from: 34, to: 74, at: 0 }, { n: 2, t: 'Purple team', from: 86, to: 126, at: 78 }, { n: 3, t: 'Everyone together', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 150, SV_HOP = 154, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { var S = SV_STAGES[0]; SV_STAGES.forEach(function (x) { if (t >= x.at) S = x; }); return S; }
   // Stages 1 and 2 are an aerobics class: every arrow you hit is a step on the stage (left, forward, back, right), and the
@@ -6700,7 +6694,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var lc = document.createElement('canvas'); lc.width = 256; lc.height = 256; (function (x) { x.fillStyle = '#c99a3a'; x.fillRect(0, 0, 256, 256); for (var k = 0; k < 90; k++) { var px = (k * 73) % 256, py = (k * 151) % 256, rr = 6 + k % 5; x.fillStyle = '#2a1606'; x.beginPath(); x.ellipse(px, py, rr * 1.3, rr, k, 0, 6.28); x.fill(); x.fillStyle = '#8a5a1a'; x.beginPath(); x.ellipse(px, py, rr * .6, rr * .45, k, 0, 6.28); x.fill(); } })(lc.getContext('2d'));
       var lt = new T.CanvasTexture(lc); lt.wrapS = lt.wrapT = T.RepeatWrapping; lt.repeat.set(3, 2); lt.encoding = T.sRGBEncoding;
       var tri = new T.Shape(); tri.moveTo(0, 0); tri.lineTo(7, 0); tri.quadraticCurveTo(2.5, .6, 0, 4.2); tri.lineTo(0, 0);
-      var sl = new T.Mesh(new T.ExtrudeGeometry(tri, { depth: 3.4, bevelEnabled: false }), new T.MeshStandardMaterial({ map: lt, roughness: .9 })); sl.scale.x = -sd; sl.position.set(sd * (C * TS / 2 + 1.2), 0, ZB - .4); sc.add(sl);   // (sloping down towards the stage)
+      var sl = new T.Mesh(new T.ExtrudeGeometry(tri, { depth: ZL(2) + TS / 2 - (ZB - .4), bevelEnabled: false }), new T.MeshStandardMaterial({ map: lt, roughness: .9 })); sl.scale.x = -sd; sl.position.set(sd * (C * TS / 2 + 1.2), 0, ZB - .4); sc.add(sl);   // (sloping down towards the stage; they end exactly where her stage ends)
     });
     // From 2:39 the arcades make way for glowing leopard statues, sitting proud on pink pedestals (our own drawing)
     var lv = document.createElement('canvas'); lv.width = 256; lv.height = 320; (function (x) {
@@ -6765,9 +6759,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // truss towers with moving heads: soft additive cones
     var truss = new T.MeshStandardMaterial({ color: '#9aa0b0', metalness: .8, roughness: .35 }), beams = [];
     [-1, 1].forEach(function (sd) {
-      var tw = new T.Mesh(new T.BoxGeometry(.7, 12, .7), truss); tw.position.set(sd * (C * TS / 2 + 2.5), 6, ZB + 2); sc.add(tw);
+      var tw = new T.Mesh(new T.BoxGeometry(.7, 12, .7), truss); tw.position.set(sd * (C * TS / 2 + 1.55), 6, ZL(2) + TS / 2 - .35); sc.add(tw);   // (against the outside of the slope, at the front end)
       for (var k = 0; k < 3; k++) {   // moving heads high up on the tower, each beam landing on the stage as a pool of light
-        var arm = new T.Group(); arm.position.set(sd * (C * TS / 2 + 2.05), 10 + k * .85, ZB + 2); sc.add(arm);   // (mounted on the tower, at the top)
+        var arm = new T.Group(); arm.position.set(sd * (C * TS / 2 + 1.1), 10 + k * .85, ZL(2) + TS / 2 - .35); sc.add(arm);   // (mounted on the tower, at the top)
         var head = new T.Mesh(new T.CylinderGeometry(.35, .45, .7, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); head.rotation.x = Math.PI / 2; arm.add(head);
         var cone = new T.Mesh(new T.ConeGeometry(1.6, 1, 24, 1, true), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .12, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         cone.rotation.x = -Math.PI / 2; arm.add(cone);
@@ -6794,8 +6788,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tbm = [];
     ['A', 'B'].forEach(function (TM, ti) {
       for (var q = 0; q < 6; q++) {   // (one beam for every player in the team: up to 6)
-        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.55, 12.5, .55), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .3), 6.25, ZF(R - 1)); sc.add(tpole); }   // (a light pole beside the stage, level with the front row of tiles: left of green, right of purple)
-        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .3 - .55), 9.8 + q * .5, ZF(R - 1))   /* (at the top of the pole) */; sc.add(tarm);
+        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.55, 12.5, .55), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .85), 6.25, ZF(R - 1)); sc.add(tpole); }   // (a light pole beside the stage, level with the front row of tiles: left of green, right of purple)
+        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .85 - .55), 9.8 + q * .5, ZF(R - 1))   /* (at the top of the pole) */; sc.add(tarm);
         var thead = new T.Mesh(new T.CylinderGeometry(.3, .4, .6, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); thead.rotation.x = Math.PI / 2; tarm.add(thead);
         var tcone = new T.Mesh(new T.ConeGeometry(1.2, 1, 20, 1, true), new T.MeshBasicMaterial({ color: ti ? '#9a3dff' : '#10ff50', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         tcone.rotation.x = -Math.PI / 2; tarm.add(tcone);

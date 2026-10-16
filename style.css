@@ -5956,36 +5956,6 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .shopov.boutique .bqbubble{top:auto;bottom:52vh}
 .shopov.boutique .bqtimer{left:22.7vw;transform:translateX(-50%)}
 /* on the balls the move across takes as long as the hop (.37 s), and it starts that much before the beat: they land on the new tile exactly on the beat */
-/* the final scores: a TV studio behind the board */
-.fsset{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.fsled{position:absolute;left:18vw;right:18vw;top:9vh;height:52vh;border-radius:10px;padding:.8vh;background:#0b0a14;box-shadow:0 0 0 .5vh #1c1a2c,0 0 60px rgba(120,80,255,.35)}
-.fsledin{width:100%;height:100%;border-radius:6px;background:radial-gradient(circle at 50% 50%,transparent 0 1.6px,rgba(0,0,0,.35) 1.8px) 0 0/7px 7px,radial-gradient(ellipse at 50% 120%,#ffd166 0%,transparent 45%),conic-gradient(from 0deg at 50% 110%,#ff3fa4,#7a2cc8,#3fd8ff,#7a2cc8,#ff3fa4);filter:saturate(1.3) brightness(.95);animation:fsled 14s linear infinite;opacity:.9}
-@keyframes fsled{to{filter:saturate(1.3) brightness(.95) hue-rotate(360deg)}}
-.fsrig{position:absolute;left:8vw;right:8vw;top:3vh;height:2.4vh;display:flex;justify-content:space-between;align-items:flex-start;padding:0 2vw;background:repeating-linear-gradient(60deg,transparent 0 .9vh,#9aa0b0 .9vh 1.2vh),repeating-linear-gradient(-60deg,transparent 0 .9vh,#9aa0b0 .9vh 1.2vh);border-top:.35vh solid #b8bdca;border-bottom:.35vh solid #b8bdca}
-.fsrig i{width:2.2vw;height:3.2vh;margin-top:2.2vh;border-radius:.4vw .4vw 1vw 1vw;background:linear-gradient(#2a2a32,#111);box-shadow:inset 0 -.8vh 0 -.4vh #fff6d0,0 1.6vh 2vh rgba(255,240,200,.4)}
-.fstruss{position:absolute;top:3vh;bottom:22vh;width:2vw;background:repeating-linear-gradient(55deg,transparent 0 1.2vh,#8a90a0 1.2vh 1.5vh),repeating-linear-gradient(-55deg,transparent 0 1.2vh,#8a90a0 1.2vh 1.5vh);border-left:.3vw solid #a8adba;border-right:.3vw solid #a8adba;opacity:.85}
-.fstruss.l{left:8vw}.fstruss.r{right:8vw}
-.fsbeams i{position:absolute;top:5vh;left:calc(14vw + var(--i) * 14vw);width:10vw;height:80vh;margin-left:-5vw;transform-origin:50% 0;background:linear-gradient(rgba(255,240,210,.22),rgba(255,240,210,0) 85%);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:fsbeam 7s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -1.3s);mix-blend-mode:screen}
-.fsbeams i:nth-child(even){background:linear-gradient(rgba(255,120,220,.2),rgba(255,120,220,0) 85%)}
-@keyframes fsbeam{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
-.fsdoor{position:absolute;right:1vw;bottom:14vh;width:9vw;height:44vh;border-radius:.6vw .6vw 0 0;background:linear-gradient(90deg,#120c22,#241a44);box-shadow:inset 0 0 0 .5vw #3a2c64,0 0 30px rgba(0,0,0,.6)}
-.fsdoorlite{position:absolute;inset:.5vw .5vw 0;background:linear-gradient(#ffe7a8,#ffb84a);opacity:.15;transition:opacity .4s}
-.fsov.cin .fsdoorlite{opacity:.55}
-.fsdoor b{position:absolute;left:50%;top:-4vh;transform:translateX(-50%);padding:.3vh .7vw;border-radius:4px;background:#1a1028;border:2px solid #ff3fa4;color:#ff9ad0;font-size:clamp(.5rem,.8vw,.8rem);letter-spacing:.15em;text-shadow:0 0 8px #ff3fa4;box-shadow:0 0 12px rgba(255,63,164,.5)}
-.fsstage{position:absolute;left:4vw;right:4vw;bottom:0;height:16vh;background:linear-gradient(#2a1f4c,#120c26);border-top:.6vh solid #6a5aa8;box-shadow:0 -1vh 3vh rgba(120,80,255,.25)}
-.fsedge{position:absolute;left:0;right:0;top:.6vh;display:flex;justify-content:space-around}
-.fsedge i{width:.7vw;height:.7vw;border-radius:50%;background:#ffd166;box-shadow:0 0 10px #ffb000;animation:fsdot 1.6s ease-in-out infinite alternate}
-.fsedge i:nth-child(odd){animation-delay:-.8s;background:#ff9ad0;box-shadow:0 0 10px #ff3fa4}
-@keyframes fsdot{from{opacity:.35}to{opacity:1}}
-.fsstep{position:absolute;left:38%;right:38%;bottom:0;height:5vh;background:linear-gradient(#3a2c64,#1c1438);border-top:.4vh solid #8a7ad0}
-.fsstep.two{left:34%;right:34%;height:2.4vh}
-.fsov .grwall{opacity:.6}
-.fsov .grfloor{opacity:.55}
-/* the final scores are shown ON the studio's LED wall, with the wall's pixel grid over them (like the victory song) */
-.fsov .fsboard{left:18.8vw;right:18.8vw;top:9.8vh;bottom:auto;height:50.4vh;border-radius:6px;overflow:hidden;align-items:stretch}
-.fsov .fsboard ol{border:0;border-radius:6px;box-shadow:none;height:100%;justify-content:center;background:radial-gradient(ellipse at 50% 0%,rgba(120,60,220,.35),transparent 70%),linear-gradient(rgba(14,8,40,.86),rgba(8,4,24,.92))}
-.fsov .fsboard::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:6px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.3));z-index:3}
-.fsov .fsboard li{position:relative;z-index:2}
 
 /* the break after the purple part, until they hop on the skippy balls: every player grooves on the beat (the whole figure, head included) */
 .svov[data-brk] .svaf .svfb2,.svov[data-brk] .svaf.ok .svfb2{animation:svpgroove .4918s ease-in-out infinite alternate;transform-origin:50% 100%}
@@ -6004,3 +5974,37 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .shopov.boutique .bqbunting{top:12.5vh}
 .shopov.boutique .bqcase{top:20vh}
 .shopov.boutique .bqsale{top:17.5vh}
+/* the final scores: on the same stage as the winner's screen; the scores on its LED wall, everyone standing on the stage */
+.fsov .grwall,.fsov .grfloor,.fsov .hsspot{display:none}
+.fsov .fsstudio{position:absolute;inset:0;overflow:hidden;display:block;z-index:0}
+.fsov .fsstudio .stwall{left:9%;right:9%;top:7%;bottom:44%;opacity:1;border-radius:12px;box-shadow:0 0 120px 20px rgba(255,46,136,.5),inset 0 0 60px rgba(0,0,0,.4)}
+.fsov .fsstudio .stfloor{height:46%}
+.fsov .fsstudio .stbeam{opacity:.55}
+.fsov .fsboard{left:9%;right:9%;top:7%;bottom:auto;height:49vh;border-radius:12px;overflow:hidden;align-items:stretch}
+.fsov .fsboard ol{border:0;border-radius:12px;box-shadow:none;height:100%;justify-content:center;background:radial-gradient(ellipse at 50% 0%,rgba(120,60,220,.35),transparent 70%),linear-gradient(rgba(14,8,40,.84),rgba(8,4,24,.9))}
+.fsov .fsboard::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:12px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.3));z-index:3}
+.fsov .fsboard li{position:relative;z-index:2}
+.fsov .grhosts .ehost{height:50vh;bottom:5vh}
+.fsov .grhosts .him{left:14vw}.fsov .grhosts .her{right:14vw}
+.fsov .hssign{display:none}
+/* the courier: on the stage too, the envelope in his hand (it moves with him), and his mouth moves when he talks */
+.fscour{bottom:5vh;transition:left 2.5s cubic-bezier(.3,.3,.55,1)}
+.fsov.cin .fscour{left:25vw}
+.fsenv{left:calc(104vw - 4.5vh);bottom:21vh;transition:left 2.5s cubic-bezier(.3,.3,.55,1),bottom .9s cubic-bezier(.3,1.2,.5,1),width .9s cubic-bezier(.3,1.2,.5,1),height .9s cubic-bezier(.3,1.2,.5,1),transform .9s,opacity .4s}
+.fsov.cin .fsenv{left:calc(25vw - 4.5vh)}
+.fsov.cgive .fsenv{left:15vw;bottom:27vh}
+.fscour .cmouth{opacity:0;transform-box:fill-box;transform-origin:50% 30%}
+.fsov.ctalk .fscour .cmouth{opacity:1;animation:ctalk .16s ease-in-out infinite alternate}
+.fsov.ctalk .fscour .csmile{opacity:0}
+@keyframes ctalk{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+.fsov .fsboard{align-items:center}.fsov .fsboard ol{height:auto;max-height:100%}
+.fsov .grbub{top:auto;bottom:57vh;max-width:24vw;font-size:clamp(1rem,1.7vw,1.5rem)}
+.fsov .grbub.him{left:2vw}.fsov .grbub.her{right:2vw}
+.fsov .fsboard{left:22vw;right:22vw}
+
+.fsov .fsstudio .stwall::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 1px,transparent 1px 4px)}
+.fsov .grbub{max-width:19vw;bottom:58vh}
+/* the team panels: glowing in the team colour on their turn, and easier to see when it isn't */
+.svov[data-act="B"] .svchart.l,.svov[data-act="A"] .svchart.r{opacity:.62}
+.svov[data-act="A"] .svchart.l,.svov[data-act="*"] .svchart.l{box-shadow:inset 0 0 0 3px #3dff7a,inset 0 0 26px rgba(61,255,122,.35),0 0 26px rgba(61,255,122,.55)}
+.svov[data-act="B"] .svchart.r,.svov[data-act="*"] .svchart.r{box-shadow:inset 0 0 0 3px #b06bff,inset 0 0 26px rgba(176,107,255,.35),0 0 26px rgba(176,107,255,.6)}
