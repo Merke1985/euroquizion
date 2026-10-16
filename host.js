@@ -117,6 +117,7 @@
       }
     }
     p.pk = !!m.pk;
+    if (m.wh === 'online' || m.wh === 'local') { if (p.wh !== m.wh) { p.wh = m.wh; setTimeout(render, 0); } }   // (where they watch: in the room, or online via a stream)
     if (isNew && !p.bot && String(m.pid).indexOf('bot') !== 0 && (G.mgTest || G.itemTest || G.goldTest)) { p.inv = p.inv || []; if (p.inv.indexOf('golden') < 0) p.inv.push('golden'); }   // (joining a test: a Golden Ticket too)   // (still choosing their avatar and country: the hosts wait with their welcome)
     var changed = isNew || p.name !== nm || p.off;
     /* the fan flag: one country per player; none picked (or taken): a random free one */
@@ -278,6 +279,7 @@
     if (G.phase === 'reveal' && autoTick && $('autolen').value !== 'end') s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
     if (G.revealAt && (G.phase === 'guess' || G.phase === 'svote' || G.phase === 'sbest')) s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (G.phase === 'lobby') s.all_ready = allReady();
+    if (G.phase === 'lobby') { s.all_sync = calAll(); s.cal_on = !!G.cal; }   // (once everyone is ready: first the sync for the online players, then Start)
     if (G.phase === 'reveal' && lastSong()) s.last = true;
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'qall' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
@@ -496,6 +498,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   var joinSeen = {}, joinQuiet = Date.now() + 2500;   // players restored when the page opens do not pop
   function render() {
+    try { calCheck(); } catch (e) {}
     var ps = list();
     if (G.phase !== 'chase') $('chase').classList.add('hidden');
     if (G.phase !== 'shop' && $('shopov')) $('shopov').remove();
@@ -524,7 +527,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var age = nowT - joinSeen[p.pid], pop = age < 700;
       var lob = G.phase === 'lobby';
       return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + ((G.phase === 'lobby' || G.phase === 'intro') && G.go && G.go[p.pid] ? ' rdy' : '') + (lob ? ' lobfig' : '') + (rmPid === p.pid ? ' rm' : '') + '" data-pid="' + esc(p.pid) + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' +
-        (lob ? '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' : '') + (p.char ? charSvg(p.char) : '<span class="char"><i class="chin"><b class="chnopic">❔</b></i></span>') + '<span class="pname">' + esc(p.name) + '</span>' + (lob && p.cc && countries[p.cc] ? '<span class="pcc">' + esc(countries[p.cc]) + '</span>' : '') + (rmPid === p.pid ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + '</span>';
+        (lob ? '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' : '') + (p.char ? charSvg(p.char) : '<span class="char"><i class="chin"><b class="chnopic">❔</b></i></span>') + '<span class="pname">' + esc(p.name) + '</span>' + (lob && p.cc && countries[p.cc] ? '<span class="pcc">' + esc(countries[p.cc]) + '</span>' : '') + (lob ? syncTag(p) : '') + (rmPid === p.pid ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + '</span>';
     }).join('') || '<span class="mute">Waiting for players…</span>';
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
     if (G.phase === 'lobby' && ps.length !== lenN) { lenN = ps.length; try { gameLen(); } catch (e) {} }
@@ -6892,13 +6895,47 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
     for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
     setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 5500 - Date.now());   // (a stream can be seconds behind: wait for the last taps)
-    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } ov.remove(); }, g.t0 + g.n * g.gap + 14000 - Date.now());
+    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } calDone(ov, g); }, g.t0 + g.n * g.gap + 8000 - Date.now());   // (then a screen with everyone's delay: OK, or try again)
   }
+  function calDone(ov, g) {
+    if (!ov.parentNode) return;
+    var hum = list().filter(function (p) { return !p.bot && String(p.pid).indexOf('bot') !== 0; });
+    var row = function (p) {
+      var d = g.res[p.pid], on = p.wh === 'online' || d >= 0 || d === -2, st, cls;
+      if (d >= 0) { st = '🌐 ' + (d / 1000).toFixed(2) + 's'; cls = 'ok'; }
+      else if (!on) { st = '📺 In the room'; cls = 'ok'; }
+      else if (d === -2) { st = '❌ Not enough taps'; cls = 'no'; }
+      else if (p.sync != null && p.sync >= 0) { st = '🌐 ' + (p.sync / 1000).toFixed(2) + 's (earlier)'; cls = 'ok'; }
+      else { st = '❌ Not synced'; cls = 'no'; }
+      return '<tr class="' + cls + '"><td>' + (p.char ? charSvg(p.char) : '') + '</td><td>' + esc(p.name) + '</td><td>' + st + '</td></tr>';
+    };
+    var bad = hum.filter(function (p) { var d = g.res[p.pid]; return (p.wh === 'online' || d === -2) && !(d >= 0) && !(p.sync != null && p.sync >= 0 && d !== -2); }).length;
+    ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (hum.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div></div>';
+    ov.querySelector('[data-a="ok"]').addEventListener('click', function () { ov.remove(); });
+    ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(); });  }
   function calShow() {
     var g = G.cal, ov = $('calov'); if (!g || !ov) return;
     var ks = Object.keys(g.res); ov.querySelector('.calres').innerHTML = ks.length ? ks.map(function (k) { var p = players[k], d = g.res[k]; return '<span>' + esc(p ? p.name : '?') + ': ' + (d < 0 ? 'in the room' : (d / 1000).toFixed(2) + 's') + '</span>'; }).join('') : '';
   }
-  net.on('cal', function (m) { var g = G.cal; if (!g || !m || m.id !== g.id || !players[m.pid]) return; g.res[m.pid] = Math.round(+m.d); calShow(); });
+  net.on('cal', function (m) { var g = G.cal; if (!g || !m || m.id !== g.id || !players[m.pid]) return; g.res[m.pid] = Math.round(+m.d); var p = players[m.pid]; if (g.res[m.pid] >= 0) { p.wh = 'online'; p.sync = g.res[m.pid]; } else if (g.res[m.pid] === -1) p.wh = 'local'; else if (g.res[m.pid] === -2) { p.wh = 'online'; p.sync = null; } calShow(); render(); push(); });
+  net.on('where', function (m) { var p = m && players[m.pid]; if (!p || (m.w !== 'online' && m.w !== 'local')) return; p.wh = m.w; render(); push(); });
+  // Under every player in the lobby: a little sync box. In the room: ticked (no sync needed); online: ticked once their delay is measured
+  function syncTag(p) {
+    var bot = p.bot || String(p.pid).indexOf('bot') === 0, on = p.wh === 'online', ok = bot || !on || (p.sync != null && p.sync >= 0);
+    return '<span class="psync' + (ok ? ' ok' : '') + '" title="' + (bot ? 'Bot' : on ? (ok ? 'Online, delay ' + (p.sync / 1000).toFixed(2) + 's' : 'Online, not synced yet') : 'In the room') + '"><i>' + (ok ? '✓' : '') + '</i>' + (bot ? 'bot' : on ? (ok ? (p.sync / 1000).toFixed(2) + 's' : 'sync') : 'room') + '</span>';
+  }
+  // The sync button gets a checkmark at the end, lit only when every player is synced: in the room (no sync needed) or online with a measured delay
+  function calAll() { return list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }).every(function (p) { return p.wh !== 'online' || (p.sync != null && p.sync >= 0); }); }   // (everyone in the room, or online with a measured delay)
+  function calCheck() {
+    var b = $('calbtn'); if (!b) return;
+    var ck = b.querySelector('.calok'); if (!ck) { ck = document.createElement('span'); ck.className = 'calok'; ck.textContent = '✓'; b.appendChild(ck); }
+    if (G.phase !== 'lobby' && $('calov') && !G.cal) $('calov').remove();   // (the game started: the sync results go away)
+    var hum = list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; });
+    var ok = hum.length > 0 && calAll();
+    b.classList.toggle('synced', ok);
+    var need = hum.filter(function (p) { return p.wh === 'online' && !(p.sync != null && p.sync >= 0); });
+    b.title = ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
+  }
   if ($('calbtn')) $('calbtn').addEventListener('click', calStart);
 
   // ---------- Say Na Na Na! (formerly The Fake Fan: the id is still 'fake') ----------
@@ -9527,7 +9564,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!p || G.phase !== 'lobby') return;
     if (!G.go) G.go = {};
     if (m.off) { delete G.go[p.pid]; push(); return; }   // pressed Ready again: not ready after all
-    if (m.start) { if (allReady()) beginGame(); return; }   // "Start game" on a phone, only once everyone is ready
+    if (m.sync) { if (allReady() && !G.cal) calStart(); return; }   // "Sync" on a phone: the sync starts for everyone
+    if (m.start) { if (allReady() && (calAll() || m.force)) { var co = $('calov'); if (co && !G.cal) co.remove(); beginGame(); } else if (allReady() && !G.cal) calStart(); return; }   // "Start game" on a phone, only once everyone is ready
     G.go[p.pid] = 1; push();
   });
 

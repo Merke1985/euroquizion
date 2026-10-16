@@ -150,7 +150,7 @@
     hi = function () {
       if (kicked) return;
       var m = me();
-      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, pk: picking && joinFlow && joinFlow < 3 ? 1 : 0, score: m ? m.score : null,
+      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, wh: SV_WHERE, pk: picking && joinFlow && joinFlow < 3 ? 1 : 0, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
     net.on('_open', function () { hi(); if (want === 'u:' + pid) picSend(); });
@@ -274,8 +274,8 @@
       // The big Ready button at the bottom: press to check it, press again to take it back.
       $('lobbyready').classList.remove('hidden'); $('lobbyready').classList.toggle('on', !!m.in); $('lobbyready').setAttribute('aria-pressed', m.in ? 'true' : 'false');
       $('lobbyreadytext').textContent = m.in ? 'Ready!' : 'Ready';
-      $('lobbystart').classList.remove('hidden'); $('lobbystart').disabled = !s.all_ready;   // always there, greyed out until everyone is ready
-      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? 'Everyone is ready. Anyone can start the game.' : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. Start unlocks when everyone is ready.';
+      $('lobbystart').classList.remove('hidden'); $('lobbystart').disabled = !s.all_ready || !!s.cal_on; var lsy = s.all_ready && s.all_sync === false; $('lobbystart').textContent = s.cal_on ? '🌐 Syncing…' : lsy ? '🌐 Sync online players' : 'Start game'; $('lobbystart').classList.toggle('sync', lsy || !!s.cal_on);   // (everyone ready, but someone online isn't synced: first the sync, for everyone; then Start)   // always there, greyed out until everyone is ready
+      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? (s.cal_on ? 'Syncing the online players…' : s.all_sync === false ? 'Everyone is ready! First a quick sync for the online players.' : 'Everyone is ready. Anyone can start the game.') : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. Start unlocks when everyone is ready.';
     }
     else if ((s.phase === 'fun' || s.phase === 'pspin') && s.fun) { show('v-wait'); $('waittitle').textContent = s.fun.icon + ' ' + s.fun.title; $('waitsub').textContent = s.fun.sub; }
     else if (s.phase === 'part' && s.part) {
@@ -752,7 +752,7 @@
   var svS = null, SV_STREAM = 0, SV_WHERE = 'local';   // (watching online, via a stream: the arrows later, in step with the music as it comes through; measured with the host's sync, or a quarter of a second)
   (function () {   // where you watch: in the room (no delay) or online (a stream: a little delay); remembered
     var w = 'local'; try { w = localStorage.getItem('eq_where') || 'local'; } catch (e) {}
-    var set = function (v) { w = v; SV_WHERE = v; var md = null; try { md = localStorage.getItem('eq_delay'); } catch (e) {} SV_STREAM = v === 'online' ? (md != null ? +md : 250) : 0; try { localStorage.setItem('eq_where', v); } catch (e) {} };
+    var set = function (v) { w = v; SV_WHERE = v; var md = null; try { md = localStorage.getItem('eq_delay'); } catch (e) {} SV_STREAM = v === 'online' ? (md != null ? +md : 250) : 0; try { localStorage.setItem('eq_where', v); } catch (e) {} try { if (net && pid) (net.toHost || net.send)('where', { pid: pid, w: v }); } catch (e) {} };   // (the host shows whether everyone is synced)
     set(w);
     var init = function () { [].forEach.call(document.querySelectorAll('input[name="where"]'), function (r) { r.checked = r.value === w; r.addEventListener('change', function () { if (r.checked) set(r.value); }); }); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
@@ -830,7 +830,7 @@
         taps.slice(0, c.n).forEach(function (tt, k) { var o = tt - (calS.t0 + k * c.gap); if (o > -300 && o < 6000) offs.push(o); });
         offs.sort(function (a, b) { return a - b; });
         if (offs.length >= 3) { var d = Math.max(0, Math.min(6000, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: d }); }
-        else { calS.res = -2; ov.querySelector('em').textContent = 'Not enough taps: ask the host to sync again.'; }
+        else { calS.res = -2; ov.querySelector('em').textContent = 'Not enough taps: ask the host to sync again.'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -2 }); }
       } else { calS.res = -1; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -1 }); }
     }
   }
@@ -1933,7 +1933,7 @@
   });
 
   var pickKey = '';
-  $('lobbystart').addEventListener('click', function () { if (net && state && state.phase === 'lobby' && state.all_ready) net.send('go', { pid: pid, start: true }); });
+  $('lobbystart').addEventListener('click', function () { if (net && state && state.phase === 'lobby' && state.all_ready && !state.cal_on) net.send('go', state.all_sync === false ? { pid: pid, sync: true } : { pid: pid, start: true }); });
   var readySeq = 0;
   $('lobbyready').addEventListener('click', function () {
     if (!net || !state || state.phase !== 'lobby') return;
