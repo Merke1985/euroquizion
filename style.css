@@ -5841,3 +5841,6 @@ body.rufrozen #waittitle{color:#0b3a66}
 #calov .calcancel{display:block;margin:2.4vh auto 0;background:none;border:0;color:var(--mute);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 /* lobby: streaming or local play, as two cards like the game types (local hides the stream delay sync) */
 .presets.playmode{grid-template-columns:repeat(2,1fr);margin:4px 0 14px}
+/* Serving: the presenters on the stage (placed by the 3D view), in front of the players */
+.svov .svhosts{z-index:30}
+.svov .svhosts .ehost{right:auto!important;bottom:auto!important;width:auto;transform:translate(-50%,-97%)}

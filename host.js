@@ -6594,11 +6594,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 60), sk = [];
     for (i = 0; i < 60; i++) { sk.push({ x: (Math.random() - .5) * 34, z: ZF(R - 1) + TS + .6 + Math.random() * 1.6, ph: Math.random() * 6.28 }); sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
     sc.add(sticks);
-    // the fans holding them: dark silhouettes with a faint outline (a slightly bigger copy drawn from behind), one arm up to the stick
-    var cGeo = { b: new T.CapsuleGeometry(.3, .9, 4, 8), h: new T.SphereGeometry(.23, 12, 8), a: new T.CylinderGeometry(.065, .065, 1, 6) }, crowd = {}, cQ = new T.Quaternion(), cUp = new T.Vector3(0, 1, 0), cD = new T.Vector3(), cS = new T.Vector3(), cP = new T.Vector3();
-    var cFill = new T.MeshBasicMaterial({ color: '#06020a', fog: false }), cLine = new T.MeshBasicMaterial({ color: '#7a4a90', side: T.BackSide, transparent: true, opacity: .2, fog: false });
-    ['b', 'h', 'a'].forEach(function (k) { crowd[k] = [new T.InstancedMesh(cGeo[k], cFill, 60), new T.InstancedMesh(cGeo[k], cLine, 60)]; sc.add(crowd[k][1]); sc.add(crowd[k][0]); });
-    var cSet = function (k, j, x, y, z, q, sx, sy, sz) { cP.set(x, y, z); cS.set(sx, sy, sz); m4.compose(cP, q, cS); crowd[k][0].setMatrixAt(j, m4); cS.set(sx * 1.14 + .02, sy + .05, sz * 1.14 + .02); m4.compose(cP, q, cS); crowd[k][1].setMatrixAt(j, m4); };
+    // the fans holding them: real people seen from behind (clothes, neck, hair), one arm up to the stick, the other down; dimly lit
+    var CN = 60, cGeo = { t: new T.CylinderGeometry(.36, .27, 1.05, 10), n: new T.CylinderGeometry(.09, .1, .2, 8), h: new T.SphereGeometry(.22, 14, 10), hr: new T.SphereGeometry(.235, 14, 10, 0, Math.PI * 2, 0, Math.PI * .62), a: new T.CylinderGeometry(.075, .065, 1, 7), d: new T.CylinderGeometry(.08, .07, 1, 7), hd: new T.SphereGeometry(.075, 8, 6) }, crowd = {}, cQ = new T.Quaternion(), cQ0 = new T.Quaternion(), cUp = new T.Vector3(0, 1, 0), cD = new T.Vector3(), cS = new T.Vector3(1, 1, 1), cP = new T.Vector3();
+    var cMat = new T.MeshLambertMaterial({ color: '#b8b0c0', fog: false });   /* (dimmed: they stand in the dark) */
+    Object.keys(cGeo).forEach(function (k) { crowd[k] = new T.InstancedMesh(cGeo[k], cMat, CN); sc.add(crowd[k]); });
+    var cloth = ['#2a2440', '#3a1830', '#1c2a3a', '#40202a', '#232323', '#5a1840', '#173a3a', '#3a3418', '#2a1a4a', '#442a1a'], hairC = ['#120c0a', '#2a1a10', '#4a2c16', '#8a6a3a', '#b8902a', '#6a1a12', '#1a1a1e', '#5a5a5a'], skinC = ['#e8bca0', '#c8946e', '#8a5a3a', '#5a3a26', '#f0d0b8'];
+    for (i = 0; i < CN; i++) {
+      var cc = col.set(cloth[i * 7 % cloth.length]).getHex(), hc = hairC[i * 5 % hairC.length], skc = skinC[i * 3 % skinC.length];
+      crowd.t.setColorAt(i, col.setHex(cc)); crowd.a.setColorAt(i, col.setHex(cc)); crowd.d.setColorAt(i, col.setHex(cc));
+      crowd.n.setColorAt(i, col.set(skc)); crowd.h.setColorAt(i, col.set(skc)); crowd.hd.setColorAt(i, col.set(skc)); crowd.hr.setColorAt(i, col.set(hc));
+      sk[i].hk = ((i * 37) % 11) / 11 * .3 - .16; sk[i].wd = 1 + ((i * 13) % 7) / 7 * .25;   // (taller and shorter, broader and slimmer)
+    }
+    var cSet = function (k, j, x, y, z, q, sx, sy, sz) { cP.set(x, y, z); cS.set(sx, sy, sz); m4.compose(cP, q, cS); crowd[k].setMatrixAt(j, m4); };
     var st = { mk: {}, mkL: {}, stage: 1, beatAt: 0, pal: SV3_PAL[0], q: new T.Quaternion(), e: new T.Euler(), s: new T.Vector3(1, 1, 1), p: new T.Vector3() };
     function drawWall(t) {   // red rays turning slowly round a point low in the middle, a little brighter on the beat
       var fl = Math.max(0, 1 - (performance.now() - st.beatAt) / 500), W = 512, H = 256, ox = W / 2, oy = H * .62;
@@ -6622,7 +6629,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       beams.forEach(function (b, j) {   // aim at a spot sweeping across the stage; the cone reaches exactly down to it
         var A = st.aim && st.aim[j % st.aim.length], tx, tz, ty = YL + .14;   // (on the singer and her dancers; with a little wobble)
         if (A) { tx = (A.c - (C - 1) / 2) * TS + .25 * Math.sin(t * 1.3 + j); tz = ZL(A.r) + .2 * Math.cos(t * 1.1 + j); } else { tx = 0; tz = ZL(1); }
-        if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .25; b.cz += (tz - b.cz) * .25; tx = b.cx; tz = b.cz;
+        if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .55; b.cz += (tz - b.cz) * .55; tx = b.cx; tz = b.cz;
         b.pool.position.set(tx, ty, tz); b.arm.lookAt(tx, ty, tz);
         var L = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L, 1); b.cone.position.set(0, 0, L / 2);
         var c2 = p[(j + st.n) % 3]; b.cone.material.color.set(c2); b.pool.material.color.set(c2); b.cone.material.opacity = .09 + fl * .08; b.pool.material.opacity = .28 + fl * .15;
@@ -6634,11 +6641,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         st.e.set(0, 0, ang); st.q.setFromEuler(st.e); st.p.set(s.x, sy, s.z); m4.compose(st.p, st.q, st.s); sticks.setMatrixAt(j, m4);
         // the fan under it: swaying a little, the hand at the bottom of the stick
         var hx = s.x + .275 * Math.sin(ang), hy = sy - .275 * Math.cos(ang), sw = .07 * Math.sin(t * 2.05 + s.ph), px = s.x - .34 + sw, pz = s.z + .2, shx = px + .22, shy = -1.62;
-        cQ.identity(); cSet('b', j, px, -2.15, pz, cQ, 1, 1, 1); cSet('h', j, px + sw * .4, -1.3, pz, cQ, 1, 1, 1);
-        cD.set(hx - shx, hy - shy, s.z - pz); var len = cD.length(); cD.normalize(); cQ.setFromUnitVectors(cUp, cD);
+        var hk = s.hk || 0, wd = s.wd || 1; shy = -1.66 + hk;
+        cQ.identity(); cSet('t', j, px, -2.18 + hk, pz, cQ, wd, 1, .7); cSet('n', j, px + sw * .3, -1.56 + hk, pz, cQ, 1, 1, 1);
+        cSet('h', j, px + sw * .4, -1.3 + hk, pz, cQ, 1, 1.08, 1); cSet('hr', j, px + sw * .4, -1.28 + hk, pz + .03, cQ, 1, 1.1, 1);   // (the back of the head: mostly hair)
+        cSet('hd', j, hx, hy, s.z, cQ, 1, 1, 1);
+        shx = px + .3 * wd; cD.set(hx - shx, hy - shy, s.z - pz); var len = cD.length(); cD.normalize(); cQ.setFromUnitVectors(cUp, cD);
         cSet('a', j, (hx + shx) / 2, (hy + shy) / 2, (s.z + pz) / 2, cQ, 1, len, 1);
+        var dx0 = px - .3 * wd, dy0 = shy - .04; cD.set(-.08 + sw * .3, -.85, 0); var ln2 = cD.length(); cD.normalize(); cQ0.setFromUnitVectors(cUp, cD);
+        cSet('d', j, dx0 + cD.x * ln2 / 2, dy0 + cD.y * ln2 / 2, pz, cQ0, 1, ln2, 1);   // (the other arm hanging down)
       });
-      sticks.instanceMatrix.needsUpdate = true; ['b', 'h', 'a'].forEach(function (k) { crowd[k][0].instanceMatrix.needsUpdate = true; crowd[k][1].instanceMatrix.needsUpdate = true; });
+      sticks.instanceMatrix.needsUpdate = true; Object.keys(crowd).forEach(function (k) { crowd[k].instanceMatrix.needsUpdate = true; });
       if (now - lastW > 50) { lastW = now; drawWall(t); }
       var W = el.clientWidth, H = el.clientHeight; if (W && H && (W !== w || H !== h)) { w = W; h = H; rn.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
       rn.getDrawingBufferSize(dbs); if (rtF.width !== Math.round(dbs.x / 2)) { rtF.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); rtL.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); } tileM.userData.rf.rRes.value.copy(dbs); ltileM.userData.rf.rRes.value.copy(dbs);
@@ -6894,6 +6906,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var af = ov.querySelector('.svaf[data-p="' + k + '"] .svfb2'); if (af) { var ob = af.querySelector('.svball'), orr = af.querySelector('.svrider'), tmp = document.createElement('div'); var tc = SV_TBALL[g.grp[k] === 'B' && g.order.length > 1 ? 1 : 0]; tmp.innerHTML = svBall(bc[0], bc[1]) + svRider({ ball: bc[0], ballS: bc[1], top: tc[0], legs: tc[1], boots: '#1a1a22' });   /* (their team outfit, their own ball colour) */ if (ob) af.replaceChild(tmp.firstChild, ob); else tmp.removeChild(tmp.firstChild); if (orr) af.replaceChild(tmp.firstChild, orr); }
     }); }
     var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 3 + Math.round(r * 2) : 10 + Math.round(r * 2));   /* (further forward = in front: so the skippy ball rising in front of her is in front of her) */ var p3 = !!(ov._3 && ov._3.proj); if (!el._pl || (p3 && el._p3 === false)) { el._pl = 1; el._p3 = p3; el.style.transition = 'none'; void el.offsetWidth; el.style.transition = ''; } el._p3 = p3; };   /* (the very first placement: straight there, no slide in from the corner) */
+    // the presenters stand on the stage itself: at the front edge of the floor, in the middle, right by the audience (sized by the perspective)
+    [].forEach.call(ov.querySelectorAll('.svhosts .ehost'), function (he) { var her = he.classList.contains('her'), P = svProj(ov, her ? 13.7 : 11.3, SV_BR - .3); he.style.left = P.x.toFixed(1) + 'px'; he.style.top = P.y.toFixed(1) + 'px'; he.style.height = (P.s * 3.7).toFixed(1) + 'px'; });
     var ins = ov.querySelector('.svins'), f00 = g.chart[0][0];
     if (g.st !== 'end' && (!g.t0 || b < f00 - 10)) act = g.st === 'intro' && (!g.t0 || (ins._act === 'off' && (!ov._3 || !ins._p3) && now - (ins._at0 || (ins._at0 = now)) < 3000)) ? 'off' : 'mid';   /* (she waits off stage until the song starts) */   /* (she waits off stage until the 3D stage is there: then her walk on is straight) */   // (the intro: she walks on to the middle; ten bounces before the red team she goes over to them)
     var LC = function (a) { return a === 'off' ? 36 : solo || a === '*' || a === 'mid' ? 12.5 : a === 'A' ? 6 : 19; };
@@ -6927,7 +6941,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the spotlights follow where she and her dancers are on screen right now (walking over: along with them, not ahead of them)
     var tw = ins._tw; if (!tw) tw = ins._tw = { fc: lcx, fr: lry, tc: lcx, tr: lry, at: 0, d: 1, wk: false };
     var twAt = function (n2) { var q = Math.max(0, Math.min(1, (n2 - tw.at) / tw.d)), e = tw.sm ? q * q * (3 - 2 * q) : q; return [tw.fc + (tw.tc - tw.fc) * e, tw.fr + (tw.tr - tw.fr) * e]; };
-    if (tw.tc !== lcx || tw.tr !== lry) { var cv0 = twAt(now); tw.fc = cv0[0]; tw.fr = cv0[1]; tw.tc = lcx; tw.tr = lry; tw.at = now; tw.wk = wk; tw.d = wk ? (parseFloat(ins.style.getPropertyValue('--wd')) || 4) * 1000 : 420; tw.wk = true; tw.sm = !wk; }   /* (the lights glide smoothly to the next spot, no hop) */
+    if (tw.tc !== lcx || tw.tr !== lry) { var cv0 = twAt(now); tw.fc = cv0[0]; tw.fr = cv0[1]; tw.tc = lcx; tw.tr = lry; tw.at = now; tw.wk = wk; tw.d = wk ? (parseFloat(ins.style.getPropertyValue('--wd')) || 4) * 1000 : 240; tw.wk = true; tw.sm = !wk; }   /* (the lights glide smoothly to the next spot, no hop, landing with the dancers) */
     var V = twAt(now), vc = V[0], vr = V[1];
     if (ov._3 && ov._3.aim) ov._3.aim([{ c: vc, r: vr }, { c: vc - 2, r: vr }, { c: vc + 4, r: vr }, { c: vc, r: vr }, { c: vc + 2, r: vr }, { c: vc - 4, r: vr }]);   // (the spotlights follow her and her dancers)   // (the tile under every dancer glows in their colour)
     if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk <= 0 && dk > -.5 && !n._hit && g.st === 'play') { n._hit = 1; var hi0 = +n.getAttribute('data-i'); if (ov._3 && ov._3._hk !== hi0) { ov._3._hk = hi0; ov._3.beat(); }   /* (the lights pulse only when an arrow hits the mark) */ var rc = n.parentNode.querySelector('.svrec.c' + g.chart[+n.getAttribute('data-i')][1]); if (rc) { rc.classList.remove('bhit'); void rc.offsetWidth; rc.classList.add('bhit'); } } if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
