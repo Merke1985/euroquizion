@@ -7024,6 +7024,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function calCheck() {
     var b = $('calbtn'); if (!b) return;
     var ck = b.querySelector('.calok'); if (!ck) { ck = document.createElement('span'); ck.className = 'calok'; ck.textContent = '✓'; b.appendChild(ck); }
+    b.classList.toggle('hidden', playMode === 'local');   // (local play: no stream delay to sync)
+    var pm = $('playmode'); if (pm) [].forEach.call(pm.querySelectorAll('button[data-m]'), function (x) { var on = x.getAttribute('data-m') === playMode; x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
     var bt = b.querySelector('.calt'), btx = G.cal ? '🌐 Syncing…' : G.syncOn ? '🌐 Stream delay on · press to turn off' : '🌐 Sync players (stream delay)'; if (bt && bt.textContent !== btx) bt.textContent = btx;
     b.disabled = !list().some(function (p) { return !p.off; });   // (no players: the sync button does nothing)
     var rr = $('rdyrow'), ar = allReady(); if (rr) { rr.classList.toggle('synced', ar); var rt = rr.firstChild, rtx = list().some(function (p) { return !p.off; }) ? '✋ Everyone ready' : '👥 No players yet'; if (rt && rt.textContent !== rtx) rt.textContent = rtx; }   // (an empty room: no players, not 'everyone ready')
@@ -7035,6 +7037,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var need = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); });
     b.title = !G.syncOn ? 'Stream delay is off: sync to turn it on' : ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
   }
+  // Streaming (some players watch through a stream: the sync button) or local play (everyone in the room: no stream delay at all); remembered on this computer
+  var playMode = 'stream'; try { playMode = localStorage.getItem('eq_playmode') === 'local' ? 'local' : 'stream'; } catch (e) {}
+  function playModeSet(m) {
+    if (G.cal) return;
+    playMode = m === 'local' ? 'local' : 'stream'; try { localStorage.setItem('eq_playmode', playMode); } catch (e) {}
+    if (playMode === 'local' && G.syncOn) { G.syncOn = false; list().forEach(function (p) { p.sync = null; }); push(); }   // (local: the delay off and forgotten)
+    render();
+  }
+  if ($('playmode')) $('playmode').addEventListener('click', function (e) { var bt = e.target.closest('button[data-m]'); if (bt) playModeSet(bt.getAttribute('data-m')); });
   if ($('calbtn')) $('calbtn').addEventListener('click', function () {   // the first press syncs everyone (stream delay on); the next press turns it off again and forgets the delays
     if (G.cal || !list().some(function (p) { return !p.off; })) return;   // (nobody in the room: nothing to sync)
     if (G.syncOn) { G.syncOn = false; list().forEach(function (p) { p.sync = null; }); render(); push(); return; }
