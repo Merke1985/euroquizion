@@ -761,7 +761,7 @@
     show('v-wait');
     if (!svS || svS.id !== z.id) { svStop(); svS = { id: z.id, t0: 0, bt: z.bt, done: {}, q: {}, raf: 0, fbAt: 0, sent: false, pf: 0, balls: 0, pp: 0, pdown: false }; }
     svS.g = (z.grp || {})[pid] || 'A';
-    box.classList.toggle('tB', svS.g === 'B' && z.order.length > 1);   // (the pump ball in the team colour)
+    box.classList.toggle('tB', svS.g === 'B' && z.order.length > 1); box.classList.toggle('tA', svS.g === 'A' && z.order.length > 1);   // (the arrow box in the team colour)   // (the pump ball in the team colour)
     var S = svS;
     if ((z.st === 'count' || z.st === 'end') && mine && !S.sent && S.chart) {   // the song is over: send my results (once)
       S.sent = true; var zid = z.id, send = function () { var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''); if (net) (net.toHost || net.send)('sv', { pid: pid, id: zid, res: res, pump: S.pdone || 0 }); };
