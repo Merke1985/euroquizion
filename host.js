@@ -6599,7 +6599,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var raf = 0, t0 = performance.now(), lastW = 0;
     function frame2() {
       raf = requestAnimationFrame(frame2); if (!el.isConnected) { cancelAnimationFrame(raf); rn.dispose(); return; }
-      var now = performance.now(), t = (now - t0) / 1000, fl = Math.max(0, 1 - (now - st.beatAt) / 420), p = st.pal;
+      var now = performance.now(), t = (now - t0) / 1000, fl = .25   /* (steady lights: no pulsing) */, p = st.pal;
       for (var i = 0; i < C * R; i++) {   // the tiles: a pattern that shifts every beat, bright on the beat and fading after
         var x = i % C, y = Math.floor(i / C), on = (x + y) % 2 === 0;   // (a fixed checkerboard, no flashing: the red team's half and the black team's half)
         col.set(x < C / 2 ? (on ? '#17a843' : '#06080e') : (on ? '#7a2fd6' : '#06080e')).convertSRGBToLinear();   /* (green team: green and black; purple team: purple and black) */ tiles.setColorAt(i, col);
@@ -6634,7 +6634,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
       aim: function (L) { st.aim = L; },
-      beat: function () { st.beatAt = performance.now(); st.n++; }, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
+      beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
   // leopard-print outfit with flared trousers, a microphone in one hand and a big red fluffy pom-pom in the other
