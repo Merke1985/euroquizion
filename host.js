@@ -6452,7 +6452,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   if ($('svmp3x')) $('svmp3x').addEventListener('click', function () { svBlob = null; svDb(function (os) { os.delete('serving'); }); svMp3Show(); });
   setTimeout(svMp3Show, 0);
   function svVol(v) { try { (svAudP && svAudP._on ? svAudP : yt).setVolume(v); } catch (e) {} }   // (the music volume setting scales it, like YouTube)
-  var SV_WORD = [70, 123];   // (song time in seconds: 1:10 and 2:03)
+  var SV_WORD = [56, 109];   // (song time in seconds: 0:56 and 1:49)
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
     if (!on) { try { yt.pauseVideo(); } catch (e) {} if (svAud) { svAud.pause(); } if (svAudP) svAudP._on = false; return; }
@@ -7054,7 +7054,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rdyN = null; if ((g.st === 'play' || g.st === 'ready') && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= 5000) rdyN = x; });   // (5 seconds before a team's turn: their name and 'Get ready!' in the middle)
     var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Green team' : 'Purple team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
-    var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 1:10 and 2:03: SERVING for a second, then KANT for two)
+    var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
     if (ov._3 && ov._3.word) ov._3.word(word);
     if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
     if (g.order.length > 1 && g.t0 && g.extra) ['A', 'B'].forEach(function (T) { if (!g.extra[T] && b >= SV_VLOCK[T]) svLock(g, T); });
