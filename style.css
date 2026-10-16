@@ -6006,3 +6006,7 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .svov[data-act="B"] .svchart.r,.svov[data-act="*"] .svchart.r{box-shadow:inset 0 0 0 3px #b06bff,inset 0 0 26px rgba(176,107,255,.35),0 0 26px rgba(176,107,255,.6)}
 /* the singer keeps singing while she walks across her stage (side view): her mouth moves */
 .svov:not([data-st="end"]) .svins.walk:not(.svdan) .svsmouth{transform-box:fill-box;transform-origin:20% 30%;animation:svlsing .49s ease-in-out infinite alternate}
+/* "not your turn": the same box as the one the arrows come in (same size, same place; the pads keep their space) */
+.svui.pumping .svpads{display:grid;visibility:hidden}
+.svui.pumping .svfield,body.svplay .svui.pumping .svfield{height:min(52vh,calc(100dvh - 300px))}
+.svui.pumping .svwt{top:50%;transform:translateY(-50%);margin-top:0}
