@@ -6682,6 +6682,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var A = st.aim && st.aim[j % st.aim.length], tx, tz, ty = YL + .14;   // (on the singer and her dancers; with a little wobble)
         if (A) { tx = (A.c - (C - 1) / 2) * TS + .25 * Math.sin(t * 1.3 + j); tz = ZL(A.r) + .2 * Math.cos(t * 1.1 + j); } else { tx = 0; tz = ZL(1); }
         if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .55; b.cz += (tz - b.cz) * .55; tx = b.cx; tz = b.cz;
+        b.cone.visible = b.pool.visible = !!st.lights;   // (the beams only once the song plays)
         b.pool.position.set(tx, ty, tz); b.arm.lookAt(tx, ty, tz);
         var L = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L, 1); b.cone.position.set(0, 0, L / 2);
         var c2 = p[(j + st.n) % 3]; b.cone.material.color.set(c2); b.pool.material.color.set(c2); b.cone.material.opacity = .09 + fl * .08; b.pool.material.opacity = .28 + fl * .15;
@@ -6717,7 +6718,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      aim: function (L) { st.aim = L; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -7014,6 +7015,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
     var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 1:10 and 2:03: SERVING for a second, then KANT for two)
     if (ov._3 && ov._3.word) ov._3.word(word);
+    if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
     var kant = false, ktx = '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
     if (kb && kb._t !== ktx) { kb._t = ktx; if (ktx) kb.textContent = ktx; kb.classList.toggle('on', !!ktx); }
     var bn = ov.querySelector('.svbanner'), showB = false,   /* (no banner for the last stage: the skippy balls are a surprise) */ bh = swB ? swB : showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Your turn! Nice and slow first…</em>' : g.stage === 3 ? '<em>Everyone together! A step on every beat, double points 🏐</em>' : '') : '';
