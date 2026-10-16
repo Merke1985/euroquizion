@@ -5849,3 +5849,25 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svov[data-bph="hop"] .svaf .svhead,.svov[data-bph="on"] .svaf .svhead{top:calc(var(--s) * -.66);width:calc(var(--s) * .52);height:calc(var(--s) * .52);margin-left:calc(var(--s) * -.26)}
 /* Serving: the song is over: the singer closes her mouth */
 .svov[data-st="end"] .svins:not(.svdan) .svlmouth,.svov[data-st="end"] .svins .svsmouth,.svov[data-st="end"] .svins .svrm{transform-box:fill-box;transform-origin:50% 30%;transform:scaleY(.16)!important;animation:none!important}
+/* Serving phone: no more pumping while the other team dances (just a message to watch) */
+.svui .svpump{display:none!important}
+.svui.pumping .svwt{display:block;font-size:5vw;margin-top:4vh}
+/* Serving: the balls inflate quicker (everyone hops on as soon as they're up); speech balloons next to the presenters */
+.svov[data-bph="rise"] .svnb i{animation:svrise 3.6s cubic-bezier(.2,.8,.3,1) both}
+.svov .svbub{max-width:26vw}
+.svov .svbub.her{transform-origin:0 50%}.svov .svbub.him{transform-origin:100% 50%}
+/* Serving: the ring at the top doesn't pulse */
+.svbeat.pulse i{animation:none}
+/* Serving: a team's scores so far, in their arrow panel after their round */
+.svscore{position:absolute;left:6%;right:6%;top:14vh;z-index:3;padding:1.4vh 1vw;border-radius:14px;background:rgba(10,4,18,.82);color:#fff;opacity:0;transform:translateY(1vh);transition:opacity .4s,transform .4s;pointer-events:none}
+.svscore.on{opacity:1;transform:none}
+.svscore .svsct{display:block;text-align:center;font-size:1.8vh;letter-spacing:.12em;text-transform:uppercase;color:#ffd23f;margin-bottom:.8vh}
+.svsrow{display:grid;grid-template-columns:1fr auto auto;gap:.6vw;align-items:center;padding:.5vh 0;border-top:1px solid rgba(255,255,255,.1);font-weight:800;font-size:1.9vh}
+.svsrow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svsrow em{font-style:normal;color:var(--mute);font-size:1.5vh}
+.svsrow i{font-style:normal;color:#ffd23f;font-size:2.2vh;min-width:2.4em;text-align:right}
+.svscore small{display:block;text-align:center;color:var(--mute);font-size:1.3vh;margin-top:.6vh}
+.svsrow{grid-template-columns:1fr auto;row-gap:0}
+.svsrow span{grid-column:1;grid-row:1;font-size:1.8vh}
+.svsrow em{grid-column:1;grid-row:2;font-size:1.35vh}
+.svsrow i{grid-column:2;grid-row:1 / 3}
