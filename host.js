@@ -2312,6 +2312,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Only a perfect answer (all three right) takes the trophy: anything less stops at the last space.
     chaseAlive().forEach(function (k) { var l = c.lanes[k], to = l.pos + (l.res || 0); l.blocked = 0;
       if (l.heel && !l.heelAt) { l.heelAt = c.n; to = l.pos; }   // a broken heel: no step this time, whatever they answered
+      to = mmTo(c, l, to);   // (the monster's own move, if it is on this question)
       if (to >= CHASE_GOAL && l.res < 3) { to = CHASE_END; l.blocked = c.n; /* not perfect: they bump into the stage and fall back onto the last space */ } l.pos = Math.max(l.pos, to); });
     if (chaseAlive().some(function (k) { return c.lanes[k].res > 0; })) Music.woosh();
     if (chaseAlive().some(function (k) { return c.lanes[k].blocked === c.n; })) setTimeout(function () { if (G.phase === 'chase') Music.buzz(); }, 650);   // in front of the stage, but not perfect
@@ -2330,6 +2331,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       chaseTimer = setTimeout(function () {
         if (!chaseAlive().length) { chaseMonsterWins(c); return; }   // everyone caught: the monster takes the trophy
         if (chaseAlive().length && caught.length) Music.dread(true, true);   // getting tight: the heart beats faster
+        // (test mode for now) the monster's own move, once per final: after the second question in the test, later in a real game
+        if (c.moves && !c.mmDone && !c.monsterDead && c.n >= (c.test ? 2 : 4) && chaseAlive().length >= 2) { c.mmDone = true; chaseMM(c, function () { var fr = c.nearShown ? [] : chaseNear(); if (fr.length) { c.nearShown = true; c.nearNew = fr; c.st = 'near'; Music.ding(); push(); chaseTimer = setTimeout(chaseAsk, 5000); return; } chaseAsk(); }); return; }
         // "Not so fast!": someone 4 to 6 spaces from the stage with a lead of more than 5 on the next one gets pulled back 4 (two bites)
         var al = chaseAlive().slice().sort(function (a, b) { return c.lanes[b].pos - c.lanes[a].pos; }), ld = al[0], lp = ld ? c.lanes[ld].pos : 0;
         if (al.length >= 2 && !c.monsterDead && lp >= CHASE_GOAL - 6 && lp <= CHASE_GOAL - 4 && lp - c.lanes[al[1]].pos > 5 && !(c.nsfDone || {})[ld]) {
@@ -2350,6 +2353,33 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         chaseAsk();
       }, caught.length ? Math.max(2800, (VOICE_MS['mine_' + c.monster.id] || 2500) + 900) : c.coming ? 2800 : stepN ? 1600 : 400);   /* (caught: the monster's words in full) */
     }, 1500);
+  }
+  /* Each monster's own move (test mode for now), once per Grand Final, with its own message on the big screen:
+     the Diva: High Note (next question everyone moves only half their spaces) · the Neon Goblin: Cha-cha Swap (the
+     leader and the last one swap places) · the Phoenix Queen: Firewall (a row of spaces on fire: cross it next
+     question and you're pushed back 2) · the Phantom Fiddler: Frozen Tune (the leader stays put next question) */
+  var MM_MS = 5600;
+  function chaseMM(c, then) {
+    var al = chaseAlive().slice().sort(function (a, b) { return c.lanes[b].pos - c.lanes[a].pos; }), ld = al[0], kind = c.monster.id, mm = { kind: kind, n: c.n };
+    if (kind === 'goblin') { mm.a = ld; mm.b = al[al.length - 1]; if (c.lanes[mm.a].pos === c.lanes[mm.b].pos && al.length > 2) mm.b = al[1]; }
+    else if (kind === 'phoenix') { var ps = al.map(function (k) { return c.lanes[k].pos; }).sort(function (a, b) { return a - b; }), med = ps[Math.floor(ps.length / 2)]; c.fireRow = Math.max(c.mon + 2, Math.min(CHASE_END - 1, med + 2)); c.fireAt = c.n + 1; mm.row = c.fireRow; }
+    else if (kind === 'fiddler') { mm.who = ld; c.lanes[ld].frozenAt = c.n + 1; }
+    else { c.halfAt = c.n + 1; }
+    c.st = 'mmove'; c.mm = mm; push(); Music.buzz(); Music.dread(true, true);
+    if (kind === 'goblin') setTimeout(function () { if (G.chase !== c || !c.lanes[mm.a] || !c.lanes[mm.b]) return; var pa = c.lanes[mm.a].pos; c.lanes[mm.a].pos = c.lanes[mm.b].pos; c.lanes[mm.b].pos = pa; push(); Music.woosh(); }, 2200);   // (a moment to read it, then they spin round)
+    else setTimeout(function () { if (G.chase === c) chaseSfx('brk', 0.8, Music.crumble); }, 1200);
+    clearTimeout(chaseTimer); chaseTimer = setTimeout(function () { if (G.chase !== c) return; c.mm = null; c.st = 'diva'; push(); Music.dread(true); then(); }, MM_MS);
+  }
+  function mmStep(c, l) { var st = l.res || 0; if (c.halfAt === c.n) st = Math.floor(st / 2); return st; }   // (the High Note: half the spaces, rounded down)
+  function mmTo(c, l, to) {
+    if (c.halfAt === c.n && to > l.pos) to = l.pos + mmStep(c, l);
+    if (l.frozenAt === c.n) to = l.pos;   // (the Frozen Tune: no move this time)
+    if (c.fireAt === c.n && l.pos < c.fireRow && to >= c.fireRow) { to = Math.max(l.pos, to - 2); l.burnt = c.n; }   // (the Firewall: crossed it, pushed back 2)
+    return to;
+  }
+  function mmPending(c) {   // the effect waiting on this question (for the board and the phones)
+    var live = c.st === 'ask' || c.st === 'show' || c.st === 'pause' || c.st === 'move' || c.st === 'go';
+    return { half: c.halfAt && (c.n < c.halfAt || (c.n === c.halfAt && live)), fire: c.fireAt && (c.n < c.fireAt || (c.n === c.fireAt && live)), frozen: function (l) { return l.frozenAt && (c.n < l.frozenAt || (c.n === l.frozenAt && live)); } };
   }
   // Two or more reach the stage at once: the monster goes down, they all walk up to the trophy, and a sudden death
   // decides: the same kind of questions, and whoever gets fewer right than the best falls off the stage.
@@ -2646,7 +2676,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
     $('adminbtn').addEventListener('click', function () { if (window.escEditorOpen) window.escEditorOpen(); });   // (⚙️ Admin: songs, minigames, items, trivia and requests, behind the password)
     $('testov').addEventListener('click', function (e) { if (e.target === $('testov')) $('testov').classList.add('hidden'); });
-    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #shoppoor1, #shoppoor2, #svtest, #wheeltest, #itemtest, #goldtest, #chasetest, #chasetest2, #chasetest3, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
+    $('testov').addEventListener('click', function (e) { if (e.target.closest('#mgtest, #shoptest, #shoppoor1, #shoppoor2, #svtest, #wheeltest, #itemtest, #goldtest, #chasetest, #chasetest2, #chasetest3, #chasetest4, #fstest, [data-one]')) setTimeout(function () { if (G.phase !== 'lobby') $('testov').classList.add('hidden'); }, 50); });
     $('onegame').addEventListener('click', function (e) {
       var b = e.target.closest('[data-one]'); if (!b || REMOTE || G.phase !== 'lobby') return;
       var k = b.getAttribute('data-one'), fa = b.getAttribute('data-act'); G.ruForce = fa == null ? null : +fa; var nb = list().filter(function (p) { return !p.off; }).length; while (nb < 3 && bots.length < (window.BOT_MAX || 12)) { botAdd(); nb++; }
@@ -2758,6 +2788,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     testPerks();
     testStandings(function () { chaseStart(true); if (G.chase) { G.chase.monster = CHASE_MONSTERS.filter(function (m) { return m.id === 'fiddler'; })[0] || G.chase.monster; $('chmon').setAttribute('data-mon', G.chase.monster.id); }   /* (testing: the newest monster, every time) */ var b0 = list().filter(function (p) { return p.bot && !p.off; })[0]; if (G.chase && b0) G.chase.plan = b0.pid; });   // (testing: one bot gets everything right, the others one out of three)
   });
+  /* testing the monsters' own moves (new, only in this test for now): each press, the next monster, and its move after the second question */
+  $('chasetest4').addEventListener('click', function () {
+    if (REMOTE || G.phase !== 'lobby') return;
+    if (!list().length) { botAdd(); botAdd(); botAdd(); }
+    if (list().filter(function (p) { return p.bot; }).length < 3) botAdd();
+    var ids = ['diva', 'goblin', 'phoenix', 'fiddler'], ix = 0; try { ix = (+localStorage.getItem('eq_mmtest') || 0) % ids.length; localStorage.setItem('eq_mmtest', ix + 1); } catch (e) {}
+    testStandings(function () { chaseStart(true); if (G.chase) { G.chase.moves = true; G.chase.monster = CHASE_MONSTERS.filter(function (m) { return m.id === ids[ix]; })[0] || G.chase.monster; $('chmon').setAttribute('data-mon', G.chase.monster.id); } });
+  });
   /* testing the final scores: random scores, and a couple of envelopes for the EBU (a human player's, or else a bot's), then back to the lobby */
   // Test the finale: four bots, random scores, one of them won the trophy in the Grand Final; after it, back to the lobby
   $('fntest').addEventListener('click', function () {
@@ -2848,6 +2886,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (c.q && c.st !== 'intro') { s.text = c.q.text; s.items = c.q.items.map(function (it) { return it.label; }); if (c.st !== 'ask') s.truth = c.q.items.map(function (it) { return it.ok; }); }
     var nx = c.monsterDead ? 0 : (c.st === 'ask' || c.st === 'show' || c.st === 'pause' || c.st === 'move') ? divaStep(c.n) : divaStep(c.n + 1);
     c.order.forEach(function (k) { var l = c.lanes[k]; s.lanes[k] = { danger: !l.out && !!nx && l.pos <= c.mon + nx && l.pos < CHASE_GOAL, fell: !!l.fell, pos: Math.min(CHASE_GOAL, l.pos), out: l.out, res: l.res, lock: l.lock, stuck: (!!l.heel && !l.heelAt) || l.heelAt === c.n }; });
+    var mp = mmPending(c); s.mmx = c.st === 'mmove' && c.mm ? c.mm.kind : mp.half ? 'half' : mp.fire ? 'fire' : '';
+    c.order.forEach(function (k) { if (s.lanes[k] && mp.frozen(c.lanes[k])) s.lanes[k].frozen = 1; });
     return s;
   }
   // The big screen: lanes, tokens, the Diva and the trophy; the question in a smaller box in the middle.
@@ -2938,6 +2978,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       r.classList.toggle('on', showR); r.classList.toggle('zero', !l.res); r.classList.toggle('gold', l.res === 3); r.textContent = showR ? (l.res === 3 ? '★ +3' : '+' + l.res) : '';
       var heeled = (!!l.heel && !l.heelAt && c.st !== 'move') || (l.heelAt === c.n && c.st === 'move');   // a broken heel: this time they stay where they are
       el.classList.toggle('heeled', heeled); el.classList.toggle('skated', !!l.skates && c.n === 0); var sk = el.querySelector('.ch-sk'); if (l.skates) { if (!sk) { sk = document.createElement('span'); sk.className = 'ch-sk'; el.appendChild(sk); } sk.textContent = '⛸️ +' + l.skates; } if (heeled && showR) { r.textContent = '👠 stuck!'; r.classList.add('zero'); r.classList.remove('gold'); }
+      var mp = mmPending(c), fz = !!mp.frozen(l); el.classList.toggle('frozen', fz);
+      if (showR && !heeled) { if (fz) { r.textContent = '🎻 frozen!'; r.classList.add('zero'); r.classList.remove('gold'); } else if (c.halfAt === c.n) { r.textContent = '🎤 +' + mmStep(c, l); r.classList.toggle('zero', !mmStep(c, l)); r.classList.remove('gold'); } else if (c.fireAt === c.n && l.pos < c.fireRow && l.pos + (l.res || 0) >= c.fireRow) { r.textContent = '🔥 +' + Math.max(0, (l.res || 0) - 2); r.classList.remove('gold'); } }
     });
     // smashed, threatened and occupied spaces (an occupied space that is threatened: deadly)
     [].forEach.call($('chtiles').children, function (t) {
@@ -2950,6 +2992,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (r <= c.mon) return;
       if (warn && !t.classList.contains('warn')) t.style.animationDelay = -(performance.now() % 1400) + 'ms'; /* all marked tiles blink in step */ t.classList.toggle('warn', warn); t.classList.remove('doom'); t.classList.toggle('occ', on && !warn);   // a player in danger: only their avatar shows it
       t.classList.toggle('deny', !!deny[t.getAttribute('data-l') + ':' + r]);
+      var mp2 = mmPending(c); t.classList.toggle('chfire', !!mp2.fire && r === c.fireRow); t.classList.toggle('chcrack', !!mp2.half);
     });
     $('chvoid').style.width = chaseX(c.mon) + '%';
     // the winner on the stage: the Diva goes down in agony and is gone, then the camera zooms in on the winner and the trophy
@@ -3010,6 +3053,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (c.st === 'win') { chSay(c, 'win', 'win'); big.innerHTML = '🏆 ' + esc((c.win || []).map(function (k) { return players[k] ? players[k].name : '?'; }).join(' & ')) + '<small>' + (c.win && c.win.length && c.lanes[c.win[0]].out ? 'caught last, so the winner!' : (c.sd ? 'last one standing on the stage: the trophy is theirs!' : 'jumped onto the stage: the trophy is theirs!')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.order.some(function (k) { return c.lanes[k].at === c.n; })) { c._said = c._said || {}; if (!REMOTE && !c._said['caught' + c.n]) { c._said['caught' + c.n] = 1; hostVoice('mine_' + c.monster.id); }   /* (the monster itself: you're mine!) */ big.innerHTML = '👹 You’re mine!<small>' + esc(c.order.filter(function (k) { return c.lanes[k].at === c.n; }).map(function (k) { return players[k] ? players[k].name : '?'; }).join(', ')) + '</small>'; big.classList.remove('hidden'); }
     else if (c.st === 'nsf' && c.nsf && Date.now() < (c.nsfMsgEnd || 0)) { setTimeout(function () { if (G.phase === 'chase') render(); }, c.nsfMsgEnd - Date.now() + 20);   /* (the message goes once the monster has said it) */ c._said = c._said || {}; if (!REMOTE && !c._said['nsf' + c.n]) { c._said['nsf' + c.n] = 1; hostVoice('nsf_' + c.monster.id); }   /* (the monster itself: not so fast!) */ big.innerHTML = '👹 NOT SO FAST!'; big.classList.remove('hidden'); }
+    else if (c.st === 'mmove' && c.mm) { var mmn = function (k) { return esc(players[k] ? players[k].name : '?'); }, mk = c.mm.kind;
+      big.innerHTML = mk === 'goblin' ? '💃 CHA-CHA SWAP!<small>' + esc(mName()) + ' spins ' + mmn(c.mm.a) + ' and ' + mmn(c.mm.b) + ' around: they swap places!</small>'
+        : mk === 'phoenix' ? '🔥 FIREWALL!<small>' + esc(mName()) + ' sets a row on fire. Cross it on the next question and you’re pushed back 2!</small>'
+        : mk === 'fiddler' ? '🎻 FROZEN TUNE!<small>' + esc(mName()) + ' plays for ' + mmn(c.mm.who) + ': frozen, they stay put on the next question!</small>'
+        : '🎤 HIGH NOTE!<small>' + esc(mName()) + ' cracks the runway: on the next question everyone moves only half their spaces!</small>';
+      big.classList.remove('hidden'); }
     else if (c.st === 'near') { chSay(c, 'near' + c.n, 'near'); big.innerHTML = '🏆 You need a perfect answer to enter the stage!'; big.classList.remove('hidden'); }
     else if (c.st === 'diva' && c.coming) { c._said = c._said || {}; if (!REMOTE && !c._said['coming' + c.n]) { c._said['coming' + c.n] = 1; hostVoice('come_' + c.monster.id); }   /* (the monster itself: it's coming) */ big.innerHTML = '👹 ' + esc(({ diva: 'I’m coming for you…', phoenix: 'Here I come…', fiddler: 'I’m coming…', goblin: 'Ready or not… here I come!' })[c.monster.id] || 'I’m coming…');   /* (what the monster says) */ big.classList.remove('hidden'); }
     else big.classList.add('hidden');

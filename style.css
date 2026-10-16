@@ -6131,3 +6131,9 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 /* the scoreboard during the game: press and hold a row to remove that player (quietly) */
 #board li{position:relative}
 #board li .rmbtn{position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:5;background:#ff4d6a;color:#fff;border:0;border-radius:999px;padding:4px 10px;font-weight:900;font-size:.8rem;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+/* the monsters' own moves (test mode): the Firewall row, the cracked runway of the High Note, a frozen player */
+.chtiles .chfire{background:linear-gradient(0deg,#ff3d00,#ffb300)!important;box-shadow:0 0 18px 4px rgba(255,120,0,.85),inset 0 0 12px rgba(255,255,180,.8)!important;animation:chfire .5s ease-in-out infinite alternate!important}
+@keyframes chfire{from{filter:brightness(1)}to{filter:brightness(1.35) saturate(1.3)}}
+.chtiles .chcrack:not(.gone):not(.crumble){background-image:linear-gradient(115deg,transparent 46%,rgba(255,255,255,.7) 47%,transparent 49%),linear-gradient(60deg,transparent 60%,rgba(255,255,255,.5) 61%,transparent 63%)!important}
+.chtok.frozen{filter:saturate(.25) brightness(1.25) drop-shadow(0 0 10px #8fe9ff) drop-shadow(0 0 4px #c9f6ff)}
+.chtok.frozen::before{content:"❄️";position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:calc(var(--tok,56px) * .4);z-index:4}

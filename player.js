@@ -95,7 +95,8 @@
       if (chKey !== c.key) { chKey = c.key; chMask = 0; chLocked = false; chNone = false; }
       if (chLocked || l.lock) { show('v-wait'); $('waittitle').textContent = 'Locked in!'; $('waitsub').textContent = where; return; }
       show('v-chase'); $('chstat').textContent = '🏁 ' + where; $('chtext').textContent = c.text;
-      $('chhelp').textContent = l.pos >= (c.goal || c.end) - 3 ? '🏆 You can reach the stage: only a perfect answer (all three right) gets you on it and wins!' : 'Tick every one that fits, or tap “None of these”. When the time runs out, what you ticked counts: one space for each one you judged right.';
+      var mmh = l.frozen ? '🎻 Frozen Tune: you stay put this time, whatever you answer. ' : c.mmx === 'half' ? '🎤 High Note: this time you move only half your spaces. ' : c.mmx === 'fire' ? '🔥 Firewall: cross the burning row this time and you’re pushed back 2. ' : '';
+      $('chhelp').textContent = mmh + (l.pos >= (c.goal || c.end) - 3 ? '🏆 You can reach the stage: only a perfect answer (all three right) gets you on it and wins!' : 'Tick every one that fits, or tap “None of these”. When the time runs out, what you ticked counts: one space for each one you judged right.');
       $('chopts').innerHTML = c.items.map(function (it, i) { return '<button type="button" class="opt' + ((chMask >> i) & 1 ? ' on' : '') + '" data-i="' + i + '"><b>' + ((chMask >> i) & 1 ? '✓' : 'ABC'[i]) + '</b>' + esc(it) + '</button>'; }).join('');
       $('chnone').classList.toggle('on', chNone && !chMask);
       if (chBarKey !== c.key) { chBarKey = c.key; var b = $('chpbar'); b.style.transition = 'none'; b.style.width = (c.left / 100) + '%'; b.getBoundingClientRect(); b.style.transition = 'width ' + c.left + 'ms linear'; b.style.width = '0%'; }
@@ -103,7 +104,7 @@
     }
     // the answer and the moves
     show('v-wait');
-    $('waittitle').textContent = (c.st === 'show' || c.st === 'pause') && l.stuck ? '👠 Broken heel: you stay put this time' : c.st === 'show' || c.st === 'pause' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A Eurovision icon') + ' moves…' : 'Moving…';
+    $('waittitle').textContent = c.st === 'mmove' ? ({ diva: '🎤 HIGH NOTE!', goblin: '💃 CHA-CHA SWAP!', phoenix: '🔥 FIREWALL!', fiddler: '🎻 FROZEN TUNE!' })[c.mmx] || '👹 Watch out!' : (c.st === 'show' || c.st === 'pause') && l.frozen ? '🎻 Frozen: you stay put this time' : (c.st === 'show' || c.st === 'pause') && l.stuck ? '👠 Broken heel: you stay put this time' : c.st === 'show' || c.st === 'pause' ? (l.res ? '+' + l.res + (l.res === 1 ? ' space' : ' spaces') : 'No move this time') : c.st === 'diva' ? (c.mname || 'A Eurovision icon') + ' moves…' : 'Moving…';
     $('waitsub').textContent = where;
   }
   $('chopts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (!b || chLocked) return; chMask ^= 1 << +b.getAttribute('data-i'); chNone = false; if (state && state.chase) chaseView(state.chase); chaseSend(false); });
