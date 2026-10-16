@@ -7182,7 +7182,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function syncOf(p) { return G.syncOn && p && p.sync > 0 ? Math.min(6000, p.sync) : 0; }
   function syncMax() { var mx = 0; if (G.syncOn) list().forEach(function (p) { if (!p.off) mx = Math.max(mx, syncOf(p)); }); return mx; }
   function calAll() { if (playMode === 'local') return true; if (!G.syncOn) return false;   // (streaming: Start waits until everyone is synced; local play: no sync needed)
- return list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }).every(function (p) { return p.sync != null && p.sync >= 0; }); }   // (stream delay off: nobody needs a sync; on: everyone has a measured delay)
+ return list().filter(function (p) { return !p.off; }).every(function (p) { return p.sync != null && p.sync >= 0; }); }   // (bots too: they get their delay from the sync)   // (stream delay off: nobody needs a sync; on: everyone has a measured delay)
   function calCheck() {
     var b = $('calbtn'); if (!b) return;
     var ck = b.querySelector('.calok'); if (!ck) { ck = document.createElement('span'); ck.className = 'calok'; ck.textContent = '✓'; b.appendChild(ck); }
@@ -7194,7 +7194,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase === 'lobby' && $('start')) $('start').disabled = !(startBase && ar && calAll());   // (Start: only once everyone is ready, and synced when the stream delay is on)
     if (G.phase !== 'lobby' && $('calov') && !G.cal) $('calov').remove();   // (the game started: the sync results go away)
     var hum = list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; });
-    var ok = !!G.syncOn && hum.length > 0 && calAll();
+    var ok = !!G.syncOn && list().some(function (p) { return !p.off; }) && calAll();
     b.classList.toggle('synced', ok);
     var need = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); });
     b.title = !G.syncOn ? 'Stream delay is off: sync to turn it on' : ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
@@ -10448,6 +10448,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var open = CHARS.filter(function (c) { return !used[c.id]; }), free = open.length ? pick(open) : null, n = bots.length + 1;
     var pid = 'bot' + n + '-' + Math.random().toString(36).slice(2, 7);
     H.hi({ pid: pid, name: free ? (free.name.length > 16 ? free.name.split(' ')[0] : free.name) : 'Bot ' + n, char: free ? free.id : null });
+    if (G.syncOn && players[pid]) players[pid].sync = Math.round(Math.random() * 100) * 10;   // (joining after the sync: a bot taps along at once)
     if (!players[pid]) return;
     players[pid].bot = true; bots.push({ pid: pid, key: '', at: 0, done: false });
     H.go({ pid: pid });
