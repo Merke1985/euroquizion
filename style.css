@@ -1976,8 +1976,9 @@ aside.recapgone{visibility:hidden}
 .fsletter span{font-size:2.3vh;font-weight:800;line-height:1.3}
 .fsov.envopen .fsletter{transform:translateY(-62%);z-index:5}
 /* the drama */
-.fsov.shock .grhosts .ehost{animation:fsshake .12s linear infinite alternate}
+.fsov.shock .grhosts .ehost{animation:fsjump .32s ease-out 2}
 @keyframes fsshake{from{translate:-4px 0}to{translate:4px 0}}
+@keyframes fsjump{0%,100%{translate:0 0}40%{translate:0 -2.2vh}}   /* (the presenters: a startled little jump, straight up; shaking sideways made them look like they were walking) */
 .fssiren{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;background:conic-gradient(from 0deg at 50% 0%,transparent 0 40%,rgba(255,40,60,.35) 45%,transparent 50% 90%,rgba(255,40,60,.35) 95%,transparent 100%);transition:opacity .4s}
 .fsov.siren .fssiren{opacity:1;animation:fssiren 1.2s linear infinite}
 @keyframes fssiren{to{filter:hue-rotate(0deg);transform:rotate(360deg) scale(2.2)}}
@@ -5955,3 +5956,28 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .shopov.boutique .bqbubble{top:auto;bottom:52vh}
 .shopov.boutique .bqtimer{left:22.7vw;transform:translateX(-50%)}
 /* on the balls the move across takes as long as the hop (.37 s), and it starts that much before the beat: they land on the new tile exactly on the beat */
+/* the final scores: a TV studio behind the board */
+.fsset{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.fsled{position:absolute;left:18vw;right:18vw;top:9vh;height:52vh;border-radius:10px;padding:.8vh;background:#0b0a14;box-shadow:0 0 0 .5vh #1c1a2c,0 0 60px rgba(120,80,255,.35)}
+.fsledin{width:100%;height:100%;border-radius:6px;background:radial-gradient(circle at 50% 50%,transparent 0 1.6px,rgba(0,0,0,.35) 1.8px) 0 0/7px 7px,radial-gradient(ellipse at 50% 120%,#ffd166 0%,transparent 45%),conic-gradient(from 0deg at 50% 110%,#ff3fa4,#7a2cc8,#3fd8ff,#7a2cc8,#ff3fa4);filter:saturate(1.3) brightness(.95);animation:fsled 14s linear infinite;opacity:.9}
+@keyframes fsled{to{filter:saturate(1.3) brightness(.95) hue-rotate(360deg)}}
+.fsrig{position:absolute;left:8vw;right:8vw;top:3vh;height:2.4vh;display:flex;justify-content:space-between;align-items:flex-start;padding:0 2vw;background:repeating-linear-gradient(60deg,transparent 0 .9vh,#9aa0b0 .9vh 1.2vh),repeating-linear-gradient(-60deg,transparent 0 .9vh,#9aa0b0 .9vh 1.2vh);border-top:.35vh solid #b8bdca;border-bottom:.35vh solid #b8bdca}
+.fsrig i{width:2.2vw;height:3.2vh;margin-top:2.2vh;border-radius:.4vw .4vw 1vw 1vw;background:linear-gradient(#2a2a32,#111);box-shadow:inset 0 -.8vh 0 -.4vh #fff6d0,0 1.6vh 2vh rgba(255,240,200,.4)}
+.fstruss{position:absolute;top:3vh;bottom:22vh;width:2vw;background:repeating-linear-gradient(55deg,transparent 0 1.2vh,#8a90a0 1.2vh 1.5vh),repeating-linear-gradient(-55deg,transparent 0 1.2vh,#8a90a0 1.2vh 1.5vh);border-left:.3vw solid #a8adba;border-right:.3vw solid #a8adba;opacity:.85}
+.fstruss.l{left:8vw}.fstruss.r{right:8vw}
+.fsbeams i{position:absolute;top:5vh;left:calc(14vw + var(--i) * 14vw);width:10vw;height:80vh;margin-left:-5vw;transform-origin:50% 0;background:linear-gradient(rgba(255,240,210,.22),rgba(255,240,210,0) 85%);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);animation:fsbeam 7s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -1.3s);mix-blend-mode:screen}
+.fsbeams i:nth-child(even){background:linear-gradient(rgba(255,120,220,.2),rgba(255,120,220,0) 85%)}
+@keyframes fsbeam{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.fsdoor{position:absolute;right:1vw;bottom:14vh;width:9vw;height:44vh;border-radius:.6vw .6vw 0 0;background:linear-gradient(90deg,#120c22,#241a44);box-shadow:inset 0 0 0 .5vw #3a2c64,0 0 30px rgba(0,0,0,.6)}
+.fsdoorlite{position:absolute;inset:.5vw .5vw 0;background:linear-gradient(#ffe7a8,#ffb84a);opacity:.15;transition:opacity .4s}
+.fsov.cin .fsdoorlite{opacity:.55}
+.fsdoor b{position:absolute;left:50%;top:-4vh;transform:translateX(-50%);padding:.3vh .7vw;border-radius:4px;background:#1a1028;border:2px solid #ff3fa4;color:#ff9ad0;font-size:clamp(.5rem,.8vw,.8rem);letter-spacing:.15em;text-shadow:0 0 8px #ff3fa4;box-shadow:0 0 12px rgba(255,63,164,.5)}
+.fsstage{position:absolute;left:4vw;right:4vw;bottom:0;height:16vh;background:linear-gradient(#2a1f4c,#120c26);border-top:.6vh solid #6a5aa8;box-shadow:0 -1vh 3vh rgba(120,80,255,.25)}
+.fsedge{position:absolute;left:0;right:0;top:.6vh;display:flex;justify-content:space-around}
+.fsedge i{width:.7vw;height:.7vw;border-radius:50%;background:#ffd166;box-shadow:0 0 10px #ffb000;animation:fsdot 1.6s ease-in-out infinite alternate}
+.fsedge i:nth-child(odd){animation-delay:-.8s;background:#ff9ad0;box-shadow:0 0 10px #ff3fa4}
+@keyframes fsdot{from{opacity:.35}to{opacity:1}}
+.fsstep{position:absolute;left:38%;right:38%;bottom:0;height:5vh;background:linear-gradient(#3a2c64,#1c1438);border-top:.4vh solid #8a7ad0}
+.fsstep.two{left:34%;right:34%;height:2.4vh}
+.fsov .grwall{opacity:.6}
+.fsov .grfloor{opacity:.55}

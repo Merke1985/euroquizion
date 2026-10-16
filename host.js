@@ -3941,7 +3941,43 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // Party: before the Grand Final, the presenters show the scores in their studio. If anyone sent an envelope to the
   // EBU, a courier rushes in with a brown envelope, the presenters open it in front of everyone, and the bribes pay out.
-  var COURIER = '<svg class="courier" viewBox="0 0 220 440" aria-hidden="true"><ellipse cx="110" cy="432" rx="70" ry="8" fill="rgba(0,0,0,.35)"/><g class="cleg l"><rect x="80" y="290" width="26" height="120" rx="10" fill="#5a3a1c"/><path d="M72 404 h40 v18 h-46 q-4-10 6-18z" fill="#222"/></g><g class="cleg r"><rect x="114" y="290" width="26" height="120" rx="10" fill="#6b4522"/><path d="M110 404 h40 q10 8 6 18 h-46z" fill="#222"/></g><path d="M66 170 Q110 150 154 170 L162 300 Q110 312 58 300 Z" fill="#8a5a2b"/><path d="M66 170 Q110 150 154 170 L150 196 Q110 182 70 196 Z" fill="#a26c36"/><rect x="58" y="282" width="104" height="16" rx="4" fill="#4a2e14"/><rect x="102" y="282" width="16" height="16" rx="3" fill="#ffd166"/><rect x="74" y="210" width="32" height="20" rx="4" fill="#ffd166"/><text x="90" y="225" font-size="13" font-weight="900" text-anchor="middle" fill="#5a3a1c">EXP</text><path d="M66 176 Q40 220 50 270" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="51" cy="274" r="12" fill="#e8b58f"/><path class="carm" d="M154 176 Q190 200 196 236" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><circle cx="196" cy="242" r="12" fill="#e8b58f"/><rect x="98" y="132" width="24" height="26" rx="8" fill="#e8b58f"/><ellipse cx="110" cy="100" rx="40" ry="44" fill="#e8b58f"/><ellipse cx="96" cy="100" rx="5" ry="6" fill="#222"/><ellipse cx="124" cy="100" rx="5" ry="6" fill="#222"/><path d="M96 122 Q110 134 124 122" stroke="#7a2a1a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="84" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><ellipse cx="136" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><path d="M68 84 Q70 48 110 46 Q150 48 152 84 Z" fill="#6b4522"/><path d="M62 84 h104 q6 0 4 8 q-56 6 -112 0 q-2-8 4-8z" fill="#4a2e14"/><rect x="100" y="56" width="20" height="14" rx="3" fill="#ffd166"/></svg>';   // (an original character: a courier in a brown uniform)
+  var COURIER = '<svg class="courier" viewBox="0 0 220 440" aria-hidden="true"><ellipse cx="110" cy="432" rx="70" ry="8" fill="rgba(0,0,0,.35)"/>' +
+    '<g class="cleg l"><rect x="80" y="290" width="26" height="114" rx="10" fill="#5a3a1c"/><path d="M93 296 v100" stroke="#3e2710" stroke-width="2" opacity=".6"/><rect x="80" y="388" width="26" height="12" fill="#e9e1d0"/><path d="M70 404 h42 v18 h-48 q-5-11 6-18z" fill="#1c1c1c"/><path d="M78 409 l8 4 M84 407 l8 4 M90 405 l8 4" stroke="#bbb" stroke-width="1.6"/><path d="M64 420 h48" stroke="#555" stroke-width="3"/></g>' +
+    '<g class="cleg r"><rect x="114" y="290" width="26" height="114" rx="10" fill="#6b4522"/><path d="M127 296 v100" stroke="#4a2e14" stroke-width="2" opacity=".6"/><rect x="114" y="388" width="26" height="12" fill="#e9e1d0"/><path d="M108 404 h42 q11 7 6 18 h-48z" fill="#1c1c1c"/><path d="M122 409 l8 4 M128 407 l8 4 M134 405 l8 4" stroke="#bbb" stroke-width="1.6"/><path d="M108 420 h48" stroke="#555" stroke-width="3"/></g>' +
+    '<path d="M66 170 Q110 150 154 170 L162 300 Q110 312 58 300 Z" fill="#8a5a2b"/>' +   /* the uniform: a brown work jacket */
+    '<path d="M110 160 L110 286" stroke="#5e3a18" stroke-width="2.5"/><circle cx="114" cy="196" r="2.6" fill="#ffd166"/><circle cx="114" cy="222" r="2.6" fill="#ffd166"/><circle cx="114" cy="248" r="2.6" fill="#ffd166"/><circle cx="114" cy="272" r="2.6" fill="#ffd166"/>' +
+    '<path d="M98 152 L110 176 L122 152 L130 160 L110 190 L90 160 Z" fill="#c98a45"/><path d="M100 152 L110 172 L120 152 Z" fill="#f2ead8"/>' +   /* (collar, and the shirt under it) */
+    '<path d="M66 170 Q110 150 154 170 L150 196 Q110 182 70 196 Z" fill="#a26c36" opacity=".55"/>' +
+    '<rect x="122" y="232" width="28" height="24" rx="3" fill="#7a4e24"/><path d="M122 238 h28" stroke="#5e3a18" stroke-width="2"/><rect x="128" y="222" width="5" height="14" rx="2" fill="#2a6ad8"/><rect x="135" y="224" width="4" height="12" rx="2" fill="#d83a2a"/>' +   /* (a chest pocket with two pens) */
+    '<rect x="70" y="250" width="30" height="24" rx="3" fill="#7a4e24"/><path d="M70 256 h30" stroke="#5e3a18" stroke-width="2"/>' +
+    '<path d="M148 168 L76 290" stroke="#3a2410" stroke-width="7" stroke-linecap="round"/><path d="M60 268 h40 v36 q-20 6 -40 0 z" fill="#5a3a1c"/><path d="M60 272 h40 v8 h-40 z" fill="#3a2410"/><rect x="76" y="276" width="8" height="8" rx="1.5" fill="#ffd166"/>' +   /* (a satchel on a strap) */
+    '<rect x="58" y="282" width="104" height="16" rx="4" fill="#4a2e14"/><rect x="102" y="282" width="16" height="16" rx="3" fill="#ffd166"/><rect x="106" y="286" width="8" height="8" rx="1" fill="#4a2e14"/>' +
+    '<rect x="74" y="208" width="34" height="22" rx="4" fill="#ffd166"/><rect x="76" y="210" width="30" height="18" rx="3" fill="none" stroke="#5a3a1c" stroke-width="1.2"/><path d="M80 213 h22 v12 h-22 z M80 213 l11 7 l11 -7" stroke="#5a3a1c" stroke-width="2" fill="none" stroke-linejoin="round"/>' +
+    '<path d="M66 176 Q40 220 50 270" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><path d="M44 252 Q47 262 52 262" stroke="#c98a45" stroke-width="22" fill="none" stroke-linecap="round" opacity=".6"/><path d="M60 196 l-6 14" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/>' +
+    '<circle cx="51" cy="274" r="12" fill="#e8b58f"/><path d="M45 268 q6 -3 12 0" stroke="#c8906a" stroke-width="2" fill="none"/>' +
+    '<g class="carm"><path d="M154 176 Q190 200 196 236" stroke="#8a5a2b" stroke-width="22" fill="none" stroke-linecap="round"/><path d="M160 196 l6 14" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/><circle cx="196" cy="242" r="12" fill="#e8b58f"/></g>' +
+    '<rect x="98" y="132" width="24" height="26" rx="8" fill="#e8b58f"/><path d="M98 148 q12 6 24 0" stroke="#c8906a" stroke-width="2" fill="none"/>' +
+    '<ellipse cx="70" cy="104" rx="8" ry="11" fill="#e0a882"/><ellipse cx="150" cy="104" rx="8" ry="11" fill="#e0a882"/>' +   /* (ears) */
+    '<ellipse cx="110" cy="100" rx="40" ry="44" fill="#e8b58f"/>' +
+    '<path d="M72 86 q-2 18 4 26 M148 86 q2 18 -4 26" stroke="#4a2c16" stroke-width="7" fill="none" stroke-linecap="round"/>' +   /* (sideburns under the cap) */
+    '<path d="M86 88 q10 -6 18 0 M116 88 q10 -6 18 0" stroke="#4a2c16" stroke-width="4" fill="none" stroke-linecap="round"/>' +   /* (eyebrows) */
+    '<ellipse cx="96" cy="100" rx="5" ry="6" fill="#222"/><ellipse cx="124" cy="100" rx="5" ry="6" fill="#222"/><circle cx="97.6" cy="98" r="1.6" fill="#fff"/><circle cx="125.6" cy="98" r="1.6" fill="#fff"/>' +
+    '<path d="M110 102 q-6 10 0 14 q4 1 6 -1" stroke="#c8906a" stroke-width="3" fill="none" stroke-linecap="round"/>' +   /* (nose) */
+    '<path d="M96 122 Q110 134 124 122" stroke="#7a2a1a" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="84" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/><ellipse cx="136" cy="114" rx="7" ry="4" fill="#ff8f8f" opacity=".5"/>' +
+    '<path d="M68 84 Q70 48 110 46 Q150 48 152 84 Z" fill="#6b4522"/><path d="M86 52 Q110 44 134 52" stroke="#8a5a2b" stroke-width="4" fill="none"/><path d="M110 46 v36" stroke="#5a3a1c" stroke-width="2" opacity=".6"/>' +
+    '<path d="M62 84 h104 q6 0 4 8 q-56 6 -112 0 q-2-8 4-8z" fill="#4a2e14"/><rect x="99" y="58" width="22" height="15" rx="3" fill="#ffd166"/><path d="M104 66 l5 4 l8 -8" stroke="#5a3a1c" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+    '</svg>';
+   // (an original character: a courier in a brown uniform)
+  // the studio behind the scores: a big LED wall, a lighting rig with lamps, light beams, a raised stage with
+  // lit edges and steps, and the backstage doorway on the right where the courier comes in
+  var FS_SET = (function () {
+    var lamps = ''; for (var i = 0; i < 9; i++) lamps += '<i style="--i:' + i + '"></i>';
+    var beams = ''; for (i = 0; i < 6; i++) beams += '<i style="--i:' + i + '"></i>';
+    var dots = ''; for (i = 0; i < 28; i++) dots += '<i></i>';
+    return '<div class="fsset" aria-hidden="true"><div class="fsled"><div class="fsledin"></div></div><div class="fsrig">' + lamps + '</div><div class="fstruss l"></div><div class="fstruss r"></div><div class="fsbeams">' + beams + '</div>' +
+      '<div class="fsdoor"><div class="fsdoorlite"></div><b>BACKSTAGE</b></div><div class="fsstage"><div class="fsedge">' + dots + '</div><div class="fsstep"></div><div class="fsstep two"></div></div></div>';
+  })();
   var knockEl = null;
   function knockSnd() { if (REMOTE) { Music.step(); return; } try { if (!knockEl) knockEl = new Audio('sounds/knock.mp3?v=1'); knockEl.currentTime = 0; knockEl.volume = Math.max(0, Math.min(1, Music.vol ? Music.vol.fx : 1)); var pr = knockEl.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
   function partyStandings(then) {
@@ -3952,7 +3988,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ov = document.createElement('div'); ov.id = 'fsov'; ov.className = 'grov hsov hs-scores fsov enter';
     var ps = list().slice().sort(function (a, b) { return b.score - a.score; }), n = ps.length;
     ov.style.setProperty('--rh', Math.min(7.5, 66 / Math.max(1, n)).toFixed(2) + 'vh');
-    ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="hsspot"></div><div class="fssiren"></div><div class="grsign hssign">🏆 The Final Scores</div>' +
+    ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div>' + FS_SET + '<div class="hsspot"></div><div class="fssiren"></div><div class="grsign hssign">🏆 The Final Scores</div>' +
       '<div class="fsboard"><ol>' + ps.map(function (p, i) { return '<li data-pid="' + esc(p.pid) + '"><b class="rk">' + (i + 1) + '</b><span class="who">' + charSvg(p.char) + '<span>' + esc(p.name) + '</span></span><span class="gain"></span><span class="tot">' + p.score + '</span></li>'; }).join('') + '</ol></div>' +
       '<div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>' +
       '<div class="fscour">' + COURIER + '<div class="fscbub"></div></div><div class="fsenv"><div class="fsback"></div><div class="fsletter"><b>EBU</b><i>Official notice</i><span></span></div><div class="fsfront"></div><div class="fsflap"></div><div class="fsseal">EBU</div></div>';
@@ -6563,7 +6599,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (now >= g.ends) {   // the song is over: the phones send their results (bots: perfect); a few seconds at most
         g.st = 'count'; push();
         g.order.forEach(function (pk) { var p = players[pk]; if (p && p.bot) svMsg({ pid: pk, id: g.id, res: g.chart.map(function () { return '2'; }).join('') }); });
-        clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv === g && g.st === 'count') svEnd(g); }, 12000);   // (wait for every phone, up to 12 seconds: some watch through a stream)
+        clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.sv === g && g.st === 'count') svEnd(g); }, 8000);   // (wait for every phone, up to 8 seconds: some watch through a stream)
         return;
       }
     }
@@ -6577,7 +6613,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.win = best > 0 ? g.order.filter(function (k) { return g.dist[k] === best; }) : [];
     var big = 12; g.win.forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
     g.prize = big; g.done = true; push(); Music.douze(); svShow();
-    clearTimeout(svTimer); svTimer = setTimeout(function () { if (G.phase === 'sv') { svSong(false); G.sv = null; startRound(); } }, 14000);
+    clearTimeout(svTimer); var goOn = function () { if (G.sv !== g) return; svSong(false); G.sv = null; startRound(); };
+    svTimer = setTimeout(goOn, 10000); setTimeout(goOn, 10500);   // (10 seconds of scores, then on to the boutique with the winner; a second timer in case the first was cleared)
   }
   function svSnap() {
     var g = G.sv, now = Date.now(), nk = g.t0 ? Math.max(0, Math.ceil(svBeat(g, now))) : 0;
