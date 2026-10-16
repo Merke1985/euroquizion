@@ -6959,7 +6959,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Syncing online players (who watch through a stream, so everything reaches them a little later): the big screen
   // plays 8 clicks with a flash; they tap their phone on every one; each phone works out its own delay from that.
   function calStart() {
-    if (REMOTE || G.phase !== 'lobby' || G.cal) return;
+    if (REMOTE || G.phase !== 'lobby' || G.cal || !list().some(function (p) { return !p.off; })) return;
     G.syncOn = true;   // (syncing turns the stream delay on: from now on every phone plays with its own measured delay)
     var g = G.cal = { id: 'cal' + Date.now().toString(36), t0: Date.now() + 4500, n: 8, gap: 1000, res: {} };
     var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing everyone</h2><p>Everyone: tap your phone on every flash and click!</p><div class="calfl"><b></b></div><div class="calres"></div></div>'; document.body.appendChild(ov);
@@ -6967,6 +6967,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var fl = ov.querySelector('.calfl'), b = fl.querySelector('b');
     var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
     for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
+    // after the 8th flash: 'Calculating…' in the circle, and a ring that goes round once, like a timer, until the results
+    setTimeout(function () {
+      if (G.cal !== g || !fl.isConnected) return;
+      var dur = g.t0 + g.n * g.gap + 8000 - Date.now();
+      fl.insertAdjacentHTML('beforeend', '<svg class="calring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>');
+      fl.style.setProperty('--dur', Math.max(1000, dur) + 'ms'); fl.classList.add('calc'); b.textContent = 'Calculating…';
+    }, g.t0 + (g.n - 1) * g.gap + 700 - Date.now());
     list().forEach(function (p) { if (p.bot || String(p.pid).indexOf('bot') === 0) setTimeout(function () { if (G.cal !== g || !players[p.pid]) return; var d = Math.round(Math.random() * 100) * 10; g.res[p.pid] = d; p.sync = d; calShow(); render(); }, g.t0 + g.n * g.gap + 1000 + Math.random() * 2500 - Date.now()); });   // (the bots tap along too, each somewhere between 0 and 1 second late)
     setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 5500 - Date.now());   // (a stream can be seconds behind: wait for the last taps)
     setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } calDone(ov, g); }, g.t0 + g.n * g.gap + 8000 - Date.now());   // (then a screen with everyone's delay: OK, or try again)
@@ -7009,7 +7016,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var b = $('calbtn'); if (!b) return;
     var ck = b.querySelector('.calok'); if (!ck) { ck = document.createElement('span'); ck.className = 'calok'; ck.textContent = '✓'; b.appendChild(ck); }
     var bt = b.querySelector('.calt'), btx = G.cal ? '🌐 Syncing…' : G.syncOn ? '🌐 Stream delay on · press to turn off' : '🌐 Sync players (stream delay)'; if (bt && bt.textContent !== btx) bt.textContent = btx;
-    var rr = $('rdyrow'), ar = allReady(); if (rr) rr.classList.toggle('synced', ar);
+    b.disabled = !list().some(function (p) { return !p.off; });   // (no players: the sync button does nothing)
+    var rr = $('rdyrow'), ar = allReady(); if (rr) { rr.classList.toggle('synced', ar); var rt = rr.firstChild, rtx = list().some(function (p) { return !p.off; }) ? '✋ Everyone ready' : '👥 No players yet'; if (rt && rt.textContent !== rtx) rt.textContent = rtx; }   // (an empty room: no players, not 'everyone ready')
     if (G.phase === 'lobby' && $('start')) $('start').disabled = !(startBase && ar && calAll());   // (Start: only once everyone is ready, and synced when the stream delay is on)
     if (G.phase !== 'lobby' && $('calov') && !G.cal) $('calov').remove();   // (the game started: the sync results go away)
     var hum = list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; });
@@ -7019,7 +7027,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     b.title = !G.syncOn ? 'Stream delay is off: sync to turn it on' : ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
   }
   if ($('calbtn')) $('calbtn').addEventListener('click', function () {   // the first press syncs everyone (stream delay on); the next press turns it off again and forgets the delays
-    if (G.cal) return;
+    if (G.cal || !list().some(function (p) { return !p.off; })) return;   // (nobody in the room: nothing to sync)
     if (G.syncOn) { G.syncOn = false; list().forEach(function (p) { p.sync = null; }); render(); push(); return; }
     calStart();
   });
