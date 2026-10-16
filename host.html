@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=1122">
+<link rel="stylesheet" href="style.css?v=1123">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -55,7 +55,7 @@
       <h3>How do you play?</h3>
       <div id="playmode" class="presets playmode" role="radiogroup" aria-label="How do you play?"><button type="button" data-m="stream" class="preset on" role="radio" aria-checked="true"><b>📡 Streaming</b><small>Some players watch through a stream (Discord, Twitch…): sync their delay</small></button><button type="button" data-m="local" class="preset" role="radio" aria-checked="false"><b>🛋️ Local play</b><small>Everyone in the same room, watching the same screen</small></button></div>
       <h3>Game settings</h3>
-      <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><span class="pcount" id="pcount"><i data-n="5" class="on">5</i><i data-n="10">10</i><i data-n="0">All</i></span><b>🎉 Party Night</b><small id="partysub">Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>4 rounds of 5 questions, a new era each round, then the Big Five</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
+      <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><span class="pcount" id="pcount"><i data-n="5" class="on">5</i><i data-n="10">10</i><i data-n="0">Grand Tour</i></span><b>🎉 Party Night</b><small id="partysub">Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>4 rounds of 5 questions, a new era each round, then the Big Five</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
       <p class="gamelen" id="gamelen"></p>
       <div class="settings" id="setform">
         <div><label for="s-atype">Game type</label><select id="s-atype">
@@ -63,7 +63,7 @@
         <div id="finalbox"><label for="s-final">Final</label><select id="s-final"><option value="chase" selected>Grand Final</option><option value="double">Big Five</option><option value="standard">Standard</option></select></div>
         <div><label for="s-parts">Rounds</label><select id="s-parts"><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
         <div id="qmodebox"><label for="s-qmode">Trivia selection</label><select id="s-qmode"><option value="standard" selected>Standard</option><option value="random">Random rounds</option><option value="vote">Voted rounds</option><option value="ladder">Ladder</option></select></div>
-        <div><label for="s-rounds">Questions per round</label><select id="s-rounds"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option selected>10</option><option>15</option><option>20</option></select></div>
+        <div><label for="s-rounds">Trivia per round</label><select id="s-rounds"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option selected>10</option><option>15</option><option>20</option></select></div>
         <div class="hidden"><label for="s-era">Era</label><select id="s-era">
           <option value="1956-2100" selected>All eras</option><option value="1956-1979">1956 – 1979</option><option value="1980-1999">1980 – 1999</option><option value="2000-2012">2000 – 2012</option><option value="2013-2100">2013 – now</option></select></div>
         <div class="multi" id="erabox" data-noneall="1"><label id="eralabel">Era</label>
@@ -364,16 +364,16 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=1122"></script>
-<script src="vendor/qrcode.js?v=1122"></script>
-<script src="config.js?v=1122"></script>
-<script src="net.js?v=1122"></script>
-<script src="music.js?v=1122"></script>
-<script src="chars.js?v=1122"></script>
-<script src="match.js?v=1122"></script>
-<script src="shapes.js?v=1122"></script>
-<script src="quiz.js?v=1122"></script>
-<script src="host.js?v=1122"></script>
-  <script src="editor.js?v=1122"></script>
+<script src="vendor/supabase.js?v=1123"></script>
+<script src="vendor/qrcode.js?v=1123"></script>
+<script src="config.js?v=1123"></script>
+<script src="net.js?v=1123"></script>
+<script src="music.js?v=1123"></script>
+<script src="chars.js?v=1123"></script>
+<script src="match.js?v=1123"></script>
+<script src="shapes.js?v=1123"></script>
+<script src="quiz.js?v=1123"></script>
+<script src="host.js?v=1123"></script>
+  <script src="editor.js?v=1123"></script>
 </body>
 </html>

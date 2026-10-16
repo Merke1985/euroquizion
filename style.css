@@ -5844,3 +5844,8 @@ body.rufrozen #waittitle{color:#0b3a66}
 /* Serving: the presenters on the stage (placed by the 3D view), in front of the players */
 .svov .svhosts{z-index:30}
 .svov .svhosts .ehost{right:auto!important;bottom:auto!important;width:auto;transform:translate(-50%,-97%)}
+#calov .calring.beat circle{stroke:rgba(255,255,255,.85);stroke-width:5}
+/* Serving: on the balls the players sit up straight, the upper body showing under the avatar head (like the dancers) */
+.svov[data-bph="hop"] .svaf .svhead,.svov[data-bph="on"] .svaf .svhead{top:calc(var(--s) * -.66);width:calc(var(--s) * .52);height:calc(var(--s) * .52);margin-left:calc(var(--s) * -.26)}
+/* Serving: the song is over: the singer closes her mouth */
+.svov[data-st="end"] .svins:not(.svdan) .svlmouth,.svov[data-st="end"] .svins .svsmouth,.svov[data-st="end"] .svins .svrm{transform-box:fill-box;transform-origin:50% 30%;transform:scaleY(.16)!important;animation:none!important}

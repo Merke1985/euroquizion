@@ -161,6 +161,7 @@
   var greeted = {}, greetQ = [], greetBusy = false, greetTurn = 0, greetAway = null;
   var GREET = [function (n, c) { return 'Welcome, ' + n + ', representing ' + c + '! 🎉'; }, function (n, c) { return 'Give it up for ' + n + ' from ' + c + '! 👏'; }, function (n, c) { return n + ' is here for ' + c + '! Douze points? 😉'; }, function (n, c) { return 'Hello ' + n + '! ' + c + ' is counting on you! ✨'; }, function (n, c) { return 'And now… ' + n + ', for ' + c + '! 🎤'; }];
   function lobbyGreet() {
+    greetQ.length = 0; return;   // (no more spoken greeting when someone joins: it got annoying)
     if (greetBusy || REMOTE || G.phase !== 'lobby') return;
     var k = greetQ.shift(); if (!k) return; var p = players[k]; if (!p) { lobbyGreet(); return; }
     var lh = $('lobhosts'); if (!lh) { lh = document.createElement('div'); lh.id = 'lobhosts'; lh.className = 'lobhosts'; lh.innerHTML = HOST_HIM + HOST_HER + '<div class="hbub him"></div><div class="hbub her"></div>'; document.body.appendChild(lh); }
@@ -6472,6 +6473,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var SV_BCOLS = [['#e0102a', '#6a0614'], ['#1f6fe8', '#0a2a6a'], ['#ffc61a', '#8a6400'], ['#22b45a', '#0c4a22'], ['#ff4fa8', '#8a1050'], ['#8a3ad8', '#3a1060'], ['#ff8a1f', '#8a4006'], ['#c8ccd8', '#5a5e6a']];   // (the colours to pick on the phone, before pumping)
   function svBall(c, d) { return '<svg viewBox="0 0 100 100" class="svball"><ellipse cx="50" cy="96" rx="34" ry="4" fill="rgba(0,0,0,.25)"/><path d="M34 22 Q30 6 40 6 Q44 12 42 24 M66 22 Q70 6 60 6 Q56 12 58 24" stroke="' + d + '" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="50" cy="56" r="38" fill="' + c + '" stroke="' + d + '" stroke-width="3"/><ellipse cx="36" cy="40" rx="12" ry="7" fill="#fff" opacity=".35" transform="rotate(-30 36 40)"/><circle cx="40" cy="58" r="3.5" fill="' + d + '"/><circle cx="60" cy="58" r="3.5" fill="' + d + '"/><path d="M40 70 Q50 78 60 70" stroke="' + d + '" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>'; }
   // the dancer (stages 1 and 2): a little body in the player's colour, arms that pose on every hit
+  function svPC(p) { return p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; }   // (a player's own colours for their body; the team shows in the floor and the ball)
   function svDancer(c, d, cc) { return '<svg viewBox="0 0 100 100" class="svdancer"><ellipse cx="50" cy="97" rx="22" ry="3" fill="rgba(0,0,0,.25)"/><g class="svlegs"><path d="M44 66 L38 94 M56 66 L62 94" stroke="' + d + '" stroke-width="9" stroke-linecap="round"/></g><path d="M36 36 Q50 30 64 36 L62 70 L38 70 Z" fill="' + c + '" stroke="' + d + '" stroke-width="3" stroke-linejoin="round"/><g class="svarms"><path class="al" d="M38 40 L22 26" stroke="' + c + '" stroke-width="8" stroke-linecap="round"/><g class="ar"><path d="M62 40 L78 26" stroke="' + c + '" stroke-width="8" stroke-linecap="round"/>' + (cc ? '<line x1="79" y1="30" x2="79" y2="-6" stroke="#e8e2d0" stroke-width="1.8" stroke-linecap="round"/><image href="https://flagcdn.com/w80/' + cc + '.png" x="80" y="-6" width="20" height="14" preserveAspectRatio="none"/>' : '') + '</g></g></svg>'; }   // (their country's flag in the hand)
   // the Serving stage in real 3D (three.js), behind the arrows and the dancers: a glossy floor of LED tiles that flash
   // on the beat, an LED wall at the back, two truss towers with moving spotlights sweeping the stage, a spinning disco
@@ -6888,7 +6890,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
-      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall.apply(null, SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + SV_RIDE_LEAD + '</div>' + [['#2a1810', '#e8b896'], ['#1a1214', '#c98a62'], ['#1a0e08', '#7a4a2a', 1], ['#120a06', '#5a3418', 1]].map(function (d, j) { return '<div class="svins svdan d' + j + '"><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + (d[2] ? SV_BACKUP_M(d[0], d[1]) + SV_RIDE_DANM(d[0], d[1]) : SV_BACKUP(d[0], d[1]).replace(/svnet/g, 'svnet' + j) + SV_RIDE_DAN(d[0], d[1])) + SV_DAN_SIDE(d[0], d[1], !!d[2]).replace(/svnet/g, 'svnetS' + j) + '</div><div class="svnb insd d' + j + '"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>'; }).join('') + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall.apply(null, SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0]) + svDancer(SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][0], SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][1], p && p.cc) + svRider({ ball: SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][0], ballS: SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][1], top: SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][0], legs: SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][1], boots: '#1a1a22' }) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
+      ov.querySelector('.svclass').innerHTML = '<div class="svnb ins"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>' + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svnb" data-b="' + esc(k) + '"><i>' + svBall.apply(null, SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0]) + '</i></div>'; }).join('') + '<div class="svins"><b class="svkant">Serving kant!</b><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + SV_LEAD + SV_LEAD_SIDE + SV_RIDE_LEAD + '</div>' + [['#2a1810', '#e8b896'], ['#1a1214', '#c98a62'], ['#1a0e08', '#7a4a2a', 1], ['#120a06', '#5a3418', 1]].map(function (d, j) { return '<div class="svins svdan d' + j + '"><div class="svinsball">' + svBall('#e0102a', '#6a0614') + '</div>' + (d[2] ? SV_BACKUP_M(d[0], d[1]) + SV_RIDE_DANM(d[0], d[1]) : SV_BACKUP(d[0], d[1]).replace(/svnet/g, 'svnet' + j) + SV_RIDE_DAN(d[0], d[1])) + SV_DAN_SIDE(d[0], d[1], !!d[2]).replace(/svnet/g, 'svnetS' + j) + '</div><div class="svnb insd d' + j + '"><i>' + svBall('#e0102a', '#6a0614') + '</i></div>'; }).join('') + g.order.map(function (k) { var p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555']; return '<div class="svaf g' + (solo ? 'A' : g.grp[k]) + '" data-p="' + esc(k) + '"><div class="svfb2">' + svBall.apply(null, SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0]) + svDancer(svPC(p)[0], svPC(p)[1], p && p.cc) + svRider({ ball: SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][0], ballS: SV_TBALL[g.grp[k] === 'B' && !solo ? 1 : 0][1], top: svPC(p)[0], legs: svPC(p)[1], boots: '#1a1a22' }) + '<span class="svhead">' + (p ? charSvg(p.char) : '') + '</span></div><em class="svq"></em><b class="svnm">' + esc(p ? p.name : '') + '</b><i class="svpt"></i></div>'; }).join('');
     }
     if (!g.home) g.home = svHomes(g);
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
@@ -6903,7 +6905,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (bph !== 'none' && !ov._bcd) { ov._bcd = 1; g.order.forEach(function (k) {   // the skippy balls come up: in the colour everyone picked (bots and late ones: a random one)
       var bc = g.bcol[k] != null ? SV_BCOLS[g.bcol[k]] : SV_TBALL[g.grp[k] === 'B' && g.order.length > 1 ? 1 : 0],   /* (the team colour) */ p = players[k], col = p && p.col != null && PCOLS[p.col] ? PCOLS[p.col] : ['#888', '#555'];
       var nb = ov.querySelector('.svnb[data-b="' + k + '"] i'); if (nb) nb.innerHTML = svBall(bc[0], bc[1]);
-      var af = ov.querySelector('.svaf[data-p="' + k + '"] .svfb2'); if (af) { var ob = af.querySelector('.svball'), orr = af.querySelector('.svrider'), tmp = document.createElement('div'); var tc = SV_TBALL[g.grp[k] === 'B' && g.order.length > 1 ? 1 : 0]; tmp.innerHTML = svBall(bc[0], bc[1]) + svRider({ ball: bc[0], ballS: bc[1], top: tc[0], legs: tc[1], boots: '#1a1a22' });   /* (their team outfit, their own ball colour) */ if (ob) af.replaceChild(tmp.firstChild, ob); else tmp.removeChild(tmp.firstChild); if (orr) af.replaceChild(tmp.firstChild, orr); }
+      var af = ov.querySelector('.svaf[data-p="' + k + '"] .svfb2'); if (af) { var ob = af.querySelector('.svball'), orr = af.querySelector('.svrider'), tmp = document.createElement('div'); var tc = SV_TBALL[g.grp[k] === 'B' && g.order.length > 1 ? 1 : 0]; tmp.innerHTML = svBall(bc[0], bc[1]) + svRider({ ball: bc[0], ballS: bc[1], top: svPC(p)[0], legs: svPC(p)[1], boots: '#1a1a22' });   /* (their team outfit, their own ball colour) */ if (ob) af.replaceChild(tmp.firstChild, ob); else tmp.removeChild(tmp.firstChild); if (orr) af.replaceChild(tmp.firstChild, orr); }
     }); }
     var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 3 + Math.round(r * 2) : 10 + Math.round(r * 2));   /* (further forward = in front: so the skippy ball rising in front of her is in front of her) */ var p3 = !!(ov._3 && ov._3.proj); if (!el._pl || (p3 && el._p3 === false)) { el._pl = 1; el._p3 = p3; el.style.transition = 'none'; void el.offsetWidth; el.style.transition = ''; } el._p3 = p3; };   /* (the very first placement: straight there, no slide in from the corner) */
     // the presenters stand on the stage itself: at the front edge of the floor, in the middle, right by the audience (sized by the perspective)
@@ -6991,15 +6993,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
     for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
     // after the 8th flash: 'Calculating…' in the circle, and a ring that goes round once, like a timer, until the results
+    // a ring sweeps round every second and closes exactly on each click: you can see when to tap
+    var ringAt = g.t0 - 3000, beatRing = function () { var rg = fl.querySelector('.calring'); if (rg) rg.remove(); fl.insertAdjacentHTML('beforeend', '<svg class="calring beat" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>'); };
+    beatRing(); var rc = fl.querySelector('.calring circle'); rc.style.animation = 'calring ' + g.gap + 'ms linear ' + (ringAt - Date.now()) + 'ms ' + Math.round((g.t0 + (g.n - 1) * g.gap - ringAt) / g.gap) + ' both';
+    var calEndAt = g.t0 + (g.n - 1) * g.gap + 600 + 5000;   // (after the last click: 'Syncing…' and a 5-second ring, then the results)
     setTimeout(function () {
       if (G.cal !== g || !fl.isConnected) return;
-      var dur = g.t0 + g.n * g.gap + 8000 - Date.now();
+      var rg = fl.querySelector('.calring'); if (rg) rg.remove();
       fl.insertAdjacentHTML('beforeend', '<svg class="calring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>');
-      fl.style.setProperty('--dur', Math.max(1000, dur) + 'ms'); fl.classList.add('calc'); b.textContent = 'Calculating…';
-    }, g.t0 + (g.n - 1) * g.gap + 700 - Date.now());
+      fl.style.setProperty('--dur', Math.max(1000, calEndAt - Date.now()) + 'ms'); fl.classList.add('calc'); b.textContent = 'Syncing…';
+    }, g.t0 + (g.n - 1) * g.gap + 600 - Date.now());
     list().forEach(function (p) { if (p.bot || String(p.pid).indexOf('bot') === 0) setTimeout(function () { if (G.cal !== g || !players[p.pid]) return; var d = Math.round(Math.random() * 100) * 10; g.res[p.pid] = d; p.sync = d; calShow(); render(); }, g.t0 + g.n * g.gap + 1000 + Math.random() * 2500 - Date.now()); });   // (the bots tap along too, each somewhere between 0 and 1 second late)
-    setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 5500 - Date.now());   // (a stream can be seconds behind: wait for the last taps)
-    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } calDone(ov, g); }, g.t0 + g.n * g.gap + 8000 - Date.now());   // (then a screen with everyone's delay: OK, or try again)
+    setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, calEndAt - 1300 - Date.now());   // (a stream can be seconds behind: wait for the last taps; a late result still counts)
+    setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } calDone(ov, g); }, calEndAt - Date.now());   // (then a screen with everyone's delay: OK, or try again)
   }
   var calLast = null;
   function calDone(ov, g) {
@@ -7034,7 +7040,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // times count from when it reached them, and answer windows stay open a little longer for them (0 with the delay off)
   function syncOf(p) { return G.syncOn && p && p.sync > 0 ? Math.min(6000, p.sync) : 0; }
   function syncMax() { var mx = 0; if (G.syncOn) list().forEach(function (p) { if (!p.off) mx = Math.max(mx, syncOf(p)); }); return mx; }
-  function calAll() { if (!G.syncOn) return true; return list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }).every(function (p) { return p.sync != null && p.sync >= 0; }); }   // (stream delay off: nobody needs a sync; on: everyone has a measured delay)
+  function calAll() { if (playMode === 'local') return true; if (!G.syncOn) return false;   // (streaming: Start waits until everyone is synced; local play: no sync needed)
+ return list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }).every(function (p) { return p.sync != null && p.sync >= 0; }); }   // (stream delay off: nobody needs a sync; on: everyone has a measured delay)
   function calCheck() {
     var b = $('calbtn'); if (!b) return;
     var ck = b.querySelector('.calok'); if (!ck) { ck = document.createElement('span'); ck.className = 'calok'; ck.textContent = '✓'; b.appendChild(ck); }
@@ -10343,9 +10350,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Rounds and the spin for the years belong to a plain quiz
     // Round Robin: several rounds, each with its own era from the spin. Rounds only counts there, and
     // the Era setting has nothing to choose then.
-    $('s-parts').disabled = party; $('s-era').disabled = robin;   // rounds: for Quiz and Through the Years, with any scoring
+    $('s-parts').disabled = tour; $('s-era').disabled = robin;   // rounds: in every mode but the Grand tour (that one sets its own length)   // rounds: for Quiz and Through the Years, with any scoring
     if (robin && lastType !== 'robin') { $('s-parts').value = '4'; $('s-rounds').value = '5'; }   // picked just now: four rounds of five songs to start from
-    if ((!robin && lastType === 'robin') || party) $('s-parts').value = '1';   // back from Through the Years, or Party: one round
+    if ((!robin && lastType === 'robin') || tour) $('s-parts').value = '1';   // back from Through the Years, or Party: one round
     lastType = $('s-atype').value;
     scoreHelp(); }
   // Only winners in play: "Higher or lower" would always be the winner, so it cannot be chosen.
@@ -10470,7 +10477,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // Rounds: a quiz can be played in several rounds of so many songs each. With "Spin the years" each
     // round gets its own decade, picked by a spin; a decade that has been played is out of the draw.
     if (G.robin) { G.era = '1956-2100'; buildPool(); }
-    G.per = +$('s-rounds').value; G.parts = G.atype === 'mc' ? +$('s-parts').value || 1 : 1;
+    G.per = +$('s-rounds').value; G.parts = G.atype === 'mc' || (G.atype === 'party' && $('s-partypick').value !== 'order') ? +$('s-parts').value || 1 : 1;   // (rounds of trivia, with the party games in between; not in the Grand tour)
     G.partLadder = G.atype === 'mc' && G.scoring === 'ladder' && G.parts > 1; G.partN = 0; G.partNext = true; G.partStart = 1;
     list().forEach(function (p) { p.bank = 0; });
     G.qmode = G.atype === 'mc' || (G.atype === 'party' && $('s-qmode').value !== 'ladder') ? $('s-qmode').value : 'standard'; G.eraBlock = -1; var oneEra = G.era && G.era.indexOf(',') < 0 && G.era !== '1956-2100';   // only one era picked: that era is the rule, no spin or vote
@@ -10707,7 +10714,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var PCOUNT = 5; try { var pc0 = localStorage.getItem('esc-pcount'); if (pc0 != null && [0, 5, 10].indexOf(+pc0) >= 0) PCOUNT = +pc0; } catch (x) {}   // (5, 10 or all of them; 5 to start with)
   function pcountShow() {
     [].forEach.call(document.querySelectorAll('#pcount i'), function (x) { x.classList.toggle('on', (+x.getAttribute('data-n') || 0) === PCOUNT); });
-    var sub = $('partysub'); if (sub) sub.textContent = 'Trivia, ' + (PCOUNT ? PCOUNT + ' party games' : 'all party games') + ', the boutique and the Grand Final';
+    var sub = $('partysub'); if (sub) sub.textContent = PCOUNT ? 'A mix of trivia and ' + PCOUNT + ' rounds of party games!' : 'A mix of trivia and go through all party games one by one!';
     gameLen();
   }
   setTimeout(pcountShow, 0);
@@ -10725,7 +10732,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (PRESET === 'party' && PCOUNT && on.length > PCOUNT) on = on.slice(0, PCOUNT);   // (a shorter Party Night: that many games)
       min += (on.length + 1) * per * perQ / 60;
       on.forEach(function (g) { min += GAME[g] * 0.65 + 1; });   /* (+ the announcement and the boutique after it; calibrated on a real game: 4 players, 3 questions a block, all games ≈ 1 hour) */
-    } else min += (+$('s-parts').value || 1) * per * perQ * 0.8 / 60;   /* (a plain quiz moves faster: no party-game breaks to settle in) */
+    } else min += (+$('s-parts').value || 1) * per * perQ * 0.8 / 60;
+    if ($('s-atype').value === 'party' && $('s-partypick').value !== 'order') min += ((+$('s-parts').value || 1) - 1) * per * perQ / 60;   /* (party rounds: more trivia) */   /* (a plain quiz moves faster: no party-game breaks to settle in) */
     var fin = $('s-final').value; min += fin === 'chase' ? 6 : fin === 'double' ? 5 * perQ * 0.8 / 60 : 0;
     var m = Math.round(min / 5) * 5, txt = m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : Math.max(5, m) + ' min';
     el.innerHTML = '⏱️ About <b>' + txt + '</b> ' + (real >= 2 ? 'with ' + real + ' players' : 'for 4 players');
