@@ -6790,8 +6790,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tbm = [];
     ['A', 'B'].forEach(function (TM, ti) {
       for (var q = 0; q < 6; q++) {   // (one beam for every player in the team: up to 6)
-        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.55, 26, .55), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 - 4), 13, ZF(R - 1) + .9); sc.add(tpole); }   // (a light pole at the front corner of the team's side, its top out of view)
-        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 - 4.5), 5.6 + q * .9, ZF(R - 1) + 1); sc.add(tarm);
+        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.5, 8, .5), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .7), 4, ZF(1)); sc.add(tpole); }   // (a light pole beside the floor, left of the green side and right of the purple side)
+        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .25), 4.6 + q * .6, ZF(1) + .35); sc.add(tarm);
         var thead = new T.Mesh(new T.CylinderGeometry(.3, .4, .6, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); thead.rotation.x = Math.PI / 2; tarm.add(thead);
         var tcone = new T.Mesh(new T.ConeGeometry(1.2, 1, 20, 1, true), new T.MeshBasicMaterial({ color: ti ? '#9a3dff' : '#10ff50', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         tcone.rotation.x = -Math.PI / 2; tarm.add(tcone);
@@ -6854,8 +6854,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ltiles.instanceColor.needsUpdate = true;
       beams.forEach(function (b, j) {   // aim at a spot sweeping across the stage; the cone reaches exactly down to it
         var A = st.aim && st.aim[j % st.aim.length], tx, tz, ty = YL + .14;   // (on the singer and her dancers; with a little wobble)
-        if (A) { tx = (A.c - (C - 1) / 2) * TS + .25 * Math.sin(t * 1.3 + j); tz = ZL(A.r) + .2 * Math.cos(t * 1.1 + j); } else { tx = 0; tz = ZL(1); }
-        if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .55; b.cz += (tz - b.cz) * .55; tx = b.cx; tz = b.cz;
+        if (A) { tx = (A.c - (C - 1) / 2) * TS + .06 * Math.sin(t * 1.3 + j); tz = ZL(A.r) + .05 * Math.cos(t * 1.1 + j); } else { tx = 0; tz = ZL(1); }
+        if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .75; b.cz += (tz - b.cz) * .75; tx = b.cx; tz = b.cz;
         b.cone.visible = b.pool.visible = !!st.lights;   // (the beams only once the song plays)
         b.pool.position.set(tx, ty, tz); b.arm.lookAt(tx, ty, tz);
         var L = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L, 1); b.cone.position.set(0, 0, L / 2);
@@ -6866,8 +6866,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       tbm.forEach(function (b, j) {   // on the team's dancers (each beam on one of them, in turn), fading in and out
         var on = !!(st.tOn && st.tOn[b.T]), L0 = (st.tPos && st.tPos[b.T]) || [], P = L0[b.q] || null;   // (each player their own beam, all the time)
         b.a += ((on && P ? 1 : 0) - b.a) * .08; var vis = b.a > .01; b.arm.visible = b.pool.visible = vis; if (!vis) return;
-        var tx = P ? (P.c - (C - 1) / 2) * TS + .3 * Math.sin(t * 1.7 + j) : (b.T === 'B' ? 1 : -1) * C * TS / 4, tz = P ? ZF(Math.max(0, Math.min(R - 1, P.r))) + .3 * Math.cos(t * 1.3 + j) : ZF(2);
-        b.x += (tx - b.x) * .1; b.z += (tz - b.z) * .1; b.pool.position.set(b.x, .15, b.z); b.arm.lookAt(b.x, .15, b.z);
+        var tx = P ? (P.c - (C - 1) / 2) * TS + .06 * Math.sin(t * 1.7 + j) : (b.T === 'B' ? 1 : -1) * C * TS / 4, tz = P ? ZF(Math.max(0, Math.min(R - 1, P.r))) + .06 * Math.cos(t * 1.3 + j) : ZF(2);
+        b.x += (tx - b.x) * .5; b.z += (tz - b.z) * .5; b.pool.position.set(b.x, .15, b.z); b.arm.lookAt(b.x, .15, b.z);
         var L3 = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L3, 1); b.cone.position.set(0, 0, L3 / 2); b.cone.material.opacity = .11 * b.a; b.pool.material.opacity = .19 * b.a;
       });
       var pOn = !!st.party;
@@ -7190,7 +7190,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the spotlights follow where she and her dancers are on screen right now (walking over: along with them, not ahead of them)
     var tw = ins._tw; if (!tw) tw = ins._tw = { fc: lcx, fr: lry, tc: lcx, tr: lry, at: 0, d: 1, wk: false };
     var twAt = function (n2) { var q = Math.max(0, Math.min(1, (n2 - tw.at) / tw.d)), e = tw.sm ? q * q * (3 - 2 * q) : q; return [tw.fc + (tw.tc - tw.fc) * e, tw.fr + (tw.tr - tw.fr) * e]; };
-    if (tw.tc !== lcx || tw.tr !== lry) { var cv0 = twAt(now); tw.fc = cv0[0]; tw.fr = cv0[1]; tw.tc = lcx; tw.tr = lry; tw.at = now; tw.wk = wk; tw.d = wk ? (parseFloat(ins.style.getPropertyValue('--wd')) || 4) * 1000 : 240; tw.wk = true; tw.sm = !wk; }   /* (the lights glide smoothly to the next spot, no hop, landing with the dancers) */
+    if (tw.tc !== lcx || tw.tr !== lry) { var cv0 = twAt(now); tw.fc = cv0[0]; tw.fr = cv0[1]; tw.tc = lcx; tw.tr = lry; tw.at = now; tw.wk = wk; tw.d = wk ? (parseFloat(ins.style.getPropertyValue('--wd')) || 4) * 1000 : 180; tw.wk = true; tw.sm = !wk; }   /* (the lights glide smoothly to the next spot, no hop, landing with the dancers) */
     var V = twAt(now), vc = V[0], vr = V[1];
     if (ov._3 && ov._3.aim) ov._3.aim([{ c: vc, r: vr }, { c: vc - 2, r: vr }, { c: vc + 4, r: vr }, { c: vc, r: vr }, { c: vc + 2, r: vr }, { c: vc - 4, r: vr }]);   // (the spotlights follow her and her dancers)   // (the tile under every dancer glows in their colour)
     if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk <= 0 && dk > -.5 && !n._hit && g.st === 'play') { n._hit = 1; var hi0 = +n.getAttribute('data-i'); if (ov._3 && ov._3._hk !== hi0) { ov._3._hk = hi0; ov._3.beat(); }   /* (the lights pulse only when an arrow hits the mark) */ var rc = n.parentNode.querySelector('.svrec.c' + g.chart[+n.getAttribute('data-i')][1]); if (rc) { rc.classList.remove('bhit'); void rc.offsetWidth; rc.classList.add('bhit'); } } if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
@@ -7210,7 +7210,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tOn = { A: false, B: false }; if (g.t0 && (g.st === 'play' || g.st === 'ready' || g.hout)) ['A', 'B'].forEach(function (T) { tOn[T] = rdyG === T || rdyG === '*' || (g.st === 'play' && !!cur && (cur[5] === T || cur[5] === '*') && b - cur[0] < 3); });
     if (ov._3 && ov._3.team) ov._3.team(tOn, tpos);
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
-    var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
+    var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + .8) word = 'SERVING'; else if (songT >= x + .8 && songT < x + 2.8) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
     if (ov._3 && ov._3.word) ov._3.word(word);
     if (ov._3 && ov._3.balls) ov._3.balls(songT >= SV_BALLS_AT);   // (from 2:53: the ball rings on the wall)
     if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
