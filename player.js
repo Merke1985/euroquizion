@@ -187,6 +187,7 @@
   var kicked = false;
   function onState(s) {
     SV_STREAM = s && s.sync_on && SV_MY != null ? SV_MY : 0;
+    if ($('svvote') && (!s || s.phase !== 'sv')) $('svvote').classList.add('hidden');
     try { document.body.classList.toggle('svplay', !!(s && s.phase === 'sv' && s.sv && ['intro', 'ready', 'play', 'count'].indexOf(s.sv.st) >= 0)); } catch (e) {}   // (dancing: the screen stays put, no scrolling)   // (the extra-arrows vote: only during Serving)   // (the host turned the stream delay on with a sync)
     if (s && s.phase !== 'clueacc') $('v-wait').classList.remove('accmode');
     if (kicked) return;
@@ -782,7 +783,7 @@
     $('waittitle').textContent = z.st === 'play' ? 'Stage ' + (z.stage || 1) + ': ' + stn : z.st === 'ready' ? '🪩 Get ready…' : '🍑 Serving';
     var tm = svS.g === 'B' ? 'purple' : 'green';
     $('waitsub').textContent = z.st === 'intro' ? 'Listen to the presenters…' : (z.order.length > 1 ? 'You’re in the ' + tm + ' team. ' : '') + (z.stage !== 3 ? 'First a step every four beats, then every two. Every arrow is a step!' : z.stage === 3 ? 'A step on every beat, double points!' : 'Hit the arrow as it reaches the top: every hit is a step!');
-    if (z.st === 'intro') { box.classList.add('hidden'); return; }   // (the arrows only when the presenters are done)
+    if (z.st === 'intro') { box.classList.add('hidden'); svVoteUI(z, -99); return; }   // (the arrows only when the presenters are done)
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id) {   // the chart: arrows scroll up to the receptors; four big pads below
       box.setAttribute('data-id', z.id); S.chart = z.chart || []; S.notes = null;
@@ -831,7 +832,21 @@
       }
     }
   }
-  function svMine(n) { return !n[5] || n[5] === '*' || (svS && svS.g) === n[5]; }   // (my team's arrows, and everyone's)
+  function svMine(n) { if (n[6]) { var z6 = state && state.sv; return !!(z6 && z6.extra && z6.extra[n[5]] === pid); } return !n[5] || n[5] === '*' || (svS && svS.g) === n[5]; }   // (an extra arrow: only if my team voted for me)
+  // While my team isn't dancing: vote for someone in the OTHER team, who gets extra difficulty in their next chorus
+  // (purple votes for green from green's 'Get ready!'; green votes for purple once their own dancing is done). Locks 5 s
+  // before that chorus starts; after voting: sit back and relax.
+  function svVoteUI(z, b) {
+    var w = $('svvote'); if (!w) { w = document.createElement('div'); w.id = 'svvote'; w.className = 'svvote hidden'; var ref = $('svui'); ref.parentNode.insertBefore(w, ref); w.addEventListener('click', function (e) { var bt = e.target.closest('button[data-k]'); var z2 = state && state.sv; if (!bt || !z2 || !net) return; w._mine = bt.getAttribute('data-k'); (net.toHost || net.send)('sv', { pid: pid, id: z2.id, vote: w._mine }); w._h = ''; svVoteUI(z2, w._b); }); }
+    w._b = b; var my = z && z.grp && z.grp[pid], T = my === 'A' ? 'B' : my === 'B' ? 'A' : null, win = z && z.vwin && T ? z.vwin[T] : null;
+    if (!z || !win || z.order.length < 2 || ['ready', 'play'].indexOf(z.st) < 0 || b < win[0]) { w.classList.add('hidden'); return; }
+    var hx, mine = (z.votes && z.votes[pid]) || w._mine;
+    if (z.extra && z.extra[T]) { if (b > win[1] + 7) { w.classList.add('hidden'); return; } hx = '<b>⭐ ' + esc(nameOf(z.extra[T])) + ' gets extra difficulty in the next chorus!</b><small>Sit back and relax 😎</small>'; }
+    else if (b >= win[1]) { w.classList.add('hidden'); return; }
+    else if (mine) hx = '<b>🗳️ You voted for ' + esc(nameOf(mine)) + '</b><small>Sit back and relax 😎</small>';
+    else { var team = z.order.filter(function (k) { return z.grp[k] === T; }); hx = '<b>🗳️ Vote for who gets extra difficulty during the next chorus!</b><div>' + team.map(function (k) { return '<button type="button" data-k="' + esc(k) + '">' + esc(nameOf(k)) + '</button>'; }).join('') + '</div><small>The votes lock 5 seconds before it starts</small>'; }
+    if (w._h !== hx) { w._h = hx; w.innerHTML = hx; } w.classList.remove('hidden');
+  }
   function nameOf(k) { var pl = state && state.players && state.players.filter(function (x) { return x.pid === k; })[0]; return pl ? pl.name : '?'; }   // (the arrows for my team, or for everyone)
   function svStop() { if (svS && svS.raf) cancelAnimationFrame(svS.raf); if (svS) svS.raf = 0; }
   function svFrame() {
@@ -839,6 +854,7 @@
     var b = (Date.now() - S.t0) / S.bt, on = S.st === 'play' || S.st === 'ready';
     if (!S.notes) S.notes = [].slice.call(box.querySelectorAll('.svn'));
     var soon = false; S.chart.forEach(function (n) { if (svMine(n) && n[0] > b - .3 && n[0] < b + 3.2) soon = true; });
+    if (state && state.sv) svVoteUI(state.sv, b);
     if (!S.partSent && S.st === 'play') {   // my team's round is over: one score update for the big screen (not every arrow)
       var lastMine = 0; S.chart.forEach(function (n) { if (n[5] && n[5] !== '*' && svMine(n)) lastMine = Math.max(lastMine, n[0]); });
       if (lastMine && b > lastMine + 1) { S.partSent = true; var zid2 = state && state.sv && state.sv.id, snd = function () { var res = S.chart.map(function (n, i) { return String(S.q[i] || 0); }).join(''); if (net && zid2) (net.toHost || net.send)('sv', { pid: pid, id: zid2, part: 1, res: res }); }; snd(); setTimeout(snd, 1500); }
