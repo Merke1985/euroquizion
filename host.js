@@ -6489,14 +6489,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       clearInterval(wt); g.hin = true; svShow();
       setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l00[0], l00[1]); }, 5300);
       setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, t00);
-      setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, voiceMs(l0[0], l0[1]) ? Math.max(1200, voiceMs(l0[0], l0[1]) - 3750) : talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
+      setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, voiceMs(l0[0], l0[1]) ? Math.max(1200, voiceMs(l0[0], l0[1]) - 2750) : talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
     }, 150);
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
   var SV_HOFF = 13500, SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!']], SV_WALKIN = 6000;
   function svIntro(g) {
-    if (!REMOTE) [82, 72, 64, 56].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) svVol(v); }, Math.max(0, g.t0 + 1700 - Date.now()) + i * 120); });   // (loud at first; it dips as her first line starts)
-    var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 1800;
+    if (!REMOTE) [82, 72, 64, 56].forEach(function (v, i) { setTimeout(function () { if (G.sv === g) svVol(v); }, Math.max(0, g.t0 + 1800 - Date.now()) + i * 120); });   // (loud at first; it dips as her first line starts)
+    var first = g.t0 + g.chart[0][0] * SV_BT, at = g.t0 + 2300;
     SV_LINES.forEach(function (l, li) {
       var len = Math.max(3000, talkLen(l[0], l[1], 2400)); if (at + len > first - SV_HOFF) return;
       (function (l, when) { setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l[0], l[1]); }, Math.max(0, when - Date.now())); })(l, at);
@@ -6519,7 +6519,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   setTimeout(svMp3Show, 0);
   function svVol(v) { try { (svAudP && svAudP._on ? svAudP : yt).setVolume(v); } catch (e) {} }   // (the music volume setting scales it, like YouTube)
   var SV_BALLS_AT = 159;   // (2:39: the last part)
-  var SV_WORD = [56, 64, 109.1, 116.5];   // (song time in seconds: 0:56, 1:04, 1:49.1 and 1:56.5)
+  var SV_WORD = [56, 65, 109.1, 116.5];   // (song time in seconds: 0:56, 1:05, 1:49.1 and 1:56.5)
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
     if (!on) { try { yt.pauseVideo(); } catch (e) {} if (svAud) { svAud.pause(); } if (svAudP) svAudP._on = false; return; }
@@ -6794,8 +6794,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tbm = [];
     ['A', 'B'].forEach(function (TM, ti) {
       for (var q = 0; q < 6; q++) {   // (one beam for every player in the team: up to 6)
-        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.6, 30, .6), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 - 5.5), 12, ZF(R - 1) + TS + 1.6); sc.add(tpole); }   // (a light pole in the audience, in front of the stage: left for green, right for purple; its top out of view)
-        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 - 5.5 - .6), 10 + q * .5, ZF(R - 1) + TS + 1.6)   /* (high on the pole, out of view) */; sc.add(tarm);
+        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.55, 12.5, .55), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .3), 6.25, ZF(1.2)); sc.add(tpole); }   // (a light pole beside the stage, as far towards the audience as can be seen: left of green, right of purple)
+        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .3 - .55), 9.8 + q * .5, ZF(1.2))   /* (at the top of the pole) */; sc.add(tarm);
         var thead = new T.Mesh(new T.CylinderGeometry(.3, .4, .6, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); thead.rotation.x = Math.PI / 2; tarm.add(thead);
         var tcone = new T.Mesh(new T.ConeGeometry(1.2, 1, 20, 1, true), new T.MeshBasicMaterial({ color: ti ? '#9a3dff' : '#10ff50', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         tcone.rotation.x = -Math.PI / 2; tarm.add(tcone);
@@ -6869,7 +6869,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       mouth.rotation.y = t * .7;
       tbm.forEach(function (b, j) {   // on the team's dancers (each beam on one of them, in turn), fading in and out
         var on = !!(st.tOn && st.tOn[b.T]), L0 = (st.tPos && st.tPos[b.T]) || [], P = L0[b.q] || null;   // (each player their own beam, all the time)
-        b.a += ((on && P ? 1 : 0) - b.a) * .08; var vis = b.a > .01; b.arm.visible = b.pool.visible = vis; if (!vis) return;
+        b.a += ((on && P ? 1 : 0) - b.a) * (on && P ? .08 : .45); var vis = b.a > .01; b.arm.visible = b.pool.visible = vis; if (!vis) return;
         var tx = P ? (P.c - (C - 1) / 2) * TS + .06 * Math.sin(t * 1.7 + j) : (b.T === 'B' ? 1 : -1) * C * TS / 4, tz = P ? ZF(Math.max(0, Math.min(R - 1, P.r))) + .06 * Math.cos(t * 1.3 + j) : ZF(2);
         b.x += (tx - b.x) * .5; b.z += (tz - b.z) * .5; b.pool.position.set(b.x, .15, b.z); b.arm.lookAt(b.x, .15, b.z);
         var L3 = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L3, 1); b.cone.position.set(0, 0, L3 / 2); b.cone.material.opacity = .11 * b.a; b.pool.material.opacity = .19 * b.a;
@@ -7211,7 +7211,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rdyN = null; if ((g.st === 'play' || g.st === 'ready' || g.hout) && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= (x === g.starts[0] ? 9000 : 5000)) rdyN = x; });   // (the first one 9 seconds ahead, once the presenters are gone; else 5 seconds before a team's turn: their name and 'Get ready!' in the middle)
     var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Green team' : 'Purple team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
     // each team's own light beams: on from their 'Get ready!' through their turn, and for both teams in the part together
-    var tOn = { A: false, B: false }; if (g.t0 && (g.st === 'play' || g.st === 'ready' || g.hout)) ['A', 'B'].forEach(function (T) { tOn[T] = rdyG === T || rdyG === '*' || (g.st === 'play' && !!cur && (cur[5] === T || cur[5] === '*') && b - cur[0] < 3); });
+    var tOn = { A: false, B: false }; if (g.t0 && (g.st === 'play' || g.st === 'ready' || g.hout)) ['A', 'B'].forEach(function (T) { tOn[T] = rdyG === T || rdyG === '*' || (g.st === 'play' && !!cur && (cur[5] === T || cur[5] === '*') && (b - cur[0] < 1 || (!!nx && (nx[5] === T || nx[5] === '*')))); });   // (off as soon as their part is done)
     if (ov._3 && ov._3.team) ov._3.team(tOn, tpos);
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
     var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + .8) word = 'SERVING'; else if (songT >= x + .8 && songT < x + 2.8) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
