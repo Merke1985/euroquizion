@@ -6102,3 +6102,6 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .whbox .whfix{z-index:2;pointer-events:none}
 .whbox .whptr{z-index:3}
 .whbox .whconf,.whbox .whban{z-index:4}
+/* the sync buttons on the phone: blue, also their shadow */
+#lobbystart.sync:not(:disabled){box-shadow:0 6px 0 #1f4fb8}
+#calui .calgo{background:radial-gradient(circle at 50% 35%,#6fd8ff,#2a5fe0);box-shadow:0 0 40px rgba(60,140,255,.6),0 8px 0 #1f3f9a}

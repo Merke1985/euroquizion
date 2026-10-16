@@ -281,7 +281,7 @@
     if (G.phase === 'reveal' && autoTick && $('autolen').value !== 'end') s.next_in = Math.max(0, autoEnd - Date.now());   // phones show the autoplay countdown too
     if (G.revealAt && (G.phase === 'guess' || G.phase === 'svote' || G.phase === 'sbest')) s.reveal_in = Math.max(0, G.revealAt - Date.now());
     if (G.phase === 'lobby') s.all_ready = allReady();
-    if (G.phase === 'lobby') { s.all_sync = calAll(); s.cal_on = !!G.cal; }   // (once everyone is ready: first the sync for the online players, then Start)
+    if (G.phase === 'lobby') { s.all_sync = calAll(); s.cal_on = !!G.cal; s.lead = leadPid(); }   // (once everyone is ready: first the sync for the online players, then Start)
     if (G.phase === 'reveal' && lastSong()) s.last = true;
     if (REMOTE) { s.remote = true; if (G.clip && (G.phase === 'loading' || G.phase === 'guess' || G.phase === 'qall' || G.phase === 'reveal')) s.clip = G.clip; }
     // Phones get the question and the options, never which option is right (until the reveal).
@@ -7315,6 +7315,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   net.on('sv', svMsg);
   // Syncing online players (who watch through a stream, so everything reaches them a little later): the big screen
   // plays 8 clicks with a flash; they tap their phone on every one; each phone works out its own delay from that.
+  // The first player who joined (still here, not a bot) runs the phones: only they can start the sync and the game
+  function leadPid() { var h = list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }); return h.length ? h[0].pid : ''; }
   function calStart(by) {
     if (REMOTE || G.phase !== 'lobby' || G.cal || !list().some(function (p) { return !p.off; })) return;
     var was = !!G.syncOn; G.syncOn = true;   // (syncing turns the stream delay on: from now on every phone plays with its own measured delay)
@@ -10099,6 +10101,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!p || G.phase !== 'lobby') return;
     if (!G.go) G.go = {};
     if (m.off) { delete G.go[p.pid]; push(); return; }   // pressed Ready again: not ready after all
+    if ((m.sync || m.start || m.calgo) && leadPid() && p.pid !== leadPid()) return;   // (only the first player who joined can start the sync and the game)
     if (m.sync) { if (allReady() && !G.cal) calStart(p.pid); return; }   // "Sync" on a phone: the sync starts for everyone
     if (m.calgo) { var cov = $('calov'); if (G.cal && G.cal.wait && G.cal.by === p.pid && cov) calRun(cov, G.cal); return; }   // (that phone's own Sync button: the countdown starts)
     if (m.start) { if (allReady() && (calAll() || m.force)) { var co = $('calov'); if (co && !G.cal) co.remove(); beginGame(); } else if (allReady() && !G.cal) calStart(); return; }   // "Start game" on a phone, only once everyone is ready
