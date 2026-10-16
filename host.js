@@ -195,7 +195,7 @@
       // it was right before the reveal, which comes once everyone has an answer in.
       if (G.best && G.best.ranked && Array.isArray(m.ranks)) {   // the 12-10-8 of the best drawings (not your own, no drawing twice)
         var rk = []; m.ranks.forEach(function (i) { if (typeof i === 'number' && G.q.options[i] && G.best.pids[i] !== m.pid && rk.indexOf(i) < 0 && rk.length < 3) rk.push(i); });
-        if (!rk.length) return; p.ranks = rk; p.pick = rk[0]; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now()); push(); allIn(); return;
+        if (!rk.length) return; p.ranks = rk; p.pick = rk[0]; p.pickMs = Math.max(0, (G.barMs || G.guessMs) - (G.endsAt - Date.now()) - syncOf(p)); push(); allIn(); return;
       }
       if (typeof m.choice !== 'number' || !G.q.options[m.choice]) return;
       if (G.draw && (m.pid === G.draw.pid || p.pick != null)) return;
@@ -207,13 +207,13 @@
         if (m.cancel) { if (p.pick != null) { p.pick = null; p.lockAt = 0; push(); } return; }
         p.lockAt = nowL + 3000;
       }
-      p.pick = m.choice; p.pickMs = (G.barMs || G.guessMs) - (G.endsAt - Date.now());
+      p.pick = m.choice; p.pickMs = Math.max(0, (G.barMs || G.guessMs) - (G.endsAt - Date.now()) - syncOf(p));   // (counted from when the stream reached them)
       push(); allIn(); return;
     }
     res = checkOpen(G.q, G.song, m.text, countries);
     if (res === 'ok') {
       var before = list().filter(function (x) { return x.got; }).length;
-      p.pts = pointsFor(G.scoring, G.guessMs - (G.endsAt - Date.now()), G.guessMs, before); if (p.halfNow) p.pts = Math.ceil(p.pts / 2); if (ccHit(p)) { p.pts *= 2; p.ccb = p.cc; } p.score += p.pts; p.got = true; cardPay(p);
+      p.pts = pointsFor(G.scoring, Math.max(0, G.guessMs - (G.endsAt - Date.now()) - syncOf(p)), G.guessMs, before); if (p.halfNow) p.pts = Math.ceil(p.pts / 2); if (ccHit(p)) { p.pts *= 2; p.ccb = p.cc; } p.score += p.pts; p.got = true; cardPay(p);
     }
     net.send('result', { pid: p.pid, res: res });
     if (res === 'ok' || mc) {
@@ -1159,7 +1159,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     else if (G.q && G.q.peel) peelPlay(ms);
     else { rate(G.q && G.q.fast ? 0.5 : 1); playClip(); if (G.q && G.q.fast) cover(true, '🐌', 'Slow motion', false); }   // Slow motion: only the sound, at half speed
     push(); if (G.draw) drawSend();
-    endTimer = setTimeout(reveal, ms);
+    endTimer = setTimeout(reveal, ms + syncMax());   // (stream viewers hear the clip later: the window stays open a little longer for them)
   }
   // Shared screen: before the answer, everyone's avatar drops in behind the answer they picked, one by one
   // with a plop, in the order the answers came in. Then the right answer lights up.
@@ -1452,7 +1452,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var ms = G.draw ? drawGuessMs() : G.guessMs;
     G.guessAt = Date.now();
     G.phase = 'guess'; G.barMs = ms; G.endsAt = Date.now() + ms; push(); if (G.draw) drawSend();
-    endTimer = setTimeout(reveal, ms);
+    endTimer = setTimeout(reveal, ms + syncMax());   // (the drawing reaches stream viewers later)
   }
 
   // ---------- Draw! ----------
@@ -3236,7 +3236,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var t = $('bombov') && $('bombov').querySelector('.utimer'); if (t) { t.textContent = Math.max(0, sec); t.classList.toggle('hot', sec <= 5); }
       if (sec !== udLastSec) { udLastSec = sec; if (sec <= 5 && sec >= 1 && !REMOTE) Music.clock(sec); }
       if (Date.now() - udMapAt > 4000) udSendMap();   // (a missed message: sent again)
-      if (left <= 0) { clearInterval(udTickT); udLock(); }
+      if (left + syncMax() <= 0) { clearInterval(udTickT); udLock(); }   // (stream viewers see the countdown later: it locks once it has reached zero for them too)
     }, 200);
   }
   function bombMsg(m) {
@@ -4084,7 +4084,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       frozePair = '';
       push();
       if (G.revealPending) { G.revealPending = false; reveal(); return; }
-      endTimer = setTimeout(reveal, left); allIn();
+      endTimer = setTimeout(reveal, left + syncMax()); allIn();
     }, ms);
   }
   // The big screen during the shopping: the items, and who has picked already.
@@ -6594,6 +6594,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 60), sk = [];
     for (i = 0; i < 60; i++) { sk.push({ x: (Math.random() - .5) * 34, z: ZF(R - 1) + TS + .6 + Math.random() * 1.6, ph: Math.random() * 6.28 }); sticks.setColorAt(i, col.set(['#ff3fa4', '#3fd8ff', '#ffd23f', '#a6ff4d'][i % 4])); }
     sc.add(sticks);
+    // the fans holding them: dark silhouettes with a faint outline (a slightly bigger copy drawn from behind), one arm up to the stick
+    var cGeo = { b: new T.CapsuleGeometry(.3, .9, 4, 8), h: new T.SphereGeometry(.23, 12, 8), a: new T.CylinderGeometry(.065, .065, 1, 6) }, crowd = {}, cQ = new T.Quaternion(), cUp = new T.Vector3(0, 1, 0), cD = new T.Vector3(), cS = new T.Vector3(), cP = new T.Vector3();
+    var cFill = new T.MeshBasicMaterial({ color: '#06020a', fog: false }), cLine = new T.MeshBasicMaterial({ color: '#7a4a90', side: T.BackSide, transparent: true, opacity: .2, fog: false });
+    ['b', 'h', 'a'].forEach(function (k) { crowd[k] = [new T.InstancedMesh(cGeo[k], cFill, 60), new T.InstancedMesh(cGeo[k], cLine, 60)]; sc.add(crowd[k][1]); sc.add(crowd[k][0]); });
+    var cSet = function (k, j, x, y, z, q, sx, sy, sz) { cP.set(x, y, z); cS.set(sx, sy, sz); m4.compose(cP, q, cS); crowd[k][0].setMatrixAt(j, m4); cS.set(sx * 1.14 + .02, sy + .05, sz * 1.14 + .02); m4.compose(cP, q, cS); crowd[k][1].setMatrixAt(j, m4); };
     var st = { mk: {}, mkL: {}, stage: 1, beatAt: 0, pal: SV3_PAL[0], q: new T.Quaternion(), e: new T.Euler(), s: new T.Vector3(1, 1, 1), p: new T.Vector3() };
     function drawWall(t) {   // red rays turning slowly round a point low in the middle, a little brighter on the beat
       var fl = Math.max(0, 1 - (performance.now() - st.beatAt) / 500), W = 512, H = 256, ox = W / 2, oy = H * .62;
@@ -6624,8 +6629,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       for (var bi = 0; bi < bulbs.count; bi++) bulbs.setColorAt(bi, col.set((bi + st.n) % 2 ? '#fff6d0' : '#ff9a30').multiplyScalar((bi + st.n) % 2 ? 1 : .55 + fl * .4)); bulbs.instanceColor.needsUpdate = true;
       mouth.rotation.y = t * .7;
-      sk.forEach(function (s, j) { st.e.set(0, 0, .5 * Math.sin(t * 4.1 + s.ph)); st.q.setFromEuler(st.e); st.p.set(s.x, -.2 + .2 * Math.sin(t * 4.1 + s.ph), s.z); m4.compose(st.p, st.q, st.s); sticks.setMatrixAt(j, m4); });
-      sticks.instanceMatrix.needsUpdate = true;
+      sk.forEach(function (s, j) {
+        var ang = .5 * Math.sin(t * 4.1 + s.ph), sy = -.2 + .2 * Math.sin(t * 4.1 + s.ph);
+        st.e.set(0, 0, ang); st.q.setFromEuler(st.e); st.p.set(s.x, sy, s.z); m4.compose(st.p, st.q, st.s); sticks.setMatrixAt(j, m4);
+        // the fan under it: swaying a little, the hand at the bottom of the stick
+        var hx = s.x + .275 * Math.sin(ang), hy = sy - .275 * Math.cos(ang), sw = .07 * Math.sin(t * 2.05 + s.ph), px = s.x - .34 + sw, pz = s.z + .2, shx = px + .22, shy = -1.62;
+        cQ.identity(); cSet('b', j, px, -2.15, pz, cQ, 1, 1, 1); cSet('h', j, px + sw * .4, -1.3, pz, cQ, 1, 1, 1);
+        cD.set(hx - shx, hy - shy, s.z - pz); var len = cD.length(); cD.normalize(); cQ.setFromUnitVectors(cUp, cD);
+        cSet('a', j, (hx + shx) / 2, (hy + shy) / 2, (s.z + pz) / 2, cQ, 1, len, 1);
+      });
+      sticks.instanceMatrix.needsUpdate = true; ['b', 'h', 'a'].forEach(function (k) { crowd[k][0].instanceMatrix.needsUpdate = true; crowd[k][1].instanceMatrix.needsUpdate = true; });
       if (now - lastW > 50) { lastW = now; drawWall(t); }
       var W = el.clientWidth, H = el.clientHeight; if (W && H && (W !== w || H !== h)) { w = W; h = H; rn.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
       rn.getDrawingBufferSize(dbs); if (rtF.width !== Math.round(dbs.x / 2)) { rtF.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); rtL.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); } tileM.userData.rf.rRes.value.copy(dbs); ltileM.userData.rf.rRes.value.copy(dbs);
@@ -6951,6 +6964,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var fl = ov.querySelector('.calfl'), b = fl.querySelector('b');
     var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
     for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
+    list().forEach(function (p) { if (p.bot || String(p.pid).indexOf('bot') === 0) setTimeout(function () { if (G.cal !== g || !players[p.pid]) return; var d = Math.round(Math.random() * 100) * 10; g.res[p.pid] = d; p.sync = d; calShow(); render(); }, g.t0 + g.n * g.gap + 1000 + Math.random() * 2500 - Date.now()); });   // (the bots tap along too, each somewhere between 0 and 1 second late)
     setTimeout(function () { if (G.cal !== g) return; g.done = true; push(); }, g.t0 + g.n * g.gap + 5500 - Date.now());   // (a stream can be seconds behind: wait for the last taps)
     setTimeout(function () { if (G.cal === g) { G.cal = null; push(); } calDone(ov, g); }, g.t0 + g.n * g.gap + 8000 - Date.now());   // (then a screen with everyone's delay: OK, or try again)
   }
@@ -6958,7 +6972,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function calDone(ov, g) {
     calLast = g; ov._g = g;
     if (!ov.parentNode) return;
-    var hum = list().filter(function (p) { return !p.bot && String(p.pid).indexOf('bot') !== 0; });
+    var all = list(), hum = all.filter(function (p) { return !p.bot && String(p.pid).indexOf('bot') !== 0; });
     var row = function (p) {
       var d = g.res[p.pid], st, cls;
       if (d >= 0) { st = '⏱️ ' + (d / 1000).toFixed(2) + 's'; cls = 'ok'; }
@@ -6968,7 +6982,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       return '<tr class="' + cls + '"><td>' + (p.char ? charSvg(p.char) : '') + '</td><td>' + esc(p.name) + '</td><td>' + st + '</td></tr>';
     };
     var bad = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); }).length;
-    ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (hum.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div></div>';
+    ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (all.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div></div>';
     ov.querySelector('[data-a="ok"]').addEventListener('click', function () { ov.remove(); });
     ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(); });  }
   function calShow() {
@@ -6979,10 +6993,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Under every player in the lobby: a little sync box. In the room: ticked (no sync needed); online: ticked once their delay is measured
   function syncTag(p) {
     if (!G.syncOn) return '';   // (only with the stream delay on)
-    var bot = p.bot || String(p.pid).indexOf('bot') === 0, ok = bot || (p.sync != null && p.sync >= 0);
-    return '<span class="psync' + (ok ? ' ok' : '') + '" title="' + (bot ? 'Bot' : ok ? 'Delay ' + (p.sync / 1000).toFixed(2) + 's' : 'Not synced yet') + '"><i>' + (ok ? '✓' : '') + '</i>' + (bot ? 'bot' : ok ? (p.sync / 1000).toFixed(2) + 's' : 'sync') + '</span>';
+    var bot = p.bot || String(p.pid).indexOf('bot') === 0, ok = p.sync != null && p.sync >= 0;
+    return '<span class="psync' + (ok ? ' ok' : '') + '" title="' + (ok ? 'Delay ' + (p.sync / 1000).toFixed(2) + 's' : 'Not synced yet') + '"><i>' + (ok ? '✓' : '') + '</i>' + (ok ? (p.sync / 1000).toFixed(2) + 's' : 'sync') + '</span>';
   }
   // The sync button gets a checkmark at the end, lit only when every player is synced: in the room (no sync needed) or online with a measured delay
+  // The stream delay in every game: an online player sees and hears the big screen this much later, so their answer
+  // times count from when it reached them, and answer windows stay open a little longer for them (0 with the delay off)
+  function syncOf(p) { return G.syncOn && p && p.sync > 0 ? Math.min(6000, p.sync) : 0; }
+  function syncMax() { var mx = 0; if (G.syncOn) list().forEach(function (p) { if (!p.off) mx = Math.max(mx, syncOf(p)); }); return mx; }
   function calAll() { if (!G.syncOn) return true; return list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }).every(function (p) { return p.sync != null && p.sync >= 0; }); }   // (stream delay off: nobody needs a sync; on: everyone has a measured delay)
   function calCheck() {
     var b = $('calbtn'); if (!b) return;
@@ -8876,7 +8894,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var ok = (g.botMiss || {})[b.pid] !== (g.prog[b.pid] || 0) + 1, d = ok ? g.seq[g.prog[b.pid] || 0] : (g.seq[g.prog[b.pid] || 0] + 1 + Math.floor(Math.random() * 3)) % 4;
         qjMsg({ pid: b.pid, id: g.id, round: g.round, i: g.prog[b.pid] || 0, dir: d }); n++; setTimeout(step, 380 + Math.random() * 520);
       }; setTimeout(step, 900 + Math.random() * 900); });
-      clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, ms);
+      clearTimeout(qjTimer); qjTimer = setTimeout(qjResolve, ms + syncMax());   // (stream viewers saw the route later: the same time for them)
       clearInterval(qjTick); qjTick = setInterval(function () { if (!G.qj || G.qj.st !== 'input') { clearInterval(qjTick); return; } qjShow(); }, 500);
     });
   }

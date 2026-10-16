@@ -907,7 +907,7 @@
     show('v-wait');
     if (!zgS || zgS.id !== z.id) { zgStop(); zgS = { id: z.id, seed: z.seed, start: 0, f: 0, y: 0.5, hit: false, inT: 0, tot: 0, outFor: 0, sent: 0, sentAt: 0, fell: false, fin: false, raf: 0, box: null }; }
     var S = zgS, fell = S.fell || (z.out || {})[pid] != null;
-    if (z.st === 'play' && z.el != null) { var st0 = Date.now() - z.el; if (!S.start || st0 < S.start) S.start = st0; }   /* (the earliest estimate: least network delay) */
+    if (z.st === 'play' && z.el != null) { var st0 = Date.now() - z.el + SV_STREAM;   /* (with the stream delay on: in step with the song as it comes through) */ if (!S.start || st0 < S.start) S.start = st0; }   /* (the earliest estimate: least network delay) */
     if (z.st === 'end') {
       zgStop(); box.classList.add('hidden');
       if (mine && !S.fin && !fell) { S.fin = true; zgTell({ acc: zgAcc() }); }
@@ -1998,7 +1998,9 @@
   function pickAvVis() {   // the avatars only after "No photo?" (or when you already have one of them)
     var on = pickMode === 'avatar' && avList;
     $('chars').classList.toggle('hidden', !on); $('pickavnote').classList.toggle('hidden', !on); $('nopic').classList.toggle('hidden', on || pickMode !== 'avatar');
+    $('mypicrow').classList.toggle('avmode', on); $('backpic').classList.toggle('hidden', !on);   // (picking an avatar: the selfie and upload options go away)
   }
+  $('backpic').addEventListener('click', function () { avList = false; pickAvVis(); });
   $('nopic').addEventListener('click', function () { avList = true; $('pickerr').textContent = ''; pickAvVis(); setTimeout(function () { try { $('chars').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 50); });
   $('ccs').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-cc]');
@@ -2020,7 +2022,7 @@
     $('picktitle').textContent = mode === 'name' ? 'Your name' : mode === 'flag' ? (joinFlow ? 'Step 2 of 2: which country do you represent?' : 'Your fan flag') : (joinFlow ? 'Step 1 of 2: choose your avatar' : 'Your avatar');
     $('pickerr').textContent = '';
     $('pickname').classList.toggle('hidden', mode !== 'name');
-    var cur0 = me(); avList = mode === 'avatar' && !joinFlow && !!(cur0 && cur0.char && String(cur0.char).indexOf('u:') !== 0);
+    avList = false;   // (always the choice first: a selfie, a picture, or an avatar)
     $('mypicrow').classList.toggle('hidden', mode !== 'avatar'); $('ccwrap').classList.toggle('hidden', mode !== 'flag'); pickAvVis();
     if (state) onState(state);
     if (mode === 'name') { try { $('editname').focus(); $('editname').select(); } catch (e) {} }

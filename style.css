@@ -5817,3 +5817,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svhosts .ehost{bottom:0;height:42vh;transition:translate 1.3s cubic-bezier(.3,.9,.4,1),opacity 1s}
 .svhosts .him{left:auto;right:calc(50% + .6vw)}.svhosts .her{right:auto;left:calc(50% + .6vw)}
 .svov:not([data-hin]) .svhosts .him{translate:-60vw 0;opacity:0}.svov:not([data-hin]) .svhosts .her{translate:60vw 0;opacity:0}
+/* picking an avatar: the selfie and upload options are hidden, with a small way back */
+.mypicrow.avmode{padding:6px 10px}
+.mypicrow.avmode > :not(#backpic){display:none!important}
+#backpic{background:none;border:0;color:var(--mute);font-weight:700;font-size:.9rem;text-decoration:underline;cursor:pointer;padding:4px;width:100%}
