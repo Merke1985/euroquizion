@@ -5946,3 +5946,7 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .shopov.boutique .bqi{width:auto;flex:1 1 0;min-width:0}
 .shopov.boutique .bqi .si{margin-bottom:.4em}
 .shopov.boutique .bqsale{right:5vw}
+/* no title signs at the top of the party games (the hosts' introduction still names the game; the final scores and the item alert keep theirs) */
+.grsign:not(.hssign),.pcov .hssign,.bqsign,.orsign,.rusign,.tcsign,.zgsign{display:none!important}
+.fksign{padding:.25em .9em}.fksign small{font-size:clamp(.8rem,1.2vw,1.2rem);margin:0}
+.fksign:has(small:empty){display:none}

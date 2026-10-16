@@ -7427,7 +7427,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov = document.createElement('div'); ov.id = 'fkov'; ov.className = 'fkov jcov enter';
       ov.innerHTML = '<div class="jcbg"><div class="jcwall"><div class="jcpress">' + jcPressWall() + '</div><div class="jcban">PRESS CONFERENCE</div><div class="jclogo">📰 SAY NA NA NA!</div><div class="jcflags">' + ['se', 'fr', 'it', 'ua', 'nl', 'gb', 'de', 'es', 'no', 'fi'].map(function (c) { return '<i><img src="https://flagcdn.com/w80/' + c + '.png" alt=""></i>'; }).join('') + '</div></div><div class="jcfloor"></div><i class="jcspot a"></i><i class="jcspot b"></i></div>' +
       '<div class="jcstage"><div class="jcguest"></div><div class="jclong"><i class="jcmic m1">' + jcMic(-.6) + '</i><i class="jcmic m2">' + jcMic(-.25) + '</i><i class="jcmic m3">' + jcMic(.25) + '</i><i class="jcmic m4">' + jcMic(.6) + '</i><b class="jcnamecard"></b><b class="jcgscore"></b></div></div>' +
-      '<div class="fksign">📰 Say Na Na Na!<small class="fkrnd"></small></div><div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div><div class="jcflash"></div>';
+      '<div class="fksign"><small class="fkrnd"></small></div><div class="fkmid"><div class="fksong"></div></div><div class="fkmsg"></div><div class="fkclock"></div><div class="fkrow"></div><div class="jcflash"></div>';
     ov.innerHTML += '<div class="jchosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub jcbub2 him"></div><div class="grbub jcbub2 her"></div>';
     document.body.appendChild(ov); whooshes([0, 350]);
     setTimeout(function () { ov.classList.remove('enter'); }, 1600);
