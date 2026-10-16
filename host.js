@@ -4136,6 +4136,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The shopkeeper of Woodruff’s Boutique (an original character): big red curls, cat-eye glasses, an emerald sequinned jumpsuit.
   // Lynda Woodruff, the shopkeeper (an original character, in the style of the reference photo): auburn waves to her
   // shoulders, rectangular silver glasses, red lipstick, a black blazer and a black scarf with big autumn flowers.
+  // The boutique's room: damask wallpaper, wood panelling with a gold rail, a marble floor, velvet curtains with gold tassels,
+  // a crystal chandelier and two glowing wall sconces
+  var BQ_ROOM = '<div class="bqroom" aria-hidden="true"><i class="bqpanel"></i><i class="bqmarble"></i><i class="bqcurt l"><b></b></i><i class="bqcurt r"><b></b></i><i class="bqsconce l"></i><i class="bqsconce r"></i>' +
+    '<svg class="bqchand" viewBox="0 0 200 170"><path d="M100 0 V36" stroke="#d9a83a" stroke-width="2.5"/><path d="M40 70 Q100 104 160 70" stroke="#d9a83a" stroke-width="5" fill="none"/><path d="M60 58 Q100 80 140 58" stroke="#e8c060" stroke-width="4" fill="none"/>' +
+    '<ellipse cx="100" cy="44" rx="16" ry="10" fill="#e8c060"/><path d="M100 54 V120" stroke="#d9a83a" stroke-width="4"/><circle cx="100" cy="124" r="7" fill="#fff6d8"/>' +
+    [40, 70, 100, 130, 160].map(function (x, i) { var y = i === 2 ? 86 : i % 4 === 0 ? 70 : 80; return '<path d="M' + x + ' ' + y + ' v-14" stroke="#d9a83a" stroke-width="3"/><rect x="' + (x - 3) + '" y="' + (y - 26) + '" width="6" height="12" rx="2" fill="#fffbe8"/><ellipse cx="' + x + '" cy="' + (y - 30) + '" rx="4" ry="6" fill="#ffd36a"/><circle cx="' + x + '" cy="' + (y - 30) + '" r="12" fill="rgba(255,220,130,.25)"/>' + [0, 1, 2].map(function (k) { return '<path d="M' + (x - 6 + k * 6) + ' ' + (y + 2) + ' l-2 ' + (10 + k % 2 * 8) + ' l2 5 l2 -5 z" fill="rgba(220,240,255,.85)"/>'; }).join(''); }).join('') +
+    [55, 80, 120, 145].map(function (x, i) { return '<path d="M' + x + ' ' + (i % 3 ? 70 : 64) + ' l-2.5 16 l2.5 6 l2.5 -6 z" fill="rgba(220,240,255,.75)"/>'; }).join('') + '</svg></div>';
   var SHOPKEEPER = '<svg class="keeper" viewBox="0 0 220 420" aria-hidden="true"><defs>' +
     '<linearGradient id="kpsuit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2a33"/><stop offset="1" stop-color="#121218"/></linearGradient>' +
     '<radialGradient id="kpskin" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#f7d6bf"/><stop offset="1" stop-color="#dba98a"/></radialGradient>' +
@@ -4159,7 +4166,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path d="M92 64 Q108 54 128 58 M118 52 Q134 56 138 70" stroke="#b0603a" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
     '<path d="M90 86 Q96 83 102 86 M118 86 Q124 83 130 86" stroke="#5e2a14" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
     '<ellipse cx="96" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/><ellipse cx="124" cy="90" rx="8" ry="4" fill="#9a5a8a" opacity=".6"/>' +
-    '<circle cx="96" cy="94" r="2.4" fill="#2a1a12"/><circle cx="124" cy="94" r="2.4" fill="#2a1a12"/>' +
+    '<path d="M90 94 Q96 89.5 102 94 Q96 97.6 90 94 Z M118 94 Q124 89.5 130 94 Q124 97.6 118 94 Z" fill="#fff"/><circle cx="96.4" cy="94" r="2.7" fill="#3a6a4a"/><circle cx="124.4" cy="94" r="2.7" fill="#3a6a4a"/><circle cx="96.4" cy="94" r="1.3" fill="#120a06"/><circle cx="124.4" cy="94" r="1.3" fill="#120a06"/><circle cx="97.2" cy="93.2" r=".8" fill="#fff"/><circle cx="125.2" cy="93.2" r=".8" fill="#fff"/>' +
+    '<path d="M89.5 93.6 Q96 88.6 102.5 93.6 M117.5 93.6 Q124 88.6 130.5 93.6" stroke="#1a0a06" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M90 93 l-2.6 -2.4 M130 93 l2.6 -2.4" stroke="#1a0a06" stroke-width="1.2" stroke-linecap="round"/>' +
+    '<circle cx="80" cy="112" r="5" fill="none" stroke="#ffd23f" stroke-width="2"/><circle cx="140" cy="112" r="5" fill="none" stroke="#ffd23f" stroke-width="2"/>' +   // (green eyes behind her glasses, gold hoops)
     '<rect x="84" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><rect x="113" y="88" width="23" height="13" rx="3" fill="#dfe6f2" fill-opacity=".1" stroke="#c9ced8" stroke-width="2.6"/><path d="M107 93 h6 M84 92 l-6 -2 M136 92 l6 -2" stroke="#c9ced8" stroke-width="2.4" stroke-linecap="round"/>' +
     '<path d="M109.5 97 Q107.5 101.5 108 103.5 Q110 105 112.5 103.5" stroke="#c08a6c" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".75"/>' +   // (a small, ordinary nose)
     '<path d="M98 108 Q110 120 122 108 Q110 113 98 108 Z" fill="#fff" stroke="#c8102e" stroke-width="3.5" stroke-linejoin="round"/>' +
@@ -4168,13 +4177,20 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '</svg>';
   // Her till: a counter with an old-fashioned cash register on it (she stands behind it in the boutique)
   var SHOPTILL = '<svg class="till" viewBox="0 0 300 300" aria-hidden="true">' +
-    '<rect x="6" y="92" width="288" height="202" rx="8" fill="#c48a3a" stroke="#6b4518" stroke-width="4"/><rect x="0" y="84" width="300" height="16" rx="6" fill="#e0b060" stroke="#6b4518" stroke-width="4"/>' +
-    '<path d="M24 120 h252 M24 160 h252 M24 200 h252 M24 240 h252" stroke="#a8702c" stroke-width="3"/><g fill="#ffd23f"><circle cx="150" cy="180" r="14"/><text x="150" y="187" font-size="18" font-weight="900" text-anchor="middle" fill="#6b4518">€</text></g>' +
+    // the counter: polished mahogany with carved panels, a marble top and gold trim
+    '<rect x="6" y="92" width="288" height="202" rx="6" fill="#5a2410" stroke="#2a0e04" stroke-width="4"/><rect x="6" y="92" width="288" height="202" rx="6" fill="none" stroke="#8a4a24" stroke-width="2" transform="translate(3 3) scale(.98)"/>' +
+    [24, 110, 196].map(function (x) { return '<rect x="' + x + '" y="160" width="80" height="112" rx="6" fill="#4a1c0a" stroke="#d9a83a" stroke-width="2.5"/><rect x="' + (x + 8) + '" y="168" width="64" height="96" rx="4" fill="#6a2c14" stroke="#2a0e04" stroke-width="2"/><path d="M' + (x + 12) + ' 172 L' + (x + 68) + ' 172" stroke="rgba(255,220,170,.25)" stroke-width="3"/>'; }).join('') +
+    '<rect x="6" y="284" width="288" height="8" fill="#d9a83a"/><rect x="6" y="100" width="288" height="5" fill="#d9a83a"/>' +
+    '<rect x="0" y="80" width="300" height="20" rx="5" fill="#ece8f0" stroke="#9a94a8" stroke-width="2.5"/><path d="M20 86 q30 6 60 0 t70 2 M160 92 q40 -5 80 1 t50 -2" stroke="#b8b2c4" stroke-width="1.4" fill="none"/><rect x="0" y="80" width="300" height="5" rx="3" fill="rgba(255,255,255,.7)"/>' +
+    '<g><circle cx="150" cy="216" r="20" fill="#e8c060" stroke="#8a5a14" stroke-width="3"/><circle cx="150" cy="216" r="14" fill="none" stroke="#fff3c0" stroke-width="1.5"/><text x="150" y="224" font-size="22" font-weight="900" text-anchor="middle" fill="#6b4518">€</text></g>' +
     '<g><rect x="86" y="108" width="128" height="40" rx="7" fill="#f3d27a" stroke="#6b4518" stroke-width="3"/><rect x="92" y="114" width="116" height="28" rx="4" fill="none" stroke="#b8913a" stroke-width="1.5"/><text x="150" y="137" font-size="24" font-weight="900" font-family="Georgia, serif" font-style="italic" text-anchor="middle" fill="#4a2a10">Lynda</text></g>' +   // (her name plate on the counter)
-    '<path d="M150 84 L156 34 Q158 22 170 22 L262 22 Q274 22 276 34 L282 84 Z" fill="#ff5fa8" stroke="#7a1e4a" stroke-width="4" stroke-linejoin="round"/>' +
-    '<rect x="186" y="4" width="62" height="24" rx="4" fill="#1d2a44" stroke="#7a1e4a" stroke-width="3"/><text x="217" y="22" font-size="15" font-weight="900" text-anchor="middle" fill="#7dffb0" font-family="monospace" class="tilln">0.00</text>' +
-    '<g fill="#fff" stroke="#7a1e4a" stroke-width="2">' + [0, 1, 2].map(function (r) { return [0, 1, 2, 3].map(function (c) { return '<rect x="' + (174 + c * 22) + '" y="' + (38 + r * 14) + '" width="17" height="10" rx="3"/>'; }).join(''); }).join('') + '</g>' +
-    '<rect x="164" y="76" width="106" height="10" rx="2" fill="#ffd23f" stroke="#7a1e4a" stroke-width="2.5"/></svg>';
+    // the cash register: pink with brass trim, a crank, a receipt, a drawer
+    '<path d="M150 82 L156 34 Q158 22 170 22 L262 22 Q274 22 276 34 L282 82 Z" fill="#ff5fa8" stroke="#7a1e4a" stroke-width="4" stroke-linejoin="round"/><path d="M160 38 Q162 28 172 28 L218 28" stroke="rgba(255,255,255,.55)" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M152 70 L280 70" stroke="#d9a83a" stroke-width="3"/>' +
+    '<path d="M282 46 h12 v-14 h6" stroke="#d9a83a" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="300" cy="32" r="5" fill="#7a1e4a"/>' +   // (the crank)
+    '<path d="M196 4 L240 4 L238 -10 L198 -10 Z" fill="#fffbe8" stroke="#c9c2b0" stroke-width="1.5"/><path d="M204 -6 h28 M204 -1 h22" stroke="#9a9488" stroke-width="1.2"/>' +   // (a receipt sticking out)
+    '<rect x="186" y="4" width="62" height="24" rx="4" fill="#1d2a44" stroke="#d9a83a" stroke-width="3"/><text x="217" y="22" font-size="15" font-weight="900" text-anchor="middle" fill="#7dffb0" font-family="monospace" class="tilln">0.00</text>' +
+    '<g fill="#fff" stroke="#7a1e4a" stroke-width="2">' + [0, 1, 2].map(function (r) { return [0, 1, 2, 3].map(function (c) { return '<rect x="' + (174 + c * 22) + '" y="' + (36 + r * 11) + '" width="17" height="8" rx="3"/>'; }).join(''); }).join('') + '</g>' +
+    '<rect x="160" y="72" width="114" height="10" rx="2" fill="#ffd23f" stroke="#7a1e4a" stroke-width="2.5"/><circle cx="217" cy="77" r="2.4" fill="#7a1e4a"/></svg>';
   // Lynda's welcome for the winner(s) of a party game: a different one each visit (all voiced; the names are not spoken)
   var LY_HELLO = [
     function (n, one) { return 'Congratulations, ' + n + '! 🛍️ I have a little selection for ' + (one ? 'you' : 'you two') + ': I handpicked one item from each shelf. Fancy one? It will cost you, darling! 💸'; },
@@ -4195,7 +4211,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       ov = document.createElement('div'); ov.id = 'shopov'; ov.className = 'shopov boutique enter'; whooshes([0, 300, 650, 950]); setTimeout(function () { ov.classList.remove('enter'); }, 2600);
       var codes = shuffle(Object.keys(countries || {}).filter(function (c) { return c.length === 2; })).slice(0, 22);
       // bunting with real flag pictures (flag emoji show up as letters on some computers)
-      ov.innerHTML = '<div class="bqwall"></div><div class="bqsign">✨ Woodruff’s Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span class="bqpen" style="--i:' + i + ';background:hsl(' + (i * 47 % 360) + ',80%,60%)"><img src="https://flagcdn.com/w80/' + c + '.png" alt="" onerror="this.remove()"></span>'; }).join('') + '</div>' +
+      ov.innerHTML = '<div class="bqwall"></div>' + BQ_ROOM + '<div class="bqsign">✨ Woodruff’s Boutique ✨</div><div class="bqbunting">' + codes.map(function (c, i) { return '<span class="bqpen" style="--i:' + i + ';background:hsl(' + (i * 47 % 360) + ',80%,60%)"><img src="https://flagcdn.com/w80/' + c + '.png" alt="" onerror="this.remove()"></span>'; }).join('') + '</div>' +
         '<div class="bqdisco">🪩</div><div class="bqsale">SALE<br><b>100% OFF</b></div>' +
         '<div class="bqfans"><span>🪭</span><span>🪭</span><span>🪭</span><span>🪭</span><span>🪭</span></div>' +
         '<div class="bqhats"><span>🎩</span><span>👑</span><span>🧢</span><span>👒</span><span>🎓</span></div>' +
