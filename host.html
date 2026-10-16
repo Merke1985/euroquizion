@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=1120">
+<link rel="stylesheet" href="style.css?v=1121">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -52,6 +52,8 @@
     </div>
     <div class="card">
       <p class="note hidden" id="note"></p>
+      <h3>How do you play?</h3>
+      <div id="playmode" class="presets playmode" role="radiogroup" aria-label="How do you play?"><button type="button" data-m="stream" class="preset on" role="radio" aria-checked="true"><b>📡 Streaming</b><small>Some players watch through a stream (Discord, Twitch…): sync their delay</small></button><button type="button" data-m="local" class="preset" role="radio" aria-checked="false"><b>🛋️ Local play</b><small>Everyone in the same room, watching the same screen</small></button></div>
       <h3>Game settings</h3>
       <div class="presets" id="presets"><button type="button" class="preset" data-preset="party"><span class="pcount" id="pcount"><i data-n="5" class="on">5</i><i data-n="10">10</i><i data-n="0">All</i></span><b>🎉 Party Night</b><small id="partysub">Trivia, all party games, the boutique and the Grand Final</small></button><button type="button" class="preset" data-preset="quick"><b>⚡ Quick Quiz</b><small>4 rounds of 5 questions, a new era each round, then the Big Five</small></button><button type="button" class="preset" data-preset="custom"><b>🎛️ Custom</b><small>Choose everything yourself</small></button></div>
       <p class="gamelen" id="gamelen"></p>
@@ -131,7 +133,7 @@
         </div></details>
         <p class="mute" id="scorehelp" style="margin:-4px 0 0;font-size:.9rem;grid-column:1/-1"></p>
       </div>
-      <div id="playmode" class="playmode" role="radiogroup" aria-label="How do you play?"><button type="button" data-m="stream" class="on" role="radio" aria-checked="true">📡 Streaming</button><button type="button" data-m="local" role="radio" aria-checked="false">🛋️ Local play</button></div><button class="btn alt" id="calbtn" type="button" style="width:100%;margin:0 0 8px"><span class="calt">🌐 Sync players (stream delay)</span></button><div id="rdyrow" class="rdyrow"><span>✋ Everyone ready</span><span class="calok">✓</span></div>
+      <button class="btn alt" id="calbtn" type="button" style="width:100%;margin:0 0 8px"><span class="calt">🌐 Sync players (stream delay)</span></button><div id="rdyrow" class="rdyrow"><span>✋ Everyone ready</span><span class="calok">✓</span></div>
       <button class="btn big" id="start" style="width:100%" disabled>Loading songs…</button>
       <p class="mute" id="songcount" style="margin:12px 0 0;font-size:.9rem"></p>
     </div>
@@ -362,16 +364,16 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=1120"></script>
-<script src="vendor/qrcode.js?v=1120"></script>
-<script src="config.js?v=1120"></script>
-<script src="net.js?v=1120"></script>
-<script src="music.js?v=1120"></script>
-<script src="chars.js?v=1120"></script>
-<script src="match.js?v=1120"></script>
-<script src="shapes.js?v=1120"></script>
-<script src="quiz.js?v=1120"></script>
-<script src="host.js?v=1120"></script>
-  <script src="editor.js?v=1120"></script>
+<script src="vendor/supabase.js?v=1121"></script>
+<script src="vendor/qrcode.js?v=1121"></script>
+<script src="config.js?v=1121"></script>
+<script src="net.js?v=1121"></script>
+<script src="music.js?v=1121"></script>
+<script src="chars.js?v=1121"></script>
+<script src="match.js?v=1121"></script>
+<script src="shapes.js?v=1121"></script>
+<script src="quiz.js?v=1121"></script>
+<script src="host.js?v=1121"></script>
+  <script src="editor.js?v=1121"></script>
 </body>
 </html>
