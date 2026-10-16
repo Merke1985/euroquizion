@@ -6593,10 +6593,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (g.st === 'play') {
       var b = svBeat(g, now), sg = svStageAt(Math.max(0, b)).n;
       if (sg !== g.stage) { g.stage = sg; g.stageAt = now; if (sg === 3) g.lo = Math.min.apply(null, g.order.map(function (k) { return g.dist[k]; })); push(); }   // (a new stage: no sound effect, the song carries it)
-      g.chart.forEach(function (n, i) {   // the soft beat tick
-        if (n[0] > b + .05 || n[0] < b - .5 || (g.tk || (g.tk = {}))[i]) return; g.tk[i] = 1;
-        if (!REMOTE && (n[0] % 1 === 0) && !(i > 0 && g.chart[i - 1][0] === n[0])) Music.discoTick();
-      });
+      // (no beat tick of our own on the arrows: only the song plays)
       if (now >= g.ends) {   // the song is over: the phones send their results (bots: perfect); a few seconds at most
         g.st = 'count'; push();
         g.order.forEach(function (pk) { var p = players[pk]; if (p && p.bot) svMsg({ pid: pk, id: g.id, res: g.chart.map(function () { return '2'; }).join('') }); });
