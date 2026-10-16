@@ -6105,3 +6105,8 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 /* the sync buttons on the phone: blue, also their shadow */
 #lobbystart.sync:not(:disabled){box-shadow:0 6px 0 #1f4fb8}
 #calui .calgo{background:radial-gradient(circle at 50% 35%,#6fd8ff,#2a5fe0);box-shadow:0 0 40px rgba(60,140,255,.6),0 8px 0 #1f3f9a}
+/* the bunting (with its country flags) a little higher, and the cabinet just above the wood panelling */
+.shopov.boutique .bqbunting{top:10.6vh}
+.shopov.boutique .bqcase{top:20.3vh}
+.shopov.boutique .bqsale{top:17.8vh}
+.shopov.boutique .shoppers{bottom:13.6vh}
