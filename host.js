@@ -989,6 +989,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   // An ad seems to be playing: show the player (title bar stays masked) so it can be skipped by hand.
   var adShown = false;
+  /* The song's video ignores the mouse unless it is moving over the stage (or an ad is up): a pointer resting on the video made
+     YouTube keep its pause button on screen the whole song. After a click in the player (Skip ad), its focus is taken back too. */
+  var ytHotT = null;
+  function ytCalm() { var st = stageEl(); if (st && !adShown) st.classList.remove('ythot'); var a = document.activeElement; if (a && a.tagName === 'IFRAME') { try { a.blur(); window.focus(); } catch (e) {} } }
+  document.addEventListener('mousemove', function (e) {
+    var st = stageEl(); if (!st) return; var r = st.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+    st.classList.add('ythot'); clearTimeout(ytHotT); ytHotT = setTimeout(ytCalm, 2500);
+  });
+  window.addEventListener('blur', function () { clearTimeout(ytHotT); ytHotT = setTimeout(ytCalm, 2500); });   // (a click went into the player: give the focus back in a moment)
   /* the question is about the player's fan-flag country (its song, or its name in the question or the answer): double points */
   function ccShown(p) {   // may the phone say "this one is about your country" during the question? Only when the question itself already shows it (a flag, a map, the name in the question); otherwise it would give the answer away
     var cc = p.cc, q = G.q; if (!cc || !q) return false;
@@ -1029,7 +1039,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (on && (noClipQ() || (G.q && G.q.peel))) return;   // never uncover the video of a question that has no clip, or that hides it (curtain, blur)
     if (on === adShown) return;
     adShown = on;
-    document.querySelector('#v-game .shield').classList.toggle('hidden', on);
+    document.querySelector('#v-game .shield').classList.toggle('hidden', on); var stA = stageEl(); if (stA) stA.classList.toggle('ythot', on);   // (an ad: the player can be clicked)
     if (on) { cover(false); $('mb').classList.add('hidden'); $('err').textContent = AD_TEXT; }
     else {
       // the wait is over: put back the bottom mask (it hides the caption with the country) and clear the note
