@@ -3580,6 +3580,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (REMOTE) return null;
     if (who === 'lynda') return document.querySelector('.bqkeeper svg');
     if (who === 'juliet') return document.querySelector('.jmjul');
+    var vis = [].filter.call(document.querySelectorAll('.ehost.' + who), function (e) { var r = e.getBoundingClientRect(); return r.width > 4 && r.height > 4 && r.bottom > 0 && r.top < innerHeight && getComputedStyle(e).opacity !== '0'; });
+    if (vis.length) return vis[vis.length - 1];   // (whichever host drawing is on screen, in any game: the last one is the one on top)
     var pc = $('fnov') || $('pcov') || $('clueov'), h = pc || hostsEl(); return h ? h.querySelector('.ehost.' + who) : null;
   }
   function mouth(who, v) { var el = mouthOf(who); if (el) el.style.setProperty('--mo', (Math.max(0, Math.min(1, v)) * 0.85).toFixed(2)); }   // (never quite all the way open)
