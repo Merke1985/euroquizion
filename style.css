@@ -5996,3 +5996,5 @@ body.svplay .svui.pumping .svfield{height:min(64vh,calc(100dvh - 240px))}
 .svov[data-act="B"] .svchart.l,.svov[data-act="A"] .svchart.r{opacity:.62}
 .svov[data-act="A"] .svchart.l,.svov[data-act="*"] .svchart.l{box-shadow:inset 0 0 0 3px #3dff7a,inset 0 0 26px rgba(61,255,122,.35),0 0 26px rgba(61,255,122,.55)}
 .svov[data-act="B"] .svchart.r,.svov[data-act="*"] .svchart.r{box-shadow:inset 0 0 0 3px #b06bff,inset 0 0 26px rgba(176,107,255,.35),0 0 26px rgba(176,107,255,.6)}
+/* the singer keeps singing while she walks across her stage (side view): her mouth moves */
+.svov:not([data-st="end"]) .svins.walk:not(.svdan) .svsmouth{transform-box:fill-box;transform-origin:20% 30%;animation:svlsing .49s ease-in-out infinite alternate}
