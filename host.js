@@ -1515,7 +1515,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'fake', 'note', 'queue', 'carpet', 'zg', 'rule', 'organ'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'fake', 'note', 'queue', 'carpet', 'zg', 'rule', 'organ', 'sv'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
@@ -1530,6 +1530,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Keep your balance in space! Follow the glowing zone on your phone with your finger as it moves with the music. From stage 2, slide up and down to dodge the asteroids. Whoever keeps their balance until the end wins!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Tap a direction on your phone and you keep going that way: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes, fix the cables, put out the fire and keep stage invaders off. Three phases, each harder than the last. The best mechanic wins!' },
+    sv: { icon: '🍑', title: 'Serving', sub: 'Background dancers wanted! Follow her steps: hit the arrows on your phone on the beat, team green, then team purple, and at the end everyone together on skippy balls. The best dancer wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
     draw: { icon: '🎨', title: 'Postcard Picasso', sub: 'Everyone picks a song and draws it on their phone. Then guess what the others drew.' },
@@ -1542,7 +1543,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, fake: fkAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, fake: fkAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll, sv: svAll };
     G.mode = G.lastParty = kind; if (G.tour && !G.extraNow && G.partyDone && G.partyDone.indexOf(kind) < 0) G.partyDone.push(kind); G.best = null; G.q = null; G.afterParty = true;   // (an extra game from a Golden Ticket doesn't use up its turn)
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
@@ -1567,6 +1568,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (kind === 'carpet' && !REMOTE) { carpetAll(); return; }
     if (kind === 'organ' && !REMOTE) { orAll(); return; }
+    if (kind === 'sv' && !REMOTE) { svAll(); return; }   // (the presenters explain it on the stage itself)
     if (kind === 'rule' && !REMOTE) { ruAll(); return; }
     if (kind === 'zg' && !REMOTE) { zgAll(); return; }
     if (kind === 'fake' && !REMOTE) { fkIntro(starts[kind]); return; }   // (the presenters explain it in the press room itself)   // (the presenters explain it in space, above the planet)   // (the presenters explain it in front of the organ itself)   // (the presenters welcome everyone on the carpet itself)
@@ -1577,7 +1579,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The party games that can be played now: switched on, and possible with this group (most need two players or more).
   function partyGames(pOn, two) {
     pOn = pOn || G.partyOn || {}; if (two == null) two = list().filter(function (p) { return !p.off; }).length >= 2;
-    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'fake' || x === 'note' || x === 'queue') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule' && x !== 'organ')); });
+    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'fake' || x === 'note' || x === 'queue' || x === 'sv') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule' && x !== 'organ')); });
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
@@ -11125,7 +11127,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, fake: 3 * (1.5 + 0.4 * n), note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 6, organ: 4.5 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, fake: 3 * (1.5 + 0.4 * n), note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 6, organ: 4.5, sv: 5 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];
