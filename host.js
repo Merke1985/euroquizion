@@ -6407,7 +6407,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     [86, 94, 102].forEach(function (t) { set(t, 2, 'B'); }); [110, 114, 118, 122].forEach(function (t) { set(t, 1, 'B'); });   // blue team, the same length (10 seconds in between while she walks over)
     // then a break: she walks to the middle (2:58); the skippy balls come up out of the floor (3:12); and at 3:21.5, the last chorus:
     for (var k3 = 0; k3 < 8; k3++) set(162 + k3 * 2, .5, '*');   // stage 3: everyone together on the skippy balls, a step on every beat
-    if (!solo) [['A', 58], ['B', 110]].forEach(function (x) { for (var t = x[1] + .5; t < x[1] + 16; t += 1) N.push([t, Math.floor(Math.random() * 4), 1, -1, 0, x[0], 1]); });   // (extra arrows in each team's double time, for the player their team voted for: a step on every beat instead of every two)
+    if (!solo && SV_VOTE) [['A', 58], ['B', 110]].forEach(function (x) { for (var t = x[1] + .5; t < x[1] + 16; t += 1) N.push([t, Math.floor(Math.random() * 4), 1, -1, 0, x[0], 1]); });   // (extra arrows in each team's double time, for the player their team voted for: a step on every beat instead of every two)
     N.sort(function (a, c) { return a[0] - c[0]; });
     return N;
   }
@@ -6518,12 +6518,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!box) { box = document.createElement('div'); box.className = 'svscore'; ch.appendChild(box); }
       var rows = g.order.filter(function (k) { return g.grp[k] === grp; }).map(function (k) { var p = players[k], bot = p && (p.bot || String(k).indexOf('bot') === 0); var R = bot ? svCount(g, k, g.chart.map(function () { return '2'; }).join(''), SV_STAGES[2].from) : g.part && g.part[k]; return { k: k, R: R }; });
       rows.sort(function (a, c) { return (c.R ? c.R.pts : -1) - (a.R ? a.R.pts : -1); });
-      var hx = '<b class="svsct">So far</b>' + rows.map(function (x) { var p = players[x.k]; return '<div class="svsrow"><span>' + esc(p ? p.name : '?') + '</span>' + (x.R ? '<em>' + x.R.p + ' · ' + x.R.g + ' · ' + x.R.m + '</em><i>' + x.R.pts + '</i>' : '<em>…</em>') + '</div>'; }).join('') + '<small>Perfect · Good · Miss</small>';
+      var hx = '<b class="svsct">So far</b>' + rows.map(function (x) { var p = players[x.k]; return '<div class="svsrow"><span>' + esc(p ? p.name : '?') + '</span>' + (x.R ? '<i>' + x.R.pts + '</i>' : '<i>…</i>') + '</div>'; }).join('');   // (only the points: the details come at the end)
       if (box._h !== hx) { box._h = hx; box.innerHTML = hx; } box.classList.add('on');
     });
   }
   // The team that isn't dancing votes (on their phones) for the teammate who gets the extra arrows in their double time;
   // the votes lock 5 seconds before it starts (bots vote at random). No votes at all: someone at random.
+  var SV_VOTE = false;   // (the vote for extra arrows: switched off for now)
   var SV_VLOCK = { A: 58 - 5000 / (60000 / 122 * 2), B: 110 - 5000 / (60000 / 122 * 2) };
   function svTally(g) { var t = {}; Object.keys(g.votes || {}).forEach(function (v) { var k = g.votes[v]; if (g.grp[k] === g.grp[v]) t[k] = (t[k] || 0) + 1; }); return t; }
   function svLock(g, T) {
@@ -6574,7 +6575,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function svSnap() {
     var g = G.sv, now = Date.now(), nk = g.t0 ? Math.max(0, Math.ceil(svBeat(g, now))) : 0;
-    return { id: g.id, st: g.st, stage: g.stage, order: g.order, dist: g.dist, win: g.win, chart: g.chart, res: g.st === 'end' ? g.res : null, rcv: Object.keys(g.res), grp: g.grp, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, lead: svLead(g), lo: g.lo || 0, extra: g.extra, vlock: SV_VLOCK, vt: svTally(g) };
+    return { id: g.id, st: g.st, stage: g.stage, order: g.order, dist: g.dist, win: g.win, chart: g.chart, res: g.st === 'end' ? g.res : null, rcv: Object.keys(g.res), grp: g.grp, nb: g.t0 ? Math.round(g.t0 + nk * SV_BT - now) : 0, nk: nk, bt: SV_BT, lead: svLead(g), lo: g.lo || 0, extra: g.extra, vlock: SV_VOTE ? SV_VLOCK : null, vt: svTally(g) };
   }
   // the skippy ball (stage 3): an original drawing in the player's colour, with two little horn handles and a smiley
   var SV_TBALL = [['#1fb34a', '#0a4a1c'], ['#8a3ce0', '#38106e']];   // (before a colour is picked: the team colours)
@@ -6816,7 +6817,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      balls: function (on) { st.balls = !!on; },   // (the leopards stay away: the arcades remain) aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      balls: function (on) { st.balls = !!on; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -7035,7 +7036,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'svov'; ov.className = 'svov enter' + (solo ? ' solo' : '');
       var chart = function (side) { return '<div class="svchart ' + side + '"><b class="svteam">' + (solo ? 'Your arrows' : side === 'l' ? 'Green team' : 'Purple team') + '</b>' + [0, 1, 2, 3].map(function (c) { return '<i class="svrec c' + c + '">' + SV_ARROW + '</i>'; }).join('') + g.chart.map(function (n, i) { if (n[6]) return ''; var gp = n[5] || '*'; if (gp !== '*' && gp !== (side === 'l' ? 'A' : 'B')) return ''; return '<i class="svn c' + n[1] + '" data-i="' + i + '">' + SV_ARROW + '</i>'; }).join('') + '</div>'; };
-      ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svsign">🍑 Serving <small>test</small></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svres"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
+      ov.innerHTML = '<div class="sv3d"></div><div class="svsky"></div><div class="svstage"></div><div class="svbeat"><i></i><b></b></div>' + chart('l') + (solo ? '' : chart('r')) + '<div class="svclass"></div><div class="svmsg"></div><div class="svbanner"></div><div class="svready"></div><div class="svres"></div><div class="svhosts">' + HOST_HIM + HOST_HER + '</div><div class="svbub him"></div><div class="svbub her"></div>';
       document.body.appendChild(ov); whooshes([0, 300]); setTimeout(function () { ov.classList.remove('enter'); }, 1400);
       if (!REMOTE) v3Load(function () { var o2 = $('svov'); if (o2 && !o2._3) { o2._3 = sv3Init(o2.querySelector('.sv3d')); if (o2._3) o2.classList.add('is3d'); } });
       g.home = svHomes(g);
@@ -7115,7 +7116,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ov._3 && ov._3.word) ov._3.word(word);
     if (ov._3 && ov._3.balls) ov._3.balls(songT >= SV_BALLS_AT);   // (from 2:53: the ball rings on the wall)
     if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
-    if (g.order.length > 1 && g.t0 && g.extra) ['A', 'B'].forEach(function (T) { if (!g.extra[T] && b >= SV_VLOCK[T]) svLock(g, T); });
+    if (SV_VOTE && g.order.length > 1 && g.t0 && g.extra) ['A', 'B'].forEach(function (T) { if (!g.extra[T] && b >= SV_VLOCK[T]) svLock(g, T); });
     ['l', 'r'].forEach(function (sd, si) {   // the voted player, in their team's panel, until their double time is over
       var ch = ov.querySelector('.svchart.' + sd); if (!ch || g.order.length < 2) return; var T = si ? 'B' : 'A', k = g.extra && g.extra[T], show = !!k && b < (si ? 126 : 74), xe = ch.querySelector('.svxtra');
       if (!xe) { xe = document.createElement('div'); xe.className = 'svxtra'; ch.appendChild(xe); } var xt = show ? '⭐ ' + (players[k] ? players[k].name : '?') + ' gets extra arrows!' : ''; if (xe.textContent !== xt) xe.textContent = xt; xe.classList.toggle('on', show);
@@ -7147,7 +7148,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     ov.querySelector('.calgo').addEventListener('click', function () { if (G.cal === g && g.wait) calRun(ov, g); });
   }
   function calRun(ov, g) {
-    g.wait = false; g.t0 = Date.now() + 3500;
+    g.wait = false; g.t0 = Date.now() + 5500;   // (a countdown from 5)
     var cc = ov.querySelector('.calcancel'); if (cc) cc.remove();
     var fl = ov.querySelector('.calfl'), b = fl.querySelector('b'); fl.classList.remove('calgo'); fl.disabled = true;
     push(); [1000, 2500].forEach(function (t) { setTimeout(function () { if (G.cal === g) push(); }, t); });   // (a few updates: the phones take the best timing)
@@ -7155,7 +7156,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     for (var k = 0; k < g.n; k++) (function (k) { setTimeout(function () { if (G.cal !== g) return; fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on'); b.textContent = String(k + 1); try { Music.discoTick(true); } catch (e) {} }, g.t0 + k * g.gap - Date.now()); })(k);
     // after the 8th flash: 'Calculating…' in the circle, and a ring that goes round once, like a timer, until the results
     // a ring sweeps round every second and closes exactly on each click: you can see when to tap
-    var ringAt = g.t0 - 3000, beatRing = function () { var rg = fl.querySelector('.calring'); if (rg) rg.remove(); fl.insertAdjacentHTML('beforeend', '<svg class="calring beat" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>'); };
+    var ringAt = g.t0 - 5000, beatRing = function () { var rg = fl.querySelector('.calring'); if (rg) rg.remove(); fl.insertAdjacentHTML('beforeend', '<svg class="calring beat" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>'); };
     beatRing(); var rc = fl.querySelector('.calring circle'); rc.style.animation = 'calring ' + g.gap + 'ms linear ' + (ringAt - Date.now()) + 'ms ' + Math.round((g.t0 + (g.n - 1) * g.gap - ringAt) / g.gap) + ' both';
     var calEndAt = g.t0 + (g.n - 1) * g.gap + 600 + 5000;   // (after the last click: 'Syncing…' and a 5-second ring, then the results)
     setTimeout(function () {
@@ -7182,9 +7183,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       return '<tr class="' + cls + '"><td>' + (p.char ? charSvg(p.char) : '') + '</td><td>' + esc(p.name) + '</td><td>' + st + '</td></tr>';
     };
     var bad = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); }).length;
-    ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (all.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div></div>';
+    ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (all.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div><button type="button" class="calnodelay" data-a="nodelay">Don’t use stream delay</button></div>';
     ov.querySelector('[data-a="ok"]').addEventListener('click', function () { ov.remove(); });
-    ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(); });  }
+    ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(); });
+    ov.querySelector('[data-a="nodelay"]').addEventListener('click', function () { ov.remove(); G.syncOn = false; list().forEach(function (p) { p.sync = null; }); render(); push(); });   // (everyone plays without a delay after all)
+  }
   function calShow() {
     var g = G.cal, ov = $('calov'); if (!g || !ov) return;
     var ks = Object.keys(g.res); ov.querySelector('.calres').innerHTML = ks.length ? ks.map(function (k) { var p = players[k], d = g.res[k]; return '<span>' + esc(p ? p.name : '?') + ': ' + (d < 0 ? 'in the room' : (d / 1000).toFixed(2) + 's') + '</span>'; }).join('') : '';

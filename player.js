@@ -389,7 +389,8 @@
       $('rround').className = why ? 'why' : 'mute';
       // The end of the game: no song any more, just the scoreboard counting up (once).
       var end = s.phase === 'end';
-      $('songcard').classList.toggle('hidden', end || (!!s.best && !s.best.quip));   // Quip! is about a song, so that one shows it $('pfinal').classList.toggle('hidden', !end);
+      $('songcard').classList.toggle('hidden', end || (!!s.best && !s.best.quip));   // Quip! is about a song, so that one shows it
+      $('pfinal').classList.toggle('hidden', !end);
       if (end && !endShown) {
         endShown = true; $('verdict').className = 'fb verdict'; $('verdict').textContent = 'Final scores';
         finalBoard($('pfinal'), s.players, pid, function (wins) {
