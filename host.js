@@ -7364,10 +7364,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       return '<tr class="' + cls + '"><td>' + (p.char ? charSvg(p.char) : '') + '</td><td>' + esc(p.name) + '</td><td>' + st + '</td></tr>';
     };
     var bad = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); }).length;
-    ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (all.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div><button type="button" class="calnodelay" data-a="nodelay">Don’t use stream delay</button></div>';
+    ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (all.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div></div>';
     ov.querySelector('[data-a="ok"]').addEventListener('click', function () { ov.remove(); });
     ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(); });
-    ov.querySelector('[data-a="nodelay"]').addEventListener('click', function () { ov.remove(); G.syncOn = false; list().forEach(function (p) { p.sync = null; }); render(); push(); });   // (everyone plays without a delay after all)
   }
   function calShow() {
     var g = G.cal, ov = $('calov'); if (!g || !ov) return;
