@@ -6408,6 +6408,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   if ($('svmp3x')) $('svmp3x').addEventListener('click', function () { svBlob = null; svDb(function (os) { os.delete('serving'); }); svMp3Show(); });
   setTimeout(svMp3Show, 0);
   function svVol(v) { try { (svAudP && svAudP._on ? svAudP : yt).setVolume(v); } catch (e) {} }   // (the music volume setting scales it, like YouTube)
+  var SV_WORD = [70, 123];   // (song time in seconds: 1:10 and 2:03)
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
     if (!on) { try { yt.pauseVideo(); } catch (e) {} if (svAud) { svAud.pause(); } if (svAudP) svAudP._on = false; return; }
@@ -6645,6 +6646,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       cx.save(); cx.translate(ox, oy); cx.rotate(t * .05); cx.fillStyle = 'rgba(255,' + (st.stage === 3 ? 110 : 60) + ',90,' + (.22 + fl * .2) + ')';
       for (var k = 0; k < 18; k++) { cx.rotate(Math.PI * 2 / 18); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(600, -40); cx.lineTo(600, 40); cx.closePath(); cx.fill(); }
       cx.restore(); var gr = cx.createRadialGradient(ox, oy, 10, ox, oy, 300); gr.addColorStop(0, 'rgba(255,160,170,.25)'); gr.addColorStop(1, 'rgba(40,0,8,.45)'); cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
+      if (st.word) {   // the word projected on the wall: big white letters with a glow
+        cx.save(); cx.font = '900 ' + (st.word.length > 5 ? 118 : 150) + 'px Inter, Arial Black, Arial, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.shadowColor = 'rgba(255,255,255,.9)'; cx.shadowBlur = 24; cx.fillStyle = '#fff';
+        cx.fillText(st.word, W / 2, H * .36, W * .94); cx.shadowBlur = 0; cx.fillText(st.word, W / 2, H * .36, W * .94); cx.restore();
+      }
       wtex.needsUpdate = true;
     }
     var raf = 0, t0 = performance.now(), lastW = 0;
@@ -6697,7 +6702,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      aim: function (L) { st.aim = L; },
+      aim: function (L) { st.aim = L; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -6992,7 +6997,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var rdyN = null; if ((g.st === 'play' || g.st === 'ready') && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= 5000) rdyN = x; });   // (5 seconds before a team's turn: their name and 'Get ready!' in the middle)
     var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Green team' : 'Purple team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
-    var kant = g.st === 'play' && SV_FAST.some(function (x, ki) { var e = ki ? 2500 / SV_BT : 0; return b >= x - .5 - e && b < x + 2.5 - e; })   /* (the second one half a second earlier) */, ktx = kant ? 'Serving kant!' : '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
+    var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 1:10 and 2:03: SERVING for a second, then KANT for two)
+    if (ov._3 && ov._3.word) ov._3.word(word);
+    var kant = false, ktx = '', kb = ov.querySelector('.svkant');   // (her pop-ups: get ready, 3 seconds before a turn; and when the tempo doubles)
     if (kb && kb._t !== ktx) { kb._t = ktx; if (ktx) kb.textContent = ktx; kb.classList.toggle('on', !!ktx); }
     var bn = ov.querySelector('.svbanner'), showB = false,   /* (no banner for the last stage: the skippy balls are a surprise) */ bh = swB ? swB : showB ? '<small>Stage ' + g.stage + '</small>' + esc(SV_STAGES[g.stage - 1].t) + (g.stage === 2 ? '<em>Your turn! Nice and slow first…</em>' : g.stage === 3 ? '<em>Everyone together! A step on every beat, double points 🏐</em>' : '') : '';
     if (bn._h !== bh) { bn._h = bh; bn.innerHTML = bh; bn.classList.toggle('on', !!bh); }
