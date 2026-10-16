@@ -6115,3 +6115,10 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 /* the arrow box on the phone in your team's colour */
 .svui.tA .svfield{background:linear-gradient(#063a1c,#0e5a2e);box-shadow:inset 0 0 0 2px rgba(61,255,122,.55),0 0 18px rgba(61,255,122,.25)}
 .svui.tB .svfield{background:linear-gradient(#2a0848,#4a1478);box-shadow:inset 0 0 0 2px rgba(176,107,255,.6),0 0 18px rgba(176,107,255,.25)}
+/* the final scores: no screen of their own: the rows are drawn straight onto the LED wall, across its width */
+.fsov .fsboard{left:9%;right:9%;top:7%;bottom:44%;height:auto;border-radius:12px;overflow:hidden;align-items:center;padding:0 17%}   /* (clear of the speech bubbles at the sides) */
+.fsov .fsboard::after{display:none}
+.fsov .fsboard ol{background:none;border:0;box-shadow:none;padding:0;max-height:100%}
+.fsov .fsboard li{background:rgba(10,4,30,.38);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);text-shadow:0 0 12px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.6)}
+.fsov .fsboard li .rk{text-shadow:0 0 14px rgba(255,209,102,.8)}
+.fsov .fsboard li.top{background:rgba(255,209,102,.24);box-shadow:inset 0 0 0 2px #ffd166,0 0 26px rgba(255,209,102,.45)}
