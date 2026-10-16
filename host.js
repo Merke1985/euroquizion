@@ -7457,13 +7457,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   function fkLast() { var y = 0; (songs || []).forEach(function (s) { if (s[0] > y) y = s[0]; }); return y || 2026; }   // the latest contest in the song list
   function fkSongs() { var y = fkLast(); return (songs || []).filter(function (s) { return s[0] >= y - 4; }); }   // (only the last five contests: known up front, so the fake has a fair chance)
   var FK_ROUNDS = 3, fkSongT = null;
+  var FK_VOL = 20;   // (low: the players need to hear each other talk; was 35)
   function fkSong(on, fade) {   // the Say Na Na Na music (youtu.be/l5arNtTYK1s from 0:05), quietly under the whole game
     clearInterval(fkSongT); fkSongT = null;
     if (REMOTE) return;
     try {
-      if (!on && fade) { var v = 35; fkSongT = setInterval(function () { v -= 2; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fkSongT); fkSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
+      if (!on && fade) { var v = FK_VOL; fkSongT = setInterval(function () { v -= 2; try { yt.setVolume(Math.max(0, v)); } catch (e) {} if (v <= 0) { clearInterval(fkSongT); fkSongT = null; try { yt.pauseVideo(); } catch (e) {} } }, 200); return; }
       if (!on) { yt.pauseVideo(); return; }
-      Music.want(false); stage = 'fake'; yt.loadVideoById({ videoId: 'l5arNtTYK1s', startSeconds: 5 }); yt.unMute(); yt.setVolume(35);
+      Music.want(false); stage = 'fake'; yt.loadVideoById({ videoId: 'l5arNtTYK1s', startSeconds: 5 }); yt.unMute(); yt.setVolume(FK_VOL);
       fkSongT = setInterval(function () { if (G.phase !== 'fake' || !G.fake) { clearInterval(fkSongT); fkSongT = null; return; } try { var st = yt.getPlayerState(); if (st === 0) { yt.seekTo(5, true); yt.playVideo(); } else if (st === 2 || st === 5) yt.playVideo(); } catch (e) {} }, 1000);   /* (round and round until the game is over) */
     } catch (e) {}
   }
