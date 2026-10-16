@@ -6452,6 +6452,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   if ($('svmp3x')) $('svmp3x').addEventListener('click', function () { svBlob = null; svDb(function (os) { os.delete('serving'); }); svMp3Show(); });
   setTimeout(svMp3Show, 0);
   function svVol(v) { try { (svAudP && svAudP._on ? svAudP : yt).setVolume(v); } catch (e) {} }   // (the music volume setting scales it, like YouTube)
+  var SV_BALLS_AT = 173;   // (2:53)
   var SV_WORD = [56, 109];   // (song time in seconds: 0:56 and 1:49)
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
@@ -6698,6 +6699,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var st = { mk: {}, mkL: {}, stage: 1, beatAt: 0, pal: SV3_PAL[0], q: new T.Quaternion(), e: new T.Euler(), s: new T.Vector3(1, 1, 1), p: new T.Vector3() };
     function drawWall(t) {   // red rays turning slowly round a point low in the middle, a little brighter on the beat
       var fl = Math.max(0, 1 - (performance.now() - st.beatAt) / 500), W = 512, H = 256, ox = W / 2, oy = H * .62;
+      if (st.balls) {   // from 2:53: a warm glowing backdrop with rings of glossy balls, each ring turning the other way
+        var bg = cx.createRadialGradient(ox, H * .42, 8, ox, H * .42, 330); bg.addColorStop(0, '#fff6c8'); bg.addColorStop(.25, '#ffd36a'); bg.addColorStop(.6, '#f08a3a'); bg.addColorStop(1, '#5aa8b8'); cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
+        for (var rg = 1; rg <= 5; rg++) {
+          var rad = 30 * rg, nb = 5 + rg * 4, rot = t * .45 * (rg % 2 ? 1 : -1), bs = 7 + rg * 1.6;
+          for (var q = 0; q < nb; q++) { var an = rot + q / nb * Math.PI * 2, bx = ox + Math.cos(an) * rad * 1.15, by = H * .42 + Math.sin(an) * rad * .78;
+            var bgr = cx.createRadialGradient(bx - bs * .35, by - bs * .35, 1, bx, by, bs); bgr.addColorStop(0, '#ffd0e0'); bgr.addColorStop(.35, q % 3 === 0 ? '#ff3a7a' : q % 3 === 1 ? '#e0102a' : '#ff6aa0'); bgr.addColorStop(1, '#7a0420');
+            cx.fillStyle = bgr; cx.beginPath(); cx.arc(bx, by, bs, 0, Math.PI * 2); cx.fill(); }
+        }
+        wtex.needsUpdate = true; return;
+      }
       cx.fillStyle = st.stage === 3 ? '#c4106a' : st.stage === 2 ? '#d01030' : '#e0102a'; cx.fillRect(0, 0, W, H);
       cx.save(); cx.translate(ox, oy); cx.rotate(t * .05); cx.fillStyle = 'rgba(255,' + (st.stage === 3 ? 110 : 60) + ',90,' + (.22 + fl * .2) + ')';
       for (var k = 0; k < 18; k++) { cx.rotate(Math.PI * 2 / 18); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(600, -40); cx.lineTo(600, 40); cx.closePath(); cx.fill(); }
@@ -6759,7 +6770,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      balls: function (on) { st.balls = !!on; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -7056,6 +7067,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
     var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
     if (ov._3 && ov._3.word) ov._3.word(word);
+    if (ov._3 && ov._3.balls) ov._3.balls(songT >= SV_BALLS_AT);   // (from 2:53: the ball rings on the wall)
     if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
     if (g.order.length > 1 && g.t0 && g.extra) ['A', 'B'].forEach(function (T) { if (!g.extra[T] && b >= SV_VLOCK[T]) svLock(g, T); });
     ['l', 'r'].forEach(function (sd, si) {   // the voted player, in their team's panel, until their double time is over
