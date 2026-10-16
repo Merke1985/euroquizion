@@ -6122,3 +6122,6 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .fsov .fsboard li{background:rgba(10,4,30,.38);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);text-shadow:0 0 12px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.6)}
 .fsov .fsboard li .rk{text-shadow:0 0 14px rgba(255,209,102,.8)}
 .fsov .fsboard li.top{background:rgba(255,209,102,.24);box-shadow:inset 0 0 0 2px #ffd166,0 0 26px rgba(255,209,102,.45)}
+/* the lobby: the first player who joined is the host (starts the sync and the game) */
+.lobbyplayers .chip{position:relative}
+.lobbyplayers .chip .leadtag{position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:3;padding:.15em .6em;border-radius:999px;background:linear-gradient(#ffe08a,#f5b301);color:#3a2300;font-size:.72rem;font-weight:900;letter-spacing:.02em;box-shadow:0 2px 8px rgba(245,179,1,.45);white-space:nowrap}

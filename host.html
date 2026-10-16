@@ -6,7 +6,7 @@
 <title>EuroQuizion – host</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=1212">
+<link rel="stylesheet" href="style.css?v=1213">
 </head>
 <body>
 <div id="demo" class="demo hidden">Demo mode – players can only join from another tab in this browser. Fill in config.js to play with phones.</div>
@@ -29,7 +29,7 @@
       <div class="lobbyplayers">
         <h3>Players <span class="mute" id="pcount"></span></h3>
         <div class="players" id="players" style="margin-top:12px"></div>
-        <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. When all rings are green, anyone can start the game from their phone.</p>
+        <p class="mute" style="margin:12px 0 0;font-size:.95rem">Everyone presses <strong style="color:var(--ink)">Ready</strong> on their phone. When all rings are green, the 🎙️ host (the first player who joined) starts the game from their phone.</p>
         <p class="testrow"><button class="testbtn" id="testbtn" type="button" title="Test">🧪 Test</button><button class="testbtn" id="adminbtn" type="button" title="Admin">⚙️ Admin</button></p>
         <div class="testov hidden" id="testov"><div class="testcard"><div class="testhead"><h2>🧪 Test</h2><button class="btn alt small" id="testclose" type="button">Close</button></div>
           <h3>Players</h3>
@@ -365,16 +365,16 @@
   </div>
 </div>
 <div id="probebox" class="probebox" aria-hidden="true"></div>
-<script src="vendor/supabase.js?v=1212"></script>
-<script src="vendor/qrcode.js?v=1212"></script>
-<script src="config.js?v=1212"></script>
-<script src="net.js?v=1212"></script>
-<script src="music.js?v=1212"></script>
-<script src="chars.js?v=1212"></script>
-<script src="match.js?v=1212"></script>
-<script src="shapes.js?v=1212"></script>
-<script src="quiz.js?v=1212"></script>
-<script src="host.js?v=1212"></script>
-  <script src="editor.js?v=1212"></script>
+<script src="vendor/supabase.js?v=1213"></script>
+<script src="vendor/qrcode.js?v=1213"></script>
+<script src="config.js?v=1213"></script>
+<script src="net.js?v=1213"></script>
+<script src="music.js?v=1213"></script>
+<script src="chars.js?v=1213"></script>
+<script src="match.js?v=1213"></script>
+<script src="shapes.js?v=1213"></script>
+<script src="quiz.js?v=1213"></script>
+<script src="host.js?v=1213"></script>
+  <script src="editor.js?v=1213"></script>
 </body>
 </html>

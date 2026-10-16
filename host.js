@@ -525,11 +525,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (G.phase === 'lobby' && nowT > joinQuiet) ps.forEach(function (p) { if (!greeted[p.pid] && p.cc && !p.pk && !p.bot && String(p.pid).indexOf('bot') !== 0) { greeted[p.pid] = 1; greetQ.push(p.pid); if (greetQ.length > 3) greetQ.shift(); } }); else ps.forEach(function (p) { greeted[p.pid] = 1; });
     if (G.phase !== 'lobby') { greetQ = []; var lhx = $('lobhosts'); if (lhx) lhx.remove(); greetBusy = false; }   /* the game started: the hosts in the corner leave at once */
     lobbyGreet();
+    var leadId = G.phase === 'lobby' ? leadPid() : '';   // (the first player who joined: they start the sync and the game)
     $('players').innerHTML = ps.map(function (p) {
       var age = nowT - joinSeen[p.pid], pop = age < 700;
       var lob = G.phase === 'lobby';
       return '<span class="chip' + (p.off ? ' off' : '') + (pop ? ' pop' : '') + ((G.phase === 'lobby' || G.phase === 'intro') && G.go && G.go[p.pid] ? ' rdy' : '') + (lob ? ' lobfig' : '') + (rmPid === p.pid ? ' rm' : '') + '" data-pid="' + esc(p.pid) + '"' + (pop ? ' style="animation-delay:-' + age + 'ms"' : '') + '>' +
-        (lob ? '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' : '') + (p.char ? charSvg(p.char) : '<span class="char"><i class="chin"><b class="chnopic">❔</b></i></span>') + '<span class="pname">' + esc(p.name) + '</span>' + (lob && p.cc && countries[p.cc] ? '<span class="pcc">' + esc(countries[p.cc]) + '</span>' : '') + (lob ? syncTag(p) : '') + (rmPid === p.pid ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + '</span>';
+        (lob ? '<span class="lbod" style="' + bodyOutfit(p.pid) + '"><i class="cl"></i><i class="cl"></i><i class="ca"></i><i class="ca">' + handFlag(p) + '</i><i class="ct"></i></span>' : '') + (p.char ? charSvg(p.char) : '<span class="char"><i class="chin"><b class="chnopic">❔</b></i></span>') + (lob && p.pid === leadId ? '<span class="leadtag">🎙️ Host</span>' : '') + '<span class="pname">' + esc(p.name) + '</span>' + (lob && p.cc && countries[p.cc] ? '<span class="pcc">' + esc(countries[p.cc]) + '</span>' : '') + (lob ? syncTag(p) : '') + (rmPid === p.pid ? '<button type="button" class="rmbtn">✕ Remove</button>' : '') + '</span>';
     }).join('') || '<span class="mute">Waiting for players…</span>';
     var nr = ps.filter(function (p) { return G.go && G.go[p.pid]; }).length;
     if (G.phase === 'lobby' && ps.length !== lenN) { lenN = ps.length; try { gameLen(); } catch (e) {} }
