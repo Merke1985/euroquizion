@@ -5647,7 +5647,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svov[data-bph="on"] .svrider .svrm{transform-box:fill-box;transform-origin:50% 0;animation:svlsing .49s ease-in-out infinite alternate}
 .svov[data-bph="hop"] .svnb{visibility:hidden}
 /* Serving: on the skippy balls every step is a bounce from tile centre to tile centre (no sliding) */
-.svov[data-bph="on"] .svaf,.svov[data-bph="on"] .svins{transition:transform .26s cubic-bezier(.45,0,.55,1)!important}
+.svov[data-bph="on"] .svaf,.svov[data-bph="on"] .svins{transition:transform .37s cubic-bezier(.4,0,.5,1)!important}
 .svov[data-bph="on"] .svaf .svfb2,.svov[data-bph="on"] .svins{animation:none}
 .svov .svaf .svrider{bottom:0}
 .svov[data-bph="on"] .svaf.ok .svfb2,.svov[data-bph="on"] .svins.ok .svrider,.svov[data-bph="on"] .svins.jmp .svrider{animation:svballhop .44s cubic-bezier(.3,0,.7,1)}
@@ -5954,3 +5954,4 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 /* Lynda's speech bubble sits just above her head, and the timer halfway between her head and the cabinet */
 .shopov.boutique .bqbubble{top:auto;bottom:52vh}
 .shopov.boutique .bqtimer{left:22.7vw;transform:translateX(-50%)}
+/* on the balls the move across takes as long as the hop (.37 s), and it starts that much before the beat: they land on the new tile exactly on the beat */

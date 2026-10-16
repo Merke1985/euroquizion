@@ -7077,9 +7077,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
     ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1); ov.toggleAttribute('data-hin', !!g.hin); ov.toggleAttribute('data-hout', !!g.hout);   /* (the presenters: in once everything has loaded) */
     // whose turn: the team of the next arrow; the instructor's steps: everything in the current phrase so far
-    var nx = null, cur = null; g.chart.forEach(function (n) { if (n[6]) return; if (!nx && n[0] >= b - .3) nx = n; if (n[0] <= b + .02) cur = n; });
+    var lb = (g.stage === 3 && b >= SV_HOP + 2 ? 360 : 100) / SV_BT;   // (a step starts a little before its arrow, so everyone lands on the new tile exactly on the beat: on the balls the hop takes longer)
+    var nx = null, cur = null; g.chart.forEach(function (n) { if (n[6]) return; if (!nx && n[0] >= b - .3) nx = n; if (n[0] <= b + lb) cur = n; });
     var act = nx ? nx[5] || '*' : '*', ix = 0, iy = 0;
-    if (cur && cur[3] != null && g.st === 'play') g.chart.forEach(function (n) { if (n[3] === cur[3] && !n[4] && n[0] <= b + .02) { ix += SV_DV[n[1]][0]; iy += SV_DV[n[1]][1]; } });
+    if (cur && cur[3] != null && g.st === 'play') g.chart.forEach(function (n) { if (n[3] === cur[3] && !n[4] && n[0] <= b + lb) { ix += SV_DV[n[1]][0]; iy += SV_DV[n[1]][1]; } });
     ov.setAttribute('data-act', act);
     var bph = g.stage === 3 ? (g.st === 'end' ? 'on' : b < SV_BALL ? 'none' : b < SV_HOP ? 'rise' : b < SV_HOP + 2 ? 'hop' : 'on') : 'none';   // (the skippy balls come up out of the tile in front of everyone; they hop on, and back)
     ov.setAttribute('data-bph', bph);
@@ -7112,8 +7113,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     g.order.forEach(function (k) {
       var el = ov.querySelector('.svaf[data-p="' + k + '"]'); if (!el) return;
       var h = g.home[k], p = players[k], f = g.fall[k], myN = null, myI = -1;
-      g.chart.forEach(function (n, i) { if (!n[6] && n[0] <= b + .02 && svMineN(g, k, n)) { myN = n; myI = i; } });
-      var off = !g.entAt || now < g.entAt ? [g.grp[k] === 'B' ? 13 : -13, 0] : f && f.off ? f.off : bph === 'hop' ? [0, 1] : myN && g.st === 'play' ? svOff(g, k, myN[3], b + .02, now) : [0, 0], c = h[0] + off[0], r = h[1] + off[1]; place(el, c, r);
+      g.chart.forEach(function (n, i) { if (!n[6] && n[0] <= b + lb && svMineN(g, k, n)) { myN = n; myI = i; } });
+      var off = !g.entAt || now < g.entAt ? [g.grp[k] === 'B' ? 13 : -13, 0] : f && f.off ? f.off : bph === 'hop' ? [0, 1] : myN && g.st === 'play' ? svOff(g, k, myN[3], b + lb, now) : [0, 0], c = h[0] + off[0], r = h[1] + off[1]; place(el, c, r);
       var nb = ov.querySelector('.svnb[data-b="' + k + '"]'); if (nb) place(nb, h[0], h[1] + 1);
       el.classList.toggle('walkin', !!g.entAt && now >= g.entAt && now < g.entAt + SV_WALKIN + 300); el.classList.toggle('offst', !g.entAt || now < g.entAt);
       if (myN && el._mi !== myI && g.st === 'play' && !f) { el._mi = myI; var q0 = g.got[k][myI]; if (q0 == null || q0 > 0) { el.classList.remove('ok', 'oops', 'p0', 'p1', 'p2'); void el.offsetWidth; el.classList.add('ok', 'p' + (myI % 3)); } }   /* (the hop: on the beat, all together) */
