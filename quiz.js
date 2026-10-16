@@ -720,7 +720,7 @@ function revealHold(yt, clipStart) {
 // A song plays and everyone answers a question about it; then the room votes for the best answer.
 // 'h' is the house answer, used when only one player wrote something.
 var QUIP_HELP = 'Disqualivision: a song plays, with a question about it. Everyone writes their funniest answer, then the room votes for the best one. Every vote scores points: 12 divided by the number of other players, so 4 per vote with four players.';
-var QUIP_MS = 30000, QUIP_VOTE_MS = 25000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
+var QUIP_MS = 60000, QUIP_VOTE_MS = 25000, QUIP_WIN = 3, QUIP_HOUSE = 'EuroQuizion';
 /* Disqualivision: the performances (YouTube id, start in seconds), one at a time, none twice in one game; and the roasts */
 /* Key Change!: the lyrics shown on the phones (YouTube id -> text, a line per line). Songs without lyrics yet get a sing-along note */
 var LYRICS = {};
