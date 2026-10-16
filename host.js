@@ -1844,7 +1844,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         var ww = ov.querySelector('.whwin'); ww.setAttribute('d', wedge[wi] || ''); ww.setAttribute('transform', 'rotate(' + a.toFixed(2) + ')');   // (the winning slice flashes)
         var cf = ov.querySelector('.whconf'), ch2 = ''; for (var c = 0; c < 40; c++) ch2 += '<i style="--x:' + (Math.random() * 2 - 1).toFixed(2) + ';--y:' + (Math.random() * -1.2 - .2).toFixed(2) + ';--r:' + Math.floor(Math.random() * 720) + 'deg;--d:' + (Math.random() * .3).toFixed(2) + 's;background:' + PW_COLS[c % 4] + '"></i>'; cf.innerHTML = ch2;   // (a burst of confetti)
         [].forEach.call(ov.querySelectorAll('.whcard'), function (c3) { c3.classList.add(+c3.getAttribute('data-i') === wi ? 'won' : 'out'); });
-        var bn = ov.querySelector('.whban'); bn.textContent = '🎉 ' + FUN[win].icon + ' ' + FUN[win].title; bn.classList.add('on'); Music.douze();
+        var bn = ov.querySelector('.whban'); bn.textContent = '🎉 ' + FUN[win].icon + ' ' + FUN[win].title; bn.classList.add('on'); if (!REMOTE) { itemSfx('sounds/fanfare.mp3?v=1', Music.douze); setTimeout(function () { itemSfx('sounds/applause.mp3?v=1'); }, 250); }   // (a fanfare and applause when the wheel stops)
         setTimeout(function () { if (under) { then(); return; } ov.classList.add('leaving'); setTimeout(function () { ov.remove(); then(); }, 600); }, 3400);
       })();
     }, 1500);
