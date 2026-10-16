@@ -214,10 +214,14 @@ function SecondPlayer(elId) {
 // flag ("Whose flag?"): a flag on the screen and four songs; one of them was sent by that country. No clip until the answer.
 var TYPE_WEIGHT = { facts: 42.5, higher: 12.5, newer: 12.5, mistake: 12.5, odd: 10, lost: 10, peel: 10, blur: 10, flag: 10, host: 8, trivia: 10 };   // (map, "On the map", is switched off for now: give it a weight here and a switch in host.html to bring it back)
 // map ("On the map"): the same, with the outline of the country in place of its flag (the smallest states are only a dot: left out).
+// A duo or a pairing ("A & B", "A and B", "A x B", "A feat. B"): its wrong answers are pairings too, when there are enough.
+function duoAct(a) { return / & | and | x | feat\.? | ft\.? | with | vs\.? /i.test(' ' + (a || '') + ' '); }
 function makeFlag(song, allSongs, countries, map) {
   if (map ? !(typeof SHAPES !== 'undefined' && SHAPES[song[1]]) : !flag(song[1])) return null;   // a country that no longer exists has no flag to show
   var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}, lands = {}; seen[song[4]] = 1; lands[song[1]] = 1;
   var add = function (s) { if (opts.length < 4 && !seen[s[4]] && !lands[s[1]] && s[2] !== song[2]) { seen[s[4]] = 1; lands[s[1]] = 1; opts.push(lab(s)); } };
+  var duo = duoAct(song[2]); if (duo) shuffle(allSongs.filter(function (s) { return duoAct(s[2]) && Math.abs(s[0] - song[0]) <= 10; })).forEach(add);
+  shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6 && duoAct(s[2]) === duo; })).forEach(add);
   shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6; })).forEach(add);
   shuffle(allSongs.slice()).forEach(add);
   if (opts.length < 4) return null;
@@ -248,24 +252,29 @@ var PEEL_MS = 60000;
 function peelPoints(ms, blur) {
   if (blur) { var h = PEEL_MS / 2; return ms < h ? 12 : [10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(8, Math.floor((ms - h) / (h / 9)))]; }   // Out of focus: 12 for the first half, then down to 1
   return [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][Math.min(9, Math.floor(Math.max(0, ms) / (PEEL_MS / 10)))]; }   // like a Eurovision scoreboard: 12, 10, 8, 7 … 1, a step down every six seconds
+// Rotation over games: when each winner was last the answer (eq_peel) or on a bar (eq_peelo), kept in this browser, so the same few do not keep coming back.
+function peelSeen(k) { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; } }
+function peelNote(k, ids) { try { var m = peelSeen(k), n = Date.now(); ids.forEach(function (id) { m[id] = n; }); localStorage.setItem(k, JSON.stringify(m)); } catch (e) {} }
+function peelOldest(list, seen) { return shuffle(list.slice()).sort(function (a, b) { return (seen[a[4]] || 0) - (seen[b[4]] || 0); }); }   // (shuffled first: equals stay in random order)
 function makePeel(song, allSongs, countries, opt) {
-  // always the song itself: four bars with title and artist, the other three from about the same years
+  // always the song itself: four bars with title and artist, the other three winners too
   // Only winners, on the screen and on the bars: a song that did not win makes way for a winner (from the years in play, if there is one).
-  // Only winners of the last ten contests (the newest year in the song list and the nine before it): recent enough to recognise by sight.
+  // Only winners of the last fifteen contests (the newest year in the song list and the fourteen before it): recent enough to recognise by sight.
   var top = allSongs.reduce(function (m, s) { return Math.max(m, s[0]); }, 0);
-  var wins = allSongs.filter(function (s) { return s[5] === 2 && s[0] >= top - 9; }), swap = null;
+  var wins = allSongs.filter(function (s) { return s[5] === 2 && s[0] >= top - 14; }), swap = null, seenA = peelSeen('eq_peel'), seenO = peelSeen('eq_peelo');
   if (wins.length < 4) return null;
-  if (wins.indexOf(song) < 0) {   // (not one of those winners: one of them takes its place)
+  if (wins.indexOf(song) < 0) {   // (not one of those winners: one of them takes its place, the one that was the answer longest ago)
     var yrs = {}, used = (opt && opt.used) || {}; ((opt && opt.pool) || []).forEach(function (s) { yrs[s[0]] = 1; });
-    var near = wins.filter(function (s) { return yrs[s[0]]; }); if (!near.length) near = wins;
-    var fresh = near.filter(function (s) { return !used[s[4]]; }); if (fresh.length) near = fresh;
-    song = swap = near[Math.floor(Math.random() * near.length)];
+    var fresh = wins.filter(function (s) { return !used[s[4]]; }); if (!fresh.length) fresh = wins;   // (not yet in this game)
+    var near = fresh.filter(function (s) { return yrs[s[0]]; }); if (near.length < 3) near = fresh;   // (from the years in play, when there is some choice there)
+    near = peelOldest(near, seenA);
+    song = swap = near[Math.floor(Math.random() * Math.max(1, Math.ceil(near.length / 3)))];   // (one of the third least recently played)
   }
-  var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}; seen[song[4]] = 1;
-  var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); } };
-  shuffle(wins.filter(function (s) { return Math.abs(s[0] - song[0]) <= 8; })).forEach(add);
-  shuffle(wins.slice()).forEach(add);
+  var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}, ids = []; seen[song[4]] = 1;
+  var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); ids.push(s[4]); } };
+  var duo = duoAct(song[2]); peelOldest(wins.filter(function (s) { return duoAct(s[2]) === duo; }), seenO).forEach(add); peelOldest(wins, seenO).forEach(add);   // (a duo next to duos first, when there are any)   // the other bars: the winners that were on a bar longest ago
   if (opts.length < 4) return null;
+  peelNote('eq_peel', [song[4]]); peelNote('eq_peelo', ids.concat([song[4]]));
   shuffle(opts);
   return { subject: 'peel', swap: swap, peel: true, type: 'mc', text: 'Behind the curtain: which song is this? The sooner you know, the more points.', hint: '', answer: answer, options: opts, correct: opts.indexOf(answer) };
 }
@@ -383,6 +392,8 @@ function makeObscure(song, allSongs, opt) {
 function makeFast(song, allSongs) {
   var lab = function (s) { return s[3] + ' – ' + s[2]; }, answer = lab(song), opts = [answer], seen = {}; seen[song[4]] = 1;
   var add = function (s) { if (opts.length < 4 && !seen[s[4]] && s[3] !== song[3] && s[2] !== song[2]) { seen[s[4]] = 1; opts.push(lab(s)); } };
+  var duo = duoAct(song[2]); if (duo) shuffle(allSongs.filter(function (s) { return duoAct(s[2]) && Math.abs(s[0] - song[0]) <= 10; })).forEach(add);
+  shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6 && duoAct(s[2]) === duo; })).forEach(add);
   shuffle(allSongs.filter(function (s) { return Math.abs(s[0] - song[0]) <= 6; })).forEach(add);
   shuffle(allSongs.slice()).forEach(add);
   if (opts.length < 4) return null;
@@ -469,6 +480,8 @@ function makeQuestion(song, subjectSetting, typeSetting, allSongs, countries, op
     if (subject === 'artist') {
       // A man is only offered next to men, a woman next to women, and a group next to groups (or acts we cannot place).
       var g = song[11], solo = g === 'm' || g === 'f';
+      var duo = duoAct(song[2]);   // a duo only next to duos, a single name (singer or band) next to single names, when there are enough
+      tiers.push(function (s) { return duoAct(s[2]) === duo && (duo || (solo ? s[11] === g : (s[11] !== 'm' && s[11] !== 'f'))); });
       tiers.push(function (s) { return solo ? s[11] === g : (s[11] !== 'm' && s[11] !== 'f'); });
     } else {
       // A title in, say, French is only offered next to French titles, topped up with English ones if needed.
