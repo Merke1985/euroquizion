@@ -2332,9 +2332,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         // and the monster is at least 6 spaces behind the last one: everyone goes back 2 (one bite)
         if (al.length >= 2 && !c.monsterDead && !c.nsfAll && lp >= CHASE_GOAL - 6 && lp <= CHASE_GOAL - 4 && lp - c.lanes[al[1]].pos <= 5 && c.lanes[al[al.length - 1]].pos - c.mon >= 6) {
           c.nsfAll = true;
-          var grp = al.slice(), one = function (j) { if (j < grp.length - 1) chaseNsf(c, grp[j], function () { one(j + 1); }, grp); else chaseNsf(c, grp[j], after, grp); };   /* (lane by lane, from the leader down) */
+          var grp = al.slice(), one = function () { chaseNsf(c, grp[0], after, grp); };   /* (every lane at once) */
           var after = (function () { var fr = c.nearShown ? [] : chaseNear(); if (fr.length) { c.nearShown = true; c.nearNew = fr; c.st = 'near'; Music.ding(); push(); chaseTimer = setTimeout(chaseAsk, 5000); return; } chaseAsk(); });
-          one(0); return;
+          one(); return;
         }
         // someone has come within reach of the stage: a big message for five seconds, then the next question
         var fresh = c.nearShown ? [] : chaseNear();   // (only the first time anyone gets close)
@@ -2386,7 +2386,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   /* NOT SO FAST: the monster lines up with the runaway leader, three spaces in that lane glow and are smashed,
      and that lane runs back like a conveyor belt: the leader goes back 3, new spaces slide in at the stage end */
   function chaseNsf(c, k, then, all) {
-    var i = c.order.indexOf(k), ks = [k], ls = ks.map(function (x) { return c.order.indexOf(x); }); if (!all) { c.nsfDone = c.nsfDone || {}; c.nsfDone[k] = 1; }
+    var i = all ? (c.order.length - 1) / 2 : c.order.indexOf(k), ks = all ? all.slice() : [k], ls = ks.map(function (x) { return c.order.indexOf(x); }); if (!all) { c.nsfDone = c.nsfDone || {}; c.nsfDone[k] = 1; }   /* (everyone: all lanes run back together, and the monster stands in the middle) */
     if (!all || all.indexOf(k) === 0) c.nsfMsgEnd = Date.now() + (VOICE_MS['nsf_' + c.monster.id] || 3000) + 300;
     c.st = 'nsf'; c.nsf = { pid: k, i: i, all: all || null, ks: ks, ls: ls }; push(); if (!all || all.indexOf(k) === 0) Music.buzz(); Music.dread(true, true);
     var tiles = function (f) { return [].filter.call($('chtiles').children, function (t) { return ls.indexOf(+t.getAttribute('data-l')) >= 0 && f(+t.getAttribute('data-r')); }); };
