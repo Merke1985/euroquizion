@@ -9126,7 +9126,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!left.length) return;
       at(t, function () { g.pos = i + 1; push(); qjShow(); runSnd(JM_WALK - 30); }); t += JM_WALK;   // (one step through the streets: the buildings glide by)
     })(i);
-    at(t + 500, qjJudge);
+    at(t, qjJudge);   // (straight after the last step)
   }
   function qjJudge() {
     var g = G.qj; if (!g || g.st !== 'run') return;
@@ -9156,7 +9156,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (!cars) { qjRound(); return; }
       setTimeout(function () { if (G.qj !== g) return; g.carOn = true; push(); jmJul(CARL); }, 600);
       setTimeout(function () { if (G.qj !== g) return; jmJul(''); qjRound(); }, 600 + Math.max(5200, voiceMs('juliet', CARL) + 900));
-    }, lost.length && !end ? 1500 : 4200);
+    }, end ? 4200 : 250);   // (no waiting: the next round starts as soon as they've stopped walking)
   }
   function qjEnd() {
     var g = G.qj; if (!g) return;
