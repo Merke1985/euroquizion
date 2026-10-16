@@ -150,7 +150,7 @@
     hi = function () {
       if (kicked) return;
       var m = me();
-      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, wh: SV_WHERE, pk: picking && joinFlow && joinFlow < 3 ? 1 : 0, score: m ? m.score : null,
+      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, wh: SV_WHERE, sd: (function () { try { var d0 = localStorage.getItem('eq_delay'), a0 = +localStorage.getItem('eq_delay_at') || 0; return SV_WHERE === 'online' && d0 != null && Date.now() - a0 < 12 * 3600000 ? +d0 : null; } catch (e) { return null; } })(), pk: picking && joinFlow && joinFlow < 3 ? 1 : 0, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
     net.on('_open', function () { hi(); if (want === 'u:' + pid) picSend(); });
@@ -829,7 +829,7 @@
         var taps = calS.taps.filter(function (tt) { return tt > calS.t0 - 300; }), offs = [];   // (the 1st tap goes with the 1st click, the 2nd with the 2nd…: so even a delay of seconds is measured right)
         taps.slice(0, c.n).forEach(function (tt, k) { var o = tt - (calS.t0 + k * c.gap); if (o > -300 && o < 6000) offs.push(o); });
         offs.sort(function (a, b) { return a - b; });
-        if (offs.length >= 3) { var d = Math.max(0, Math.min(6000, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: d }); }
+        if (offs.length >= 3) { var d = Math.max(0, Math.min(6000, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); localStorage.setItem('eq_delay_at', String(Date.now())); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: d }); }
         else { calS.res = -2; ov.querySelector('em').textContent = 'Not enough taps: ask the host to sync again.'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -2 }); }
       } else { calS.res = -1; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -1 }); }
     }

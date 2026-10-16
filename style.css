@@ -5793,3 +5793,9 @@ body.rufrozen #waittitle{color:#0b3a66}
 #calov .calbtns{display:flex;gap:2vw;justify-content:center;margin-top:4vh}
 #calov .calbtns .btn{min-width:12em;font-size:clamp(1rem,1.8vw,1.5rem)}
 #lobbystart.sync:not(:disabled){background:linear-gradient(135deg,#2de2e6,#3a7bff);color:#06122a}
+/* Serving: on the balls, every landing squashes the ball and sends a ring across the tile */
+@keyframes svballhop{0%{transform:translateY(0) scale(1.1,.86)}14%{transform:translateY(0) scale(.95,1.06)}50%{transform:translateY(calc(var(--s) * -.45)) scale(.97,1.04)}84%{transform:translateY(0) scale(1,1)}92%{transform:translateY(0) scale(1.16,.8)}100%{transform:translateY(0) scale(1.04,.94)}}
+.svov[data-bph="on"] .svaf::after,.svov[data-bph="on"] .svins::after{content:'';position:absolute;left:50%;bottom:calc(var(--s) * -.08);width:calc(var(--s) * 1.1);height:calc(var(--s) * .38);margin-left:calc(var(--s) * -.55);border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 12px rgba(255,255,255,.7),inset 0 0 8px rgba(255,255,255,.5);opacity:0;pointer-events:none;z-index:-1}
+.svov[data-bph="on"] .svins::after{bottom:0}
+.svov[data-bph="on"] .svaf.ok::after,.svov[data-bph="on"] .svins.ok::after,.svov[data-bph="on"] .svins.jmp::after{animation:svland .5s ease-out .37s both}
+@keyframes svland{0%{opacity:1;transform:scale(.35)}100%{opacity:0;transform:scale(1.5)}}

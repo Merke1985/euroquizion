@@ -117,7 +117,8 @@
       }
     }
     p.pk = !!m.pk;
-    if (m.wh === 'online' || m.wh === 'local') { if (p.wh !== m.wh) { p.wh = m.wh; setTimeout(render, 0); } }   // (where they watch: in the room, or online via a stream)
+    if (m.wh === 'online' || m.wh === 'local') { if (p.wh !== m.wh) { p.wh = m.wh; setTimeout(render, 0); } }
+    if (m.wh === 'online' && typeof m.sd === 'number' && m.sd >= 0 && m.sd <= 6000 && !(p.sync != null && p.sync >= 0)) { p.sync = m.sd; setTimeout(function () { render(); push(); }, 0); }   // (rejoining: still synced from earlier tonight)   // (where they watch: in the room, or online via a stream)
     if (isNew && !p.bot && String(m.pid).indexOf('bot') !== 0 && (G.mgTest || G.itemTest || G.goldTest)) { p.inv = p.inv || []; if (p.inv.indexOf('golden') < 0) p.inv.push('golden'); }   // (joining a test: a Golden Ticket too)   // (still choosing their avatar and country: the hosts wait with their welcome)
     var changed = isNew || p.name !== nm || p.off;
     /* the fan flag: one country per player; none picked (or taken): a random free one */
@@ -6481,13 +6482,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     // the players' floor in front (24 × 5 LED tiles); behind it the singer's raised stage (24 × 3), then the set
     var C = SV_BC, R = SV_BR, TS = 1.6, LR = 3, Z0L = -5, Z0F = Z0L + (LR - 1) * TS + TS + 1,   /* (her stage at the back, in front of the lips; the players' floor in front of it) */ ZF = function (j) { return Z0F + j * TS; }, ZL = function (j) { return Z0L + j * TS; }, YL = .7;
     var base = new T.Mesh(new T.BoxGeometry(C * TS + 1, .5, R * TS + 1), new T.MeshStandardMaterial({ color: '#0a0a0c', roughness: .3, metalness: .6 })); base.position.set(0, -.25, ZF((R - 1) / 2)); sc.add(base);
-    var tiles = new T.InstancedMesh(new T.BoxGeometry(TS * .94, .12, TS * .94), new T.MeshBasicMaterial({ color: '#ffffff' }), C * R), m4 = new T.Matrix4(), col = new T.Color();
+    // the tiles: glossy LED panels under a clear-coat. They glow in their own colour and mirror the set above them (a reflection of the stage, captured once it is built)
+    var glossy = function () { var M = new (T.MeshPhysicalMaterial || T.MeshStandardMaterial)({ color: '#ffffff', roughness: .16, metalness: .25, clearcoat: 1, clearcoatRoughness: .08, envMapIntensity: .9 }); M.userData.rf = { rTex: { value: null }, rRes: { value: new T.Vector2(1, 1) }, rK: { value: .24 } };
+      M.onBeforeCompile = function (s) { Object.assign(s.uniforms, M.userData.rf); s.fragmentShader = 'uniform sampler2D rTex; uniform vec2 rRes; uniform float rK;\n' + s.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += diffuseColor.rgb * 0.62;').replace('#include <output_fragment>', 'vec2 ruv = gl_FragCoord.xy / rRes; vec2 rd = vec2(1.5) / rRes; vec3 rfl = (texture2D(rTex, ruv).rgb * 2.0 + texture2D(rTex, ruv + vec2(rd.x, 0.0)).rgb + texture2D(rTex, ruv - vec2(rd.x, 0.0)).rgb + texture2D(rTex, ruv + vec2(0.0, rd.y)).rgb + texture2D(rTex, ruv - vec2(0.0, rd.y)).rgb) / 6.0;\n outgoingLight += rfl * rK * (1.0 - 0.7 * max(max(diffuseColor.r, diffuseColor.g), diffuseColor.b));\n#include <output_fragment>'); };
+      return M; };
+    var tileM = glossy(), ltileM = glossy();
+    // a real mirror image in the tiles: the set is drawn once more, flipped upside down under each floor, into a picture the tiles reflect
+    var rtF = new T.WebGLRenderTarget(2, 2), rtL = new T.WebGLRenderTarget(2, 2), clipP = new T.Plane(new T.Vector3(0, -1, 0), 0), dbs = new T.Vector2();
+    tileM.userData.rf.rTex.value = rtF.texture; ltileM.userData.rf.rTex.value = rtL.texture; ltileM.userData.rf.rK.value = .2;
+    var mirror = function (rt, y) {
+      sc.scale.y = -1; sc.position.y = 2 * y; sc.updateMatrixWorld(true); clipP.constant = y - .01; rn.clippingPlanes = [clipP];
+      rn.setRenderTarget(rt); rn.clear(); rn.render(sc, cam); rn.setRenderTarget(null);
+      rn.clippingPlanes = []; sc.scale.y = 1; sc.position.y = 0; sc.updateMatrixWorld(true);
+    };
+    var tiles = new T.InstancedMesh(new T.BoxGeometry(TS * .94, .12, TS * .94), tileM, C * R), m4 = new T.Matrix4(), col = new T.Color();
     for (var i = 0; i < C * R; i++) { m4.makeTranslation((i % C - (C - 1) / 2) * TS, .06, ZF(Math.floor(i / C))); tiles.setMatrixAt(i, m4); tiles.setColorAt(i, col.set('#20102e')); }
     sc.add(tiles);
     // the singer's own stage, raised, between the players and the lips
     var lbase = new T.Mesh(new T.BoxGeometry(C * TS + .6, YL + .2, LR * TS + .5), new T.MeshStandardMaterial({ color: '#0a0a0c', roughness: .3, metalness: .6 })); lbase.position.set(0, (YL - .2) / 2 - .1, ZL((LR - 1) / 2)); sc.add(lbase);
     var ledge = new T.Mesh(new T.BoxGeometry(C * TS + .7, .12, .12), new T.MeshBasicMaterial({ color: '#ffd23f' })); ledge.position.set(0, YL - .05, ZL(LR - 1) + TS / 2 + .25); sc.add(ledge);
-    var ltiles = new T.InstancedMesh(new T.BoxGeometry(TS * .94, .12, TS * .94), new T.MeshBasicMaterial({ color: '#ffffff' }), C * LR);
+    var ltiles = new T.InstancedMesh(new T.BoxGeometry(TS * .94, .12, TS * .94), ltileM, C * LR);
     for (i = 0; i < C * LR; i++) { m4.makeTranslation((i % C - (C - 1) / 2) * TS, YL + .06, ZL(Math.floor(i / C))); ltiles.setMatrixAt(i, m4); ltiles.setColorAt(i, col.set('#20102e')); }
     sc.add(ltiles);
     // the set behind her: a red LED wall with rays turning slowly, tiers of blue arcades with golden arches and red
@@ -6607,8 +6621,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       sticks.instanceMatrix.needsUpdate = true;
       if (now - lastW > 50) { lastW = now; drawWall(t); }
       var W = el.clientWidth, H = el.clientHeight; if (W && H && (W !== w || H !== h)) { w = W; h = H; rn.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+      rn.getDrawingBufferSize(dbs); if (rtF.width !== Math.round(dbs.x / 2)) { rtF.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); rtL.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); } tileM.userData.rf.rRes.value.copy(dbs); ltileM.userData.rf.rRes.value.copy(dbs);
+      tiles.visible = ltiles.visible = false; mirror(rtF, .12); mirror(rtL, YL + .12); tiles.visible = ltiles.visible = true;
       rn.render(sc, cam);
     }
+    try { var pm = new T.PMREMGenerator(rn); tiles.visible = ltiles.visible = false; var envRT = pm.fromScene(sc, .02, .3, 120); tiles.visible = ltiles.visible = true; tileM.envMap = ltileM.envMap = envRT.texture; tileM.needsUpdate = ltileM.needsUpdate = true; pm.dispose(); } catch (e) { tiles.visible = ltiles.visible = true; }   // (the reflection of the set in the tiles)
     st.n = 0; frame2();
     var pv = new T.Vector3();
     return { proj: function (c, r, lead) {   // a tile → screen pixels (its centre), and the size of a tile there (lead: on the singer's stage)
@@ -6838,7 +6855,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var lcx = lc + (wk ? 0 : ix), lry = bph === 'hop' ? 2 : wk ? ins._wr : Math.max(0, Math.min(2, SV_LROW + iy)); ins._ry = lry;   /* (walking: straight along the row she's on) */   /* (walking: straight along her row) */ place(ins, lcx, lry, true); place(ov.querySelector('.svnb.ins'), lc, 2, true);
     [-4, 4, -2, 2].forEach(function (dx, j) {   // (the two women on the outside, the two men closest to her: a tile free between everyone)   // her two backup dancers: one tile free on either side, doing exactly what she does
       var dn = ov.querySelector('.svdan.d' + j), db = ov.querySelector('.svnb.insd.d' + j); if (!dn) return;
-      var cl = 'svins svdan d' + j + ' ' + ins.className.replace(/\bsvins\b/, '').trim(); if (dn.className !== cl) dn.className = cl;   /* (the walk class first, then the move: so they walk too, not slide) */
+      var cl = 'svins svdan d' + j + ' ' + ins.className.replace(/\bsvins\b/, '').trim(); if (dn._n !== ins._n) { dn._n = ins._n; dn.className = cl.replace(/\b(ok|jmp)\b/g, ''); void dn.offsetWidth; }   /* (every step a fresh hop, like her: on the balls too) */ if (dn.className !== cl) dn.className = cl;   /* (the walk class first, then the move: so they walk too, not slide) */
       dn.style.setProperty('--wd', ins.style.getPropertyValue('--wd'));
       place(dn, lcx + dx, lry, true); if (db) place(db, lc + dx, 2, true);
     });
@@ -6857,10 +6874,15 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var pt = el.querySelector('.svpt'), tx = g.st === 'end' ? g.dist[k] + ' pts' : ''; if (pt.textContent !== tx) pt.textContent = tx;   // (the scores only at the end)
     });
     if (ov._3 && ov._3.mark) ov._3.mark(marks, { c: lcx, r: lry });
-    if (ov._3 && ov._3.aim) ov._3.aim([{ c: lcx, r: lry }, { c: lcx - 2, r: lry }, { c: lcx + 4, r: lry }, { c: lcx, r: lry }, { c: lcx + 2, r: lry }, { c: lcx - 4, r: lry }]);   // (the spotlights follow her and her dancers)   // (the tile under every dancer glows in their colour)
-    if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk <= 0 && dk > -.5 && !n._hit && g.st === 'play') { n._hit = 1; var rc = n.parentNode.querySelector('.svrec.c' + g.chart[+n.getAttribute('data-i')][1]); if (rc) { rc.classList.remove('bhit'); void rc.offsetWidth; rc.classList.add('bhit'); } } if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
+    // the spotlights follow where she and her dancers are on screen right now (walking over: along with them, not ahead of them)
+    var tw = ins._tw; if (!tw) tw = ins._tw = { fc: lcx, fr: lry, tc: lcx, tr: lry, at: 0, d: 1, wk: false };
+    var twAt = function (n2) { var q = Math.max(0, Math.min(1, (n2 - tw.at) / tw.d)), e = tw.wk ? q : q < .5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; return [tw.fc + (tw.tc - tw.fc) * e, tw.fr + (tw.tr - tw.fr) * e]; };
+    if (tw.tc !== lcx || tw.tr !== lry) { var cv0 = twAt(now); tw.fc = cv0[0]; tw.fr = cv0[1]; tw.tc = lcx; tw.tr = lry; tw.at = now; tw.wk = wk; tw.d = wk ? (parseFloat(ins.style.getPropertyValue('--wd')) || 4) * 1000 : bph === 'on' ? 260 : 900; }
+    var V = twAt(now), vc = V[0], vr = V[1];
+    if (ov._3 && ov._3.aim) ov._3.aim([{ c: vc, r: vr }, { c: vc - 2, r: vr }, { c: vc + 4, r: vr }, { c: vc, r: vr }, { c: vc + 2, r: vr }, { c: vc - 4, r: vr }]);   // (the spotlights follow her and her dancers)   // (the tile under every dancer glows in their colour)
+    if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk <= 0 && dk > -.5 && !n._hit && g.st === 'play') { n._hit = 1; var hi0 = +n.getAttribute('data-i'); if (ov._3 && ov._3._hk !== hi0) { ov._3._hk = hi0; ov._3.beat(); }   /* (the lights pulse only when an arrow hits the mark) */ var rc = n.parentNode.querySelector('.svrec.c' + g.chart[+n.getAttribute('data-i')][1]); if (rc) { rc.classList.remove('bhit'); void rc.offsetWidth; rc.classList.add('bhit'); } } if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
     var bt = ov.querySelector('.svbeat'), bk = Math.floor(b + .5);
-    if (g.st === 'play' && bt._k !== bk && b > -.5) { bt._k = bk; bt.classList.remove('pulse'); void bt.offsetWidth; bt.classList.add('pulse'); if (ov._3) ov._3.beat(); }
+    if (g.st === 'play' && bt._k !== bk && b > -.5) { bt._k = bk; bt.classList.remove('pulse'); void bt.offsetWidth; bt.classList.add('pulse'); }
     if (ov._3) ov._3.stage(g.stage || 1);
     var f0 = g.t0 ? g.t0 + g.chart[0][0] * SV_BT : 0, cd = g.st === 'ready' && f0 && f0 - now < 3000 ? Math.max(1, Math.ceil((f0 - now) / 1000)) : 0;
     bt.querySelector('b').textContent = cd ? String(cd) : '';
