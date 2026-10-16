@@ -5813,3 +5813,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svins.svdan .svfanf{transform-box:view-box;transform-origin:231px 244px}
 .svins.svdan.ok .svfanf,.svins.svdan.jmp .svfanf{animation:svfano .3s cubic-bezier(.3,1.5,.5,1)}
 @keyframes svfano{0%{transform:rotate(-50deg) scale(.35)}100%{transform:none}}
+/* Serving: the presenters walk in once everything has loaded, and stand together at the front of the stage, in the middle */
+.svhosts .ehost{bottom:0;height:42vh;transition:translate 1.3s cubic-bezier(.3,.9,.4,1),opacity 1s}
+.svhosts .him{left:auto;right:calc(50% + .6vw)}.svhosts .her{right:auto;left:calc(50% + .6vw)}
+.svov:not([data-hin]) .svhosts .him{translate:-60vw 0;opacity:0}.svov:not([data-hin]) .svhosts .her{translate:60vw 0;opacity:0}

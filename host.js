@@ -117,8 +117,7 @@
       }
     }
     p.pk = !!m.pk;
-    if (m.wh === 'online' || m.wh === 'local') { if (p.wh !== m.wh) { p.wh = m.wh; setTimeout(render, 0); } }
-    if (m.wh === 'online' && typeof m.sd === 'number' && m.sd >= 0 && m.sd <= 6000 && !(p.sync != null && p.sync >= 0)) { p.sync = m.sd; setTimeout(function () { render(); push(); }, 0); }   // (rejoining: still synced from earlier tonight)   // (where they watch: in the room, or online via a stream)
+    if (typeof m.sd === 'number' && m.sd >= 0 && m.sd <= 6000 && !(p.sync != null && p.sync >= 0)) { p.sync = m.sd; setTimeout(function () { render(); push(); }, 0); }   // (rejoining: still synced from earlier tonight)   // (where they watch: in the room, or online via a stream)
     if (isNew && !p.bot && String(m.pid).indexOf('bot') !== 0 && (G.mgTest || G.itemTest || G.goldTest)) { p.inv = p.inv || []; if (p.inv.indexOf('golden') < 0) p.inv.push('golden'); }   // (joining a test: a Golden Ticket too)   // (still choosing their avatar and country: the hosts wait with their welcome)
     var changed = isNew || p.name !== nm || p.off;
     /* the fan flag: one country per player; none picked (or taken): a random free one */
@@ -264,6 +263,7 @@
     if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.sv && G.phase === 'sv') s.sv = svSnap();
+    if (G.syncOn) s.sync_on = 1;   // (the stream delay: on once the host has run a sync)
     if (G.cal) s.cal = { id: G.cal.id, dt: G.cal.t0 - Date.now(), n: G.cal.n, gap: G.cal.gap, done: !!G.cal.done };
     if (G.rule && G.phase === 'rule') s.rule = ruSnap();
     if (G.organ && G.phase === 'organ') s.organ = orSnap();
@@ -6369,11 +6369,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     G.sv.home = svHomes(G.sv);
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
     var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
-    var l00 = ['her', 'Thank you for coming to help us during this rehearsal show!'], t00 = 1400 + Math.max(3000, talkLen(l00[0], l00[1], 2400));
-    setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l00[0], l00[1]); }, 1400);
-    setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, t00);
-    var iv = setInterval(function () { if (G.sv !== g || g.t0) { clearInterval(iv); return; } svShow(); }, 200);   // (until the song plays: she walks on to the middle while he talks)   // (she walks on to the middle while he talks)
-    setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (she cuts him off)   // (and the song cuts in already: the presenters talk over its intro)
+    var l00 = ['her', 'Thank you for coming to help us during this rehearsal show!'], t00 = 1500 + Math.max(3000, talkLen(l00[0], l00[1], 2400));
+    var iv = setInterval(function () { if (G.sv !== g || g.t0) { clearInterval(iv); return; } svShow(); }, 200);   // (until the song plays)
+    // First everything loads (the 3D stage); then the presenters walk in to the front of the stage, in the middle, and talk
+    // there; only after that the song cuts in (cutting him off) and the singer comes on
+    var w0 = Date.now(), wt = setInterval(function () {
+      if (G.sv !== g) { clearInterval(wt); return; }
+      var ov = $('svov'), el = Date.now() - w0; if (el < 2000 || (!(ov && ov._3) && el < 8000)) return;
+      clearInterval(wt); g.hin = true; svShow();
+      setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l00[0], l00[1]); }, 1500);
+      setTimeout(function () { if (G.sv === g && g.st === 'intro') svSay(l0[0], l0[1]); }, t00);
+      setTimeout(function () { if (G.sv === g) svSong(true); }, t00 + Math.max(2600, talkLen(l0[0], l0[1], 2400) - 500));   // (the song cuts him off; then she comes on)
+    }, 150);
   }
   // Over the song's intro (until 5 seconds before the first arrows): the presenters hurry everyone onto the stage.
   var SV_LINES = [['her', 'Hurry, she’s already starting! Get on the stage!'], ['him', 'Look carefully which team you’re in!'], ['her', 'Follow her instructions: press the arrows at the right time!'], ['him', 'When it’s your turn, look at your phones!'], ['her', 'And when it’s not your turn to dance, you’ll be asked to help pump up the skippy balls!']], SV_WALKIN = 6000;
@@ -6610,7 +6617,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       beams.forEach(function (b, j) {   // aim at a spot sweeping across the stage; the cone reaches exactly down to it
         var A = st.aim && st.aim[j % st.aim.length], tx, tz, ty = YL + .14;   // (on the singer and her dancers; with a little wobble)
         if (A) { tx = (A.c - (C - 1) / 2) * TS + .25 * Math.sin(t * 1.3 + j); tz = ZL(A.r) + .2 * Math.cos(t * 1.1 + j); } else { tx = 0; tz = ZL(1); }
-        if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .45; b.cz += (tz - b.cz) * .45; tx = b.cx; tz = b.cz;
+        if (b.cx == null) { b.cx = tx; b.cz = tz; } b.cx += (tx - b.cx) * .25; b.cz += (tz - b.cz) * .25; tx = b.cx; tz = b.cz;
         b.pool.position.set(tx, ty, tz); b.arm.lookAt(tx, ty, tz);
         var L = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L, 1); b.cone.position.set(0, 0, L / 2);
         var c2 = p[(j + st.n) % 3]; b.cone.material.color.set(c2); b.pool.material.color.set(c2); b.cone.material.opacity = .09 + fl * .08; b.pool.material.opacity = .28 + fl * .15;
@@ -6622,7 +6629,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       if (now - lastW > 50) { lastW = now; drawWall(t); }
       var W = el.clientWidth, H = el.clientHeight; if (W && H && (W !== w || H !== h)) { w = W; h = H; rn.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
       rn.getDrawingBufferSize(dbs); if (rtF.width !== Math.round(dbs.x / 2)) { rtF.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); rtL.setSize(Math.round(dbs.x / 2), Math.round(dbs.y / 2)); } tileM.userData.rf.rRes.value.copy(dbs); ltileM.userData.rf.rRes.value.copy(dbs);
-      tiles.visible = ltiles.visible = false; mirror(rtF, .12); mirror(rtL, YL + .12); tiles.visible = ltiles.visible = true;
+      tiles.visible = ltiles.visible = false; heart.visible = false; mirror(rtF, .12); mirror(rtL, YL + .12); tiles.visible = ltiles.visible = true; heart.visible = true;   /* (the hearts stay out of the reflection: they looked like stains on the floor) */
       rn.render(sc, cam);
     }
     try { var pm = new T.PMREMGenerator(rn); tiles.visible = ltiles.visible = false; var envRT = pm.fromScene(sc, .02, .3, 120); tiles.visible = ltiles.visible = true; tileM.envMap = ltileM.envMap = envRT.texture; tileM.needsUpdate = ltileM.needsUpdate = true; pm.dispose(); } catch (e) { tiles.visible = ltiles.visible = true; }   // (the reflection of the set in the tiles)
@@ -6733,7 +6740,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   var SV_RIDE_LEAD = svRider({ ball: '#e0102a', ballS: '#6a0614', top: '#1a0e12', legs: '#c20e1c', boots: '#8a0a16', arms: 'rgba(20,12,16,.9)', skin: '#f0c8b2',
     back: '<path d="M33 30 Q30 2 50 0 Q70 2 67 30 Q72 52 66 62 L34 62 Q28 52 33 30 Z" fill="#e3141e"/>',
-    head: '<ellipse cx="50" cy="20" rx="10" ry="11.5" fill="#f6dccb"/><path d="M44 19 q3 2 6 0 M51 19 q3 2 6 0" stroke="#111" stroke-width="1.2" fill="none"/><ellipse class="svrm" cx="50" cy="26" rx="3" ry="2.4" fill="#c0102a"/><path d="M39 22 Q36 4 50 3 Q64 4 61 22 Q58 9 50 9 Q42 9 39 22 Z" fill="#ff3a2e"/><path d="M40 16 Q36 34 38 52 L42 52 Q41 34 43 18 Z M60 16 Q64 34 62 52 L58 52 Q59 34 57 18 Z" fill="#ff3a2e"/>' }, true);
+    head: '<ellipse cx="50" cy="20" rx="9.6" ry="11.2" fill="#f6dccb"/>' +   // (the face fully free: the hair frames it instead of covering the cheeks)
+      '<path d="M43.2 15.6 Q46 14.2 48.4 15.4 M51.6 15.4 Q54 14.2 56.8 15.6" stroke="#3a0a10" stroke-width="1" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="46" cy="19" rx="1.5" ry="1.8" fill="#1a0a10"/><ellipse cx="54" cy="19" rx="1.5" ry="1.8" fill="#1a0a10"/><circle cx="46.5" cy="18.4" r=".5" fill="#fff"/><circle cx="54.5" cy="18.4" r=".5" fill="#fff"/>' +
+      '<path d="M44 17.6 L43 16.6 M56 17.6 L57 16.6" stroke="#111" stroke-width=".7"/><ellipse cx="44.2" cy="23" rx="2" ry="1.1" fill="#ff8f9a" opacity=".5"/><ellipse cx="55.8" cy="23" rx="2" ry="1.1" fill="#ff8f9a" opacity=".5"/>' +
+      '<ellipse class="svrm" cx="50" cy="26.2" rx="2.6" ry="1.9" fill="#c0102a"/>' +
+      '<path d="M39.6 19 Q37 3 50 2.4 Q63 3 60.4 19 Q58 8.6 52 8.4 L50 10 L48 8.4 Q42 8.6 39.6 19 Z" fill="#ff3a2e"/><path d="M38.6 13 Q34.4 34 36 53 L40.8 53 Q39.2 34 40.8 19 Z M61.4 13 Q65.6 34 64 53 L59.2 53 Q60.8 34 59.2 19 Z" fill="#ff3a2e"/>' }, true);
   var SV_RIDE_DAN = function (hair, skin) { return svRider({ ball: '#e0102a', ballS: '#6a0614', top: '#e3141e', legs: '#8a1a24', boots: '#141014', arms: '#e3141e', skin: skin,
     back: '<path d="M44 6 Q50 -6 58 4 Q62 18 56 24 Z" fill="' + hair + '"/>',
     head: '<ellipse cx="50" cy="21" rx="9" ry="10.5" fill="' + skin + '"/><path d="M41 19 Q41 9 50 9 Q59 9 59 19 Q55 13 50 13 Q45 13 41 19 Z" fill="' + hair + '"/><path d="M45 21 h3 M52 21 h3" stroke="#111" stroke-width="1.2"/><ellipse cx="50" cy="26" rx="2.4" ry="1.4" fill="#a00c18"/>' }, true); };
@@ -6852,7 +6864,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }
     if (!g.home) g.home = svHomes(g);
     var now = Date.now(), b = g.t0 ? svBeat(g, now) : -9;
-    ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1);
+    ov.setAttribute('data-st', g.st); ov.setAttribute('data-stage', g.stage || 1); ov.toggleAttribute('data-hin', !!g.hin);   /* (the presenters: in once everything has loaded) */
     // whose turn: the team of the next arrow; the instructor's steps: everything in the current phrase so far
     var nx = null, cur = null; g.chart.forEach(function (n) { if (!nx && n[0] >= b - .3) nx = n; if (n[0] <= b + .02) cur = n; });
     var act = nx ? nx[5] || '*' : '*', ix = 0, iy = 0;
@@ -6867,9 +6879,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     }); }
     var place = function (el, c, r, lead) { var P = svProj(ov, c, r, lead); el.style.transform = 'translate(' + P.x.toFixed(1) + 'px,' + P.y.toFixed(1) + 'px)'; el.style.setProperty('--s', P.s.toFixed(1) + 'px'); el.style.zIndex = String(lead ? 3 + Math.round(r * 2) : 10 + Math.round(r * 2));   /* (further forward = in front: so the skippy ball rising in front of her is in front of her) */ var p3 = !!(ov._3 && ov._3.proj); if (!el._pl || (p3 && el._p3 === false)) { el._pl = 1; el._p3 = p3; el.style.transition = 'none'; void el.offsetWidth; el.style.transition = ''; } el._p3 = p3; };   /* (the very first placement: straight there, no slide in from the corner) */
     var ins = ov.querySelector('.svins'), f00 = g.chart[0][0];
-    if (g.st !== 'end' && (!g.t0 || b < f00 - 10)) act = g.st === 'intro' && !g.t0 && (!ins._act || (ins._act === 'off' && (!ov._3 || !ins._p3) && now - (ins._at0 || (ins._at0 = now)) < 3000)) ? 'off' : 'mid';   /* (she waits off stage until the 3D stage is there: then her walk on is straight) */   // (the intro: she walks on to the middle; ten bounces before the red team she goes over to them)
-    var LC = function (a) { return a === 'off' ? 29 : solo || a === '*' || a === 'mid' ? 12.5 : a === 'A' ? 6 : 19; };
-    if (ins._act !== act) { if (ins._act && g.st !== 'end') { var wd = ins._act === 'off' ? 4.5 : act === 'A' && b < f00 ? 4 : Math.max(2.2, Math.min(7, ((nx ? nx[0] : b + 7) - b) * SV_BT / 1000 - .6)), lx2 = LC(act) < (ins._lc || 12.5); ins.style.setProperty('--wd', wd.toFixed(2) + 's'); ins.classList.remove('wl', 'wr'); ins.classList.add('walk', lx2 ? 'wl' : 'wr'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk', 'wl', 'wr'); }, wd * 1000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
+    if (g.st !== 'end' && (!g.t0 || b < f00 - 10)) act = g.st === 'intro' && (!g.t0 || (ins._act === 'off' && (!ov._3 || !ins._p3) && now - (ins._at0 || (ins._at0 = now)) < 3000)) ? 'off' : 'mid';   /* (she waits off stage until the song starts) */   /* (she waits off stage until the 3D stage is there: then her walk on is straight) */   // (the intro: she walks on to the middle; ten bounces before the red team she goes over to them)
+    var LC = function (a) { return a === 'off' ? 36 : solo || a === '*' || a === 'mid' ? 12.5 : a === 'A' ? 6 : 19; };
+    if (ins._act !== act) { if (ins._act && g.st !== 'end') { var wd = ins._act === 'off' ? 6 : act === 'A' && b < f00 ? 4 : Math.max(2.2, Math.min(7, ((nx ? nx[0] : b + 7) - b) * SV_BT / 1000 - .6)), lx2 = LC(act) < (ins._lc || 12.5); ins.style.setProperty('--wd', wd.toFixed(2) + 's'); ins.classList.remove('wl', 'wr'); ins.classList.add('walk', lx2 ? 'wl' : 'wr'); clearTimeout(ins._wt); ins._wt = setTimeout(function () { ins.classList.remove('walk', 'wl', 'wr'); }, wd * 1000); if (act !== '*') { g.swAt = now; g.swTo = act; } } ins._act = act; }   // (she walks over to the next team, taking her time)
     var lc = LC(act);
     ins._lc = lc;
     if (cur && ins._n !== cur[0] && g.st === 'play') { ins._n = cur[0]; ins.classList.remove('ok', 'jmp'); void ins.offsetWidth; ins.classList.add(cur[4] ? 'jmp' : 'ok'); }   /* (the hop class first, then the move: so it never slides) */
@@ -6898,8 +6910,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ov._3 && ov._3.mark) ov._3.mark(marks, { c: lcx, r: lry });
     // the spotlights follow where she and her dancers are on screen right now (walking over: along with them, not ahead of them)
     var tw = ins._tw; if (!tw) tw = ins._tw = { fc: lcx, fr: lry, tc: lcx, tr: lry, at: 0, d: 1, wk: false };
-    var twAt = function (n2) { var q = Math.max(0, Math.min(1, (n2 - tw.at) / tw.d)), e = tw.wk ? q : q < .5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; return [tw.fc + (tw.tc - tw.fc) * e, tw.fr + (tw.tr - tw.fr) * e]; };
-    if (tw.tc !== lcx || tw.tr !== lry) { var cv0 = twAt(now); tw.fc = cv0[0]; tw.fr = cv0[1]; tw.tc = lcx; tw.tr = lry; tw.at = now; tw.wk = wk; tw.d = wk ? (parseFloat(ins.style.getPropertyValue('--wd')) || 4) * 1000 : bph === 'on' ? 260 : 180; }   /* (a hop takes .18s: the lights land with them) */
+    var twAt = function (n2) { var q = Math.max(0, Math.min(1, (n2 - tw.at) / tw.d)), e = tw.sm ? q * q * (3 - 2 * q) : q; return [tw.fc + (tw.tc - tw.fc) * e, tw.fr + (tw.tr - tw.fr) * e]; };
+    if (tw.tc !== lcx || tw.tr !== lry) { var cv0 = twAt(now); tw.fc = cv0[0]; tw.fr = cv0[1]; tw.tc = lcx; tw.tr = lry; tw.at = now; tw.wk = wk; tw.d = wk ? (parseFloat(ins.style.getPropertyValue('--wd')) || 4) * 1000 : 420; tw.wk = true; tw.sm = !wk; }   /* (the lights glide smoothly to the next spot, no hop) */
     var V = twAt(now), vc = V[0], vr = V[1];
     if (ov._3 && ov._3.aim) ov._3.aim([{ c: vc, r: vr }, { c: vc - 2, r: vr }, { c: vc + 4, r: vr }, { c: vc, r: vr }, { c: vc + 2, r: vr }, { c: vc - 4, r: vr }]);   // (the spotlights follow her and her dancers)   // (the tile under every dancer glows in their colour)
     if (g.t0) [].forEach.call(ov.querySelectorAll('.svn'), function (n) { var dk = g.chart[+n.getAttribute('data-i')][0] - b; if (dk <= 0 && dk > -.5 && !n._hit && g.st === 'play') { n._hit = 1; var hi0 = +n.getAttribute('data-i'); if (ov._3 && ov._3._hk !== hi0) { ov._3._hk = hi0; ov._3.beat(); }   /* (the lights pulse only when an arrow hits the mark) */ var rc = n.parentNode.querySelector('.svrec.c' + g.chart[+n.getAttribute('data-i')][1]); if (rc) { rc.classList.remove('bhit'); void rc.offsetWidth; rc.classList.add('bhit'); } } if (dk < -.6 || dk > 3.3) { if (n._v !== 0) { n._v = 0; n.style.opacity = 0; } return; } n._v = 1; n.style.opacity = dk < 0 ? Math.max(0, 1 + dk * 2) : 1; n.style.transform = 'translateY(' + (dk * 20).toFixed(2) + 'vh)'; });   // (the arrows scroll up to the receptors)
@@ -6932,8 +6944,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // plays 8 clicks with a flash; they tap their phone on every one; each phone works out its own delay from that.
   function calStart() {
     if (REMOTE || G.phase !== 'lobby' || G.cal) return;
+    G.syncOn = true;   // (syncing turns the stream delay on: from now on every phone plays with its own measured delay)
     var g = G.cal = { id: 'cal' + Date.now().toString(36), t0: Date.now() + 4500, n: 8, gap: 1000, res: {} };
-    var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing online players</h2><p>Online players: tap your phone on every flash and click!</p><div class="calfl"><b></b></div><div class="calres"></div></div>'; document.body.appendChild(ov);
+    var ov = document.createElement('div'); ov.id = 'calov'; ov.innerHTML = '<div class="calbox"><h2>🌐 Syncing everyone</h2><p>Everyone: tap your phone on every flash and click!</p><div class="calfl"><b></b></div><div class="calres"></div></div>'; document.body.appendChild(ov);
     push(); [1000, 2500].forEach(function (t) { setTimeout(function () { if (G.cal === g) push(); }, t); });   // (a few updates: the phones take the best timing)
     var fl = ov.querySelector('.calfl'), b = fl.querySelector('b');
     var cd = setInterval(function () { var ms = g.t0 - Date.now(); b.textContent = ms > 0 ? String(Math.ceil(ms / 1000)) : ''; if (ms <= 0) clearInterval(cd); }, 100);
@@ -6947,15 +6960,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!ov.parentNode) return;
     var hum = list().filter(function (p) { return !p.bot && String(p.pid).indexOf('bot') !== 0; });
     var row = function (p) {
-      var d = g.res[p.pid], on = p.wh === 'online' || d >= 0 || d === -2, st, cls;
-      if (d >= 0) { st = '🌐 ' + (d / 1000).toFixed(2) + 's'; cls = 'ok'; }
-      else if (!on) { st = '📺 In the room'; cls = 'ok'; }
+      var d = g.res[p.pid], st, cls;
+      if (d >= 0) { st = '⏱️ ' + (d / 1000).toFixed(2) + 's'; cls = 'ok'; }
       else if (d === -2) { st = '❌ Not enough taps'; cls = 'no'; }
-      else if (p.sync != null && p.sync >= 0) { st = '🌐 ' + (p.sync / 1000).toFixed(2) + 's (earlier)'; cls = 'ok'; }
+      else if (p.sync != null && p.sync >= 0) { st = '⏱️ ' + (p.sync / 1000).toFixed(2) + 's (earlier)'; cls = 'ok'; }
       else { st = '❌ Not synced'; cls = 'no'; }
       return '<tr class="' + cls + '"><td>' + (p.char ? charSvg(p.char) : '') + '</td><td>' + esc(p.name) + '</td><td>' + st + '</td></tr>';
     };
-    var bad = hum.filter(function (p) { var d = g.res[p.pid]; return (p.wh === 'online' || d === -2) && !(d >= 0) && !(p.sync != null && p.sync >= 0 && d !== -2); }).length;
+    var bad = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); }).length;
     ov.innerHTML = '<div class="calbox caldone"><h2>' + (bad ? '⚠️ Not everyone is synced' : '✅ Everyone is synced') + '</h2><table class="caltab">' + (hum.map(row).join('') || '<tr><td colspan="3">No players yet</td></tr>') + '</table><div class="calbtns"><button type="button" class="btn" data-a="ok">OK</button><button type="button" class="btn alt" data-a="again">🔁 Try again</button></div></div>';
     ov.querySelector('[data-a="ok"]').addEventListener('click', function () { ov.remove(); });
     ov.querySelector('[data-a="again"]').addEventListener('click', function () { ov.remove(); calStart(); });  }
@@ -6963,26 +6975,28 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.cal, ov = $('calov'); if (!g || !ov) return;
     var ks = Object.keys(g.res); ov.querySelector('.calres').innerHTML = ks.length ? ks.map(function (k) { var p = players[k], d = g.res[k]; return '<span>' + esc(p ? p.name : '?') + ': ' + (d < 0 ? 'in the room' : (d / 1000).toFixed(2) + 's') + '</span>'; }).join('') : '';
   }
-  net.on('cal', function (m) { var g = G.cal && m && m.id === G.cal.id ? G.cal : calLast && m && m.id === calLast.id ? calLast : null; if (!g || !players[m.pid]) return;   /* (a late result still counts, and updates the results screen) */ g.res[m.pid] = Math.round(+m.d); var p = players[m.pid]; if (g.res[m.pid] >= 0) { p.wh = 'online'; p.sync = g.res[m.pid]; } else if (g.res[m.pid] === -1) p.wh = 'local'; else if (g.res[m.pid] === -2) { p.wh = 'online'; p.sync = null; } calShow(); var cov = $('calov'); if (cov && cov._g === g && cov.querySelector('.caldone')) calDone(cov, g); render(); push(); });
-  net.on('where', function (m) { var p = m && players[m.pid]; if (!p || (m.w !== 'online' && m.w !== 'local')) return; p.wh = m.w; render(); push(); });
+  net.on('cal', function (m) { var g = G.cal && m && m.id === G.cal.id ? G.cal : calLast && m && m.id === calLast.id ? calLast : null; if (!g || !players[m.pid]) return;   /* (a late result still counts, and updates the results screen) */ g.res[m.pid] = Math.round(+m.d); var p = players[m.pid]; if (g.res[m.pid] >= 0) p.sync = g.res[m.pid]; else if (g.res[m.pid] === -2) p.sync = null; calShow(); var cov = $('calov'); if (cov && cov._g === g && cov.querySelector('.caldone')) calDone(cov, g); render(); push(); });
   // Under every player in the lobby: a little sync box. In the room: ticked (no sync needed); online: ticked once their delay is measured
   function syncTag(p) {
-    var bot = p.bot || String(p.pid).indexOf('bot') === 0, on = p.wh === 'online', ok = bot || !on || (p.sync != null && p.sync >= 0);
-    return '<span class="psync' + (ok ? ' ok' : '') + '" title="' + (bot ? 'Bot' : on ? (ok ? 'Online, delay ' + (p.sync / 1000).toFixed(2) + 's' : 'Online, not synced yet') : 'In the room') + '"><i>' + (ok ? '✓' : '') + '</i>' + (bot ? 'bot' : on ? (ok ? (p.sync / 1000).toFixed(2) + 's' : 'sync') : 'room') + '</span>';
+    if (!G.syncOn) return '';   // (only with the stream delay on)
+    var bot = p.bot || String(p.pid).indexOf('bot') === 0, ok = bot || (p.sync != null && p.sync >= 0);
+    return '<span class="psync' + (ok ? ' ok' : '') + '" title="' + (bot ? 'Bot' : ok ? 'Delay ' + (p.sync / 1000).toFixed(2) + 's' : 'Not synced yet') + '"><i>' + (ok ? '✓' : '') + '</i>' + (bot ? 'bot' : ok ? (p.sync / 1000).toFixed(2) + 's' : 'sync') + '</span>';
   }
   // The sync button gets a checkmark at the end, lit only when every player is synced: in the room (no sync needed) or online with a measured delay
-  function calAll() { return list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }).every(function (p) { return p.wh !== 'online' || (p.sync != null && p.sync >= 0); }); }   // (everyone in the room, or online with a measured delay)
+  function calAll() { if (!G.syncOn) return true; return list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; }).every(function (p) { return p.sync != null && p.sync >= 0; }); }   // (stream delay off: nobody needs a sync; on: everyone has a measured delay)
   function calCheck() {
     var b = $('calbtn'); if (!b) return;
     var ck = b.querySelector('.calok'); if (!ck) { ck = document.createElement('span'); ck.className = 'calok'; ck.textContent = '✓'; b.appendChild(ck); }
     if (G.phase !== 'lobby' && $('calov') && !G.cal) $('calov').remove();   // (the game started: the sync results go away)
     var hum = list().filter(function (p) { return !p.off && !p.bot && String(p.pid).indexOf('bot') !== 0; });
-    var ok = hum.length > 0 && calAll();
+    var ok = !!G.syncOn && hum.length > 0 && calAll();
+    var off = $('caloff'); if (off) off.classList.toggle('hidden', !G.syncOn);
     b.classList.toggle('synced', ok);
-    var need = hum.filter(function (p) { return p.wh === 'online' && !(p.sync != null && p.sync >= 0); });
-    b.title = ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
+    var need = hum.filter(function (p) { return !(p.sync != null && p.sync >= 0); });
+    b.title = !G.syncOn ? 'Stream delay is off: sync to turn it on' : ok ? 'Everyone is synced' : need.length ? 'Not synced yet: ' + need.map(function (p) { return p.name; }).join(', ') : 'No players yet';
   }
   if ($('calbtn')) $('calbtn').addEventListener('click', calStart);
+  if ($('caloff')) $('caloff').addEventListener('click', function () { if (G.cal) return; G.syncOn = false; render(); push(); });   // (everyone in the room after all: no delay)
 
   // ---------- Say Na Na Na! (formerly The Fake Fan: the id is still 'fake') ----------
   // Everyone's phone shows the same secret Eurovision song, except one player: the fake fan, who sees "You're the

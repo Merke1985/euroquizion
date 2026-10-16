@@ -150,7 +150,7 @@
     hi = function () {
       if (kicked) return;
       var m = me();
-      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, wh: SV_WHERE, sd: (function () { try { var d0 = localStorage.getItem('eq_delay'), a0 = +localStorage.getItem('eq_delay_at') || 0; return SV_WHERE === 'online' && d0 != null && Date.now() - a0 < 12 * 3600000 ? +d0 : null; } catch (e) { return null; } })(), pk: picking && joinFlow && joinFlow < 3 ? 1 : 0, score: m ? m.score : null,
+      net.send('hi', { pid: pid, was: wasPid, name: name, char: want, cc: wantCC, sd: SV_MY, pk: picking && joinFlow && joinFlow < 3 ? 1 : 0, score: m ? m.score : null,
         last: state ? { phase: state.phase, round: state.round, total: state.total, total_ms: state.total_ms, cfg: state.cfg } : null });
     };
     net.on('_open', function () { hi(); if (want === 'u:' + pid) picSend(); });
@@ -186,6 +186,7 @@
   }
   var kicked = false;
   function onState(s) {
+    SV_STREAM = s && s.sync_on && SV_MY != null ? SV_MY : 0;   // (the host turned the stream delay on with a sync)
     if (s && s.phase !== 'clueacc') $('v-wait').classList.remove('accmode');
     if (kicked) return;
     if (s && s.players) charCC(s.players);
@@ -274,8 +275,8 @@
       // The big Ready button at the bottom: press to check it, press again to take it back.
       $('lobbyready').classList.remove('hidden'); $('lobbyready').classList.toggle('on', !!m.in); $('lobbyready').setAttribute('aria-pressed', m.in ? 'true' : 'false');
       $('lobbyreadytext').textContent = m.in ? 'Ready!' : 'Ready';
-      $('lobbystart').classList.remove('hidden'); $('lobbystart').disabled = !s.all_ready || !!s.cal_on; var lsy = s.all_ready && s.all_sync === false; $('lobbystart').textContent = s.cal_on ? '🌐 Syncing…' : lsy ? '🌐 Sync online players' : 'Start game'; $('lobbystart').classList.toggle('sync', lsy || !!s.cal_on);   // (everyone ready, but someone online isn't synced: first the sync, for everyone; then Start)   // always there, greyed out until everyone is ready
-      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? (s.cal_on ? 'Syncing the online players…' : s.all_sync === false ? 'Everyone is ready! First a quick sync for the online players.' : 'Everyone is ready. Anyone can start the game.') : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. Start unlocks when everyone is ready.';
+      $('lobbystart').classList.remove('hidden'); $('lobbystart').disabled = !s.all_ready || !!s.cal_on; var lsy = s.all_ready && s.all_sync === false; $('lobbystart').textContent = s.cal_on ? '🌐 Syncing…' : lsy ? '🌐 Sync everyone' : 'Start game'; $('lobbystart').classList.toggle('sync', lsy || !!s.cal_on);   // (everyone ready, but someone online isn't synced: first the sync, for everyone; then Start)   // always there, greyed out until everyone is ready
+      show('v-wait'); $('waittitle').textContent = emb ? '' : 'You’re in!'; $('waitsub').textContent = emb ? '' : s.all_ready ? (s.cal_on ? 'Syncing everyone…' : s.all_sync === false ? 'Everyone is ready! First a quick sync.' : 'Everyone is ready. Anyone can start the game.') : m.in ? 'You’re ready. Waiting for the others (' + nrdy + ' of ' + s.players.length + ')…' : 'Press Ready when you’re set. Start unlocks when everyone is ready.';
     }
     else if ((s.phase === 'fun' || s.phase === 'pspin') && s.fun) { show('v-wait'); $('waittitle').textContent = s.fun.icon + ' ' + s.fun.title; $('waitsub').textContent = s.fun.sub; }
     else if (s.phase === 'part' && s.part) {
@@ -749,14 +750,8 @@
   var zgS = null;
   function zgOnLive() {}
   // ---------- Serving! (the dance-off test game): DDR-style arrows scroll up; hit the matching pad as they reach the top ----------
-  var svS = null, SV_STREAM = 0, SV_WHERE = 'local';   // (watching online, via a stream: the arrows later, in step with the music as it comes through; measured with the host's sync, or a quarter of a second)
-  (function () {   // where you watch: in the room (no delay) or online (a stream: a little delay); remembered
-    var w = 'local'; try { w = localStorage.getItem('eq_where') || 'local'; } catch (e) {}
-    var set = function (v) { w = v; SV_WHERE = v; var md = null; try { md = localStorage.getItem('eq_delay'); } catch (e) {} SV_STREAM = v === 'online' ? (md != null ? +md : 250) : 0; try { localStorage.setItem('eq_where', v); } catch (e) {} try { if (net && pid) (net.toHost || net.send)('where', { pid: pid, w: v }); } catch (e) {} };   // (the host shows whether everyone is synced)
-    set(w);
-    var init = function () { [].forEach.call(document.querySelectorAll('input[name="where"]'), function (r) { r.checked = r.value === w; r.addEventListener('change', function () { if (r.checked) set(r.value); }); }); };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-  })();
+  var svS = null, SV_STREAM = 0, SV_MY = null;   // (my delay, measured with the host's sync: used only when the host has the stream delay on)
+  try { var d0 = localStorage.getItem('eq_delay'), a0 = +localStorage.getItem('eq_delay_at') || 0; if (d0 != null && Date.now() - a0 < 12 * 3600000) SV_MY = +d0; } catch (e) {}   // (measured earlier tonight: still counts after a rejoin)
   function svView(s) {
     var z = s.sv, box = $('svui'), mine = z.order.indexOf(pid) >= 0;
     show('v-wait');
@@ -821,17 +816,16 @@
     var est = Date.now() + c.dt; if (!calS.t0 || est < calS.t0) calS.t0 = est;   // (the earliest estimate: the least network delay)
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'calui'; document.body.appendChild(ov);
-      if (SV_WHERE === 'online') { ov.innerHTML = '<div class="calp"><b>🌐 Sync</b><p>Tap anywhere on every flash and click you see and hear on the stream!</p><i class="calpad">TAP</i><em></em></div>'; ov.addEventListener('pointerdown', function (e) { e.preventDefault(); if (!calS || calS.res) return; calS.taps.push(Date.now()); var pd = ov.querySelector('.calpad'); pd.classList.remove('hit'); void pd.offsetWidth; pd.classList.add('hit'); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} }); }
-      else ov.innerHTML = '<div class="calp"><b>📺 In the room</b><p>No sync needed for you. Online players are syncing now…</p></div>';
+      { ov.innerHTML = '<div class="calp"><b>🌐 Sync</b><p>Tap anywhere on every flash and click, the moment you see and hear it (on the TV or on the stream)!</p><i class="calpad">TAP</i><em></em></div>'; ov.addEventListener('pointerdown', function (e) { e.preventDefault(); if (!calS || calS.res) return; calS.taps.push(Date.now()); var pd = ov.querySelector('.calpad'); pd.classList.remove('hit'); void pd.offsetWidth; pd.classList.add('hit'); try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} }); }
     }
     if (c.done && !calS.res) {
-      if (SV_WHERE === 'online') {
+      {
         var taps = calS.taps.filter(function (tt) { return tt > calS.t0 - 300; }), offs = [];   // (the 1st tap goes with the 1st click, the 2nd with the 2nd…: so even a delay of seconds is measured right)
         taps.slice(0, c.n).forEach(function (tt, k) { var o = tt - (calS.t0 + k * c.gap); if (o > -300 && o < 6000) offs.push(o); });
         offs.sort(function (a, b) { return a - b; });
-        if (offs.length >= 3) { var d = Math.max(0, Math.min(6000, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); localStorage.setItem('eq_delay_at', String(Date.now())); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; var cm = { pid: pid, id: c.id, d: d }; if (net) (net.toHost || net.send)('cal', cm); [700, 1800].forEach(function (ms) { setTimeout(function () { if (net) (net.toHost || net.send)('cal', { pid: pid, id: cm.id, d: d }); }, ms); }); setTimeout(function () { try { hi(); } catch (x) {} }, 2600); }   // (sent again, in case one got lost; and with the next hello it counts for later too)
+        if (offs.length >= 3) { var d = Math.max(0, Math.min(6000, Math.round(offs[Math.floor(offs.length / 2)] / 10) * 10)); calS.res = d; SV_MY = d; SV_STREAM = d; try { localStorage.setItem('eq_delay', String(d)); localStorage.setItem('eq_delay_at', String(Date.now())); } catch (x) {} ov.querySelector('em').textContent = '✅ Your delay: ' + (d / 1000).toFixed(2) + 's'; var cm = { pid: pid, id: c.id, d: d }; if (net) (net.toHost || net.send)('cal', cm); [700, 1800].forEach(function (ms) { setTimeout(function () { if (net) (net.toHost || net.send)('cal', { pid: pid, id: cm.id, d: d }); }, ms); }); setTimeout(function () { try { hi(); } catch (x) {} }, 2600); }   // (sent again, in case one got lost; and with the next hello it counts for later too)
         else { calS.res = -2; ov.querySelector('em').textContent = 'Not enough taps: ask the host to sync again.'; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -2 }); }
-      } else { calS.res = -1; if (net) (net.toHost || net.send)('cal', { pid: pid, id: c.id, d: -1 }); }
+      }
     }
   }
   function svMine(n) { return !n[5] || n[5] === '*' || (svS && svS.g) === n[5]; }   // (the arrows for my team, or for everyone)
