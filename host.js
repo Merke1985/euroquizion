@@ -6790,8 +6790,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tbm = [];
     ['A', 'B'].forEach(function (TM, ti) {
       for (var q = 0; q < 6; q++) {   // (one beam for every player in the team: up to 6)
-        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.5, 8, .5), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .7), 4, ZF(1)); sc.add(tpole); }   // (a light pole beside the floor, left of the green side and right of the purple side)
-        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .25), 4.6 + q * .6, ZF(1) + .35); sc.add(tarm);
+        if (!q) { var tpole = new T.Mesh(new T.BoxGeometry(.5, 12, .5), truss); tpole.position.set((ti ? 1 : -1) * (C * TS / 2 + .7), 6, ZF(1)); sc.add(tpole); }   // (a light pole beside the floor, left of the green side and right of the purple side)
+        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (C * TS / 2 + .25), 8.6 + q * .6, ZF(1) + .35); sc.add(tarm);
         var thead = new T.Mesh(new T.CylinderGeometry(.3, .4, .6, 12), new T.MeshStandardMaterial({ color: '#222', metalness: .6 })); thead.rotation.x = Math.PI / 2; tarm.add(thead);
         var tcone = new T.Mesh(new T.ConeGeometry(1.2, 1, 20, 1, true), new T.MeshBasicMaterial({ color: ti ? '#9a3dff' : '#10ff50', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
         tcone.rotation.x = -Math.PI / 2; tarm.add(tcone);
