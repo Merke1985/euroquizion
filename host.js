@@ -7208,7 +7208,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var tOn = { A: false, B: false }; if (g.t0 && (g.st === 'play' || g.st === 'ready' || g.hout)) ['A', 'B'].forEach(function (T) { tOn[T] = rdyG === T || rdyG === '*' || (g.st === 'play' && !!cur && (cur[5] === T || cur[5] === '*') && (b - cur[0] < 1 || (!!nx && (nx[5] === T || nx[5] === '*')))); });   // (off as soon as their part is done)
     if (ov._3 && ov._3.team) ov._3.team(tOn, tpos);
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
-    var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + .8) word = 'SERVING'; else if (songT >= x + .8 && songT < x + 2.8) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
+    var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + .7) word = 'SERVING'; else if (songT >= x + .7 && songT < x + 2.7) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
     if (ov._3 && ov._3.word) ov._3.word(word);
     if (ov._3 && ov._3.balls) ov._3.balls(songT >= SV_BALLS_AT);   // (from 2:53: the ball rings on the wall)
     if (ov._3 && ov._3.lights) ov._3.lights(!!g.t0);
