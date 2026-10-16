@@ -5764,3 +5764,14 @@ body.rufrozen #waittitle{color:#0b3a66}
 #calui .calpad.hit{animation:calfl .3s ease-out}
 #calui em{display:block;font-style:normal;font-weight:900;font-size:5.6vw;color:#ffd23f;min-height:1.4em}
 .svpick{display:none!important}
+/* Serving: green team (left) and purple team (right) */
+.svchart.l .svteam{color:#4fe07a}.svchart.l{box-shadow:inset 0 0 0 2px rgba(31,179,74,.8)}
+.svchart.r .svteam{color:#c08cff}.svchart.r{box-shadow:inset 0 0 0 2px rgba(138,60,224,.85);background:rgba(30,6,40,.28)}
+.svready.a b{color:#4fe07a;text-shadow:0 0 30px #17a843}.svready.a{box-shadow:0 0 0 4px #1fb34a,0 0 50px rgba(31,179,74,.6)}
+.svready.b b{color:#c08cff;text-shadow:0 0 30px #7a2fd6}.svready.b{background:rgba(20,4,30,.72);box-shadow:0 0 0 4px #8a3ce0,0 0 50px rgba(138,60,224,.6)}
+.svres tr.a td:first-child{border-left-color:#1fb34a}.svres tr.b td:first-child{border-left-color:#8a3ce0}
+.svaf.gA .svtile{box-shadow:0 0 0 2px #1fb34a,0 0 18px #1fb34a}.svaf.gB .svtile{box-shadow:0 0 0 2px #8a3ce0,0 0 18px #8a3ce0}
+.svpball i{background:radial-gradient(circle at 35% 30%,#9cf5b4,#1fb34a 55%,#0a4a1c)}
+.svpball i::before,.svpball i::after{border-color:#0a4a1c}
+.svui.tB .svpball i{background:radial-gradient(circle at 35% 30%,#dcc0ff,#8a3ce0 55%,#38106e)}
+.svui.tB .svpball i::before,.svui.tB .svpball i::after{border-color:#38106e}
