@@ -5986,13 +5986,14 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .fsov .fsboard ol{border:0;border-radius:6px;box-shadow:none;height:100%;justify-content:center;background:radial-gradient(ellipse at 50% 0%,rgba(120,60,220,.35),transparent 70%),linear-gradient(rgba(14,8,40,.86),rgba(8,4,24,.92))}
 .fsov .fsboard::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:6px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 1px,transparent 1px 4px),radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(0,0,0,.3));z-index:3}
 .fsov .fsboard li{position:relative;z-index:2}
-/* the team light poles, drawn again over the singer and her dancers (who are behind them), but under the players */
-.svov .svpole{position:absolute;z-index:8;pointer-events:none;background:linear-gradient(90deg,#6a7080,#c8ccd8 45%,#7a8090);box-shadow:0 0 6px rgba(0,0,0,.4)}
-/* the break after the purple part, until they hop on the skippy balls: every player grooves on the beat */
-.svov[data-brk] .svaf .svdancer{animation:svgroove .4918s ease-in-out infinite alternate;transform-origin:50% 100%}
-.svov[data-brk] .svaf:nth-child(even) .svdancer{animation-delay:-.4918s}
-.svov[data-brk] .svaf .svdancer .al{animation:svgrooveal .4918s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:100% 100%}
-.svov[data-brk] .svaf .svdancer .ar{animation:svgroovear .4918s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:0 100%}
-@keyframes svgroove{from{transform:translateY(0) rotate(-5deg)}to{transform:translateY(-7%) rotate(5deg)}}
-@keyframes svgrooveal{from{transform:rotate(-10deg)}to{transform:rotate(-60deg)}}
-@keyframes svgroovear{from{transform:rotate(60deg)}to{transform:rotate(10deg)}}
+
+/* the break after the purple part, until they hop on the skippy balls: every player grooves on the beat (the whole figure, head included) */
+.svov[data-brk] .svaf .svfb2,.svov[data-brk] .svaf.ok .svfb2{animation:svpgroove .4918s ease-in-out infinite alternate;transform-origin:50% 100%}
+.svov[data-brk] .svaf:nth-child(even) .svfb2{animation-delay:-.4918s}
+.svov[data-brk] .svaf .svdancer .al{animation:svpgrooveal .4918s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:100% 100%}
+.svov[data-brk] .svaf .svdancer .ar{animation:svpgroovear .4918s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:0 100%}
+@keyframes svpgroove{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-6%) rotate(4deg)}}
+@keyframes svpgrooveal{from{transform:rotate(-10deg)}to{transform:rotate(-60deg)}}
+@keyframes svpgroovear{from{transform:rotate(60deg)}to{transform:rotate(10deg)}}
+/* while the song plays, no idle floating up and down: they only move on their steps */
+.svov[data-st="play"]:not([data-brk]) .svaf:not(.ok):not(.oops):not(.walkin):not(.fall) .svfb2,.svov[data-st="ready"] .svaf:not(.walkin) .svfb2{animation:none}
