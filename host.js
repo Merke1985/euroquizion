@@ -6742,6 +6742,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       for (var k = 0; k < 18; k++) { cx.rotate(Math.PI * 2 / 18); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(600, -40); cx.lineTo(600, 40); cx.closePath(); cx.fill(); }
       cx.restore(); var gr = cx.createRadialGradient(ox, oy, 10, ox, oy, 300); gr.addColorStop(0, 'rgba(255,160,170,.25)'); gr.addColorStop(1, 'rgba(40,0,8,.45)'); cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
       if (st.word) {   // the word projected on the wall: big white letters with a glow
+        cx.fillStyle = '#050307'; cx.fillRect(0, 0, W, H);   // (the wall goes black behind the word)
         cx.save(); cx.font = '900 ' + (st.word.length > 5 ? 118 : 150) + 'px Inter, Arial Black, Arial, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.shadowColor = 'rgba(255,255,255,.9)'; cx.shadowBlur = 24; cx.fillStyle = '#fff';
         cx.fillText(st.word, W / 2, H * .36, W * .94); cx.shadowBlur = 0; cx.fillText(st.word, W / 2, H * .36, W * .94); cx.restore();
       }
