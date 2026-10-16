@@ -5938,3 +5938,5 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .shopov.boutique .bqtier em{color:#7a0a2a!important}
 .shopov.boutique .bqi .si{position:relative;display:inline-block}
 .shopov.boutique .bqi .si::after{content:'';position:absolute;left:8%;right:8%;bottom:-.18em;height:.2em;border-radius:50%;background:radial-gradient(ellipse at 50% 30%,#ffe9a8,#a8741a 70%);box-shadow:0 .1em .15em rgba(0,0,0,.5);z-index:-1}
+/* Serving: when the dancing is about to start the presenters walk off the stage (him left, her right) as the music comes up, fading only at the edge */
+.svov:not([data-st="intro"]) .svhosts .ehost{transition:translate 4.4s cubic-bezier(.4,0,.6,1),opacity .5s 3.9s}
