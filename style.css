@@ -5799,3 +5799,17 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svov[data-bph="on"] .svins::after{bottom:0}
 .svov[data-bph="on"] .svaf.ok::after,.svov[data-bph="on"] .svins.ok::after,.svov[data-bph="on"] .svins.jmp::after{animation:svland .5s ease-out .37s both}
 @keyframes svland{0%{opacity:1;transform:scale(.35)}100%{opacity:0;transform:scale(1.5)}}
+/* Serving: the backup dancers walk in profile (legs and arms swinging, fan in front) */
+.svov .svins.svdan.walk .svleadsvg{display:none}
+.svov .svins.svdan.walk .svleadside{display:block}
+.svins.svdan .svsarm.f{transform-box:view-box;transform-origin:168px 178px;animation:svsarm .68s ease-in-out infinite;animation-delay:-.34s}
+/* their fan routine: a new move with every step (fan high, across the chest, arms wide, fan over the head), the fan snapping open */
+.svins.svdan .svdarm{transform-box:view-box;transition:transform .16s cubic-bezier(.3,1.4,.5,1)}
+.svins.svdan .svdarm.r{transform-origin:203px 169px}.svins.svdan .svdarm.l{transform-origin:117px 169px}
+.svins.svdan.fp0 .svdarm.r{transform:rotate(-125deg)}.svins.svdan.fp0 .svdarm.l{transform:rotate(-20deg)}
+.svins.svdan.fp1 .svdarm.r{transform:rotate(62deg)}.svins.svdan.fp1 .svdarm.l{transform:rotate(105deg)}
+.svins.svdan.fp2 .svdarm.r{transform:rotate(-62deg)}.svins.svdan.fp2 .svdarm.l{transform:rotate(62deg)}
+.svins.svdan.fp3 .svdarm.r{transform:rotate(-150deg)}.svins.svdan.fp3 .svdarm.l{transform:rotate(25deg)}
+.svins.svdan .svfanf{transform-box:view-box;transform-origin:231px 244px}
+.svins.svdan.ok .svfanf,.svins.svdan.jmp .svfanf{animation:svfano .3s cubic-bezier(.3,1.5,.5,1)}
+@keyframes svfano{0%{transform:rotate(-50deg) scale(.35)}100%{transform:none}}
