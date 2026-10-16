@@ -7314,7 +7314,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     b.classList.toggle('hidden', playMode === 'local');   // (local play: no stream delay to sync)
     var pm = $('playmode'); if (pm) [].forEach.call(pm.querySelectorAll('button[data-m]'), function (x) { var on = x.getAttribute('data-m') === playMode; x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
     var bt = b.querySelector('.calt'), btx = G.cal ? '🌐 Syncing…' : G.syncOn ? '🌐 Stream delay on · press to turn off' : '🌐 Sync players (stream delay)'; if (bt && bt.textContent !== btx) bt.textContent = btx;
-    b.disabled = !list().some(function (p) { return !p.off; });   // (no players: the sync button does nothing)
+    b.disabled = !list().some(function (p) { return !p.off; }) || (!G.syncOn && !G.cal && !allReady());   // (no players, or not everyone ready yet: first everyone presses Ready, then the sync)
     var rr = $('rdyrow'), ar = allReady(); if (rr) { rr.classList.toggle('synced', ar); var rt = rr.firstChild, rtx = list().some(function (p) { return !p.off; }) ? '✋ Everyone ready' : '👥 No players yet'; if (rt && rt.textContent !== rtx) rt.textContent = rtx; }   // (an empty room: no players, not 'everyone ready')
     if (G.phase === 'lobby' && $('start')) $('start').disabled = !(startBase && ar && calAll());   // (Start: only once everyone is ready, and synced when the stream delay is on)
     if (G.phase !== 'lobby' && $('calov') && !G.cal) $('calov').remove();   // (the game started: the sync results go away)
@@ -7335,6 +7335,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   if ($('playmode')) $('playmode').addEventListener('click', function (e) { var bt = e.target.closest('button[data-m]'); if (bt) playModeSet(bt.getAttribute('data-m')); });
   if ($('calbtn')) $('calbtn').addEventListener('click', function () {   // the first press syncs everyone (stream delay on); the next press turns it off again and forgets the delays
     if (G.cal || !list().some(function (p) { return !p.off; })) return;   // (nobody in the room: nothing to sync)
+    if (!G.syncOn && !allReady()) return;   // (everyone ready first)
     if (G.syncOn) { G.syncOn = false; list().forEach(function (p) { p.sync = null; }); render(); push(); return; }
     calStart();
   });

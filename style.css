@@ -5997,3 +5997,5 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 @keyframes svpgroovear{from{transform:rotate(60deg)}to{transform:rotate(10deg)}}
 /* while the song plays, no idle floating up and down: they only move on their steps */
 .svov[data-st="play"]:not([data-brk]) .svaf:not(.ok):not(.oops):not(.walkin):not(.fall) .svfb2,.svov[data-st="ready"] .svaf:not(.walkin) .svfb2{animation:none}
+/* the shoppers' names: centred under the cabinet, halfway between its bottom and the chequered floor */
+.shopov.boutique .shoppers{left:30.5vw;right:7.5vw;bottom:10.2vh;justify-content:center}
