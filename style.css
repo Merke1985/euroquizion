@@ -2275,7 +2275,7 @@ aside.recapgone{visibility:hidden}
 .jmbalc{position:absolute;right:3vw;top:10vh;width:17vw;height:30vh;z-index:3}
 .jmjul{position:absolute;left:50%;bottom:7vh;height:22vh;transform:translateX(-50%)}
 .jmjul .juliet{height:100%;width:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5))}
-.jmjul.talk .jarm,.jmjul.talk .jhand{animation:jwave .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:0 100%}
+.jmjul.talk .jarm{animation:jwave .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:0 100%}
 @keyframes jwave{to{transform:rotate(-14deg)}}
 .jmrail{position:absolute;left:0;right:0;bottom:2vh;height:7vh;border-radius:6px 6px 0 0;background:repeating-linear-gradient(90deg,#e8dcc4 0 1.2vh,#b8a888 1.2vh 1.6vh,transparent 1.6vh 2.6vh),linear-gradient(#efe4cc,#c9b896);box-shadow:0 8px 18px rgba(0,0,0,.5);border-top:1.2vh solid #f4ead4}
 .jmrail::after{content:'';position:absolute;left:-1vw;right:-1vw;bottom:-2vh;height:2vh;background:#d8c9a8;border-radius:0 0 8px 8px}
@@ -5277,7 +5277,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .jwl{transform-origin:36.5px 0}.jwr{transform-origin:63.5px 0}
 .dooropen .jwl,.dooropen .jwr{transform:scaleX(-.62)}
 .jmjul{z-index:1}
-.jmjul.talk .jarm,.jmjul.talk .jhand{animation:jwave2 .38s ease-in-out infinite alternate}
+.jmjul.talk .jarm{animation:jwave2 .38s ease-in-out infinite alternate}
 @keyframes jwave2{from{transform:rotate(10deg)}to{transform:rotate(-34deg)}}
 /* Rule the World: the singers rise (and stand) with their mouths closed until they start singing */
 .rus2d:not(.dance) .rsmouth{transform:scaleY(.22)}
@@ -5900,7 +5900,7 @@ body.rufrozen #waittitle{color:#0b3a66}
 .svxtra.on{opacity:1}
 
 /* Verona: her hand stays on her arm while she waves (both turn round the shoulder) */
-.jmjul .jarm,.jmjul .jhand{transform-box:view-box!important;transform-origin:134px 122px!important}
+.jmjul .jarm{transform-box:view-box!important;transform-origin:134px 122px!important}
 
 /* The presenters from the back (Verona: they turn round, then walk off into the distance) */
 .ehost .ehback{display:none}
