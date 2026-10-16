@@ -6744,6 +6744,17 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var ppool = new T.Mesh(new T.CircleGeometry(1.4, 28), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .4, blending: T.AdditiveBlending, depthWrite: false })); ppool.rotation.x = -Math.PI / 2; sc.add(ppool);
       parm.visible = ppool.visible = false; party.bm.push({ arm: parm, cone: pcone, pool: ppool, x: 0, z: ZF(1), tx: 0, tz: ZF(1), nt: 0 });
     }
+    // each team's own moving heads, high over the audience: green over the green half, purple over the purple half
+    var tbm = [];
+    ['A', 'B'].forEach(function (TM, ti) {
+      for (var q = 0; q < 3; q++) {
+        var tarm = new T.Group(); tarm.position.set((ti ? 1 : -1) * (2.5 + q * 3.2), 11, ZF(R - 1) + 7); sc.add(tarm);
+        var tcone = new T.Mesh(new T.ConeGeometry(1.2, 1, 20, 1, true), new T.MeshBasicMaterial({ color: ti ? '#9a3dff' : '#10ff50', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
+        tcone.rotation.x = -Math.PI / 2; tarm.add(tcone);
+        var tpool = new T.Mesh(new T.CircleGeometry(1.25, 28), new T.MeshBasicMaterial({ color: ti ? '#7a1fff' : '#00d83a', transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false })); tpool.rotation.x = -Math.PI / 2; sc.add(tpool);
+        tbm.push({ T: TM, q: q, arm: tarm, cone: tcone, pool: tpool, x: (ti ? 1 : -1) * 6, z: ZF(1), a: 0 });
+      }
+    });
     var pflash = new T.PointLight('#ffffff', 0, 40); pflash.position.set(0, 9, ZB + 8); sc.add(pflash);
     // the crowd: glow sticks at the front edge, swaying
     var sticks = new T.InstancedMesh(new T.CylinderGeometry(.045, .045, .55, 6), new T.MeshBasicMaterial({ color: '#ffffff' }), 60), sk = [];
@@ -6808,6 +6819,13 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       });
       for (var bi = 0; bi < bulbs.count; bi++) bulbs.setColorAt(bi, col.set((bi + st.n) % 2 ? '#fff6d0' : '#ff9a30').multiplyScalar((bi + st.n) % 2 ? 1 : .55 + fl * .4)); bulbs.instanceColor.needsUpdate = true;
       mouth.rotation.y = t * .7;
+      tbm.forEach(function (b, j) {   // on the team's dancers (each beam on one of them, in turn), fading in and out
+        var on = !!(st.tOn && st.tOn[b.T]), L0 = (st.tPos && st.tPos[b.T]) || [], P = L0.length ? L0[(b.q + Math.floor(t / 2.2)) % L0.length] : null;
+        b.a += ((on ? 1 : 0) - b.a) * .08; var vis = b.a > .01; b.arm.visible = b.pool.visible = vis; if (!vis) return;
+        var tx = P ? (P.c - (C - 1) / 2) * TS + .3 * Math.sin(t * 1.7 + j) : (b.T === 'B' ? 1 : -1) * C * TS / 4, tz = P ? ZF(Math.max(0, Math.min(R - 1, P.r))) + .3 * Math.cos(t * 1.3 + j) : ZF(2);
+        b.x += (tx - b.x) * .1; b.z += (tz - b.z) * .1; b.pool.position.set(b.x, .15, b.z); b.arm.lookAt(b.x, .15, b.z);
+        var L3 = b.arm.position.distanceTo(b.pool.position); b.cone.scale.set(1, L3, 1); b.cone.position.set(0, 0, L3 / 2); b.cone.material.opacity = .22 * b.a; b.pool.material.opacity = .38 * b.a;
+      });
       var pOn = !!st.party;
       if (pOn && now > party.nextC) { party.nextC = now + 350 + Math.random() * 500; party.lz.forEach(function (l) { if (Math.random() < .5) l.m.material.color.set(PCOL[Math.floor(Math.random() * PCOL.length)]); }); }
       party.lz.forEach(function (l, j) { l.g.visible = pOn; if (!pOn) return; l.g.rotation.set(-.12 + .16 * Math.sin(t * l.sp + l.ph), (j % 2 ? 1 : -1) * (.2 + .55 * Math.sin(t * l.sp * .7 + l.ph * 2)), 0); l.m.material.opacity = .45 + .35 * Math.abs(Math.sin(t * 3 + j)); });
@@ -6848,7 +6866,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      balls: function (on) { st.balls = !!on; }, party: function (on) { st.party = !!on; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      balls: function (on) { st.balls = !!on; }, party: function (on) { st.party = !!on; }, team: function (on, pos) { st.tOn = on; st.tPos = pos; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
@@ -7109,7 +7127,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       dn.style.setProperty('--wd', ins.style.getPropertyValue('--wd'));
       place(dn, lcx + dx, lry, true); if (db) place(db, lc + dx, 2, true);
     });
-    var marks = [];
+    var marks = [], tpos = { A: [], B: [] };
     g.order.forEach(function (k) {
       var el = ov.querySelector('.svaf[data-p="' + k + '"]'); if (!el) return;
       var h = g.home[k], p = players[k], f = g.fall[k], myN = null, myI = -1;
@@ -7119,6 +7137,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       el.classList.toggle('walkin', !!g.entAt && now >= g.entAt && now < g.entAt + SV_WALKIN + 300); el.classList.toggle('offst', !g.entAt || now < g.entAt);
       if (myN && el._mi !== myI && g.st === 'play' && !f) { el._mi = myI; var q0 = g.got[k][myI]; if (q0 == null || q0 > 0) { el.classList.remove('ok', 'oops', 'p0', 'p1', 'p2'); void el.offsetWidth; el.classList.add('ok', 'p' + (myI % 3)); } }   /* (the hop: on the beat, all together) */
       el.classList.toggle('fall', !!f); if (f && el._fa !== f.at) { el._fa = f.at; el.classList.remove('bump'); if (f.bump) { var dv = SV_DV[f.d] || [0, 0], P0 = svProj(ov, c, r), P1 = svProj(ov, c + dv[0], r + dv[1]); el.style.setProperty('--bx', ((P1.x - P0.x) * .45).toFixed(0) + 'px'); el.style.setProperty('--by', ((P1.y - P0.y) * .45).toFixed(0) + 'px'); void el.offsetWidth; el.classList.add('bump'); } var qe0 = el.querySelector('.svq'); qe0.textContent = f.bump ? 'BUMP! 💥' : 'FELL! 🕳️'; qe0.className = 'svq q0'; el._lk = (g.last[k] || {}).at; }
+      if (tpos[g.grp[k]]) tpos[g.grp[k]].push({ c: c, r: r });
       marks.push({ c: c, r: r, col: f ? '#000000' : p && p.col != null && PCOLS[p.col] ? PCOLS[p.col][0] : '#ffffff' });
       var L = g.last[k]; if (L && el._lk !== L.at) { el._lk = L.at; if (!L.q) { el.classList.remove('ok', 'oops', 'p0', 'p1', 'p2'); void el.offsetWidth; el.classList.add('oops'); } var qe = el.querySelector('.svq'); qe.textContent = L.q === 2 ? 'PERFECT' : L.q ? 'GOOD' : 'MISS'; qe.className = 'svq q' + L.q; }
       var pt = el.querySelector('.svpt'), tx = g.st === 'end' ? g.dist[k] + ' pts' : ''; if (pt.textContent !== tx) pt.textContent = tx;   // (the scores only at the end)
@@ -7143,6 +7162,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!g.starts) { g.starts = []; g.chart.forEach(function (n, i) { if (!i || g.chart[i - 1][5] !== n[5] || n[0] - g.chart[i - 1][0] > 6) g.starts.push(n[0]); }); }   // (where a team's turn begins)
     var rdyN = null; if ((g.st === 'play' || g.st === 'ready' || g.hout) && g.t0) g.starts.forEach(function (x) { var ms = (x - b) * SV_BT; if (ms > 0 && ms <= (x === g.starts[0] ? 9000 : 5000)) rdyN = x; });   // (the first one 9 seconds ahead, once the presenters are gone; else 5 seconds before a team's turn: their name and 'Get ready!' in the middle)
     var rdyG = rdyN == null ? null : (g.chart.filter(function (n) { return n[0] === rdyN; })[0] || [])[5], rtx = rdyN == null ? '' : '<b>' + (solo || rdyG === '*' ? 'Everyone' : rdyG === 'A' ? 'Green team' : 'Purple team') + '</b><em>Get ready!</em>', re = ov.querySelector('.svready');
+    // each team's own light beams: on from their 'Get ready!' through their turn, and for both teams in the part together
+    var tOn = { A: false, B: false }; if (g.t0 && (g.st === 'play' || g.st === 'ready' || g.hout)) ['A', 'B'].forEach(function (T) { tOn[T] = rdyG === T || rdyG === '*' || (g.st === 'play' && !!cur && (cur[5] === T || cur[5] === '*') && b - cur[0] < 3); });
+    if (ov._3 && ov._3.team) ov._3.team(tOn, tpos);
     if (re && re._h !== rtx) { re._h = rtx; if (rtx) { re.innerHTML = rtx; re.className = 'svready on ' + (rdyG === 'B' ? 'b' : rdyG === 'A' ? 'a' : 'all'); } else re.classList.remove('on'); }
     var songT = g.t0 ? (now - g.t0 - (g.mp3 ? SV_MP3_LAG : SV_LAG)) / 1000 + (g.mp3 ? SV_MP3_OFF : 0) : -1, word = ''; if (g.st === 'play') SV_WORD.forEach(function (x) { if (songT >= x && songT < x + 1) word = 'SERVING'; else if (songT >= x + 1 && songT < x + 3) word = 'KANT'; });   // (on the LED wall behind the stage at 0:56 and 1:49: SERVING for a second, then KANT for two)
     if (ov._3 && ov._3.word) ov._3.word(word);
