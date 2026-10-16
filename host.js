@@ -6362,7 +6362,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Arrows scroll up on the phone; hit the same arrow as it reaches the top. The phone judges its own taps (it knows
   // the chart and the beat); the host just adds up. The beat (122 BPM, an arrow every two beats) follows the song's clock.
   var SV_VID = 'WPfV96fRvW0', SV_S = 0, SV_BT = 60000 / 122 * 2, SV_PHASE = -3, SV_LAG = 90,   /* (measured: exactly 122 BPM, and in the video the beat starts right at 0:00: bounce 0 = 0:00; the song plays from the start, under the presenters. SV_LAG: the sound reaches the room a little after the player reports its time) */ svLoop = null, svTimer = null, svSongT = null;
-  var SV_STAGES = [{ n: 1, t: 'Green team', from: 34, to: 74, at: 0 }, { n: 2, t: 'Purple team', from: 86, to: 126, at: 78 }, { n: 3, t: 'Everyone together', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 144, SV_HOP = 148, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
+  var SV_STAGES = [{ n: 1, t: 'Green team', from: 34, to: 74, at: 0 }, { n: 2, t: 'Purple team', from: 86, to: 126, at: 78 }, { n: 3, t: 'Everyone together', from: 162, to: 177.5, at: 144 }], SV_END = 178, SV_BALL = 149, SV_HOP = 154, SV_BRK = 128, SV_FAST = [58, 110];   /* (in bounces of two beats; 0:00 = bounce 0. Pink: slow from 0:31.5, double time 0:57–1:13; she walks over; blue: slow from 1:22.6, double time 1:48–2:06; she pauses in the middle; the balls come up at 2:21.6, everyone hops on at 2:29.5; all together at 2:39.3 until 2:55) */
   var SV_ARROW = '<svg viewBox="0 0 100 100"><path d="M50 8 L92 52 L66 52 L66 92 L34 92 L34 52 L8 52 Z" stroke-width="6" stroke-linejoin="round"/></svg>';   // (pointing up; turned per column)
   function svStageAt(t) { var S = SV_STAGES[0]; SV_STAGES.forEach(function (x) { if (t >= x.at) S = x; }); return S; }
   // Stages 1 and 2 are an aerobics class: every arrow you hit is a step on the stage (left, forward, back, right), and the
@@ -6413,7 +6413,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     order.forEach(function (k, i) { G.sv.grp[k] = i % 2 ? 'B' : 'A'; });   // (two groups, taking turns)
     G.sv.home = svHomes(G.sv);
     G.phase = 'sv'; G.barMs = 0; cover(true, '', '', false); masks(true); hostsAway(); push();
-    var g = G.sv, l0 = ['him', 'Tonight, you’ll all be Serving as background dancers for our very special—'];
+    var g = G.sv, l0 = ['him', 'Today, you’ll all be Serving as background dancers for our very special—'];
     var l00 = ['her', 'Thank you for coming to help us during this rehearsal show!'], t00 = 5300 + Math.max(3000, talkLen(l00[0], l00[1], 2400));   // (they walk in first, slowly; then they talk)
     var iv = setInterval(function () { if (G.sv !== g || g.t0) { clearInterval(iv); return; } svShow(); }, 200);   // (until the song plays)
     // First everything loads (the 3D stage); then the presenters walk in to the front of the stage, in the middle, and talk
@@ -6726,21 +6726,18 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var st = { mk: {}, mkL: {}, stage: 1, beatAt: 0, pal: SV3_PAL[0], q: new T.Quaternion(), e: new T.Euler(), s: new T.Vector3(1, 1, 1), p: new T.Vector3() };
     function drawWall(t) {   // red rays turning slowly round a point low in the middle, a little brighter on the beat
       var fl = Math.max(0, 1 - (performance.now() - st.beatAt) / 500), W = 512, H = 256, ox = W / 2, oy = H * .62;
-      if (st.balls) {   // from 2:53: a warm glowing backdrop with rings of glossy balls, each ring turning the other way
-        var bg = cx.createRadialGradient(ox, H * .42, 8, ox, H * .42, 300); bg.addColorStop(0, '#fffbe6'); bg.addColorStop(.18, '#ffe27a'); bg.addColorStop(.42, '#ffb24a'); bg.addColorStop(.7, '#9ad0d0'); bg.addColorStop(1, '#5aaec8'); cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
-        cx.save(); cx.translate(ox, H * .42); cx.rotate(t * .08); cx.fillStyle = 'rgba(255,240,150,.35)'; for (var ry = 0; ry < 16; ry++) { cx.rotate(Math.PI / 8); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(300, -10); cx.lineTo(300, 10); cx.closePath(); cx.fill(); } cx.restore();   // a sunburst behind
+      cx.fillStyle = st.stage === 3 ? '#c4106a' : st.stage === 2 ? '#d01030' : '#e0102a'; cx.fillRect(0, 0, W, H);
+      cx.save(); cx.translate(ox, oy); cx.rotate(t * .05); cx.fillStyle = 'rgba(255,' + (st.stage === 3 ? 110 : 60) + ',90,' + (.22 + fl * .2) + ')';
+      for (var k = 0; k < 18; k++) { cx.rotate(Math.PI * 2 / 18); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(600, -40); cx.lineTo(600, 40); cx.closePath(); cx.fill(); }
+      cx.restore(); var gr = cx.createRadialGradient(ox, oy, 10, ox, oy, 300); gr.addColorStop(0, 'rgba(255,160,170,.25)'); gr.addColorStop(1, 'rgba(40,0,8,.45)'); cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
+      if (st.balls) {   // the last part (from 2:39): rings of glossy balls on the red wall, each ring turning the other way
         for (var rg = 1; rg <= 4; rg++) {
           var rad = 38 * rg, nb = 5 + rg * 3, rot = t * .45 * (rg % 2 ? 1 : -1), bs = 11 + rg * 2;
           for (var q = 0; q < nb; q++) { var an = rot + q / nb * Math.PI * 2, bx = ox + Math.cos(an) * rad * 1.15, by = H * .42 + Math.sin(an) * rad * .78;
             var bgr = cx.createRadialGradient(bx - bs * .35, by - bs * .35, 1, bx, by, bs); bgr.addColorStop(0, '#ffd0e0'); bgr.addColorStop(.35, q % 3 === 0 ? '#ff4f9a' : q % 3 === 1 ? '#e8206e' : '#ff73b0'); bgr.addColorStop(1, '#8a0838');
             cx.fillStyle = bgr; cx.beginPath(); cx.arc(bx, by, bs, 0, Math.PI * 2); cx.fill(); }
         }
-        wtex.needsUpdate = true; return;
       }
-      cx.fillStyle = st.stage === 3 ? '#c4106a' : st.stage === 2 ? '#d01030' : '#e0102a'; cx.fillRect(0, 0, W, H);
-      cx.save(); cx.translate(ox, oy); cx.rotate(t * .05); cx.fillStyle = 'rgba(255,' + (st.stage === 3 ? 110 : 60) + ',90,' + (.22 + fl * .2) + ')';
-      for (var k = 0; k < 18; k++) { cx.rotate(Math.PI * 2 / 18); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(600, -40); cx.lineTo(600, 40); cx.closePath(); cx.fill(); }
-      cx.restore(); var gr = cx.createRadialGradient(ox, oy, 10, ox, oy, 300); gr.addColorStop(0, 'rgba(255,160,170,.25)'); gr.addColorStop(1, 'rgba(40,0,8,.45)'); cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
       if (st.word) {   // the word projected on the wall: big white letters with a glow
         cx.fillStyle = '#050307'; cx.fillRect(0, 0, W, H);   // (the wall goes black behind the word)
         cx.save(); cx.font = '900 ' + (st.word.length > 5 ? 118 : 150) + 'px Inter, Arial Black, Arial, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.shadowColor = 'rgba(255,255,255,.9)'; cx.shadowBlur = 24; cx.fillStyle = '#fff';
@@ -6799,7 +6796,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      balls: function (on) { on = !!on; if (st.balls !== on) { st.balls = on; arcades.forEach(function (a) { a.visible = !on; }); leos.forEach(function (m) { m.visible = on; }); } }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      balls: function (on) { st.balls = !!on; },   // (the leopards stay away: the arcades remain) aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
