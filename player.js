@@ -187,7 +187,8 @@
   var kicked = false;
   function onState(s) {
     SV_STREAM = s && s.sync_on && SV_MY != null ? SV_MY : 0;
-    if ($('svvote') && (!s || s.phase !== 'sv')) $('svvote').classList.add('hidden');   // (the extra-arrows vote: only during Serving)   // (the host turned the stream delay on with a sync)
+    if ($('svvote') && (!s || s.phase !== 'sv')) $('svvote').classList.add('hidden');
+    try { document.body.classList.toggle('svplay', !!(s && s.phase === 'sv' && s.sv && ['intro', 'ready', 'play', 'count'].indexOf(s.sv.st) >= 0)); } catch (e) {}   // (dancing: the screen stays put, no scrolling)   // (the extra-arrows vote: only during Serving)   // (the host turned the stream delay on with a sync)
     if (s && s.phase !== 'clueacc') $('v-wait').classList.remove('accmode');
     if (kicked) return;
     if (s && s.players) charCC(s.players);

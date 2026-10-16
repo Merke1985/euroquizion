@@ -5911,3 +5911,9 @@ body.rufrozen #waittitle{color:#0b3a66}
 .hostsgone .grhosts .ehost .ehback .ehbl{animation:ehbstep .42s ease-in-out infinite alternate}
 .hostsgone .grhosts .ehost .ehback .ehbl.r{animation-delay:-.42s}
 @keyframes ehbstep{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+/* Serving on the phone: everything fits on the screen and nothing scrolls while you dance */
+body.svplay{position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;overscroll-behavior:none}
+body.svplay .svui{touch-action:none}
+body.svplay .svui .svfield{height:min(52vh,calc(100dvh - 300px))}
+body.svplay .svui.pumping .svfield{height:min(64vh,calc(100dvh - 240px))}
+body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);min-height:120px}

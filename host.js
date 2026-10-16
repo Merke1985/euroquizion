@@ -6452,8 +6452,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   if ($('svmp3x')) $('svmp3x').addEventListener('click', function () { svBlob = null; svDb(function (os) { os.delete('serving'); }); svMp3Show(); });
   setTimeout(svMp3Show, 0);
   function svVol(v) { try { (svAudP && svAudP._on ? svAudP : yt).setVolume(v); } catch (e) {} }   // (the music volume setting scales it, like YouTube)
-  var SV_BALLS_AT = 173;   // (2:53)
-  var SV_WORD = [56, 109];   // (song time in seconds: 0:56 and 1:49)
+  var SV_BALLS_AT = 159;   // (2:39: the last part)
+  var SV_WORD = [56, 64, 109, 117];   // (song time in seconds: 0:56, 1:04, 1:49 and 1:57)
   function svSong(on) {
     clearInterval(svSongT); svSongT = null; if (REMOTE) return;
     if (!on) { try { yt.pauseVideo(); } catch (e) {} if (svAud) { svAud.pause(); } if (svAudP) svAudP._on = false; return; }
@@ -6620,11 +6620,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     })(arch.getContext('2d'));
     var archT = function (n) { var t = new T.CanvasTexture(arch); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(n, 1); t.encoding = T.sRGBEncoding; return t; };
     var frameM = new T.MeshStandardMaterial({ color: '#22103a', roughness: .7 });
+    var arcades = [], leos = [];
     [-1, 1].forEach(function (sd) {   // three tiers of arcades on each side, each curving towards the middle
       [[14, 3.6, 1.9, 0], [12, 3.6, 5.6, 1.2], [10, 3.6, 9.3, 2.4]].forEach(function (tr, ti) {
         var n = Math.round(tr[0] / 1.9), g2 = new T.Group();
         var bx = new T.Mesh(new T.BoxGeometry(tr[0], tr[1], 1), [frameM, frameM, frameM, frameM, new T.MeshBasicMaterial({ map: archT(n) }), frameM]);
-        g2.add(bx); g2.position.set(sd * (C * TS / 2 - tr[0] / 2 + 1 - tr[3]), tr[2], ZB - 1.6 - ti * .6); g2.rotation.y = -sd * .22; sc.add(g2);
+        g2.add(bx); g2.position.set(sd * (C * TS / 2 - tr[0] / 2 + 1 - tr[3]), tr[2], ZB - 1.6 - ti * .6); g2.rotation.y = -sd * .22; sc.add(g2); arcades.push(g2);
         var cap = new T.Mesh(new T.BoxGeometry(tr[0] + .2, .18, 1.1), new T.MeshStandardMaterial({ color: '#7a8ad8', metalness: .3 })); cap.position.y = tr[1] / 2 + .09; g2.add(cap);
       });
       // a leopard-print slope in front of the arcades
@@ -6633,6 +6634,32 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       var tri = new T.Shape(); tri.moveTo(0, 0); tri.lineTo(7, 0); tri.quadraticCurveTo(2.5, .6, 0, 4.2); tri.lineTo(0, 0);
       var sl = new T.Mesh(new T.ExtrudeGeometry(tri, { depth: 3.4, bevelEnabled: false }), new T.MeshStandardMaterial({ map: lt, roughness: .9 })); sl.scale.x = -sd; sl.position.set(sd * (C * TS / 2 + 1.2), 0, ZB - .4); sc.add(sl);   // (sloping down towards the stage)
     });
+    // From 2:39 the arcades make way for glowing leopard statues, sitting proud on pink pedestals (our own drawing)
+    var lv = document.createElement('canvas'); lv.width = 256; lv.height = 320; (function (x) {
+      var body = function () {
+        x.beginPath(); x.ellipse(116, 236, 74, 52, 0, 0, Math.PI * 2);   // the haunch
+        x.moveTo(176, 150); x.ellipse(140, 160, 40, 72, -.12, 0, Math.PI * 2);   // the chest, upright
+        x.rect(126, 200, 22, 84); x.rect(156, 196, 22, 88);   // the front legs
+        x.moveTo(184, 82); x.ellipse(146, 82, 40, 36, 0, 0, Math.PI * 2);   // the head
+        x.moveTo(120, 60); x.arc(118, 56, 12, 0, Math.PI * 2); x.moveTo(184, 56); x.arc(174, 52, 12, 0, Math.PI * 2);   // the ears
+      };
+      x.fillStyle = '#ff4f8a'; x.beginPath(); x.ellipse(128, 296, 112, 18, 0, 0, Math.PI * 2); x.fill(); x.fillRect(16, 280, 224, 16); x.fillStyle = '#ff8ab8'; x.beginPath(); x.ellipse(128, 280, 112, 16, 0, 0, Math.PI * 2); x.fill();   // the pink pedestal
+      x.save(); x.shadowColor = 'rgba(255,214,110,.95)'; x.shadowBlur = 26; x.fillStyle = '#f2c46a'; body(); x.fill(); x.restore();   // glowing
+      var gr = x.createLinearGradient(60, 40, 200, 300); gr.addColorStop(0, '#fff0c0'); gr.addColorStop(.5, '#f0c060'); gr.addColorStop(1, '#c8862a'); x.fillStyle = gr; body(); x.fill();
+      x.save(); body(); x.clip();
+      for (var k = 0; k < 70; k++) { var px = 46 + (k * 53) % 170, py = 40 + (k * 97) % 250, rr = 4 + k % 4; x.strokeStyle = '#4a2a10'; x.lineWidth = 2.4; x.beginPath(); x.arc(px, py, rr, .3, Math.PI * 1.6); x.stroke(); x.fillStyle = 'rgba(160,90,20,.55)'; x.beginPath(); x.arc(px, py, rr * .55, 0, Math.PI * 2); x.fill(); }   // the rosettes
+      x.restore();
+      x.fillStyle = '#fff4d8'; x.beginPath(); x.ellipse(152, 98, 22, 15, 0, 0, Math.PI * 2); x.fill(); x.beginPath(); x.ellipse(144, 170, 18, 40, -.1, 0, Math.PI * 2); x.fill();   // the muzzle and the chest
+      x.fillStyle = '#3a1a0a'; x.beginPath(); x.moveTo(146, 90); x.lineTo(160, 90); x.lineTo(153, 99); x.closePath(); x.fill(); x.strokeStyle = '#3a1a0a'; x.lineWidth = 2; x.beginPath(); x.moveTo(153, 99); x.lineTo(153, 106); x.moveTo(144, 108); x.quadraticCurveTo(153, 112, 162, 108); x.stroke();
+      [[132, 76], [166, 76]].forEach(function (e) { x.fillStyle = '#c8e05a'; x.beginPath(); x.ellipse(e[0], e[1], 7, 5, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#111'; x.beginPath(); x.ellipse(e[0], e[1], 2, 4.5, 0, 0, Math.PI * 2); x.fill(); });
+      x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(140, 102); x.lineTo(112, 98); x.moveTo(140, 106); x.lineTo(114, 110); x.moveTo(166, 102); x.lineTo(194, 98); x.moveTo(166, 106); x.lineTo(192, 110); x.stroke();
+      x.strokeStyle = '#c8862a'; x.lineWidth = 12; x.lineCap = 'round'; x.beginPath(); x.moveTo(52, 260); x.quadraticCurveTo(20, 230, 40, 200); x.stroke();   // the tail, curling up
+    })(lv.getContext('2d'));
+    var lvT = new T.CanvasTexture(lv); lvT.encoding = T.sRGBEncoding;
+    [-1, 1].forEach(function (sd) { [[10.5, 3.2, 9.4, 1.4], [6.4, 1.6, 5.2, 0]].forEach(function (lp) {   // on each side: a big one high at the back, a smaller one in front, looking towards the middle
+      var m = new T.Mesh(new T.PlaneGeometry(lp[0], lp[0] * 1.25), new T.MeshBasicMaterial({ map: lvT, transparent: true, depthWrite: false }));
+      m.position.set(sd * (C * TS / 2 - lp[2]), lp[1] + lp[0] * .55, ZB - 1.6 - lp[3]); m.rotation.y = -sd * .22; m.scale.x = sd < 0 ? 1 : -1; m.visible = false; sc.add(m); leos.push(m);
+    }); });
     var gold = new T.MeshStandardMaterial({ color: '#ffc93c', metalness: .9, roughness: .25, emissive: '#5a3a00' });
     var hframe = new T.MeshStandardMaterial({ color: '#2a0a34', metalness: .4, roughness: .5 });
     var hp = []; for (i = 0; i <= 120; i++) { var a = i / 120 * Math.PI * 2; hp.push(new T.Vector3(16 * Math.pow(Math.sin(a), 3) * .36, (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) * .36, 0)); }
@@ -6700,11 +6727,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     function drawWall(t) {   // red rays turning slowly round a point low in the middle, a little brighter on the beat
       var fl = Math.max(0, 1 - (performance.now() - st.beatAt) / 500), W = 512, H = 256, ox = W / 2, oy = H * .62;
       if (st.balls) {   // from 2:53: a warm glowing backdrop with rings of glossy balls, each ring turning the other way
-        var bg = cx.createRadialGradient(ox, H * .42, 8, ox, H * .42, 330); bg.addColorStop(0, '#fff6c8'); bg.addColorStop(.25, '#ffd36a'); bg.addColorStop(.6, '#f08a3a'); bg.addColorStop(1, '#5aa8b8'); cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
-        for (var rg = 1; rg <= 5; rg++) {
-          var rad = 30 * rg, nb = 5 + rg * 4, rot = t * .45 * (rg % 2 ? 1 : -1), bs = 7 + rg * 1.6;
+        var bg = cx.createRadialGradient(ox, H * .42, 8, ox, H * .42, 300); bg.addColorStop(0, '#fffbe6'); bg.addColorStop(.18, '#ffe27a'); bg.addColorStop(.42, '#ffb24a'); bg.addColorStop(.7, '#9ad0d0'); bg.addColorStop(1, '#5aaec8'); cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
+        cx.save(); cx.translate(ox, H * .42); cx.rotate(t * .08); cx.fillStyle = 'rgba(255,240,150,.35)'; for (var ry = 0; ry < 16; ry++) { cx.rotate(Math.PI / 8); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(300, -10); cx.lineTo(300, 10); cx.closePath(); cx.fill(); } cx.restore();   // a sunburst behind
+        for (var rg = 1; rg <= 4; rg++) {
+          var rad = 38 * rg, nb = 5 + rg * 3, rot = t * .45 * (rg % 2 ? 1 : -1), bs = 11 + rg * 2;
           for (var q = 0; q < nb; q++) { var an = rot + q / nb * Math.PI * 2, bx = ox + Math.cos(an) * rad * 1.15, by = H * .42 + Math.sin(an) * rad * .78;
-            var bgr = cx.createRadialGradient(bx - bs * .35, by - bs * .35, 1, bx, by, bs); bgr.addColorStop(0, '#ffd0e0'); bgr.addColorStop(.35, q % 3 === 0 ? '#ff3a7a' : q % 3 === 1 ? '#e0102a' : '#ff6aa0'); bgr.addColorStop(1, '#7a0420');
+            var bgr = cx.createRadialGradient(bx - bs * .35, by - bs * .35, 1, bx, by, bs); bgr.addColorStop(0, '#ffd0e0'); bgr.addColorStop(.35, q % 3 === 0 ? '#ff4f9a' : q % 3 === 1 ? '#e8206e' : '#ff73b0'); bgr.addColorStop(1, '#8a0838');
             cx.fillStyle = bgr; cx.beginPath(); cx.arc(bx, by, bs, 0, Math.PI * 2); cx.fill(); }
         }
         wtex.needsUpdate = true; return;
@@ -6770,7 +6798,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         pv.set(X + TS, Y, Z).project(cam); return { x: x, y: y, s: Math.abs((pv.x + 1) / 2 * w - x) };
       },
       mark: function (L, ld) { st.mk = {}; L.forEach(function (m) { var c = Math.round(m.c), r = Math.round(m.r); if (c >= 0 && c < C && r >= 0 && r < R) st.mk[r * C + c] = m.col; }); st.mkL = {}; if (ld) { var lc = Math.round(ld.c), lr = Math.round(ld.r); if (lc >= 0 && lc < C && lr >= 0 && lr < LR) st.mkL[lr * C + lc] = '#ff2a3d'; } },
-      balls: function (on) { st.balls = !!on; }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
+      balls: function (on) { on = !!on; if (st.balls !== on) { st.balls = on; arcades.forEach(function (a) { a.visible = !on; }); leos.forEach(function (m) { m.visible = on; }); } }, aim: function (L) { st.aim = L; }, lights: function (on) { st.lights = !!on; }, word: function (w) { w = w || ''; if (st.word !== w) { st.word = w; lastW = 0; } },
       beat: function () {}, stage: function (n) { if (st.stage !== n) { st.stage = n; st.pal = SV3_PAL[n - 1] || SV3_PAL[0]; } } };
   }
   // the dance captain: an original character with long straight red hair, a sheer black top with long sleeves, a red
