@@ -2999,8 +2999,10 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<path d="M83 81 Q90 76 97 80 M103 80 Q110 76 117 81" stroke="#4a1a08" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
     '<path d="M100 93 Q98 101 96.4 103.6 Q99 106 100.6 105 M100.6 105 Q102.4 106 104 103.6" stroke="#9a6040" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
     '<ellipse cx="84" cy="104" rx="6.5" ry="3.4" fill="#ff7a8a" opacity=".32"/><ellipse cx="116" cy="104" rx="6.5" ry="3.4" fill="#ff7a8a" opacity=".32"/>' +
-    '<path d="M90 107 Q100 116 110 107" stroke="#c0204a" stroke-width="4" fill="#fff" stroke-linecap="round"/>' +
-    '<g class="emouth"><g class="emin"><path d="M92.5 108.5 Q100 107.5 107.5 108.5 Q107.5 118 100 118 Q92.5 118 92.5 108.5 Z" fill="#8a2a36"/><rect x="94.1" y="108.5" width="11.8" height="2.3" rx="1.1" fill="#fff"/><ellipse cx="100" cy="116.2" rx="4.5" ry="2" fill="#e07a80"/></g><path class="elip" style="--lh:7px" d="M93 109 Q100 113.5 107 109" stroke="#c0204a" stroke-width="3.6" fill="none" stroke-linecap="round"/></g>' +   // (opens when she talks)
+        '<path d="M88.5 107.4 Q100 109.6 111.5 107.4 Q108 114.4 100 115 Q92 114.4 88.5 107.4 Z" fill="#d42a5c"/><ellipse cx="100" cy="111.6" rx="4.6" ry="1.4" fill="#ff9ab4" opacity=".7"/>' +   // (her lips, closed in a smile: the lower lip with a shine…)
+    '<g class="emouth"><g class="emin"><path d="M89.5 107.8 Q100 110 110.5 107.8 Q109 117.4 100 118.4 Q91 117.4 89.5 107.8 Z" fill="#5a1220"/><path d="M91.5 108.2 Q100 110 108.5 108.2 L108 110.8 Q100 112.2 92 110.8 Z" fill="#fff"/><ellipse cx="100" cy="116.2" rx="4.6" ry="1.9" fill="#e0707e"/></g>' +   // (…the mouth opening when she talks, hinged under the upper lip…)
+    '<path class="elip" style="--lh:6.5px" d="M89 108 Q100 110 111 108 Q107.6 114.6 100 115.2 Q92.4 114.6 89 108 Z" fill="#d42a5c"/>' +   // (…the lower lip going down with it…)
+    '<path d="M88 107.2 Q92.6 104.4 96.8 105.8 Q100 104.2 103.2 105.8 Q107.4 104.4 112 107.2 Q100 109.6 88 107.2 Z" fill="#b81c48"/><path d="M93 106 Q96.8 105.2 99 106.4" stroke="rgba(255,255,255,.35)" stroke-width=".9" fill="none"/></g>' +   // (…and the upper lip with its cupid's bow, always on top)
     '<path d="M72 94 Q66 46 104 44 Q136 46 132 84 Q124 62 104 62 Q90 64 84 72 Q78 80 77 96 Z" fill="url(#ehhair2)"/><path d="M84 52 Q100 42 124 52" stroke="#c46a3a" stroke-width="2" fill="none" stroke-linecap="round" opacity=".75"/>' +
     '<path d="M73 86 Q56 140 64 190 Q70 196 75 186 Q68 150 76 104 Z M127 86 Q144 140 136 190 Q130 196 125 186 Q132 150 124 104 Z" fill="url(#ehhair2)"/><path d="M68 112 Q62 150 68 182 M132 112 Q138 150 132 182" stroke="#c46a3a" stroke-width="1.6" fill="none" opacity=".6"/>' +
     '<circle cx="75.5" cy="103" r="2.4" fill="#ffd23f"/><path d="M75.5 105 L73.3 111 L75.5 116 L77.7 111 Z" fill="#ff9ad0" stroke="#ffd23f" stroke-width=".8"/><circle cx="124.5" cy="103" r="2.4" fill="#ffd23f"/><path d="M124.5 105 L122.3 111 L124.5 116 L126.7 111 Z" fill="#ff9ad0" stroke="#ffd23f" stroke-width=".8"/>' +
@@ -8918,29 +8920,34 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var HOST_HIM_SIDE = '<g class="ehside">' +
     '<ellipse cx="102" cy="410" rx="46" ry="8" fill="rgba(0,0,0,.45)"/>' +
     '<g class="eharm b"><path d="M100 160 Q96 210 98 258" stroke="#121640" stroke-width="19" fill="none" stroke-linecap="round"/><circle cx="98" cy="264" r="8.5" fill="url(#ehskin)"/></g>' +
-    '<g class="ehleg b"><path d="M92 298 L89 400 L109 400 L111 298 Z" fill="#0a0c2a"/><path d="M86 398 L112 398 Q122 400 124 408 L124 412 L86 412 Z" fill="#050510"/></g>' +
+    '<g class="ehleg b"><path d="M92 298 L89 400 L109 400 L111 298 Z" fill="#0a0c2a"/><path d="M86 398 L112 398 Q122 400 124 408 L124 412 L86 412 Z" fill="#050510"/><path d="M96 401 Q108 400 118 404" stroke="rgba(255,255,255,.4)" stroke-width="1.5" fill="none"/></g>' +
     '<path d="M80 150 Q100 134 122 146 Q128 200 126 310 Q104 320 80 310 Q76 230 80 150 Z" fill="url(#ehsuit)"/>' +
-    '<path d="M114 146 L125 150 L124 214 L112 200 Z" fill="#fff"/><path d="M117 154 L123 156 L121 196 L116 190 Z" fill="#e0234a"/>' +
-    '<g class="ehleg f"><path d="M92 298 L89 400 L109 400 L111 298 Z" fill="#0d1033"/><path d="M86 398 L112 398 Q122 400 124 408 L124 412 L86 412 Z" fill="#050510"/></g>' +
+    '<path d="M114 146 L125 150 L124 214 L112 200 Z" fill="#fff"/><path d="M110 148 L120 152 L114 196 L104 214 Z" fill="url(#ehlapel)"/><path d="M120 148 L130 151 L128 160 L121 156 Z" fill="#d81e45"/><circle cx="122" cy="152" r="2.4" fill="#a8122f"/>' +
+    '<path d="M104 180 L118 178 L117 186 L105 187 Z" fill="#0f1238"/><path d="M106 180 L109 174 L112 179 L115 173 L117 179 Z" fill="#ffd23f"/><circle cx="112" cy="244" r="3" fill="#d9b04a"/><circle cx="112" cy="270" r="3" fill="#d9b04a"/>' +
+    '<g class="ehleg f"><path d="M92 298 L89 400 L109 400 L111 298 Z" fill="#0d1033"/><path d="M86 398 L112 398 Q122 400 124 408 L124 412 L86 412 Z" fill="#050510"/><path d="M96 401 Q108 400 118 404" stroke="rgba(255,255,255,.4)" stroke-width="1.5" fill="none"/></g>' +
     '<rect x="96" y="118" width="16" height="24" fill="#d89b72"/>' +
     '<path d="M78 92 Q76 54 106 52 Q134 54 132 92 Q132 104 136 110 Q131 114 130 116 Q128 128 118 130 Q104 134 92 126 Q78 116 78 92 Z" fill="url(#ehskin)"/>' +
-    '<ellipse cx="117" cy="91" rx="2.8" ry="3.6" fill="#2a1a10"/><path d="M111 82 q6 -3 12 0" stroke="#2b1d14" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M112 90 Q117 86.5 122 90 Q117 93.5 112 90 Z" fill="#fff"/><circle cx="118.6" cy="90.2" r="2.5" fill="#4a2a16"/><circle cx="119.4" cy="89.4" r=".8" fill="#fff"/><path d="M110 81 Q117 76 125 81" stroke="#2b1d14" stroke-width="3.6" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="116" cy="106" rx="6" ry="3" fill="#f08a80" opacity=".22"/>' +
     '<path d="M116 112 Q124 118 130 112" stroke="#7a3b2a" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-    '<path d="M76 92 Q72 52 104 50 Q132 50 133 74 Q122 62 104 64 Q92 68 90 92 Q88 104 84 112 Q78 104 76 92 Z" fill="#2b1d14"/><ellipse cx="92" cy="98" rx="5" ry="7" fill="#d89b72"/>' +
-    '<g class="eharm f"><path d="M104 162 Q110 214 112 256" stroke="url(#ehsuit)" stroke-width="20" fill="none" stroke-linecap="round"/><rect x="104" y="248" width="34" height="24" rx="3" fill="#ffd23f" transform="rotate(-8 121 260)"/><circle cx="112" cy="262" r="9" fill="url(#ehskin)"/></g>' +
+    '<path d="M76 92 Q70 50 104 46 Q134 46 135 72 Q124 58 104 61 Q92 66 90 92 Q88 104 84 112 Q78 104 76 92 Z" fill="url(#ehhair)"/><path d="M96 50 Q118 40 134 60 Q120 52 104 54 Z" fill="#5a3e2a"/><path d="M98 52 Q116 44 130 56" stroke="#8a6a4a" stroke-width="1.8" fill="none" opacity=".7"/>' +
+    '<ellipse cx="92" cy="98" rx="5.5" ry="8" fill="#e7b48c"/><path d="M93 93 Q90 98 93 103" stroke="#c4875e" stroke-width="1.4" fill="none"/>' +
+    '<g class="eharm f"><path d="M104 162 Q110 214 112 256" stroke="url(#ehsuit)" stroke-width="20" fill="none" stroke-linecap="round"/><path d="M103 250 L121 252" stroke="#fff" stroke-width="5"/><rect x="104" y="248" width="34" height="24" rx="3" fill="#ffd23f" transform="rotate(-8 121 260)"/><circle cx="112" cy="262" r="9" fill="url(#ehskin)"/></g>' +
     '</g>';
   var HOST_HER_SIDE = '<g class="ehside">' +
     '<ellipse cx="102" cy="410" rx="58" ry="9" fill="rgba(0,0,0,.45)"/>' +
-    '<path d="M100 50 Q72 50 70 96 Q66 142 74 178 Q90 188 106 178 Q100 142 100 112 Z" fill="#6b2a12"/>' +   // (her long hair, down her back)
+    '<path d="M100 50 Q72 50 70 96 Q66 142 74 178 Q90 188 106 178 Q100 142 100 112 Z" fill="url(#ehhair2)"/><path d="M80 80 Q74 130 82 176 M92 70 Q86 130 94 180" stroke="#c46a3a" stroke-width="1.6" fill="none" opacity=".55"/>' +   // (her long hair, down her back)
     '<g class="eharm b"><path d="M98 156 Q94 200 96 240" stroke="#b9805a" stroke-width="13" fill="none" stroke-linecap="round"/><circle cx="96" cy="244" r="7.5" fill="url(#ehskin2)"/></g>' +
     '<g class="ehleg b"><path d="M90 396 L114 396 Q122 400 122 408 L90 408 Z" fill="#ffd23f"/></g>' +
     '<g class="ehgown"><path d="M86 150 Q104 140 120 150 L124 232 Q150 330 158 408 Q104 418 52 408 Q66 330 84 232 Z" fill="url(#ehgown)"/><path d="M86 150 Q104 140 120 150 L124 232 Q150 330 158 408 Q104 418 52 408 Q66 330 84 232 Z" fill="url(#ehsparkle)"/><path d="M84 232 Q104 240 124 232" stroke="#ffd23f" stroke-width="4" fill="none"/></g>' +
     '<g class="ehleg f"><path d="M100 400 L126 400 Q134 404 134 410 L100 410 Z" fill="#ffd23f"/></g>' +
-    '<rect x="96" y="118" width="14" height="26" fill="#b9805a"/>' +
+    '<rect x="96" y="118" width="14" height="26" fill="#b9805a"/><path d="M98 140 Q106 148 112 140" stroke="#ffd23f" stroke-width="1.6" fill="none"/><path d="M108 146 L106 150 L108 155 L110 150 Z" fill="#ff9ad0"/>' +
     '<path d="M82 90 Q80 56 108 56 Q132 58 132 90 Q132 100 136 106 Q131 110 130 112 Q128 124 118 126 Q104 130 94 122 Q82 112 82 90 Z" fill="url(#ehskin2)"/>' +
-    '<ellipse cx="118" cy="89" rx="2.6" ry="3.4" fill="#2a1a10"/><path d="M121 85 l3 -3" stroke="#2a1a10" stroke-width="2" stroke-linecap="round"/>' +
-    '<path d="M117 109 Q124 114 129 108" stroke="#c0204a" stroke-width="3.5" fill="none" stroke-linecap="round"/>' +
-    '<path d="M80 96 Q76 54 108 50 Q134 52 134 78 Q124 64 108 66 Q98 70 98 92 Q98 106 94 118 Q84 112 80 96 Z" fill="#6b2a12"/><path d="M86 66 Q102 54 126 60" stroke="#8a3e1e" stroke-width="2.5" fill="none" opacity=".7"/><ellipse cx="99" cy="98" rx="4" ry="6" fill="#b9805a"/><circle cx="99" cy="106" r="3" fill="#ffd23f"/>' +   // (the hair: top and back of the head, the ear and earring just showing)
+    '<ellipse cx="118" cy="84" rx="6.5" ry="3" fill="#c060a0" opacity=".3"/><path d="M113 89 Q118 85.5 123 89 Q118 92.5 113 89 Z" fill="#fff"/><circle cx="119" cy="89" r="2.4" fill="#4a2410"/><circle cx="119.8" cy="88.2" r=".8" fill="#fff"/>' +
+    '<path d="M112.5 88.6 Q118 84.6 123.5 88.6" stroke="#1a0a06" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M121 86 l2.6 -3 M123.4 87.6 l3.2 -2" stroke="#1a0a06" stroke-width="1.2" stroke-linecap="round"/><path d="M112 79 Q118 75 124 79" stroke="#4a1a08" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="116" cy="102" rx="6" ry="3.2" fill="#ff7a8a" opacity=".32"/>' +
+    '<path d="M120 107 Q125 105.5 130 107.5 Q126 109 120 108.5 Z" fill="#b81c48"/><path d="M120 108.5 Q126 109 130 107.5 Q128 113 122 112 Z" fill="#d42a5c"/><path d="M123 110 Q125.5 110.4 127 109.6" stroke="#ff9ab4" stroke-width=".9" fill="none"/>' +
+    '<path d="M80 96 Q76 54 108 50 Q134 52 134 78 Q124 64 108 66 Q98 70 98 92 Q98 106 94 118 Q84 112 80 96 Z" fill="url(#ehhair2)"/><path d="M86 66 Q102 54 126 60" stroke="#c46a3a" stroke-width="2.5" fill="none" opacity=".7"/><ellipse cx="99" cy="98" rx="4" ry="6" fill="#b9805a"/><circle cx="99" cy="105" r="2.4" fill="#ffd23f"/><path d="M99 107 L97 113 L99 118 L101 113 Z" fill="#ff9ad0" stroke="#ffd23f" stroke-width=".8"/>' +   // (the hair: top and back of the head, the ear and earring just showing)
     '<g class="eharm f"><path d="M106 158 Q112 196 122 214" stroke="#b9805a" stroke-width="13" fill="none" stroke-linecap="round"/><rect x="122" y="192" width="7" height="28" rx="3" fill="#222" transform="rotate(20 125 206)"/><circle cx="121" cy="192" r="7.5" fill="#9aa0b4"/><circle cx="124" cy="216" r="7.5" fill="url(#ehskin2)"/></g>' +
     '</g>';
   // The presenters from the back (turning round and walking away into the distance)
