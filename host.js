@@ -6661,12 +6661,12 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   var SV_LEAD = (function () {
     var i;
     var sleeve = function (d, wd) { wd = wd || 17; return '<path d="' + d + '" stroke="#f0c8b2" stroke-width="' + (wd - 4) + '" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" stroke="rgba(14,10,14,.8)" stroke-width="' + wd + '" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" stroke="rgba(255,255,255,.16)" stroke-width="2" fill="none" stroke-dasharray="2 6"/>'; };
-    var spark = ''; for (i = 0; i < 14; i++) spark += '<circle cx="' + (150 + (i * 37 % 21)) + '" cy="' + (266 + (i * 13 % 24)) + '" r="' + (1 + i % 2) + '" fill="#fff"/>';
+    var spark = ''; for (i = 0; i < 16; i++) spark += '<circle cx="' + (136 + (i * 37 % 48)) + '" cy="' + (268 + (i * 13 % 26)) + '" r="' + (.7 + i % 3 * .4) + '" fill="#fff" opacity="' + (.5 + i % 2 * .35) + '"/>';
     return '<svg viewBox="0 0 320 540" class="svleadsvg" aria-hidden="true"><defs>' +
       '<pattern id="svleo" width="30" height="28" patternUnits="userSpaceOnUse"><rect width="30" height="28" fill="#c20e1c"/><g fill="#1e0204"><path d="M3 6 q2 -3 5 -2 l-1 2 q-2 0 -4 2z M10 4 q3 0 4 3 l-2 0 q-1 -2 -2 -1z M13 9 q0 3 -3 4 l0 -2 q2 -1 1 -2z M4 11 q2 2 5 2 l-1 1 q-3 0 -4 -2z"/><path d="M18 17 q3 -2 6 0 l-1 1 q-2 -1 -4 0z M25 19 q1 3 -1 5 l-1 -1 q1 -2 0 -3z M17 22 q2 3 5 3 l0 -1 q-3 -1 -4 -3z"/><circle cx="26" cy="5" r="1.5"/><circle cx="6" cy="22" r="1.7"/><circle cx="20" cy="9" r="1.1"/></g><circle cx="8.5" cy="8.5" r="2.4" fill="#86101a"/><circle cx="21" cy="21" r="2.2" fill="#86101a"/></pattern>' +
       '<linearGradient id="svhair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3a2e"/><stop offset=".55" stop-color="#e3141e"/><stop offset="1" stop-color="#9a0812"/></linearGradient>' +
       '<radialGradient id="svskin" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#f6dccb"/><stop offset="1" stop-color="#e2b296"/></radialGradient>' +
-      '<linearGradient id="svsilv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f4fb"/><stop offset=".5" stop-color="#a9acc0"/><stop offset="1" stop-color="#e6e7f2"/></linearGradient></defs>' +
+      '<linearGradient id="svsilv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f4fb"/><stop offset=".5" stop-color="#a9acc0"/><stop offset="1" stop-color="#e6e7f2"/></linearGradient><pattern id="svlace" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="rgba(215,218,235,.1)"/><circle cx="4.5" cy="4.5" r="2.8" fill="none" stroke="rgba(236,238,250,.36)" stroke-width=".9"/><circle cx="0" cy="0" r="1.1" fill="rgba(255,255,255,.75)"/><circle cx="9" cy="9" r="1.1" fill="rgba(255,255,255,.75)"/></pattern></defs>' +
       '<ellipse cx="160" cy="528" rx="96" ry="9" fill="rgba(0,0,0,.35)"/>' +
       '<g class="svlbody">' +
       // back hair: long, straight, dark red, past the waist
@@ -6686,7 +6686,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M102 196 Q130 178 160 196 Q190 178 218 196 L216 236 Q206 266 222 298 L98 298 Q114 266 104 236 Z" fill="url(#svleo)" stroke="#1e0204" stroke-width="2"/>' +
       '<path d="M108 196 Q132 218 160 200 Q188 218 212 196" stroke="#111" stroke-width="5" fill="none"/>' +
       '<path d="M130 216 L134 296 M190 216 L186 296 M160 204 L160 258" stroke="#3e0206" stroke-width="1.8" opacity=".7"/>' +
-      '<path d="M146 260 L174 260 L170 296 L150 296 Z" fill="url(#svsilv)" stroke="#8a8ca0" stroke-width="1"/>' + spark + '<g class="svfringe" stroke="#0a0608" stroke-width="2.2" stroke-linecap="round">' + [104, 110, 116, 204, 210, 216].map(function (x, k) { return '<path d="M' + x + ' 196 Q' + (x + (k < 3 ? -4 : 4)) + ' 250 ' + (x + (k < 3 ? -2 : 2)) + ' ' + (300 + k % 3 * 14) + '" fill="none"/>'; }).join('') + '</g>' +
+      '<path d="M126 268 Q143 259 160 271 Q177 259 194 268 Q189 285 174 296 Q166 302 160 302 Q154 302 146 296 Q131 285 126 268 Z" fill="url(#svlace)"/><path d="M126 268 Q143 259 160 271 Q177 259 194 268" stroke="rgba(236,238,250,.45)" stroke-width="1.2" fill="none" stroke-dasharray="2 2.5"/>' + spark +   /* (a subtle sparkly silver lace panel low on the belly) */ '<g class="svfringe" stroke="#0a0608" stroke-width="2.2" stroke-linecap="round">' + [104, 110, 116, 204, 210, 216].map(function (x, k) { return '<path d="M' + x + ' 196 Q' + (x + (k < 3 ? -4 : 4)) + ' 250 ' + (x + (k < 3 ? -2 : 2)) + ' ' + (300 + k % 3 * 14) + '" fill="none"/>'; }).join('') + '</g>' +
       // the open hand, out to the side
       '<g class="svlarm r">' + sleeve('M212 172 Q242 206 266 228', 19) + '<path d="M266 228 l14 -2 M266 228 l15 4 M266 228 l12 10 M266 228 l6 13 M266 228 l10 -10" stroke="#f0c8b2" stroke-width="4.5" stroke-linecap="round"/><circle cx="266" cy="228" r="9" fill="#f0c8b2"/></g>' +
       // head: a round face, eyes closed in the moment, big red lips singing
@@ -6819,7 +6819,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<ellipse cx="166" cy="530" rx="70" ry="8" fill="rgba(0,0,0,.35)"/>' +
       '<g class="svsbody">' +
       // hair streaming back, and the sheer cape fluttering behind her
-      '<path d="M172 32 Q118 26 106 84 Q90 150 86 232 Q84 296 100 338 Q128 330 140 280 Q152 220 154 156 Q158 118 150 96 Z" fill="url(#svhair)"/><path d="M118 90 Q104 170 104 250 M132 96 Q122 180 126 290" stroke="#9a0812" stroke-width="2" fill="none" opacity=".5"/>' +   // (big, voluminous red hair down her back)
+      '<path d="M178 30 Q126 34 116 96 Q108 160 110 232 Q112 292 120 344 Q138 352 156 344 Q150 284 152 222 Q152 160 160 112 Z" fill="url(#svhair)"/><path d="M128 110 Q120 200 128 336 M140 120 Q134 220 142 340 M150 130 Q146 220 150 340" stroke="#7a0610" stroke-width="1.6" fill="none" opacity=".45"/>' +   // (long straight red hair, falling down her back to the waist)
       '<path class="svscape" d="M134 168 Q84 240 46 400 Q90 404 132 372 Q130 280 150 190 Z" fill="rgba(8,4,10,.78)"/>' +
       '<g class="svsarm b">' + sleeve('M160 176 Q128 220 120 262') + '<circle cx="120" cy="264" r="8.5" fill="#f0c8b2"/></g>' +
       leg('b') +
@@ -6828,16 +6828,19 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       '<path d="M150 150 Q140 210 146 250 Q138 290 150 304 L190 304 Q204 270 196 240 Q214 210 206 180 Q200 152 182 146 Z" fill="rgba(12,8,12,.82)"/>' +
       '<path d="M148 196 Q176 186 206 196 Q214 214 200 240 Q206 270 190 302 L150 302 Q140 280 146 250 Q140 222 148 196 Z" fill="url(#svleo)" stroke="#1e0204" stroke-width="2"/>' +
       '<path d="M150 198 Q178 192 206 198" stroke="#111" stroke-width="5" fill="none"/>' +
-      '<path d="M176 262 L196 262 L192 296 L176 296 Z" fill="url(#svsilv)"/>' +
+      '<path d="M172 266 Q186 260 199 266 Q195 284 186 297 Q179 302 174 296 Z" fill="url(#svlace)"/>' +   // (the lace panel, subtle)
       leg('f') +
       // head in profile: nose and lips to the right, eye closed, singing
       '<path d="M164 120 L180 120 L182 150 L164 150 Z" fill="url(#svskin)"/><path d="M162 118 L182 118 L184 152 L162 152 Z" fill="rgba(12,8,12,.82)"/>' +
-      '<path d="M140 88 Q140 50 176 48 Q210 50 212 88 Q214 96 220 104 Q214 108 212 110 Q214 116 210 120 Q208 128 200 130 Q186 136 172 128 Q148 120 140 88 Z" fill="url(#svskin)"/>' +
-      '<path d="M196 88 Q202 92 208 88" stroke="#0c0c0c" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M194 78 Q202 72 210 78" stroke="#3a0a10" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
-      '<ellipse cx="190" cy="104" rx="8" ry="4.5" fill="#ff8f9a" opacity=".45"/>' +
-      '<g class="svsmouth"><path d="M204 112 Q214 112 214 118 Q212 126 204 124 Z" fill="#c0102a"/><path d="M206 114 Q211 115 211 118 Q210 122 206 121 Z" fill="#4a0610"/></g>' +
-      '<path d="M132 108 Q116 36 174 26 Q218 26 220 76 Q216 84 208 80 Q198 56 170 58 Q154 64 154 96 Q152 116 140 120 Z" fill="url(#svhair)"/><path d="M146 50 Q170 34 204 46" stroke="#ff7a5a" stroke-width="3" fill="none" opacity=".55"/>' +   // (the crown: covering the top and back of her head)
-      '<path d="M150 74 Q140 140 136 196 Q148 200 154 192 Q156 130 162 84 Z" fill="url(#svhair)"/>' +
+      // the face in profile: a full cheek and chin, nose, eyes closed with lashes, a dark brow, red lips wide open singing
+      '<path d="M146 86 Q146 46 182 44 Q206 46 212 68 Q214 78 212 84 Q216 92 223 100 Q219 104 213 105 Q216 109 217 112 L205 115 L216 123 Q215 132 207 137 Q198 147 183 147 Q163 145 154 129 Q146 112 146 86 Z" fill="url(#svskin)"/>' +
+      '<path d="M192 75 Q201 68 211 73" stroke="#2a0a08" stroke-width="3.6" fill="none" stroke-linecap="round"/>' +
+      '<path d="M194 85 Q200 90 208 86" stroke="#0c0c0c" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M196 88 l-2 3 M200 89.5 l-1 3.2 M204 89 l0 3" stroke="#0c0c0c" stroke-width="1.6" stroke-linecap="round"/>' +
+      '<ellipse cx="192" cy="106" rx="9" ry="6" fill="#ff8f9a" opacity=".45"/><path d="M213 104 Q210 106 212 107" stroke="#c99080" stroke-width="1.4" fill="none"/>' +
+      '<g class="svsmouth"><path d="M205 113 L215 113 L214 122 L206 119 Z" fill="#4a0610"/><path d="M206 113 L214.6 113.2 L214.2 115.8 L206 115.2 Z" fill="#fff"/><path d="M206 112 Q211 108.5 217 112 L215 113.4 L206 113.6 Z" fill="#c0102a"/><path d="M206 118.5 L214.5 121.5 Q214 128 208 127.5 Q205 124 206 118.5 Z" fill="#c0102a"/></g>' +
+      // her hair on the head: covering the top and back (and the ear), a soft hairline at the forehead, a shine on top
+      '<path d="M150 124 Q136 98 140 64 Q148 28 182 26 Q212 28 216 58 Q216 66 212 70 Q202 50 184 50 Q170 52 166 66 Q160 84 166 104 Q170 120 166 140 Z" fill="url(#svhair)"/><path d="M152 46 Q174 30 206 40" stroke="#ff7a5a" stroke-width="3" fill="none" opacity=".55"/>' +
+      '<path d="M168 118 Q163 170 170 222 Q173 252 168 282 L179 280 Q185 250 182 220 Q177 170 178 124 Z" fill="url(#svhair)"/><path d="M173 130 Q170 200 174 276" stroke="#7a0610" stroke-width="1.2" fill="none" opacity=".5"/>' +   // (a lock falling over the shoulder)
       // the arm with the microphone, at her lips
       // the arm with the microphone: the fist under her chin, the mic head right in front of her lips
       '<g class="svsarm f">' + sleeve('M180 180 Q204 214 216 196 Q222 178 220 160') +
