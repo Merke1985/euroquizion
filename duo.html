@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Odd Couples (test)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+<style>
+  /* Odd Couples: an early test of a duo game. A long Eurovision title appears word by word on the big screen; even or odd number of words? In every team one partner has the EVEN button, the other the ODD one. First correct team scores most. */
+  :root{--ink:#fff;--mute:#d9c8f0;--pink:#ff4fa3;--gold:#ffd166;--line:rgba(255,255,255,.16)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none}
+  body{background:radial-gradient(ellipse at 50% 120%,#5a1a6e 0%,#24093a 45%,#0c0418 100%)}
+  .beam{position:fixed;top:-10vh;width:22vw;height:120vh;background:linear-gradient(180deg,rgba(255,120,220,.16),rgba(255,120,220,0) 80%);transform-origin:50% 0;filter:blur(6px);pointer-events:none;animation:sweep 7s ease-in-out infinite alternate}
+  .beam.b2{left:60vw;animation-delay:-3s;background:linear-gradient(180deg,rgba(120,180,255,.14),rgba(120,180,255,0) 80%)} .beam.b1{left:18vw}
+  @keyframes sweep{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+  .stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:3vh 3vw 2vh}
+  .top{display:flex;align-items:center;gap:18px;width:100%;justify-content:center;min-height:9vh}
+  .top h1{margin:0;font-size:clamp(1.4rem,3.4vw,3rem);font-weight:800;text-shadow:0 0 24px rgba(255,79,163,.7)}
+  .tag{padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid var(--line);font-weight:700;font-size:clamp(.9rem,1.4vw,1.2rem)}
+  .tag.hot{background:var(--pink);border-color:#fff;color:#fff;animation:pulse .6s infinite alternate}
+  @keyframes pulse{to{transform:scale(1.08)}}
+  .q{margin-top:1vh;font-size:clamp(1.1rem,2.2vw,2rem);font-weight:700;color:var(--mute);text-align:center;min-height:3vh}
+  .q b{color:var(--gold)}
+  .words{flex:1;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:1.4vw 1.2vw;max-width:92vw;padding:2vh 0}
+  .w{position:relative;padding:.35em .6em;border-radius:.45em;background:rgba(20,8,40,.75);border:2px solid rgba(255,140,220,.55);font-size:clamp(1.6rem,4.2vw,4rem);font-weight:800;box-shadow:0 0 22px rgba(255,79,163,.25);animation:pop .35s cubic-bezier(.2,1.6,.4,1) both}
+  .w.hit{background:rgba(255,209,102,.18);border-color:var(--gold)}
+  .w .n{position:absolute;top:-.85em;left:50%;transform:translateX(-50%);font-size:.42em;color:var(--gold);opacity:0;transition:opacity .15s}
+  .w.cnt .n{opacity:1}
+  .w.cnt{border-color:var(--gold);box-shadow:0 0 26px rgba(255,209,102,.55)}
+  .w.dim{opacity:.35}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .verdict{font-size:clamp(2rem,6vw,5.5rem);font-weight:800;min-height:1.2em;text-shadow:0 0 30px rgba(255,209,102,.8);color:var(--gold)}
+  .src{color:var(--mute);font-weight:600;font-size:clamp(.9rem,1.5vw,1.3rem);min-height:1.4em}
+  .src img{height:.9em;vertical-align:-.08em;border-radius:2px;margin-right:.3em}
+  .timer{width:min(60vw,700px);height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin:1vh 0}
+  .timer i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--gold));border-radius:99px}
+  .teams{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:100%;margin-top:1.5vh}
+  .team{min-width:170px;padding:10px 14px;border-radius:16px;background:rgba(20,8,40,.7);border:2px solid var(--line);transition:all .25s}
+  .team .hd{display:flex;align-items:baseline;gap:10px}
+  .team .nm{flex:1;font-weight:800;font-size:clamp(.95rem,1.4vw,1.25rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22vw}
+  .team .rl{font-size:.85rem;color:var(--mute);font-weight:600}
+  .team .rl b{color:#fff}
+  .team .pt{font-size:1.4rem;font-weight:800;color:var(--gold);white-space:nowrap}
+  .team.ans{border-color:rgba(255,255,255,.6)}
+  .team.first{border-color:var(--gold);box-shadow:0 0 26px rgba(255,209,102,.6);background:rgba(255,209,102,.16)}
+  .team.ok{border-color:#8dff8a} .team.bad{border-color:#ff4d6d;opacity:.6}
+  .team .plus{color:#8dff8a;font-weight:800;margin-left:6px}
+  .ov{position:fixed;inset:0;display:grid;justify-items:center;align-items:start;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:radial-gradient(ellipse at 50% 30%,rgba(120,30,120,.75),rgba(12,4,24,.94));z-index:5;padding:16px}
+  .ov.hidden{display:none}
+  .hidden{display:none!important}
+  .ov>.card{margin:auto 0}
+  .card{max-width:660px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(30,10,52,.94);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .card h2{margin:0 0 .3em;font-size:clamp(1.6rem,4vw,2.4rem)}
+  .card p{margin:.4em 0;color:var(--mute);line-height:1.45}
+  .card b{color:var(--ink)}
+  .join{display:flex;gap:16px;align-items:center;margin:14px 0 4px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);line-height:1.5}
+  .join .qr{width:112px;height:112px;flex:none;background:#fff;border-radius:10px;padding:6px}
+  .join .qr svg{width:100%;height:100%;display:block}
+  .join .mute{color:var(--mute)} .join .code{font-size:1.3em;letter-spacing:.12em;color:var(--gold)}
+  .plist{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px} .plist .pp{padding:2px 10px;border-radius:99px;background:rgba(255,79,163,.18);border:1px solid rgba(255,79,163,.5);font-weight:700}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  button{font:inherit;font-weight:800;border:0;border-radius:14px;padding:12px 18px;cursor:pointer;background:var(--pink);color:#fff;font-size:1.05rem}
+  label{color:var(--mute);font-weight:700;display:inline-flex;gap:6px;align-items:center}
+  select{font:inherit;font-weight:700;padding:8px 10px;border-radius:10px;background:#3a1458;color:#fff;border:1px solid var(--line)}
+  ol.res{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+  ol.res li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:700}
+  ol.res li.top{background:rgba(255,209,102,.2);box-shadow:0 0 0 2px var(--gold)}
+  ol.res li .rk{width:1.6em;color:var(--gold)} ol.res li .nm{flex:1}
+  @media (max-width:560px){.card{padding:20px 18px}.join{flex-direction:column;text-align:center}.join .plist{justify-content:center}}
+</style>
+</head>
+<body>
+<div class="beam b1"></div><div class="beam b2"></div>
+<div class="stage">
+  <div class="top"><h1>💞 Odd Couples</h1><span class="tag" id="rd"></span><span class="tag" id="twist"></span></div>
+  <div class="q" id="q"></div>
+  <div class="timer"><i id="bar"></i></div>
+  <div class="words" id="words"></div>
+  <div class="verdict" id="verdict"></div>
+  <div class="src" id="src"></div>
+  <div class="teams" id="teams"></div>
+</div>
+
+<div class="ov" id="start">
+  <div class="card">
+    <h2>💞 Odd Couples</h2>
+    <p>You play in <b>pairs</b>. A long Eurovision song title appears on the big screen. Does it have an <b>even</b> or an <b>odd</b> number of words?</p>
+    <p>In every pair <b>one partner has the EVEN button</b> and the other <b>the ODD button</b>, so only the right partner can answer. Decide together who presses! A wrong press locks your pair out for that round. Now and then the buttons <b>swap</b>.</p>
+    <p>First correct pair: <b>3 points</b>. Every other correct pair: 1 point. 10 rounds.</p>
+    <div class="join"><div class="qr" id="qr"></div><div><b>📱 Join with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="url"></span><br><span class="mute">Room</span> <b id="code" class="code"></b><div id="plist" class="plist"><span class="mute">Nobody has joined yet: the computer pairs play alone.</span></div></div></div>
+    <div class="btns">
+      <label>Computer pairs <select id="nbots"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+      <label><input type="checkbox" id="kb" checked> 🧪 Me alone with the keys E and O</label>
+      <button id="go">▶ Start</button>
+    </div>
+  </div>
+</div>
+<div class="ov hidden" id="end">
+  <div class="card">
+    <h2 id="endt">The winners</h2>
+    <ol class="res" id="res"></ol>
+    <div class="btns"><button id="again">↻ Play again</button></div>
+  </div>
+</div>
+
+<script src="vendor/supabase.js?v=1"></script>
+<script src="vendor/qrcode.js?v=1"></script>
+<script src="config.js?v=1"></script>
+<script src="net.js?v=2"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var ROUNDS = 10, AFTER_ALL = 7, STEP = 0.75, COUNT = 0.22;   // (10 rounds; 7 s to answer once the whole title is there; build-up rounds add a word every 0.75 s; the count at the reveal)
+  var PLAN = [{}, {}, {}, { swap: 1 }, { build: 1 }, { build: 1 }, { swap: 1 }, { build: 1 }, { letter: 1 }, { letter: 1, swap: 1 }];   // (what each round adds: the buttons swap, the title builds up word by word, or only words with a certain letter count)
+  var TCOLS = ['#ff4fa3', '#5ee0ff', '#ffd166', '#8dff8a', '#c58bff', '#ff9f43', '#4dd4b0', '#ff6b6b'];
+  var BOTN = [['Loreen', 'Käärijä'], ['Abba', 'Lordi'], ['Conchita', 'Verka'], ['Emmy', 'Joost']];
+  var songs = [], countries = {};
+  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries || {}; songs = (d.songs || []).filter(function (s) { var n = words(s[3]).length; return n >= 5 && n <= 10; }); }).catch(function () {});
+  function words(title) { return String(title || '').replace(/\s*\([^)]*\)\s*/g, ' ').split(/\s+/).filter(function (w) { return /[\p{L}\p{N}]/u.test(w); }); }   // (the translation in brackets goes; a lone dash isn't a word)
+
+  // ---------- sound ----------
+  var ac = null;
+  function au() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); return ac; }
+  function tone(f0, f1, dur, type, vol, delay) { var a = au(); if (!a) return; var t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur); g.gain.setValueAtTime(vol || 0.1, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02); }
+  function sWord() { tone(520, 700, 0.08, 'triangle', 0.06); }
+  function sCount(i) { tone(600 + i * 60, 600 + i * 60, 0.09, 'square', 0.04); }
+  function sPress(ok) { tone(ok ? 880 : 300, ok ? 1200 : 200, 0.15, 'triangle', 0.08); }
+  function sFirst() { [784, 988, 1175].forEach(function (f, i) { tone(f, f, 0.25, 'triangle', 0.08, i * 0.07); }); }
+  function sSwap() { tone(400, 1200, 0.3, 'sawtooth', 0.05); tone(1200, 400, 0.3, 'sawtooth', 0.05, 0.3); }
+  function sWin() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, f, 0.4, 'triangle', 0.08, i * 0.14); }); }
+
+  // ---------- phones ----------
+  var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '', joined = [], net = null, lastState = '', lastSent = 0;
+  for (var ri = 0; ri < 4; ri++) room += A[Math.floor(Math.random() * A.length)];
+  var padUrl = new URL('duopad.html?r=' + room, location.href).href;
+  $('code').textContent = room; $('url').textContent = padUrl.replace(/^https?:\/\//, '');
+  try { var qq = qrcode(0, 'M'); qq.addData(padUrl); qq.make(); $('qr').innerHTML = qq.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('qr').style.display = 'none'; }
+  function showJoined() { $('plist').innerHTML = joined.length ? joined.map(function (j) { return '<span class="pp">' + esc(j.name) + '</span>'; }).join('') : '<span class="mute">Nobody has joined yet: the computer pairs play alone.</span>'; }
+  try {
+    net = escConnect('du' + room); net.hostIn();
+    net.on('hi', function (p) { if (!p || !p.pid) return; var nm = String(p.name || 'Player').trim().slice(0, 14) || 'Player', j = joined.filter(function (x) { return x.pid === p.pid; })[0]; if (j) j.name = nm; else if (joined.length < 16) joined.push({ pid: p.pid, name: nm }); showJoined(); sendState(true); });
+    net.on('zg', function (p) { if (!p || !p.pid || (p.v !== 0 && p.v !== 1)) return; teams.forEach(function (tm) { tm.m.forEach(function (m, i) { if (m.pid === p.pid) press(tm, i, p.v); }); }); });   // (a press from a phone: 0 even, 1 odd)
+  } catch (e) { net = null; }
+
+  // ---------- the game ----------
+  var teams = [], phase = 'lobby', t = 0, phT = 0, rd = 0, cur = null, shown = 0, fullAt = 0, ended = false, timers = [];
+  function makeTeams() {
+    teams = []; var ppl = joined.map(function (j) { return { name: j.name, pid: j.pid }; }).sort(function () { return Math.random() - 0.5; });
+    if ($('kb').checked) teams.push({ m: [{ name: 'You', kb: true }] });   // (the test player: a pair on their own, both buttons)
+    for (var i = 0; i < ppl.length; i += 2) teams.push({ m: ppl.slice(i, i + 2) });   // (pairs; an odd one out plays alone with both buttons)
+    var nb = +$('nbots').value; for (i = 0; i < nb; i++) teams.push({ m: BOTN[i % BOTN.length].map(function (n) { return { name: n }; }), bot: true, skill: 0.55 + Math.random() * 0.4 });
+    teams.forEach(function (tm, i) { tm.col = TCOLS[i % TCOLS.length]; tm.pts = 0; tm.flip = Math.random() < 0.5; tm.name = tm.m.map(function (m) { return m.name; }).join(' & '); });
+  }
+  function role(tm, i) { return tm.m.length === 1 ? 'both' : ((i === 0) !== tm.flip ? 'even' : 'odd'); }   // (which button this partner has)
+  function start() { au(); if (!songs.length) { alert('The song list is still loading, try again in a second.'); return; } makeTeams(); if (!teams.length) return; ended = false; rd = 0; $('start').classList.add('hidden'); $('end').classList.add('hidden'); t = 0; nextRound(); }
+  function setPhase(p) { phase = p; phT = t; }
+  function pickLetter(ws) { var cand = 'AEIORSTNL'.split('').filter(function (L) { var k = ws.filter(function (w) { return w.toUpperCase().indexOf(L) >= 0; }).length; return k >= 2 && k < ws.length; }); return cand.length ? cand[Math.floor(Math.random() * cand.length)] : null; }
+  function nextRound() {
+    rd++; if (rd > ROUNDS) { finish(); return; }
+    var pl = PLAN[rd - 1], s, ws, L = null, tries = 0;
+    do { s = songs[Math.floor(Math.random() * songs.length)]; ws = words(s[3]); if (pl.letter) L = pickLetter(ws); tries++; } while (pl.letter && !L && tries < 50);
+    var counted = L ? ws.map(function (w) { return w.toUpperCase().indexOf(L) >= 0; }) : ws.map(function () { return true; }), n = counted.filter(Boolean).length;
+    cur = { s: s, ws: ws, L: L, counted: counted, n: n, odd: n % 2 === 1, build: !!pl.build, first: null };
+    if (pl.swap) teams.forEach(function (tm) { tm.flip = !tm.flip; });
+    teams.forEach(function (tm) { tm.ans = null; tm.who = null; tm.at = null; tm.got = 0; if (tm.bot) { tm.botAt = 1.4 + (1 - tm.skill) * 3 + Math.random() * 2.5 + (L ? 1.5 : 0); tm.botV = Math.random() < 0.5 + tm.skill * 0.42 ? (cur.odd ? 1 : 0) : (cur.odd ? 0 : 1); } });
+    $('words').innerHTML = ''; $('verdict').textContent = ''; $('src').innerHTML = ''; shown = 0;
+    $('rd').textContent = 'Round ' + rd + ' of ' + ROUNDS;
+    var tw = [pl.swap && '🔄 Swap!', pl.build && '⏳ Word by word', L && '🔤 Only words with ' + L].filter(Boolean); $('twist').textContent = tw.join(' · '); $('twist').classList.toggle('hidden', !tw.length); $('twist').classList.toggle('hot', !!pl.swap);
+    $('q').innerHTML = L ? 'How many words have an <b>' + L + '</b> in them? Even or odd?' : 'How many words? <b>Even</b> or <b>odd</b>?';
+    if (pl.swap) sSwap();
+    setPhase('pre'); paintTeams(); sendState(true);
+  }
+  function press(tm, i, v) {
+    if ((phase !== 'show') || tm.ans != null) return;
+    var r = role(tm, i); if (r !== 'both' && ((r === 'even') !== (v === 0))) return;   // (you can only press your own button)
+    tm.ans = v; tm.who = i; tm.at = t - phT; var ok = (v === 1) === cur.odd;
+    if (ok && !cur.first) { cur.first = tm; tm.got = 3; sFirst(); } else { tm.got = ok ? 1 : 0; sPress(ok); }
+    paintTeams(); sendState(true);
+    if (teams.every(function (x) { return x.ans != null; })) toReveal();
+  }
+  function toReveal() { if (phase !== 'show') return; while (shown < cur.ws.length) addWord(); setPhase('reveal'); teams.forEach(function (tm) { tm.pts += tm.got; }); paintTeams(); sendState(true); }
+  function addWord() { var i = shown++, el = document.createElement('span'); el.className = 'w'; el.innerHTML = '<span class="n"></span>' + esc(cur.ws[i]); $('words').appendChild(el); if (cur.build) sWord(); }
+  function step(dt) {
+    t += dt; var e = t - phT;
+    if (phase === 'pre' && e > 2) { setPhase('show'); if (!cur.build) { while (shown < cur.ws.length) addWord(); sWord(); } fullAt = cur.build ? STEP * cur.ws.length : 0; sendState(true); }
+    else if (phase === 'show') {
+      if (cur.build) while (shown < cur.ws.length && e >= shown * STEP) addWord();
+      teams.forEach(function (tm) { if (tm.bot && tm.ans == null && e >= fullAt * 0.85 + tm.botAt) press(tm, tm.botV === 0 ? (role(tm, 0) === 'even' ? 0 : 1) : (role(tm, 0) === 'odd' ? 0 : 1), tm.botV); });
+      var left = fullAt + AFTER_ALL - e; $('bar').style.width = Math.max(0, Math.min(1, left / AFTER_ALL)) * 100 + '%';
+      if (left <= 0) toReveal();
+    }
+    else if (phase === 'reveal') {   // (the words are counted one by one, then the verdict)
+      var els = $('words').children, k = 0;
+      for (var i = 0; i < els.length; i++) { if (!cur.counted[i]) { els[i].classList.add('dim'); continue; } k++; if (e >= 0.4 + k * COUNT && !els[i].classList.contains('cnt')) { els[i].classList.add('cnt'); els[i].firstChild.textContent = k; sCount(k); } }
+      if (e >= 0.4 + (cur.n + 1) * COUNT && !$('verdict').textContent) { $('verdict').textContent = cur.n + ' · ' + (cur.odd ? 'ODD' : 'EVEN'); $('src').innerHTML = '<img src="https://flagcdn.com/w40/' + esc(cur.s[1]) + '.png" alt="">' + esc(countries[cur.s[1]] || '') + ' ' + cur.s[0] + ' · ' + esc(cur.s[2]) + ' · <i>' + esc(cur.s[3]) + '</i>'; paintTeams(true); sendState(true); }
+      if (e >= 0.4 + (cur.n + 1) * COUNT + 3.5) nextRound();
+    }
+    sendState(false);
+  }
+  function paintTeams(rev) {
+    var rk = teams.slice().sort(function (a, b) { return b.pts - a.pts; });
+    $('teams').innerHTML = rk.map(function (tm) { var cls = 'team' + (tm.ans != null ? ' ans' : '') + ((phase === 'reveal') && rev !== false && $('verdict').textContent ? (tm.got ? ' ok' : tm.ans != null ? ' bad' : '') : '') + (cur && cur.first === tm && $('verdict').textContent ? ' first' : '');
+      var rl = tm.m.map(function (m, i) { var r = role(tm, i); return esc(m.name) + ' <b>' + (r === 'both' ? 'EVEN+ODD' : r.toUpperCase()) + '</b>'; }).join(' · ');
+      return '<div class="' + cls + '" style="--c:' + tm.col + '"><div class="hd"><div class="nm" style="color:' + tm.col + '">' + esc(tm.name) + (tm.ans != null && !$('verdict').textContent ? ' ✓' : '') + '</div><span class="pt">' + tm.pts + (phase === 'reveal' && $('verdict').textContent && tm.got ? '<span class="plus">+' + tm.got + '</span>' : '') + '</span></div><div class="rl">' + rl + '</div></div>'; }).join('');
+  }
+  function finish() {
+    phase = 'end'; ended = true; sWin();
+    var r = teams.slice().sort(function (a, b) { return b.pts - a.pts; }); r.forEach(function (tm, i) { tm.rank = i && tm.pts === r[i - 1].pts ? r[i - 1].rank : i + 1; });
+    $('endt').textContent = '🏆 ' + r[0].name + (r[0].m.length > 1 ? ' win!' : ' wins!');
+    $('res').innerHTML = r.map(function (tm) { return '<li class="' + (tm.rank === 1 ? 'top' : '') + '"><span class="rk">' + tm.rank + '</span><span class="nm" style="color:' + tm.col + '">' + esc(tm.name) + '</span>' + tm.pts + ' points</li>'; }).join('');
+    setTimeout(function () { $('end').classList.remove('hidden'); }, 800); sendState(true);
+  }
+  $('go').addEventListener('click', start);
+  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); phase = 'lobby'; teams = []; $('teams').innerHTML = ''; $('words').innerHTML = ''; showJoined(); sendState(true); });
+  addEventListener('keydown', function (ev) { var me = teams.filter(function (tm) { return tm.m[0].kb; })[0]; if (!me) return; var k = ev.key.toLowerCase(); if (k !== 'e' && k !== 'o') return; ev.preventDefault(); press(me, 0, k === 'o' ? 1 : 0); });
+
+  function sendState(force) {
+    if (!net) return;
+    var ph = phase === 'lobby' ? 'lobby' : ended ? 'end' : phase, ps = {}, rev = phase === 'reveal' && !!$('verdict').textContent;
+    if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
+    else teams.forEach(function (tm) { tm.m.forEach(function (m, i) { if (!m.pid) return; var mate = tm.m[1 - i]; ps[m.pid] = { n: m.name, c: tm.col, role: role(tm, i), mate: mate ? mate.name : null, mr: mate ? role(tm, 1 - i) : null, ans: tm.ans, who: tm.who === i ? 'me' : tm.who != null ? 'mate' : null, got: rev ? tm.got : null, pts: tm.pts, r: ended ? tm.rank : null }; }); });
+    var o = { ph: ph, p: ps, rd: rd, of: ROUNDS, sw: rd && PLAN[rd - 1] && PLAN[rd - 1].swap ? 1 : 0, rev: rev ? (cur.odd ? 1 : 0) : null };
+    var s = JSON.stringify(o), now = Date.now();
+    if (!force && (s === lastState ? now - lastSent < 3000 : now - lastSent < 300)) return;
+    lastState = s; lastSent = now; net.send('state', o);
+  }
+  var last = performance.now();
+  function loop(now) { var dt = Math.min(0.05, (now - last) / 1000); last = now; if (phase !== 'lobby' && phase !== 'end') step(dt); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+  window.__du = { teams: function () { return teams; }, phase: function () { return phase; }, cur: function () { return cur; }, round: function () { return rd; }, role: role };
+})();
+</script>
+</body>
+</html>
