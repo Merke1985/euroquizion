@@ -11037,7 +11037,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
   }
   function beginGame() {
-    herWorn = {}; herWorn[herLook] = 1;   // (a new game: what she's wearing now counts as worn)
+    if (HER_LOOKS.length) { herLook = Math.floor(Math.random() * HER_LOOKS.length); HOST_HER = HER_LOOKS[herLook]; var hh0 = !REMOTE && stageEl() && stageEl().querySelector('.shosts .ehost.her'); if (hh0 && !hh0.classList.contains('coat')) hh0.outerHTML = HOST_HER; }   // (every game she starts in a random gown…)
+    herWorn = {}; herWorn[herLook] = 1;   // (…which counts as worn)
     if (G.phase !== 'lobby') return false;
     looksFill();
     G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.finalMode = $('s-final').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : $('s-atype').value === 'mc' && $('s-qmode').value === 'ladder' ? 'ladder' : $('s-scoring').value || 'correct'; G.showScore = 'always';   /* the scores are always in view (only the Big Five hides them) */
