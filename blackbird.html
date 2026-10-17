@@ -758,9 +758,7 @@
     if (k !== sideKey) { sideKey = k; $('side').innerHTML = players().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out || !b.feathers ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
     var bn = $('banner'), txt = '', cls = '';
     if (t >= SOAR_T) { txt = t >= LAND_T + 0.8 && t < LAND_T + 6.6 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
-    else if (t >= FAST_T - 0.5 && t < FAST_T + 2.5 && !me.manual) { txt = '💨 Faster! Follow the blackbird…'; cls = 'warn'; }
     else if (t >= PRACT0 - WARN && t < PRACT0 + 2.5) { txt = '🐦‍⬛ Everyone, fly!'; cls = 'warn'; }
-    else if (t >= ALL_T - WARN && t < ALL_T + 2.5) { txt = '🐦‍⬛ Follow the blackbird!'; cls = 'warn'; }
     else if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
