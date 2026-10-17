@@ -621,15 +621,15 @@
     for (i = n; i >= 0; i--) { s = i / n; w = w0 * Math.pow(1 - s, 1.25) * (1 + 0.14 * Math.sin(s * 23 + sd * 5 + 1) + 0.07 * Math.sin(s * 37 + sd)); y = base + (tip - base) * s; cx.lineTo(px + w, y); }
     cx.closePath();
   }
-  function stoneFill(px, w0, dim) { var g = cx.createLinearGradient(px - w0, 0, px + w0, 0); g.addColorStop(0, 'rgba(70,56,42,' + dim + ')'); g.addColorStop(0.3, 'rgba(176,150,112,' + dim + ')'); g.addColorStop(0.55, 'rgba(128,104,78,' + dim + ')'); g.addColorStop(1, 'rgba(40,32,26,' + dim + ')'); return g; }
+  function stoneFill(px, w0, dim) { var g = cx.createLinearGradient(px - w0, 0, px + w0, 0); g.addColorStop(0, 'rgba(10,14,34,' + dim + ')'); g.addColorStop(0.3, 'rgba(62,70,128,' + dim + ')'); g.addColorStop(0.55, 'rgba(34,38,82,' + dim + ')'); g.addColorStop(1, 'rgba(6,8,22,' + dim + ')'); return g; }
   function drawDrip(px, base, tip, dir, sd) {
     var w0 = H * 0.036, len = tip - base;
     for (var j = 0; j < 3; j++) { var hs = hsh(sd * 10 + j), side = j % 2 ? 1 : -1, ox = side * w0 * (1.1 + 0.6 * hs), l2 = len * (0.22 + 0.3 * hsh(sd * 7 + j)), ww = w0 * (0.32 + 0.2 * hs);   // the smaller drips around it
       dripShape(px + ox, base, base + l2, ww, sd + j); cx.fillStyle = stoneFill(px + ox, ww, 0.8); cx.fill(); }
     dripShape(px, base, tip, w0, sd); cx.fillStyle = stoneFill(px, w0, 1); cx.fill();   // the main spike
     cx.save(); dripShape(px, base, tip, w0, sd); cx.clip();
-    cx.strokeStyle = 'rgba(235,215,175,.22)'; cx.lineWidth = Math.max(1, w0 * 0.12); cx.beginPath(); cx.moveTo(px - w0 * 0.35, base); cx.quadraticCurveTo(px - w0 * 0.25, base + len * 0.5, px - w0 * 0.04, tip); cx.stroke();   // a wet highlight
-    cx.strokeStyle = 'rgba(40,30,22,.35)'; cx.lineWidth = 1; for (var k = 1; k <= 5; k++) { var yy = base + len * k / 6, hw = w0 * (1 - k / 6) * 1.1; cx.beginPath(); cx.moveTo(px - hw, yy); cx.quadraticCurveTo(px, yy + dir * H * 0.007, px + hw, yy); cx.stroke(); }   // growth bands
+    cx.strokeStyle = 'rgba(190,200,255,.25)'; cx.lineWidth = Math.max(1, w0 * 0.12); cx.beginPath(); cx.moveTo(px - w0 * 0.35, base); cx.quadraticCurveTo(px - w0 * 0.25, base + len * 0.5, px - w0 * 0.04, tip); cx.stroke();   // a wet highlight
+    cx.strokeStyle = 'rgba(4,6,20,.4)'; cx.lineWidth = 1; for (var k = 1; k <= 5; k++) { var yy = base + len * k / 6, hw = w0 * (1 - k / 6) * 1.1; cx.beginPath(); cx.moveTo(px - hw, yy); cx.quadraticCurveTo(px, yy + dir * H * 0.007, px + hw, yy); cx.stroke(); }   // growth bands
     cx.restore();
     cx.save(); cx.shadowColor = 'rgba(185,80,255,.85)'; cx.shadowBlur = H * 0.014; cx.strokeStyle = 'rgba(205,125,255,.7)'; cx.lineWidth = 2; dripShape(px, base, tip, w0, sd); cx.stroke(); cx.restore();   // the glow: this one hurts
     if (dir > 0) { var dp = ((t * 0.55 + sd * 3) % 1); if (dp < 0.6) { var dy = tip + dp * dp * H * 0.35; cx.fillStyle = 'rgba(190,220,255,' + (0.7 * (1 - dp / 0.6)) + ')'; cx.beginPath(); cx.ellipse(px, dy, H * 0.0035, H * 0.006, 0, 0, 7); cx.fill(); } }   // now and then a drop falls
