@@ -123,8 +123,8 @@
   var FASTX = 2.3;   // (how much faster from 2:05)
   function camAt(T) { var x = 0; for (var tt = TAKEOFF; tt < T; tt += 0.02) x += SPEED * 0.02 * Math.max(0, Math.min(1, (tt - TAKEOFF - 1.6) / 2.4)) * spd(tt); return x; }   // (where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
-    var FIRST_T = MUSIC - SONG0 + 46.9;   // (the first group's turn: its first tree comes at 0:49 in the song. Turns every 7 s (5 s flying, 2 s pause): 6 over the pine forest, 6 in the cave)
-    MSG1 = FIRST_T - WARN - 0.4; MSG0 = MSG1 - 8;   // (5 s the how-to, then 3 s: watch your phone if the stream lags)   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
+    var FIRST_T = MUSIC - SONG0 + 47.9;   // (the first group's turn: its first tree comes at 0:49 in the song. Turns every 7 s (5 s flying, 2 s pause): 6 over the pine forest, 6 in the cave)
+    MSG1 = FIRST_T - CD - 0.4; MSG0 = MSG1 - 8;   // (5 s the how-to, then 3 s: watch your phone if the stream lags)   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
     REVEAL0 = tAir + 1.5; var gap = Math.max(0.3, Math.min(0.9, (MSG0 - 1.4 - REVEAL0) / Math.max(1, order.length - 1))); order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the neon, one bird at a time)
     pgroups = []; pgi = 0; pracDone = false; PRACT0 = FIRST_T; PRACT_END = FIRST_T; SAFE_X = camAt(FIRST_T) + 0.3 * W / H;   // (no practice: straight into it)
     var FT = FIRST_T + 6 * (TURN + WARN) - 1;   // (into the cave just before the 7th turn)
@@ -178,7 +178,7 @@
   // ---------- the flock ----------
   var COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43', '#f5f5f5', '#ff4d6d', '#4dd4b0', '#a3b8ff'];
   var NAMES = ['Raven', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Nightingale', 'Magpie'];
-  var TURN = 5, WARN = 2;   // (2 s of blinking before your turn)
+  var TURN = 5, WARN = 2, CD = 3;   // (2 s of blinking before your turn)
   var tAir = 99, birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
   function makeBirds(nb) {
     birds = [];
@@ -222,7 +222,7 @@
     if (planT < 0) planT = PRACT0;
     while (t >= planT - 3.6 && planT + SEG <= FAST_T + 2.2) { planTurn(planT); planT += SEG; }
     if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 1; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (1 / 2) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
-    if (t >= PRACT0 - WARN && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (everyone blinks for 2 s)
+    if (t >= PRACT0 - CD && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (a 3 s countdown in the middle of the screen; the colours stay on, no blinking)
     if (t >= PRACT0) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
 
@@ -806,7 +806,7 @@
       if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
       if (b.wasManual && !b.manual) b.offT = t; b.wasManual = b.manual; var glowA = b.manual ? 1 : b.offT != null ? Math.max(0, 1 - (t - b.offT) / 1.5) : 0;   // (after a turn the neon fades out gently)
       if (glowA > 0) { cx.globalAlpha *= glowA; var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); cx.globalAlpha /= glowA; }
-      var warn = pending.indexOf(b) >= 0; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
+      var warn = false; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
       var sitting = (t < TAKEOFF && !landing) || (b.lead && L < 0.15 && t >= TAKEOFF) || (bp.home != null && bp.home >= 1);
       if (bp.home != null && bp.home < 1) landing = false;
       if (sitting || L < 0.35) { cx.strokeStyle = '#3a2a1a'; cx.lineWidth = Math.max(1, s * 0.07); cx.lineCap = 'round'; var tuck = sitting ? 0 : 0.6;
@@ -822,7 +822,7 @@
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
       var wa = sitting ? -0.15 : bp.home != null ? Math.sin(t * 14 + b.id) * 0.9 : landing ? Math.sin(t * (bp.land > 0.7 ? 20 : 11)) * 0.9 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
       cx.strokeStyle = 'rgba(120,130,170,.4)'; cx.lineWidth = 1; for (var wf = 0; wf < 3; wf++) { cx.beginPath(); cx.moveTo(-s * (0.15 - wf * 0.15), -s * 0.08); cx.quadraticCurveTo(s * (0.05 + wf * 0.08), -s * (0.25 + 1.0 * wa) * (0.6 + wf * 0.15), s * (0.3 + wf * 0.04), -s * 0.06); cx.stroke(); }   // feathers on the wing
-      var isWarn = pending.indexOf(b) >= 0, blink = Math.sin(t * 14) > 0 ? 1 : 0.12, turnA = b.manual ? 1 : isWarn ? blink : glowA;   // (after the start everyone is a plain blackbird again: colour and name only on your turn, blinking for 2 s before it)
+      var isWarn = pending.indexOf(b) >= 0, blink = Math.sin(t * 14) > 0 ? 1 : 0.12, turnA = b.manual || isWarn ? 1 : glowA;   // (after the start everyone is a plain blackbird again: colour and name only on your turn, blinking for 2 s before it)
       var colA = (t < MSG1 ? Math.max(0, Math.min(1, (t - b.colT) / 0.5)) : t < MSG1 + 0.8 ? Math.max(turnA, 1 - (t - MSG1) / 0.8) : turnA) * (1 - Math.max(0, Math.min(1, (t - HOME_T) / 2.5))), pop = t - b.colT;   // (at home they're plain blackbirds again)   // (plain black blackbirds until the whole flock is in the air; then the neon lights up, one bird at a time)
       if (pop > 0 && pop < 0.9) { cx.strokeStyle = b.col; cx.globalAlpha = 1 - pop / 0.9; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.2 + pop * 3), 0, 7); cx.stroke(); var fl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 3); fl.addColorStop(0, b.col + '99'); fl.addColorStop(1, b.col + '00'); cx.fillStyle = fl; cx.beginPath(); cx.arc(0, 0, s * 3, 0, 7); cx.fill(); cx.globalAlpha = 1; }   // (the flash as it lights up)
       if (colA > 0) { cx.globalAlpha *= colA; cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke(); cx.globalAlpha /= colA; }   // their colour
@@ -926,6 +926,10 @@
       cx.restore(); }
     var fa = t >= FADE_T && t < HOME_T ? (t - FADE_T) / (HOME_T - FADE_T) : t >= HOME_T && t < HOME_T + 1.8 ? 1 - (t - HOME_T) / 1.8 : 0;
     if (fa > 0) { cx.save(); cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.fillStyle = 'rgba(2,3,10,' + fa + ')'; cx.fillRect(0, 0, W, H); cx.restore(); }   // (a fade to black: and we're home)
+    if (t >= PRACT0 - CD && t < PRACT0 + 0.9) {   // the countdown: 3, 2, 1, Fly!
+      var cl = PRACT0 - t, num = cl > 0 ? String(Math.ceil(cl)) : 'Fly!', ph = cl > 0 ? 1 - (cl - Math.floor(cl)) : -cl / 0.9, cs = 1 + 0.25 * (1 - Math.min(1, ph * 4)), ca = cl > 0 ? Math.min(1, ph * 6) * (ph > 0.85 ? (1 - ph) / 0.15 : 1) : 1 - ph;
+      cx.save(); cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.translate(W / 2, H * 0.45); cx.scale(cs, cs); cx.globalAlpha = Math.max(0, ca); cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.font = '800 ' + Math.round(H * (cl > 0 ? 0.22 : 0.13)) + 'px "Bricolage Grotesque",system-ui';
+      cx.shadowColor = 'rgba(185,80,255,.8)'; cx.shadowBlur = H * 0.03; cx.fillStyle = '#fff'; cx.fillText(num, 0, 0); cx.restore(); }
     parts.forEach(function (p) { cx.save(); cx.globalAlpha = Math.max(0, 1 - p.t / 1.6); cx.translate(sx(p.x), sy(p.y)); cx.rotate(p.r); cx.fillStyle = '#1c1c28'; cx.strokeStyle = p.col; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(0, 0, 7, 2.5, 0, 0, 7); cx.fill(); cx.stroke(); cx.restore(); });
   }
 
