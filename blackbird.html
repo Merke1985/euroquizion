@@ -244,6 +244,7 @@
     t += dt; if (t >= TAKEOFF) cam += SPEED * dt * Math.max(0, Math.min(1, (t - TAKEOFF - 1.6) / 2.4)) * spd(t); if (t >= HOME_T) cam = 0; schedule();
     if (t >= SOAR_T && !soarOn) { soarOn = true; pending = []; birds.forEach(function (b) { b.manual = false; if (b.out) { b.out = false; b.rejoin = true; b.y = 1.15; b.vy = -0.3; b.inv = 0; } }); }   // (2:08: nobody steers any more; birds that landed rejoin the flock)
     if (soarOn && SPOT_C < 0) { var cs = cam; for (var tt = t; tt < STOP_T; tt += 0.01) cs += SPEED * spd(tt) * 0.01; SPOT_C = cs + 0.5 * W / H; FLOWER_X = SPOT_C - 0.33; FLOWER_Y = GY; }   // (where the flock will come to rest: their favourite spot)
+    if (preWant && t >= MUSIC - 3) { preWant = false; ytPre(); }   // (3 s before the song: the video already runs, silently, from 3 s earlier, so it's loaded and playing when the song starts)
     if (musicWant && t >= MUSIC) { musicWant = false; ytPlay(); }
     if (t >= PRACT0 + 4 && t < SOAR_T && t >= nextOrder) { nextOrder = t + 10; reorder(); }
     birds.forEach(function (b) { if (b.xoC != null) b.xoC += (b.xo - b.xoC) * Math.min(1, dt * 0.8); });   // (gliding to a new place in the flock)
@@ -955,10 +956,10 @@
   function frame(now) {
     if (!running && !ended) return;   // (after the results the scene keeps living: she blinks, the curtain moves)
     var real = Math.min(0.25, (now - last) / 1000 || 0), adv = real; last = now;
-    if (songAsked && t >= MUSIC && ytOk) {   // (locked to the song: the game's clock follows the video, so 2:35 in the song is 2:35 in the game)
+    if ((songAsked && t >= MUSIC || preOn && t >= MUSIC - PRE) && ytOk) {   // (locked to the song: the game's clock follows the video, so 2:35 in the song is 2:35 in the game)
       var st = -1, ct = 0; try { st = yt.getPlayerState(); ct = yt.getCurrentTime() || 0; } catch (e) {}
-      if (st === 1 && ct > SONG0 - 0.5) { var df = MUSIC - SONG0 + ct - t; adv = Math.abs(df) > 1.5 ? Math.max(0, Math.min(1.5, df)) : Math.max(0, real + df * 0.4); waitSong = 0; }   // (catch up or wait a moment; a big jump is caught up within a second or two)
-      else if ((st === 3 || st === -1 || st === 5 || (st === 1 && ct <= SONG0 - 0.5)) && waitSong < 5) { waitSong += real; adv = 0; }   // (the song is loading: wait for it, for at most 5 s)
+      if (st === 1 && ct > SONG0 - PRE - 0.5) { var df = MUSIC - SONG0 + ct - t; adv = Math.abs(df) > 1.5 ? Math.max(0, Math.min(1.5, df)) : Math.max(0, real + df * 0.4); waitSong = 0; }   // (catch up or wait a moment; a big jump is caught up within a second or two)
+      else if ((st === 3 || st === -1 || st === 5 || (st === 1 && ct <= SONG0 - PRE - 0.5)) && waitSong < 5) { waitSong += real; adv = 0; }   // (the song is loading: wait for it, for at most 5 s)
     }
     while (adv > 1e-6) { var sd = Math.min(0.05, adv); step(sd); adv -= sd; }   // (small steps, so a slow frame never loses time)
     draw(); hud(); sendState(false);
@@ -976,7 +977,7 @@
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
     t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; SPOT_C = -99; nextOrder = 0; songAsked = false; waitSong = 0; pending = []; parts = []; ended = false; sideKey = '';
     makeBirds(+$('nbots').value); makeCourse(); nextPick = PRACT0; holds = {}; sendState(true);
-    audioOn(); flockPlayed = false; musicWant = !!music; if (music) ytPrime();
+    audioOn(); flockPlayed = false; musicWant = !!music; preWant = !!music; preOn = false; if (music) ytPrime();
     running = true; last = performance.now(); requestAnimationFrame(frame);
   }
   $('go').addEventListener('click', function () { start(true); });
@@ -1021,13 +1022,14 @@
   }
 
   // ---------- the song (Blackbird, Norma John, Finland 2017), quietly in the background ----------
-  var yt = null, ytOk = false, ytWant = false, musicWant = false;
+  var yt = null, ytOk = false, ytWant = false, musicWant = false, preWant = false, preOn = false, PRE = 3;
   window.onYouTubeIframeAPIReady = function () { yt = new YT.Player('yt', { width: 200, height: 120, videoId: 'qTLczT5h9Lo', playerVars: { controls: 0, disablekb: 1, playsinline: 1, rel: 0 }, events: { onReady: function () { ytOk = true; if (ytWant) ytPlay(); } } }); };
   (function () { var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
   var songAsked = false, waitSong = 0;
-  function ytPlay() { songAsked = true; waitSong = 0; ytWant = true; if (!ytOk) return; try { yt.seekTo(SONG0, true); yt.setVolume(80); yt.unMute(); yt.playVideo(); } catch (e) {} }
-  function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(SONG0, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(SONG0, true); } yt.unMute(); } catch (e) {} }, 400); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
-  function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
+  function ytPlay() { songAsked = true; waitSong = 0; ytWant = true; if (!ytOk) return; try { var ct = yt.getCurrentTime(), on = yt.getPlayerState() === 1 && Math.abs(ct - SONG0) < 1.2; if (!on) yt.seekTo(SONG0, true); yt.setVolume(80); yt.unMute(); yt.playVideo(); } catch (e) {} }   // (already running in step with the game: just turn it up, no seek, so no loading pause)
+  function ytPre() { if (!ytOk) return; preOn = true; try { yt.setVolume(0); yt.unMute(); var ct = yt.getCurrentTime(); if (Math.abs(ct - (SONG0 - PRE)) > 0.3) yt.seekTo(SONG0 - PRE, true); yt.playVideo(); } catch (e) {} }
+  function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(SONG0 - PRE, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(SONG0 - PRE, true); } yt.setVolume(0); yt.unMute(); } catch (e) {} }, 2500); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
+  function ytStop() { ytWant = false; preOn = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
   // ---------- phones: join with the room code, one big button to fly ----------
   var nextOrder = 0, joined = [], holds = {}, net = null, lastState = '', lastSent = 0, BBA = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '';
