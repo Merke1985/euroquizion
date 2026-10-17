@@ -790,7 +790,7 @@
     var k = birds.map(function (b) { return b.feathers + (b.manual ? 'm' : '') + (b.out ? 'o' : '') + (t >= b.colT ? 'r' : ''); }).join(',');
     if (k !== sideKey) { sideKey = k; $('side').innerHTML = players().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out || !b.feathers ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
     var bn = $('banner'), txt = '', cls = '';
-    if (t >= SOAR_T) { txt = t >= LAND_T + 1.3 && t < LAND_T + 7.1 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
+    if (t >= SOAR_T) { txt = ''; }   // (from the cave exit on, no banners: the scene speaks for itself)
     else if (t >= PRACT0 - WARN && t < PRACT0 + 2.5) { txt = '🐦‍⬛ Everyone, fly!'; cls = 'warn'; }
     else if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
