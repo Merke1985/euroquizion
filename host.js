@@ -1547,7 +1547,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     fake: { icon: '📰', title: 'Say Na Na Na!', sub: 'One player guesses a secret word. Everyone else writes ONE word as a clue. The same clues cancel each other out! Right: 12 points for the guesser, 6 for every clue that survived. Everyone gets a turn.' },
     note: { icon: '🎤', title: 'Hold That Note!', sub: 'Technical problems! Predict how long the diva’s note lasts before the sound system breaks down (10 seconds to one minute). Closest prediction wins!' },
     carpet: { icon: '💎', title: 'Turquoise Carpet', sub: 'Five photos on the turquoise carpet! Watch every contestant closely: after each act comes one memory question. Most right answers wins; a tie goes to the fastest.' },
-    zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Keep your balance in space! Follow the glowing zone on your phone with your finger as it moves with the music. From stage 2, slide up and down to dodge the asteroids. Two groups, left and right of the singer, take turns: not your turn? Watch the big screen and cheer! Whoever keeps their balance longest wins!' },
+    zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Keep your balance in space! Follow the glowing zone on your phone with your finger as it moves with the music. From stage 2, slide up and down to dodge the asteroids. Whoever keeps their balance until the end wins!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Tap a direction on your phone and you keep going that way: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes, fix the cables, put out the fire and keep stage invaders off. Three phases, each harder than the last. The best mechanic wins!' },
     bb: { icon: '🐦‍⬛', title: 'Blackbird', sub: 'A moonlit flight through the forest! Find your bird by its colour and name, then hold the button on your phone to fly up and let go to glide. Dodge the pines, the brambles and the stalactites: every hit costs a feather. Most feathers left wins!' },
@@ -5396,8 +5396,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       lines: [['him', 'Welcome to space, Europe! 🌌 Up here, there’s no gravity at all…'],
         ['her', 'So you’ll need to keep your balance! Keep your finger in the glowing zone on your phone: it moves with the music.'],
         ['him', 'Stay in the zone! Whoever keeps their balance until the end wins. 🌟'],
-        ['her', 'And watch out: from stage two, asteroids! Slide up and down to dodge them. ☄️'],
-        ['him', 'You play in two groups, left and right of our singer, and you take turns. Not your turn? Watch the big screen and cheer for your side! 🎉']] },
+        ['her', 'And watch out: from stage two, asteroids! Slide up and down to dodge them. ☄️']] },
     carpet: { sign: '💎 Turquoise Carpet', theme: 'carpet',
       get art() { return '<div class="hscarpet"><span class="hsg a">' + tcSvg({ o: 'dress', c: 1, h: 2, g: 1, s: 0, k: 1, r: 0, y: 0 }) + '</span><span class="hsg b">' + tcSvg({ o: 'suit', c: 0, h: 0, g: 0, s: 2, k: 3, r: 2, y: 2 }) + '</span><span class="hsflash">📸</span></div>'; },
       lines: [['him', 'Welcome to the Turquoise Carpet! Tonight’s stars are arriving for the big party! 💎'],
@@ -6478,7 +6477,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var order = shuffle(act.map(function (p) { return p.pid; }));
     G.zg = { id: 'zg' + G.round + '-' + Math.random().toString(36).slice(2, 6), seed: Math.floor(Math.random() * 1e9), st: 'ready', order: order, lvl: {}, sgn: {}, acc: {}, out: {}, t: 0, ends: 0, win: [], bot: {} };
     order.forEach(function (k) { var g = G.zg; g.lvl[k] = 0; g.sgn[k] = 1; g.acc[k] = 100; g.bot[k] = { skill: 0.6 + Math.random() * 0.4, until: 0 }; });
-    if (order.length >= 2) { G.zg.grp = {}; order.forEach(function (k, i) { G.zg.grp[k] = i < Math.ceil(order.length / 2) ? 0 : 1; }); }   // (two groups that take turns: left of the singer and right, as their poles stand)
     G.phase = 'zg'; G.barMs = 0;
     if (REMOTE) { push(); zgReady(); return; }
     var g = G.zg; g.st = 'intro'; cover(true, '', '', false); masks(true); hostsAway(); push(); Music.want(false); Music.space(true, function () { return G.zg === g && g.st === 'intro' && G.phase === 'zg'; }); zgShow();   // (floating space music until the song starts)
@@ -6510,13 +6508,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var now = Date.now(), t = (now - g.t0) / 1000, st = zgStage(t);
     g.t = t;
     if (st !== g.stage) { g.stage = st; push(); Music.douze(); var ov = $('zgov'); if (ov) { ov.classList.remove('stagefx'); void ov.offsetWidth; ov.classList.add('stagefx'); zgAnnounce(st === 1 ? '☄️ <b>Asteroids!</b> Slide up and down to dodge them!' : '<b>Faster!</b> And more asteroids… hold on tight! 🌪️'); } }
-    var tuN = zgTurnAt(t); if (g.grp && tuN && tuN.i !== g.turnI) { g.turnI = tuN.i; if (tuN.i > 0) { Music.ding(); zgAnnounce(tuN.g ? '<b>Right side</b>, your turn! ➡️' : '⬅️ <b>Left side</b>, your turn!'); } }   // (the switch)
     var brk = zgBreak(t); if (brk !== (g.brk == null ? -1 : g.brk)) { g.brk = brk; if (brk >= 0) { Music.ding(); zgAnnounce(''); } }
     g.order.forEach(function (k) {
       var p = players[k]; if (g.out[k] != null || !p || !p.bot) return;
       var b = g.bot[k];
       if (zgBreak(t) >= 0) { if (g.lvl[k]) g.lvl[k] = 0; return; }   // (a break: everyone relaxes)
-      var tu = zgTurnAt(t); if (g.grp && tu && (g.grp[k] !== tu.g || t - tu.from < ZG_GRACE)) { if (g.lvl[k]) g.lvl[k] = 0; if (g.grp[k] !== tu.g && Math.random() < 0.02) zgCheer(k); return; }   // (not their turn: they rest, and cheer now and then)
       var wv = zgRocks(g.seed).filter(function (w) { return t >= w.t0 + w.dur * .5 && t < w.t0 + w.dur * .5 + 0.1; })[0];   // (a wave passing: a bot can get hit)
       if (wv && b.wave !== wv.t0) { b.wave = wv.t0; if (Math.random() < (wv.st === 1 ? 0.06 : 0.15) * (1.4 - b.skill)) { zgMsg({ pid: k, id: g.id, out: Math.round(t * 10) / 10, acc: Math.round(60 + b.skill * 35), hit: 1 }); return; } }
       if (now < b.until) return;
@@ -6534,12 +6530,11 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var g = G.zg; if (!g || G.phase !== 'zg' || !m || m.id !== g.id || !m.pid || g.lvl[m.pid] == null) return;
     if (m.acc != null) g.acc[m.pid] = Math.max(0, Math.min(100, Math.round(Number(m.acc) || 0)));
     if (g.st !== 'play' || g.out[m.pid] != null) return;
-    if (m.cheer) { zgCheer(m.pid); return; }   // (the side that's waiting cheers for their own)
     if (m.out != null) { g.out[m.pid] = Math.max(0, Math.min(ZG_LEN, Number(m.out) || g.t)); g.lvl[m.pid] = 3; if (m.hit) { (g.hit = g.hit || {})[m.pid] = 1; zgBoom(m.pid); boomSnd(); setTimeout(function () { Music.scream(); }, 250); } else Music.scream(); push(); return; }
     if (m.l != null) { g.lvl[m.pid] = Math.max(0, Math.min(2, m.l | 0)); g.sgn[m.pid] = m.s < 0 ? -1 : 1; }
   }
   function zgRank(g) {   // the ones still standing first (the most accurate first), then whoever fell last
-    return g.order.map(function (k) { return { pid: k, up: g.out[k] == null, at: g.out[k] == null ? ZG_LEN : g.grp ? zgPlayed(g.grp[k], g.out[k]) : g.out[k], acc: g.acc[k] || 0 }; }).sort(function (a, b) { return (b.up - a.up) || (b.at - a.at) || (b.acc - a.acc); });
+    return g.order.map(function (k) { return { pid: k, up: g.out[k] == null, at: g.out[k] == null ? ZG_LEN : g.out[k], acc: g.acc[k] || 0 }; }).sort(function (a, b) { return (b.up - a.up) || (b.at - a.at) || (b.acc - a.acc); });
   }
   function zgEnd() {
     var g = G.zg; if (!g || g.st !== 'play') return;
@@ -6567,7 +6562,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   }
   function zgSnap() {
     var g = G.zg;
-    return { id: g.id, len: g.len || ZG_LEN, grp: g.grp || null, seed: g.seed, st: g.st, order: g.order, el: g.st === 'play' ? Date.now() - g.t0 : 0, stage: g.stage || 0, out: g.out, win: g.done ? g.win : null, acc: g.done ? g.acc : null, prize: g.prize || 0, done: !!g.done };
+    return { id: g.id, len: g.len || ZG_LEN, seed: g.seed, st: g.st, order: g.order, el: g.st === 'play' ? Date.now() - g.t0 : 0, stage: g.stage || 0, out: g.out, win: g.done ? g.win : null, acc: g.done ? g.acc : null, prize: g.prize || 0, done: !!g.done };
   }
   // The big screen: space, the singer's pole in the middle, the players' poles around it, swaying together.
   function zgAnnounce(html) {   // a big message in the middle of the screen for a few seconds
@@ -6588,12 +6583,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
     for (; n < el.length; n++) if (el[n].style.display !== 'none') el[n].style.display = 'none';
   }
-  var zgCheerT = {};
-  function zgCheer(k) {   // a cheer from a player who's waiting: sparkles rising from their pole
-    var now = Date.now(); if (now - (zgCheerT[k] || 0) < 180) return; zgCheerT[k] = now;
-    var e = document.querySelector('#zgov .zgp[data-p="' + String(k).replace(/"/g, '') + '"]'); if (!e) return;
-    var c = document.createElement('span'); c.className = 'zgcheer'; c.textContent = ['🎉', '✨', '👏', '💫', '🙌', '💖', '⭐'][Math.floor(Math.random() * 7)]; c.style.setProperty('--dx', (Math.random() * 60 - 30).toFixed(0) + 'px'); e.appendChild(c); setTimeout(function () { c.remove(); }, 1700);
-  }
   function zgBoom(k) {   // an asteroid hit: a flash on that player's pole
     var e = document.querySelector('#zgov .zgp[data-p="' + k.replace(/"/g, '') + '"]'); if (!e) return;
     var b = document.createElement('span'); b.className = 'zgboom'; b.textContent = '💥'; e.appendChild(b); setTimeout(function () { b.remove(); }, 1600);
@@ -6608,9 +6597,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var sing = g.st === 'play' && t >= 9 || g.st === 'end'; if (ov.classList.contains('sing') !== sing) ov.classList.toggle('sing', sing);   // (she starts singing at 0:09 in the song)
     [].forEach.call(ov.querySelectorAll('.zgp'), function (el) {
       var k = el.getAttribute('data-p'); if (g.out[k] != null) return;
-      var tu2 = g.st === 'play' && g.grp ? zgTurnAt(t) : null, act = !tu2 || g.grp[k] === tu2.g, nx = !act && tu2 && tu2.to - t <= ZG_CD;
-      if (el.classList.contains('rest') !== !act) el.classList.toggle('rest', !act); if (el.classList.contains('soon') !== !!nx) el.classList.toggle('soon', !!nx);   // (the side that's waiting stands dimmed; just before their turn they light up)
-      var want = act ? (g.sgn[k] || 1) * [0, 14, 30, 30][g.lvl[k] || 0] : 0; el._lean = (el._lean || 0) + (want - (el._lean || 0)) * .12;
+      var want = (g.sgn[k] || 1) * [0, 14, 30, 30][g.lvl[k] || 0]; el._lean = (el._lean || 0) + (want - (el._lean || 0)) * .12;
       el.querySelector('.zgfig').style.rotate = (px * [40, 55, 70][g.st === 'play' ? zgStage(t) : 0] + el._lean).toFixed(2) + 'deg';
     });
   }
@@ -6648,9 +6635,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (ck.textContent !== sec) ck.textContent = sec; ov.classList.toggle('cd', !!cdn);
     var up = g.order.filter(function (k) { return g.out[k] == null; }).length;
     if (g.st !== 'intro') { ov.classList.add('rise'); ov.classList.add('rise2'); ov.classList.add('hostsoff'); }
-    var msg = g.st === 'intro' ? '' : g.st === 'ready' || (g.st === 'play' && tz < ZG_GO) ? (g.grp ? '⬅️ Left side first! Keep your finger on the glowing zone on your phone 🌌' : 'Hold on tight… keep your finger on the glowing zone on your phone! 🌌') : g.st === 'play' ? (zgBreak((Date.now() - g.t0) / 1000) >= 0 ? '☕ Break time' : (function () { var tu3 = g.grp ? zgTurnAt(tz) : null, cd3 = tu3 && tu3.to < ZG_LEN ? tu3.to - tz : 99; return (tu3 ? (cd3 <= ZG_CD ? (tu3.g ? '⬅️ Left side' : 'Right side ➡️') + ': get ready… ' + Math.ceil(cd3) : (tu3.g ? 'Right side’s turn ➡️' : '⬅️ Left side’s turn')) + ' · ' : '') + 'Stage ' + ((g.stage || 0) + 1) + ' of 3 · ' + up + ' of ' + g.order.length + ' still standing'; })()) : !g.done ? 'And… stop! 🌌' : g.win.length ? '🏆 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' win!' : ' wins!') + (shopOn() ? '' : ' +' + g.prize) : 'Everyone fell into space… 🌌';
+    var msg = g.st === 'intro' ? '' : g.st === 'ready' || (g.st === 'play' && tz < ZG_GO) ? 'Hold on tight… keep your finger on the glowing zone on your phone! 🌌' : g.st === 'play' ? (zgBreak((Date.now() - g.t0) / 1000) >= 0 ? '☕ Break time' : 'Stage ' + ((g.stage || 0) + 1) + ' of 3 · ' + up + ' of ' + g.order.length + ' still standing') : !g.done ? 'And… stop! 🌌' : g.win.length ? '🏆 ' + g.win.map(function (k) { return players[k] ? esc(players[k].name) : ''; }).join(' & ') + (g.win.length > 1 ? ' win!' : ' wins!') + (shopOn() ? '' : ' +' + g.prize) : 'Everyone fell into space… 🌌';
     var me = ov.querySelector('.zgmsg'); if (me.innerHTML !== msg) me.innerHTML = msg;
-    var bd = ov.querySelector('.zgboard'), bh = g.done ? zgRank(g).map(function (x, i) { var p = players[x.pid]; if (!p) return ''; return '<div class="tcrow' + (g.win.indexOf(x.pid) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (x.up ? '🧍 standing' : ((g.hit || {})[x.pid] ? '☄️ hit' : '🌌 fell') + (g.grp ? ' after ' + Math.floor(x.at) + 's of play' : ' at ' + Math.floor(x.at) + 's')) + '</em><i>' + x.acc + '%</i></div>'; }).join('') : '';
+    var bd = ov.querySelector('.zgboard'), bh = g.done ? zgRank(g).map(function (x, i) { var p = players[x.pid]; if (!p) return ''; return '<div class="tcrow' + (g.win.indexOf(x.pid) >= 0 ? ' win' : '') + '"><b>' + (i + 1) + '</b>' + charSvg(p.char) + '<span>' + esc(p.name) + '</span><em>' + (x.up ? '🧍 standing' : ((g.hit || {})[x.pid] ? '☄️ hit at ' : '🌌 fell at ') + Math.floor(x.at) + 's') + '</em><i>' + x.acc + '%</i></div>'; }).join('') : '';
     if (bd.getAttribute('data-h') !== bh) { bd.setAttribute('data-h', bh); bd.innerHTML = bh; }
   }
   net.on('zg', zgMsg);
