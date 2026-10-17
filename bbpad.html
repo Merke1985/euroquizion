@@ -54,7 +54,7 @@
 </div>
 <div class="hidden" id="game">
   <div class="top"><span class="nm"><span class="dot" id="dot"></span><span id="me"></span></span><span class="fe" id="fe"></span></div>
-  <div id="pad"><canvas id="view"></canvas><div class="big" id="big">You’re in!<span class="small">Watch the big screen</span></div></div>
+  <div id="pad"><canvas id="view"></canvas><div class="big" id="big">Watch the big screen</div></div>
   <div class="msg" id="msg"></div>
 </div>
 <script src="vendor/supabase.js?v=1"></script>
@@ -104,7 +104,7 @@
     else if (my.s === 'out') { cls = 'out'; txt = '🌿 Your bird has landed<span class="small">No feathers left: watch the rest fly</span>'; }
     else if (my.s === 'fly') { cls = 'fly' + (held ? ' down' : ''); txt = 'Hold to fly up · let go to glide'; }
     else if (my.s === 'warn') { cls = 'warn'; txt = 'Get ready…<span class="small">You’re about to fly</span>'; try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
-    else { txt = my.c ? 'Watch the big screen<span class="small">Find your colour: soon everyone flies</span>' : 'Watch the big screen<span class="small">The flock is about to take off</span>'; }
+    else { txt = 'Watch the big screen'; }
     if (my.c && s.ph === 'play' && my.s !== 'fly' && my.s !== 'out') m = 'This is your colour on the big screen.';
     pre = s.ph === 'play' && !!my.c && (my.s === 'wait' || my.s === 'warn') && !!K && gameT() < K.P0 + 1;   // (before you can steer: your bird already shows, with a countdown)
     if (pre) cls += ' pre';
