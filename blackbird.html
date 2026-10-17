@@ -129,7 +129,7 @@
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     var FIRST_T = MUSIC - SONG0 + 47.9;   // (the first group's turn: its first tree comes at 0:49 in the song. Turns every 7 s (5 s flying, 2 s pause): 6 over the pine forest, 6 in the cave)
     MSG1 = FIRST_T - CD - 0.4; MSG0 = MSG1 - 8;   // (5 s the how-to, then 3 s: watch your phone if the stream lags)   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
-    REVEAL0 = tAir + 1.5; var gap = Math.max(0.25, Math.min(0.9, 4.2 / Math.max(1, order.length - 1)));   /* (one by one, all within the how-to card) */ MSG0 = REVEAL0; order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the how-to card comes up as the colours appear, and the neon lights up one bird at a time)
+    REVEAL0 = tAir + 1.5; var gap = Math.max(0.25, Math.min(0.9, 3.4 / Math.max(1, order.length - 1)));   /* (one by one, all within the how-to card) */ MSG0 = REVEAL0; order.forEach(function (b, i) { b.colT = REVEAL0 + 1 + i * gap; });   // (the how-to card comes up as the colours appear, and the neon lights up one bird at a time)
     pgroups = []; pgi = 0; pracDone = false; PRACT0 = FIRST_T; PRACT_END = FIRST_T; SAFE_X = camAt(FIRST_T) + 0.3 * W / H;   // (no practice: straight into it)
     var FT = FIRST_T + 6 * (TURN + WARN) - 1;   // (into the cave just before the 7th turn)
     FOREST = camAt(FT) + 0.3 * W / H; DIVE0 = FOREST - 3.4; DIVE1 = FOREST + 0.9; GRAVE_X = camAt(GRAVE_T) + 0.3 * W / H; XEND = GRAVE_X; DUR = END_T;
