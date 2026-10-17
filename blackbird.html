@@ -119,6 +119,7 @@
     var D0 = STOP_T - 3.3; if (T > D0) return FASTX * (1 - ez((T - D0) / (STOP_T - D0)));   // (fast right through 'Follow me!'; the wind drops as they fly out of the cave)
     return 1 + (FASTX - 1) * ez((T - FAST_T) / 2.5);
   }
+  var CLOUDS = false;   // (the cloud deck over the sky: switched off for now; true brings it back)
   var FASTX = 2.3;   // (how much faster from 2:05)
   function camAt(T) { var x = 0; for (var tt = TAKEOFF; tt < T; tt += 0.02) x += SPEED * 0.02 * Math.max(0, Math.min(1, (tt - TAKEOFF - 1.6) / 2.4)) * spd(tt); return x; }   // (where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
@@ -704,9 +705,9 @@
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
     var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04071a'); g.addColorStop(0.55, '#0b1433'); g.addColorStop(1, '#0d1a2a'); cx.fillStyle = g; cx.fillRect(-W, -H, W * 3, H * 3);
     stars.forEach(function (s) { cx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.04) % W + W) % W, s.y * H * 0.6, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
-    var cl1 = Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 70)) / 6)), cl2 = Math.max(0, Math.min(1, (t - FAST_T - 1) / 9)), cloudA = t >= HOME_T ? 0 : cl1 * (1 - cl2); cloudA = cloudA * cloudA * (3 - 2 * cloudA);   // (1:10: clouds roll in over the whole sky and hide the moon; they dissipate while the flock races through the cave, from 2:05)
+    var cl1 = CLOUDS ? Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 70)) / 6)) : Math.max(0, Math.min(1, (cam + 0.3 * W / H - FOREST) / 0.6)), cl2 = CLOUDS ? Math.max(0, Math.min(1, (t - FAST_T - 1) / 9)) : Math.max(0, Math.min(1, (t - SOAR_T + 0.5) / 3.5)), cloudA = t >= HOME_T ? 0 : cl1 * (1 - cl2); cloudA = cloudA * cloudA * (3 - 2 * cloudA);   // (CLOUDS on: a cloud deck from 1:10 that dissipates in the fast part. Off: the moonlight just fades inside the cave and comes back on the way out)
     var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.globalAlpha = 1 - cloudA; cx.fillStyle = mg; cx.fillRect(0, 0, W, H); cx.globalAlpha = 1;
-    if (cloudA > 0.01) {   // the clouds: a whole deck rolling in from the right over the sky, dark with a faint silver edge; when they dissipate they thin out and drift apart
+    if (CLOUDS && cloudA > 0.01) {   // the clouds: a whole deck rolling in from the right over the sky, dark with a faint silver edge; when they dissipate they thin out and drift apart
       cx.save(); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
       for (var layer = 0; layer < 2; layer++) for (var ci = 0; ci < 16; ci++) {
         var u = ci / 15, cw2 = H * (0.16 + 0.08 * hsh(ci + layer * 40)), ch2 = cw2 * (0.42 + 0.12 * hsh(ci + 7));
