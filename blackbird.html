@@ -86,8 +86,7 @@
   addEventListener('resize', size); size();
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
-  var MUSIC = 3, BOTTOM = 9, UP = 5, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
-      LAND0 = CLOSE_END + 1.2, LAND1 = LAND0 + 3.4,   // (the lone blackbird flies in and lands on her roof after the close-up)
+  var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99,   // (after the take-off: the neon colours one by one, then practice in pairs (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function camAt(T) { return Math.max(0, T - TAKEOFF - 2.8) * SPEED; }   // (roughly where the camera is at time T)
@@ -326,6 +325,7 @@
     cx.fillStyle = '#ffd08a'; cx.fillRect(sx(0.672), sy(0.775), sx(0.688) - sx(0.672), sy(0.8) - sy(0.775)); cx.fillStyle = '#2a2140'; cx.fillRect(sx(0.668), sy(0.77), sx(0.692) - sx(0.668), H * 0.004);   // the little lamp
     cx.fillStyle = '#141020'; cx.fillRect(sx(0.55), sy(0.955), sx(0.67) - sx(0.55), sy(0.975) - sy(0.955)); cx.fillRect(sx(0.54), sy(0.965), sx(0.68) - sx(0.54), sy(0.975) - sy(0.965));   // the steps
     cx.fillStyle = '#06110d'; [[0.16, 0.05], [0.24, 0.04], [0.47, 0.045], [0.75, 0.05], [0.84, 0.06], [0.93, 0.045]].forEach(function (q) { cx.beginPath(); cx.ellipse(sx(q[0]), sy(0.975), q[1] * H, q[1] * H * 0.7, 0, Math.PI, 0); cx.fill(); });   // bushes
+    drawHosts();
     // a lit window in the wall below
     var dx0 = sx(0.26), dx1 = sx(0.4), dy0 = sy(0.72), dy1 = sy(0.86); cx.fillStyle = '#c98e45'; cx.fillRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.strokeStyle = '#2a2140'; cx.lineWidth = 3; cx.strokeRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.beginPath(); cx.moveTo((dx0 + dx1) / 2, dy0); cx.lineTo((dx0 + dx1) / 2, dy1); cx.moveTo(dx0, (dy0 + dy1) / 2); cx.lineTo(dx1, (dy0 + dy1) / 2); cx.stroke();
     // her bedroom window, up in the roof right below the flock: wide open, deep blue light, the curtain blowing out into the night
@@ -350,6 +350,47 @@
     cx.fillStyle = '#1d1830'; cx.fillRect(W0 - Ww * 0.06, V1, Ww * 1.12, Ww * 0.04);   // the sill
 
   }
+  /* the two hosts, left of the house in the dark: one holds a lantern, they whisper (speech bubbles for now; voices later) */
+  var WHISPER = [[0.8, 3.9, 0, 'Tonight we’re here to remember…'], [4.1, 7.2, 1, '…that Eurovision isn’t always a party.'], [7.4, 10.4, 0, 'It can also be emotional.']];
+  function drawHosts() {
+    var gy = sy(0.975), hh = H * 0.2, fl = 0.85 + 0.1 * Math.sin(t * 11) + 0.05 * Math.sin(t * 23), say = WHISPER.filter(function (w) { return t >= w[0] && t < w[1]; })[0];
+    var lx = sx(-0.075), ly = gy - hh * 0.5;   // the lantern
+    var lg = cx.createRadialGradient(lx, ly, 0, lx, ly, hh * 1.6); lg.addColorStop(0, 'rgba(255,190,100,' + (0.42 * fl) + ')'); lg.addColorStop(0.35, 'rgba(255,160,70,' + (0.16 * fl) + ')'); lg.addColorStop(1, 'rgba(255,150,60,0)'); cx.fillStyle = lg; cx.fillRect(lx - hh * 1.6, ly - hh * 1.6, hh * 3.2, hh * 3.2);
+    var gl = cx.createRadialGradient(lx, gy, 0, lx, gy, hh * 0.9); gl.addColorStop(0, 'rgba(255,180,90,' + (0.3 * fl) + ')'); gl.addColorStop(1, 'rgba(255,180,90,0)'); cx.fillStyle = gl; cx.beginPath(); cx.ellipse(lx, gy + 2, hh * 0.9, hh * 0.12, 0, 0, 7); cx.fill();   // its light on the grass
+    [{ x: -0.13, coat: '#1f4a52', hair: '#2a1b12', face: 1, scarf: '#d8b45a' }, { x: -0.02, coat: '#5a1f35', hair: '#c9a46a', face: -1, scarf: '#9fc3d8' }].forEach(function (h, i) {
+      var X = sx(h.x), top = gy - hh, talk = say && say[2] === i, warm = i === 0 ? 1 : 0.6;
+      cx.fillStyle = '#05070f'; [-0.09, 0.05].forEach(function (o) { cx.fillRect(X + o * hh, gy - hh * 0.3, hh * 0.07, hh * 0.3); });   // legs
+      cx.fillStyle = h.coat; cx.beginPath(); cx.moveTo(X - hh * 0.13, top + hh * 0.24); cx.lineTo(X + hh * 0.13, top + hh * 0.24); cx.lineTo(X + hh * 0.18, gy - hh * 0.22); cx.lineTo(X - hh * 0.18, gy - hh * 0.22); cx.closePath(); cx.fill();   // a long coat
+      cx.fillStyle = 'rgba(255,170,80,' + (0.25 * warm * fl) + ')'; cx.beginPath(); cx.moveTo(X + h.face * hh * 0.02, top + hh * 0.26); cx.lineTo(X + h.face * hh * 0.13, top + hh * 0.24); cx.lineTo(X + h.face * hh * 0.18, gy - hh * 0.22); cx.lineTo(X + h.face * hh * 0.04, gy - hh * 0.22); cx.closePath(); if (i === 0) cx.fill();   // lantern light on the coat
+      cx.fillStyle = h.scarf; cx.fillRect(X - hh * 0.1, top + hh * 0.2, hh * 0.2, hh * 0.06); cx.fillRect(X + h.face * -hh * 0.06, top + hh * 0.24, hh * 0.05, hh * 0.16);   // a scarf
+      cx.fillStyle = '#e2b892'; cx.beginPath(); cx.ellipse(X + h.face * hh * 0.01, top + hh * 0.11, hh * 0.075, hh * 0.09, 0, 0, 7); cx.fill();   // head
+      cx.fillStyle = 'rgba(10,15,40,.45)'; cx.beginPath(); cx.ellipse(X - h.face * hh * 0.03, top + hh * 0.11, hh * 0.055, hh * 0.09, 0, 0, 7); cx.fill();   // the far side of the face in shadow
+      cx.fillStyle = h.hair; cx.beginPath();
+      if (i === 0) { cx.ellipse(X, top + hh * 0.05, hh * 0.085, hh * 0.05, -0.2, 0, 7); cx.fill(); cx.beginPath(); cx.ellipse(X - h.face * hh * 0.05, top + hh * 0.09, hh * 0.035, hh * 0.06, 0, 0, 7); }   // short, swept
+      else { for (var c = 0; c < 6; c++) { var a = Math.PI * (1.05 + c * 0.18); cx.moveTo(X + Math.cos(a) * hh * 0.07, top + hh * 0.08 + Math.sin(a) * hh * 0.07); cx.arc(X + Math.cos(a) * hh * 0.07, top + hh * 0.08 + Math.sin(a) * hh * 0.07, hh * 0.035, 0, 7); } }   // curls
+      cx.fill();
+      cx.fillStyle = '#1a1020'; cx.beginPath(); cx.arc(X + h.face * hh * 0.04, top + hh * 0.1, hh * 0.009, 0, 7); cx.fill();   // eye
+      cx.fillRect(X + h.face * hh * 0.035, top + hh * 0.15, h.face * hh * 0.025, hh * (talk ? 0.008 + 0.008 * Math.abs(Math.sin(t * 9)) : 0.005));   // mouth, moving when whispering
+      cx.strokeStyle = h.coat; cx.lineWidth = hh * 0.055; cx.lineCap = 'round'; cx.beginPath();
+      if (i === 0) { cx.moveTo(X + hh * 0.08, top + hh * 0.3); cx.lineTo(X + hh * 0.17, top + hh * 0.42); cx.lineTo(sx(-0.075) - hh * 0.01, ly - hh * 0.11); }   // the arm holding the lantern
+      else { cx.moveTo(X - hh * 0.08, top + hh * 0.3); cx.lineTo(X - hh * 0.12, top + hh * 0.36); cx.lineTo(X - hh * 0.07, top + hh * 0.17); }   // a hand to the mouth: whispering
+      cx.stroke();
+      cx.fillStyle = '#e2b892'; cx.beginPath(); if (i === 0) cx.arc(sx(-0.075) - hh * 0.01, ly - hh * 0.11, hh * 0.025, 0, 7); else cx.arc(X - hh * 0.065, top + hh * 0.165, hh * 0.025, 0, 7); cx.fill();   // hands
+      if (talk) {   // the whisper, in a soft bubble above their head
+        var a0 = Math.min(1, (t - say[0]) / 0.4, (say[1] - t) / 0.4); cx.globalAlpha = Math.max(0, a0);
+        cx.font = 'italic 600 ' + Math.round(H * 0.024) + 'px "Bricolage Grotesque",system-ui'; var tw = cx.measureText(say[3]).width, bx0 = X - tw / 2 + h.face * hh * 0.1, by0 = top - hh * 0.32, pw = tw + H * 0.03, ph = H * 0.045;
+        cx.fillStyle = 'rgba(15,18,45,.82)'; cx.strokeStyle = 'rgba(255,220,170,.5)'; cx.lineWidth = 1.2; cx.beginPath(); if (cx.roundRect) cx.roundRect(bx0 - H * 0.015, by0, pw, ph, ph / 2); else cx.rect(bx0 - H * 0.015, by0, pw, ph); cx.fill(); cx.stroke();
+        cx.beginPath(); cx.moveTo(X - hh * 0.02, by0 + ph); cx.lineTo(X + h.face * hh * 0.02, top - hh * 0.04); cx.lineTo(X + hh * 0.05, by0 + ph); cx.closePath(); cx.fill();
+        cx.fillStyle = '#ffe9c9'; cx.textAlign = 'left'; cx.textBaseline = 'middle'; cx.fillText(say[3], bx0, by0 + ph / 2); cx.textBaseline = 'alphabetic'; cx.globalAlpha = 1;
+      }
+    });
+    // the lantern itself
+    cx.strokeStyle = '#2a2140'; cx.lineWidth = hh * 0.012; cx.beginPath(); cx.arc(lx, ly - hh * 0.09, hh * 0.025, Math.PI, 0); cx.stroke();
+    cx.fillStyle = '#2a2140'; cx.fillRect(lx - hh * 0.04, ly - hh * 0.085, hh * 0.08, hh * 0.018); cx.fillRect(lx - hh * 0.045, ly + hh * 0.05, hh * 0.09, hh * 0.02);
+    cx.fillStyle = 'rgba(255,' + Math.round(200 + 30 * fl) + ',120,' + (0.85 * fl + 0.1) + ')'; cx.fillRect(lx - hh * 0.032, ly - hh * 0.067, hh * 0.064, hh * 0.117);
+    cx.fillStyle = '#fff6d0'; cx.beginPath(); cx.ellipse(lx, ly - hh * 0.005 + Math.sin(t * 13) * hh * 0.003, hh * 0.012, hh * 0.022 * fl, 0, 0, 7); cx.fill();   // the flame
+    cx.strokeStyle = '#2a2140'; cx.lineWidth = hh * 0.006; cx.beginPath(); cx.moveTo(lx, ly - hh * 0.067); cx.lineTo(lx, ly + hh * 0.05); cx.stroke();
+  }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
     var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
     if (side < 0) return e - 0.018 * (Math.abs(Math.sin(X * 6.3)) + 0.6 * Math.abs(Math.sin(X * 11.7 + 2)));
@@ -363,7 +404,7 @@
     var Z0 = 0.46 / (WIN.y1 - WIN.y0), lead = birds.filter(function (b) { return b.lead; })[0], lx = (lead ? lead.rx : 0.905), wx = (WIN.x0 + WIN.x1) / 2, wy = (WIN.y0 + WIN.y1) / 2;
     var Z2 = Math.min(3, (W / H) / 0.62), tx2 = (wx + lx) / 2 * H, ty2 = (wy + ROOF_Y - 0.03) / 2 * H;   // (her and the bird together)
     var K = [   // [time, zoom, x, y]: the camera's stops
-      [0, 1.6, 0.42 * H, 0.86 * H], [BOTTOM, 1.6, 0.47 * H, 0.85 * H],   // the bottom of the house, a bit to the left (drifting a touch)
+      [0, 1.7, 0.02 * H, 0.8 * H], [BOTTOM, 1.7, 0.06 * H, 0.8 * H],   // the hosts with their lantern, left of the house (drifting a touch); then the song starts and we go up
       [BOTTOM + UP, Z0, wx * H, wy * H],   // up to her window
       [CLOSE_END, Z0 * 0.96, wx * H, wy * H],   // her, singing, sad (slowly a little closer)
       [CLOSE_END + TWO, Z2, tx2, ty2],   // gently back: her and the blackbird that has just landed on her roof
@@ -375,7 +416,6 @@
   }
   function birdPos(b) {   // where a bird is: at the take-off the lone bird goes up off the ridge; the others rise straight up from behind the house first, then out into the flock
     var X = cam + bx(b), y = b.y, L = t < TAKEOFF ? 0 : Math.max(0, Math.min(1, (t - TAKEOFF - b.dl) / b.fi));
-    if (b.lead && t < LAND1) { var la = Math.max(0, Math.min(1, (t - LAND0) / (LAND1 - LAND0))), le = 1 - Math.pow(1 - la, 2.4); return { X: b.rx + 0.5 * (1 - le), y: b.ry - 0.34 * Math.pow(1 - le, 1.4) - Math.sin(Math.PI * la) * 0.03, L: 0, land: la }; }   // (flying in from the upper right, gliding down onto the ridge)
     if (L < 1) {
       if (b.lead) { var e = L * L * (3 - 2 * L); X = b.rx + (X - b.rx) * e; y = b.ry + (b.y - b.ry) * e - Math.sin(Math.PI * L) * 0.12; }
       else { var ey = 1 - Math.pow(1 - L, 2.2), ex = Math.pow(L, 1.8); X = b.rx + (X - b.rx) * ex; y = b.ry + (b.y - 0.06 - b.ry) * ey + 0.06 * ex; }
@@ -386,7 +426,6 @@
   function behind(b) { if (b.lead || t < TAKEOFF || cam > 1.4) return false; var p = birdPos(b); return p.L < 1 && p.y > roofTop(p.X - cam * 0) - 0.035; }   // (still below the roofline: drawn before the house, so it hides them)
   function drawBird(b) {
       if (!b.lead && t < TAKEOFF + b.dl) return;   // (the others wait out of sight behind the house)
-      if (b.lead && t < LAND0) return;   // (not there yet during her close-up)
       var bp = birdPos(b), X = bp.X, py0 = bp.y, L = bp.L, landing = bp.land != null && bp.land < 1;
       var px = sx(X), py = sy(py0), s = H * 0.032;
       if (b.out && py > H + 40) return;
@@ -571,7 +610,7 @@
   function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(0, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(0, true); } yt.unMute(); } catch (e) {} }, 400); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
   function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
-  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { return { TAKEOFF: TAKEOFF, LAND0: LAND0, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
+  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { return { TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();
 })();
 </script>
