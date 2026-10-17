@@ -69,7 +69,7 @@
 <div class="side" id="side"></div>
 <div class="songclock" id="songclock"></div>
 <div class="banner" id="banner"></div>
-<div class="howto" id="howto"><p>When your <span class="glow">colour and name</span> light up,<br>it’s your time to fly.</p><p>📱 Use the controls on your phone.</p></div>
+<div class="howto" id="howto"><p>Find your <span class="glow">colour and name</span>:<br>everyone flies at the same time.</p><p>📱 Hold the button on your phone to fly up, let go to glide.</p></div>
 <div class="hint">Players steer their own bird with their phone; the computer birds fly themselves.</div>
 <div id="yt"></div>
 
@@ -77,8 +77,8 @@
   <div class="card">
     <h2>🐦‍⬛ Blackbird</h2>
     <p>The whole flock takes off from a rooftop, flies through the night sky and then down into a dark forest, along with the song. Most of the time every bird is on <b>autopilot</b> and can’t crash.</p>
-    <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you, your phone lights up in your colour: <b>hold</b> to fly up, <b>let go</b> to glide down, and keep to the moonlit path through the dark forest: away from the leaves above, the undergrowth below and the branches.</p>
-    <p>A hit costs a feather 🪶 (you have 3). No feathers left and your bird lands on a branch. Most feathers when the song ends wins.</p>
+    <p>When the flock is up, <b>everyone flies at the same time</b>, each with their own phone: <b>hold</b> to fly up, <b>let go</b> to glide down. Over the pine forest only the trees are in the way; in the cave keep to the path of fireflies, away from the leaves above, the undergrowth below and the branches.</p>
+    <p>A hit costs a feather 🪶 (you have 5). No feathers left and your bird lands on a branch. Most feathers when the song ends wins.</p>
     <div class="join"><div class="qr" id="bbqr"></div><div><b>📱 Fly with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="bburl"></span><br><span class="mute">Room</span> <b id="bbcode" class="code"></b><div id="bbplayers" class="plist"><span class="mute">Nobody has joined yet: the computer birds fly alone.</span></div></div></div>
     <div class="btns">
       <label>Computer birds <select id="nbots"><option>0</option><option>1</option><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
@@ -134,7 +134,7 @@
     if (x < FOREST) return 0.25 * Math.max(0, x - SAFE_X) / Math.max(1, FOREST - SAFE_X);
     return Math.min(0.8, 0.4 + 0.4 * (x - FOREST) / Math.max(1, XEND - FOREST));   // (the forest: harder as it goes, but never too much)
   }
-  function half(x) { return 0.30 - 0.1 * diff(x); }   // half the height of the band of light
+  function half(x) { return 0.30 - 0.06 * diff(x); }   // (half the height of the path: wide, since everyone flies the whole time)   // half the height of the band of light
   var DIVE0 = FOREST - 3.4, DIVE1 = FOREST + 0.9;   // (the dive: from here nobody flies; the flock rises once more and dives down into the forest together)
   function inDive(X) { return X > DIVE0 - 1.6 && X < DIVE1; }
   function cen(x) {
@@ -144,26 +144,26 @@
     return c;
   }
   function cen0(x) {   // its middle: a slow wave that swings wider and faster as the song builds (not the real melody)
-    var d = diff(x), a = 0.05 + 0.17 * d;
+    var d = diff(x), a = 0.05 + 0.12 * d;
     var y = 0.5 + a * (0.62 * Math.sin(0.85 * x) + 0.28 * Math.sin(2.05 * x + 1.3) + 0.1 * Math.sin((3.6 + 2 * d) * x + 0.4));
     var h = half(x); return Math.max(h + 0.05, Math.min(1 - h - 0.05, y));
   }
   var branches = [];
   var turnEnd = -1, patternNo = 0, lastPlanT = -99, allPlanned = false, allWarn = false, allOn = false;
-  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnEnd = -1; allPlanned = false; allWarn = false; allOn = false; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
+  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnEnd = -1; planT = -1; allPlanned = false; allWarn = false; allOn = false; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
   /* Fair turns: every group in a round meets exactly the same obstacles (how many, from which side, where in the turn and
      how deep). Each new round gets a new pattern, a little harder. */
   var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
   function birdXAt(T) { var x = cam; for (var tt = t; tt < T; tt += 0.02) x += SPEED * 0.02 * spd(tt); return x + 0.3 * W / H; }
   function newPattern(x) {
-    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 2 : patternNo === 0 ? 3 : 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = []; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
+    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 2 : patternNo === 0 ? 3 : 1 + (d > 0.55 ? 1 : 0), p = []; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
     for (var i = 0; i < n; i++) p.push({ tau: 1.6 + (i + 0.5 + (rnd() - 0.5) * 0.5) / n * (TURN - 2.1), top: forest && rnd() < 0.5, reach: (fast ? 0.3 + 0.12 * d : 0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)
     p.fast = fast; return p;
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
     var x0 = birdXAt(T);
     var fast = T >= FAST_T - 0.5;
-    if (roundTurn >= roundLen || !pattern || pattern.fast !== fast) { pattern = newPattern(x0, fast); roundTurn = 0; roundLen = Math.max(1, Math.ceil(alive().length / pickN)); }
+    if (roundTurn >= roundLen || !pattern || pattern.fast !== fast) { pattern = newPattern(x0, fast); roundTurn = 0; roundLen = 1; }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
     pattern.forEach(function (o) { var x = birdXAt(T + o.tau), h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw }); });
     branches = branches.filter(function (r) { return r.x > cam - 1; });
@@ -178,10 +178,10 @@
     birds = [];
     var hs = joined.slice(0, 10), bn = NAMES.filter(function (nm) { return !hs.some(function (h) { return h.name.toLowerCase() === nm.toLowerCase(); }); });
     nb = Math.max(hs.length ? 0 : 1, Math.min(nb, 10 - hs.length));
-    for (var i = 0; i < hs.length + nb; i++) birds.push({ id: i, name: i < hs.length ? hs[i].name : bn[i - hs.length], pid: i < hs.length ? hs[i].pid : null, col: COLS[i % COLS.length], human: i < hs.length,   /* (no controls in the browser: on the big screen every bird flies itself; players will steer from their phones) */ feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
-      skill: 0.55 + Math.random() * 0.4, react: 0.1 + Math.random() * 0.14, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
+    for (var i = 0; i < hs.length + nb; i++) birds.push({ id: i, name: i < hs.length ? hs[i].name : bn[i - hs.length], pid: i < hs.length ? hs[i].pid : null, col: COLS[i % COLS.length], human: i < hs.length,   /* (no controls in the browser: on the big screen every bird flies itself; players will steer from their phones) */ feathers: 5, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
+      skill: 0.55 + Math.random() * 0.4, react: 0.07 + Math.random() * 0.08, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
     me = {};   // (nobody plays on this screen)
-    birds.push({ id: birds.length, name: '', col: '#000000', npc: true, human: false, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0, skill: 1, react: 0.1, decide: 0, hold: false, flap: 0, slot: birds.length, colT: 1e9 });   // (the lone blackbird: our guide. Nobody steers it, it can't crash; we all follow it)
+    birds.push({ id: birds.length, name: '', col: '#000000', npc: true, human: false, feathers: 5, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0, skill: 1, react: 0.1, decide: 0, hold: false, flap: 0, slot: birds.length, colT: 1e9 });   // (the lone blackbird: our guide. Nobody steers it, it can't crash; we all follow it)
     var n = birds.length; birds.forEach(function (b, i) { b.off = n > 1 ? (i / (n - 1)) * 2 - 1 : 0; b.xo = -((i * 37) % n) * 0.06; });   // (a loose V: everyone their own place in the formation)
     var lead = birds[n - 1]; lead.lead = true;   // (one lone blackbird on her roof; the rest of the flock waits behind the house)
     var others = birds.filter(function (b) { return !b.lead; });
@@ -203,30 +203,16 @@
     var sh = al.slice().sort(function () { return Math.random() - .5; }).sort(function (a, b) { return a.flown - b.flown; });
     return sh.slice(0, Math.min(pickN, al.length));
   }
+  /* Everyone flies at the same time: after 2 s of blinking, every bird is steered by its own player (or flies itself, for a
+     computer bird) until the flock leaves the cave. The obstacles come in stretches of SEG seconds, each laid out out of sight ahead. */
+  var SEG = 5, planT = -1;
   function schedule() {
     if (t >= SOAR_T) return;
+    if (planT < 0) planT = PRACT0;
+    while (t >= planT - 3.6 && planT + SEG <= ALL_T + 0.3) { planTurn(planT); planT += SEG; }
     if (t >= ALL_T - 3.6 && !allPlanned) { allPlanned = true; for (var k = 0; k < 5; k++) { var x = birdXAt(ALL_T + 1.3 + k * 1.9), h = half(x), c = cen(x), top = k % 2 === 1, reach = 0.22 * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the follow-me stretch: gentle branches, the blackbird shows the way)
-    if (t >= ALL_T - WARN) {   // (the last 3 s of the cave: everyone at once, after 2 s of blinking)
-      if (t < ALL_T) { if (!allWarn) { allWarn = true; pending = alive(); } return; }
-      if (!allOn) { allOn = true; pending = []; alive().forEach(function (b) { b.manual = true; b.turnStart = t; b.turnHit = false; }); }
-      return;
-    }
-    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick >= lastPlanT + TURN - 0.3 && nextPick + TURN <= ALL_T - WARN + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
-      var xa = birdXAt(nextPick), xb = xa + TURN * SPEED;
-      plannedFor = nextPick; lastPlanT = nextPick; planTurn(nextPick);   // (turns go on right up to the forest: no pause for the dive any more)
-    }
-    if (t >= nextPick - WARN && !pending.length && nextPick + (t < PRACT_END - 1 ? 0 : TURN) <= ALL_T - WARN + 0.3) {
-      if (pgi < pgroups.length && t < PRACT_END - 1) pending = pgroups[pgi++].filter(function (b) { return !b.out; });   // (practice: the pairs in turn)
-      else { if (!pracDone) { pracDone = true; nowAt = t + WARN; birds.forEach(function (b) { b.flown = 0; }); } pending = choose(); }
-      warnAt = t;
-    }
-    if (turnEnd > 0 && t >= turnEnd) { turnEnd = -1; birds.forEach(function (b) { b.manual = false; }); }   // (a turn ends: 2 s with nobody steering, while the next group blinks)
-    if (t >= nextPick && pending.length) {
-      birds.forEach(function (b) { b.manual = false; });
-      pending.forEach(function (b) { if (!b.out) { b.manual = true; b.turnStart = t; b.turnHit = false; } });
-      pending = []; turnEnd = nextPick + TURN; nextPick = turnEnd + WARN;   // (a fixed rhythm: no drift)
-    }
-    if (t >= DUR - 2) birds.forEach(function (b) { b.manual = false; });
+    if (t >= PRACT0 - WARN && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (everyone blinks for 2 s)
+    if (t >= PRACT0) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
 
   // ---------- a computer bird flying itself: aims for the middle of the band (or the gap past a branch), with a little delay and the odd slip ----------
@@ -771,7 +757,8 @@
     var bn = $('banner'), txt = '', cls = '';
     if (t >= SOAR_T) { txt = t >= LAND_T + 0.8 && t < LAND_T + 6.6 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
     else if (t >= FAST_T - 0.5 && t < FAST_T + 2.5 && !me.manual) { txt = '💨 Faster! Follow the blackbird…'; cls = 'warn'; }
-    else if (t >= ALL_T - WARN && t < ALL_T + 2.5) { txt = '🐦‍⬛ Everyone together: follow the blackbird!'; cls = 'warn'; }
+    else if (t >= PRACT0 - WARN && t < PRACT0 + 2.5) { txt = '🐦‍⬛ Everyone, fly!'; cls = 'warn'; }
+    else if (t >= ALL_T - WARN && t < ALL_T + 2.5) { txt = '🐦‍⬛ Follow the blackbird!'; cls = 'warn'; }
     else if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
