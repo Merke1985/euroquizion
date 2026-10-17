@@ -250,7 +250,7 @@
   }
 
   // ---------- one step ----------
-  var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
+  var GRAV = 1.1, LIFT = 1.35, VMAX = 0.6, DRAG = 1.6, R = 0.026;   // (floaty and forgiving: gentler rise and fall, a lower top speed, and a little air drag so it doesn't overshoot)
   function step(dt) {
     t += dt; if (t >= TAKEOFF) cam += SPEED * dt * Math.max(0, Math.min(1, (t - TAKEOFF - 1.6) / 2.4)) * spd(t); if (t >= HOME_T) cam = 0; schedule();
     if (!ctrlOver && allPlanned && t > FAST_T && t < SOAR_T) {   // the last obstacle is behind every bird: hands off, look at the big screen
@@ -284,7 +284,7 @@
         var fromPhone = b.human && b.netT && Date.now() - b.netT < 1200;   // (the phone flies this bird itself and tells us where it is)
         if (fromPhone) { var ny2 = b.netY + b.netVy * Math.min(0.3, (Date.now() - b.netT) / 1000); b.vy = (ny2 - b.y) / Math.max(dt, 1e-3) * Math.min(1, dt * 9); b.y += (ny2 - b.y) * Math.min(1, dt * 9); }
         else if (b.human) { var up = !!holds[b.pid];   // (no word from the phone: its button, here)
-        b.vy += (up ? -LIFT : GRAV) * dt; b.vy = Math.max(-VMAX, Math.min(VMAX, b.vy)); b.y += b.vy * dt; }
+        b.vy += (up ? -LIFT : GRAV) * dt; b.vy -= b.vy * Math.min(1, DRAG * dt); b.vy = Math.max(-VMAX, Math.min(VMAX, b.vy)); b.y += b.vy * dt; }
         if (b.y < R) { b.y = R; b.vy = 0; } if (b.y > 1 - R) { b.y = 1 - R; b.vy = 0; }
         if (t < PRACT_END) { var bot = cen(X) + half(X) - R; if (b.y > bot) { b.y = bot; b.vy = -0.3; } }   // (practice: no damage, the pine tops bounce you back up)
         else if (b.human && !fromPhone && b.inv <= 0 && hits(b, X)) hit(b);   // (computer birds never get hit)   // (a phone decides its own hits: what the player saw)

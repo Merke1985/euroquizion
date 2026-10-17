@@ -124,7 +124,7 @@
      So a slow connection only delays what the big screen shows, never your own flight. (The course maths is a copy of the
      big screen's: keep them the same.) */
   var pre = false, K = null, br = [], clk = null, live = null, fly = false, by = 0.5, bvy = 0, inv = 0, hc = 0, lastSend = 0, back = 0;
-  var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
+  var GRAV = 1.1, LIFT = 1.35, VMAX = 0.6, DRAG = 1.6, R = 0.026;   // (floaty and forgiving: gentler rise and fall, a lower top speed, and a little air drag so it doesn't overshoot)
   function ez(a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); }
   function diff(x) { if (x >= K.G) return 1 - 0.45 * Math.min(1, (x - K.G) / 1.5); if (x < K.F) return 0.25 * Math.max(0, x - K.S0) / Math.max(1, K.F - K.S0); return Math.min(0.8, 0.4 + 0.4 * (x - K.F) / Math.max(1, K.XE - K.F)); }
   function half(x) { return 0.30 - 0.06 * diff(x); }
@@ -147,7 +147,7 @@
     if (!CW) size();
     var cam = camNow(), bx0 = (live && live.x) || 0.53, X = cam + bx0;   // (the big screen's place for your bird, including any knock-back)
     inv = Math.max(0, inv - dt); back = Math.max(0, back - dt * 0.01);
-    bvy += (held ? -LIFT : GRAV) * dt; bvy = Math.max(-VMAX, Math.min(VMAX, bvy)); by += bvy * dt;
+    bvy += (held ? -LIFT : GRAV) * dt; bvy -= bvy * Math.min(1, DRAG * dt); bvy = Math.max(-VMAX, Math.min(VMAX, bvy)); by += bvy * dt;
     if (by < R) { by = R; bvy = 0; } if (by > 1 - R) { by = 1 - R; bvy = 0; }
     if (inv <= 0 && hits(X, by)) { hc++; inv = 1.5; back = Math.min(0.25, back + 0.06); bvy = (cen(X) - by) * 2.5; try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} send(true); }   // (a hit: you saw it, so it counts)
     if (tn - lastSend > 0.2) send(false);   // (5 times a second: where your bird is)
