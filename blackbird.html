@@ -449,7 +449,7 @@
 
   }
   /* the two hosts, left of the house in the dark: one holds a lantern, they whisper (speech bubbles for now; voices later) */
-  var WHISPER = [[0.8, 3.9, 0, 'Tonight we’re here to remember…'], [4.1, 7.2, 1, '…that Eurovision isn’t only a party.'], [7.4, 10.4, 0, 'Sometimes, a song can break our hearts a little.']];
+  var WHISPER = [[0.6, 4.3, 0, 'Tonight we are not here to remember, but to remind ourselves…'], [4.5, 7.4, 1, '…that Eurovision isn’t only a party.'], [7.6, 10.6, 0, 'Sometimes, a song can break our hearts a little.']];
   function drawHosts() {
     var gy = sy(0.975), hh = H * 0.2, fl = 0.85 + 0.1 * Math.sin(t * 11) + 0.05 * Math.sin(t * 23), say = WHISPER.filter(function (w) { return t >= w[0] && t < w[1]; })[0];
     var lx = sx(-0.075), ly = gy - hh * 0.5;   // the lantern
