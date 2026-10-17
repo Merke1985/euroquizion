@@ -99,7 +99,7 @@
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, SONG0 = 7, BOTTOM = 11.4, UP = 6, CLOSE = 4, TWO = 4.5, HOLD2 = 1.5, OUT = 4.2, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 2,   /* (take-off at 0:30 in the song: the song starts at 0:07, so 7 s less intro) */   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
-      FAST_T = MUSIC - SONG0 + 125, PICK_T = MUSIC - SONG0 + 155, SOAR_T = PICK_T - 11.7, ALL_T = PICK_T - 14.7,   /* (the last 3 s of the cave: everyone steers at once) */ GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 8, APP_T = PICK_T - 11.4, STOP_T = PICK_T - 8.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 4 s, 1 s after the landing; the rose at PICK_T) */ END_T = MUSIC - SONG0 + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
+      FAST_T = MUSIC - SONG0 + 125, PICK_T = MUSIC - SONG0 + 160, SOAR_T = PICK_T - 14.7, ALL_T = PICK_T - 17.7,   /* (the last 3 s of the cave: everyone steers at once) */ GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 11, APP_T = PICK_T - 14.4, STOP_T = PICK_T - 11.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 4 s, 1 s after the landing; the rose at PICK_T) */ END_T = MUSIC - SONG0 + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing to a stop at their favourite spot, then away after the rose
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
@@ -257,7 +257,7 @@
         if (!b.turnHit) b.clean += dt;
       } else {   // autopilot: back to its place in the flock, smoothly
         var ty = cen(X + 0.12) + b.off * half(X) * 0.62, rate = 3.2;
-        if (t >= SOAR_T) { b.flap += dt * 7; rate = 2.2;   // (soaring high and fast; at 2:35 the lone bird dives for the flower; then they all fly off)
+        if (t >= SOAR_T) { b.flap += dt * 7; rate = 2.2;   // (soaring high and fast; at 2:40 the lone bird picks the rose; then they all fly off)
           if (t < TAKE_T) ty = 0.2 + b.off * 0.08 + 0.03 * Math.sin(t * 1.5 + b.id);
           else ty = 0.06 + b.off * 0.05; }
         var ny = b.y + (ty - b.y) * Math.min(1, dt * rate);
@@ -308,9 +308,9 @@
      lace, dark lips). u and v run 0..1 across the box she's drawn in; she sings, blinks and sways a little. */
   function drawSinger(X0, Y0, Wd, Hd) {   // her head bowed a little, and now and then a tear
     cx.save(); var pv = [X0 + Wd * 0.5, Y0 + Hd * 0.62]; cx.translate(pv[0], pv[1]); cx.rotate(-0.05 * (1 - smileA * 0.8) + Math.sin(t * 0.5) * 0.015); cx.translate(-pv[0], -pv[1] + Hd * 0.015);
-    var home = t >= HOME_T; smileA = home ? Math.max(0, Math.min(1, (t - HOME_T - 18.6) / 3)) : 0; smileA = smileA * smileA * (3 - 2 * smileA);
+    var home = t >= HOME_T; smileA = home ? Math.max(0, Math.min(1, (t - HOME_T - 16.5) / 3)) : 0; smileA = smileA * smileA * (3 - 2 * smileA);
     drawSinger0(X0, Y0, Wd, Hd);
-    var tc = home ? Math.min(0.74, (t - HOME_T - 15) / 8) : -1; if (tc >= 0 && tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek   // (at home: one last, slow tear; then the smile)
+    var tc = home ? Math.min(0.74, (t - HOME_T - 13) / 8) : -1; if (tc >= 0 && tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek   // (at home: one last, slow tear; then the smile)
     cx.restore();
   }
   var smileA = 0;
@@ -592,7 +592,7 @@
       [CLOSE_END + TWO + HOLD2, Z2 * 0.94, tx2, ty2],
       [INTRO, 1, W / 2, H / 2]   // and out to the whole scene
     ];
-    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 13.5, 6.4, wx * H, (fy + 0.012) * H], [END_T - 0.5, 6.9, wx * H, (fy + 0.01) * H], [END_T + 2.5, 5, (wx + (W / H) / 5 * 0.22) * H, (fy + 0.03) * H], [END_T + 60, 5.2, (wx + (W / H) / 5.2 * 0.22) * H, (fy + 0.03) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
+    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 12, 6.4, wx * H, (fy + 0.012) * H], [END_T - 0.5, 6.9, wx * H, (fy + 0.01) * H], [END_T + 2.5, 5, (wx + (W / H) / 5 * 0.22) * H, (fy + 0.03) * H], [END_T + 60, 5.2, (wx + (W / H) / 5.2 * 0.22) * H, (fy + 0.03) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
     for (var i = 1; i < K.length; i++) if (t < K[i][0]) { var A = K[i - 1], B = K[i], e = ez((t - A[0]) / (B[0] - A[0])); return { z: A[1] * Math.pow(B[1] / A[1], e), x: A[2] + (B[2] - A[2]) * e, y: A[3] + (B[3] - A[3]) * e }; }
     return null;
   }
