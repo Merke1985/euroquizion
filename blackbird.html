@@ -331,7 +331,7 @@
   }
   var smileA = 0;
   function drawSinger0(X0, Y0, Wd, Hd) {
-    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.sin(t * 3.1) * 0.4 + Math.sin(t * 1.3) * 0.35) * (1 - 0.7 * smileA);   // (singing softly)
+    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.sin(t * 3.1) * 0.4 + Math.sin(t * 1.3) * 0.35) * (1 - 0.7 * smileA) * Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 10)) / 0.4));   // (her lips stay closed until she starts singing at 0:10 in the song)   // (singing softly)
     var M = function (u, v) { var q = P(u + sw, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u + sw, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var a = P(cu + sw, cv), b = P(u + sw, v); cx.quadraticCurveTo(a[0], a[1], b[0], b[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var p1 = P(a1 + sw, b1), p2 = P(a2 + sw, b2), p3 = P(u + sw, v); cx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); };
     // the hair behind her head
     var hg = cx.createLinearGradient(X0, Y0 + Hd * 0.12, X0, Y0 + Hd * 0.62); hg.addColorStop(0, '#f6e6b8'); hg.addColorStop(0.6, '#e2c98e'); hg.addColorStop(1, '#c9ab6c'); cx.fillStyle = hg;
