@@ -131,7 +131,7 @@
   function cen0(x) { var d = diff(x), a = 0.05 + 0.12 * d, y = 0.5 + a * (0.62 * Math.sin(0.85 * x) + 0.28 * Math.sin(2.05 * x + 1.3) + 0.1 * Math.sin((3.6 + 2 * d) * x + 0.4)), h = half(x); return Math.max(h + 0.05, Math.min(1 - h - 0.05, y)); }
   function cen(x) { var c = cen0(x), top = half(x) + 0.03; if (x > K.D0 - 1.6 && x <= K.D0) c = c + (top - c) * ez((x - (K.D0 - 1.6)) / 1.6); else if (x > K.D0 && x < K.F + 0.4) c = top + (cen0(K.F + 0.4) - top) * ez((x - K.D0) / (K.F + 0.4 - K.D0)); return c; }
   function spd(T) { if (T < K.FT) return 1; if (T >= K.TK) return 2.5 * ez((T - K.TK) / 3); if (T >= K.ST) return 0; var D0 = K.ST - 3.3; if (T > D0) return K.FX * (1 - ez((T - D0) / (K.ST - D0))); return 1 + (K.FX - 1) * ez((T - K.FT) / 2.5); }
-  function hits(X, y) { var c = cen(X), h = half(X); if (X >= K.F && ((X < K.G && y - R < c - h) || y + R > c + h)) return true; for (var i = 0; i < br.length; i++) { var q = br[i]; if (Math.abs(q[0] - X) < 0.02 + R && (q[1] ? y - R < q[2] : y + R > q[2])) return true; } return false; }
+  function hits(X, y) { var c = cen(X), h = half(X), R = 0.026 * 0.75;   /* (a forgiving hit area, as on the big screen) */ if (X >= K.F && ((X < K.G && y - R < c - h) || y + R > c + h)) return true; for (var i = 0; i < br.length; i++) { var q = br[i]; if (Math.abs(q[0] - X) < 0.02 + R && (q[1] ? y - R < q[2] : y + R > q[2])) return true; } return false; }
   function now() { return performance.now() / 1000; }
   function gameT() { return clk ? clk.t + (now() - clk.at) : 0; }
   function camNow() { if (!clk) return 0; var T = gameT(); while (clk.ct < T) { var d = Math.min(0.02, T - clk.ct); clk.cam += K.SP * d * spd(clk.ct); clk.ct += d; } return clk.cam; }

@@ -124,7 +124,7 @@
     return 1 + (FASTX - 1) * ez((T - FAST_T) / 2.5);
   }
   var CLOUDS = false;   // (the cloud deck over the sky: switched off for now; true brings it back)
-  var FASTX = 2.875;   // (how much faster from 2:05: 25% faster than the first 2.3)
+  var FASTX = 2.5;   // (how much faster from 2:05: 25% faster than the first 2.3)
   function camAt(T) { var x = 0; for (var tt = TAKEOFF; tt < T; tt += 0.02) x += SPEED * 0.02 * Math.max(0, Math.min(1, (tt - TAKEOFF - 1.6) / 2.4)) * spd(tt); return x; }   // (where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     var FIRST_T = MUSIC - SONG0 + 47.9;   // (the first group's turn: its first tree comes at 0:49 in the song. Turns every 7 s (5 s flying, 2 s pause): 6 over the pine forest, 6 in the cave)
@@ -171,8 +171,8 @@
     var x0 = birdXAt(T);
     var fast = T >= FAST_T - 0.5, mixSeg = x0 < FOREST - 1 && T > PRACT0 + 0.01,   /* (over the pines, after the first stretch: pines from below, mixed with brambles hanging down from above) */ oakSeg = false && mixSeg && T >= PRACT0 + 3 * SEG - 0.01 && T < PRACT0 + 5 * SEG - 0.01;   // (the oak: switched off for now)   // (over the pines, after the first stretch: pines from below mixed with branches from clumps of leaves; and two stretches under an enormous oak, its limbs reaching down)
     if (!fast && (mixSeg || x0 >= FOREST)) {   // a steady slalom: over the forest pines and brambles every ~1.8 s, in the cave stalactites and stalagmites every ~2.2 s (half the passage), top and bottom in turn
-      var sp = mixSeg ? 1.8 : 1.7, at = Math.max(lastArr + sp, T + 0.3);
-      while (at < T + SEG) { if (!(at > FAST_T - 3 && at < FAST_T + 2)) { var x = birdXAt(at), h = half(x), c = cen(x), top = (slTop = !slTop), rc = (mixSeg ? 0.46 + rnd() * 0.06 : 0.58 + rnd() * 0.04) * 2 * h;
+      var sp = mixSeg ? 2.4 : 2.3, at = Math.max(lastArr + sp, T + 0.3);
+      while (at < T + SEG) { if (!(at > FAST_T - 3 && at < FAST_T + 2)) { var x = birdXAt(at), h = half(x), c = cen(x), top = (slTop = !slTop), rc = (mixSeg ? 0.38 + rnd() * 0.06 : 0.44 + rnd() * 0.04) * 2 * h;
           branches.push({ x: x, top: top, tip: top ? c - h + rc : c + h - rc, tw: rnd(), clump: mixSeg && top }); lastArr = at; }
         at += sp + (rnd() - 0.5) * 0.15; }
       turnNo++; planLog.push({ T: T, x0: x0, steady: sp }); branches = branches.filter(function (r) { return r.x > cam - 1; }); return;
@@ -232,7 +232,7 @@
     if (t >= SOAR_T) return;
     if (planT < 0) planT = PRACT0;
     while (t >= planT - 3.6 && planT + SEG <= FAST_T + 2.2) { planTurn(planT); planT += SEG; }
-    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.2 < SOAR_T - 2; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.2), h = half(x), c = cen(x), top = k % 2 === tp0, reach = Math.min(0.76, 0.6 + k * 0.016 + rnd() * 0.01) * 2 * h;   /* (from 60% like the cave before, a little longer with every one: up to about 75%) */ branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
+    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 2; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = Math.min(0.6, 0.45 + k * 0.015 + rnd() * 0.01) * 2 * h;   /* (from 60% like the cave before, a little longer with every one: up to about 75%) */ branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
     if (t >= PRACT0 - CD && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (a 3 s countdown in the middle of the screen; the colours stay on, no blinking)
     if (t >= PRACT0 && !ctrlOver) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
@@ -308,7 +308,7 @@
     if (!ended && t >= DUR) finish();
   }
   function hits(b, X) {
-    var c = cen(X), h = half(X);
+    var c = cen(X), h = half(X), R = 0.026 * 0.75;   // (a forgiving hit area: a near miss is a miss)
     if (X >= FOREST && ((X < GRAVE_X && b.y - R < c - h) || b.y + R > c + h)) return true;   // (in the sky only the pine trees hurt: no ceiling, no ground)   // (the sky has no ceiling: only the pines below)
     for (var i = 0; i < branches.length; i++) { var r = branches[i]; if (Math.abs(r.x - X) < 0.02 + R) { if (r.top ? b.y - R < r.tip : b.y + R > r.tip) return true; } }
     return false;
