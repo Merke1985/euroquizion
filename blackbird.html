@@ -62,6 +62,8 @@
   ol.res li .nm{flex:1}
   #yt{position:fixed;left:-9999px;top:0;width:200px;height:120px}
   .hint{position:fixed;left:16px;bottom:12px;color:var(--mute);font-size:.85rem;pointer-events:none}
+  .cdbig{position:fixed;left:0;right:0;bottom:7%;text-align:center;font-weight:800;font-size:clamp(1.4rem,3.4vw,2.6rem);color:#fff;text-shadow:0 0 18px rgba(185,80,255,.7),0 2px 8px rgba(0,0,0,.6);pointer-events:none;z-index:20}
+  .endcd{margin:12px 0 4px;color:var(--mute);font-weight:700;font-size:1.05rem}
 </style>
 </head>
 <body>
@@ -89,10 +91,12 @@
     </div>
   </div>
 </div>
+<div class="cdbig" id="cdbig"></div>
 <div class="ov hidden" id="end">
   <div class="card">
     <h2 id="endt">The flock has landed</h2>
     <ol class="res" id="res"></ol>
+    <p class="endcd" id="endcd"></p>
     <div class="btns"><button id="again">↻ Fly again</button></div>
   </div>
 </div>
@@ -770,7 +774,7 @@
       [CLOSE_END + TWO + HOLD2, Z2 * 0.94, tx2, ty2],
       [INTRO, 1, W / 2, H / 2]   // and out to the whole scene
     ];
-    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 12, 6.4, wx * H, (fy + 0.012) * H], [END_T - 0.5, 6.9, wx * H, (fy + 0.01) * H], [END_T + 2.5, 5, (wx + (W / H) / 5 * 0.22) * H, (fy + 0.03) * H], [END_T + 60, 5.2, (wx + (W / H) / 5.2 * 0.22) * H, (fy + 0.03) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
+    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 12, 6.4, wx * H, (fy + 0.012) * H], [END_T - 0.5, 6.9, wx * H, (fy + 0.01) * H], [END_T + 2.5, 5, (wx + (W / H) / 5 * 0.22) * H, (fy + 0.03) * H], [END_T + 5.2, 5.05, (wx + (W / H) / 5.05 * 0.22) * H, (fy + 0.03) * H], [END_T + 9, 1, W / 2, H / 2], [END_T + 99, 1, W / 2, H / 2]]; }   /* (5 s of results; then out to the whole house) */   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
     for (var i = 1; i < K.length; i++) if (t < K[i][0]) { var A = K[i - 1], B = K[i], e = ez((t - A[0]) / (B[0] - A[0])); return { z: A[1] * Math.pow(B[1] / A[1], e), x: A[2] + (B[2] - A[2]) * e, y: A[3] + (B[3] - A[3]) * e }; }
     return null;
   }
@@ -830,7 +834,7 @@
       cx.strokeStyle = 'rgba(120,130,170,.35)'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(-s * 0.95, -s * 0.02); cx.lineTo(-s * 1.6, -s * 0.12); cx.stroke();
       cx.beginPath(); cx.arc(s * 0.82, -s * 0.28, s * 0.42, 0, 7); cx.fill();   // head
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(s * 1.15, -s * 0.36); cx.lineTo(s * 1.6, -s * 0.22); cx.lineTo(s * 1.15, -s * 0.12); cx.closePath(); cx.fill();   // beak
-      if (b.lead && t > HOME_T + 5.95 && t < HOME_T + 6.13) { cx.strokeStyle = '#ffb000'; cx.lineWidth = Math.max(1, s * 0.06); cx.lineCap = 'round'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.43, s * 0.08, 0.2 * Math.PI, 0.8 * Math.PI); cx.stroke(); }   // (just after it dropped the rose: one slow, content blink)
+      if (b.lead && ((t > HOME_T + 5.95 && t < HOME_T + 6.13) || (t > HOME_T + 10.6 && t < HOME_T + 10.78))) { cx.strokeStyle = '#ffb000'; cx.lineWidth = Math.max(1, s * 0.06); cx.lineCap = 'round'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.43, s * 0.08, 0.2 * Math.PI, 0.8 * Math.PI); cx.stroke(); }   // (just after it dropped the rose: one slow, content blink)
       else { cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill(); }   // eye ring
       var wa = sitting ? -0.15 : bp.home != null ? Math.sin(t * 14 + b.id) * 0.9 : landing ? Math.sin(t * (bp.land > 0.7 ? 20 : 11)) * 0.9 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
       cx.strokeStyle = 'rgba(120,130,170,.4)'; cx.lineWidth = 1; for (var wf = 0; wf < 3; wf++) { cx.beginPath(); cx.moveTo(-s * (0.15 - wf * 0.15), -s * 0.08); cx.quadraticCurveTo(s * (0.05 + wf * 0.08), -s * (0.25 + 1.0 * wa) * (0.6 + wf * 0.15), s * (0.3 + wf * 0.04), -s * 0.06); cx.stroke(); }   // feathers on the wing
@@ -980,7 +984,7 @@
       else if ((st === 3 || st === -1 || st === 5 || (st === 1 && ct <= SONG0 - PRE - 0.5)) && waitSong < 5) { waitSong += real; adv = 0; }   // (the song is loading: wait for it, for at most 5 s)
     }
     while (adv > 1e-6) { var sd = Math.min(0.05, adv); step(sd); adv -= sd; }   // (small steps, so a slow frame never loses time)
-    draw(); hud(); sendState(false);
+    draw(); hud(); endTick(); sendState(false);
     var sc = $('songclock'); if (sc) { var sgt = Math.max(0, t - MUSIC + SONG0); sc.textContent = t >= MUSIC ? '♪ ' + Math.floor(sgt / 60) + ':' + ('0' + Math.floor(sgt % 60)).slice(-2) : ''; }
     requestAnimationFrame(frame);
   }
@@ -1002,7 +1006,19 @@
     var solo = rows.filter(function (b) { return b.human; }).length === 1 ? rows[0] : null, byD = rows[0] && rows[0].byDist;
     $('endt').textContent = solo ? (solo.feathers >= 5 ? '🏆 ' + solo.name + ': a perfect flight!' : byD ? '🪶 ' + solo.name + ' flew ' + km(solo.dist) : '🪶 ' + solo.name + ' kept ' + solo.feathers + ' of 5 feathers') : '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + (byD ? ' flew furthest' : ' win') : wn[0] + (byD ? ' flew furthest' : ' wins')); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
     $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (b.win ? 'top' : '') + '"><span class="rk">' + (b.rank || '·') + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + (b.rank ? '' : ' <small style="color:var(--mute);font-weight:500">computer</small>') + '</span>' + (b.byDist && b.rank ? '<span style="font-weight:700;color:var(--mute)">' + km(b.dist) + '</span>' : '<span class="fe" style="display:flex;gap:3px">' + featherRow(b.feathers, false) + '</span>') + '</li>'; }).join('');
-    $('end').classList.remove('hidden');
+    $('end').classList.remove('hidden'); shopShown = false; endLeft = -1; $('endcd').textContent = ''; $('cdbig').textContent = '';
+  }
+  var shopShown = false, endLeft = -1;
+  function endTick() {   // the results stay 10 s, counting down; then off to the boutique, where the winners may pick an item
+    if (!ended || shopShown) return;
+    if (t >= END_T + 5) $('end').classList.add('hidden');   // (the results for 5 s, then the whole house)
+    if (t < END_T + 9) return; var left = Math.max(0, Math.ceil(END_T + 19 - t));   // (then: game ends in 10…)
+    if (left !== endLeft) { endLeft = left; $('cdbig').textContent = left > 0 ? 'Game ends in ' + left : ''; sendState(true); }
+    if (left > 0) return; shopShown = true; $('cdbig').textContent = ''; $('end').classList.remove('hidden');
+    var ws = ranking().filter(function (b) { return b.win; }).map(function (b) { return b.name; });
+    $('endt').textContent = '🛍️ Off to Woodruff’s Boutique!'; $('res').innerHTML = '';
+    $('endcd').textContent = ws.length ? (ws.length > 1 ? ws.slice(0, -1).join(', ') + ' & ' + ws[ws.length - 1] + ' may each pick an item.' : ws[0] + ' may pick an item.') : 'Nobody won this time: maybe next flight!';
+    sendState(true);   // (in the full game, this is where it hands over to the boutique: the winners shop)
   }
   function start(music) {
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
@@ -1013,7 +1029,7 @@
   }
   $('go').addEventListener('click', function () { start(true); });
   $('go2').addEventListener('click', function () { start(false); });
-  $('again').addEventListener('click', function () { ended = false; $('end').classList.add('hidden'); $('start').classList.remove('hidden'); ytStop(); });
+  $('again').addEventListener('click', function () { ended = false; $('cdbig').textContent = ''; $('end').classList.add('hidden'); $('start').classList.remove('hidden'); ytStop(); });
 
   // ---------- holding: mouse, touch or spacebar ----------
   function down(e) { if (e.target.closest && e.target.closest('.ov')) return; hold = true; if (e.cancelable) e.preventDefault(); }
@@ -1104,15 +1120,15 @@
   } catch (e) { net = null; }
   function sendState(force) {   // (what each phone needs: its colour and state, plus, while flying, the course and the obstacles ahead so it can fly its bird itself)
     if (!net) return;
-    var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {}, live = {};
+    var ph = ended ? (shopShown ? 'shop' : 'end') : running ? 'play' : 'lobby', ps = {}, live = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
     else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: ctrlOver || t >= SOAR_T ? 'done' : b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; live[b.pid] = { y: +b.y.toFixed(3), x: +bx(b).toFixed(3) }; });
-    if (ph === 'end') { var rkg = ranking(), one = rkg.filter(function (b) { return b.human; }).length === 1; rkg.forEach(function (b) { if (b.human && ps[b.pid]) { ps[b.pid].r = b.rank; if (one) ps[b.pid].solo = 1; if (b.byDist) ps[b.pid].d = b.dist || 0; } }); }
+    if (ph === 'end' || ph === 'shop') { var rkg = ranking(), one = rkg.filter(function (b) { return b.human; }).length === 1; rkg.forEach(function (b) { if (b.human && ps[b.pid]) { ps[b.pid].r = b.rank; if (one) ps[b.pid].solo = 1; if (b.byDist) ps[b.pid].d = b.dist || 0; if (b.win) ps[b.pid].win = 1; } }); }
     var br = ph === 'play' ? branches.filter(function (q) { return q.x > cam - 0.3; }).map(function (q) { return [+q.x.toFixed(3), q.top ? 1 : 0, +q.tip.toFixed(3)]; }) : [];
-    var s = JSON.stringify({ ph: ph, p: ps, br: br }), now = Date.now();
+    var cd = ph === 'end' && endLeft > 0 ? endLeft : 0, s = JSON.stringify({ ph: ph, p: ps, br: br, cd: cd }), now = Date.now();
     if (!force && s === lastState && now - lastSent < (ph === 'play' ? 2000 : 4000)) return;   // (the clock is resent every 2 s while playing, so the phones stay in step)
     lastState = s; lastSent = now;
-    var msg = { ph: ph, p: ps, br: br };
+    var msg = { ph: ph, p: ps, br: br, cd: cd };
     if (ph === 'play') { msg.t = +t.toFixed(3); msg.cam = +cam.toFixed(4); msg.live = live; msg.k = { P0: PRACT0, F: FOREST, D0: DIVE0, D1: DIVE1, G: GRAVE_X, XE: XEND, S0: SAFE_X, SP: SPEED, FX: FASTX, FT: FAST_T, ST: STOP_T, TK: TAKE_T, SO: SOAR_T }; }
     net.send('state', msg);
   }
