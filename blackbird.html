@@ -166,6 +166,13 @@
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
     var x0 = birdXAt(T);
     var fast = T >= FAST_T - 0.5, mixSeg = x0 < FOREST - 1 && T > PRACT0 + 0.01,   /* (over the pines, after the first stretch: pines from below, mixed with brambles hanging down from above) */ oakSeg = false && mixSeg && T >= PRACT0 + 3 * SEG - 0.01 && T < PRACT0 + 5 * SEG - 0.01;   // (the oak: switched off for now)   // (over the pines, after the first stretch: pines from below mixed with branches from clumps of leaves; and two stretches under an enormous oak, its limbs reaching down)
+    if (!fast && (mixSeg || x0 >= FOREST)) {   // a steady slalom: over the forest pines and brambles every ~1.8 s, in the cave stalactites and stalagmites every ~2.2 s (half the passage), top and bottom in turn
+      var sp = mixSeg ? 1.8 : 2.2, at = Math.max(lastArr + sp, T + 0.3);
+      while (at < T + SEG) { if (!(at > FAST_T - 3 && at < FAST_T + 2)) { var x = birdXAt(at), h = half(x), c = cen(x), top = (slTop = !slTop), rc = (mixSeg ? 0.46 + rnd() * 0.06 : 0.48 + rnd() * 0.04) * 2 * h;
+          branches.push({ x: x, top: top, tip: top ? c - h + rc : c + h - rc, tw: rnd(), clump: mixSeg && top }); lastArr = at; }
+        at += sp + (rnd() - 0.5) * 0.15; }
+      turnNo++; planLog.push({ T: T, x0: x0, steady: sp }); branches = branches.filter(function (r) { return r.x > cam - 1; }); return;
+    }
     if (roundTurn >= roundLen || !pattern || pattern.fast !== fast || pattern.mix !== mixSeg + '' + oakSeg) { pattern = newPattern(x0, fast, T <= PRACT0 + 0.01, mixSeg, oakSeg); roundTurn = 0; roundLen = 1; }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
     pattern.forEach(function (o) { var at = T + o.tau; if (at > FAST_T - 3 && at < FAST_T + 2) return;
@@ -221,7 +228,7 @@
     if (t >= SOAR_T) return;
     if (planT < 0) planT = PRACT0;
     while (t >= planT - 3.6 && planT + SEG <= FAST_T + 2.2) { planTurn(planT); planT += SEG; }
-    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 5; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (1 / 2) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
+    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 2; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (1 / 2) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
     if (t >= PRACT0 - CD && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (a 3 s countdown in the middle of the screen; the colours stay on, no blinking)
     if (t >= PRACT0 && !ctrlOver) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
