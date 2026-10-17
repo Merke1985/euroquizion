@@ -67,11 +67,13 @@
   var $ = function (id) { return document.getElementById(id); };
   var st = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   var pid = st.get('bb-pid'); if (!pid) { pid = 'p' + Math.random().toString(36).slice(2, 10); st.set('bb-pid', pid); }
+  var EQ = new URLSearchParams(location.search), EMBED = EQ.get('embed') === '1'; if (EMBED && EQ.get('pid')) pid = EQ.get('pid');   // (inside the main game: you're already known)
   var q = new URLSearchParams(location.search), room = (q.get('r') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
   $('lag').checked = q.get('lag') === '1';
   $('name').value = st.get('bb-name') || st.get('esc-name') || ''; $('code').value = room;
   var name0 = '', net = null, name = '', joinedOk = false, hiT = null, my = null, held = false, lastF = 5;
   $('go').addEventListener('click', join);
+  if (EMBED) { $('name').value = (EQ.get('name') || 'Bird').slice(0, 14); $('join').classList.add('hidden'); setTimeout(join, 50); }
   function join() {
     name = $('name').value.trim().slice(0, 14); room = $('code').value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
     if (!name) { $('jmsg').textContent = 'Type your name first.'; return; }

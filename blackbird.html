@@ -62,6 +62,7 @@
   ol.res li .nm{flex:1}
   #yt{position:fixed;left:-9999px;top:0;width:200px;height:120px}
   .hint{position:fixed;left:16px;bottom:12px;color:var(--mute);font-size:.85rem;pointer-events:none}
+  html.embed #again{display:none}
   .cdbig{position:fixed;left:0;right:0;bottom:7%;text-align:center;font-weight:800;font-size:clamp(1.4rem,3.4vw,2.6rem);color:#fff;text-shadow:0 0 18px rgba(185,80,255,.7),0 2px 8px rgba(0,0,0,.6);pointer-events:none;z-index:20}
   .endcd{margin:12px 0 4px;color:var(--mute);font-weight:700;font-size:1.05rem}
 </style>
@@ -108,6 +109,9 @@
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
+  var QP = new URLSearchParams(location.search), EMBED = QP.get('embed') === '1', EMB_ID = QP.get('id') || '', EMB_PL = [], BOTN = [];   // (inside the main game: the room, the players and the computer birds come from the host)
+  try { EMB_PL = JSON.parse(QP.get('pl') || '[]'); BOTN = JSON.parse(QP.get('bn') || '[]'); } catch (e) {}
+  if (EMBED) document.documentElement.classList.add('embed');
   var cv = $('c'), cx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
   function size() { DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0); }
   addEventListener('resize', size); size();
@@ -193,7 +197,7 @@
   var tAir = 99, birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
   function makeBirds(nb) {
     birds = [];
-    var hs = joined.slice(0, 10), bn = NAMES.filter(function (nm) { return !hs.some(function (h) { return h.name.toLowerCase() === nm.toLowerCase(); }); });
+    var hs = joined.slice(0, 10), bn = (BOTN.length ? BOTN.concat(NAMES) : NAMES).filter(function (nm) { return !hs.some(function (h) { return h.name.toLowerCase() === nm.toLowerCase(); }); });
     nb = Math.max(hs.length ? 0 : 1, Math.min(nb, 10 - hs.length));
     for (var i = 0; i < hs.length + nb; i++) birds.push({ id: i, name: i < hs.length ? hs[i].name : bn[i - hs.length], pid: i < hs.length ? hs[i].pid : null, col: COLS[i % COLS.length], human: i < hs.length,   /* (no controls in the browser: on the big screen every bird flies itself; players will steer from their phones) */ feathers: 5, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
       skill: 0.55 + Math.random() * 0.4, react: 0.07 + Math.random() * 0.08, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
@@ -1014,7 +1018,9 @@
     if (t >= END_T + 5) $('end').classList.add('hidden');   // (the results for 5 s, then the whole house)
     if (t < END_T + 9) return; var left = Math.max(0, Math.ceil(END_T + 19 - t));   // (then: game ends in 10…)
     if (left !== endLeft) { endLeft = left; $('cdbig').textContent = left > 0 ? 'Game ends in ' + left : ''; sendState(true); }
-    if (left > 0) return; shopShown = true; $('cdbig').textContent = ''; $('end').classList.remove('hidden');
+    if (left > 0) return; shopShown = true; $('cdbig').textContent = '';
+    if (EMBED) { sendState(true); try { parent.postMessage({ type: 'bb-done', id: EMB_ID, win: ranking().filter(function (b) { return b.win && b.human; }).map(function (b) { return b.pid; }) }, '*'); } catch (e) {} return; }   // (inside the main game: back to the host, who takes the winners to the boutique)
+    $('end').classList.remove('hidden');
     var ws = ranking().filter(function (b) { return b.win; }).map(function (b) { return b.name; });
     $('endt').textContent = '🛍️ Off to Woodruff’s Boutique!'; $('res').innerHTML = '';
     $('endcd').textContent = ws.length ? (ws.length > 1 ? ws.slice(0, -1).join(', ') + ' & ' + ws[ws.length - 1] + ' may each pick an item.' : ws[0] + ' may pick an item.') : 'Nobody won this time: maybe next flight!';
@@ -1103,6 +1109,7 @@
   // ---------- phones: join with the room code, one big button to fly ----------
   var ctrlOver = false, nextOrder = 0, joined = [], holds = {}, net = null, lastState = '', lastSent = 0, BBA = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '';
   for (var ri = 0; ri < 4; ri++) room += BBA[Math.floor(Math.random() * BBA.length)];
+  if (EMBED && /^[A-Z]{4}$/.test(QP.get('room') || '')) room = QP.get('room');
   var padUrl = new URL('bbpad.html?r=' + room, location.href).href;
   $('bbcode').textContent = room; $('bburl').textContent = padUrl.replace(/^https?:\/\//, '');
   try { var qq = qrcode(0, 'M'); qq.addData(padUrl); qq.make(); $('bbqr').innerHTML = qq.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('bbqr').style.display = 'none'; }
@@ -1118,6 +1125,11 @@
       if (p.hc != null) { if (b.hcSeen == null) b.hcSeen = 0; while (b.hcSeen < p.hc && !b.out && b.manual) { b.hcSeen++; hit(b); } b.hcSeen = Math.max(b.hcSeen, p.hc); }   // (hits the phone saw, each counted once)
     });
   } catch (e) { net = null; }
+  if (EMBED) {   // inside the main game: no start screen; the players are known, their phones join by themselves; start when they're all in (or after 8 s)
+    $('start').classList.add('hidden'); EMB_PL.forEach(function (p) { if (p && p.pid) joined.push({ pid: p.pid, name: String(p.name || 'Bird').slice(0, 14) }); });
+    var embT0 = Date.now(), heard = {}; if (net) net.on('hi', function (p) { if (p && p.pid) heard[p.pid] = 1; });
+    var embGo = setInterval(function () { if (running || ended) { clearInterval(embGo); return; } if (EMB_PL.every(function (p) { return heard[p.pid]; }) || Date.now() - embT0 > 8000) { clearInterval(embGo); $('nbots').innerHTML = '<option>' + (+QP.get('nb') || 0) + '</option>'; start(true); } }, 300);
+  }
   function sendState(force) {   // (what each phone needs: its colour and state, plus, while flying, the course and the obstacles ahead so it can fly its bird itself)
     if (!net) return;
     var ph = ended ? (shopShown ? 'shop' : 'end') : running ? 'play' : 'lobby', ps = {}, live = {};

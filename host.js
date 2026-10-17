@@ -268,6 +268,7 @@
     if (G.note && G.phase === 'note') s.note = noteSnap();
     if (G.fake && G.phase === 'fake') s.fake = fkSnap();
     if (G.carpet && G.phase === 'carpet') s.carpet = carpetSnap();
+    if (G.bb && G.phase === 'bb') s.bb = { id: G.bb.id, room: G.bb.room };
     if (G.zg && G.phase === 'zg') s.zg = zgSnap();
     if (G.sv && G.phase === 'sv') s.sv = svSnap();
     if (G.syncOn) s.sync_on = 1;   // (the stream delay: on once the host has run a sync)
@@ -615,6 +616,8 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       show('v-game'); noteShow();
     } else if (G.phase === 'carpet') {
       show('v-game'); carpetShow();
+    } else if (G.phase === 'bb') {
+      show('v-game');
     } else if (G.phase === 'zg') {
       show('v-game'); zgShow();
     } else if (G.phase === 'sv') {
@@ -1532,7 +1535,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     loadSong(it.options[it.chosen]);
   }
   // ---------- the title card before a party round ----------
-  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'fake', 'note', 'queue', 'carpet', 'zg', 'rule', 'organ', 'sv'];   // (Song Battle and Beat the Favourite were taken out)
+  var PARTY_KINDS = ['sing', 'draw', 'quip', 'bluff', 'clue', 'fake', 'note', 'queue', 'carpet', 'zg', 'rule', 'organ', 'sv', 'bb'];   // (Song Battle and Beat the Favourite were taken out)
   var FUN = {
     bigfive: { icon: '🖐️', title: 'Big Five', sub: 'Five final questions, and every point counts double! The scores stay hidden until the end.' },
     bomb: { icon: '💣', title: 'The Unlucky Draw', sub: 'Everyone holds an envelope: most hide a flag, some hide a bomb. HOLD or SWAP? Insiders know where the bombs are. Survive to win!' },
@@ -1547,6 +1550,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     zg: { icon: '🌌', title: 'Zero Gravity', sub: 'Keep your balance in space! Follow the glowing zone on your phone with your finger as it moves with the music. From stage 2, slide up and down to dodge the asteroids. Whoever keeps their balance until the end wins!' },
     rule: { icon: '🪩', title: 'We Will Rule the World', sub: 'A disco floor battle! Tap a direction on your phone and you keep going that way: every tile you step on becomes your colour. Bump into someone and you’re stunned for 3 seconds. When the song ends, most tiles wins!' },
     organ: { icon: '🎡', title: 'Sja-la-lie Sja-la-Mayhem!', sub: 'The giant barrel organ is falling apart! Repair it together on your phones: turn the crank, tune the pipes, fix the cables, put out the fire and keep stage invaders off. Three phases, each harder than the last. The best mechanic wins!' },
+    bb: { icon: '🐦‍⬛', title: 'Blackbird', sub: 'A moonlit flight through the forest! Find your bird by its colour and name, then hold the button on your phone to fly up and let go to glide. Dodge the pines, the brambles and the stalactites: every hit costs a feather. Most feathers left wins!' },
     sv: { icon: '🍑', title: 'Serving', sub: 'Background dancers wanted! Follow her steps: hit the arrows on your phone on the beat, team green, then team purple, and at the end everyone together on skippy balls. The best dancer wins!' },
     battle: { icon: '⚔️', title: 'Song Battle', sub: 'Four songs, two semi-finals and a final. First bet on the winner, then vote for your favourite in every battle.' },
     quip: { icon: '⚖️', title: 'Disqualivision', sub: 'Three performances that should never have been allowed on stage. Roast them! Write the funniest answer on your phone, then vote for the best one. Most points wins.' },
@@ -1560,7 +1564,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Which party round is next. How that is decided is a setting: a spin (random), each in turn, a vote
   // by everyone, or one player (a different one each time) picks.
   function partyGo(kind, ms) {
-    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, fake: fkAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll, sv: svAll };
+    var starts = { sing: singStart, draw: drawAll, quip: quipAll, bluff: bluffAll, battle: battleAll, clue: clueAll, shop: shopAll, bomb: bombAll, fake: fkAll, note: noteAll, queue: qjAll, carpet: carpetAll, zg: zgAll, rule: ruAll, organ: orAll, sv: svAll, bb: bbAll };
     G.mode = G.lastParty = kind; if (G.tour && !G.extraNow && G.partyDone && G.partyDone.indexOf(kind) < 0) G.partyDone.push(kind); G.best = null; G.q = null; G.afterParty = true;   // (an extra game from a Golden Ticket doesn't use up its turn)
     G.quipRun = kind === 'quip' || kind === 'bluff' ? { kind: kind, n: 1, songs: [], base: mgScores() } : null;   /* (three rounds, most points wins) */
     G.mgBase = kind !== 'shop' && shopOn() ? mgScores() : null; G.mgLive = kind !== 'shop';   // (items wait: no items during a party game)   // (the winner goes shopping instead of keeping the points)
@@ -1596,7 +1600,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The party games that can be played now: switched on, and possible with this group (most need two players or more).
   function partyGames(pOn, two) {
     pOn = pOn || G.partyOn || {}; if (two == null) two = list().filter(function (p) { return !p.off; }).length >= 2;
-    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'fake' || x === 'note' || x === 'queue' || x === 'sv') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule' && x !== 'organ')); });
+    return PARTY_KINDS.filter(function (x) { return pOn[x] !== false && !((x === 'sing' || x === 'battle' || x === 'clue' || x === 'fake' || x === 'note' || x === 'queue' || x === 'sv' || x === 'bb') && REMOTE) && (two || (x !== 'sing' && x !== 'draw' && x !== 'battle' && x !== 'clue' && x !== 'note' && x !== 'queue' && x !== 'shop' && x !== 'bomb' && x !== 'rule' && x !== 'organ')); });
   }
   function partyTime(games) {
     if (REMOTE) { partyChoose(games); return; }
@@ -2670,7 +2674,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // Test the party games: a Party game that goes straight from one party game to the next (the ones switched on), no trivia in between.
   /* the test section: a small 🔧 in the lobby opens it; one button per party game */
   (function () {
-    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', fake: '📰 Say Na Na Na!', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
+    var NAMES = { sing: '🎤 Key Change!', draw: '🎨 Postcard Picasso', quip: '⚖️ Disqualivision', bluff: '🗣️ United by Nonsense', clue: '🔍 Where the Hell Is Edgar?', bomb: '💣 The Unlucky Draw', fake: '📰 Say Na Na Na!', note: '🎶 Hold That Note!', carpet: '💎 Turquoise Carpet', zg: '🌌 Zero Gravity', bb: '🐦‍⬛ Blackbird', rule: '🪩 We Will Rule the World', organ: '🎡 Sja-la-lie Sja-la-Mayhem!', queue: '🌹 Lost in Verona' };
     $('onegame').innerHTML = PARTY_KINDS.map(function (k) { if (k === 'rule') return ['🪩 We Will Rule the World', '💛 Discoteque'].map(function (t, i) { return '<button class="btn alt small" type="button" data-one="rule" data-act="' + i + '">' + t + '</button>'; }).join(''); return '<button class="btn alt small" type="button" data-one="' + k + '">' + (NAMES[k] || k) + '</button>'; }).join('');   /* (Rule the World: one button per act) */
     $('testbtn').addEventListener('click', function () { $('testov').classList.remove('hidden'); });
     $('testclose').addEventListener('click', function () { $('testov').classList.add('hidden'); });
@@ -3158,6 +3162,26 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     '<circle cx="75.5" cy="103" r="2.4" fill="#ffd23f"/><path d="M75.5 105 L73.3 111 L75.5 116 L77.7 111 Z" fill="#ff9ad0" stroke="#ffd23f" stroke-width=".8"/><circle cx="124.5" cy="103" r="2.4" fill="#ffd23f"/><path d="M124.5 105 L122.3 111 L124.5 116 L126.7 111 Z" fill="#ff9ad0" stroke="#ffd23f" stroke-width=".8"/>' +
     '</svg>';
 
+  // The presenters in their autumn coats (for Blackbird, the walk into the forest): him in a long navy wool coat with a
+  // red scarf, her in a long plum coat with a mustard scarf, the same as in the forest itself
+  var HOST_HIM_AUT = HOST_HIM.replace('<rect x="91" y="116"',
+    '<defs><linearGradient id="ehcoat1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#33408a"/><stop offset=".6" stop-color="#1f2a5e"/><stop offset="1" stop-color="#141c44"/></linearGradient></defs>' +
+    '<path d="M46 150 Q100 130 154 150 L162 362 Q100 374 38 362 Z" fill="url(#ehcoat1)"/><path d="M100 150 L100 366" stroke="#121a40" stroke-width="2"/>' +
+    '<path d="M84 140 L70 152 L84 196 L100 156 Z M116 140 L130 152 L116 196 L100 156 Z" fill="#2a3577"/><path d="M71 153 L84 194 M129 153 L116 194" stroke="rgba(255,255,255,.15)" stroke-width="1.4"/>' +
+    '<circle cx="93" cy="214" r="3" fill="#0e1430"/><circle cx="93" cy="250" r="3" fill="#0e1430"/><circle cx="93" cy="286" r="3" fill="#0e1430"/><path d="M58 254 L80 252 M142 254 L120 252" stroke="#141c44" stroke-width="2.5"/>' +
+    '<path d="M46 152 Q30 205 38 268 L60 268 Q58 212 68 170 Z" fill="url(#ehcoat1)"/><path d="M38 262 L60 262" stroke="#141c44" stroke-width="2"/><circle cx="50" cy="274" r="9" fill="url(#ehskin)"/>' +
+    '<path d="M152 152 Q170 188 164 234 L146 238 Q150 200 138 172 Z" fill="url(#ehcoat1)"/><circle cx="154" cy="240" r="8.5" fill="url(#ehskin)"/>' +
+    '<rect x="91" y="116"').replace('</svg>',
+    '<path d="M78 140 Q100 152 122 140 L122 149 Q100 161 78 149 Z" fill="#d81e45"/><path d="M106 150 L114 150 L118 206 L106 208 Z" fill="#c0163b"/><path d="M107 196 L117 195 M107 202 L118 201" stroke="#ff7a90" stroke-width="1.6"/><path d="M82 143 Q100 152 118 143" stroke="rgba(255,255,255,.25)" stroke-width="1.4" fill="none"/></svg>');
+  var HOST_HER_AUT = HOST_HER.replace('<rect x="93" y="116"',
+    '<defs><linearGradient id="ehcoat2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c24a98"/><stop offset=".6" stop-color="#9a2a74"/><stop offset="1" stop-color="#6e1a54"/></linearGradient></defs>' +
+    '<path d="M64 150 Q100 134 136 150 L152 364 Q100 378 48 364 Z" fill="url(#ehcoat2)"/><path d="M100 160 L100 366" stroke="#6e1a54" stroke-width="2"/>' +
+    '<path d="M86 140 L72 152 L88 196 L100 160 Z M114 140 L128 152 L112 196 L100 160 Z" fill="#b23c8a"/>' +
+    '<path d="M60 230 Q100 242 140 230 L141 240 Q100 252 59 240 Z" fill="#7e1f60"/><path d="M96 236 Q88 252 92 268 M104 236 Q112 252 108 270" stroke="#7e1f60" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="100" cy="238" rx="6" ry="5" fill="#7e1f60"/>' +
+    '<g class="earm"><path d="M64 152 Q50 198 56 240 L74 240 Q74 202 82 162 Z" fill="url(#ehcoat2)"/><circle cx="65" cy="246" r="8" fill="url(#ehskin2)"/></g>' +
+    '<path d="M134 152 Q152 182 150 220 L134 222 Q136 194 120 166 Z" fill="url(#ehcoat2)"/><circle cx="141" cy="225" r="7.5" fill="url(#ehskin2)"/>' +
+    '<rect x="93" y="116"').replace('</svg>',
+    '<path d="M80 139 Q100 151 120 139 L120 148 Q100 160 80 148 Z" fill="#e8b84a"/><path d="M84 148 L92 149 L88 210 L78 208 Z" fill="#d9a63a"/><path d="M80 198 L89 199 M79 204 L88 205" stroke="#fff0b0" stroke-width="1.5"/></svg>');
   // The presenters walk wherever they move across the screen (in every game): while a host slides sideways, the side view
   // shows, facing the way they go, legs and arms swinging; once they stand still, the front view is back
   (function () {
@@ -5362,6 +5386,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['her', 'Everyone else sees the word on their phone, and writes ONE word as a clue. All at the same time!'],
         ['him', 'But careful: clues that are the same cancel each other out! So be clever… and different.'],
         ['her', 'A right guess: 12 points for the guesser, and 6 for every clue that survived. Everyone gets a turn to guess!']] },
+    bb: { sign: '🐦‍⬛ Blackbird', theme: 'bb', autumn: true, art: '',
+      lines: [['her', 'Tonight we have something different to show you… 🍂'],
+        ['him', 'Please follow us into the forest. 🌲']] },
     zg: { sign: '🌌 Zero Gravity', theme: 'zg',
       get art() { return '<div class="hszg">' + ZG_SINGER + '</div>'; },
       lines: [['him', 'Welcome to space, Europe! 🌌 Up here, there’s no gravity at all…'],
@@ -5393,7 +5420,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var old = $('hsov'); if (old) old.remove();
     var ov = document.createElement('div'); ov.id = 'hsov'; ov.className = 'grov hsov hs-' + sc.theme + ' enter';
     ov.innerHTML = '<div class="grwall"></div><div class="grfloor"></div><div class="hsspot"></div><div class="grsign hssign">' + sc.sign + '</div>' +
-      '<div class="hsart">' + sc.art + '</div><div class="grhosts">' + HOST_HIM + HOST_HER + '</div><div class="grbub him"></div><div class="grbub her"></div>';
+      '<div class="hsart">' + sc.art + '</div><div class="grhosts">' + (sc.autumn ? HOST_HIM_AUT : HOST_HIM) + (sc.autumn ? HOST_HER_AUT : HOST_HER) + '</div><div class="grbub him"></div><div class="grbub her"></div>';
     document.body.appendChild(ov); whooshes([0, 350, 700]); Music.ding();
     setTimeout(function () { ov.classList.remove('enter'); }, 2600);
     var say = function (who, txt) { [].forEach.call(ov.querySelectorAll('.grbub'), function (x) { x.classList.remove('on'); }); var b = ov.querySelector('.grbub.' + who); b._said = ''; b.classList.add('on'); typeSay(b, txt, who); };
@@ -6297,6 +6324,32 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (!REMOTE) Music.snap();
   }
   net.on('carpet', tcMsg);
+  // ---------- Blackbird ----------
+  // The whole game runs in blackbird.html, full-screen on top of the host; the phones open its controller (bbpad.html)
+  // by themselves. When it's over it tells us who won: they get the party-game points, and so a trip to the boutique.
+  var bbSafe = null;
+  function bbAll() {
+    var act = list().filter(function (p) { return !p.off; }); if (!act.length) { quipAll(); return; }
+    var isBot = function (p) { return p.bot || String(p.pid).indexOf('bot') === 0; }, hum = act.filter(function (p) { return !isBot(p); }), bt = act.filter(isBot);
+    var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = ''; for (var i = 0; i < 4; i++) room += A[Math.floor(Math.random() * A.length)];
+    stopTimers(); G.q = null; G.song = null; G.clip = null; G.draw = null; G.best = null;
+    try { yt.pauseVideo(); } catch (e) {} Music.want(false); hostsAway();
+    G.bb = { id: 'bb' + G.round + '-' + Math.random().toString(36).slice(2, 6), room: room }; G.phase = 'bb'; G.barMs = 0; push();
+    var old = $('bbov'); if (old) old.remove();
+    var ov = document.createElement('div'); ov.id = 'bbov'; ov.style.cssText = 'position:fixed;inset:0;z-index:99990;background:#04071a;opacity:0;transition:opacity 1.2s';
+    var url = 'blackbird.html?embed=1&id=' + encodeURIComponent(G.bb.id) + '&room=' + room + '&nb=' + Math.min(9, bt.length) +
+      '&pl=' + encodeURIComponent(JSON.stringify(hum.slice(0, 10).map(function (p) { return { pid: p.pid, name: p.name }; }))) + '&bn=' + encodeURIComponent(JSON.stringify(bt.map(function (p) { return p.name; })));
+    ov.innerHTML = '<iframe src="' + url + '" allow="autoplay; fullscreen" style="border:0;width:100%;height:100%;display:block"></iframe>';
+    document.body.appendChild(ov); setTimeout(function () { ov.style.opacity = '1'; }, 50);
+    clearTimeout(bbSafe); bbSafe = setTimeout(function () { if (G.phase === 'bb') bbEnd([]); }, 300000);   // (a safety net: never stuck in the forest)
+  }
+  function bbEnd(wins) {
+    clearTimeout(bbSafe); if (G.phase !== 'bb' || !G.bb) return;
+    var big = 12; (wins || []).forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
+    var ov = $('bbov'); if (ov) { ov.style.opacity = '0'; setTimeout(function () { ov.remove(); }, 1300); }
+    G.bb = null; startRound();
+  }
+  window.addEventListener('message', function (e) { var d = e.data; if (d && d.type === 'bb-done' && G.bb && d.id === G.bb.id) bbEnd(d.win); });
   // ---------- Zero Gravity ----------
   // A cosmic stage: the singer on a high central pole, the players on swaying poles around her. Everyone keeps their
   // balance with LEFT and RIGHT on the phone; the poles sway harder and harder. Leaning further scores more, but lean
@@ -11205,7 +11258,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var real = list().filter(function (p) { return !p.off; }).length, n = Math.max(2, real || 4);
     var auto = $('s-auto') ? $('s-auto').value === '1' : true, rev = auto ? (+($('s-autolen') || {}).value || 20) : 15;
     var perQ = 5 + 9 + 3 + 0.2 * n + 1.5 + rev, per = +$('s-rounds').value || 3, min = 1.5;   /* (seconds per question; minutes for the opening and the final scores) */
-    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, fake: 3 * (1.5 + 0.4 * n), note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 6, organ: 4.5, sv: 5 };
+    var GAME = { sing: 4 + 0.75 * n, draw: 3 + 0.5 * n, quip: 3 + 0.25 * n, bluff: 3 + 0.25 * n, clue: 7, bomb: 2 + 0.5 * n, fake: 3 * (1.5 + 0.4 * n), note: 3 + 0.25 * n, queue: 7, carpet: 4.5, zg: 3, rule: 6, organ: 4.5, sv: 5, bb: 4 };
     if ($('s-atype').value === 'party') {
       var on = [].filter.call(document.querySelectorAll('#partybox input[data-party]'), function (x) { return x.checked && GAME[x.getAttribute('data-party')] != null; }).map(function (x) { return x.getAttribute('data-party'); });
       if (n < 2) on = [];

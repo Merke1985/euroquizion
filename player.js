@@ -204,6 +204,7 @@
     if (s.phase !== 'organ' || !s.organ) $('orui').classList.add('hidden');
     if (s.phase !== 'rule' || !s.rule) { $('ruui').classList.add('hidden'); if (ruD) ruSet(''); document.body.classList.remove('rufrozen'); }
     if (s.phase !== 'zg' || !s.zg) { $('zgui').classList.add('hidden'); zgStop(); }
+    if (s.phase !== 'bb' || !s.bb) bbClose();
     if (s.phase !== 'sv' || !s.sv) { if ($('svui')) $('svui').classList.add('hidden'); svStop(); }
     calView(s);
     if (s.phase !== 'fake' || !s.fake) $('fkui').classList.add('hidden');
@@ -311,6 +312,7 @@
     else if ((s.phase === 'clueacc' || s.phase === 'cluerev') && s.clue) clueView(s);
     else if (s.phase === 'note' && s.note) noteView(s);
     else if (s.phase === 'carpet' && s.carpet) carpetView(s);
+    else if (s.phase === 'bb' && s.bb) bbView(s);
     else if (s.phase === 'zg' && s.zg) zgView(s);
     else if (s.phase === 'sv' && s.sv) svView(s);
     else if (s.phase === 'fake' && s.fake) fkView(s);
@@ -888,6 +890,15 @@
   }
 
   function zgStop() { if (zgS) { cancelAnimationFrame(zgS.raf); zgS.raf = 0; } }
+  // Blackbird: the controller (bbpad.html) opens full-screen on its own, already joined: hold to fly up, let go to glide
+  function bbView(s) {
+    show('v-wait'); $('waittitle').textContent = 'Into the forest… 🐦‍⬛'; $('waitsub').textContent = 'Watch the big screen.';
+    var ov = $('bbpad'); if (ov && ov.getAttribute('data-id') === s.bb.id) return; if (ov) ov.remove();
+    ov = document.createElement('div'); ov.id = 'bbpad'; ov.setAttribute('data-id', s.bb.id); ov.style.cssText = 'position:fixed;inset:0;z-index:99990;background:#070a1f';
+    ov.innerHTML = '<iframe src="bbpad.html?embed=1&r=' + s.bb.room + '&pid=' + encodeURIComponent(pid) + '&name=' + encodeURIComponent(name || 'Bird') + '" allow="vibrate" style="border:0;width:100%;height:100%;display:block"></iframe>';
+    document.body.appendChild(ov);
+  }
+  function bbClose() { var ov = $('bbpad'); if (ov) ov.remove(); }
   function zgTell(o) { var z = state && state.zg; if (!net || !z) return; o.pid = pid; o.id = z.id; (net.toHost || net.send)('zg', o); }
   function zgAcc() { return zgS && zgS.tot > 0 ? Math.round(100 * zgS.inT / zgS.tot) : 100; }
   function zgFrame() {
