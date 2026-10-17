@@ -153,14 +153,14 @@
   }
   var branches = [];
   var turnEnd = -1, patternNo = 0, lastPlanT = -99, allPlanned = false, allWarn = false, allOn = false;
-  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnEnd = -1; planT = -1; allPlanned = false; allWarn = false; allOn = false; turnNo = 0; lastArr = -99; OAK_A = 1e9; OAK_B = -1e9; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
+  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnEnd = -1; planT = -1; allPlanned = false; allWarn = false; allOn = false; turnNo = 0; slTop = false; lastArr = -99; OAK_A = 1e9; OAK_B = -1e9; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
   /* Fair turns: every group in a round meets exactly the same obstacles (how many, from which side, where in the turn and
      how deep). Each new round gets a new pattern, a little harder. */
-  var OAK_A = 1e9, OAK_B = -1e9, lastArr = -99, planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
+  var slTop = false, OAK_A = 1e9, OAK_B = -1e9, lastArr = -99, planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
   function birdXAt(T) { var x = cam; for (var tt = t; tt < T; tt += 0.02) x += SPEED * 0.02 * spd(tt); return x + 0.3 * W / H; }
   function newPattern(x) {
-    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], oak = arguments[3], n = fast ? 3 : oak ? 2 : patternNo === 0 ? 3 : 1 + (d > 0.55 ? 1 : 0), p = [], p0 = rnd() < 0.5 ? 0 : 1; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
-    for (var i = 0; i < n; i++) p.push({ tau: (arguments[2] ? 1.6 : 0.3) + (i + 0.5 + (rnd() - 0.5) * 0.2) / n * (arguments[2] ? TURN - 2.1 : SEG - 0.6), top: arguments[4] ? true : oak ? rnd() < 0.45 : (forest && (fast ? i % 2 === p0 : rnd() < 0.5)), reach: oak ? 0.3 + rnd() * 0.12 : forest ? (fast ? 1 / 2 : 1 / 3) + (rnd() - 0.5) * 0.04 : (0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)   // (in the cave: a third of the way across, in the fast part half, from top and bottom in turn; evenly spread)
+    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], oak = arguments[3], n = fast ? 3 : oak ? 3 : patternNo === 0 ? 3 : 1 + (d > 0.55 ? 1 : 0), p = [], p0 = rnd() < 0.5 ? 0 : 1; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
+    for (var i = 0; i < n; i++) p.push({ tau: (arguments[2] ? 1.6 : 0.3) + (i + 0.5 + (rnd() - 0.5) * 0.2) / n * (arguments[2] ? TURN - 2.1 : SEG - 0.6), top: arguments[4] ? true : oak ? (slTop = !slTop) : (forest && (fast ? i % 2 === p0 : rnd() < 0.5)), reach: oak ? 0.46 + rnd() * 0.06 : forest ? (fast ? 1 / 2 : 1 / 3) + (rnd() - 0.5) * 0.04 : (0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)   // (in the cave: a third of the way across, in the fast part half, from top and bottom in turn; evenly spread)
     p.fast = fast; p.mix = oak + '' + !!arguments[4]; return p;
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
