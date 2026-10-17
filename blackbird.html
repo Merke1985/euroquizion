@@ -221,7 +221,7 @@
     if (t >= SOAR_T) return;
     if (planT < 0) planT = PRACT0;
     while (t >= planT - 3.6 && planT + SEG <= FAST_T + 2.2) { planTurn(planT); planT += SEG; }
-    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 1; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (1 / 2) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
+    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 5; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (1 / 2) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
     if (t >= PRACT0 - CD && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (a 3 s countdown in the middle of the screen; the colours stay on, no blinking)
     if (t >= PRACT0 && !ctrlOver) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
