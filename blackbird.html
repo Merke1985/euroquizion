@@ -306,6 +306,7 @@
     b.feathers--; b.inv = 1.5; b.turnHit = true; b.back = Math.min(0.25, b.back + 0.06);
     var X = cam + bx(b); b.vy = (cen(X) - b.y) * 2.5;   // (bounced back towards the middle)
     for (var i = 0; i < 7; i++) parts.push({ x: X, y: b.y, vx: -0.2 - Math.random() * 0.3, vy: (Math.random() - .6) * 0.5, t: 0, r: Math.random() * 6, col: b.col });
+    var nr = branches.reduce(function (m, r) { return !m || Math.abs(r.x - X) < Math.abs(m.x - X) ? r : m; }, null); hitSound(X >= FOREST ? 'rock' : nr && nr.top ? 'bramble' : 'pine', b.feathers <= 0);   // (what was hit decides the sound)
     if (b.feathers <= 0) { b.out = true; b.manual = false; b.vy = 0.1; }
     if (b.human) { try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} }
   }
@@ -1008,6 +1009,28 @@
       var src = a.createBufferSource(); src.buffer = buf; src.loop = true; var bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.6; windG = a.createGain(); windG.gain.value = 0; src.connect(bp); bp.connect(windG); windG.connect(a.destination); src.start(); windG.bp = bp; }
     windG.gain.setTargetAtTime(v * 0.35, actx.currentTime, 0.25); windG.bp.frequency.setTargetAtTime(380 + v * 300, actx.currentTime, 0.3);
   }
+  /* the sound of a bird hitting something: synthesised, short, under the song */
+  var noiseBuf = null, lastHitS = 0;
+  function noise(a) { if (!noiseBuf) { noiseBuf = a.createBuffer(1, a.sampleRate, a.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } var s = a.createBufferSource(); s.buffer = noiseBuf; return s; }
+  function burst(a, out, t0, type, f, q, peak, att, dec) { var s = noise(a), fl = a.createBiquadFilter(), g = a.createGain(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + att); g.gain.exponentialRampToValueAtTime(0.0001, t0 + att + dec); s.connect(fl); fl.connect(g); g.connect(out); s.start(t0, Math.random() * 0.5, att + dec + 0.05); }
+  function tone(a, out, t0, type, f0, f1, peak, dur) { var o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g); g.connect(out); o.start(t0); o.stop(t0 + dur + 0.05); }
+  function hitSound(kind, last) {
+    if (!actx) return; var a = actx, now = a.currentTime; if (now - lastHitS < 0.06) return; lastHitS = now;
+    var out = a.createGain(); out.gain.value = 0.55; out.connect(a.destination);
+    if (kind === 'pine') {   // into a pine: a swish of needles, a soft woody knock, a little shower of needles after
+      burst(a, out, now, 'highpass', 2600, 0.7, 0.5, 0.01, 0.22); tone(a, out, now, 'sine', 210, 90, 0.5, 0.14); burst(a, out, now + 0.03, 'bandpass', 900, 3, 0.25, 0.005, 0.06);
+      for (var i = 0; i < 5; i++) burst(a, out, now + 0.08 + Math.random() * 0.25, 'highpass', 4000 + Math.random() * 2000, 1, 0.08, 0.003, 0.03);
+    } else if (kind === 'bramble') {   // into the brambles: a thorny scratch, leaves rustling, a twig snapping
+      for (var j = 0; j < 4; j++) burst(a, out, now + j * 0.045, 'bandpass', 3000 + Math.random() * 2500, 4, 0.5, 0.004, 0.05);
+      burst(a, out, now, 'bandpass', 1400, 0.8, 0.3, 0.02, 0.3); burst(a, out, now + 0.06, 'highpass', 1800, 2, 0.4, 0.002, 0.03);
+    } else {   // against the rock: a hard stony knock, a click of grit, an echo in the cave
+      var d = a.createDelay(); d.delayTime.value = 0.18; var fb = a.createGain(); fb.gain.value = 0.35; var lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800; d.connect(lp); lp.connect(fb); fb.connect(d); var wet = a.createGain(); wet.gain.value = 0.5; lp.connect(wet); wet.connect(out);
+      var dry = a.createGain(); dry.gain.value = 1; dry.connect(out); dry.connect(d);
+      tone(a, dry, now, 'triangle', 160, 70, 0.7, 0.18); burst(a, dry, now, 'bandpass', 2200, 5, 0.45, 0.002, 0.06); tone(a, dry, now, 'sine', 1300, 900, 0.12, 0.08);
+      for (var k = 0; k < 3; k++) burst(a, dry, now + 0.06 + Math.random() * 0.15, 'bandpass', 5000, 3, 0.07, 0.002, 0.02);   // (grit)
+    }
+    tone(a, out, now + 0.04, 'sine', last ? 2400 : 3000, last ? 1100 : 2000, 0.06, last ? 0.4 : 0.15);   // (and a startled chirp; a long falling one when it was the last feather)
+  }
   function flockSound() {
     if (!actx) return; var a = actx, now = a.currentTime, len = 2.5, sr = a.sampleRate;
     var buf = a.createBuffer(1, Math.floor(sr * len), sr), d = buf.getChannelData(0);
@@ -1072,7 +1095,7 @@
     if (ph === 'play') { msg.t = +t.toFixed(3); msg.cam = +cam.toFixed(4); msg.live = live; msg.k = { P0: PRACT0, F: FOREST, D0: DIVE0, D1: DIVE1, G: GRAVE_X, XE: XEND, S0: SAFE_X, SP: SPEED, FX: FASTX, FT: FAST_T, ST: STOP_T, TK: TAKE_T, SO: SOAR_T }; }
     net.send('state', msg);
   }
-  window.__bb = { allBr: function () { return branches; }, leadHit: function () { var l = birds.filter(function (b) { return b.lead; })[0]; return hits(l, cam + bx(l)); }, birds: function () { return birds; }, state: function () { return { t: t, cam: cam, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
+  window.__bb = { snd: function (k) { var keep = actx; actx = new OfflineAudioContext(1, 44100, 44100); lastHitS = -1; hitSound(k, false); var c = actx; actx = keep; return c.startRendering().then(function (b) { var d = b.getChannelData(0), m = 0; for (var i = 0; i < d.length; i++) m = Math.max(m, Math.abs(d[i])); return m; }); }, allBr: function () { return branches; }, leadHit: function () { var l = birds.filter(function (b) { return b.lead; })[0]; return hits(l, cam + bx(l)); }, birds: function () { return birds; }, state: function () { return { t: t, cam: cam, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();
 })();
 </script>
