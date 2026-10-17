@@ -159,8 +159,8 @@
   var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
   function birdXAt(T) { var x = cam; for (var tt = t; tt < T; tt += 0.02) x += SPEED * 0.02 * spd(tt); return x + 0.3 * W / H; }
   function newPattern(x) {
-    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 2 : patternNo === 0 ? 3 : 1 + (d > 0.55 ? 1 : 0), p = []; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
-    for (var i = 0; i < n; i++) p.push({ tau: 1.6 + (i + 0.5 + (rnd() - 0.5) * 0.5) / n * (TURN - 2.1), top: forest && rnd() < 0.5, reach: (fast ? 0.3 + 0.12 * d : 0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)
+    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 3 : patternNo === 0 ? 3 : 1 + (d > 0.55 ? 1 : 0), p = [], p0 = rnd() < 0.5 ? 0 : 1; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
+    for (var i = 0; i < n; i++) p.push({ tau: 1.6 + (i + 0.5 + (rnd() - 0.5) * 0.5) / n * (TURN - 2.1), top: forest && (fast ? i % 2 === p0 : rnd() < 0.5), reach: forest ? (fast ? 2 / 3 : 0.5) + (rnd() - 0.5) * 0.04 : (0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)   // (in the cave: half the way across, in the fast part two thirds, from top and bottom in turn)
     p.fast = fast; return p;
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
@@ -218,7 +218,7 @@
     if (t >= SOAR_T) return;
     if (planT < 0) planT = PRACT0;
     while (t >= planT - 3.6 && planT + SEG <= ALL_T + 0.3) { planTurn(planT); planT += SEG; }
-    if (t >= ALL_T - 3.6 && !allPlanned) { allPlanned = true; for (var k = 0; k < 5; k++) { var x = birdXAt(ALL_T + 1.3 + k * 1.9), h = half(x), c = cen(x), top = k % 2 === 1, reach = 0.22 * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the follow-me stretch: gentle branches, the blackbird shows the way)
+    if (t >= ALL_T - 3.6 && !allPlanned) { allPlanned = true; for (var k = 0; k < 5; k++) { var x = birdXAt(ALL_T + 1.3 + k * 1.9), h = half(x), c = cen(x), top = k % 2 === 1, reach = (2 / 3) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the follow-me stretch: gentle branches, the blackbird shows the way)
     if (t >= PRACT0 - WARN && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (everyone blinks for 2 s)
     if (t >= PRACT0) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
@@ -273,7 +273,12 @@
         if (!b.turnHit) b.clean += dt;
       } else {   // autopilot: back to its place in the flock, smoothly
         var ty = cen(X + 0.12) + b.off * half(X) * 0.62, rate = 3.2;
-        if (b.lead && t >= FAST_T - 2 && t < SOAR_T) { var nb = branches.filter(function (r) { return r.x > X - 0.02 && r.x < X + 0.8; })[0]; ty = cen(X + 0.1); if (nb) { var hh2 = half(nb.x), cc = cen(nb.x); ty = nb.top ? (nb.tip + cc + hh2) / 2 : (cc - hh2 + nb.tip) / 2; } rate = 2.6; }   // (follow me: the blackbird flies the safe way through)
+        if (b.lead && t >= tAir && t < SOAR_T) {   // the guide flies around every obstacle in smooth, graceful arcs
+          var nb = branches.filter(function (r) { return r.x > X - 0.035 && r.x < X + 0.7; })[0], gy = ty;
+          if (nb) { var hh2 = half(nb.x), cc = cen(nb.x), lo = nb.x < FOREST ? 0.05 : cc - hh2, hi = nb.x < FOREST ? 1 - R : cc + hh2; gy = nb.top ? (nb.tip + hi) / 2 : (lo + nb.tip) / 2;   // (the middle of the open space at that obstacle)
+            var sp = spd(t), wb = Math.max(0, Math.min(1, 1 - (nb.x - X - 0.22 * sp) / (0.4 * sp))); wb = wb * wb * (3 - 2 * wb); ty = ty + (gy - ty) * wb; }   // (it starts curving towards the gap well before it)
+          ty += 0.012 * Math.sin(t * 2.2);   // (a gentle bob)
+          var wn = 5.2 + 1.6 * Math.max(0, spd(t) - 1); b.vy += (wn * wn * (ty - b.y) - 2 * wn * b.vy) * dt; b.y += b.vy * dt; b.y = Math.max(R, Math.min(1 - R, b.y)); return; }   // (a spring, not a snap: it glides in and out of each curve)
         if (t >= SOAR_T) { b.flap += dt * 7; rate = 2.2;   // (soaring high and fast; at 2:40 the lone bird picks the rose; then they all fly off)
           if (t < TAKE_T) ty = 0.2 + b.off * 0.08 + 0.03 * Math.sin(t * 1.5 + b.id);
           else ty = 0.06 + b.off * 0.05; }
@@ -331,7 +336,7 @@
   }
   var smileA = 0;
   function drawSinger0(X0, Y0, Wd, Hd) {
-    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.min(1, 0.15 + Math.abs(Math.sin(t * 4.6)) * 0.6 + Math.sin(t * 1.7) * 0.3)) * (1 - 0.7 * smileA) * Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 10)) / 0.4)) * (t < HOME_T ? 1 : Math.max(0, Math.min(1, (t - HOME_T - 15) / 0.4, (HOME_T + 20.9 - t) / 0.4)));   // (her lips stay closed until she starts singing at 0:10; at the end she only sings while the tear runs down)   // (singing softly)
+    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.min(1, 0.15 + Math.abs(Math.sin(t * 4.6)) * 0.6 + Math.sin(t * 1.7) * 0.3)) * (1 - 0.7 * smileA) * Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 10)) / 0.4)) * (t < HOME_T ? 0 : Math.max(0, Math.min(1, (t - HOME_T - 15) / 0.4, (HOME_T + 20.9 - t) / 0.4)));   // (at the start she stays silent, just sad; she only sings at the end, while the tear runs down)   // (singing softly)
     var M = function (u, v) { var q = P(u + sw, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u + sw, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var a = P(cu + sw, cv), b = P(u + sw, v); cx.quadraticCurveTo(a[0], a[1], b[0], b[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var p1 = P(a1 + sw, b1), p2 = P(a2 + sw, b2), p3 = P(u + sw, v); cx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); };
     // the hair behind her head
     var hg = cx.createLinearGradient(X0, Y0 + Hd * 0.12, X0, Y0 + Hd * 0.62); hg.addColorStop(0, '#f6e6b8'); hg.addColorStop(0.6, '#e2c98e'); hg.addColorStop(1, '#c9ab6c'); cx.fillStyle = hg;
@@ -623,7 +628,7 @@
   }
   function stoneFill(px, w0, dim) { var g = cx.createLinearGradient(px - w0, 0, px + w0, 0); g.addColorStop(0, 'rgba(10,14,34,' + dim + ')'); g.addColorStop(0.3, 'rgba(62,70,128,' + dim + ')'); g.addColorStop(0.55, 'rgba(34,38,82,' + dim + ')'); g.addColorStop(1, 'rgba(6,8,22,' + dim + ')'); return g; }
   function drawDrip(px, base, tip, dir, sd) {
-    var w0 = H * 0.036, len = tip - base;
+    var len = tip - base, w0 = Math.max(H * 0.036, Math.abs(len) * 0.11);   // (longer ones are thicker at the base)
     for (var j = 0; j < 3; j++) { var hs = hsh(sd * 10 + j), side = j % 2 ? 1 : -1, ox = side * w0 * (1.1 + 0.6 * hs), l2 = len * (0.22 + 0.3 * hsh(sd * 7 + j)), ww = w0 * (0.32 + 0.2 * hs);   // the smaller drips around it
       dripShape(px + ox, base, base + l2, ww, sd + j); cx.fillStyle = stoneFill(px + ox, ww, 0.8); cx.fill(); }
     dripShape(px, base, tip, w0, sd); cx.fillStyle = stoneFill(px, w0, 1); cx.fill();   // the main spike
@@ -954,7 +959,7 @@
     if (ph === 'play') { msg.t = +t.toFixed(3); msg.cam = +cam.toFixed(4); msg.live = live; msg.k = { P0: PRACT0, F: FOREST, D0: DIVE0, D1: DIVE1, G: GRAVE_X, XE: XEND, S0: SAFE_X, SP: SPEED, FX: FASTX, FT: FAST_T, ST: STOP_T, TK: TAKE_T, SO: SOAR_T }; }
     net.send('state', msg);
   }
-  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, cam: cam, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
+  window.__bb = { leadHit: function () { var l = birds.filter(function (b) { return b.lead; })[0]; return hits(l, cam + bx(l)); }, birds: function () { return birds; }, state: function () { return { t: t, cam: cam, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();
 })();
 </script>
