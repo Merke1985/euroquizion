@@ -659,7 +659,11 @@
     }
   }
   function drawBough(px, tip, sd) {   // a gnarled oak bough hanging down from the crown, ending in a clump of leaves
-    var top = sy(OAK_TOP) - H * 0.03, len = tip - top, n = 12, i, s, pts = [];
+    var top = H * 0.1, len = tip - top, n = 12, i, s, pts = [];
+    var leaves = function (dark) {   // (a big area of leaves at the top of the screen, the branch sticking out of it)
+      for (var k = 0; k < 22; k++) { var a = hsh(sd * 50 + k), b2 = hsh(sd * 70 + k * 3), lx = px + (a - 0.5) * H * 0.6, ly = H * (0.03 + b2 * 0.15) * (1 - Math.abs(a - 0.5) * 1.1), lr = H * (0.055 + hsh(sd * 90 + k) * 0.04);
+        if (dark) { cx.beginPath(); cx.arc(lx, ly, lr, 0, 7); cx.fill(); } else { cx.beginPath(); cx.ellipse(lx - lr * 0.3, ly + lr * 0.35, lr * 0.32, lr * 0.13, -0.4 + a, 0, 7); cx.fill(); } } };
+
     for (i = 0; i <= n; i++) { s = i / n; pts.push([px + Math.sin(s * 5.3 + sd * 6) * H * 0.012 * (1 - s) - (1 - s) * (1 - s) * H * 0.05, top + len * s, H * (0.04 * Math.pow(1 - s, 1.3) + 0.008) * (1 + 0.15 * Math.sin(s * 17 + sd * 9))]); }   // (thick where it leaves the crown, knobbly, bending down)
     var path = function () { cx.beginPath(); pts.forEach(function (p, j) { if (j) cx.lineTo(p[0] - p[2], p[1]); else cx.moveTo(p[0] - p[2], p[1]); }); for (var j = pts.length - 1; j >= 0; j--) cx.lineTo(pts[j][0] + pts[j][2], pts[j][1]); cx.closePath(); };
     cx.strokeStyle = '#0a0f24'; cx.lineCap = 'round'; cx.lineWidth = H * 0.005; [0.35, 0.6].forEach(function (f, k) { var p = pts[Math.round(f * n)], d = k ? 1 : -1; cx.beginPath(); cx.moveTo(p[0], p[1]); cx.quadraticCurveTo(p[0] + d * H * 0.025, p[1] + H * 0.01, p[0] + d * H * 0.035, p[1] + H * 0.035); cx.stroke(); cx.fillStyle = '#0d1a2c'; cx.beginPath(); cx.ellipse(p[0] + d * H * 0.036, p[1] + H * 0.04, H * 0.011, H * 0.007, d * 0.5, 0, 7); cx.fill(); });   // (twigs with a few leaves: harmless)
@@ -667,6 +671,8 @@
     cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineWidth = 2.5; path(); cx.stroke();   // (the bough, outlined in glowing purple)
     var e = pts[n]; for (i = 0; i < 6; i++) { var an = i / 6 * Math.PI * 2 + sd * 3; cx.fillStyle = '#16264a'; cx.beginPath(); cx.ellipse(e[0] + Math.cos(an) * H * 0.016, e[1] + H * 0.006 + Math.sin(an) * H * 0.01, H * 0.016, H * 0.008, an, 0, 7); cx.fill(); cx.stroke(); }   // (and the clump of leaves at its end)
     cx.restore();
+    cx.fillStyle = '#111a3c'; cx.beginPath(); cx.ellipse(px, 0, H * 0.24, H * 0.1, 0, 0, 7); cx.fill(); leaves(true);   // (the leaves last: the branch comes out of them)
+    cx.fillStyle = 'rgba(90,110,200,.3)'; leaves(false);   // (moonlit leaves)
   }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
     var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
@@ -781,7 +787,6 @@
     treeLayer(0.1, '#16224a', 0.74 + low, 0.32, 0.5, 0.08, 1); mist(0.55 + low, 0.85 + low, 0.12);
     treeLayer(0.25, '#0f1834', 0.84 + low, 0.42, 0.66, 0.12, 2); mist(0.68 + low, 0.95 + low, 0.08);
     treeLayer(0.5, '#0a1024', 0.95 + low * 0.6, 0.55, 0.85, 0.19, 3);
-    drawOak();
     var x0 = cam - 0.1, x1 = cam + W / H + 0.1, st = 0.015, X;
     birds.forEach(function (b) { if (behind(b)) drawBird(b); });
     drawHouse();
