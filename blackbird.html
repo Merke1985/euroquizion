@@ -99,12 +99,12 @@
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, SONG0 = 7, BOTTOM = 11.4, UP = 6, CLOSE = 4, TWO = 4.5, HOLD2 = 1.5, OUT = 4.2, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 2,   /* (take-off at 0:30 in the song: the song starts at 0:07, so 7 s less intro) */   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
-      FAST_T = MUSIC - SONG0 + 125, PICK_T = MUSIC - SONG0 + 155, SOAR_T = PICK_T - 15.7, GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 10, APP_T = PICK_T - 13.6, STOP_T = PICK_T - 10.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 6 s; the rose at PICK_T) */ END_T = MUSIC - SONG0 + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
+      FAST_T = MUSIC - SONG0 + 125, PICK_T = MUSIC - SONG0 + 155, SOAR_T = PICK_T - 11.7, ALL_T = PICK_T - 14.7,   /* (the last 3 s of the cave: everyone steers at once) */ GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 8, APP_T = PICK_T - 11.4, STOP_T = PICK_T - 8.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 4 s, 1 s after the landing; the rose at PICK_T) */ END_T = MUSIC - SONG0 + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing to a stop at their favourite spot, then away after the rose
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
     if (T < FAST_T) return 1; if (T >= TAKE_T) return 2.5 * ez((T - TAKE_T) / 3); if (T >= STOP_T) return 0;
-    var D0 = STOP_T - 5; if (T > D0) return FASTX * (1 - ez((T - D0) / (STOP_T - D0)));
+    var D0 = STOP_T - 3.3; if (T > D0) return FASTX * (1 - ez((T - D0) / (STOP_T - D0)));
     return 1 + (FASTX - 1) * ez((T - FAST_T) / 2.5);
   }
   var FASTX = 2.3;   // (how much faster from 2:05)
@@ -122,9 +122,9 @@
   function diff(x) {   // the sky is the warm-up (wide, gentle, few obstacles: get used to flying); the forest gets harder and harder
     if (x >= GRAVE_X) return 1 - 0.45 * Math.min(1, (x - GRAVE_X) / 1.5);   // (the graveyard: open sky again)
     if (x < FOREST) return 0.25 * Math.max(0, x - SAFE_X) / Math.max(1, FOREST - SAFE_X);
-    return Math.min(1, 0.45 + 0.55 * (x - FOREST) / Math.max(1, XEND - FOREST));
+    return Math.min(0.8, 0.4 + 0.4 * (x - FOREST) / Math.max(1, XEND - FOREST));   // (the forest: harder as it goes, but never too much)
   }
-  function half(x) { return 0.30 - 0.13 * diff(x); }   // half the height of the band of light
+  function half(x) { return 0.30 - 0.1 * diff(x); }   // half the height of the band of light
   var DIVE0 = FOREST - 3.4, DIVE1 = FOREST + 0.9;   // (the dive: from here nobody flies; the flock rises once more and dives down into the forest together)
   function inDive(X) { return X > DIVE0 - 1.6 && X < DIVE1; }
   function cen(x) {
@@ -134,20 +134,20 @@
     return c;
   }
   function cen0(x) {   // its middle: a slow wave that swings wider and faster as the song builds (not the real melody)
-    var d = diff(x), a = 0.05 + 0.24 * d;
+    var d = diff(x), a = 0.05 + 0.17 * d;
     var y = 0.5 + a * (0.62 * Math.sin(0.85 * x) + 0.28 * Math.sin(2.05 * x + 1.3) + 0.1 * Math.sin((3.6 + 2 * d) * x + 0.4));
     var h = half(x); return Math.max(h + 0.05, Math.min(1 - h - 0.05, y));
   }
   var branches = [];
-  var patternNo = 0, lastPlanT = -99;
-  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
+  var turnEnd = -1, patternNo = 0, lastPlanT = -99, allPlanned = false, allWarn = false, allOn = false;
+  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnEnd = -1; allPlanned = false; allWarn = false; allOn = false; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
   /* Fair turns: every group in a round meets exactly the same obstacles (how many, from which side, where in the turn and
      how deep). Each new round gets a new pattern, a little harder. */
   var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
   function birdXAt(T) { var x = cam; for (var tt = t; tt < T; tt += 0.02) x += SPEED * 0.02 * spd(tt); return x + 0.3 * W / H; }
   function newPattern(x) {
-    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 3 + (rnd() < 0.5 ? 1 : 0) : patternNo === 0 ? 3 : 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = []; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
-    for (var i = 0; i < n; i++) p.push({ tau: 1.6 + (i + 0.5 + (rnd() - 0.5) * 0.5) / n * (TURN - 2.1), top: forest && rnd() < 0.5, reach: (fast ? 0.42 : 0.32) + 0.28 * d + rnd() * 0.12, tw: rnd() });   // (when in the turn each one comes)
+    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 2 : patternNo === 0 ? 3 : 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = []; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
+    for (var i = 0; i < n; i++) p.push({ tau: 1.6 + (i + 0.5 + (rnd() - 0.5) * 0.5) / n * (TURN - 2.1), top: forest && rnd() < 0.5, reach: (fast ? 0.3 + 0.12 * d : 0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)
     p.fast = fast; return p;
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
@@ -193,19 +193,26 @@
   }
   function schedule() {
     if (t >= SOAR_T) return;
-    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick >= lastPlanT + TURN - 0.3 && nextPick + TURN <= SOAR_T + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
+    if (t >= ALL_T - 3.6 && !allPlanned) { allPlanned = true; [0.9, 1.7, 2.5].forEach(function (tau, k) { var x = birdXAt(ALL_T + tau), h = half(x), c = cen(x), reach = (0.3 + 0.04 * k) * 2 * h, top = k % 2 === 1; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); }); }   // (the finale: a last stretch of branches for the whole flock)
+    if (t >= ALL_T - WARN) {   // (the last 3 s of the cave: everyone at once, after 2 s of blinking)
+      if (t < ALL_T) { if (!allWarn) { allWarn = true; pending = alive(); } return; }
+      if (!allOn) { allOn = true; pending = []; alive().forEach(function (b) { b.manual = true; b.turnStart = t; b.turnHit = false; }); }
+      return;
+    }
+    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick >= lastPlanT + TURN - 0.3 && nextPick + TURN <= ALL_T - WARN + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
       var xa = birdXAt(nextPick), xb = xa + TURN * SPEED;
       plannedFor = nextPick; lastPlanT = nextPick; planTurn(nextPick);   // (turns go on right up to the forest: no pause for the dive any more)
     }
-    if (t >= nextPick - WARN && !pending.length && nextPick + (t < PRACT_END - 1 ? 0 : TURN) <= SOAR_T + 0.3) {
+    if (t >= nextPick - WARN && !pending.length && nextPick + (t < PRACT_END - 1 ? 0 : TURN) <= ALL_T - WARN + 0.3) {
       if (pgi < pgroups.length && t < PRACT_END - 1) pending = pgroups[pgi++].filter(function (b) { return !b.out; });   // (practice: the pairs in turn)
       else { if (!pracDone) { pracDone = true; nowAt = t + WARN; birds.forEach(function (b) { b.flown = 0; }); } pending = choose(); }
       warnAt = t;
     }
+    if (turnEnd > 0 && t >= turnEnd) { turnEnd = -1; birds.forEach(function (b) { b.manual = false; }); }   // (a turn ends: 2 s with nobody steering, while the next group blinks)
     if (t >= nextPick && pending.length) {
       birds.forEach(function (b) { b.manual = false; });
       pending.forEach(function (b) { if (!b.out) { b.manual = true; b.turnStart = t; b.turnHit = false; } });
-      pending = []; nextPick = t + (t < PRACT_END - 1 ? PRACT_T : TURN);
+      pending = []; turnEnd = t + TURN; nextPick = turnEnd + WARN;
     }
     if (t >= DUR - 2) birds.forEach(function (b) { b.manual = false; });
   }
@@ -492,7 +499,7 @@
   /* the lovers: a memory of her and her love, standing by the water, forehead to forehead in an embrace. They appear as
      the flock settles in the tree, stay for three seconds, then dissolve into light. */
   function drawLovers(px, base) {
-    var a0 = LAND_T - 0.4, a = t < a0 ? 0 : t < a0 + 0.8 ? (t - a0) / 0.8 : t < LAND_T + 6.4 ? 1 : Math.max(0, 1 - (t - LAND_T - 6.4) / 1.2), dis = Math.max(0, Math.min(1, (t - LAND_T - 6.4) / 1.8));
+    var a0 = LAND_T + 1, a = t < a0 ? 0 : t < a0 + 0.6 ? (t - a0) / 0.6 : t < a0 + 4.6 ? 1 : Math.max(0, 1 - (t - a0 - 4.6) / 0.9), dis = Math.max(0, Math.min(1, (t - a0 - 4.6) / 1.2));   // (1 s after the flock lands; 4 s; then they dissolve)
     if (a <= 0 && (dis <= 0 || dis >= 1)) return;
     var hh = H * 0.3, P = function (u, v) { return [px + u * hh, base - v * hh]; }, M = function (u, v) { var q = P(u, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var q1 = P(cu, cv), q2 = P(u, v); cx.quadraticCurveTo(q1[0], q1[1], q2[0], q2[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var q1 = P(a1, b1), q2 = P(a2, b2), q3 = P(u, v); cx.bezierCurveTo(q1[0], q1[1], q2[0], q2[1], q3[0], q3[1]); };
     var halo = cx.createRadialGradient(px, base - hh * 0.55, 0, px, base - hh * 0.55, hh * 0.75); halo.addColorStop(0, 'rgba(190,215,255,' + (0.28 * a) + ')'); halo.addColorStop(1, 'rgba(190,215,255,0)'); cx.fillStyle = halo; cx.fillRect(px - hh, base - hh * 1.4, hh * 2, hh * 1.5);
@@ -594,7 +601,7 @@
       var ez2 = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); }, pp = perch(b), from = pp;
       if (t < LAND_T) { var la = (t - APP_T) / (LAND_T - APP_T), le = ez2(la); return { X: b.ax + (pp.x - b.ax) * le, y: b.ay + (pp.y - b.ay) * le - Math.sin(Math.PI * la) * 0.05, L: 1, home: Math.min(0.99, la) }; }
       var rp = { x: FLOWER_X - 0.04, y: GY - 0.03 };
-      if (b.lead && t >= PICK_T - 2.2) { var hg = Math.max(0, Math.min(1, (t - PICK_T + 2.2) / 1.6)), he2 = ez2(hg); from = { x: pp.x + (rp.x - pp.x) * he2, y: pp.y + (rp.y - pp.y) * he2 - Math.sin(Math.PI * hg) * 0.05 }; if (t < TAKE_T) return { X: from.x, y: from.y, L: 1, home: hg < 1 ? 0.6 : 1 }; }
+      if (b.lead && t >= PICK_T - 1.5) { var hg = Math.max(0, Math.min(1, (t - PICK_T + 1.5) / 1.2)), he2 = ez2(hg); from = { x: pp.x + (rp.x - pp.x) * he2, y: pp.y + (rp.y - pp.y) * he2 - Math.sin(Math.PI * hg) * 0.05 }; if (t < TAKE_T) return { X: from.x, y: from.y, L: 1, home: hg < 1 ? 0.6 : 1 }; }
       if (t < TAKE_T) return { X: pp.x, y: pp.y, L: 1, home: 1 };
       var ta = Math.max(0, Math.min(1, (t - TAKE_T) / 2.6)), te = ez2(ta);
       return { X: from.x + (cam + bx(b) - from.x) * te, y: from.y + (b.y - from.y) * te - Math.sin(Math.PI * ta) * 0.04, L: 1, home: 0.6 };
@@ -626,7 +633,8 @@
       cx.save(); cx.translate(px, py); cx.scale(fs, 1 + 0.06 * (1 - Math.abs(b.face))); cx.rotate(bp.home != null ? 0.15 * (1 - bp.home) * (bp.home < 1 ? 1 : 0) : landing ? 0.12 * (1 - bp.land) : t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * Math.max(L, 0.25)) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
       if (t < TAKEOFF && !landing) cx.translate(0, -Math.max(0, Math.sin(t * 3 + b.id * 1.7)) * s * 0.18);   // (a little hop now and then, while they wait)
       if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
-      if (b.manual) { var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); }
+      if (b.wasManual && !b.manual) b.offT = t; b.wasManual = b.manual; var glowA = b.manual ? 1 : b.offT != null ? Math.max(0, 1 - (t - b.offT) / 1.5) : 0;   // (after a turn the neon fades out gently)
+      if (glowA > 0) { cx.globalAlpha *= glowA; var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); cx.globalAlpha /= glowA; }
       var warn = pending.indexOf(b) >= 0; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
       var sitting = (t < TAKEOFF && !landing) || (b.lead && L < 0.15 && t >= TAKEOFF) || (bp.home != null && bp.home >= 1);
       if (bp.home != null && bp.home < 1) landing = false;
@@ -643,14 +651,14 @@
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
       var wa = sitting ? -0.15 : bp.home != null ? Math.sin(t * 14 + b.id) * 0.9 : landing ? Math.sin(t * (bp.land > 0.7 ? 20 : 11)) * 0.9 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
       cx.strokeStyle = 'rgba(120,130,170,.4)'; cx.lineWidth = 1; for (var wf = 0; wf < 3; wf++) { cx.beginPath(); cx.moveTo(-s * (0.15 - wf * 0.15), -s * 0.08); cx.quadraticCurveTo(s * (0.05 + wf * 0.08), -s * (0.25 + 1.0 * wa) * (0.6 + wf * 0.15), s * (0.3 + wf * 0.04), -s * 0.06); cx.stroke(); }   // feathers on the wing
-      var isWarn = pending.indexOf(b) >= 0, blink = Math.sin(t * 14) > 0 ? 1 : 0.12, turnA = b.manual ? 1 : isWarn ? blink : 0;   // (after the start everyone is a plain blackbird again: colour and name only on your turn, blinking for 2 s before it)
+      var isWarn = pending.indexOf(b) >= 0, blink = Math.sin(t * 14) > 0 ? 1 : 0.12, turnA = b.manual ? 1 : isWarn ? blink : glowA;   // (after the start everyone is a plain blackbird again: colour and name only on your turn, blinking for 2 s before it)
       var colA = (t < MSG1 ? Math.max(0, Math.min(1, (t - b.colT) / 0.5)) : t < MSG1 + 0.8 ? Math.max(turnA, 1 - (t - MSG1) / 0.8) : turnA) * (1 - Math.max(0, Math.min(1, (t - HOME_T) / 2.5))), pop = t - b.colT;   // (at home they're plain blackbirds again)   // (plain black blackbirds until the whole flock is in the air; then the neon lights up, one bird at a time)
       if (pop > 0 && pop < 0.9) { cx.strokeStyle = b.col; cx.globalAlpha = 1 - pop / 0.9; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.2 + pop * 3), 0, 7); cx.stroke(); var fl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 3); fl.addColorStop(0, b.col + '99'); fl.addColorStop(1, b.col + '00'); cx.fillStyle = fl; cx.beginPath(); cx.arc(0, 0, s * 3, 0, 7); cx.fill(); cx.globalAlpha = 1; }   // (the flash as it lights up)
       if (colA > 0) { cx.globalAlpha *= colA; cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke(); cx.globalAlpha /= colA; }   // their colour
       if (b.lead && t >= PICK_T - 0.05 && t < HOME_T + 5.4 && !(t >= FADE_T && t < HOME_T)) { cx.save(); cx.translate(s * 1.45, -s * 0.15); cx.rotate(1.2); drawRose(0, 0, s * 0.9, 0.8); cx.restore(); }   // (the flower in its beak)
       cx.restore();
       var intro = t > b.colT && t < b.colT + 2.8 && t < MSG1;   // (its name, for a moment, as it lights up)
-      if (!b.out && t > b.colT && t < SOAR_T && (b.manual || intro || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
+      if (!b.out && t > b.colT && t < SOAR_T && (b.manual || intro || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name, px, py - s * 1.6); }
   }
   function draw() {
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -749,8 +757,9 @@
     var k = birds.map(function (b) { return b.feathers + (b.manual ? 'm' : '') + (b.out ? 'o' : '') + (t >= b.colT ? 'r' : ''); }).join(',');
     if (k !== sideKey) { sideKey = k; $('side').innerHTML = players().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out || !b.feathers ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
     var bn = $('banner'), txt = '', cls = '';
-    if (t >= SOAR_T) { txt = t >= LAND_T - 0.6 && t < LAND_T + 7.5 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
+    if (t >= SOAR_T) { txt = t >= LAND_T + 0.8 && t < LAND_T + 6.6 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
     else if (t >= FAST_T - 0.5 && t < FAST_T + 2.5 && !me.manual) { txt = '💨 Faster! Follow the blackbird…'; cls = 'warn'; }
+    else if (t >= ALL_T - WARN && t < ALL_T + 1.2) { txt = '🐦‍⬛ Everyone together! Fly!'; cls = 'warn'; }
     else if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
