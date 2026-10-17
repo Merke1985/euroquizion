@@ -12,8 +12,10 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
   intent shown above its head each turn. Each player has a hand of 3 cards on the phone; playing one means answering
   a question (right = it works): Strike (easy, 6 damage), Power Ballad (hard, 15), Sequin Shield (block 8), Duet
   (block 6 for a teammate), Encore (heal 6), Key Change (next attack double). Knocked out = backup dancer.
-  Open questions: who gets the trophy (most damage, or damage + support), and turn timing (all at once, or pick
-  then answer).
+  **Test version built:** 🧪 Test → "⚔️ Boss Battle (prototype)" (bossbattle.html): you plus computer teammates on
+  one screen, all four monsters with a special move every 3rd turn. Choices made: trophy = damage + half of
+  shielding/healing (plus an MVP for support); everyone picks and answers at the same time (14 s). Still to do:
+  phones for every player, then hook it into the real Grand Final as an alternative mode.
 
 ## Duo games (partners, no shouting needed)
 
@@ -25,6 +27,11 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
   faster, backwards, or from memory. Duos side by side; 3 mistakes and your stage goes dark.
 - Other duo ideas: Perfect Harmony (both pick the same answer without talking), Running Order (the cards split over
   both phones), Duet Drawing, Mirror Dance (Serving with half the arrows each).
+
+- **Douze Points Code** (Mastermind): guess the hidden order of 4 countries; feedback is 12/10/8 points for right
+  spot, right country wrong spot.
+- **Nul Points Roulette** (Honeycomb Havoc variant): lives instead of elimination, everyone gets equal turns, a pass
+  option, two belts so big groups move faster.
 
 ## Other party games
 

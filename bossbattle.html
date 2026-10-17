@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boss Battle (test)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+<style>
+  /* Boss Battle: an early test of a second Grand Final mode. Everyone together against the monster; questions are the weapons.
+     One computer: you plus computer teammates. Phones come later. */
+  :root{--bg:#0b0633;--ink:#fff;--mute:#b9b3e6;--line:rgba(255,255,255,.14);--pink:#ff2e88;--gold:#ffd166;--hp:#3ddc84;--blk:#5ec8ff;--red:#ff4d6a}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);background:radial-gradient(80vw 60vh at 50% 0%,#3a1470,transparent 70%),radial-gradient(60vw 50vh at 50% 110%,#12306b,transparent 70%),var(--bg);overflow:hidden;display:grid;grid-template-rows:auto 1fr auto auto;height:100vh}
+  header{display:flex;align-items:center;gap:14px;padding:10px 18px}
+  header h1{margin:0;font-size:clamp(1.1rem,2.2vw,1.6rem)}
+  header h1 small{color:var(--mute);font-weight:600;font-size:.65em;margin-left:.4em}
+  .turn{margin-left:auto;font-weight:800;color:var(--mute)}
+  .turn b{color:var(--ink)}
+  .timer{width:180px;height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+  .timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--gold),var(--pink));transform-origin:left}
+  /* the stage: the monster in the middle */
+  .stage{position:relative;display:grid;place-items:center;min-height:0}
+  .mon{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .mon svg{width:min(26vh,260px);height:min(26vh,260px);filter:drop-shadow(0 18px 30px rgba(0,0,0,.5));transition:transform .2s}
+  .mon.hit svg{animation:mhit .35s}
+  .mon.act svg{animation:mact .6s}
+  @keyframes mhit{20%{transform:translateX(-10px) rotate(-3deg);filter:brightness(2.2) drop-shadow(0 0 30px #fff)}60%{transform:translateX(8px)}}
+  @keyframes mact{40%{transform:scale(1.15) translateY(10px)}}
+  .mname{font-weight:800;font-size:clamp(1rem,1.8vw,1.4rem);letter-spacing:.04em;text-transform:uppercase}
+  .bar{position:relative;width:min(46vw,460px);height:20px;border-radius:99px;background:rgba(0,0,0,.45);border:1px solid var(--line);overflow:hidden}
+  .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ff4d6a,#ff9f43);transition:width .5s}
+  .bar b{position:absolute;inset:0;display:grid;place-items:center;font-size:.8rem;font-weight:800;text-shadow:0 1px 2px #000}
+  .mblk{position:absolute;left:calc(50% + min(23vw,230px) + 8px);top:auto;font-weight:800;color:var(--blk)}
+  .intent{position:absolute;top:-8px;left:50%;transform:translate(-50%,-100%);white-space:nowrap;padding:8px 14px;border-radius:14px;background:rgba(20,10,50,.85);border:2px solid var(--line);font-weight:800;font-size:clamp(.9rem,1.5vw,1.15rem);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .intent.atk{border-color:var(--red)} .intent.spec{border-color:var(--gold);color:var(--gold)} .intent.def{border-color:var(--blk)}
+  .floaty{position:absolute;font-weight:900;font-size:clamp(1.4rem,3vw,2.4rem);pointer-events:none;animation:fl 1.1s ease-out forwards;text-shadow:0 2px 6px #000}
+  @keyframes fl{from{opacity:1;transform:translateY(0) scale(.8)}to{opacity:0;transform:translateY(-70px) scale(1.2)}}
+  .banner{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);padding:8px 18px;border-radius:999px;background:rgba(10,6,40,.8);border:1px solid var(--line);font-weight:800;white-space:nowrap;font-size:clamp(.9rem,1.5vw,1.1rem)}
+  /* the party */
+  .party{display:flex;justify-content:center;gap:12px;padding:8px 14px;flex-wrap:wrap}
+  .pc{position:relative;width:min(22vw,200px);padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid var(--line);transition:transform .2s,opacity .3s,box-shadow .3s}
+  .pc .nm{font-weight:800;display:flex;align-items:center;gap:6px}
+  .pc .nm .dot{width:12px;height:12px;border-radius:50%}
+  .pc .hpb{height:10px;border-radius:99px;background:rgba(0,0,0,.4);overflow:hidden;margin-top:6px}
+  .pc .hpb i{display:block;height:100%;background:var(--hp);transition:width .4s}
+  .pc .st{display:flex;justify-content:space-between;font-size:.82rem;color:var(--mute);margin-top:4px;font-weight:700}
+  .pc .st .bk{color:var(--blk)}
+  .pc .pl{min-height:1.3em;font-size:.82rem;font-weight:800;margin-top:4px}
+  .pc.ko{opacity:.55} .pc.ko .nm::after{content:' 💃 backup dancer';font-size:.7em;color:var(--pink)}
+  .pc.tgt{box-shadow:0 0 0 2px var(--red),0 0 22px rgba(255,77,106,.5)}
+  .pc.frozen{box-shadow:0 0 0 2px #8fe9ff,0 0 22px rgba(143,233,255,.5)} .pc.frozen .nm::before{content:'❄️'}
+  .pc.hitme{animation:mhit .35s}
+  .pc.me{background:rgba(255,209,102,.1)}
+  /* your hand */
+  .hand{display:flex;justify-content:center;gap:14px;padding:12px 14px 18px;min-height:168px}
+  .card{position:relative;width:min(24vw,170px);padding:12px;border-radius:16px;background:linear-gradient(160deg,#2b1a66,#160d3d);border:2px solid var(--line);cursor:pointer;transition:transform .15s,border-color .15s,opacity .2s;user-select:none}
+  .card:hover{transform:translateY(-6px);border-color:var(--gold)}
+  .card .ic{font-size:1.8rem}
+  .card b{display:block;font-size:1.02rem;margin-top:2px}
+  .card .ef{font-size:.85rem;color:var(--mute);margin-top:4px;line-height:1.25}
+  .card .df{position:absolute;top:10px;right:10px;font-size:.7rem;font-weight:800;padding:2px 7px;border-radius:99px}
+  .df.easy{background:#1f7a4a} .df.medium{background:#8a6a12} .df.hard{background:#8a1f3a}
+  .hand.off .card{opacity:.35;pointer-events:none}
+  .handmsg{align-self:center;color:var(--mute);font-weight:700}
+  /* the question */
+  .qov{position:fixed;inset:0;display:grid;place-items:center;background:rgba(5,3,20,.6);z-index:5;padding:16px}
+  .qov.hidden,.ov.hidden{display:none}
+  .qbox{width:min(640px,100%);padding:20px 22px;border-radius:20px;background:#170d40;border:2px solid var(--gold);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .qbox h3{margin:0 0 4px;font-size:1.25rem}
+  .qbox .qc{color:var(--mute);font-weight:700;font-size:.9rem}
+  .qbox .opts{display:grid;gap:8px;margin-top:14px}
+  .qbox button{font:inherit;font-weight:800;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);cursor:pointer}
+  .qbox button:hover{border-color:var(--gold)}
+  .ov{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,rgba(60,20,120,.8),rgba(5,3,20,.94));z-index:6;padding:16px}
+  .box{width:min(640px,100%);padding:24px 26px;border-radius:22px;background:#140b3a;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .box h2{margin:0 0 .3em;font-size:clamp(1.5rem,4vw,2.2rem)}
+  .box p{color:var(--mute);line-height:1.45;margin:.4em 0}
+  .box p b{color:var(--ink)}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+  .btn{font:inherit;font-weight:800;border:0;border-radius:14px;padding:12px 18px;cursor:pointer;background:var(--gold);color:#2a1a00;font-size:1.02rem}
+  .btn.alt{background:rgba(255,255,255,.1);color:var(--ink);border:1px solid var(--line)}
+  select{font:inherit;font-weight:700;padding:8px 10px;border-radius:10px;background:#21155a;color:#fff;border:1px solid var(--line)}
+  label{color:var(--mute);font-weight:700}
+  .cardlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-top:8px;font-size:.88rem;color:var(--mute)}
+  .cardlist b{color:var(--ink)}
+  ol.res{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:6px}
+  ol.res li{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:700}
+  ol.res li.top{background:rgba(255,209,102,.2);box-shadow:0 0 0 2px var(--gold)}
+  ol.res li span:last-child{margin-left:auto;color:var(--mute);font-size:.88rem}
+</style>
+</head>
+<body>
+<header><h1>⚔️ Boss Battle <small>test</small></h1><span class="turn" id="turn"></span><div class="timer"><i id="tbar"></i></div></header>
+<section class="stage" id="stage">
+  <div class="mon" id="mon"><div class="intent" id="intent"></div><div id="msvg"></div><div class="mname" id="mname"></div><div class="bar"><i id="mhp"></i><b id="mhpt"></b></div></div>
+  <div class="banner" id="banner"></div>
+</section>
+<section class="party" id="party"></section>
+<section class="hand" id="hand"></section>
+
+<div class="qov hidden" id="qov"><div class="qbox"><div class="qc" id="qc"></div><h3 id="qt"></h3><div class="opts" id="qo"></div></div></div>
+
+<div class="ov" id="start"><div class="box">
+  <h2>⚔️ Boss Battle</h2>
+  <p>A second kind of Grand Final: <b>everyone together</b> against the monster. Above its head you see what it’s about to do (its <b>intent</b>), so you can plan.</p>
+  <p>Every turn you get <b>3 cards</b>. Play one: you get a question, and if you answer it right, the card works. Harder questions do more. When your health runs out you become a <b>backup dancer</b>: you can still cheer the others on (heal them).</p>
+  <div class="cardlist"><span>⚔️ <b>Strike</b>: easy · 6 damage</span><span>🎤 <b>Power Ballad</b>: hard · 15 damage</span><span>🛡️ <b>Sequin Shield</b>: easy · block 8</span><span>💞 <b>Duet</b>: medium · block 6 for a teammate</span><span>✨ <b>Encore</b>: medium · heal 6</span><span>🎹 <b>Key Change</b>: hard · your next attack ×2</span></div>
+  <p>Beat the monster within 10 turns and the team wins: the trophy goes to whoever did the most (damage, plus half of the shielding and healing).</p>
+  <div class="btns"><label>Monster <select id="msel"><option value="diva">The Diva</option><option value="goblin">The Neon Goblin</option><option value="phoenix">The Phoenix Queen</option><option value="fiddler">The Phantom Fiddler</option></select></label><label>Teammates <select id="nb"><option>2</option><option selected>3</option><option>5</option></select></label><button class="btn" id="go">Fight!</button></div>
+</div></div>
+<div class="ov hidden" id="end"><div class="box"><h2 id="endt"></h2><p id="ends"></p><ol class="res" id="res"></ol><div class="btns"><button class="btn" id="again">↻ Fight again</button></div></div></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var COUNTRIES = {};
+  var SONGS = [];   // [year, country, artist, title, id, won(2), place, points, ...]
+  fetch('songs.json?v=44').then(function (r) { return r.json(); }).then(function (d) { COUNTRIES = d.countries || {}; SONGS = (d.songs || []).filter(function (s) { return s && s[2] && s[3] && COUNTRIES[s[1]]; }); }).catch(function () {});
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  // ---------- questions: easy (which country, well-known songs), medium (who sang it), hard (which year) ----------
+  function question(level) {
+    var known = SONGS.filter(function (s) { return s[0] >= 1990 && s[6] != null && s[6] <= 10; }), pool = level === 'easy' ? known : SONGS.filter(function (s) { return s[0] >= 1975; });
+    if (!pool.length) return { text: 'Which song won Eurovision 1974?', opts: ['Waterloo', 'Save Your Kisses for Me', 'Ding-a-dong', 'Puppet on a String'], ok: 0, ctx: 'Eurovision' };
+    var s = pick(pool), opts, ok;
+    if (level === 'easy') {
+      var cs = [COUNTRIES[s[1]]]; shuffle(Object.keys(COUNTRIES)).forEach(function (k) { if (cs.length < 4 && cs.indexOf(COUNTRIES[k]) < 0) cs.push(COUNTRIES[k]); });
+      opts = shuffle(cs); ok = opts.indexOf(COUNTRIES[s[1]]);
+      return { text: 'Which country sent “' + s[3] + '” by ' + s[2] + '?', opts: opts, ok: ok, ctx: s[0] };
+    }
+    if (level === 'medium') {
+      var as = [s[2]]; shuffle(SONGS.filter(function (x) { return Math.abs(x[0] - s[0]) <= 5; })).forEach(function (x) { if (as.length < 4 && as.indexOf(x[2]) < 0) as.push(x[2]); });
+      opts = shuffle(as); ok = opts.indexOf(s[2]);
+      return { text: 'Who sang “' + s[3] + '” (' + COUNTRIES[s[1]] + ')?', opts: opts, ok: ok, ctx: s[0] };
+    }
+    var ys = [s[0]]; shuffle([-4, -3, -2, -1, 1, 2, 3, 4]).forEach(function (d) { var y = s[0] + d; if (ys.length < 4 && y !== 2020 && y >= 1956 && y <= 2026) ys.push(y); });
+    opts = ys.sort(function (a, b) { return a - b; }).map(String); ok = opts.indexOf(String(s[0]));
+    return { text: 'In which year did ' + COUNTRIES[s[1]] + ' send “' + s[3] + '” by ' + s[2] + '?', opts: opts, ok: ok, ctx: 'Eurovision' };
+  }
+
+  // ---------- cards ----------
+  var CARDS = {
+    strike: { ic: '⚔️', name: 'Strike', lv: 'easy', ef: '6 damage', w: 4 },
+    ballad: { ic: '🎤', name: 'Power Ballad', lv: 'hard', ef: '15 damage', w: 2 },
+    shield: { ic: '🛡️', name: 'Sequin Shield', lv: 'easy', ef: 'Block 8 damage', w: 3 },
+    duet: { ic: '💞', name: 'Duet', lv: 'medium', ef: 'Block 6 for the teammate in most danger', w: 2 },
+    encore: { ic: '✨', name: 'Encore', lv: 'medium', ef: 'Heal 6 (yourself, or the teammate who needs it most)', w: 2 },
+    key: { ic: '🎹', name: 'Key Change', lv: 'hard', ef: 'Your next attack does double', w: 1 },
+    cheer: { ic: '📣', name: 'Cheer', lv: 'easy', ef: 'Heal a teammate 4 (backup dancer)', w: 0 }
+  };
+  function drawHand(p) {
+    if (p.ko) return ['cheer', 'cheer'];
+    var bag = []; Object.keys(CARDS).forEach(function (k) { for (var i = 0; i < CARDS[k].w; i++) bag.push(k); });
+    var h = []; while (h.length < 3) { var c = pick(bag); if (h.indexOf(c) < 0 || Math.random() < 0.15) h.push(c); }
+    return h;
+  }
+
+  // ---------- the monsters: their look, their attacks, and their special move every third turn ----------
+  var MONS = {
+    diva: { name: 'The Diva', col: '#ff5fb0', special: { ic: '🎤', name: 'HIGH NOTE', txt: '4 damage to everyone, and your attacks do half next turn' } },
+    goblin: { name: 'The Neon Goblin', col: '#7dff6a', special: { ic: '💃', name: 'CHA-CHA SWAP', txt: 'swaps the health of the healthiest and the weakest player' } },
+    phoenix: { name: 'The Phoenix Queen', col: '#ff9f43', special: { ic: '🔥', name: 'FIREWALL', txt: '7 damage to everyone' } },
+    fiddler: { name: 'The Phantom Fiddler', col: '#b58bff', special: { ic: '🎻', name: 'FROZEN TUNE', txt: '6 damage to one player, who is frozen next turn' } }
+  };
+  function monSvg(id) {
+    var c = MONS[id].col;
+    var eyes = '<circle cx="82" cy="92" r="9" fill="#fff"/><circle cx="118" cy="92" r="9" fill="#fff"/><circle cx="84" cy="94" r="4.5" fill="#120a20"/><circle cx="120" cy="94" r="4.5" fill="#120a20"/>';
+    if (id === 'diva') return '<svg viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + c + '"/><stop offset="1" stop-color="#6a1048"/></linearGradient></defs><path d="M60 196 Q70 120 100 116 Q130 120 140 196Z" fill="url(#g)"/><circle cx="100" cy="88" r="36" fill="#f1c7b4"/><path d="M62 92 Q58 40 100 44 Q142 40 138 92 Q132 64 100 62 Q70 64 62 92Z" fill="#2a0d2c"/><path d="M76 40 L88 22 L100 38 L112 22 L124 40Z" fill="#ffd166"/>' + eyes + '<path d="M86 112 Q100 104 114 112 Q100 122 86 112Z" fill="#b0124a"/><path d="M78 80 L92 84 M122 80 L108 84" stroke="#2a0d2c" stroke-width="4" stroke-linecap="round"/></svg>';
+    if (id === 'goblin') return '<svg viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + c + '"/><stop offset="1" stop-color="#1d6b2a"/></linearGradient></defs><path d="M58 196 Q62 128 100 122 Q138 128 142 196Z" fill="#20113a"/><path d="M40 80 L70 92 L62 70Z M160 80 L130 92 L138 70Z" fill="url(#g)"/><ellipse cx="100" cy="92" rx="42" ry="38" fill="url(#g)"/>' + eyes + '<path d="M78 112 Q100 128 122 112" stroke="#0b2a10" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M84 114 L88 122 L92 115 M108 115 L112 122 L116 114" fill="#fff"/><path d="M72 60 Q100 30 128 60" stroke="#ff2e88" stroke-width="6" fill="none"/></svg>';
+    if (id === 'phoenix') return '<svg viewBox="0 0 200 200"><defs><radialGradient id="g" cx=".5" cy=".6" r=".6"><stop offset="0" stop-color="#ffe08a"/><stop offset=".6" stop-color="' + c + '"/><stop offset="1" stop-color="#b8260f"/></radialGradient></defs><path d="M30 120 Q50 60 80 100 Q60 40 100 20 Q140 40 120 100 Q150 60 170 120 Q150 150 100 196 Q50 150 30 120Z" fill="url(#g)"/><circle cx="100" cy="100" r="32" fill="#f3c9a8"/>' + eyes.replace(/cy="9[24]"/g, function (m) { return m.replace('9', '10'); }) + '<path d="M88 118 Q100 112 112 118" stroke="#8a1f0f" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M74 64 L82 46 L90 62 L100 40 L110 62 L118 46 L126 64Z" fill="#ffd166"/></svg>';
+    return '<svg viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2140"/><stop offset="1" stop-color="#0d0818"/></linearGradient></defs><path d="M52 196 Q56 124 100 118 Q144 124 148 196Z" fill="url(#g)"/><ellipse cx="100" cy="88" rx="34" ry="40" fill="#e8e4f4"/><path d="M64 80 Q66 40 100 44 Q134 40 136 80 Q120 56 100 58 Q80 56 64 80Z" fill="#1a1426"/><circle cx="86" cy="88" r="10" fill="' + c + '"/><circle cx="114" cy="88" r="10" fill="' + c + '"/><circle cx="86" cy="88" r="4" fill="#fff"/><circle cx="114" cy="88" r="4" fill="#fff"/><path d="M86 112 L114 112" stroke="#1a1426" stroke-width="4" stroke-linecap="round"/><path d="M90 112 L90 118 M98 112 L98 118 M106 112 L106 118" stroke="#1a1426" stroke-width="2"/><path d="M130 150 Q170 120 160 176 Q150 190 132 172Z" fill="#8a4a1f"/><path d="M40 120 L172 160" stroke="#d9c7a0" stroke-width="3"/></svg>';
+  }
+
+  // ---------- the battle ----------
+  var B = null, PLAY_MS = 14000, MAX_TURN = 10, tickT = null;
+  var NAMES = ['You', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark'], COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43'];
+  function start() {
+    var nb = +$('nb').value || 3, mid = $('msel').value;
+    var ps = []; for (var i = 0; i <= nb; i++) ps.push({ id: i, name: NAMES[i], col: COLS[i], human: i === 0, hp: 30, max: 30, blk: 0, ko: false, frozen: 0, key: false, hand: [], play: null, ok: null, dmg: 0, sup: 0, skill: 0.55 + Math.random() * 0.35 });
+    B = { mon: mid, mhp: 28 * ps.length, mmax: 28 * ps.length, mblk: 0, turn: 0, ps: ps, intent: null, half: 0, phase: 'intro', ends: 0 };
+    $('msvg').innerHTML = monSvg(mid); $('mname').textContent = MONS[mid].name; $('mname').style.color = MONS[mid].col;
+    $('start').classList.add('hidden'); $('end').classList.add('hidden');
+    render(); say('⚔️ ' + MONS[mid].name + ' appears!'); setTimeout(nextTurn, 1600);
+  }
+  function alive() { return B.ps.filter(function (p) { return !p.ko; }); }
+  function makeIntent() {
+    var al = alive(), m = MONS[B.mon];
+    if (B.turn % 3 === 0) { var tg = B.mon === 'fiddler' ? pick(al) : null; return { kind: 'spec', tg: tg ? tg.id : null, txt: m.special.ic + ' ' + m.special.name + ': ' + m.special.txt.replace('one player', tg ? tg.name : 'one player') }; }
+    var r = Math.random();
+    if (r < 0.55) { var t = pick(al), n = 7 + Math.floor(Math.random() * 4) + Math.floor(B.turn / 2); return { kind: 'atk', tg: t.id, n: n, txt: '🗡️ ' + n + ' damage to ' + t.name }; }
+    if (r < 0.82) { var n2 = 3 + Math.floor(B.turn / 3); return { kind: 'all', n: n2, txt: '🌀 ' + n2 + ' damage to everyone' }; }
+    return { kind: 'def', n: 14, txt: '🛡️ Shields up (blocks 14)' };
+  }
+  function nextTurn() {
+    if (!B) return;
+    B.turn++; if (B.turn > MAX_TURN) { finish(false, 'out of time'); return; }
+    B.ps.forEach(function (p) { p.blk = 0; p.play = null; p.ok = null; p.hand = drawHand(p); if (p.frozen) p.frozen--; });
+    B.intent = makeIntent(); B.phase = 'play'; B.ends = Date.now() + PLAY_MS;
+    say(B.half ? '🎤 Still ringing from the High Note: your attacks do half this turn' : 'Pick a card and answer the question!');
+    render(); renderHand();
+    B.ps.forEach(function (p) { if (!p.human) botPlay(p); });
+    clearInterval(tickT); tickT = setInterval(tick, 100);
+  }
+  function tick() {
+    var left = Math.max(0, B.ends - Date.now()); $('tbar').style.transform = 'scaleX(' + (left / PLAY_MS) + ')';
+    var me = B.ps[0], done = B.ps.every(function (p) { return p.frozen || p.ok !== null || (p.human && false); });
+    if (left <= 0 || done) { clearInterval(tickT); closeQ(); resolve(); }
+  }
+  // a computer teammate: picks sensibly (shield when targeted, heal when low), answers after a few seconds, right more often on easy ones
+  function botPlay(p) {
+    if (p.frozen) { p.ok = false; return; }
+    var h = p.hand, it = B.intent, c;
+    if (p.ko) c = 'cheer';
+    else if (it && it.kind === 'atk' && it.tg === p.id && h.indexOf('shield') >= 0) c = 'shield';
+    else if (p.hp < 12 && h.indexOf('encore') >= 0) c = 'encore';
+    else if (h.indexOf('ballad') >= 0 && Math.random() < 0.5) c = 'ballad';
+    else c = pick(h);
+    p.play = c; var lv = CARDS[c].lv, chance = { easy: 0.85, medium: 0.7, hard: 0.5 }[lv] * (0.7 + p.skill * 0.4);
+    setTimeout(function () { if (!B || B.phase !== 'play') return; p.ok = Math.random() < chance; renderParty(); }, 2500 + Math.random() * 7000);
+    renderParty();
+  }
+  // you: pick a card, answer the question
+  var curQ = null;
+  function playCard(k) {
+    var me = B.ps[0]; if (B.phase !== 'play' || me.play || me.frozen) return;
+    me.play = k; curQ = question(CARDS[k].lv);
+    $('qc').textContent = CARDS[k].ic + ' ' + CARDS[k].name + ' · ' + CARDS[k].lv + ' question';
+    $('qt').textContent = curQ.text;
+    $('qo').innerHTML = curQ.opts.map(function (o, i) { return '<button data-i="' + i + '">' + esc(o) + '</button>'; }).join('');
+    $('qov').classList.remove('hidden'); renderHand(); renderParty();
+  }
+  $('qo').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || !curQ) return;
+    var me = B.ps[0]; me.ok = +b.getAttribute('data-i') === curQ.ok;
+    say(me.ok ? '✅ Right! Your ' + CARDS[me.play].name + ' is ready.' : '❌ Not quite: “' + curQ.opts[curQ.ok] + '”. Your card fizzles.');
+    curQ = null; closeQ(); renderParty();
+  });
+  function closeQ() { $('qov').classList.add('hidden'); var me = B.ps[0]; if (me.play && me.ok === null) me.ok = false; }
+
+  // ---------- resolve: the cards one by one, then the monster ----------
+  function resolve() {
+    B.phase = 'resolve'; renderHand();
+    var q = B.ps.filter(function (p) { return p.play && !p.frozen; }), i = 0;
+    var step = function () {
+      if (i >= q.length) { B.half = Math.max(0, B.half - 1); setTimeout(monsterAct, 500); return; }
+      var p = q[i++], c = p.play;
+      if (!p.ok) { floatAt(card(p), '💨 fizzle', '#b9b3e6'); setTimeout(step, 450); return; }
+      if (c === 'strike' || c === 'ballad') {
+        var n = (c === 'strike' ? 6 : 15) * (p.key ? 2 : 1); if (B.half) n = Math.floor(n / 2); p.key = false;
+        var hitB = Math.min(B.mblk, n); B.mblk -= hitB; n -= hitB; B.mhp = Math.max(0, B.mhp - n); p.dmg += n;
+        floatAt($('mon'), '−' + n + (hitB ? ' (🛡️' + hitB + ')' : ''), '#ff6b81', true); $('mon').classList.remove('hit'); void $('mon').offsetWidth; $('mon').classList.add('hit');
+      } else if (c === 'shield') { p.blk += 8; floatAt(card(p), '🛡️ +8', '#5ec8ff'); }
+      else if (c === 'duet') { var t = mostDanger(p); t.blk += 6; p.sup += 6; floatAt(card(t), '💞 +6', '#5ec8ff'); }
+      else if (c === 'encore' || c === 'cheer') { var h = c === 'cheer' ? 4 : 6, t2 = c === 'cheer' || p.hp > p.max - 4 ? neediest(p) : p; var got = Math.min(h, t2.max - t2.hp); t2.hp += got; p.sup += got; floatAt(card(t2), '✨ +' + got, '#3ddc84'); }
+      else if (c === 'key') { p.key = true; floatAt(card(p), '🎹 next ×2', '#ffd166'); }
+      render();
+      if (B.mhp <= 0) { setTimeout(function () { finish(true); }, 900); return; }
+      setTimeout(step, 520);
+    };
+    step();
+  }
+  function mostDanger(self) { var it = B.intent, al = alive().filter(function (p) { return p !== self; }); if (!al.length) return self; if (it && it.kind === 'atk') { var t = B.ps[it.tg]; if (t && !t.ko && t !== self) return t; } return al.sort(function (a, b) { return a.hp - b.hp; })[0]; }
+  function neediest(self) { var al = alive().filter(function (p) { return p !== self; }); if (!al.length) return self; return al.sort(function (a, b) { return (a.hp / a.max) - (b.hp / b.max); })[0]; }
+  function hurt(p, n) { if (p.ko) return; var b = Math.min(p.blk, n); p.blk -= b; n -= b; p.hp = Math.max(0, p.hp - n); floatAt(card(p), n ? '−' + n : '🛡️ blocked', n ? '#ff6b81' : '#5ec8ff'); var el = card(p); if (el) { el.classList.remove('hitme'); void el.offsetWidth; el.classList.add('hitme'); } if (!p.hp) { p.ko = true; p.key = false; } }
+  function monsterAct() {
+    var it = B.intent; B.phase = 'monster'; $('mon').classList.remove('act'); void $('mon').offsetWidth; $('mon').classList.add('act');
+    if (it.kind === 'atk') { var t = B.ps[it.tg]; if (t.ko) t = pick(alive()) || t; hurt(t, it.n); }
+    else if (it.kind === 'all') alive().forEach(function (p) { hurt(p, it.n); });
+    else if (it.kind === 'def') { B.mblk += it.n; floatAt($('mon'), '🛡️ +' + it.n, '#5ec8ff', true); }
+    else {
+      if (B.mon === 'diva') { alive().forEach(function (p) { hurt(p, 4); }); B.half = 1; }
+      else if (B.mon === 'goblin') { var al = alive().slice().sort(function (a, b) { return b.hp - a.hp; }); if (al.length > 1) { var a = al[0], z = al[al.length - 1], x = a.hp; a.hp = z.hp; z.hp = x; floatAt(card(a), '💃 swap', '#7dff6a'); floatAt(card(z), '💃 swap', '#7dff6a'); } }
+      else if (B.mon === 'phoenix') alive().forEach(function (p) { hurt(p, 7); });
+      else { var tg = B.ps[it.tg]; if (tg.ko) tg = pick(alive()) || tg; hurt(tg, 6); if (!tg.ko) tg.frozen = 2; }
+      say(MONS[B.mon].special.ic + ' ' + MONS[B.mon].special.name + '!');
+    }
+    render();
+    setTimeout(function () { if (!alive().length) { finish(false, 'everyone down'); return; } nextTurn(); }, 1500);
+  }
+  function finish(won, why) {
+    clearInterval(tickT); B.phase = 'end'; closeQ();
+    var score = function (p) { return p.dmg + p.sup * 0.5; }, rows = B.ps.slice().sort(function (a, b) { return score(b) - score(a); });
+    var sup = B.ps.slice().sort(function (a, b) { return b.sup - a.sup; })[0];
+    $('endt').textContent = won ? '🏆 ' + (rows[0].human ? 'You take' : rows[0].name + ' takes') + ' the trophy!' : '👹 ' + MONS[B.mon].name + ' wins…';
+    $('ends').innerHTML = won ? 'The team beat ' + esc(MONS[B.mon].name) + ' in ' + B.turn + ' turns.' + (sup && sup.sup > 0 ? ' 💞 MVP for support: <b>' + esc(sup.name) + '</b> (' + sup.sup + ' shielded and healed).' : '') : (why === 'out of time' ? 'Ten turns, and the monster is still standing.' : 'Everyone is down.') + ' It takes the trophy.';
+    $('res').innerHTML = rows.map(function (p, i) { return '<li class="' + (won && i === 0 ? 'top' : '') + '"><span style="width:12px;height:12px;border-radius:50%;background:' + p.col + '"></span><span>' + esc(p.name) + '</span><span>⚔️ ' + p.dmg + ' damage · 💞 ' + p.sup + ' support</span></li>'; }).join('');
+    setTimeout(function () { $('end').classList.remove('hidden'); }, 600);
+  }
+
+  // ---------- drawing ----------
+  function card(p) { return document.querySelector('.pc[data-id="' + p.id + '"]'); }
+  function floatAt(el, txt, col, big) { if (!el) return; var r = el.getBoundingClientRect(), f = document.createElement('div'); f.className = 'floaty'; f.textContent = txt; f.style.color = col; f.style.left = (r.left + r.width / 2 - 40 + (Math.random() - 0.5) * 40) + 'px'; f.style.top = (r.top + (big ? r.height * 0.3 : 0)) + 'px'; f.style.position = 'fixed'; document.body.appendChild(f); setTimeout(function () { f.remove(); }, 1200); }
+  function say(t) { $('banner').textContent = t; }
+  function render() {
+    if (!B) return;
+    $('turn').innerHTML = 'Turn <b>' + Math.max(1, B.turn) + '</b> of ' + MAX_TURN;
+    $('mhp').style.width = (B.mhp / B.mmax * 100) + '%'; $('mhpt').textContent = B.mhp + ' / ' + B.mmax + (B.mblk ? '   🛡️ ' + B.mblk : '');
+    var it = B.intent; $('intent').textContent = it ? it.txt : '…'; $('intent').className = 'intent ' + (it ? (it.kind === 'all' ? 'atk' : it.kind) : '');
+    renderParty();
+  }
+  function renderParty() {
+    if (!B) return; var it = B.intent;
+    $('party').innerHTML = B.ps.map(function (p) {
+      var st = p.frozen ? '❄️ frozen' : p.play ? (p.ok === null ? (p.human ? '❓ answering…' : '🤔 thinking…') : p.ok ? CARDS[p.play].ic + ' ' + CARDS[p.play].name + ' ✓' : '💨 ' + CARDS[p.play].name + ' ✗') : (B.phase === 'play' ? '…' : '');
+      var tg = it && B.phase !== 'resolve' && ((it.kind === 'atk' || (it.kind === 'spec' && it.tg != null)) && it.tg === p.id);
+      return '<div class="pc' + (p.ko ? ' ko' : '') + (tg ? ' tgt' : '') + (p.frozen ? ' frozen' : '') + (p.human ? ' me' : '') + '" data-id="' + p.id + '"><div class="nm"><span class="dot" style="background:' + p.col + '"></span>' + esc(p.name) + (p.key ? ' 🎹' : '') + '</div><div class="hpb"><i style="width:' + (p.hp / p.max * 100) + '%;background:' + (p.hp / p.max < 0.35 ? '#ff6b81' : '') + '"></i></div><div class="st"><span>❤️ ' + p.hp + ' / ' + p.max + '</span><span class="bk">' + (p.blk ? '🛡️ ' + p.blk : '') + '</span></div><div class="pl">' + st + '</div></div>';
+    }).join('');
+  }
+  function renderHand() {
+    var me = B.ps[0], h = $('hand');
+    if (me.frozen && B.phase === 'play') { h.className = 'hand'; h.innerHTML = '<span class="handmsg">❄️ You’re frozen this turn…</span>'; return; }
+    h.className = 'hand' + (B.phase !== 'play' || me.play ? ' off' : '');
+    h.innerHTML = me.hand.map(function (k) { var c = CARDS[k]; return '<div class="card" data-k="' + k + '"><span class="df ' + c.lv + '">' + c.lv + '</span><div class="ic">' + c.ic + '</div><b>' + c.name + '</b><div class="ef">' + c.ef + '</div></div>'; }).join('') + (me.ko ? '<span class="handmsg">💃 You’re a backup dancer now: cheer the others on!</span>' : '');
+  }
+  $('hand').addEventListener('click', function (e) { var c = e.target.closest('.card'); if (c) playCard(c.getAttribute('data-k')); });
+  $('go').addEventListener('click', start);
+  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); });
+  window.__bb = { state: function () { return B; }, q: function () { return curQ; } };   // (for testing)
+})();
+</script>
+</body>
+</html>
