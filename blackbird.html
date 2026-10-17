@@ -363,9 +363,11 @@
     });
     cx.strokeStyle = 'rgba(120,80,70,.45)'; cx.lineWidth = Math.max(0.8, Wd * 0.004); cx.beginPath(); M(0.5, 0.41); Qc(0.49, 0.47, 0.51, 0.485); cx.stroke(); cx.beginPath(); M(0.48, 0.49); Qc(0.5, 0.5, 0.525, 0.488); cx.stroke();   // the nose
     // the lips: dark, open as she sings
-    var cy0 = 0.545 - smileA * 0.02; cx.fillStyle = '#3a1c26'; cx.beginPath(); M(0.457 - smileA * 0.006, cy0); Qc(0.5, 0.518 + smileA * 0.01, 0.543 + smileA * 0.006, cy0); Qc(0.5, 0.54 + open * 0.025 + smileA * 0.02, 0.457 - smileA * 0.006, cy0); cx.fill();   // (the corners turned down… and at the very end, up)   // (the corners turned down)
-    cx.fillStyle = 'rgba(255,220,230,.25)'; var lh = P(0.51 + sw, 0.527); cx.beginPath(); cx.ellipse(lh[0], lh[1], Wd * 0.012, Hd * 0.003, 0, 0, 7); cx.fill();   // a sheen on the lips
-    if (open > 0.15) { cx.fillStyle = '#160a10'; cx.beginPath(); var mc = P(0.5 + sw, 0.536 + open * 0.008); cx.ellipse(mc[0], mc[1], Wd * 0.03, Hd * 0.005 + open * Hd * 0.012, 0, 0, 7); cx.fill(); }
+    var cy0 = 0.545 - smileA * 0.02, op = open * 1.3;   // (her lips: the corners turned down… and at the very end, up. When she sings, her mouth opens and the lower lip drops)
+    if (op > 0.04) { cx.fillStyle = '#1a0a10'; cx.beginPath(); var mc = P(0.5 + sw, cy0 + 0.004 + op * 0.014); cx.ellipse(mc[0], mc[1], Wd * (0.036 - op * 0.006), Hd * (0.004 + op * 0.022), 0, 0, 7); cx.fill(); cx.fillStyle = 'rgba(240,235,235,.85)'; var tm = P(0.5 + sw, cy0 + 0.003); cx.beginPath(); cx.ellipse(tm[0], tm[1], Wd * 0.024, Hd * Math.min(0.004, op * 0.004), 0, 0, 7); cx.fill(); }   // the open mouth, a glimpse of teeth
+    cx.fillStyle = '#3a1c26'; cx.beginPath(); M(0.457 - smileA * 0.006, cy0); Qc(0.5, 0.518 + smileA * 0.01, 0.543 + smileA * 0.006, cy0); Qc(0.5, cy0 - 0.004 + op * 0.006, 0.457 - smileA * 0.006, cy0); cx.fill();   // upper lip
+    cx.beginPath(); M(0.459 - smileA * 0.006, cy0 + op * 0.006); Qc(0.5, cy0 + 0.002 + op * 0.03, 0.541 + smileA * 0.006, cy0 + op * 0.006); Qc(0.5, cy0 + 0.016 + op * 0.04 + smileA * 0.008, 0.459 - smileA * 0.006, cy0 + op * 0.006); cx.fill();   // lower lip, dropping as she sings
+    cx.fillStyle = 'rgba(255,220,230,.25)'; var lh = P(0.51 + sw, cy0 + 0.01 + op * 0.035); cx.beginPath(); cx.ellipse(lh[0], lh[1], Wd * 0.012, Hd * 0.003, 0, 0, 7); cx.fill();   // a sheen on the lower lip
     cx.fillStyle = 'rgba(60,40,40,.18)'; cx.beginPath(); M(0.35, 0.3); Qc(0.38, 0.22, 0.47, 0.2); Lq(0.47, 0.24); Qc(0.4, 0.26, 0.37, 0.4); cx.closePath(); cx.fill(); cx.beginPath(); M(0.65, 0.3); Qc(0.62, 0.22, 0.5, 0.21); Lq(0.5, 0.25); Qc(0.6, 0.26, 0.63, 0.4); cx.closePath(); cx.fill();   // shadow from the hair on her face
     // the front of the hair: a sleek bob, parted on one side, framing the face to the jaw
     cx.fillStyle = hg;
