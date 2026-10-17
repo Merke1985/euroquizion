@@ -40,6 +40,11 @@
   .ov.hidden{display:none}
   #end{background:linear-gradient(90deg,rgba(3,5,18,0) 40%,rgba(3,5,18,.8));place-items:center end;padding:4vh 4vw}   /* (the results on the right: she and the rose stay in view) */
   #end .box{width:min(400px,36vw);min-width:260px;background:rgba(10,12,40,.82)}
+  .join{display:flex;gap:16px;align-items:center;margin:14px 0 4px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);line-height:1.5}
+  .join .qr{width:112px;height:112px;flex:none;background:#fff;border-radius:10px;padding:6px}
+  .join .qr svg{width:100%;height:100%;display:block}
+  .join .mute{color:var(--mute)} .join .code{font-size:1.3em;letter-spacing:.12em;color:var(--gold)}
+  .plist{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px} .plist .pp{padding:2px 10px;border-radius:99px;background:rgba(255,209,102,.18);border:1px solid rgba(255,209,102,.5);font-weight:700}
   .card{max-width:620px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(12,16,46,.9);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
   .card h2{margin:0 0 .3em;font-size:clamp(1.6rem,4vw,2.4rem)}
   .card p{margin:.4em 0;color:var(--mute);line-height:1.45}
@@ -65,17 +70,18 @@
 <div class="songclock" id="songclock"></div>
 <div class="banner" id="banner"></div>
 <div class="howto" id="howto"><p>When your <span class="glow">colour and name</span> light up,<br>it’s your time to fly.</p><p>📱 Use the controls on your phone.</p></div>
-<div class="hint">Preview: every bird flies itself here. Players will steer from their phones.</div>
+<div class="hint">Players steer their own bird with their phone; the computer birds fly themselves.</div>
 <div id="yt"></div>
 
 <div class="ov" id="start">
   <div class="card">
     <h2>🐦‍⬛ Blackbird</h2>
-    <p>The whole flock takes off from a rooftop, flies through the night sky and then down into a dark forest, along with the song. Most of the time every bird is on <b>autopilot</b> and can’t crash. <i>(Preview: all birds fly themselves; phone controls come later.)</i></p>
-    <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you: <b>hold</b> to fly up, <b>let go</b> to glide down, and keep to the moonlit path through the dark forest: away from the leaves above, the undergrowth below and the branches.</p>
+    <p>The whole flock takes off from a rooftop, flies through the night sky and then down into a dark forest, along with the song. Most of the time every bird is on <b>autopilot</b> and can’t crash.</p>
+    <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you, your phone lights up in your colour: <b>hold</b> to fly up, <b>let go</b> to glide down, and keep to the moonlit path through the dark forest: away from the leaves above, the undergrowth below and the branches.</p>
     <p>A hit costs a feather 🪶 (you have 3). No feathers left and your bird lands on a branch. Most feathers when the song ends wins.</p>
+    <div class="join"><div class="qr" id="bbqr"></div><div><b>📱 Fly with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="bburl"></span><br><span class="mute">Room</span> <b id="bbcode" class="code"></b><div id="bbplayers" class="plist"><span class="mute">Nobody has joined yet: the computer birds fly alone.</span></div></div></div>
     <div class="btns">
-      <label>Birds <select id="nbots"><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
+      <label>Computer birds <select id="nbots"><option>0</option><option>1</option><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
       <button id="go">▶ Start with the song</button>
       <button class="alt" id="go2">Start without the song</button>
     </div>
@@ -89,6 +95,10 @@
   </div>
 </div>
 
+<script src="vendor/supabase.js?v=1"></script>
+<script src="vendor/qrcode.js?v=1"></script>
+<script src="config.js?v=1"></script>
+<script src="net.js?v=2"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -167,10 +177,12 @@
   var tAir = 99, birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
   function makeBirds(nb) {
     birds = [];
-    for (var i = 0; i <= nb; i++) birds.push({ id: i, name: NAMES[i], col: COLS[i % COLS.length], human: false,   /* (no controls in the browser: on the big screen every bird flies itself; players will steer from their phones) */ feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
+    var hs = joined.slice(0, 10), bn = NAMES.filter(function (nm) { return !hs.some(function (h) { return h.name.toLowerCase() === nm.toLowerCase(); }); });
+    nb = Math.max(hs.length ? 0 : 1, Math.min(nb, 10 - hs.length));
+    for (var i = 0; i < hs.length + nb; i++) birds.push({ id: i, name: i < hs.length ? hs[i].name : bn[i - hs.length], pid: i < hs.length ? hs[i].pid : null, col: COLS[i % COLS.length], human: i < hs.length,   /* (no controls in the browser: on the big screen every bird flies itself; players will steer from their phones) */ feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
       skill: 0.55 + Math.random() * 0.4, react: 0.1 + Math.random() * 0.14, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
     me = {};   // (nobody plays on this screen)
-    birds.push({ id: nb + 1, name: '', col: '#000000', npc: true, human: false, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0, skill: 1, react: 0.1, decide: 0, hold: false, flap: 0, slot: nb + 1, colT: 1e9 });   // (the lone blackbird: our guide. Nobody steers it, it can't crash; we all follow it)
+    birds.push({ id: birds.length, name: '', col: '#000000', npc: true, human: false, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0, skill: 1, react: 0.1, decide: 0, hold: false, flap: 0, slot: birds.length, colT: 1e9 });   // (the lone blackbird: our guide. Nobody steers it, it can't crash; we all follow it)
     var n = birds.length; birds.forEach(function (b, i) { b.off = n > 1 ? (i / (n - 1)) * 2 - 1 : 0; b.xo = -((i * 37) % n) * 0.06; });   // (a loose V: everyone their own place in the formation)
     var lead = birds[n - 1]; lead.lead = true;   // (one lone blackbird on her roof; the rest of the flock waits behind the house)
     var others = birds.filter(function (b) { return !b.lead; });
@@ -243,14 +255,14 @@
       if (t < TAKEOFF) { b.flap = 0; return; }   // (still sitting on the roof)
       if (t >= HOME_T) return;   // (home: see birdPos)
       if (SPOT_C > 0 && t >= APP_T && !b.capt) { b.capt = true; b.ax = cam + bx(b); b.ay = b.y; }   // (where it was when the glide into the tree began)
-      b.flap += dt * (b.manual && (b.human ? hold : b.hold) ? 16 : 7);
+      b.flap += dt * (b.manual && (b.human ? !!holds[b.pid] : b.hold) ? 16 : 7);
       if (b.out) { b.fall += dt; b.vy = Math.min(1.2, b.vy + 1.6 * dt); b.y += b.vy * dt; return; }
       b.inv = Math.max(0, b.inv - dt); b.back = Math.max(0, b.back - dt * 0.01);
       var X = cam + bx(b);
       if (b.manual) {
         b.flown += dt;
         if (!b.human) botSteer(b, dt);
-        var up = b.human ? hold : b.hold;
+        var up = b.human ? !!holds[b.pid] : b.hold;   // (a player: their phone's button)
         b.vy += (up ? -LIFT : GRAV) * dt; b.vy = Math.max(-VMAX, Math.min(VMAX, b.vy)); b.y += b.vy * dt;
         if (b.y < R) { b.y = R; b.vy = 0; } if (b.y > 1 - R) { b.y = 1 - R; b.vy = 0; }
         if (t < PRACT_END) { var bot = cen(X) + half(X) - R; if (b.y > bot) { b.y = bot; b.vy = -0.3; } }   // (practice: no damage, the pine tops bounce you back up)
@@ -604,7 +616,7 @@
       if (t < LAND_T) { var la = (t - APP_T) / (LAND_T - APP_T), le = ez2(la); return { X: b.ax + (pp.x - b.ax) * le, y: b.ay + (pp.y - b.ay) * le - Math.sin(Math.PI * la) * 0.05, L: 1, home: Math.min(0.99, la) }; }
       var rp = { x: FLOWER_X + 0.052, y: GY - 0.03 };   // (it lands just right of the rose and faces it: it came from the tree on the right)
       if (b.lead && t >= PICK_T - 1.5) { var hg = Math.max(0, Math.min(1, (t - PICK_T + 1.5) / 1.2)), he2 = ez2(hg); from = { x: pp.x + (rp.x - pp.x) * he2, y: pp.y + (rp.y - pp.y) * he2 - Math.sin(Math.PI * hg) * 0.05 }; if (t < TAKE_T) return { X: from.x, y: from.y, L: 1, home: hg < 1 ? 0.6 : 1 }; }
-      if (t < TAKE_T) return { X: pp.x, y: pp.y, L: 1, home: 1 };
+      if (t < TAKE_T) return { X: pp.x, y: pp.y, L: 1, home: 1, perch: 1 };   // (sitting in the tree, looking at the lovers)
       var ta = Math.max(0, Math.min(1, (t - TAKE_T) / 2.6)), te = ez2(ta);
       return { X: from.x + (cam + bx(b) - from.x) * te, y: from.y + (b.y - from.y) * te - Math.sin(Math.PI * ta) * 0.04, L: 1, home: 0.6 };
     }
@@ -631,7 +643,7 @@
       var px = sx(X), py = sy(py0), s = H * 0.032;
       if (b.out && py > H + 40) return;
       if (b.face == null) b.face = 1; var fdt = b.lastT != null ? t - b.lastT : 0;
-      if (fdt > 0) { var vx = (X - b.lastX) / fdt, ft = vx < -0.06 ? -1 : vx > 0.06 ? 1 : (b.faceT || 1); b.faceT = ft; b.face += (ft - b.face) * Math.min(1, Math.min(0.1, fdt) * 7); } b.lastX = X; b.lastT = t;   // (which way it's flying; it turns around smoothly, like a 2D flip)
+      if (fdt > 0) { var vx = (X - b.lastX) / fdt, ft = bp.perch ? -1 : vx < -0.06 ? -1 : vx > 0.06 ? 1 : (b.faceT || 1); b.faceT = ft; b.face += (ft - b.face) * Math.min(1, Math.min(0.1, fdt) * 7); } b.lastX = X; b.lastT = t;   // (which way it's flying; it turns around smoothly, like a 2D flip)
       var fs = (b.face < 0 ? -1 : 1) * Math.max(0.06, Math.abs(b.face));
       cx.save(); cx.translate(px, py); cx.scale(fs, 1 + 0.06 * (1 - Math.abs(b.face))); cx.rotate(bp.home != null ? 0.15 * (1 - bp.home) * (bp.home < 1 ? 1 : 0) : landing ? 0.12 * (1 - bp.land) : t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * Math.max(L, 0.25)) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
       if (t < TAKEOFF && !landing) cx.translate(0, -Math.max(0, Math.sin(t * 3 + b.id * 1.7)) * s * 0.18);   // (a little hop now and then, while they wait)
@@ -667,11 +679,11 @@
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
     var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04071a'); g.addColorStop(0.55, '#0b1433'); g.addColorStop(1, '#0d1a2a'); cx.fillStyle = g; cx.fillRect(-W, -H, W * 3, H * 3);
     stars.forEach(function (s) { cx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.04) % W + W) % W, s.y * H * 0.6, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
-    var bxn = cam + 0.3 * W / H, cl1 = Math.max(0, Math.min(1, (bxn - (FOREST - 2.2)) / 2)), cl2 = Math.max(0, Math.min(1, (bxn - (GRAVE_X - 1.4)) / 1.8)), cloudA = t >= HOME_T ? 0 : cl1 * (1 - cl2); cloudA = cloudA * cloudA * (3 - 2 * cloudA);   // (in the forest a cloud covers the moon; it drifts off as they reach their spot)
-    var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.globalAlpha = 1 - 0.8 * cloudA; cx.fillStyle = mg; cx.fillRect(0, 0, W, H); cx.globalAlpha = 1;
-    if (cloudA > 0.01) { var ccx = W * 0.8 + (1 - cloudA) * W * 0.55, ccy = H * 0.16;   // the cloud, drifting in front of the moon: dark, with a silver lining
-      [[0, 0, 0.17, 0.075], [-0.13, 0.025, 0.12, 0.06], [0.14, 0.02, 0.13, 0.06], [-0.05, -0.045, 0.1, 0.06], [0.07, -0.05, 0.09, 0.055]].forEach(function (c) { var ex = ccx + c[0] * H, ey = ccy + c[1] * H; cx.fillStyle = 'rgba(205,215,245,' + (0.28 * cloudA) + ')'; cx.beginPath(); cx.ellipse(ex, ey - 2, c[2] * H + 2, c[3] * H + 2, 0, 0, 7); cx.fill(); });
-      [[0, 0, 0.17, 0.075], [-0.13, 0.025, 0.12, 0.06], [0.14, 0.02, 0.13, 0.06], [-0.05, -0.045, 0.1, 0.06], [0.07, -0.05, 0.09, 0.055]].forEach(function (c) { cx.fillStyle = 'rgba(22,28,52,' + Math.min(1, cloudA * 1.2) + ')'; cx.beginPath(); cx.ellipse(ccx + c[0] * H, ccy + c[1] * H, c[2] * H, c[3] * H, 0, 0, 7); cx.fill(); }); }
+    var CL_T = MUSIC - SONG0 + 68, cl1 = Math.max(0, Math.min(1, (t - CL_T) / 4)), cl2 = Math.max(0, Math.min(1, (t - SOAR_T + 0.5) / 3.5)), cloudA = t >= HOME_T ? 0 : cl1 * (1 - cl2); cloudA = cloudA * cloudA * (3 - 2 * cloudA);   // (1:08: clouds shroud the moon, no moonlight in the cave; they dissipate as the flock flies out)
+    var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.globalAlpha = 1 - cloudA; cx.fillStyle = mg; cx.fillRect(0, 0, W, H); cx.globalAlpha = 1;
+    if (cloudA > 0.01) { var ccx = W * 0.8 + (1 - cl1) * W * 0.55, ccy = H * 0.16, spread = 1 + 1.4 * cl2, CLS = [[0, 0, 0.17, 0.075], [-0.13, 0.025, 0.12, 0.06], [0.14, 0.02, 0.13, 0.06], [-0.05, -0.045, 0.1, 0.06], [0.07, -0.05, 0.09, 0.055], [-0.26, 0.05, 0.15, 0.05], [0.27, 0.045, 0.14, 0.05], [0.02, 0.08, 0.2, 0.05]];   // the clouds shrouding the moon: dark, with a faint silver lining; when they dissipate they thin out and drift apart
+      CLS.forEach(function (c) { var ex = ccx + c[0] * H * spread, ey = ccy + c[1] * H * spread; cx.fillStyle = 'rgba(205,215,245,' + (0.18 * cloudA) + ')'; cx.beginPath(); cx.ellipse(ex, ey - 2, c[2] * H + 2, c[3] * H + 2, 0, 0, 7); cx.fill(); });
+      CLS.forEach(function (c) { cx.fillStyle = 'rgba(20,26,50,' + Math.min(1, cloudA * 1.15) + ')'; cx.beginPath(); cx.ellipse(ccx + c[0] * H * spread, ccy + c[1] * H * spread, c[2] * H, c[3] * H, 0, 0, 7); cx.fill(); }); }
     // the forest behind, far to near, with mist between
     var near = Math.max(0, Math.min(1, (cam + W / H - (FOREST - 1.2)) / 2.4)), low = 0;   // (high in the sky the forest sinks away below; it rises again as you come down to it)
     treeLayer(0.1, '#16224a', 0.74 + low, 0.32, 0.5, 0.08, 1); mist(0.55 + low, 0.85 + low, 0.12);
@@ -788,21 +800,21 @@
       else if ((st === 3 || st === -1 || st === 5 || (st === 1 && ct <= SONG0 - 0.5)) && waitSong < 5) { waitSong += real; adv = 0; }   // (the song is loading: wait for it, for at most 5 s)
     }
     while (adv > 1e-6) { var sd = Math.min(0.05, adv); step(sd); adv -= sd; }   // (small steps, so a slow frame never loses time)
-    draw(); hud();
+    draw(); hud(); sendState(false);
     var sc = $('songclock'); if (sc) { var sgt = Math.max(0, t - MUSIC + SONG0); sc.textContent = t >= MUSIC ? '♪ ' + Math.floor(sgt / 60) + ':' + ('0' + Math.floor(sgt % 60)).slice(-2) : ''; }
     requestAnimationFrame(frame);
   }
   function finish() {
     ended = true; running = false; windLevel(0);   // (the song plays on to its end under the results)
     var rows = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; });
-    $('endt').textContent = rows[0].human ? '🏆 You win!' : '🏆 ' + rows[0].name + ' wins';
+    $('endt').textContent = '🏆 ' + rows[0].name + ' wins'; sendState(true);
     $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (i === 0 ? 'top' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + '</span><span>' + (b.feathers ? '🪶'.repeat(b.feathers) : '🌿') + '</span><span style="color:var(--mute);min-width:6em;text-align:right">' + b.clean.toFixed(1) + 's clean</span></li>'; }).join('');
     $('end').classList.remove('hidden');
   }
   function start(music) {
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
     t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; SPOT_C = -99; songAsked = false; waitSong = 0; pending = []; parts = []; ended = false; sideKey = '';
-    makeBirds(+$('nbots').value || 5); makeCourse(); nextPick = PRACT0;
+    makeBirds(+$('nbots').value); makeCourse(); nextPick = PRACT0; holds = {}; sendState(true);
     audioOn(); flockPlayed = false; musicWant = !!music; if (music) ytPrime();
     running = true; last = performance.now(); requestAnimationFrame(frame);
   }
@@ -856,7 +868,29 @@
   function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(SONG0, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(SONG0, true); } yt.unMute(); } catch (e) {} }, 400); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
   function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
-  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
+  // ---------- phones: join with the room code, one big button to fly ----------
+  var joined = [], holds = {}, net = null, lastState = '', lastSent = 0, BBA = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '';
+  for (var ri = 0; ri < 4; ri++) room += BBA[Math.floor(Math.random() * BBA.length)];
+  var padUrl = new URL('bbpad.html?r=' + room, location.href).href;
+  $('bbcode').textContent = room; $('bburl').textContent = padUrl.replace(/^https?:\/\//, '');
+  try { var qq = qrcode(0, 'M'); qq.addData(padUrl); qq.make(); $('bbqr').innerHTML = qq.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('bbqr').style.display = 'none'; }
+  function showJoined() { $('bbplayers').innerHTML = joined.length ? joined.map(function (j) { return '<span class="pp">' + esc(j.name) + '</span>'; }).join('') : '<span class="mute">Nobody has joined yet: the computer birds fly alone.</span>'; }
+  try {
+    net = escConnect('bb' + room); net.hostIn();
+    net.on('hi', function (p) { if (!p || !p.pid) return; var nm = String(p.name || 'Bird').trim().slice(0, 14) || 'Bird', j = joined.filter(function (x) { return x.pid === p.pid; })[0]; if (j) j.name = nm; else if (joined.length < 10) joined.push({ pid: p.pid, name: nm }); showJoined(); sendState(true); });
+    net.on('zg', function (p) { if (p && p.pid) holds[p.pid] = !!p.h; });
+  } catch (e) { net = null; }
+  function sendState(force) {   // (what each phone needs to know: its colour, and whether it's waiting, about to fly, flying or out; sent only when something changes)
+    if (!net) return;
+    var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {};
+    if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
+    else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; });
+    if (ph === 'end') { var rk = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; }); rk.forEach(function (b, i) { if (b.human && ps[b.pid]) ps[b.pid].r = i + 1; }); }
+    var s = JSON.stringify({ ph: ph, p: ps }), now = Date.now();
+    if (!force && s === lastState && now - lastSent < 4000) return;
+    lastState = s; lastSent = now; net.send('state', { ph: ph, p: ps });
+  }
+  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();
 })();
 </script>

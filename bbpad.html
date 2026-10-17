@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#060a1c">
+<title>Blackbird controller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+<style>
+  /* Blackbird on the phone: join the flock with the room code, then one big button. Hold to fly up, let go to glide. */
+  :root{--ink:#fff;--mute:#aab4dc;--line:rgba(255,255,255,.16);--col:#ffd166}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#060a1c;color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;gap:14px;text-align:center}
+  .hidden{display:none!important}
+  h1{margin:0;font-size:1.6rem}
+  p{margin:0;color:var(--mute);line-height:1.4}
+  input{font:inherit;font-size:1.2rem;font-weight:700;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;width:min(320px,100%);text-align:center}
+  button.go{font:inherit;font-size:1.15rem;font-weight:800;padding:14px 26px;border-radius:14px;border:0;background:#ffd166;color:#2a1a00}
+  .top{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-weight:800}
+  .top .nm{display:flex;align-items:center;gap:8px} .top .dot{width:14px;height:14px;border-radius:50%;background:var(--col)}
+  .fe{letter-spacing:-.1em}
+  #pad{position:fixed;left:16px;right:16px;top:64px;bottom:96px;border-radius:32px;display:grid;place-items:center;background:rgba(255,255,255,.04);border:2px solid var(--line);transition:background .2s,box-shadow .2s,border-color .2s}
+  #pad .big{font-size:clamp(1.4rem,7vw,2.4rem);font-weight:800;line-height:1.2;padding:0 16px}
+  #pad .small{display:block;font-size:1rem;font-weight:600;color:var(--mute);margin-top:8px}
+  #pad.warn{border-color:var(--col);animation:blink .28s steps(2) infinite}
+  @keyframes blink{50%{border-color:rgba(255,255,255,.1);box-shadow:none}}
+  #pad.warn{box-shadow:0 0 40px var(--col)}
+  #pad.fly{background:color-mix(in srgb,var(--col) 28%,transparent);border-color:var(--col);box-shadow:0 0 60px color-mix(in srgb,var(--col) 60%,transparent)}
+  #pad.fly.down{background:color-mix(in srgb,var(--col) 60%,transparent);transform:scale(.985)}
+  #pad.fly .small{color:#fff}
+  #pad.out{opacity:.5}
+  .msg{position:fixed;left:16px;right:16px;bottom:22px;text-align:center;color:var(--mute);font-weight:600;min-height:3em}
+</style>
+</head>
+<body>
+<div class="screen" id="join">
+  <h1>🐦‍⬛ Blackbird</h1>
+  <p>Join the flock on the big screen.</p>
+  <input id="name" maxlength="14" placeholder="Your name" autocomplete="nickname">
+  <input id="code" maxlength="4" placeholder="Room code" autocapitalize="characters">
+  <button class="go" id="go">Join</button>
+  <p id="jmsg"></p>
+</div>
+<div class="hidden" id="game">
+  <div class="top"><span class="nm"><span class="dot" id="dot"></span><span id="me"></span></span><span class="fe" id="fe"></span></div>
+  <div id="pad"><div class="big" id="big">You’re in!<span class="small">Watch the big screen</span></div></div>
+  <div class="msg" id="msg"></div>
+</div>
+<script src="vendor/supabase.js?v=1"></script>
+<script src="config.js?v=1"></script>
+<script src="net.js?v=2"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var st = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  var pid = st.get('bb-pid'); if (!pid) { pid = 'p' + Math.random().toString(36).slice(2, 10); st.set('bb-pid', pid); }
+  var q = new URLSearchParams(location.search), room = (q.get('r') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+  $('name').value = st.get('bb-name') || st.get('esc-name') || ''; $('code').value = room;
+  var net = null, name = '', joinedOk = false, hiT = null, my = null, held = false, lastF = 3;
+  $('go').addEventListener('click', join);
+  function join() {
+    name = $('name').value.trim().slice(0, 14); room = $('code').value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+    if (!name) { $('jmsg').textContent = 'Type your name first.'; return; }
+    if (room.length !== 4) { $('jmsg').textContent = 'The room code has 4 letters (it’s on the big screen).'; return; }
+    st.set('bb-name', name); $('jmsg').textContent = 'Joining…';
+    net = escConnect('bb' + room);
+    net.on('state', onState);
+    var hi = function () { if (!joinedOk) net.send('hi', { pid: pid, name: name }); };
+    hi(); hiT = setInterval(hi, 1500);   // (keep saying hello until the big screen has us)
+  }
+  function onState(s) {
+    if (!s || !s.p) return;
+    my = s.p[pid] || null;
+    if (my && !joinedOk) { joinedOk = true; $('join').classList.add('hidden'); $('game').classList.remove('hidden'); }
+    if (!joinedOk) return;
+    $('me').textContent = name;
+    var pad = $('pad'), big = $('big'), msg = $('msg');
+    if (!my) { pad.className = ''; big.innerHTML = 'A flight is in progress<span class="small">You’ll fly in the next one</span>'; msg.textContent = ''; return; }
+    document.documentElement.style.setProperty('--col', my.c || '#8a93b8');
+    $('dot').style.background = my.c || 'rgba(255,255,255,.25)';
+    $('fe').textContent = s.ph === 'lobby' ? '' : my.f ? '🪶'.repeat(my.f) : '🌿';
+    if (my.f != null && my.f < lastF) { try { navigator.vibrate && navigator.vibrate([90, 40, 90]); } catch (e) {} }   // (lost a feather)
+    if (my.f != null) lastF = my.f;
+    var cls = '', txt = '', m = '';
+    if (s.ph === 'lobby') { txt = 'You’re in, ' + esc(name) + '!<span class="small">Wait for the host to start</span>'; lastF = 3; }
+    else if (s.ph === 'end') { txt = (my.r === 1 ? '🏆 You win!' : 'You finished ' + ordinal(my.r || 0)) + '<span class="small">Look at the big screen</span>'; }
+    else if (my.s === 'out') { cls = 'out'; txt = '🌿 Your bird has landed<span class="small">No feathers left: watch the rest fly</span>'; }
+    else if (my.s === 'fly') { cls = 'fly' + (held ? ' down' : ''); txt = 'HOLD to fly up<span class="small">Let go to glide down</span>'; }
+    else if (my.s === 'warn') { cls = 'warn'; txt = 'Get ready…<span class="small">Your turn is coming</span>'; try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
+    else { txt = my.c ? 'Watch the big screen<span class="small">When your colour lights up, it’s your turn</span>' : 'Watch the big screen<span class="small">The flock is about to take off</span>'; }
+    if (my.c && s.ph === 'play' && my.s !== 'fly') m = 'Your bird glows in this colour when it’s your turn.';
+    pad.className = cls; big.innerHTML = txt; msg.textContent = m;
+  }
+  // the one button: hold anywhere on the pad
+  function press(v) { if (held === v) return; held = v; $('pad').classList.toggle('down', v && $('pad').classList.contains('fly')); if (net) net.toHost('zg', { pid: pid, h: v ? 1 : 0 }); }
+  var pad = $('pad');
+  pad.addEventListener('touchstart', function (e) { e.preventDefault(); press(true); }, { passive: false });
+  pad.addEventListener('touchend', function (e) { e.preventDefault(); press(false); }, { passive: false });
+  pad.addEventListener('touchcancel', function () { press(false); });
+  pad.addEventListener('mousedown', function () { press(true); });
+  addEventListener('mouseup', function () { press(false); });
+  addEventListener('blur', function () { press(false); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) press(false); });
+  if (room.length === 4 && $('name').value) $('go').focus();
+})();
+</script>
+</body>
+</html>
