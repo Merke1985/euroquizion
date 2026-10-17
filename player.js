@@ -907,12 +907,13 @@
     if (S.fell || z.st !== 'play') return;
     var now = Date.now(), t = (now - S.start) / 1000, dt = Math.min(0.1, (now - (S.last || now)) / 1000); S.last = now;
     if (t >= ZG_LEN) return;
-    var st = zgStage(t), w = zgW(t), tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), pre = t < ZG_GO, inside = pre || brk >= 0 || Math.abs(err) <= w;   // (before she starts singing: no control yet, nothing counts)   // (a break: relax, nothing counts)
-    if (t > ZG_GO + 1.5 && brk < 0) { S.tot += dt; if (inside) S.inT += dt; }
+    var myG = z.grp ? z.grp[pid] : null, tu = myG != null && t >= ZG_GO ? zgTurnAt(t) : null, act = !tu || tu.g === myG, nxt = act ? null : zgNextTurn(myG, t), soon = !act && nxt != null && nxt - t <= ZG_CD, grace = act && tu && t - tu.from < ZG_GRACE;   // (two groups take turns: when it's the other side's turn you rest, and cheer)
+    var st = zgStage(t), w = zgW(t), tg = zgPath(S.seed, t), err = S.f - tg, brk = zgBreak(t), pre = t < ZG_GO, inside = pre || brk >= 0 || !act || grace || Math.abs(err) <= w;   // (before she starts singing: no control yet, nothing counts)   // (a break: relax, nothing counts)
+    if (t > ZG_GO + 1.5 && brk < 0 && act && !grace) { S.tot += dt; if (inside) S.inT += dt; }
     S.outFor = inside ? 0 : S.outFor + dt;
     var fall = ZG_FALL[st] || 1, lv = inside ? 0 : S.outFor < fall * 0.5 ? 1 : 2;   // (off the zone: 2 seconds to get back)
-    var hit = st > 0 && brk < 0 && t > ZG_GO + 3 && zgHit(S.seed, t, S.f, S.y);   // (stages 2 and 3: an asteroid knocks you off)
-    if (hit || (t > ZG_GO + 3 && S.outFor >= fall)) {   // you fall
+    var hit = act && !grace && st > 0 && brk < 0 && t > ZG_GO + 3 && zgHit(S.seed, t, S.f, S.y);   // (stages 2 and 3: an asteroid knocks you off)
+    if (hit || (act && t > ZG_GO + 3 && S.outFor >= fall)) {   // you fall
       S.fell = true; S.hit = hit; zgTell({ out: Math.round(t * 10) / 10, acc: zgAcc(), hit: hit ? 1 : 0 }); if (hit) try { var bx = S.boom || new Audio('sounds/explosion.mp3?v=1'); bx.muted = false; bx.volume = .9; bx.currentTime = 0; var bp = bx.play(); if (bp && bp.catch) bp.catch(function () {}); } catch (e) {} try { navigator.vibrate && navigator.vibrate([80, 40, 200]); } catch (e) {}
       zgView(state); return;
     }
@@ -923,7 +924,10 @@
     B.me.style.left = ((S.f + 1) / 2 * 100).toFixed(2) + '%'; B.me.style.top = (S.y * 100).toFixed(2) + '%'; if (B.xh) { B.xh.style.top = B.me.style.top; B.xv.style.left = B.me.style.left; }   // (the crosshair: where you are, across the whole field)
     var warn = zgRockDraw(B, S.seed, t);
     B.track.setAttribute('data-l', lv); B.track.classList.toggle('brk', brk >= 0); B.track.classList.toggle('pre', pre);
+    var rest = !act && !soon, ui = $('zgui'); if (ui.classList.contains('rest') !== rest) ui.classList.toggle('rest', rest);
     var sec = Math.max(0, Math.ceil(zgNext(t) - t)), txt = pre ? (t >= ZG_GO - 3 ? '🎤 ' + Math.ceil(ZG_GO - t) + '…' : '🎤 Get ready… you take over when she starts singing') : brk >= 0 ? '☕ Break time! Relax your fingers… ' + Math.ceil(ZG_BRK[brk][1] - t) + 's' + (brk === 0 ? ' · Next: asteroids! ☄️' : '') : warn && inside ? '☄️ Asteroids! Slide up or down to the gap!' : !inside && t > 3 ? '⚠️ Back to the zone! ' + Math.max(0, fall - S.outFor).toFixed(1) + 's' : 'Stage ' + (st + 1) + ' of 3 · ' + sec + 's';
+    if (!act) txt = soon ? '⏱️ Your turn in ' + Math.ceil(nxt - t) + '… put your finger on the zone!' : nxt != null ? '👀 The other side’s turn: watch the big screen! You’re back in ' + Math.ceil(nxt - t) + 's' : '👀 The other side’s turn: watch the big screen and cheer!';
+    else if (grace) txt = '✋ Your turn! Find the zone…';
     if (B.info.textContent !== txt) B.info.textContent = txt;
   }
   // The asteroids on the phone: a warning at the edge they come from (red where the rocks will be, the gap stays dark),
@@ -965,11 +969,13 @@
     if (fell) { zgStop(); box.classList.add('hidden'); $('waittitle').textContent = S.hit ? '☄️ Hit by an asteroid! You fell into space!' : '🚀 You fell into space!'; $('waitsub').textContent = 'You followed the zone ' + zgAcc() + '% of the time. Watch the others wobble…'; return; }
     if (z.st === 'intro') { box.classList.add('hidden'); $('waittitle').textContent = '🌌 Zero Gravity'; $('waitsub').textContent = 'Listen to the astronauts on the big screen… 👩‍🚀'; return; }
     $('waittitle').textContent = z.st === 'ready' ? '🌌 Get ready…' : '🌌 Keep your balance!';
-    $('waitsub').textContent = (z.stage || 0) > 0 ? 'Stay in the glowing zone, and slide up or down to dodge the asteroids! ☄️' : 'Keep your finger on the glowing zone: it moves with the music. Stay in the zone, or you fall!';
+    $('waitsub').textContent = z.grp && z.grp[pid] != null ? 'You’re on the ' + (z.grp[pid] ? 'right' : 'left') + ' of the singer: the two sides take turns. ' + ((z.stage || 0) > 0 ? 'Stay in the zone and dodge the asteroids! ☄️' : 'Keep your finger on the glowing zone!') : (z.stage || 0) > 0 ? 'Stay in the glowing zone, and slide up or down to dodge the asteroids! ☄️' : 'Keep your finger on the glowing zone: it moves with the music. Stay in the zone, or you fall!';
     box.classList.remove('hidden');
     if (box.getAttribute('data-id') !== z.id || !S.box) {
       box.setAttribute('data-id', z.id);
       box.innerHTML = '<div class="zginfo">Stage 1 of 3</div><div class="zgtrack" data-l="0"><span class="zgzone"></span><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgrock"></i><i class="zgwarn"></i><i class="zgwarn"></i><i class="zgxh"></i><i class="zgxv"></i><span class="zgme"></span></div><div class="zghint">👆 Slide left and right to stay in the zone · from stage 2 also up and down to dodge the asteroids ☄️</div>';
+      var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'zgcheerbtn'; cb.innerHTML = '🎉<b>Cheer for your side!</b><small>Watch the big screen: you’re back soon</small>'; box.appendChild(cb);
+      cb.addEventListener('click', function () { zgTell({ cheer: 1 }); cb.classList.remove('pop'); void cb.offsetWidth; cb.classList.add('pop'); try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} });   // (the side that's waiting: tap to send sparkles up from your pole)
       var tr = box.querySelector('.zgtrack');
       S.box = { track: tr, zone: tr.querySelector('.zgzone'), me: tr.querySelector('.zgme'), info: box.querySelector('.zginfo'), xh: tr.querySelector('.zgxh'), xv: tr.querySelector('.zgxv'), rocks: [].slice.call(tr.querySelectorAll('.zgrock')), warns: [].slice.call(tr.querySelectorAll('.zgwarn')) };
       S.box.rocks.concat(S.box.warns).forEach(function (e) { e.style.display = 'none'; });

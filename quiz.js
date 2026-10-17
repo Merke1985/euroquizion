@@ -990,7 +990,7 @@ function edSock(id, x, y, sz) { return '<g transform="translate(' + x + ' ' + y 
 // break 2:05–2:15, then fast, with more and faster asteroids, to the end. Off the zone: 2 seconds to get back, always.
 // In a break the poles come back to the middle and nobody can fall.
 // x goes from -1 (far left) to 1 (far right).
-var ZG_GO = 9, ZG_LEN0 = 182, ZG_LEN = ZG_LEN0, ZG_ST = [72, 135], ZG_BRK = [[62, 72], [125, 135]], ZG_FALL = [2, 2, 2], zgPar = {};
+var ZG_GO = 9, ZG_LEN0 = 182, ZG_LEN = ZG_LEN0, ZG_ST = [72, 135], ZG_BRK = [], ZG_FALL = [2, 2, 2], zgPar = {};
 function zgW(t) { return [0.24, 0.24, 0.21][zgStage(t)]; }   // (the zone: a bit smaller in the fast stage)
 function zgNext(t) { var n = ZG_LEN; ZG_BRK.forEach(function (b) { if (b[0] > t && b[0] < n) n = b[0]; if (t >= b[0] && t < b[1] && b[1] < n) n = b[1]; }); return n; }   // (the end of the current stage, or break)
 function zgBreak(t) { for (var i = 0; i < ZG_BRK.length; i++) if (t >= ZG_BRK[i][0] && t < ZG_BRK[i][1]) return i; return -1; }
@@ -1017,7 +1017,7 @@ var ZG_WARN = 1.4, zgRockC = {};
 function zgRocks(seed) {
   if (zgRockC.seed === seed && zgRockC.len === ZG_LEN) return zgRockC.list;
   var R = zgRnd((seed || 1) ^ 0x5eed), L = [], gy = 0.5;
-  [[ZG_ST[0] + 3, ZG_BRK[1][0] - 4, 4.6, 3.4, 0.44, 0.16, 1.4], [ZG_ST[1] + 3, ZG_LEN - 6, 2.3, 1.6, 0.27, 0.3, 1.0]].forEach(function (S, si) {   // (start, end, every … s, crossing time, gap, smallest jump to the next gap, warning) — the last stage: faster, more often, a smaller gap that jumps further
+  [[ZG_ST[0] + 3, ZG_ST[1] - 4, 4.6, 3.4, 0.44, 0.16, 1.4], [ZG_ST[1] + 3, ZG_LEN - 6, 2.3, 1.6, 0.27, 0.3, 1.0]].forEach(function (S, si) {   // (start, end, every … s, crossing time, gap, smallest jump to the next gap, warning) — the last stage: faster, more often, a smaller gap that jumps further
     for (var t = S[0]; t <= S[1]; t += S[2] * (0.9 + R() * 0.2)) {
       var gap = S[4], lo = gap / 2 + 0.01, hi = 1 - lo, jump = S[5] + R() * 0.3, c = [gy - jump, gy + jump].filter(function (v) { return v >= lo && v <= hi; }), ny = c.length ? c[Math.floor(R() * c.length)] : (gy - lo > hi - gy ? lo : hi);   // (the next gap is never where the last one was: you have to move)
       gy = ny; var dir = R() < 0.5 ? 1 : -1, rocks = [], top = gy - gap / 2, bot = 1 - (gy + gap / 2);
@@ -1038,6 +1038,14 @@ function zgHit(seed, t, x, y) {
   return false;
 }
 function zgStage(t) { return t < ZG_ST[0] ? 0 : t < ZG_ST[1] ? 1 : 2; }
+// Two groups take turns (with two players or more): left of the singer (0) and right (1). Every stage is split in two:
+// left plays the first half, right the second. A countdown of ZG_CD seconds before your turn, and ZG_GRACE seconds at
+// its start in which you can't fall (time to find the zone). Who stays up longest (in their own playing time) wins.
+var ZG_CD = 3, ZG_GRACE = 2;
+function zgTurns() { return [[ZG_GO, (ZG_GO + ZG_ST[0]) / 2, 0], [(ZG_GO + ZG_ST[0]) / 2, ZG_ST[0], 1], [ZG_ST[0], (ZG_ST[0] + ZG_ST[1]) / 2, 0], [(ZG_ST[0] + ZG_ST[1]) / 2, ZG_ST[1], 1], [ZG_ST[1], (ZG_ST[1] + ZG_LEN) / 2, 0], [(ZG_ST[1] + ZG_LEN) / 2, ZG_LEN, 1]]; }   // (stage 1 = the old stage 1 and its break, 0:09–1:12; stage 2 the same, 1:12–2:15; then the fast stage to the end: each split in half)
+function zgTurnAt(t) { var T = zgTurns(); for (var i = 0; i < T.length; i++) if (t >= T[i][0] && t < T[i][1]) return { i: i, from: T[i][0], to: T[i][1], g: T[i][2] }; return null; }
+function zgNextTurn(grp, t) { var T = zgTurns(); for (var i = 0; i < T.length; i++) if (T[i][2] === grp && T[i][0] > t) return T[i][0]; return null; }   // (when this group plays next)
+function zgPlayed(grp, t) { var s = 0; zgTurns().forEach(function (x) { if (grp == null || x[2] === grp) s += Math.max(0, Math.min(t, x[1]) - x[0]); }); return s; }   // (seconds this group has played up to t)
 
 // ---------- Edited content (the editor in the 🔧 Testing screen) ----------
 // What the host changed is kept in Supabase (table esc_content, readable by everyone; saving goes through esc_save,

@@ -4962,7 +4962,7 @@ body.hasdock main{padding-bottom:84px}
 #v-wait:has(#zgui:not(.hidden)) #waitlabel,#v-wait:has(#zgui:not(.hidden)) #profile{display:none}
 #v-wait:has(#zgui:not(.hidden)) #waittitle{font-size:1.15rem;margin:0}
 #v-wait:has(#zgui:not(.hidden)) #waitsub{font-size:.85rem;margin:0}
-#zgui{gap:8px;margin-top:2px}
+#zgui{gap:8px;margin-top:2px;position:relative}
 .zgtrack{width:min(88vw,360px,calc(100svh - 270px))}
 .zghint{font-size:.75rem;line-height:1.2}
 /* Edgar's reveal on the phone: the right card glows green, a wrong pick gets a red cross */
@@ -6139,3 +6139,16 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .chtok.frozen::before{content:"❄️";position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:calc(var(--tok,56px) * .4);z-index:4}
 
 .ehost.aut.walk .ehfront{display:inline}.ehost.aut.walk .ehside{display:none}   /* (in their autumn coats they just glide, front on) */
+/* Zero Gravity in two groups: the side that's waiting stands dimmed; just before their turn they light up; their cheers rise from their poles */
+.zgp .zgrod{transition:filter .6s}
+.zgp.rest .zgrod{filter:brightness(.42) saturate(.45)}
+.zgp.rest.soon .zgrod{filter:brightness(1.15) drop-shadow(0 0 14px rgba(140,220,255,.9))}
+.zgcheer{position:absolute;left:0;bottom:calc(var(--h, 40vh) + 4vh);font-size:clamp(18px,2.6vw,34px);pointer-events:none;z-index:6;animation:zgcheer 1.7s ease-out forwards}
+@keyframes zgcheer{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}15%{opacity:1;transform:translate(calc(-50% + var(--dx) * .3),-10px) scale(1.1)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),-110px) scale(.9)}}
+/* Zero Gravity on the phone, waiting for your turn: a big cheer button, the field faded behind it */
+.zgcheerbtn{display:none}
+#zgui.rest .zgtrack{opacity:.1;pointer-events:none}
+#zgui.rest .zgcheerbtn{display:flex;flex-direction:column;align-items:center;gap:6px;position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);width:min(80vw,340px);padding:26px 18px;border-radius:26px;border:0;background:linear-gradient(135deg,#ff4fae,#7c3aed);color:#fff;font-size:2.6rem;box-shadow:0 10px 30px rgba(124,58,237,.5);cursor:pointer;z-index:5}
+#zgui.rest .zgcheerbtn b{font-size:1.25rem}#zgui.rest .zgcheerbtn small{font-size:.85rem;opacity:.85;font-weight:600}
+#zgui .zgcheerbtn.pop{animation:zgcpop .25s ease-out}
+@keyframes zgcpop{50%{transform:translate(-50%,-50%) scale(1.07)}}
