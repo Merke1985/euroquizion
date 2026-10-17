@@ -153,22 +153,24 @@
   }
   var branches = [];
   var turnEnd = -1, patternNo = 0, lastPlanT = -99, allPlanned = false, allWarn = false, allOn = false;
-  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnEnd = -1; planT = -1; allPlanned = false; allWarn = false; allOn = false; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
+  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnEnd = -1; planT = -1; allPlanned = false; allWarn = false; allOn = false; turnNo = 0; lastArr = -99; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
   /* Fair turns: every group in a round meets exactly the same obstacles (how many, from which side, where in the turn and
      how deep). Each new round gets a new pattern, a little harder. */
-  var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
+  var lastArr = -99, planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
   function birdXAt(T) { var x = cam; for (var tt = t; tt < T; tt += 0.02) x += SPEED * 0.02 * spd(tt); return x + 0.3 * W / H; }
   function newPattern(x) {
     var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 3 : patternNo === 0 ? 3 : 1 + (d > 0.55 ? 1 : 0), p = [], p0 = rnd() < 0.5 ? 0 : 1; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
-    for (var i = 0; i < n; i++) p.push({ tau: 1.6 + (i + 0.5 + (rnd() - 0.5) * 0.5) / n * (TURN - 2.1), top: forest && (fast ? i % 2 === p0 : rnd() < 0.5), reach: forest ? (fast ? 2 / 3 : 0.5) + (rnd() - 0.5) * 0.04 : (0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)   // (in the cave: half the way across, in the fast part two thirds, from top and bottom in turn)
+    for (var i = 0; i < n; i++) p.push({ tau: (arguments[2] ? 1.6 : 0.3) + (i + 0.5 + (rnd() - 0.5) * 0.2) / n * (arguments[2] ? TURN - 2.1 : SEG - 0.6), top: forest && (fast ? i % 2 === p0 : rnd() < 0.5), reach: forest ? (fast ? 1 / 2 : 1 / 3) + (rnd() - 0.5) * 0.04 : (0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)   // (in the cave: a third of the way across, in the fast part half, from top and bottom in turn; evenly spread)
     p.fast = fast; return p;
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
     var x0 = birdXAt(T);
     var fast = T >= FAST_T - 0.5;
-    if (roundTurn >= roundLen || !pattern || pattern.fast !== fast) { pattern = newPattern(x0, fast); roundTurn = 0; roundLen = 1; }
+    if (roundTurn >= roundLen || !pattern || pattern.fast !== fast) { pattern = newPattern(x0, fast, T <= PRACT0 + 0.01); roundTurn = 0; roundLen = 1; }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
-    pattern.forEach(function (o) { if (T + o.tau > FAST_T - 3 && T + o.tau < FAST_T + 2) return;   // (a calm moment: nothing in the 3 s before the speed-up and its first 2 s)
+    pattern.forEach(function (o) { var at = T + o.tau; if (at > FAST_T - 3 && at < FAST_T + 2) return;
+      var gapMin = fast ? 1.3 : 1.5; if (at - lastArr < gapMin) at = lastArr + gapMin; if (at > T + SEG + 0.2) return; lastArr = at;   // (never two too close together)
+      o = { tau: at - T, top: o.top, reach: o.reach, tw: o.tw };   // (a calm moment: nothing in the 3 s before the speed-up and its first 2 s)
       var x = birdXAt(T + o.tau), h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw }); });
     branches = branches.filter(function (r) { return r.x > cam - 1; });
   }
@@ -218,8 +220,8 @@
   function schedule() {
     if (t >= SOAR_T) return;
     if (planT < 0) planT = PRACT0;
-    while (t >= planT - 3.6 && planT + SEG <= ALL_T + 0.3) { planTurn(planT); planT += SEG; }
-    if (t >= ALL_T - 3.6 && !allPlanned) { allPlanned = true; for (var k = 0; k < 5; k++) { var x = birdXAt(ALL_T + 1.3 + k * 1.9), h = half(x), c = cen(x), top = k % 2 === 1, reach = (2 / 3) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the follow-me stretch: gentle branches, the blackbird shows the way)
+    while (t >= planT - 3.6 && planT + SEG <= FAST_T + 2.2) { planTurn(planT); planT += SEG; }
+    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 1; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (1 / 2) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
     if (t >= PRACT0 - WARN && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (everyone blinks for 2 s)
     if (t >= PRACT0) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
@@ -960,7 +962,7 @@
     if (ph === 'play') { msg.t = +t.toFixed(3); msg.cam = +cam.toFixed(4); msg.live = live; msg.k = { P0: PRACT0, F: FOREST, D0: DIVE0, D1: DIVE1, G: GRAVE_X, XE: XEND, S0: SAFE_X, SP: SPEED, FX: FASTX, FT: FAST_T, ST: STOP_T, TK: TAKE_T, SO: SOAR_T }; }
     net.send('state', msg);
   }
-  window.__bb = { leadHit: function () { var l = birds.filter(function (b) { return b.lead; })[0]; return hits(l, cam + bx(l)); }, birds: function () { return birds; }, state: function () { return { t: t, cam: cam, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
+  window.__bb = { allBr: function () { return branches; }, leadHit: function () { var l = birds.filter(function (b) { return b.lead; })[0]; return hits(l, cam + bx(l)); }, birds: function () { return birds; }, state: function () { return { t: t, cam: cam, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();
 })();
 </script>
