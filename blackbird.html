@@ -947,7 +947,7 @@
     if (k !== sideKey) { sideKey = k; $('side').innerHTML = players().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + '</span><span class="fe">' + featherRow(b.feathers, b.out) + '</span></div>'; }).join(''); }
     var bn = $('banner'), txt = '', cls = '';
     if (t >= SOAR_T) { txt = ''; }   // (from the cave exit on, no banners: the scene speaks for itself)
-    else if (t >= PRACT0 - WARN && t < PRACT0 + 2.5) { txt = '🐦‍⬛ Everyone, fly!'; cls = 'warn'; }
+    else if (t >= PRACT0 - WARN && t < PRACT0 + 2.5) { txt = ''; }   // (the countdown in the middle says it all)
     else if (me.out) { txt = '🪶 Your bird lost all their feathers'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
