@@ -331,7 +331,7 @@
   }
   var smileA = 0;
   function drawSinger0(X0, Y0, Wd, Hd) {
-    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.sin(t * 3.1) * 0.4 + Math.sin(t * 1.3) * 0.35) * (1 - 0.7 * smileA) * Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 10)) / 0.4)) * (t < HOME_T ? 1 : Math.max(0, Math.min(1, (t - HOME_T - 15) / 0.4, (HOME_T + 20.9 - t) / 0.4)));   // (her lips stay closed until she starts singing at 0:10; at the end she only sings while the tear runs down)   // (singing softly)
+    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.min(1, 0.15 + Math.abs(Math.sin(t * 4.6)) * 0.6 + Math.sin(t * 1.7) * 0.3)) * (1 - 0.7 * smileA) * Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 10)) / 0.4)) * (t < HOME_T ? 1 : Math.max(0, Math.min(1, (t - HOME_T - 15) / 0.4, (HOME_T + 20.9 - t) / 0.4)));   // (her lips stay closed until she starts singing at 0:10; at the end she only sings while the tear runs down)   // (singing softly)
     var M = function (u, v) { var q = P(u + sw, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u + sw, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var a = P(cu + sw, cv), b = P(u + sw, v); cx.quadraticCurveTo(a[0], a[1], b[0], b[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var p1 = P(a1 + sw, b1), p2 = P(a2 + sw, b2), p3 = P(u + sw, v); cx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); };
     // the hair behind her head
     var hg = cx.createLinearGradient(X0, Y0 + Hd * 0.12, X0, Y0 + Hd * 0.62); hg.addColorStop(0, '#f6e6b8'); hg.addColorStop(0.6, '#e2c98e'); hg.addColorStop(1, '#c9ab6c'); cx.fillStyle = hg;
@@ -363,7 +363,7 @@
     });
     cx.strokeStyle = 'rgba(120,80,70,.45)'; cx.lineWidth = Math.max(0.8, Wd * 0.004); cx.beginPath(); M(0.5, 0.41); Qc(0.49, 0.47, 0.51, 0.485); cx.stroke(); cx.beginPath(); M(0.48, 0.49); Qc(0.5, 0.5, 0.525, 0.488); cx.stroke();   // the nose
     // the lips: dark, open as she sings
-    var cy0 = 0.545 - smileA * 0.02, op = open * 1.3;   // (her lips: the corners turned down… and at the very end, up. When she sings, her mouth opens and the lower lip drops)
+    var cy0 = 0.545 - smileA * 0.02, op = open * 1.6;   // (her lips: the corners turned down… and at the very end, up. When she sings, her mouth opens and the lower lip drops)
     if (op > 0.04) { cx.fillStyle = '#1a0a10'; cx.beginPath(); var mc = P(0.5 + sw, cy0 + 0.004 + op * 0.014); cx.ellipse(mc[0], mc[1], Wd * (0.036 - op * 0.006), Hd * (0.004 + op * 0.022), 0, 0, 7); cx.fill(); cx.fillStyle = 'rgba(240,235,235,.85)'; var tm = P(0.5 + sw, cy0 + 0.003); cx.beginPath(); cx.ellipse(tm[0], tm[1], Wd * 0.024, Hd * Math.min(0.004, op * 0.004), 0, 0, 7); cx.fill(); }   // the open mouth, a glimpse of teeth
     cx.fillStyle = '#3a1c26'; cx.beginPath(); M(0.457 - smileA * 0.006, cy0); Qc(0.5, 0.518 + smileA * 0.01, 0.543 + smileA * 0.006, cy0); Qc(0.5, cy0 - 0.004 + op * 0.006, 0.457 - smileA * 0.006, cy0); cx.fill();   // upper lip
     cx.beginPath(); M(0.459 - smileA * 0.006, cy0 + op * 0.006); Qc(0.5, cy0 + 0.002 + op * 0.03, 0.541 + smileA * 0.006, cy0 + op * 0.006); Qc(0.5, cy0 + 0.016 + op * 0.04 + smileA * 0.008, 0.459 - smileA * 0.006, cy0 + op * 0.006); cx.fill();   // lower lip, dropping as she sings
