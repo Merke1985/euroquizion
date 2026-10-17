@@ -93,13 +93,13 @@
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
-      PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in pairs (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
+      PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function camAt(T) { return Math.max(0, T - TAKEOFF - 2.8) * SPEED; }   // (roughly where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     REVEAL0 = tAir + 3.2; order.forEach(function (b, i) { b.colT = REVEAL0 + i * 0.9; });
     MSG0 = REVEAL0 + (order.length - 1) * 0.9 + 1.4 + 2.6; MSG1 = MSG0 + 7;   // (a quiet moment after the last colour, then the how-to on screen: not voiced, so the spell isn't broken)
-    PRACT0 = MSG1 + 0.8 + WARN; pgroups = []; for (var i = 0; i < order.length; i += 2) pgroups.push(order.slice(i, i + 2)); pgi = 0; pracDone = false;
+    PRACT0 = MSG1 + 0.8 + WARN; pgroups = []; for (var i = 0; i < order.length; i += 3) pgroups.push(order.slice(i, i + 3));   // (practice in threes: the same rhythm as the rest of the game) pgi = 0; pracDone = false;
     PRACT_END = PRACT0 + pgroups.length * PRACT_T; SAFE_X = camAt(PRACT_END) + 0.3 * W / H + 0.2;
     FOREST = SAFE_X + 40 * SPEED; DIVE0 = FOREST - 3.4; DIVE1 = FOREST + 0.9; DUR = PRACT_END + 40 + 45; XEND = camAt(DUR) + 1;
   }   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
@@ -153,7 +153,7 @@
     lead.rx = 0.905; lead.ry = ROOF_Y - 0.02; lead.y = lead.ry; lead.dl = 0; lead.fi = FLY_IN;
     others.forEach(function (b, i) { b.rx = 0.28 + (others.length > 1 ? i / (others.length - 1) : 0.5) * 0.56; b.ry = 0.8 + (i % 2) * 0.07; b.y = b.ry; b.dl = 0.7 + i * 0.16 + Math.random() * 0.1; b.fi = 2.4; });
     tAir = TAKEOFF + Math.max.apply(null, birds.map(function (b) { return b.dl + b.fi; }));   // (once they're all up, the colours come)
-    pickN = n <= 3 ? 1 : n <= 7 ? 2 : 3;
+    pickN = Math.min(3, n);   // (three birds fly at a time, the whole game)
     setTimeline(birds.slice().sort(function () { return Math.random() - .5; }));
   }
   function bx(b) { var lift = t < TAKEOFF ? 0.5 : 0.5 * (1 - Math.max(0, Math.min(1, (t - TAKEOFF - 2) / 6))); return 0.3 * W / H + b.xo - b.back + lift; }   // (at the take-off the flock heads off to the right, and settles into its place as the camera follows)   // the bird's place on the screen, in world units from the left edge
@@ -547,7 +547,7 @@
     else if (t < REVEAL0) txt = '🐦‍⬛ The flock takes off!';
     else if (t < MSG0 - 1.5) txt = '✨ Meet the flock…';
     else if (t < PRACT0 - WARN) txt = '';
-    else if (t < PRACT_END) { var fl = birds.filter(function (b) { return b.manual; }).map(function (b) { return b.name; }); txt = '✨ Practice round' + (fl.length ? ': ' + fl.join(' & ') + ' flying' : '') + '. Nothing to dodge, no damage yet'; }
+    else if (t < PRACT_END) { var fl = birds.filter(function (b) { return b.manual; }).map(function (b) { return b.name; }); txt = '✨ Practice round' + (fl.length ? ': ' + (fl.length > 1 ? fl.slice(0, -1).join(', ') + ' & ' + fl[fl.length - 1] : fl[0]) + ' flying' : '') + '. Nothing to dodge, no damage yet'; }
     else if (t < nowAt + 3.5) { txt = '⚠️ Now it counts! Mind the pine tops'; cls = 'warn'; }
     else if (inDive(cam + 0.3 * W / H + 0.6)) txt = '🐦‍⬛ Down into the forest…';
     $('howto').className = 'howto' + (t >= MSG0 && t < MSG1 ? ' on' : '');
