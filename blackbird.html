@@ -95,15 +95,16 @@
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
-      SOAR_T = MUSIC + 128, PICK_T = MUSIC + 155, GRAVE_T = SOAR_T - 9,   /* (GRAVE_*: the serene place after the forest) */ HOME_T = PICK_T + 4, END_T = HOME_T + 15, GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
+      FAST_T = MUSIC + 125, PICK_T = MUSIC + 155, SOAR_T = PICK_T - 11.7, GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ HOME_T = PICK_T + 4, LAND_T = PICK_T - 6, APP_T = PICK_T - 9.2, STOP_T = PICK_T - 6.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 3 s; the rose at PICK_T) */ END_T = HOME_T + 15, GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
-  function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing for the flower at 2:35, then away
+  function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing to a stop at their favourite spot, then away after the rose
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
-    if (T < SOAR_T) return 1; if (T >= PICK_T) return 0.9 + 1.6 * ez((T - PICK_T) / 2);
-    if (T > PICK_T - 4.5) return 3 - 2.1 * ez((T - (PICK_T - 4.5)) / 3.7);
-    return 1 + 2 * ez((T - SOAR_T) / 2.5);
+    if (T < FAST_T) return 1; if (T >= PICK_T + 0.6) return 2.5 * ez((T - PICK_T - 0.6) / 2); if (T >= STOP_T) return 0;
+    var D0 = STOP_T - 5; if (T > D0) return FASTX * (1 - ez((T - D0) / (STOP_T - D0)));
+    return 1 + (FASTX - 1) * ez((T - FAST_T) / 2.5);
   }
-  function camAt(T) { return Math.max(0, T - TAKEOFF - 2.8) * SPEED; }   // (roughly where the camera is at time T)
+  var FASTX = 2.3;   // (how much faster from 2:05)
+  function camAt(T) { var x = 0; for (var tt = TAKEOFF; tt < T; tt += 0.02) x += SPEED * 0.02 * Math.max(0, Math.min(1, (tt - TAKEOFF - 1.6) / 2.4)) * spd(tt); return x; }   // (where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     REVEAL0 = tAir + 3.2; order.forEach(function (b, i) { b.colT = REVEAL0 + i * 0.9; });
     MSG0 = REVEAL0 + (order.length - 1) * 0.9 + 1.4 + 2.6; MSG1 = MSG0 + 7;   // (a quiet moment after the last colour, then the how-to on screen: not voiced, so the spell isn't broken)
@@ -139,17 +140,18 @@
   /* Fair turns: every group in a round meets exactly the same obstacles (how many, from which side, where in the turn and
      how deep). Each new round gets a new pattern, a little harder. */
   var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
-  function birdXAt(T) { return cam + SPEED * (T - t) + 0.3 * W / H; }
+  function birdXAt(T) { var x = cam; for (var tt = t; tt < T; tt += 0.02) x += SPEED * 0.02 * spd(tt); return x + 0.3 * W / H; }
   function newPattern(x) {
-    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, L = TURN * SPEED, n = 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = [];
-    for (var i = 0; i < n; i++) p.push({ u: 0.75 + (i + 0.5 + (rnd() - 0.5) * 0.5) * (L - 1.05) / n, top: forest && rnd() < 0.5, reach: 0.32 + 0.28 * d + rnd() * 0.12, tw: rnd() });
-    return p;
+    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], n = fast ? 3 + (rnd() < 0.5 ? 1 : 0) : 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = [];   // (the fast part: more to dodge)
+    for (var i = 0; i < n; i++) p.push({ tau: 1.6 + (i + 0.5 + (rnd() - 0.5) * 0.5) / n * (TURN - 2.1), top: forest && rnd() < 0.5, reach: (fast ? 0.42 : 0.32) + 0.28 * d + rnd() * 0.12, tw: rnd() });   // (when in the turn each one comes)
+    p.fast = fast; return p;
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
     var x0 = birdXAt(T);
-    if (roundTurn >= roundLen) { pattern = newPattern(x0); roundTurn = 0; roundLen = Math.max(1, Math.ceil(alive().length / pickN)); }
+    var fast = T >= FAST_T - 0.5;
+    if (roundTurn >= roundLen || !pattern || pattern.fast !== fast) { pattern = newPattern(x0, fast); roundTurn = 0; roundLen = Math.max(1, Math.ceil(alive().length / pickN)); }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
-    pattern.forEach(function (o) { var x = x0 + o.u, h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw }); });
+    pattern.forEach(function (o) { var x = birdXAt(T + o.tau), h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw }); });
     branches = branches.filter(function (r) { return r.x > cam - 1; });
   }
 
@@ -163,18 +165,20 @@
     for (var i = 0; i <= nb; i++) birds.push({ id: i, name: NAMES[i], col: COLS[i % COLS.length], human: i === 0, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
       skill: 0.55 + Math.random() * 0.4, react: 0.1 + Math.random() * 0.14, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
     me = birds[0];
+    birds.push({ id: nb + 1, name: '', col: '#000000', npc: true, human: false, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0, skill: 1, react: 0.1, decide: 0, hold: false, flap: 0, slot: nb + 1, colT: 1e9 });   // (the lone blackbird: our guide. Nobody steers it, it can't crash; we all follow it)
     var n = birds.length; birds.forEach(function (b, i) { b.off = n > 1 ? (i / (n - 1)) * 2 - 1 : 0; b.xo = -((i * 37) % n) * 0.06; });   // (a loose V: everyone their own place in the formation)
-    var lead = birds[Math.floor(Math.random() * n)]; lead.lead = true;   // (one lone blackbird on her roof; the rest of the flock waits behind the house)
+    var lead = birds[n - 1]; lead.lead = true;   // (one lone blackbird on her roof; the rest of the flock waits behind the house)
     var others = birds.filter(function (b) { return !b.lead; });
     var fr = birds.reduce(function (m, b) { return b.xo > m.xo ? b : m; }, birds[0]), fx0 = fr.xo, fo = fr.off; fr.xo = lead.xo; fr.off = lead.off; lead.xo = fx0; lead.off = fo;   // (the lone bird leads, at the front of the flock)
     lead.rx = 0.905; lead.ry = ROOF_Y - 0.02; lead.y = lead.ry; lead.dl = 0; lead.fi = FLY_IN;
     others.forEach(function (b, i) { b.rx = 0.28 + (others.length > 1 ? i / (others.length - 1) : 0.5) * 0.56; b.ry = 0.8 + (i % 2) * 0.07; b.y = b.ry; b.dl = 0.7 + i * 0.16 + Math.random() * 0.1; b.fi = 2.4; });
     tAir = TAKEOFF + Math.max.apply(null, birds.map(function (b) { return b.dl + b.fi; }));   // (once they're all up, the colours come)
-    pickN = Math.min(3, n);   // (three birds fly at a time, the whole game)
-    setTimeline(birds.slice().sort(function () { return Math.random() - .5; }));
+    pickN = Math.min(3, n - 1);   // (three birds fly at a time, the whole game)
+    setTimeline(players().sort(function () { return Math.random() - .5; }));
   }
   function bx(b) { var lift = t < TAKEOFF ? 0.5 : 0.5 * (1 - Math.max(0, Math.min(1, (t - TAKEOFF - 2) / 6))); return 0.3 * W / H + b.xo - b.back + lift; }   // (at the take-off the flock heads off to the right, and settles into its place as the camera follows)   // the bird's place on the screen, in world units from the left edge
-  function alive() { return birds.filter(function (b) { return !b.out; }); }
+  function players() { return birds.filter(function (b) { return !b.npc; }); }
+  function alive() { return birds.filter(function (b) { return !b.out && !b.npc; }); }
 
   // ---------- picking who flies (fair: whoever has flown least goes first, random among equals) ----------
   
@@ -187,7 +191,7 @@
     if (t >= SOAR_T) return;
     if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick + TURN <= SOAR_T + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
       var xa = birdXAt(nextPick), xb = xa + TURN * SPEED;
-      if (xb > DIVE0 - 1.8 && xa < DIVE1 + 0.3) nextPick = t + (DIVE1 + 0.4 - (cam + 0.3 * W / H)) / SPEED;
+      if (xb > DIVE0 - 1.8 && xa < DIVE1 + 0.3) nextPick = t + (DIVE1 + 0.4 - (cam + 0.3 * W / H)) / (SPEED * spd(t));
       else { plannedFor = nextPick; planTurn(nextPick); }
     }
     if (inDive(cam + 0.3 * W / H + 0.6)) { birds.forEach(function (b) { b.manual = false; }); pending = []; nextPick = Math.max(nextPick, t + WARN + 1.2); return; }   // (the dive: everyone on autopilot)
@@ -221,12 +225,14 @@
   function step(dt) {
     t += dt; if (t >= TAKEOFF) cam += SPEED * dt * Math.max(0, Math.min(1, (t - TAKEOFF - 1.6) / 2.4)) * spd(t); if (t >= HOME_T) cam = 0; schedule();
     if (t >= SOAR_T && !soarOn) { soarOn = true; pending = []; birds.forEach(function (b) { b.manual = false; if (b.out) { b.out = false; b.rejoin = true; b.y = 1.15; b.vy = -0.3; b.inv = 0; } }); }   // (2:08: nobody steers any more; birds that landed rejoin the flock)
-    if (t >= PICK_T - 7 && FLOWER_X < 0) { var ld = birds.filter(function (b) { return b.lead; })[0], fx = cam + bx(ld); for (var tt = t; tt < PICK_T; tt += 0.01) fx += SPEED * spd(tt) * 0.01; FLOWER_X = fx; FLOWER_Y = cen(fx) + half(fx); }   // (the one flower, on a grave just where the lone bird will be at 2:35)   // (the camera holds on the house while the flock rises from behind it, then sets off gently)
-    if (musicWant && t >= MUSIC) { musicWant = false; ytPlay(); }   // (the song starts after a moment of silence at the house)
+    if (soarOn && SPOT_C < 0) { var cs = cam; for (var tt = t; tt < STOP_T; tt += 0.01) cs += SPEED * spd(tt) * 0.01; SPOT_C = cs + 0.5 * W / H; FLOWER_X = SPOT_C - 0.33; FLOWER_Y = GY; }   // (where the flock will come to rest: their favourite spot)
+    if (musicWant && t >= MUSIC) { musicWant = false; ytPlay(); }
+    windLevel(t >= FAST_T - 0.5 && t < STOP_T ? Math.max(0, (spd(t) - 1) / (FASTX - 1)) : 0);   // (the rush of the wind)   // (the song starts after a moment of silence at the house)
     if (t >= TAKEOFF && !flockPlayed) { flockPlayed = true; flockSound(); }
     birds.forEach(function (b) {
       if (t < TAKEOFF) { b.flap = 0; return; }   // (still sitting on the roof)
       if (t >= HOME_T) return;   // (home: see birdPos)
+      if (SPOT_C > 0 && t >= APP_T && !b.capt) { b.capt = true; b.ax = cam + bx(b); b.ay = b.y; }   // (where it was when the glide into the tree began)
       b.flap += dt * (b.manual && (b.human ? hold : b.hold) ? 16 : 7);
       if (b.out) { b.fall += dt; b.vy = Math.min(1.2, b.vy + 1.6 * dt); b.y += b.vy * dt; return; }
       b.inv = Math.max(0, b.inv - dt); b.back = Math.max(0, b.back - dt * 0.01);
@@ -243,8 +249,7 @@
       } else {   // autopilot: back to its place in the flock, smoothly
         var ty = cen(X + 0.12) + b.off * half(X) * 0.62, rate = 3.2;
         if (t >= SOAR_T) { b.flap += dt * 7; rate = 2.2;   // (soaring high and fast; at 2:35 the lone bird dives for the flower; then they all fly off)
-          if (t < PICK_T - 2.8) ty = 0.2 + b.off * 0.08 + 0.03 * Math.sin(t * 1.5 + b.id);
-          else if (t < PICK_T + 0.3) { ty = b.lead ? FLOWER_Y - 0.075 : 0.3 + b.off * 0.07; if (b.lead) rate = 3; }
+          if (t < PICK_T + 0.6) ty = 0.2 + b.off * 0.08 + 0.03 * Math.sin(t * 1.5 + b.id);
           else ty = 0.06 + b.off * 0.05; }
         var ny = b.y + (ty - b.y) * Math.min(1, dt * rate);
         b.vy = (ny - b.y) / Math.max(dt, 1e-3); b.y = ny;
@@ -448,7 +453,7 @@
      candle, and a willow with a heart carved in its bark. */
   var FLOWERCOLS = ['#ffd6e8', '#ffffff', '#ffe08a', '#b9d4ff', '#ff9fc2', '#e6c8ff'];
   function graveEdge(X) {   // the top of the meadow: grass, and flowers whose heads reach the edge
-    var e = cen(X) + half(X), k = Math.floor(X / 0.035), f = X / 0.035 - k;
+    var e = groundTop(X), k = Math.floor(X / 0.035), f = X / 0.035 - k;
     if (hsh(k + 11) < 0.55 && f > 0.4 && f < 0.6) return e;   // a flower stalk
     return e + 0.016 + 0.008 * Math.abs(Math.sin(X * 90));   // grass
   }
@@ -459,26 +464,77 @@
     for (var i = 0; i < 26; i++) { var a = -1 + i / 25 * 2, sx0 = px + a * th * 0.3, sw = Math.sin(t * 0.8 + i) * th * 0.015; cx.beginPath(); cx.moveTo(sx0, base - th * 0.8 + Math.abs(a) * th * 0.1); cx.quadraticCurveTo(sx0 + a * th * 0.08, base - th * 0.5, sx0 + a * th * 0.1 + sw, base - th * (0.12 + 0.18 * hsh(i))); cx.stroke(); }   // the hanging branches, swaying
     if (carve) { var hx = px, hy = base - th * 0.42, hs = th * 0.035; cx.strokeStyle = 'rgba(255,190,200,.75)'; cx.lineWidth = Math.max(1, th * 0.006); cx.beginPath(); cx.moveTo(hx, hy + hs); cx.bezierCurveTo(hx - hs * 1.6, hy, hx - hs, hy - hs * 1.2, hx, hy - hs * 0.4); cx.bezierCurveTo(hx + hs, hy - hs * 1.2, hx + hs * 1.6, hy, hx, hy + hs); cx.stroke(); }   // a heart carved in the bark
   }
-  /* their favourite spot. The flashback: as the flock arrives, a ghostly memory of her and her love, hand in hand, her head on their shoulder;
-     it flickers for a moment and then dissolves into light, just as the rose is picked */
-  function drawGhosts(px, base) {
-    var a0 = PICK_T - 2.6, a = t < a0 ? 0 : t < a0 + 0.9 ? (t - a0) / 0.9 : t < PICK_T - 0.25 ? 1 : Math.max(0, 1 - (t - PICK_T + 0.25) / 0.6), dis = Math.max(0, Math.min(1, (t - PICK_T + 0.25) / 0.8));
+  /* their favourite spot: flat ground by the lake, an old blossom tree with low branches to sit on, the bench with its candle */
+  function groundTop(X) { var b0 = cen(X) + half(X); if (SPOT_C < 0) return b0; var w = Math.max(0, Math.min(1, 1 - (Math.abs(X - SPOT_C) - 0.95) / 0.5)); w = w * w * (3 - 2 * w); return b0 + (GY - b0) * w; }
+  var TREE_B = [[[-0.02, 0.42], [-0.25, 0.53], [-0.56, 0.47]], [[0, 0.55], [-0.18, 0.68], [-0.4, 0.73]], [[0.02, 0.5], [0.2, 0.6], [0.38, 0.62]], [[0, 0.68], [-0.08, 0.82], [-0.2, 0.93]], [[0.02, 0.7], [0.12, 0.85], [0.22, 0.95]]];
+  var PERCH = [[0, 0.5], [1, 0.6], [2, 0.55], [1, 0.92], [2, 0.92], [3, 0.7], [4, 0.7], [3, 0.97], [4, 0.97], [0, 0.28]], TH = 0.6;
+  function treeX() { return SPOT_C + 0.42; }
+  function qpt(br, s) { var a = br[0], c = br[1], b = br[2], m = 1 - s; return [m * m * a[0] + 2 * m * s * c[0] + s * s * b[0], m * m * a[1] + 2 * m * s * c[1] + s * s * b[1]]; }
+  function perch(b) { var pr = b.lead ? [0, 0.82] : PERCH[birds.filter(function (o) { return !o.lead; }).indexOf(b) % PERCH.length], q = qpt(TREE_B[pr[0]], pr[1]); return { x: treeX() + q[0] * TH, y: GY - q[1] * TH - 0.03 }; }
+  function drawTree() {
+    var tx = sx(treeX()), gy = sy(GY), th = TH * H, P = function (u, v) { return [tx + u * th, gy - v * th]; };
+    cx.fillStyle = '#120d12'; cx.beginPath(); var a = P(-0.07, 0), b = P(0.08, 0); cx.moveTo(a[0], a[1]); var c1 = P(-0.02, 0.3), c2 = P(-0.035, 0.6); cx.quadraticCurveTo(c1[0], c1[1], c2[0], c2[1]); var c3 = P(0.0, 0.74), c4 = P(0.03, 0.6), c5 = P(0.035, 0.3); cx.lineTo(c3[0], c3[1]); cx.lineTo(c4[0], c4[1]); cx.quadraticCurveTo(c5[0], c5[1], b[0], b[1]); cx.closePath(); cx.fill();   // the old trunk
+    cx.strokeStyle = 'rgba(190,200,240,.25)'; cx.lineWidth = Math.max(1, th * 0.006); cx.beginPath(); var m1 = P(-0.05, 0.02), m2 = P(-0.025, 0.4), m3 = P(-0.03, 0.62); cx.moveTo(m1[0], m1[1]); cx.quadraticCurveTo(m2[0], m2[1], m3[0], m3[1]); cx.stroke();   // moonlight on the bark
+    var hc = P(0.0, 0.28), hs = th * 0.022; cx.strokeStyle = 'rgba(255,190,205,.8)'; cx.lineWidth = Math.max(1, th * 0.004); cx.beginPath(); cx.moveTo(hc[0], hc[1] + hs); cx.bezierCurveTo(hc[0] - hs * 1.6, hc[1], hc[0] - hs, hc[1] - hs * 1.2, hc[0], hc[1] - hs * 0.4); cx.bezierCurveTo(hc[0] + hs, hc[1] - hs * 1.2, hc[0] + hs * 1.6, hc[1], hc[0], hc[1] + hs); cx.stroke();   // the heart carved in its bark
+    TREE_B.forEach(function (br, k) { var p0 = P(br[0][0], br[0][1]), pc = P(br[1][0], br[1][1]), p1 = P(br[2][0], br[2][1]); cx.strokeStyle = '#120d12'; cx.lineCap = 'round'; cx.lineWidth = th * (k < 3 ? 0.03 : 0.022); cx.beginPath(); cx.moveTo(p0[0], p0[1]); cx.quadraticCurveTo(pc[0], pc[1], p1[0], p1[1]); cx.stroke(); cx.lineWidth = th * 0.012; var tw = qpt(br, 0.7), tw0 = P(tw[0], tw[1]); cx.beginPath(); cx.moveTo(tw0[0], tw0[1]); cx.lineTo(tw0[0] + th * 0.05 * (k % 2 ? 1 : -1), tw0[1] - th * 0.06); cx.stroke(); });   // the branches
+    var BL = ['rgba(255,214,228,.9)', 'rgba(255,236,242,.9)', 'rgba(248,190,214,.85)', 'rgba(255,255,255,.85)'];
+    TREE_B.forEach(function (br, k) { for (var i = 0; i < 26; i++) { var s = 0.35 + hsh(i + k * 31) * 0.75, q = qpt(br, Math.min(1, s)), o = P(q[0] + (hsh(i * 3 + k) - 0.5) * 0.14, q[1] + 0.02 + hsh(i * 7 + k) * 0.1); cx.fillStyle = BL[i % 4]; cx.beginPath(); cx.arc(o[0], o[1], th * (0.012 + hsh(i + k) * 0.012), 0, 7); cx.fill(); } });   // blossom along the branches
+    for (var f = 0; f < 22; f++) { var ph = (t * 0.07 + hsh(f)) % 1, fx = tx + (hsh(f + 5) - 0.6) * th * 0.9 + Math.sin(t * 1.3 + f) * th * 0.04, fy = gy - th * 0.9 + ph * th * 0.95; cx.fillStyle = 'rgba(255,215,230,' + (0.85 * (1 - ph)) + ')'; cx.beginPath(); cx.ellipse(fx, fy, th * 0.008, th * 0.005, t + f, 0, 7); cx.fill(); }   // petals drifting down
+  }
+  function drawLake2() {   // water lilies, reeds and the moonlight on the water at their spot
+    var x0 = SPOT_C - 1.1, ly = 0.74;
+    for (var i = 0; i < 16; i++) { var lx = sx(x0 + hsh(i + 50) * 2.2), lyy = sy(ly + 0.03 + hsh(i + 60) * 0.09), lr = H * (0.016 + hsh(i + 70) * 0.012); cx.fillStyle = '#123828'; cx.beginPath(); cx.ellipse(lx, lyy, lr, lr * 0.32, 0, 0.3, 6.0); cx.lineTo(lx, lyy); cx.fill();
+      if (hsh(i + 80) < 0.45) { cx.fillStyle = i % 2 ? '#ffe9f2' : '#ffc7dc'; for (var pt = 0; pt < 6; pt++) { cx.beginPath(); cx.ellipse(lx + Math.cos(pt) * lr * 0.25, lyy - lr * 0.18, lr * 0.3, lr * 0.12, pt * 0.5 - 1.5, 0, 7); cx.fill(); } cx.fillStyle = '#ffd36a'; cx.beginPath(); cx.arc(lx, lyy - lr * 0.2, lr * 0.08, 0, 7); cx.fill(); } }   // lily pads, some in flower
+    var mx = W * 0.8; for (var k = 0; k < 26; k++) { var yy = sy(ly) + H * 0.006 * (k + 1), w2 = H * (0.09 - k * 0.003) * (0.75 + 0.25 * Math.sin(t * 2.2 + k * 1.7)); cx.fillStyle = 'rgba(255,250,230,' + Math.max(0, 0.5 - k * 0.017) + ')'; cx.fillRect(mx - w2 / 2 + Math.sin(t * 1.4 + k * 2.3) * 6, yy, w2, 1.4); }   // the moon's path on the water
+    for (var s2 = 0; s2 < 18; s2++) { var sa = Math.max(0, Math.sin(t * 3 + s2 * 2.1)); if (sa < 0.6) continue; cx.fillStyle = 'rgba(255,255,255,' + (sa - 0.6) * 2 + ')'; cx.beginPath(); cx.arc(mx + (hsh(s2) - 0.5) * H * 0.14, sy(ly) + hsh(s2 + 9) * H * 0.12, 1.4, 0, 7); cx.fill(); }   // sparkles
+  }
+  /* the lovers: a memory of her and her love, standing by the water, forehead to forehead in an embrace. They appear as
+     the flock settles in the tree, stay for three seconds, then dissolve into light. */
+  function drawLovers(px, base) {
+    var a0 = LAND_T - 0.4, a = t < a0 ? 0 : t < a0 + 0.8 ? (t - a0) / 0.8 : t < LAND_T + 3.4 ? 1 : Math.max(0, 1 - (t - LAND_T - 3.4) / 0.7), dis = Math.max(0, Math.min(1, (t - LAND_T - 3.4) / 1.1));
     if (a <= 0 && (dis <= 0 || dis >= 1)) return;
-    var hh = H * 0.27, fl = 0.85 + 0.15 * Math.sin(t * 23) * Math.sin(t * 7);
-    cx.save(); cx.globalAlpha = a * fl; cx.shadowColor = 'rgba(170,210,255,.9)'; cx.shadowBlur = H * 0.03;
-    cx.fillStyle = 'rgba(205,228,255,.32)'; cx.strokeStyle = 'rgba(235,246,255,.85)'; cx.lineWidth = Math.max(1, H * 0.0025);
-    var sp = function () { cx.fill(); cx.stroke(); };
-    var hx = px - hh * 0.14, lx = px + hh * 0.14;   // her (left) and her love (right)
-    cx.beginPath(); cx.moveTo(hx - hh * 0.05, base - hh * 0.66); cx.quadraticCurveTo(hx - hh * 0.07, base - hh * 0.35, hx - hh * 0.17, base); cx.lineTo(hx + hh * 0.14, base); cx.quadraticCurveTo(hx + hh * 0.07, base - hh * 0.35, hx + hh * 0.06, base - hh * 0.66); cx.closePath(); sp();   // her long dress
-    cx.beginPath(); cx.ellipse(hx + hh * 0.025, base - hh * 0.75, hh * 0.06, hh * 0.075, 0.3, 0, 7); sp();   // her head, leaning in
-    cx.beginPath(); cx.moveTo(hx - hh * 0.04, base - hh * 0.83); cx.quadraticCurveTo(hx + hh * 0.05, base - hh * 0.88, hx + hh * 0.1, base - hh * 0.76); cx.lineTo(hx + hh * 0.085, base - hh * 0.68); cx.quadraticCurveTo(hx + hh * 0.02, base - hh * 0.8, hx - hh * 0.06, base - hh * 0.7); cx.closePath(); sp();   // her bob
-    cx.beginPath(); cx.moveTo(lx - hh * 0.07, base - hh * 0.78); cx.lineTo(lx + hh * 0.07, base - hh * 0.78); cx.lineTo(lx + hh * 0.06, base - hh * 0.4); cx.lineTo(lx + hh * 0.05, base); cx.lineTo(lx + hh * 0.005, base); cx.lineTo(lx, base - hh * 0.38); cx.lineTo(lx - hh * 0.005, base); cx.lineTo(lx - hh * 0.05, base); cx.lineTo(lx - hh * 0.06, base - hh * 0.4); cx.closePath(); sp();   // their love: a little taller
-    cx.beginPath(); cx.ellipse(lx - hh * 0.005, base - hh * 0.87, hh * 0.058, hh * 0.072, -0.1, 0, 7); sp();   // their head, turned towards her
-    cx.lineCap = 'round'; cx.lineWidth = hh * 0.035; cx.strokeStyle = 'rgba(205,228,255,.45)'; cx.beginPath(); cx.moveTo(hx + hh * 0.05, base - hh * 0.6); cx.quadraticCurveTo(px, base - hh * 0.38, lx - hh * 0.06, base - hh * 0.62); cx.stroke();   // hand in hand
-    cx.fillStyle = 'rgba(255,255,255,.7)'; cx.beginPath(); cx.arc(px, base - hh * 0.44, hh * 0.022, 0, 7); cx.fill();
+    var hh = H * 0.3, P = function (u, v) { return [px + u * hh, base - v * hh]; }, M = function (u, v) { var q = P(u, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var q1 = P(cu, cv), q2 = P(u, v); cx.quadraticCurveTo(q1[0], q1[1], q2[0], q2[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var q1 = P(a1, b1), q2 = P(a2, b2), q3 = P(u, v); cx.bezierCurveTo(q1[0], q1[1], q2[0], q2[1], q3[0], q3[1]); };
+    var halo = cx.createRadialGradient(px, base - hh * 0.55, 0, px, base - hh * 0.55, hh * 0.75); halo.addColorStop(0, 'rgba(190,215,255,' + (0.28 * a) + ')'); halo.addColorStop(1, 'rgba(190,215,255,0)'); cx.fillStyle = halo; cx.fillRect(px - hh, base - hh * 1.4, hh * 2, hh * 1.5);
+    cx.save(); cx.globalAlpha = a * (0.88 + 0.12 * Math.sin(t * 17) * Math.sin(t * 5)); cx.shadowColor = 'rgba(180,215,255,.9)'; cx.shadowBlur = hh * 0.06; cx.lineJoin = 'round'; cx.lineCap = 'round';
+    var rim = function () { cx.strokeStyle = 'rgba(230,242,255,.75)'; cx.lineWidth = Math.max(1, hh * 0.004); cx.stroke(); };
+    var SKIN = 'rgba(242,222,212,.92)';
+    // their love (right, facing her): trousers and shoes
+    cx.fillStyle = 'rgba(40,46,78,.9)'; cx.beginPath(); M(0.04, 0.36); Lq(0.135, 0.36); Lq(0.125, 0.03); Lq(0.095, 0.03); Lq(0.088, 0.3); Lq(0.075, 0.03); Lq(0.045, 0.03); cx.closePath(); cx.fill(); rim();
+    cx.fillStyle = 'rgba(30,26,40,.95)'; [0.045, 0.092].forEach(function (u) { cx.beginPath(); var q = P(u, 0.016); cx.ellipse(q[0] - hh * 0.006, q[1], hh * 0.026, hh * 0.013, 0, 0, 7); cx.fill(); });   // shoes
+    // their long coat
+    cx.fillStyle = 'rgba(62,72,108,.92)'; cx.beginPath(); M(0.03, 0.775); Qc(0.08, 0.79, 0.13, 0.77); Qc(0.15, 0.6, 0.145, 0.33); Lq(0.03, 0.33); Qc(0.012, 0.55, 0.015, 0.69); Qc(0.016, 0.75, 0.03, 0.775); cx.fill(); rim();
+    cx.strokeStyle = 'rgba(200,215,255,.35)'; cx.lineWidth = Math.max(1, hh * 0.004); cx.beginPath(); M(0.045, 0.77); Lq(0.07, 0.66); Lq(0.04, 0.33); cx.stroke();   // the lapel and the opening
+    cx.fillStyle = 'rgba(220,230,255,.5)'; [0.6, 0.5, 0.4].forEach(function (v) { var q = P(0.046, v); cx.beginPath(); cx.arc(q[0], q[1], hh * 0.005, 0, 7); cx.fill(); });   // buttons
+    // their neck and head, bowed to hers
+    cx.fillStyle = SKIN; cx.beginPath(); M(0.05, 0.8); Lq(0.09, 0.795); Lq(0.095, 0.765); Lq(0.045, 0.77); cx.closePath(); cx.fill();
+    cx.beginPath(); M(0.075, 0.948); Bz(0.04, 0.95, 0.014, 0.93, 0.009, 0.895); Lq(0.006, 0.875); Qc(-0.004, 0.866, -0.006, 0.857); Lq(0.005, 0.851); Qc(0.003, 0.843, 0.008, 0.838); Qc(0.004, 0.832, 0.01, 0.826); Qc(0.016, 0.812, 0.03, 0.808); Qc(0.06, 0.806, 0.085, 0.825); Bz(0.115, 0.85, 0.12, 0.92, 0.075, 0.948); cx.fill(); rim();   // their profile: brow, nose, lips, chin
+    cx.fillStyle = 'rgba(78,64,82,.95)'; cx.beginPath(); M(0.016, 0.915); Bz(0.025, 0.955, 0.08, 0.968, 0.11, 0.93); Bz(0.125, 0.9, 0.12, 0.86, 0.1, 0.838); Lq(0.09, 0.86); Qc(0.08, 0.875, 0.065, 0.88); Qc(0.05, 0.9, 0.03, 0.905); cx.closePath(); cx.fill(); rim();   // short, tousled hair
+    cx.strokeStyle = 'rgba(200,190,220,.4)'; cx.lineWidth = Math.max(0.8, hh * 0.003); for (var hs = 0; hs < 5; hs++) { cx.beginPath(); M(0.03 + hs * 0.018, 0.93 - hs * 0.004); Qc(0.06 + hs * 0.012, 0.955, 0.1 + hs * 0.004, 0.92 - hs * 0.012); cx.stroke(); }
+    cx.strokeStyle = 'rgba(60,40,60,.8)'; cx.lineWidth = Math.max(0.8, hh * 0.003); cx.beginPath(); M(0.022, 0.873); Qc(0.03, 0.866, 0.038, 0.872); cx.stroke();   // their eye, closed
+    // her (left, facing her love): the long black lace dress with a little train
+    var dress = function () { cx.beginPath(); M(-0.1, 0.775); Qc(-0.142, 0.762, -0.138, 0.72); Qc(-0.142, 0.64, -0.13, 0.565); Bz(-0.15, 0.36, -0.22, 0.13, -0.28, 0.0); Lq(-0.005, 0.0); Bz(-0.02, 0.16, -0.05, 0.38, -0.06, 0.565); Qc(-0.03, 0.605, -0.035, 0.665); Qc(-0.045, 0.725, -0.068, 0.768); cx.closePath(); };
+    dress(); cx.fillStyle = 'rgba(28,30,62,.9)'; cx.fill(); rim();
+    cx.save(); dress(); cx.clip(); cx.shadowBlur = 0; cx.strokeStyle = 'rgba(170,185,240,.35)'; cx.lineWidth = Math.max(0.6, hh * 0.0025);
+    for (var lu = -0.3; lu < 0.0; lu += 0.026) for (var lv = 0.0; lv < 0.8; lv += 0.03) { var c0 = P(lu + ((lv * 33) % 2) * 0.013, lv), rr = hh * (0.004 + hsh(lu * 31 + lv * 17) * 0.004); cx.beginPath(); for (var pe = 0; pe < 5; pe++) { var an = pe / 5 * 6.283; cx.moveTo(c0[0], c0[1]); cx.quadraticCurveTo(c0[0] + Math.cos(an + 0.6) * rr * 1.6, c0[1] + Math.sin(an + 0.6) * rr * 1.6, c0[0] + Math.cos(an) * rr * 1.9, c0[1] + Math.sin(an) * rr * 1.9); } cx.stroke(); }   // the lace flowers
+    cx.strokeStyle = 'rgba(200,210,255,.3)'; for (var fo = 0; fo < 5; fo++) { cx.beginPath(); M(-0.07 - fo * 0.016, 0.5); Qc(-0.09 - fo * 0.03, 0.25, -0.05 - fo * 0.05, 0.0); cx.stroke(); }   // folds in the skirt
+    cx.restore();
+    // her neck and head, leaning in
+    cx.fillStyle = SKIN; cx.beginPath(); M(-0.095, 0.79); Lq(-0.062, 0.79); Lq(-0.068, 0.765); Lq(-0.1, 0.77); cx.closePath(); cx.fill();
+    cx.beginPath(); M(-0.07, 0.905); Bz(-0.04, 0.905, -0.012, 0.893, -0.006, 0.872); Lq(-0.007, 0.858); Qc(0.004, 0.846, 0.005, 0.838); Lq(-0.008, 0.832); Qc(-0.006, 0.825, -0.01, 0.82); Qc(-0.006, 0.814, -0.012, 0.808); Qc(-0.014, 0.796, -0.026, 0.792); Qc(-0.06, 0.788, -0.09, 0.805); Bz(-0.118, 0.83, -0.115, 0.895, -0.07, 0.905); cx.fill(); rim();   // her profile: forehead to theirs, nose, lips, chin
+    cx.fillStyle = 'rgba(240,0,40,0)';
+    cx.fillStyle = 'rgba(150,60,80,.75)'; cx.beginPath(); M(-0.009, 0.82); Qc(-0.004, 0.816, -0.01, 0.811); Qc(-0.006, 0.807, -0.012, 0.806); Qc(-0.014, 0.813, -0.009, 0.82); cx.fill();   // dark lips
+    cx.strokeStyle = 'rgba(40,30,40,.85)'; cx.lineWidth = Math.max(0.8, hh * 0.003); cx.beginPath(); M(-0.038, 0.858); Qc(-0.028, 0.85, -0.019, 0.857); cx.stroke(); for (var lsh = 0; lsh < 4; lsh++) { cx.beginPath(); M(-0.036 + lsh * 0.005, 0.855 - lsh * 0.0008); Lq(-0.037 + lsh * 0.005, 0.849); cx.stroke(); }   // her eye, closed, lashes
+    var hair = cx.createLinearGradient(px - hh * 0.12, base - hh * 0.92, px - hh * 0.05, base - hh * 0.78); hair.addColorStop(0, 'rgba(252,238,196,.95)'); hair.addColorStop(1, 'rgba(226,200,142,.95)'); cx.fillStyle = hair;
+    cx.beginPath(); M(-0.012, 0.888); Bz(-0.02, 0.925, -0.08, 0.93, -0.112, 0.895); Bz(-0.132, 0.86, -0.13, 0.81, -0.122, 0.78); Qc(-0.1, 0.772, -0.078, 0.78); Qc(-0.07, 0.8, -0.075, 0.82); Qc(-0.06, 0.86, -0.04, 0.874); Qc(-0.025, 0.874, -0.012, 0.888); cx.fill(); rim();   // her blonde bob, the fringe brushing her forehead
+    cx.strokeStyle = 'rgba(255,248,220,.6)'; cx.lineWidth = Math.max(0.6, hh * 0.0025); for (var hb = 0; hb < 7; hb++) { cx.beginPath(); M(-0.03 - hb * 0.012, 0.9 - hb * 0.002); Bz(-0.07 - hb * 0.006, 0.925, -0.12, 0.88 - hb * 0.004, -0.115 + hb * 0.004, 0.79 + hb * 0.002); cx.stroke(); }   // strands catching the moonlight
+    // her arm: a hand on their chest
+    cx.strokeStyle = SKIN; cx.lineWidth = hh * 0.024; cx.beginPath(); M(-0.112, 0.735); Qc(-0.07, 0.62, 0.0, 0.69); cx.stroke(); cx.fillStyle = SKIN; var hn = P(0.01, 0.7); cx.beginPath(); cx.ellipse(hn[0], hn[1], hh * 0.016, hh * 0.011, -0.4, 0, 7); cx.fill();
+    // their arm around her waist
+    cx.strokeStyle = 'rgba(62,72,108,.95)'; cx.lineWidth = hh * 0.03; cx.beginPath(); M(0.05, 0.75); Qc(0.0, 0.57, -0.095, 0.575); cx.stroke(); cx.strokeStyle = 'rgba(230,242,255,.5)'; cx.lineWidth = Math.max(1, hh * 0.003); cx.beginPath(); M(0.05, 0.765); Qc(0.0, 0.59, -0.095, 0.59); cx.stroke();
+    cx.fillStyle = SKIN; var hw = P(-0.11, 0.575); cx.beginPath(); cx.ellipse(hw[0], hw[1], hh * 0.017, hh * 0.012, 0.3, 0, 7); cx.fill();   // their hand on her back
     cx.restore();
     if (dis > 0 && dis < 1) {   // dissolving: a drift of little lights rising away
-      for (var i = 0; i < 40; i++) { var ox = (hsh(i) - 0.5) * hh * 0.5, oy = -hsh(i + 9) * hh * 0.95, rise = dis * hh * (0.4 + hsh(i + 3) * 0.8); cx.fillStyle = 'rgba(225,240,255,' + (0.8 * (1 - dis)) + ')'; cx.beginPath(); cx.arc(px + ox + Math.sin(dis * 6 + i) * hh * 0.05, base + oy - rise, H * 0.003 * (1 + hsh(i + 5)), 0, 7); cx.fill(); }
+      for (var i = 0; i < 70; i++) { var ox = (hsh(i) - 0.55) * hh * 0.35, oy = -hsh(i + 9) * hh * 0.95, rise = dis * hh * (0.3 + hsh(i + 3) * 0.9); cx.fillStyle = 'rgba(225,240,255,' + (0.85 * (1 - dis)) + ')'; cx.beginPath(); cx.arc(px + ox + Math.sin(dis * 6 + i) * hh * 0.05, base + oy - rise, H * 0.003 * (1 + hsh(i + 5)), 0, 7); cx.fill(); }
     }
   }
   function drawGraveyard(x0, x1) {
@@ -489,23 +545,23 @@
     cx.beginPath(); cx.moveTo(L0, ly); for (X = g0; X <= x1; X += 0.02) cx.lineTo(sx(X), ly - H * (0.04 + 0.03 * Math.sin(X * 1.7) + 0.015 * Math.sin(X * 4.1))); cx.lineTo(L1, ly); cx.closePath(); cx.fill();
     var wg = cx.createLinearGradient(0, ly, 0, H); wg.addColorStop(0, '#1b2b5e'); wg.addColorStop(1, '#0a1230'); cx.fillStyle = wg; cx.fillRect(L0, ly, L1 - L0, H - ly);   // the lake
     var mx = W * 0.8; if (mx > L0) { for (var k = 0; k < 14; k++) { var yy = ly + H * 0.012 * (k + 1) * 1.3, w2 = H * (0.05 - k * 0.0025) * (0.8 + 0.2 * Math.sin(t * 2 + k)); cx.fillStyle = 'rgba(255,248,225,' + (0.35 - k * 0.022) + ')'; cx.fillRect(mx - w2 / 2 + Math.sin(t * 1.3 + k * 2) * 4, yy, w2, 1.6); } }   // the moon on the water
-    for (var q = Math.floor(g0 / 1.1) - 1; q * 1.1 < x1 + 0.5; q++) { var qx = q * 1.1 + hsh(q) * 0.5; if (qx < GRAVE_X + 0.3 || Math.abs(qx - FLOWER_X) < 0.5) continue; willow(sx(qx), sy(cen(qx) + half(qx) + 0.05), H * (0.3 + hsh(q + 7) * 0.1), false); }   // weeping willows along the shore
+    for (var q = Math.floor(g0 / 1.1) - 1; q * 1.1 < x1 + 0.5; q++) { var qx = q * 1.1 + hsh(q) * 0.5; if (qx < GRAVE_X + 0.3 || (SPOT_C > 0 && Math.abs(qx - SPOT_C) < 1.3)) continue; willow(sx(qx), sy(groundTop(qx) + 0.05), H * (0.3 + hsh(q + 7) * 0.1), false); }   // weeping willows along the shore
     // the meadow: grass, and flowers along its edge
     cx.beginPath(); cx.moveTo(L0, H); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.lineTo(L1, H); cx.closePath(); cx.fillStyle = '#06140f'; cx.fill();
     cx.beginPath(); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.strokeStyle = 'rgba(150,230,190,.35)'; cx.lineWidth = 1.5; cx.stroke();
-    for (var kf = Math.floor(g0 / 0.035); kf * 0.035 < x1; kf++) { if (hsh(kf + 11) >= 0.55) continue; var fx2 = (kf + 0.5) * 0.035, fy = sy(cen(fx2) + half(fx2)), fp = sx(fx2), fr = H * 0.008;
+    for (var kf = Math.floor(g0 / 0.035); kf * 0.035 < x1; kf++) { if (hsh(kf + 11) >= 0.55) continue; var fx2 = (kf + 0.5) * 0.035, fy = sy(groundTop(fx2)), fp = sx(fx2), fr = H * 0.008;
       cx.strokeStyle = '#1f5a3a'; cx.lineWidth = 1.2; cx.beginPath(); cx.moveTo(fp, fy); cx.lineTo(fp, fy + H * 0.03); cx.stroke();
       cx.fillStyle = FLOWERCOLS[Math.floor(hsh(kf + 3) * FLOWERCOLS.length)]; for (var pt = 0; pt < 5; pt++) { var an = pt / 5 * 6.283 + kf; cx.beginPath(); cx.arc(fp + Math.cos(an) * fr * 0.8, fy + Math.sin(an) * fr * 0.8, fr * 0.6, 0, 7); cx.fill(); } cx.fillStyle = '#ffcf4a'; cx.beginPath(); cx.arc(fp, fy, fr * 0.4, 0, 7); cx.fill(); }
-    // the reminder of her love, where the rose grows
-    if (FLOWER_X > 0 && FLOWER_X > x0 - 0.6 && FLOWER_X < x1 + 0.6) {
-      var by = sy(FLOWER_Y) + H * 0.01, bxp = sx(FLOWER_X - 0.16), bw2 = H * 0.11;
-      willow(sx(FLOWER_X + 0.2), sy(FLOWER_Y + 0.05), H * 0.42, true);
-      cx.fillStyle = '#2a1d16'; cx.fillRect(bxp - bw2 / 2, by - H * 0.03, bw2, H * 0.008); cx.fillRect(bxp - bw2 / 2, by - H * 0.055, bw2, H * 0.006); cx.fillRect(bxp - bw2 / 2, by - H * 0.042, bw2, H * 0.006);   // an empty bench by the water
-      cx.fillRect(bxp - bw2 * 0.45, by - H * 0.03, H * 0.006, H * 0.03); cx.fillRect(bxp + bw2 * 0.45 - H * 0.006, by - H * 0.03, H * 0.006, H * 0.03);
-      var cf = 0.85 + 0.15 * Math.sin(t * 9), cxp = bxp + bw2 * 0.3, cyp = by - H * 0.03; var cg = cx.createRadialGradient(cxp, cyp - H * 0.02, 0, cxp, cyp - H * 0.02, H * 0.08); cg.addColorStop(0, 'rgba(255,200,120,' + (0.5 * cf) + ')'); cg.addColorStop(1, 'rgba(255,200,120,0)'); cx.fillStyle = cg; cx.beginPath(); cx.arc(cxp, cyp - H * 0.02, H * 0.08, 0, 7); cx.fill();
-      cx.fillStyle = '#efe6d6'; cx.fillRect(cxp - H * 0.004, cyp - H * 0.018, H * 0.008, H * 0.018); cx.fillStyle = '#fff1c0'; cx.beginPath(); cx.ellipse(cxp, cyp - H * 0.023, H * 0.0025, H * 0.005 * cf, 0, 0, 7); cx.fill();   // a candle on it
-      drawGhosts(sx(FLOWER_X - 0.035), sy(FLOWER_Y) + H * 0.012);
-      if (t < PICK_T) drawRose(sx(FLOWER_X), sy(FLOWER_Y) - 2, H * 0.06, 0.7 + 0.3 * Math.sin(t * 3));   // the one red rose
+    // their favourite spot
+    if (SPOT_C > 0 && SPOT_C > x0 - 1.5 && SPOT_C < x1 + 1.5) {
+      drawLake2(); drawTree();
+      var by = sy(GY) + H * 0.004, bxp = sx(SPOT_C - 0.6), bw2 = H * 0.13;
+      cx.fillStyle = '#2a1d16'; cx.fillRect(bxp - bw2 / 2, by - H * 0.035, bw2, H * 0.009); cx.fillRect(bxp - bw2 / 2, by - H * 0.065, bw2, H * 0.007); cx.fillRect(bxp - bw2 / 2, by - H * 0.05, bw2, H * 0.007);   // an empty bench by the water
+      cx.fillRect(bxp - bw2 * 0.45, by - H * 0.035, H * 0.007, H * 0.035); cx.fillRect(bxp + bw2 * 0.45 - H * 0.007, by - H * 0.035, H * 0.007, H * 0.035);
+      var cf = 0.85 + 0.15 * Math.sin(t * 9), cxp = bxp + bw2 * 0.3, cyp = by - H * 0.035; var cg = cx.createRadialGradient(cxp, cyp - H * 0.02, 0, cxp, cyp - H * 0.02, H * 0.09); cg.addColorStop(0, 'rgba(255,200,120,' + (0.5 * cf) + ')'); cg.addColorStop(1, 'rgba(255,200,120,0)'); cx.fillStyle = cg; cx.beginPath(); cx.arc(cxp, cyp - H * 0.02, H * 0.09, 0, 7); cx.fill();
+      cx.fillStyle = '#efe6d6'; cx.fillRect(cxp - H * 0.004, cyp - H * 0.02, H * 0.008, H * 0.02); cx.fillStyle = '#fff1c0'; cx.beginPath(); cx.ellipse(cxp, cyp - H * 0.026, H * 0.0028, H * 0.006 * cf, 0, 0, 7); cx.fill();   // a candle on it
+      drawLovers(sx(SPOT_C - 0.08), sy(GY) + H * 0.004);
+      if (t < PICK_T) drawRose(sx(FLOWER_X), sy(FLOWER_Y), H * 0.06, 0.7 + 0.3 * Math.sin(t * 3));   // the one red rose
     }
   }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
@@ -533,6 +589,15 @@
     return null;
   }
   function birdPos(b) {   // where a bird is: at the take-off the lone bird goes up off the ridge; the others rise straight up from behind the house first, then out into the flock
+    if (SPOT_C > 0 && t >= APP_T && t < PICK_T + 2.4 && b.capt) {   // their favourite spot: glide into the tree, sit; the lone bird hops down for the rose; then all away
+      var ez2 = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); }, pp = perch(b), from = pp;
+      if (t < LAND_T) { var la = (t - APP_T) / (LAND_T - APP_T), le = ez2(la); return { X: b.ax + (pp.x - b.ax) * le, y: b.ay + (pp.y - b.ay) * le - Math.sin(Math.PI * la) * 0.05, L: 1, home: Math.min(0.99, la) }; }
+      var rp = { x: FLOWER_X - 0.04, y: GY - 0.03 };
+      if (b.lead && t >= PICK_T - 1.2) { var hg = Math.max(0, Math.min(1, (t - PICK_T + 1.2) / 0.8)), he2 = ez2(hg); from = { x: pp.x + (rp.x - pp.x) * he2, y: pp.y + (rp.y - pp.y) * he2 - Math.sin(Math.PI * hg) * 0.05 }; if (t < PICK_T + 0.6) return { X: from.x, y: from.y, L: 1, home: hg < 1 ? 0.6 : 1 }; }
+      if (t < PICK_T + 0.6) return { X: pp.x, y: pp.y, L: 1, home: 1 };
+      var ta = Math.max(0, Math.min(1, (t - PICK_T - 0.6) / 1.8)), te = ez2(ta);
+      return { X: from.x + (cam + bx(b) - from.x) * te, y: from.y + (b.y - from.y) * te - Math.sin(Math.PI * ta) * 0.04, L: 1, home: 0.6 };
+    }
     if (t >= HOME_T) {   // home again: the lone bird brings the flower to her sill, the flock settles on the roof
       var i = birds.indexOf(b), k = b.lead ? 0 : i + 1, a0 = HOME_T + (b.lead ? 0.4 : 1 + k * 0.3), du = b.lead ? 3.4 : 3.2, ha = Math.max(0, Math.min(1, (t - a0) / du)), he = 1 - Math.pow(1 - ha, 2.2);
       var others = birds.filter(function (o) { return !o.lead; }), j = others.indexOf(b), dx = b.lead ? WIN.x1 - 0.02 : 0.2 + (others.length > 1 ? j / (others.length - 1) : 0.5) * 0.66, dy = b.lead ? WIN.y1 - 0.021 : ROOF_Y - 0.02;
@@ -654,6 +719,12 @@
     });
     // the birds (the ones still rising from behind the house were drawn before it)
     birds.forEach(function (b) { if (!behind(b)) drawBird(b); });
+    var wi = t >= FAST_T - 0.5 && t < STOP_T ? Math.max(0, (spd(t) - 1) / (FASTX - 1)) : 0;   // the wind: streaks rushing past and leaves torn along, the faster the more
+    if (wi > 0.02) { cx.save(); cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.lineCap = 'round';
+      for (var wl = 0; wl < Math.round(46 * wi); wl++) { var wy = hsh(wl + 200) * H, wsp = W * (1.6 + hsh(wl + 300) * 1.4), wx = W * 1.2 - ((t * wsp + hsh(wl + 400) * W * 3) % (W * 1.5)), wlen = H * (0.08 + hsh(wl + 500) * 0.16) * (0.6 + wi);
+        var wg = cx.createLinearGradient(wx, 0, wx + wlen, 0); wg.addColorStop(0, 'rgba(210,225,255,0)'); wg.addColorStop(1, 'rgba(210,225,255,' + (0.12 + 0.2 * hsh(wl + 600)) * wi + ')'); cx.strokeStyle = wg; cx.lineWidth = 1 + hsh(wl + 700) * 1.6; cx.beginPath(); cx.moveTo(wx, wy); cx.lineTo(wx + wlen, wy + Math.sin(t * 3 + wl) * 3); cx.stroke(); }
+      for (var lf = 0; lf < Math.round(14 * wi); lf++) { var lsp = W * (1.1 + hsh(lf + 800) * 0.9), lx2 = W * 1.1 - ((t * lsp + hsh(lf + 900) * W * 2) % (W * 1.3)), ly2 = hsh(lf + 950) * H + Math.sin(t * 4 + lf) * H * 0.03; cx.save(); cx.translate(lx2, ly2); cx.rotate(t * (4 + lf % 5) + lf); cx.fillStyle = 'rgba(20,40,30,.85)'; cx.beginPath(); cx.ellipse(0, 0, H * 0.009, H * 0.004, 0, 0, 7); cx.fill(); cx.restore(); }
+      cx.restore(); }
     var fa = t >= PICK_T + 2.4 && t < HOME_T ? (t - PICK_T - 2.4) / (HOME_T - PICK_T - 2.4) : t >= HOME_T && t < HOME_T + 1.4 ? 1 - (t - HOME_T) / 1.4 : 0;
     if (fa > 0) { cx.save(); cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.fillStyle = 'rgba(2,3,10,' + fa + ')'; cx.fillRect(0, 0, W, H); cx.restore(); }   // (a fade to black: and we're home)
     parts.forEach(function (p) { cx.save(); cx.globalAlpha = Math.max(0, 1 - p.t / 1.6); cx.translate(sx(p.x), sy(p.y)); cx.rotate(p.r); cx.fillStyle = '#1c1c28'; cx.strokeStyle = p.col; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(0, 0, 7, 2.5, 0, 0, 7); cx.fill(); cx.stroke(); cx.restore(); });
@@ -664,9 +735,10 @@
   function hud() {
     $('tbar').style.width = Math.min(100, t / DUR * 100) + '%';
     var k = birds.map(function (b) { return b.feathers + (b.manual ? 'm' : '') + (b.out ? 'o' : '') + (t >= b.colT ? 'r' : ''); }).join(',');
-    if (k !== sideKey) { sideKey = k; $('side').innerHTML = birds.slice().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out || !b.feathers ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
+    if (k !== sideKey) { sideKey = k; $('side').innerHTML = players().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out || !b.feathers ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
     var bn = $('banner'), txt = '', cls = '';
-    if (t >= SOAR_T) { txt = t < SOAR_T + 3 ? '🐦‍⬛ Soar!' : t >= PICK_T - 2.6 && t < PICK_T + 1.5 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
+    if (t >= SOAR_T) { txt = t >= LAND_T - 0.6 && t < LAND_T + 4 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
+    else if (t >= FAST_T - 0.5 && t < FAST_T + 2.5 && !me.manual) { txt = '💨 Faster! Follow the blackbird…'; cls = 'warn'; }
     else if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
@@ -693,15 +765,15 @@
     requestAnimationFrame(frame);
   }
   function finish() {
-    ended = true; running = false; ytStop();
-    var rows = birds.slice().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; });
+    ended = true; running = false; ytStop(); windLevel(0);
+    var rows = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; });
     $('endt').textContent = rows[0].human ? '🏆 You win!' : '🏆 ' + rows[0].name + ' wins';
     $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (i === 0 ? 'top' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + '</span><span>' + (b.feathers ? '🪶'.repeat(b.feathers) : '🌿') + '</span><span style="color:var(--mute);min-width:6em;text-align:right">' + b.clean.toFixed(1) + 's clean</span></li>'; }).join('');
     $('end').classList.remove('hidden');
   }
   function start(music) {
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
-    t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; pending = []; parts = []; ended = false; sideKey = '';
+    t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; SPOT_C = -99; pending = []; parts = []; ended = false; sideKey = '';
     makeBirds(+$('nbots').value || 5); makeCourse(); nextPick = PRACT0;
     audioOn(); flockPlayed = false; musicWant = !!music; if (music) ytPrime();
     running = true; last = performance.now(); requestAnimationFrame(frame);
@@ -720,6 +792,13 @@
   // ---------- the sound of the flock taking off: dozens of wing beats (filtered noise, fluttering) and a few calls ----------
   var actx = null, flockPlayed = false;
   function audioOn() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+  var windG = null;
+  function windLevel(v) {
+    if (!actx) return;
+    if (!windG) { if (v <= 0) return; var a = actx, sr = a.sampleRate, buf = a.createBuffer(1, sr * 2, sr), d = buf.getChannelData(0), last = 0; for (var i = 0; i < d.length; i++) { last = last * 0.97 + (Math.random() * 2 - 1) * 0.03; d[i] = last * 6; }
+      var src = a.createBufferSource(); src.buffer = buf; src.loop = true; var bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.6; windG = a.createGain(); windG.gain.value = 0; src.connect(bp); bp.connect(windG); windG.connect(a.destination); src.start(); windG.bp = bp; }
+    windG.gain.setTargetAtTime(v * 0.5, actx.currentTime, 0.25); windG.bp.frequency.setTargetAtTime(380 + v * 300, actx.currentTime, 0.3);
+  }
   function flockSound() {
     if (!actx) return; var a = actx, now = a.currentTime, len = 2.5, sr = a.sampleRate;
     var buf = a.createBuffer(1, Math.floor(sr * len), sr), d = buf.getChannelData(0);
