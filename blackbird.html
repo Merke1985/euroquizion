@@ -331,7 +331,7 @@
   }
   var smileA = 0;
   function drawSinger0(X0, Y0, Wd, Hd) {
-    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.sin(t * 3.1) * 0.4 + Math.sin(t * 1.3) * 0.35) * (1 - 0.7 * smileA) * Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 10)) / 0.4));   // (her lips stay closed until she starts singing at 0:10 in the song)   // (singing softly)
+    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.sin(t * 3.1) * 0.4 + Math.sin(t * 1.3) * 0.35) * (1 - 0.7 * smileA) * Math.max(0, Math.min(1, (t - (MUSIC - SONG0 + 10)) / 0.4)) * (t < HOME_T ? 1 : Math.max(0, Math.min(1, (t - HOME_T - 15) / 0.4, (HOME_T + 20.9 - t) / 0.4)));   // (her lips stay closed until she starts singing at 0:10; at the end she only sings while the tear runs down)   // (singing softly)
     var M = function (u, v) { var q = P(u + sw, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u + sw, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var a = P(cu + sw, cv), b = P(u + sw, v); cx.quadraticCurveTo(a[0], a[1], b[0], b[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var p1 = P(a1 + sw, b1), p2 = P(a2 + sw, b2), p3 = P(u + sw, v); cx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); };
     // the hair behind her head
     var hg = cx.createLinearGradient(X0, Y0 + Hd * 0.12, X0, Y0 + Hd * 0.62); hg.addColorStop(0, '#f6e6b8'); hg.addColorStop(0.6, '#e2c98e'); hg.addColorStop(1, '#c9ab6c'); cx.fillStyle = hg;
@@ -611,6 +611,27 @@
       if (t < PICK_T) drawRose(sx(FLOWER_X), sy(FLOWER_Y), H * 0.06, 0.7 + 0.3 * Math.sin(t * 3));   // the one red rose
     }
   }
+  /* Dripstone: a lumpy limestone spike, lit from one side, with a few smaller drips beside it, faint growth bands and now
+     and then a falling drop. dir = 1 hanging down (stalactite), -1 rising up (stalagmite). The glow marks the danger. */
+  function dripShape(px, base, tip, w0, sd) {
+    cx.beginPath(); var n = 14, i, s, w, y;
+    for (i = 0; i <= n; i++) { s = i / n; w = w0 * Math.pow(1 - s, 1.25) * (1 + 0.16 * Math.sin(s * 19 + sd * 7) + 0.08 * Math.sin(s * 41 + sd * 3)); y = base + (tip - base) * s; if (i === 0) cx.moveTo(px - w, y); else cx.lineTo(px - w * 0.98, y); }
+    for (i = n; i >= 0; i--) { s = i / n; w = w0 * Math.pow(1 - s, 1.25) * (1 + 0.14 * Math.sin(s * 23 + sd * 5 + 1) + 0.07 * Math.sin(s * 37 + sd)); y = base + (tip - base) * s; cx.lineTo(px + w, y); }
+    cx.closePath();
+  }
+  function stoneFill(px, w0, dim) { var g = cx.createLinearGradient(px - w0, 0, px + w0, 0); g.addColorStop(0, 'rgba(70,56,42,' + dim + ')'); g.addColorStop(0.3, 'rgba(176,150,112,' + dim + ')'); g.addColorStop(0.55, 'rgba(128,104,78,' + dim + ')'); g.addColorStop(1, 'rgba(40,32,26,' + dim + ')'); return g; }
+  function drawDrip(px, base, tip, dir, sd) {
+    var w0 = H * 0.036, len = tip - base;
+    for (var j = 0; j < 3; j++) { var hs = hsh(sd * 10 + j), side = j % 2 ? 1 : -1, ox = side * w0 * (1.1 + 0.6 * hs), l2 = len * (0.22 + 0.3 * hsh(sd * 7 + j)), ww = w0 * (0.32 + 0.2 * hs);   // the smaller drips around it
+      dripShape(px + ox, base, base + l2, ww, sd + j); cx.fillStyle = stoneFill(px + ox, ww, 0.8); cx.fill(); }
+    dripShape(px, base, tip, w0, sd); cx.fillStyle = stoneFill(px, w0, 1); cx.fill();   // the main spike
+    cx.save(); dripShape(px, base, tip, w0, sd); cx.clip();
+    cx.strokeStyle = 'rgba(235,215,175,.22)'; cx.lineWidth = Math.max(1, w0 * 0.12); cx.beginPath(); cx.moveTo(px - w0 * 0.35, base); cx.quadraticCurveTo(px - w0 * 0.25, base + len * 0.5, px - w0 * 0.04, tip); cx.stroke();   // a wet highlight
+    cx.strokeStyle = 'rgba(40,30,22,.35)'; cx.lineWidth = 1; for (var k = 1; k <= 5; k++) { var yy = base + len * k / 6, hw = w0 * (1 - k / 6) * 1.1; cx.beginPath(); cx.moveTo(px - hw, yy); cx.quadraticCurveTo(px, yy + dir * H * 0.007, px + hw, yy); cx.stroke(); }   // growth bands
+    cx.restore();
+    cx.save(); cx.shadowColor = 'rgba(185,80,255,.85)'; cx.shadowBlur = H * 0.014; cx.strokeStyle = 'rgba(205,125,255,.7)'; cx.lineWidth = 2; dripShape(px, base, tip, w0, sd); cx.stroke(); cx.restore();   // the glow: this one hurts
+    if (dir > 0) { var dp = ((t * 0.55 + sd * 3) % 1); if (dp < 0.6) { var dy = tip + dp * dp * H * 0.35; cx.fillStyle = 'rgba(190,220,255,' + (0.7 * (1 - dp / 0.6)) + ')'; cx.beginPath(); cx.ellipse(px, dy, H * 0.0035, H * 0.006, 0, 0, 7); cx.fill(); } }   // now and then a drop falls
+  }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
     var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
     if (side < 0) return e - 0.018 * (Math.abs(Math.sin(X * 6.3)) + 0.6 * Math.abs(Math.sin(X * 11.7 + 2)));
@@ -781,10 +802,7 @@
            // (the danger point)
         return;
       }
-      var sw3 = H * 0.034, rk = function () { cx.beginPath(); cx.moveTo(px - sw3, base); cx.quadraticCurveTo(px - sw3 * 0.55, (base + tip) / 2, px - sw3 * 0.08, tip - dir * H * 0.008); cx.quadraticCurveTo(px, tip + dir * H * 0.004, px + sw3 * 0.08, tip - dir * H * 0.008); cx.quadraticCurveTo(px + sw3 * 0.6, (base + tip) / 2, px + sw3 * 1.05, base); cx.closePath(); };   // a stalactite (from the roof of the cave) or a stalagmite (from its floor): a tapering spike of rock
-      rk(); var rg = cx.createLinearGradient(px - sw3, 0, px + sw3, 0); rg.addColorStop(0, '#0b0a14'); rg.addColorStop(0.45, '#1c1a2a'); rg.addColorStop(1, '#07060c'); cx.fillStyle = rg; cx.fill();
-      cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineWidth = 2.5; rk(); cx.stroke(); cx.restore();   // outlined in glowing purple
-      cx.strokeStyle = 'rgba(160,150,200,.18)'; cx.lineWidth = 1; for (var k = 1; k <= 4; k++) { var yy = base + (tip - base) * (k / 5), hw = sw3 * (1 - k / 5) * 0.8; cx.beginPath(); cx.moveTo(px - hw, yy); cx.quadraticCurveTo(px, yy + dir * H * 0.006, px + hw, yy); cx.stroke(); }   // rings of dripstone
+      drawDrip(px, base, tip, dir, r.tw);   // a stalactite (from the roof of the cave) or a stalagmite (from its floor), like real dripstone
          // (the danger point)
     });
     // the birds (the ones still rising from behind the house were drawn before it)
