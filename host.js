@@ -1592,6 +1592,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     if (kind === 'sv' && !REMOTE) { svAll(); return; }   // (the presenters explain it on the stage itself)
     if (kind === 'rule' && !REMOTE) { ruAll(); return; }
     if (kind === 'zg' && !REMOTE) { zgAll(); return; }
+    if (kind === 'bb' && !REMOTE) { bbStage(); return; }   // (the presenters, on their own stage, already in their autumn coats)
     if (kind === 'fake' && !REMOTE) { fkIntro(starts[kind]); return; }   // (the presenters explain it in the press room itself)   // (the presenters explain it in space, above the planet)   // (the presenters explain it in front of the organ itself)   // (the presenters welcome everyone on the carpet itself)
     if (SCENES[kind] && !REMOTE) { hostScene(kind, starts[kind]); return; }   // the presenters set the scene and explain the game   // the Green Room: the presenters take us there first
     funIntro(kind, starts[kind], 8000);   // long enough to read what the minigame asks of you
@@ -3164,24 +3165,24 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
 
   // The presenters in their autumn coats (for Blackbird, the walk into the forest): him in a long navy wool coat with a
   // red scarf, her in a long plum coat with a mustard scarf, the same as in the forest itself
-  var HOST_HIM_AUT = HOST_HIM.replace('<rect x="91" y="116"',
+  var HOST_HIM_AUT = '', HOST_HER_AUT = '', COAT_HIM = ''.concat(
     '<defs><linearGradient id="ehcoat1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#33408a"/><stop offset=".6" stop-color="#1f2a5e"/><stop offset="1" stop-color="#141c44"/></linearGradient></defs>' +
     '<path d="M46 150 Q100 130 154 150 L162 362 Q100 374 38 362 Z" fill="url(#ehcoat1)"/><path d="M100 150 L100 366" stroke="#121a40" stroke-width="2"/>' +
     '<path d="M84 140 L70 152 L84 196 L100 156 Z M116 140 L130 152 L116 196 L100 156 Z" fill="#2a3577"/><path d="M71 153 L84 194 M129 153 L116 194" stroke="rgba(255,255,255,.15)" stroke-width="1.4"/>' +
     '<circle cx="93" cy="214" r="3" fill="#0e1430"/><circle cx="93" cy="250" r="3" fill="#0e1430"/><circle cx="93" cy="286" r="3" fill="#0e1430"/><path d="M58 254 L80 252 M142 254 L120 252" stroke="#141c44" stroke-width="2.5"/>' +
     '<path d="M46 152 Q30 205 38 268 L60 268 Q58 212 68 170 Z" fill="url(#ehcoat1)"/><path d="M38 262 L60 262" stroke="#141c44" stroke-width="2"/><circle cx="50" cy="274" r="9" fill="url(#ehskin)"/>' +
     '<path d="M152 152 Q170 188 164 234 L146 238 Q150 200 138 172 Z" fill="url(#ehcoat1)"/><circle cx="154" cy="240" r="8.5" fill="url(#ehskin)"/>' +
-    '<rect x="91" y="116"').replace('</svg>',
-    '<path d="M78 140 Q100 152 122 140 L122 149 Q100 161 78 149 Z" fill="#d81e45"/><path d="M106 150 L114 150 L118 206 L106 208 Z" fill="#c0163b"/><path d="M107 196 L117 195 M107 202 L118 201" stroke="#ff7a90" stroke-width="1.6"/><path d="M82 143 Q100 152 118 143" stroke="rgba(255,255,255,.25)" stroke-width="1.4" fill="none"/></svg>');
-  var HOST_HER_AUT = HOST_HER.replace('<rect x="93" y="116"',
+    ''), SCARF_HIM = ''.concat(
+    '<path d="M78 140 Q100 152 122 140 L122 149 Q100 161 78 149 Z" fill="#d81e45"/><path d="M106 150 L114 150 L118 206 L106 208 Z" fill="#c0163b"/><path d="M107 196 L117 195 M107 202 L118 201" stroke="#ff7a90" stroke-width="1.6"/><path d="M82 143 Q100 152 118 143" stroke="rgba(255,255,255,.25)" stroke-width="1.4" fill="none"/>');
+  var COAT_HER = ''.concat(
     '<defs><linearGradient id="ehcoat2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c24a98"/><stop offset=".6" stop-color="#9a2a74"/><stop offset="1" stop-color="#6e1a54"/></linearGradient></defs>' +
     '<path d="M64 150 Q100 134 136 150 L152 364 Q100 378 48 364 Z" fill="url(#ehcoat2)"/><path d="M100 160 L100 366" stroke="#6e1a54" stroke-width="2"/>' +
     '<path d="M86 140 L72 152 L88 196 L100 160 Z M114 140 L128 152 L112 196 L100 160 Z" fill="#b23c8a"/>' +
     '<path d="M60 230 Q100 242 140 230 L141 240 Q100 252 59 240 Z" fill="#7e1f60"/><path d="M96 236 Q88 252 92 268 M104 236 Q112 252 108 270" stroke="#7e1f60" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="100" cy="238" rx="6" ry="5" fill="#7e1f60"/>' +
     '<g class="earm"><path d="M64 152 Q50 198 56 240 L74 240 Q74 202 82 162 Z" fill="url(#ehcoat2)"/><circle cx="65" cy="246" r="8" fill="url(#ehskin2)"/></g>' +
     '<path d="M134 152 Q152 182 150 220 L134 222 Q136 194 120 166 Z" fill="url(#ehcoat2)"/><circle cx="141" cy="225" r="7.5" fill="url(#ehskin2)"/>' +
-    '<rect x="93" y="116"').replace('</svg>',
-    '<path d="M80 139 Q100 151 120 139 L120 148 Q100 160 80 148 Z" fill="#e8b84a"/><path d="M84 148 L92 149 L88 210 L78 208 Z" fill="#d9a63a"/><path d="M80 198 L89 199 M79 204 L88 205" stroke="#fff0b0" stroke-width="1.5"/></svg>');
+    ''), SCARF_HER = ''.concat(
+    '<path d="M80 139 Q100 151 120 139 L120 148 Q100 160 80 148 Z" fill="#e8b84a"/><path d="M84 148 L92 149 L88 210 L78 208 Z" fill="#d9a63a"/><path d="M80 198 L89 199 M79 204 L88 205" stroke="#fff0b0" stroke-width="1.5"/>');
   // The presenters walk wherever they move across the screen (in every game): while a host slides sideways, the side view
   // shows, facing the way they go, legs and arms swinging; once they stand still, the front view is back
   (function () {
@@ -5386,9 +5387,6 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
         ['her', 'Everyone else sees the word on their phone, and writes ONE word as a clue. All at the same time!'],
         ['him', 'But careful: clues that are the same cancel each other out! So be clever… and different.'],
         ['her', 'A right guess: 12 points for the guesser, and 6 for every clue that survived. Everyone gets a turn to guess!']] },
-    bb: { sign: '🐦‍⬛ Blackbird', theme: 'bb', autumn: true, art: '',
-      lines: [['her', 'Tonight we have something different to show you… 🍂'],
-        ['him', 'Please follow us into the forest. 🌲']] },
     zg: { sign: '🌌 Zero Gravity', theme: 'zg',
       get art() { return '<div class="hszg">' + ZG_SINGER + '</div>'; },
       lines: [['him', 'Welcome to space, Europe! 🌌 Up here, there’s no gravity at all…'],
@@ -6328,6 +6326,21 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // The whole game runs in blackbird.html, full-screen on top of the host; the phones open its controller (bbpad.html)
   // by themselves. When it's over it tells us who won: they get the party-game points, and so a trip to the boutique.
   var bbSafe = null;
+  function bbDress(aut) {   // the presenters on the studio stage: in their autumn coats, or back in their show outfits
+    var h = hostsEl(); if (!h) return; var him = h.querySelector('.ehost.him'), her = h.querySelector('.ehost.her'); if (!him || !her || him.classList.contains('aut') === !!aut) return;
+    him.outerHTML = aut ? HOST_HIM_AUT : HOST_HIM; her.outerHTML = aut ? HOST_HER_AUT : HOST_HER;
+  }
+  function bbStage() {
+    stopTimers(); G.q = null; G.best = null; try { yt.pauseVideo(); } catch (e) {} G.phase = 'loading'; cover(true, '', '', false); masks(true); $('cover').classList.add('funcard'); push();
+    bbDress(true); hostHold = true; clearTimeout(hostT.away);
+    var h = hostsEl(); if (h && h.classList.contains('away')) { h.classList.remove('away'); Music.woosh(); }
+    var l1 = 'Tonight we have something different to show you… 🍂', l2 = 'Please follow us into the forest. 🌲';
+    var g1 = Math.max(Array.from(l1).length * TALK_MS + 1800, voiceMs('her', l1) + 500), g2 = Math.max(Array.from(l2).length * TALK_MS + 2200, voiceMs('him', l2) + 600);
+    setTimeout(function () { hostSay('her', l1, g1 - 200); }, 1000);
+    setTimeout(function () { hostSay('him', l2, g2); }, 1000 + g1);
+    setTimeout(function () { hostHold = false; var hh = hostsEl(); if (hh) { [].forEach.call(hh.querySelectorAll('.hbub'), function (x) { x.classList.remove('on'); }); hh.classList.add('away'); Music.woosh(); } }, 1000 + g1 + g2);   // (and off they go…)
+    setTimeout(function () { if (G.phase === 'loading' && G.mode === 'bb') bbAll(); }, 1000 + g1 + g2 + 1300);   // (…into the forest)
+  }
   function bbAll() {
     var act = list().filter(function (p) { return !p.off; }); if (!act.length) { quipAll(); return; }
     var isBot = function (p) { return p.bot || String(p.pid).indexOf('bot') === 0; }, hum = act.filter(function (p) { return !isBot(p); }), bt = act.filter(isBot);
@@ -6347,7 +6360,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     clearTimeout(bbSafe); if (G.phase !== 'bb' || !G.bb) return;
     var big = 12; (wins || []).forEach(function (k) { var p = players[k]; if (p) { p.score += big; p.pts = big; p.got = true; } });
     var ov = $('bbov'); if (ov) { ov.style.opacity = '0'; setTimeout(function () { ov.remove(); }, 1300); }
-    G.bb = null; startRound();
+    G.bb = null; setTimeout(function () { bbDress(false); }, 1400); startRound();   /* (back in their show outfits) */
   }
   window.addEventListener('message', function (e) { var d = e.data; if (d && d.type === 'bb-done' && G.bb && d.id === G.bb.id) bbEnd(d.win); });
   // ---------- Zero Gravity ----------
@@ -9302,7 +9315,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     var defs = '', strip = function (str) { return str.replace(/<defs>([\s\S]*?)<\/defs>/g, function (m, d) { defs += d; return ''; }); };
     HOST_HIM = strip(HOST_HIM); HOST_HER = strip(HOST_HER);
     HOST_HIM = HOST_HIM.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HIM_SIDE + HOST_HIM_BACK + '</svg>'; });   // (front and side view in one drawing: the side view while walking)
-    HOST_HER = HOST_HER.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HER_SIDE + HOST_HER_BACK + '</svg>'; }); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
+    HOST_HER = HOST_HER.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HER_SIDE + HOST_HER_BACK + '</svg>'; });
+    HOST_HIM_AUT = strip(HOST_HIM.replace('class="ehost him"', 'class="ehost him aut"').replace('<rect x="91" y="116"', COAT_HIM + '<rect x="91" y="116"').replace('</g>' + HOST_HIM_SIDE, SCARF_HIM + '</g>' + HOST_HIM_SIDE));   // (in their autumn coats, for Blackbird)
+    HOST_HER_AUT = strip(HOST_HER.replace('class="ehost her"', 'class="ehost her aut"').replace('<rect x="93" y="116"', COAT_HER + '<rect x="93" y="116"').replace('</g>' + HOST_HER_SIDE, SCARF_HER + '</g>' + HOST_HER_SIDE)); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
     try { var box = document.createElement('div'); box.innerHTML = '<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"><defs>' + defs + '</defs></svg>'; document.body.appendChild(box.firstChild); } catch (e) {}
   })();
   function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards

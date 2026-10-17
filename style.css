@@ -6137,3 +6137,5 @@ body.svplay #svvote:not(.hidden) + .svui .svfield{height:calc(100dvh - 470px);mi
 .chtiles .chcrack:not(.gone):not(.crumble){background-image:linear-gradient(115deg,transparent 46%,rgba(255,255,255,.7) 47%,transparent 49%),linear-gradient(60deg,transparent 60%,rgba(255,255,255,.5) 61%,transparent 63%)!important}
 .chtok.frozen{filter:saturate(.25) brightness(1.25) drop-shadow(0 0 10px #8fe9ff) drop-shadow(0 0 4px #c9f6ff)}
 .chtok.frozen::before{content:"❄️";position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:calc(var(--tok,56px) * .4);z-index:4}
+
+.ehost.aut.walk .ehfront{display:inline}.ehost.aut.walk .ehside{display:none}   /* (in their autumn coats they just glide, front on) */
