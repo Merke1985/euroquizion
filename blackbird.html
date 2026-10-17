@@ -94,7 +94,7 @@
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
-      SOAR_T = MUSIC + 128, PICK_T = MUSIC + 155, GRAVE_T = SOAR_T - 9, HOME_T = PICK_T + 4, END_T = HOME_T + 15, GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
+      SOAR_T = MUSIC + 128, PICK_T = MUSIC + 155, GRAVE_T = SOAR_T - 9,   /* (GRAVE_*: the serene place after the forest) */ HOME_T = PICK_T + 4, END_T = HOME_T + 15, GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing for the flower at 2:35, then away
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
@@ -442,24 +442,47 @@
     cx.fillStyle = '#ff5a74'; cx.beginPath(); cx.ellipse(c[0], c[1] - r0 * 0.2, r0 * 0.38, r0 * 0.42, 0, 0, 7); cx.fill();
     cx.strokeStyle = '#7a0e22'; cx.lineWidth = Math.max(0.6, L * 0.02); cx.beginPath(); cx.arc(c[0], c[1] - r0 * 0.15, r0 * 0.2, 0.5, 5.5); cx.stroke();
   }
-  /* the graveyard after the forest: old stones and crosses along the bottom edge, dark cypresses, a little chapel */
-  function graveEdge(X) {
-    var e = cen(X) + half(X), k = Math.floor(X / 0.13), f = X / 0.13 - k, ty = Math.floor(hsh(k + 41) * 3);
-    if (ty === 0 && f > 0.22 && f < 0.62) { var u = (f - 0.42) / 0.2; return e + 0.012 + 0.02 * (1 - Math.sqrt(Math.max(0, 1 - u * u))) - 0.012; }   // a round-topped stone
-    if (ty === 1 && f > 0.47 && f < 0.53) return e - 0.004;   // a cross: the upright
-    if (ty === 1 && f > 0.36 && f < 0.64) return e + 0.014;   // and its arms
-    return e + 0.018 + 0.006 * Math.sin(X * 40);   // grass between the graves
+  /* after the forest: a serene spot, a piece of paradise. A still lake under the moon, a meadow full of flowers, weeping
+     willows, fireflies; and where the rose grows, a reminder of her love who died: an empty bench by the water with a
+     candle, and a willow with a heart carved in its bark. */
+  var FLOWERCOLS = ['#ffd6e8', '#ffffff', '#ffe08a', '#b9d4ff', '#ff9fc2', '#e6c8ff'];
+  function graveEdge(X) {   // the top of the meadow: grass, and flowers whose heads reach the edge
+    var e = cen(X) + half(X), k = Math.floor(X / 0.035), f = X / 0.035 - k;
+    if (hsh(k + 11) < 0.55 && f > 0.4 && f < 0.6) return e;   // a flower stalk
+    return e + 0.016 + 0.008 * Math.abs(Math.sin(X * 90));   // grass
+  }
+  function willow(px, base, th, carve) {
+    cx.fillStyle = '#071019'; cx.beginPath(); cx.moveTo(px - th * 0.05, base); cx.quadraticCurveTo(px - th * 0.02, base - th * 0.4, px - th * 0.04, base - th * 0.72); cx.lineTo(px + th * 0.04, base - th * 0.72); cx.quadraticCurveTo(px + th * 0.03, base - th * 0.4, px + th * 0.06, base); cx.closePath(); cx.fill();   // trunk
+    cx.fillStyle = '#0b1a24'; cx.beginPath(); cx.ellipse(px, base - th * 0.78, th * 0.34, th * 0.2, 0, 0, 7); cx.fill();   // crown
+    cx.strokeStyle = 'rgba(70,120,110,.55)'; cx.lineWidth = Math.max(1, th * 0.008);
+    for (var i = 0; i < 26; i++) { var a = -1 + i / 25 * 2, sx0 = px + a * th * 0.3, sw = Math.sin(t * 0.8 + i) * th * 0.015; cx.beginPath(); cx.moveTo(sx0, base - th * 0.8 + Math.abs(a) * th * 0.1); cx.quadraticCurveTo(sx0 + a * th * 0.08, base - th * 0.5, sx0 + a * th * 0.1 + sw, base - th * (0.12 + 0.18 * hsh(i))); cx.stroke(); }   // the hanging branches, swaying
+    if (carve) { var hx = px, hy = base - th * 0.42, hs = th * 0.035; cx.strokeStyle = 'rgba(255,190,200,.75)'; cx.lineWidth = Math.max(1, th * 0.006); cx.beginPath(); cx.moveTo(hx, hy + hs); cx.bezierCurveTo(hx - hs * 1.6, hy, hx - hs, hy - hs * 1.2, hx, hy - hs * 0.4); cx.bezierCurveTo(hx + hs, hy - hs * 1.2, hx + hs * 1.6, hy, hx, hy + hs); cx.stroke(); }   // a heart carved in the bark
   }
   function drawGraveyard(x0, x1) {
-    var g0 = Math.max(x0, GRAVE_X); if (g0 >= x1) return; var st = 0.006, X;
-    for (var q = Math.floor(g0 / 0.9) - 1; q * 0.9 < x1 + 0.3; q++) { var qx = q * 0.9 + hsh(q) * 0.4; if (qx < GRAVE_X + 0.2) continue; var px = sx(qx), base = sy(cen(qx) + half(qx) + 0.06), th = H * (0.22 + hsh(q + 7) * 0.12);   // cypresses behind the stones
-      cx.fillStyle = '#060b18'; cx.beginPath(); cx.moveTo(px, base - th); cx.quadraticCurveTo(px + th * 0.16, base - th * 0.5, px + th * 0.07, base); cx.lineTo(px - th * 0.07, base); cx.quadraticCurveTo(px - th * 0.16, base - th * 0.5, px, base - th); cx.fill();
-      if (hsh(q + 3) < 0.18) { var cw = H * 0.12, cy = base; cx.fillStyle = '#080d1d'; cx.fillRect(px + cw * 0.3, cy - cw * 0.8, cw, cw * 0.8); cx.beginPath(); cx.moveTo(px + cw * 0.22, cy - cw * 0.8); cx.lineTo(px + cw * 0.8, cy - cw * 1.35); cx.lineTo(px + cw * 1.38, cy - cw * 0.8); cx.fill(); cx.fillRect(px + cw * 0.76, cy - cw * 1.6, cw * 0.08, cw * 0.3); cx.fillRect(px + cw * 0.7, cy - cw * 1.52, cw * 0.2, cw * 0.06); cx.fillStyle = 'rgba(255,190,110,.55)'; cx.fillRect(px + cw * 0.7, cy - cw * 0.55, cw * 0.2, cw * 0.28); }   // now and then a little chapel, one window lit
+    var g0 = Math.max(x0, GRAVE_X); if (g0 >= x1) return; var st = 0.006, X, L0 = sx(g0), L1 = sx(x1);
+    var fadeIn = Math.min(1, (x1 - GRAVE_X) / 1.5);
+    var glow = cx.createLinearGradient(0, 0, 0, H); glow.addColorStop(0, 'rgba(120,90,200,0)'); glow.addColorStop(0.6, 'rgba(150,120,230,' + (0.12 * fadeIn) + ')'); glow.addColorStop(1, 'rgba(255,180,210,' + (0.1 * fadeIn) + ')'); cx.fillStyle = glow; cx.fillRect(L0, 0, L1 - L0, H);   // a soft, warmer light over this place
+    var ly = H * 0.74, hg = cx.createLinearGradient(0, ly - H * 0.08, 0, ly); hg.addColorStop(0, '#0d1838'); hg.addColorStop(1, '#0a1430'); cx.fillStyle = hg;   // far hills on the other side of the lake
+    cx.beginPath(); cx.moveTo(L0, ly); for (X = g0; X <= x1; X += 0.02) cx.lineTo(sx(X), ly - H * (0.04 + 0.03 * Math.sin(X * 1.7) + 0.015 * Math.sin(X * 4.1))); cx.lineTo(L1, ly); cx.closePath(); cx.fill();
+    var wg = cx.createLinearGradient(0, ly, 0, H); wg.addColorStop(0, '#1b2b5e'); wg.addColorStop(1, '#0a1230'); cx.fillStyle = wg; cx.fillRect(L0, ly, L1 - L0, H - ly);   // the lake
+    var mx = W * 0.8; if (mx > L0) { for (var k = 0; k < 14; k++) { var yy = ly + H * 0.012 * (k + 1) * 1.3, w2 = H * (0.05 - k * 0.0025) * (0.8 + 0.2 * Math.sin(t * 2 + k)); cx.fillStyle = 'rgba(255,248,225,' + (0.35 - k * 0.022) + ')'; cx.fillRect(mx - w2 / 2 + Math.sin(t * 1.3 + k * 2) * 4, yy, w2, 1.6); } }   // the moon on the water
+    for (var q = Math.floor(g0 / 1.1) - 1; q * 1.1 < x1 + 0.5; q++) { var qx = q * 1.1 + hsh(q) * 0.5; if (qx < GRAVE_X + 0.3 || Math.abs(qx - FLOWER_X) < 0.5) continue; willow(sx(qx), sy(cen(qx) + half(qx) + 0.05), H * (0.3 + hsh(q + 7) * 0.1), false); }   // weeping willows along the shore
+    // the meadow: grass, and flowers along its edge
+    cx.beginPath(); cx.moveTo(L0, H); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.lineTo(L1, H); cx.closePath(); cx.fillStyle = '#06140f'; cx.fill();
+    cx.beginPath(); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.strokeStyle = 'rgba(150,230,190,.35)'; cx.lineWidth = 1.5; cx.stroke();
+    for (var kf = Math.floor(g0 / 0.035); kf * 0.035 < x1; kf++) { if (hsh(kf + 11) >= 0.55) continue; var fx2 = (kf + 0.5) * 0.035, fy = sy(cen(fx2) + half(fx2)), fp = sx(fx2), fr = H * 0.008;
+      cx.strokeStyle = '#1f5a3a'; cx.lineWidth = 1.2; cx.beginPath(); cx.moveTo(fp, fy); cx.lineTo(fp, fy + H * 0.03); cx.stroke();
+      cx.fillStyle = FLOWERCOLS[Math.floor(hsh(kf + 3) * FLOWERCOLS.length)]; for (var pt = 0; pt < 5; pt++) { var an = pt / 5 * 6.283 + kf; cx.beginPath(); cx.arc(fp + Math.cos(an) * fr * 0.8, fy + Math.sin(an) * fr * 0.8, fr * 0.6, 0, 7); cx.fill(); } cx.fillStyle = '#ffcf4a'; cx.beginPath(); cx.arc(fp, fy, fr * 0.4, 0, 7); cx.fill(); }
+    // the reminder of her love, where the rose grows
+    if (FLOWER_X > 0 && FLOWER_X > x0 - 0.6 && FLOWER_X < x1 + 0.6) {
+      var by = sy(FLOWER_Y) + H * 0.01, bxp = sx(FLOWER_X - 0.16), bw2 = H * 0.11;
+      willow(sx(FLOWER_X + 0.2), sy(FLOWER_Y + 0.05), H * 0.42, true);
+      cx.fillStyle = '#2a1d16'; cx.fillRect(bxp - bw2 / 2, by - H * 0.03, bw2, H * 0.008); cx.fillRect(bxp - bw2 / 2, by - H * 0.055, bw2, H * 0.006); cx.fillRect(bxp - bw2 / 2, by - H * 0.042, bw2, H * 0.006);   // an empty bench by the water
+      cx.fillRect(bxp - bw2 * 0.45, by - H * 0.03, H * 0.006, H * 0.03); cx.fillRect(bxp + bw2 * 0.45 - H * 0.006, by - H * 0.03, H * 0.006, H * 0.03);
+      var cf = 0.85 + 0.15 * Math.sin(t * 9), cxp = bxp + bw2 * 0.3, cyp = by - H * 0.03; var cg = cx.createRadialGradient(cxp, cyp - H * 0.02, 0, cxp, cyp - H * 0.02, H * 0.08); cg.addColorStop(0, 'rgba(255,200,120,' + (0.5 * cf) + ')'); cg.addColorStop(1, 'rgba(255,200,120,0)'); cx.fillStyle = cg; cx.beginPath(); cx.arc(cxp, cyp - H * 0.02, H * 0.08, 0, 7); cx.fill();
+      cx.fillStyle = '#efe6d6'; cx.fillRect(cxp - H * 0.004, cyp - H * 0.018, H * 0.008, H * 0.018); cx.fillStyle = '#fff1c0'; cx.beginPath(); cx.ellipse(cxp, cyp - H * 0.023, H * 0.0025, H * 0.005 * cf, 0, 0, 7); cx.fill();   // a candle on it
+      if (t < PICK_T) drawRose(sx(FLOWER_X), sy(FLOWER_Y) - 2, H * 0.06, 0.7 + 0.3 * Math.sin(t * 3));   // the one red rose
     }
-    var mg = cx.createLinearGradient(0, H * 0.55, 0, H); mg.addColorStop(0, 'rgba(150,175,230,0)'); mg.addColorStop(1, 'rgba(150,175,230,.12)'); cx.fillStyle = mg; cx.fillRect(sx(g0), H * 0.55, sx(x1) - sx(g0), H * 0.45);   // mist over the graves
-    cx.beginPath(); cx.moveTo(sx(g0), H); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.lineTo(sx(x1), H); cx.closePath(); cx.fillStyle = '#04070f'; cx.fill();
-    cx.beginPath(); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.strokeStyle = 'rgba(190,205,240,.4)'; cx.lineWidth = 1.5; cx.stroke();   // moonlight on the stones
-    if (FLOWER_X > 0 && t < PICK_T && FLOWER_X > x0 - 0.2 && FLOWER_X < x1 + 0.2) drawRose(sx(FLOWER_X), sy(FLOWER_Y) - 2, H * 0.06, 0.7 + 0.3 * Math.sin(t * 3));   // the one flower, glowing
   }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
     var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
@@ -556,7 +579,7 @@
     while (flies.length < 34) flies.push({ x: cam + Math.random() * (W / H + 0.6), o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
     flies = flies.filter(function (f) { return f.x > cam - 0.2; });
     while (flies.length < 34) flies.push({ x: cam + W / H + Math.random() * 0.4, o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
-    flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST || f.x > GRAVE_X) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
+    flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
       var fg = cx.createRadialGradient(px, py, 0, px, py, 9); fg.addColorStop(0, 'rgba(255,240,140,' + a + ')'); fg.addColorStop(1, 'rgba(255,240,140,0)'); cx.fillStyle = fg; cx.fillRect(px - 9, py - 9, 18, 18); });
     // in the sky: open above, the tops of the pines below (touch them and you lose a feather)
     var xs0 = Math.max(x0, SKY0), xs1 = Math.min(x1, FOREST + 0.02);
@@ -589,9 +612,10 @@
     branches.forEach(function (r) {
       if (r.x < x0 - 0.3 || r.x > x1 + 0.3) return;
       var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 40 : sy(cen(r.x) + half(r.x)) + 40, tip = sy(r.tip), dir = r.top ? 1 : -1;
-      if (r.x >= GRAVE_X) {   // in the graveyard: a tall old stone with a cross on top
-        var sw2 = H * 0.022; cx.fillStyle = '#0a0f1e'; cx.beginPath(); cx.moveTo(px - sw2, base); cx.lineTo(px - sw2 * 0.7, tip + H * 0.03); cx.lineTo(px + sw2 * 0.7, tip + H * 0.03); cx.lineTo(px + sw2, base); cx.closePath(); cx.fill();
-        cx.fillRect(px - H * 0.004, tip, H * 0.008, H * 0.032); cx.fillRect(px - H * 0.014, tip + H * 0.008, H * 0.028, H * 0.007); cx.strokeStyle = 'rgba(190,205,240,.35)'; cx.lineWidth = 1.2; cx.beginPath(); cx.moveTo(px - sw2 * 0.7, tip + H * 0.03); cx.lineTo(px - sw2, base); cx.stroke();
+      if (r.x >= GRAVE_X) {   // by the water: a tall reed with a cattail
+        cx.strokeStyle = '#123a2a'; cx.lineWidth = H * 0.01; cx.lineCap = 'round'; cx.beginPath(); cx.moveTo(px, base); cx.quadraticCurveTo(px + H * 0.01, (base + tip) / 2, px, tip + H * 0.035); cx.stroke();
+        cx.strokeStyle = '#1b5a3c'; cx.lineWidth = H * 0.006; [-1, 1].forEach(function (sd) { cx.beginPath(); cx.moveTo(px, base - (base - tip) * 0.3); cx.quadraticCurveTo(px + sd * H * 0.04, base - (base - tip) * 0.6, px + sd * H * 0.03, tip + (base - tip) * 0.15); cx.stroke(); });
+        cx.fillStyle = '#4a2c1a'; cx.beginPath(); cx.ellipse(px, tip + H * 0.02, H * 0.009, H * 0.022, 0, 0, 7); cx.fill(); cx.strokeStyle = '#123a2a'; cx.lineWidth = H * 0.004; cx.beginPath(); cx.moveTo(px, tip); cx.lineTo(px, tip - H * 0.006); cx.stroke();
         cx.strokeStyle = 'rgba(255,90,110,.35)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip, 0.022 * H, 0, 7); cx.stroke(); return;
       }
       if (r.x < FOREST) {
@@ -631,7 +655,7 @@
     else if (t < PRACT_END) { var fl = birds.filter(function (b) { return b.manual; }).map(function (b) { return b.name; }); txt = '✨ Practice round' + (fl.length ? ': ' + (fl.length > 1 ? fl.slice(0, -1).join(', ') + ' & ' + fl[fl.length - 1] : fl[0]) + ' flying' : '') + '. Nothing to dodge, no damage yet'; }
     else if (t < nowAt + 3.5) { txt = '⚠️ Now it counts! Mind the pine tops'; cls = 'warn'; }
     else if (inDive(cam + 0.3 * W / H + 0.6)) txt = '🐦‍⬛ Down into the forest…';
-    else if (cam + 0.3 * W / H > GRAVE_X - 0.2 && cam + 0.3 * W / H < GRAVE_X + 1.2) txt = '🕯️ Out of the forest… the old graveyard';
+    else if (cam + 0.3 * W / H > GRAVE_X - 0.2 && cam + 0.3 * W / H < GRAVE_X + 1.2) txt = '🌸 Out of the forest… a quiet, beautiful place';
     $('side').style.opacity = t >= SOAR_T ? '0' : '1';
     $('howto').className = 'howto' + (t >= MSG0 && t < MSG1 ? ' on' : '');
     bn.textContent = txt; bn.className = 'banner' + (txt ? ' on' : '') + (cls ? ' ' + cls : '');
