@@ -168,7 +168,8 @@
     var fast = T >= FAST_T - 0.5;
     if (roundTurn >= roundLen || !pattern || pattern.fast !== fast) { pattern = newPattern(x0, fast); roundTurn = 0; roundLen = 1; }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
-    pattern.forEach(function (o) { var x = birdXAt(T + o.tau), h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw }); });
+    pattern.forEach(function (o) { if (T + o.tau > FAST_T - 3 && T + o.tau < FAST_T + 2) return;   // (a calm moment: nothing in the 3 s before the speed-up and its first 2 s)
+      var x = birdXAt(T + o.tau), h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw }); });
     branches = branches.filter(function (r) { return r.x > cam - 1; });
   }
 
