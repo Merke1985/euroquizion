@@ -60,8 +60,8 @@
 <div class="ov" id="start">
   <div class="card">
     <h2>🐦‍⬛ Blackbird</h2>
-    <p>The whole flock flies along with the song. Most of the time your bird is on <b>autopilot</b> and can’t crash.</p>
-    <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you: <b>hold</b> to fly up, <b>let go</b> to glide down, and stay inside the band of light, away from the branches.</p>
+    <p>The whole flock flies through a dark forest along with the song. Most of the time your bird is on <b>autopilot</b> and can’t crash.</p>
+    <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you: <b>hold</b> to fly up, <b>let go</b> to glide down, and keep to the moonlit path through the dark forest: away from the leaves above, the undergrowth below and the branches.</p>
     <p>A hit costs a feather 🪶 (you have 3). No feathers left and your bird lands on a branch. Most feathers when the song ends wins.</p>
     <div class="btns">
       <label>Computer birds <select id="nbots"><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
@@ -86,7 +86,7 @@
   addEventListener('resize', size); size();
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
-  var DUR = 95, SPEED = 0.42, XEND = DUR * SPEED, WARM = 3;   // (an early test: 95 seconds; the real game would follow the whole song)
+  var DUR = 104, TAKEOFF = 9, FLY_IN = 2, FOREST = 1.9, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
   var seed = 1;
   function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
   function diff(x) { var d = Math.max(0, Math.min(1, x / XEND)); return d < .35 ? d / .35 * .35 : d < .72 ? .35 + (d - .35) / .37 * .3 : .65 + (d - .72) / .28 * .35; }   // calm, the middle, the climax
@@ -117,7 +117,7 @@
       skill: 0.55 + Math.random() * 0.4, react: 0.1 + Math.random() * 0.14, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
     me = birds[0];
     var n = birds.length; birds.forEach(function (b, i) { b.off = n > 1 ? (i / (n - 1)) * 2 - 1 : 0; b.xo = -((i * 37) % n) * 0.06; });   // (a loose V: everyone their own place in the formation)
-    birds.forEach(function (b) { b.y = cen(cam + bx(b)) + b.off * half(cam) * 0.62; });
+    birds.forEach(function (b, i) { b.rx = 0.22 + (n > 1 ? i / (n - 1) : 0.5) * 0.66; b.ry = ROOF_Y - 0.02; b.y = b.ry; });   // (all in a row on the ridge of the roof)
     pickN = n <= 3 ? 1 : n <= 7 ? 2 : 3;
   }
   function bx(b) { return 0.3 * W / H + b.xo - b.back; }   // the bird's place on the screen, in world units from the left edge
@@ -155,8 +155,9 @@
   // ---------- one step ----------
   var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
   function step(dt) {
-    t += dt; cam += SPEED * dt; schedule();
+    t += dt; if (t >= TAKEOFF) cam += SPEED * dt; schedule();
     birds.forEach(function (b) {
+      if (t < TAKEOFF) { b.flap = 0; return; }   // (still sitting on the roof)
       b.flap += dt * (b.manual && (b.human ? hold : b.hold) ? 16 : 7);
       if (b.out) { b.fall += dt; b.vy = Math.min(1.2, b.vy + 1.6 * dt); b.y += b.vy * dt; return; }
       b.inv = Math.max(0, b.inv - dt); b.back = Math.max(0, b.back - dt * 0.01);
@@ -194,31 +195,101 @@
   // ---------- drawing ----------
   var stars = []; for (var i = 0; i < 140; i++) stars.push({ x: Math.random(), y: Math.random() * 0.8, r: Math.random() * 1.4 + .3, p: Math.random() * 6 });
   function sx(x) { return (x - cam) * H; } function sy(y) { return y * H; }
+  // the forest: layers of pines from far to near, each scrolling at its own speed (the same trees every time they come by)
+  function hsh(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  function treeLayer(par, col, base, hmin, hmax, gap, kind) {
+    var off = cam * par * H, step = gap * H, i0 = Math.floor((off - step) / step), i1 = Math.ceil((off + W + step) / step);
+    cx.fillStyle = col; cx.beginPath();
+    for (var i = i0; i <= i1; i++) {
+      var r = hsh(i + kind * 1000), x = i * step - off + (r - .5) * step * .7, h = (hmin + (hmax - hmin) * hsh(i * 3.1 + kind * 7)) * H, w = h * (0.22 + 0.1 * r), by = base * H;
+      for (var k = 0; k < 4; k++) { var ty = by - h + k * h * 0.2, ww = w * (0.3 + k * 0.24); cx.moveTo(x, ty); cx.lineTo(x - ww, ty + h * 0.36); cx.lineTo(x + ww, ty + h * 0.36); cx.closePath(); }
+      cx.rect(x - w * 0.05, by - h * 0.15, w * 0.1, h * 0.15);
+    }
+    cx.fill(); cx.fillRect(0, base * H - 1, W, H);
+  }
+  function mist(y0, y1, a) { var m = cx.createLinearGradient(0, y0 * H, 0, y1 * H); m.addColorStop(0, 'rgba(150,175,230,0)'); m.addColorStop(0.5, 'rgba(150,175,230,' + a + ')'); m.addColorStop(1, 'rgba(150,175,230,0)'); cx.fillStyle = m; cx.fillRect(0, y0 * H, W, (y1 - y0) * H); }
+  var flies = [];
+  function edge(X, side) {   // the leafy edge of the canopy (top) or the undergrowth (bottom): scalloped, never inside the playing band
+    var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X), bump = 0.012 * (Math.abs(Math.sin(X * 19)) + Math.abs(Math.sin(X * 37 + 1.7)) * 0.7);
+    return e + side * bump;
+  }
+  /* the start: a house at the edge of the forest, the flock in a row on the ridge of its roof; a roof window stands open, warm light inside */
+  var ROOF_Y = 0.47;
+  function drawHouse() {
+    if (cam > 1.4) return;
+    var L = sx(0.08), R2 = sx(1.02), rL = sx(0.16), rR = sx(0.94), ry = sy(ROOF_Y), ey = sy(0.63), gy = H * 1.02;
+    cx.fillStyle = '#0b0f1f'; cx.fillRect(sx(0.12), ey, sx(0.98) - sx(0.12), gy - ey);   // the walls
+    cx.fillStyle = '#121633'; cx.beginPath(); cx.moveTo(L, ey); cx.lineTo(rL, ry); cx.lineTo(rR, ry); cx.lineTo(R2, ey); cx.closePath(); cx.fill();   // the roof
+    cx.strokeStyle = 'rgba(255,255,255,.05)'; cx.lineWidth = 1; for (var k = 1; k < 6; k++) { var yy = ry + (ey - ry) * k / 6, f = k / 6; cx.beginPath(); cx.moveTo(rL + (L - rL) * f, yy); cx.lineTo(rR + (R2 - rR) * f, yy); cx.stroke(); }   // tiles
+    cx.strokeStyle = 'rgba(190,210,255,.7)'; cx.lineWidth = 2.5; cx.beginPath(); cx.moveTo(L, ey); cx.lineTo(rL, ry); cx.lineTo(rR, ry); cx.lineTo(R2, ey); cx.stroke();   // moonlight on the edge
+    cx.fillStyle = '#0b0f1f'; cx.fillRect(sx(0.3), sy(0.36), sx(0.36) - sx(0.3), ry - sy(0.36)); cx.fillStyle = '#161b3a'; cx.fillRect(sx(0.29), sy(0.355), sx(0.37) - sx(0.29), H * 0.012);   // chimney
+    for (var i = 0; i < 4; i++) { var a = (t * 0.25 + i / 4) % 1; cx.fillStyle = 'rgba(200,210,235,' + (0.18 * (1 - a)) + ')'; cx.beginPath(); cx.arc(sx(0.33) + a * H * 0.08 + Math.sin(a * 6 + i) * 6, sy(0.34) - a * H * 0.16, H * (0.012 + a * 0.03), 0, 7); cx.fill(); }   // smoke
+    // the open roof window: warm light, the pane swung up, a curtain moving in the night air
+    var wx0 = sx(0.62), wx1 = sx(0.77), wy0 = ry + (ey - ry) * 0.25, wy1 = ry + (ey - ry) * 0.8;
+    var glow = cx.createRadialGradient((wx0 + wx1) / 2, (wy0 + wy1) / 2, 0, (wx0 + wx1) / 2, (wy0 + wy1) / 2, H * 0.22); glow.addColorStop(0, 'rgba(255,190,90,.35)'); glow.addColorStop(1, 'rgba(255,190,90,0)'); cx.fillStyle = glow; cx.fillRect(wx0 - H * .22, wy0 - H * .22, wx1 - wx0 + H * .44, wy1 - wy0 + H * .44);
+    cx.fillStyle = '#ffc56b'; cx.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0);
+    cx.fillStyle = 'rgba(255,240,215,.85)'; cx.beginPath(); cx.moveTo(wx0, wy0); cx.quadraticCurveTo(wx0 + (wx1 - wx0) * (0.35 + 0.08 * Math.sin(t * 1.4)), (wy0 + wy1) / 2, wx0 + (wx1 - wx0) * 0.2, wy1); cx.lineTo(wx0, wy1); cx.closePath(); cx.fill();   // curtain
+    cx.strokeStyle = '#2a2140'; cx.lineWidth = 3; cx.strokeRect(wx0, wy0, wx1 - wx0, wy1 - wy0); cx.beginPath(); cx.moveTo((wx0 + wx1) / 2, wy0); cx.lineTo((wx0 + wx1) / 2, wy1); cx.stroke();
+    cx.fillStyle = 'rgba(160,190,255,.25)'; cx.strokeStyle = '#2a2140'; cx.beginPath(); cx.moveTo(wx0, wy0); cx.lineTo(wx1, wy0); cx.lineTo(wx1 + 6, wy0 - (wy1 - wy0) * 0.75); cx.lineTo(wx0 + 6, wy0 - (wy1 - wy0) * 0.75); cx.closePath(); cx.fill(); cx.stroke();   // the pane, swung open
+    // a lit window in the wall below
+    var dx0 = sx(0.26), dx1 = sx(0.4), dy0 = sy(0.72), dy1 = sy(0.86); cx.fillStyle = '#e8a64f'; cx.fillRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.strokeStyle = '#2a2140'; cx.lineWidth = 3; cx.strokeRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.beginPath(); cx.moveTo((dx0 + dx1) / 2, dy0); cx.lineTo((dx0 + dx1) / 2, dy1); cx.moveTo(dx0, (dy0 + dy1) / 2); cx.lineTo(dx1, (dy0 + dy1) / 2); cx.stroke();
+  }
   function draw() {
-    var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#060a24'); g.addColorStop(0.6, '#0e1640'); g.addColorStop(1, '#1b1636'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
-    stars.forEach(function (s) { cx.globalAlpha = 0.4 + 0.4 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.08) % W + W) % W, s.y * H, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
-    var mg = cx.createRadialGradient(W * 0.82, H * 0.2, 0, W * 0.82, H * 0.2, H * 0.22); mg.addColorStop(0, 'rgba(255,248,220,.9)'); mg.addColorStop(0.25, 'rgba(255,248,220,.5)'); mg.addColorStop(1, 'rgba(255,248,220,0)'); cx.fillStyle = mg; cx.fillRect(0, 0, W, H);
-    // the band of light
-    var x0 = cam - 0.1, x1 = cam + W / H + 0.1, st = 0.02, X;
-    cx.beginPath(); for (X = x0; X <= x1; X += st) cx.lineTo(sx(X), sy(cen(X) - half(X))); for (X = x1; X >= x0; X -= st) cx.lineTo(sx(X), sy(cen(X) + half(X))); cx.closePath();
-    var bg = cx.createLinearGradient(0, 0, W, 0); bg.addColorStop(0, 'rgba(120,150,255,.16)'); bg.addColorStop(1, 'rgba(255,209,102,.2)'); cx.fillStyle = bg; cx.fill();
-    [[-1, 'rgba(160,190,255,'], [1, 'rgba(255,215,140,']].forEach(function (e) {
-      cx.beginPath(); for (X = x0; X <= x1; X += st) cx.lineTo(sx(X), sy(cen(X) + e[0] * half(X)));
-      cx.strokeStyle = e[1] + '.18)'; cx.lineWidth = 10; cx.stroke(); cx.strokeStyle = e[1] + '.85)'; cx.lineWidth = 2; cx.stroke();
+    var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04071a'); g.addColorStop(0.55, '#0b1433'); g.addColorStop(1, '#0d1a2a'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    stars.forEach(function (s) { cx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.04) % W + W) % W, s.y * H * 0.6, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
+    var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.fillStyle = mg; cx.fillRect(0, 0, W, H);
+    // the forest behind, far to near, with mist between
+    treeLayer(0.1, '#16224a', 0.74, 0.32, 0.5, 0.08, 1); mist(0.55, 0.85, 0.12);
+    treeLayer(0.25, '#0f1834', 0.84, 0.42, 0.66, 0.12, 2); mist(0.68, 0.95, 0.08);
+    treeLayer(0.5, '#0a1024', 0.95, 0.55, 0.85, 0.19, 3);
+    var x0 = cam - 0.1, x1 = cam + W / H + 0.1, st = 0.015, X;
+    drawHouse();
+    var xf = Math.max(x0, FOREST);   // (the forest starts behind the house)
+    // the path through the trees: a faint glow of moonlight
+    cx.beginPath(); for (X = xf; X <= x1; X += st) cx.lineTo(sx(X), sy(cen(X) - half(X))); for (X = x1; X >= xf; X -= st) cx.lineTo(sx(X), sy(cen(X) + half(X))); cx.closePath();
+    var fx = sx(FOREST), bg = fx > -H * 0.5 ? cx.createLinearGradient(fx, 0, fx + H * 0.5, 0) : cx.createLinearGradient(0, 0, W, 0); if (fx > -H * 0.5) { bg.addColorStop(0, 'rgba(130,160,255,0)'); bg.addColorStop(1, 'rgba(150,175,255,.13)'); } else { bg.addColorStop(0, 'rgba(130,160,255,.10)'); bg.addColorStop(1, 'rgba(200,220,255,.16)'); }   // (fades in at the entrance of the forest) cx.fillStyle = bg; cx.fill();
+    // fireflies along the path
+    while (flies.length < 34) flies.push({ x: cam + Math.random() * (W / H + 0.6), o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
+    flies = flies.filter(function (f) { return f.x > cam - 0.2; });
+    while (flies.length < 34) flies.push({ x: cam + W / H + Math.random() * 0.4, o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
+    flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
+      var fg = cx.createRadialGradient(px, py, 0, px, py, 9); fg.addColorStop(0, 'rgba(255,240,140,' + a + ')'); fg.addColorStop(1, 'rgba(255,240,140,0)'); cx.fillStyle = fg; cx.fillRect(px - 9, py - 9, 18, 18); });
+    // the canopy above and the undergrowth below: the edges of the path (touch them and you lose a feather)
+    [-1, 1].forEach(function (side) {
+      if (xf >= x1) return;
+      cx.beginPath(); cx.moveTo(sx(xf), side < 0 ? 0 : H);
+      for (X = xf; X <= x1; X += st) cx.lineTo(sx(X), sy(edge(X, side)));
+      cx.lineTo(sx(x1), side < 0 ? 0 : H); cx.closePath();
+      var cg = cx.createLinearGradient(0, side < 0 ? 0 : H, 0, side < 0 ? H * 0.5 : H * 0.5); cg.addColorStop(0, '#02040b'); cg.addColorStop(1, side < 0 ? '#06102a' : '#071a1c'); cx.fillStyle = cg; cx.fill();
+      cx.beginPath(); for (X = xf; X <= x1; X += st) cx.lineTo(sx(X), sy(edge(X, side)));
+      cx.strokeStyle = side < 0 ? 'rgba(150,185,255,.55)' : 'rgba(140,220,170,.45)'; cx.lineWidth = 2; cx.stroke();   // (moonlight on the leaves: the edge stays visible)
+      // leaves and ferns sticking out of the edge
+      cx.fillStyle = side < 0 ? '#03081a' : '#04140f';
+      for (X = Math.ceil(xf / 0.07) * 0.07; X <= x1; X += 0.07) { var ey = sy(edge(X, side)), lx = sx(X), r = hsh(Math.round(X * 100)); cx.beginPath(); cx.ellipse(lx, ey + side * -2, 6 + r * 7, 3 + r * 3, (r - .5) * 1.2, 0, 7); cx.fill(); }
     });
+    // the big tree at the entrance of the forest: you fly in past its trunk
+    if (sx(FOREST) > -H * 0.2 && sx(FOREST) < W + H * 0.2) {
+      var tx = sx(FOREST) - H * 0.02, tw = H * 0.07;
+      cx.fillStyle = '#02040b'; cx.beginPath(); cx.moveTo(tx - tw * 0.6, H); cx.lineTo(tx - tw * 0.35, sy(edge(FOREST + 0.05, 1)) + 10); cx.lineTo(tx + tw * 0.5, sy(edge(FOREST + 0.05, 1)) + 10); cx.lineTo(tx + tw * 0.75, H); cx.closePath(); cx.fill();   // the trunk below the path
+      cx.beginPath(); cx.moveTo(tx - tw * 0.5, 0); cx.lineTo(tx - tw * 0.3, sy(edge(FOREST + 0.05, -1)) - 10); cx.lineTo(tx + tw * 0.45, sy(edge(FOREST + 0.05, -1)) - 10); cx.lineTo(tx + tw * 0.6, 0); cx.closePath(); cx.fill();   // and above it
+      for (var q = 0; q < 9; q++) { var qa = q / 8; cx.beginPath(); cx.ellipse(tx + (hsh(q + 3) - 0.3) * H * 0.18, sy(edge(FOREST + 0.05, -1)) - H * (0.04 + qa * 0.35), H * (0.08 + hsh(q) * 0.06), H * 0.05, 0, 0, 7); cx.fill(); }   // its crown, joining the canopy
+    }
     // the branches: bare, black, from the edge of the light into it
     branches.forEach(function (r) {
       if (r.x < x0 - 0.3 || r.x > x1 + 0.3) return;
-      var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 30 : sy(cen(r.x) + half(r.x)) + 30, tip = sy(r.tip), dir = r.top ? 1 : -1;
-      cx.strokeStyle = '#05060f'; cx.lineCap = 'round'; cx.lineWidth = 0.032 * H; cx.beginPath(); cx.moveTo(px - 6, base); cx.quadraticCurveTo(px + 8, (base + tip) / 2, px, tip); cx.stroke();
+      var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 40 : sy(cen(r.x) + half(r.x)) + 40, tip = sy(r.tip), dir = r.top ? 1 : -1;
+      cx.strokeStyle = '#020309'; cx.lineCap = 'round'; cx.lineWidth = 0.032 * H; cx.beginPath(); cx.moveTo(px - 6, base); cx.quadraticCurveTo(px + 8, (base + tip) / 2, px, tip); cx.stroke();
       cx.lineWidth = 0.012 * H; for (var k = 1; k <= 3; k++) { var yy = base + (tip - base) * (k / 4), s = (k % 2 ? 1 : -1); cx.beginPath(); cx.moveTo(px, yy); cx.lineTo(px + s * 0.035 * H, yy + dir * 0.03 * H); cx.stroke(); }
       cx.strokeStyle = 'rgba(255,90,110,.35)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip, 0.022 * H, 0, 7); cx.stroke();   // (the danger point)
     });
     // the birds
     birds.forEach(function (b) {
-      var X = cam + bx(b), px = sx(X), py = sy(b.y), s = H * 0.032;
+      var X = cam + bx(b), py0 = b.y, L = t < TAKEOFF ? 0 : Math.min(1, (t - TAKEOFF) / FLY_IN), e = L * L * (3 - 2 * L);
+      if (L < 1) { X = b.rx + (X - b.rx) * e; py0 = b.ry + (b.y - b.ry) * e - Math.sin(Math.PI * L) * 0.12; }   // (take-off: up off the ridge and into the flock)
+      var px = sx(X), py = sy(py0), s = H * 0.032;
       if (b.out && py > H + 40) return;
-      cx.save(); cx.translate(px, py); cx.rotate(Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
+      cx.save(); cx.translate(px, py); cx.rotate(t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * L) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
+      if (t < TAKEOFF) cx.translate(0, -Math.max(0, Math.sin(t * 3 + b.id * 1.7)) * s * 0.18);   // (a little hop now and then, while they wait)
       if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
       if (b.manual) { var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); }
       var warn = pending.indexOf(b) >= 0; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
@@ -227,7 +298,7 @@
       cx.beginPath(); cx.arc(s * 0.82, -s * 0.28, s * 0.42, 0, 7); cx.fill();   // head
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(s * 1.15, -s * 0.36); cx.lineTo(s * 1.6, -s * 0.22); cx.lineTo(s * 1.15, -s * 0.12); cx.closePath(); cx.fill();   // beak
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
-      var wa = Math.sin(b.flap) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
+      var wa = t < TAKEOFF ? -0.15 : Math.sin(b.flap) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
       cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke();   // their colour
       cx.restore();
       if (!b.out && (b.manual || b.human || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
@@ -245,7 +316,9 @@
     if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
-    else if (t < WARM) txt = 'The flock takes off…';
+    else if (t < TAKEOFF - 2.5) txt = '🌙 The flock rests on the roof… listen';
+    else if (t < TAKEOFF) { txt = '🐦‍⬛ Get ready to take off…'; cls = 'warn'; }
+    else if (t < WARM) txt = '🐦‍⬛ The flock takes off!';
     bn.textContent = txt; bn.className = 'banner' + (txt ? ' on' : '') + (cls ? ' ' + cls : '');
   }
 
