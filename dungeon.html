@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>The Guardian's Vault (test)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+<style>
+  /* The Guardian's Vault: an early test. A stone Guardian with a sword, three chests with riddles on them; only one holds the treasure. Pick a chest on your phone; the Guardian smashes the other two. Two lives each. */
+  :root{--ink:#fff;--mute:#cdbfa8;--gold:#ffcf5a;--line:rgba(255,230,190,.18);--eye:#ff5a3c}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none}
+  body{background:#0d0a0a}
+  .wall{position:fixed;inset:0;background:
+    radial-gradient(ellipse at 50% 35%,rgba(255,170,90,.16),rgba(0,0,0,0) 55%),
+    repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 2px,transparent 2px 7vh),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.25) 0 2px,transparent 2px 12vh),
+    linear-gradient(180deg,#2a2220 0%,#1c1615 60%,#120e0e 100%)}
+  .floor{position:fixed;left:0;right:0;bottom:0;height:46vh;background:linear-gradient(180deg,#231b19,#0e0b0b);clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);opacity:.9}
+  .vig{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.75) 100%);pointer-events:none}
+  .torch{position:fixed;top:18vh;width:3vh;height:12vh}
+  .torch.l{left:9vw} .torch.r{right:9vw}
+  .torch::before{content:'';position:absolute;left:30%;right:30%;top:40%;bottom:0;background:#3b2a1f;border-radius:3px}
+  .torch i{position:absolute;left:50%;top:0;width:3vh;height:6vh;margin-left:-1.5vh;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(ellipse at 50% 70%,#fff3b0,#ffb03a 40%,#ff5a1f 70%,transparent 72%);filter:blur(.5px);animation:flick .18s infinite alternate;transform-origin:50% 100%}
+  .torch b{position:absolute;left:50%;top:2vh;width:30vh;height:30vh;margin:-15vh 0 0 -15vh;border-radius:50%;background:radial-gradient(circle,rgba(255,150,60,.22),transparent 65%);animation:glow 1.3s infinite alternate}
+  @keyframes flick{from{transform:scale(1,1) rotate(-2deg)}to{transform:scale(.92,1.08) rotate(2deg)}}
+  @keyframes glow{to{opacity:.65}}
+  .top{position:fixed;left:0;right:0;top:2vh;display:flex;justify-content:center;align-items:center;gap:16px;z-index:3}
+  .top h1{margin:0;font-size:clamp(1.3rem,3vw,2.6rem);font-weight:800;color:#ffe7b8;text-shadow:0 0 22px rgba(255,140,40,.6)}
+  .tag{padding:6px 14px;border-radius:99px;background:rgba(0,0,0,.45);border:1px solid var(--line);font-weight:700;font-size:clamp(.85rem,1.3vw,1.15rem)}
+  .timer{position:fixed;top:9vh;left:50%;transform:translateX(-50%);width:min(44vw,560px);height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;z-index:3}
+  .timer i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff5a1f,#ffcf5a);border-radius:99px}
+  .say{position:fixed;top:10.5vh;left:50%;transform:translateX(-50%);max-width:70vw;text-align:center;font-weight:700;font-size:clamp(1rem,1.7vw,1.5rem);color:#ffe7b8;z-index:3;min-height:1.4em;text-shadow:0 2px 8px #000}
+  #guard{position:fixed;left:50%;top:15vh;width:26vh;height:36vh;margin-left:-13vh;z-index:1;transition:transform .2s}
+  #guard svg{width:100%;height:100%;overflow:visible}
+  #guard .eye{fill:var(--eye);filter:drop-shadow(0 0 6px var(--eye))}
+  #guard.angry .eye{fill:#ff2a1a;filter:drop-shadow(0 0 14px #ff2a1a)}
+  #guard.calm .eye{fill:#ffd86b;filter:drop-shadow(0 0 10px #ffd86b)}
+  #guard .ownsword{transition:opacity .15s}
+  #guard.swing .ownsword{opacity:0}
+  #sword{position:fixed;width:9vh;height:40vh;z-index:6;left:50%;top:22vh;margin-left:-4.5vh;opacity:0;transform-origin:50% 12%;pointer-events:none}
+  #sword svg{width:100%;height:100%}
+  .chests{position:fixed;left:0;right:0;top:49vh;display:flex;justify-content:center;gap:4vw;z-index:2}
+  .col{width:27vw;display:flex;flex-direction:column;align-items:center;position:relative}
+  .chest{width:16vh;height:12vh;position:relative}
+  .chest svg{width:100%;height:100%;overflow:visible}
+  .chest .lid{transition:transform .6s cubic-bezier(.3,1.6,.5,1);transform-origin:10px 40px;transform-box:view-box}
+  .col.open .chest .lid{transform:rotate(-38deg)}
+  .col.open .shine{opacity:1}
+  .shine{opacity:0;transition:opacity .5s}
+  .col.smashed .chest{animation:squash .35s ease-out forwards}
+  @keyframes squash{0%{transform:scale(1)}40%{transform:scale(1.15,.35) translateY(28%)}100%{transform:scale(1.25,.22) translateY(42%);filter:grayscale(.6) brightness(.6)}}
+  .col.smashed .plaque{opacity:.35;filter:grayscale(1)}
+  .name{margin-top:.4vh;font-weight:800;font-size:clamp(.95rem,1.5vw,1.3rem);letter-spacing:.08em;text-transform:uppercase}
+  .plaque{margin-top:.6vh;width:100%;min-height:14vh;padding:1.4vh 1.2vw;border-radius:14px;background:linear-gradient(180deg,#e9d6ad,#cdb27f);color:#2a1b0b;box-shadow:0 8px 24px rgba(0,0,0,.6),inset 0 0 0 3px rgba(80,50,20,.35);font-weight:700;font-size:clamp(.95rem,1.45vw,1.35rem);line-height:1.3;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:1vh;transition:opacity .4s,filter .4s}
+  .plaque .st{padding:.3vh .2vw}
+  .plaque .st+.st{border-top:1px dashed rgba(60,35,10,.4);padding-top:1vh}
+  .plaque .blank{color:rgba(60,35,10,.5);font-style:italic}
+  .verdict{position:absolute;top:-4vh;left:50%;transform:translateX(-50%) scale(.6);padding:4px 12px;border-radius:99px;font-weight:800;font-size:clamp(.8rem,1.2vw,1.05rem);opacity:0;transition:all .35s;white-space:nowrap;z-index:3}
+  .verdict.on{opacity:1;transform:translateX(-50%) scale(1)}
+  .verdict.T{background:#2fbf71;color:#04210f} .verdict.F{background:#e5484d;color:#2a0607} .verdict.M{background:#f5a524;color:#2a1700} .verdict.B{background:#888;color:#111}
+  .pick{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;min-height:3.6vh;margin-top:.8vh}
+  .pick span{padding:2px 9px;border-radius:99px;font-weight:800;font-size:clamp(.75rem,1.1vw,.95rem);background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);transition:all .3s}
+  .col.smashed .pick span{background:rgba(229,72,77,.55);border-color:#ff8a8d}
+  .debris{position:absolute;width:1.2vh;height:1.2vh;background:#8a6a3a;border-radius:2px;pointer-events:none;z-index:4;animation:fly .9s ease-out forwards}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(540deg);opacity:0}}
+  .shake{animation:shake .45s}
+  @keyframes shake{20%{transform:translate(-10px,6px)}40%{transform:translate(9px,-7px)}60%{transform:translate(-6px,4px)}80%{transform:translate(4px,-3px)}}
+  .players{position:fixed;left:2vw;right:2vw;bottom:2vh;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;z-index:3}
+  .pl{padding:6px 12px;border-radius:12px;background:rgba(0,0,0,.55);border:1px solid var(--line);font-weight:800;font-size:clamp(.85rem,1.2vw,1.05rem);display:flex;gap:8px;align-items:center;transition:all .3s}
+  .pl .h{letter-spacing:2px}
+  .pl.in{border-color:rgba(255,207,90,.8)}
+  .pl.out{opacity:.35;text-decoration:line-through}
+  .pl.hurt{animation:hurt .6s}
+  @keyframes hurt{30%{background:rgba(229,72,77,.6);transform:scale(1.1)}}
+  .ov{position:fixed;inset:0;display:grid;justify-items:center;align-items:start;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:radial-gradient(ellipse at 50% 30%,rgba(90,50,20,.75),rgba(8,5,4,.94));z-index:9;padding:16px}
+  .ov.hidden{display:none}
+  .ov>.card{margin:auto 0}
+  .hidden{display:none!important}
+  .card{max-width:680px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(36,24,18,.95);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .card h2{margin:0 0 .3em;font-size:clamp(1.6rem,4vw,2.4rem);color:#ffe7b8}
+  .card p{margin:.4em 0;color:var(--mute);line-height:1.45}
+  .card b{color:var(--ink)}
+  .card ul{margin:.4em 0 .4em 1.1em;padding:0;color:var(--mute);line-height:1.45}
+  .join{display:flex;gap:16px;align-items:center;margin:14px 0 4px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);line-height:1.5}
+  .join .qr{width:112px;height:112px;flex:none;background:#fff;border-radius:10px;padding:6px}
+  .join .qr svg{width:100%;height:100%;display:block}
+  .join .mute{color:var(--mute)} .join .code{font-size:1.3em;letter-spacing:.12em;color:var(--gold)}
+  .plist{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px} .plist .pp{padding:2px 10px;border-radius:99px;background:rgba(255,207,90,.15);border:1px solid rgba(255,207,90,.5);font-weight:700}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  button{font:inherit;font-weight:800;border:0;border-radius:14px;padding:12px 18px;cursor:pointer;background:var(--gold);color:#2a1700;font-size:1.05rem}
+  label{color:var(--mute);font-weight:700;display:inline-flex;gap:6px;align-items:center}
+  select{font:inherit;font-weight:700;padding:8px 10px;border-radius:10px;background:#3a2618;color:#fff;border:1px solid var(--line)}
+  ol.res{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+  ol.res li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:700}
+  ol.res li.top{background:rgba(255,207,90,.2);box-shadow:0 0 0 2px var(--gold)}
+  ol.res li .rk{width:1.6em;color:var(--gold)} ol.res li .nm{flex:1}
+  #yt{position:fixed;left:-9999px;top:0;width:200px;height:120px}
+  @media (max-width:560px){.card{padding:20px 18px}.join{flex-direction:column;text-align:center}.join .plist{justify-content:center}}
+</style>
+</head>
+<body>
+<div class="wall"></div><div class="floor"></div>
+<div class="torch l"><b></b><i></i></div><div class="torch r"><b></b><i></i></div>
+<div id="yt"></div>
+<div id="scene">
+  <div class="top"><h1>⚔️ The Guardian's Vault</h1><span class="tag" id="rd"></span><span class="tag" id="cnt"></span></div>
+  <div class="timer"><i id="bar"></i></div>
+  <div class="say" id="say"></div>
+  <div id="guard" class="calm"><svg viewBox="0 0 200 300" aria-hidden="true">
+    <defs><linearGradient id="st" x1="0" x2="1"><stop offset="0" stop-color="#4c4f58"/><stop offset=".5" stop-color="#7d818c"/><stop offset="1" stop-color="#444750"/></linearGradient></defs>
+    <rect x="34" y="262" width="132" height="38" rx="4" fill="#3a3c43"/><rect x="26" y="256" width="148" height="12" rx="3" fill="#55585f"/>
+    <path d="M62 160 L138 160 L150 256 L50 256 Z" fill="url(#st)"/>
+    <path d="M70 180 L70 256 M100 170 L100 256 M130 180 L130 256" stroke="#3a3c43" stroke-width="3"/>
+    <rect x="58" y="86" width="84" height="80" rx="16" fill="url(#st)"/>
+    <path d="M70 100 Q100 122 130 100" stroke="#3a3c43" stroke-width="4" fill="none"/>
+    <ellipse cx="56" cy="96" rx="22" ry="16" fill="#6a6e78"/><ellipse cx="144" cy="96" rx="22" ry="16" fill="#6a6e78"/>
+    <path d="M46 104 Q44 140 86 160" stroke="#5e626b" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M154 104 Q156 140 114 160" stroke="#5e626b" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <g class="ownsword"><rect x="94" y="150" width="12" height="104" rx="3" fill="#b9c0cc"/><path d="M94 254 L100 270 L106 254 Z" fill="#b9c0cc"/><rect x="72" y="142" width="56" height="9" rx="3" fill="#8a6b2c"/><rect x="96" y="112" width="8" height="32" rx="3" fill="#5a3c1c"/><circle cx="100" cy="110" r="7" fill="#8a6b2c"/></g>
+    <circle cx="86" cy="158" r="9" fill="#666a73"/><circle cx="114" cy="158" r="9" fill="#666a73"/>
+    <path d="M74 44 Q100 18 126 44 L128 90 Q100 98 72 90 Z" fill="url(#st)"/>
+    <path d="M100 18 Q112 6 104 -2" stroke="#9a3b2a" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <rect x="76" y="56" width="48" height="10" rx="3" fill="#1b1c20"/>
+    <rect class="eye" x="82" y="58" width="12" height="6" rx="2"/><rect class="eye" x="106" y="58" width="12" height="6" rx="2"/>
+    <path d="M100 66 L100 88" stroke="#3a3c43" stroke-width="3"/>
+  </svg></div>
+  <div id="sword"><svg viewBox="0 0 40 180" aria-hidden="true"><circle cx="20" cy="6" r="6" fill="#8a6b2c"/><rect x="16" y="10" width="8" height="26" rx="3" fill="#5a3c1c"/><rect x="2" y="34" width="36" height="8" rx="3" fill="#8a6b2c"/><rect x="14" y="42" width="12" height="118" rx="3" fill="#c9d0db"/><path d="M14 160 L20 178 L26 160 Z" fill="#c9d0db"/><rect x="18" y="44" width="3" height="112" fill="#fff" opacity=".45"/></svg></div>
+  <div class="chests" id="chests"></div>
+  <div class="players" id="players"></div>
+</div>
+
+<div class="ov" id="start">
+  <div class="card">
+    <h2>⚔️ The Guardian's Vault</h2>
+    <p>Deep in a dungeon a stone <b>Guardian</b> watches over three chests: gold, silver and bronze. <b>Only one holds the treasure.</b> Every chest carries a riddle.</p>
+    <ul><li>At least one chest tells <b>only the truth</b>.</li><li>At least one chest <b>only lies</b>.</li><li>A chest with nothing on it neither lies nor tells the truth; a chest with two lines may mix one true and one false.</li></ul>
+    <p>Work out which chest holds the treasure and pick it on your phone (you can change your mind until time runs out). Then the Guardian <b>smashes the other two</b>. Wrong chest: you lose a ❤️. Everyone has <b>2 lives</b>. Last ones standing win.</p>
+    <div class="join"><div class="qr" id="qr"></div><div><b>📱 Pick with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="url"></span><br><span class="mute">Room</span> <b id="code" class="code"></b><div id="plist" class="plist"><span class="mute">Nobody has joined yet: the computer players go alone.</span></div></div></div>
+    <div class="btns">
+      <label>Computer players <select id="nbots"><option>0</option><option>1</option><option selected>3</option><option>5</option><option>7</option></select></label>
+      <label><input type="checkbox" id="kb" checked> 🧪 Me with the keys 1 2 3</label>
+      <label><input type="checkbox" id="song" checked> 🎵 Heroes</label>
+      <button id="go">▶ Enter the vault</button>
+    </div>
+  </div>
+</div>
+<div class="ov hidden" id="end">
+  <div class="card">
+    <h2 id="endt">The vault is quiet</h2>
+    <ol class="res" id="res"></ol>
+    <div class="btns"><button id="again">↻ Play again</button></div>
+  </div>
+</div>
+
+<script src="vendor/supabase.js?v=1"></script>
+<script src="vendor/qrcode.js?v=1"></script>
+<script src="config.js?v=1"></script>
+<script src="net.js?v=2"></script>
+<script src="riddles.js?v=1"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var ROUNDS = 8, LIVES = 2;
+  function timeFor(lv) { return 30 + lv * 4; }   // (30 s for the first riddle, up to 58 s for the eighth)
+  var NAMES = ['Gold', 'Silver', 'Bronze'], METAL = [['#f2c230', '#a97c10', '#ffe58a'], ['#d4dbe4', '#8a94a3', '#ffffff'], ['#cd7f3f', '#7d4a21', '#f0b17a']];
+  var BOTN = ['Raven', 'Robin', 'Wren', 'Finch', 'Lark', 'Swift', 'Magpie'];
+
+  // ---------- sound ----------
+  var ac = null;
+  function au() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); return ac; }
+  function tone(f0, f1, dur, type, vol, delay) { var a = au(); if (!a) return; var t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur); g.gain.setValueAtTime(vol || 0.1, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02); }
+  function noise(dur, f0, f1, vol, delay) { var a = au(); if (!a) return; var t0 = a.currentTime + (delay || 0), n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; var s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(); s.buffer = b; fl.type = 'lowpass'; fl.frequency.setValueAtTime(f0, t0); fl.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); s.connect(fl); fl.connect(g); g.connect(a.destination); s.start(t0); }
+  function sSmash() { noise(0.9, 1800, 120, 0.5); tone(90, 40, 0.6, 'sine', 0.35); }
+  function sRaise() { tone(200, 900, 0.5, 'sawtooth', 0.04); noise(0.5, 4000, 8000, 0.05); }
+  function sOpen() { [988, 1319, 1568, 1976].forEach(function (f, i) { tone(f, f, 0.5, 'sine', 0.07, i * 0.09); }); }
+  function sTick() { tone(1200, 1200, 0.05, 'square', 0.03); }
+  function sHurt() { tone(400, 120, 0.4, 'triangle', 0.1); }
+  function sRumble() { noise(1.6, 300, 60, 0.25); }
+  function sWin() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, f, 0.4, 'triangle', 0.08, i * 0.14); }); }
+
+  // ---------- the song: Heroes (Måns Zelmerlöw, 2015) from YouTube, quietly under the riddles ----------
+  var yt = null, ytOk = false, ytWant = false, SONG = '';
+  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { var s = (d.songs || []).filter(function (x) { return x[3] === 'Heroes' && x[0] === 2015; })[0]; if (s) { SONG = s[4]; loadYt(); } }).catch(function () {});
+  function loadYt() { window.onYouTubeIframeAPIReady = function () { yt = new YT.Player('yt', { width: 200, height: 120, videoId: SONG, playerVars: { controls: 0, disablekb: 1, playsinline: 1, rel: 0 }, events: { onReady: function () { ytOk = true; if (ytWant) songPlay(); }, onStateChange: function (ev) { if (ev.data === 0 && ytWant) { try { yt.seekTo(0, true); yt.playVideo(); } catch (e) {} } } } }); }; var sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(sc); }
+  function songPlay() { ytWant = true; if (!ytOk) return; try { yt.unMute(); yt.setVolume(35); yt.playVideo(); } catch (e) {} }
+  function songVol(v) { if (ytOk) try { yt.setVolume(v); } catch (e) {} }
+  function songStop() { ytWant = false; if (ytOk) try { yt.pauseVideo(); } catch (e) {} }
+
+  // ---------- phones ----------
+  var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '', joined = [], net = null, lastState = '', lastSent = 0;
+  for (var ri = 0; ri < 4; ri++) room += A[Math.floor(Math.random() * A.length)];
+  var padUrl = new URL('dungeonpad.html?r=' + room, location.href).href;
+  $('code').textContent = room; $('url').textContent = padUrl.replace(/^https?:\/\//, '');
+  try { var qq = qrcode(0, 'M'); qq.addData(padUrl); qq.make(); $('qr').innerHTML = qq.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('qr').style.display = 'none'; }
+  function showJoined() { $('plist').innerHTML = joined.length ? joined.map(function (j) { return '<span class="pp">' + esc(j.name) + '</span>'; }).join('') : '<span class="mute">Nobody has joined yet: the computer players go alone.</span>'; }
+  try {
+    net = escConnect('dg' + room); net.hostIn();
+    net.on('hi', function (p) { if (!p || !p.pid) return; var nm = String(p.name || 'Hero').trim().slice(0, 14) || 'Hero', j = joined.filter(function (x) { return x.pid === p.pid; })[0]; if (j) j.name = nm; else if (joined.length < 16) joined.push({ pid: p.pid, name: nm }); showJoined(); sendState(true); });
+    net.on('zg', function (p) { if (!p || !p.pid || [0, 1, 2].indexOf(p.c) < 0) return; var pl = players.filter(function (x) { return x.pid === p.pid; })[0]; if (pl) choose(pl, p.c); });   // (a pick from a phone: 0 gold, 1 silver, 2 bronze)
+  } catch (e) { net = null; }
+
+  // ---------- the game ----------
+  var players = [], phase = 'lobby', rd = 0, puz = null, T0 = 0, tLeft = 0, ended = false, tm = [], tickN = -1;
+  function later(ms, f) { tm.push(setTimeout(f, ms)); }
+  function makePlayers() {
+    players = [];
+    if ($('kb').checked) players.push({ name: 'You', kb: true });
+    joined.forEach(function (j) { players.push({ name: j.name, pid: j.pid, human: true }); });
+    var nb = +$('nbots').value, names = BOTN.filter(function (n) { return !players.some(function (p) { return p.name.toLowerCase() === n.toLowerCase(); }); });
+    for (var i = 0; i < nb; i++) players.push({ name: names[i % names.length], bot: true, skill: 0.45 + Math.random() * 0.5 });
+    players.forEach(function (p) { p.lives = LIVES; p.right = 0; p.tsum = 0; p.pick = null; p.at = null; p.outAt = null; });
+  }
+  function alive() { return players.filter(function (p) { return p.lives > 0; }); }
+  function say(s) { $('say').textContent = s || ''; }
+  function start() { au(); makePlayers(); if (!players.length) return; ended = false; rd = 0; $('start').classList.add('hidden'); $('end').classList.add('hidden'); if ($('song').checked) songPlay(); say('“Seekers of treasure… one chest is true. Choose wrongly and I will crush it.”'); $('guard').className = 'calm'; renderChests(null); paintPlayers(); phase = 'intro'; sendState(true); later(5000, nextRound); }
+  function nextRound() {
+    rd++; var al = alive();
+    if (rd > ROUNDS || (players.length > 1 && al.length <= 1) || !al.length) { finish(); return; }
+    puz = makePuzzle(rd - 1, Math.floor(Math.random() * 3));
+    players.forEach(function (p) { p.pick = null; p.at = null; p.hurt = false; if (p.bot && p.lives > 0) { var ok = Math.random() < Math.max(0.35, p.skill + 0.25 - rd * 0.05); p.botPick = ok ? puz.p : [0, 1, 2].filter(function (c) { return c !== puz.p; })[Math.floor(Math.random() * 2)]; p.botAt = 6 + Math.random() * (timeFor(rd - 1) - 10); } });
+    $('rd').textContent = 'Riddle ' + rd + ' of ' + ROUNDS; $('guard').className = 'calm'; say('');
+    renderChests(puz); phase = 'think'; T0 = performance.now(); tLeft = timeFor(rd - 1); tickN = -1; songVol(35); paintPlayers(); sendState(true);
+  }
+  function choose(p, c) { if (phase !== 'think' || p.lives <= 0) return; p.pick = c; p.at = (performance.now() - T0) / 1000; paintPlayers(); sendState(true); if (alive().every(function (q) { return q.pick != null; }) && tLeft > 4) { T0 -= (tLeft - 3) * 1000; } }   // (everyone has picked: 3 more seconds to change your mind)
+  function renderChests(P) {
+    $('chests').innerHTML = [0, 1, 2].map(function (c) { var m = METAL[c], box = P ? P.boxes[c] : [];
+      return '<div class="col" id="col' + c + '"><div class="verdict" id="vd' + c + '"></div><div class="chest">' + chestSvg(m) + '</div><div class="name" style="color:' + m[0] + '">' + NAMES[c] + '</div><div class="pick" id="pk' + c + '"></div>' +
+        (P ? '<div class="plaque">' + (box.length ? box.map(function (s) { return '<div class="st">' + esc(s) + '</div>'; }).join('') : '<div class="st blank">(nothing written on it)</div>') + '</div>' : '') + '</div>'; }).join('');
+  }
+  function chestSvg(m) { return '<svg viewBox="0 0 120 90" aria-hidden="true"><g class="shine"><ellipse cx="60" cy="40" rx="50" ry="26" fill="' + m[2] + '" opacity=".55"/><circle cx="45" cy="38" r="7" fill="#ff4fa3"/><circle cx="62" cy="34" r="8" fill="#5ee0ff"/><circle cx="76" cy="40" r="6" fill="#8dff8a"/><circle cx="56" cy="44" r="6" fill="#ffd166"/></g>' +
+    '<rect x="10" y="40" width="100" height="46" rx="6" fill="' + m[0] + '" stroke="' + m[1] + '" stroke-width="3"/><rect x="10" y="56" width="100" height="6" fill="' + m[1] + '"/><rect x="30" y="40" width="6" height="46" fill="' + m[1] + '"/><rect x="84" y="40" width="6" height="46" fill="' + m[1] + '"/>' +
+    '<g class="lid"><path d="M10 40 Q10 10 60 10 Q110 10 110 40 Z" fill="' + m[0] + '" stroke="' + m[1] + '" stroke-width="3"/><rect x="30" y="14" width="6" height="26" fill="' + m[1] + '"/><rect x="84" y="14" width="6" height="26" fill="' + m[1] + '"/><rect x="52" y="32" width="16" height="16" rx="3" fill="' + m[1] + '"/><circle cx="60" cy="40" r="3" fill="#1b120a"/></g></svg>'; }
+  function paintPlayers() {
+    $('players').innerHTML = players.map(function (p) { var cls = 'pl' + (p.lives <= 0 ? ' out' : '') + (phase === 'think' && p.pick != null ? ' in' : '') + (p.hurt ? ' hurt' : '');
+      return '<span class="' + cls + '">' + esc(p.name) + ' <span class="h">' + '❤️'.repeat(Math.max(0, p.lives)) + '🖤'.repeat(Math.max(0, LIVES - p.lives)) + '</span>' + (phase === 'think' && p.pick != null && p.lives > 0 ? '✓' : '') + '</span>'; }).join('');
+    var al = alive(); $('cnt').textContent = phase === 'think' ? al.filter(function (p) { return p.pick != null; }).length + ' of ' + al.length + ' have chosen' : al.length + ' still standing';
+  }
+  function tick() {
+    if (phase !== 'think') return;
+    tLeft = timeFor(rd - 1) - (performance.now() - T0) / 1000;
+    $('bar').style.width = Math.max(0, tLeft / timeFor(rd - 1)) * 100 + '%';
+    players.forEach(function (p) { if (p.bot && p.lives > 0 && p.pick == null && timeFor(rd - 1) - tLeft >= p.botAt) choose(p, p.botPick); });
+    var k = Math.ceil(tLeft); if (k <= 5 && k > 0 && k !== tickN) { tickN = k; sTick(); }
+    if (tLeft <= 0) reveal();
+    sendState(false);
+  }
+  function reveal() {   // the Guardian rises, smashes the two wrong chests one by one, then the right one opens
+    phase = 'smash'; $('bar').style.width = '0%'; songVol(15);
+    var al = alive(), wrongCount = al.filter(function (p) { return p.pick !== puz.p; }).length, pity = al.length > 0 && al.every(function (p) { return p.pick !== puz.p && p.lives === 1; });
+    [0, 1, 2].forEach(function (c) { $('pk' + c).innerHTML = al.filter(function (p) { return p.pick === c; }).map(function (p) { return '<span>' + esc(p.name) + '</span>'; }).join(''); });
+    say('“Time is up.”'); sRumble(); $('guard').className = 'angry'; paintPlayers(); sendState(true);
+    var wrong = [0, 1, 2].filter(function (c) { return c !== puz.p; }).sort(function () { return Math.random() - 0.5; });
+    later(1400, function () { smash(wrong[0]); });
+    later(3600, function () { smash(wrong[1]); });
+    later(5600, function () {
+      $('col' + puz.p).classList.add('open'); sOpen(); $('guard').className = 'calm'; say('“The treasure was in the ' + NAMES[puz.p].toLowerCase() + ' chest.”');
+      [0, 1, 2].forEach(function (c) { var v = $('vd' + c), s = puz.S[c]; v.className = 'verdict ' + s + ' on'; v.textContent = s === 'T' ? '✓ told the truth' : s === 'F' ? '✗ lied' : s === 'M' ? '½ one true, one false' : 'said nothing'; });
+      al.forEach(function (p) { if (p.pick === puz.p) { p.right++; p.tsum += p.at; } else if (!pity) { p.lives--; p.hurt = true; if (p.lives <= 0) p.outAt = rd; } });
+      if (wrongCount) sHurt(); if (pity) say('“…All of you, wrong? I will spare you. Once.”');
+      phase = 'after'; paintPlayers(); sendState(true);
+      later(pity ? 6000 : 5000, nextRound);
+    });
+  }
+  function smash(c) {
+    var col = $('col' + c), ch = col.querySelector('.chest').getBoundingClientRect(), sw = $('sword'), g = $('guard');
+    g.classList.add('swing'); sRaise();
+    sw.style.transition = 'none'; sw.style.opacity = '1'; sw.style.left = '50%'; sw.style.top = '22vh'; sw.style.transform = 'rotate(0deg)';
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      sw.style.transition = 'left .45s ease-in-out, top .45s ease-in-out, transform .45s ease-in-out'; sw.style.left = (ch.left + ch.width / 2) + 'px'; sw.style.top = (ch.top - window.innerHeight * 0.42) + 'px'; sw.style.transform = 'rotate(' + (c === 0 ? -20 : c === 2 ? 20 : 0) + 'deg) translateY(-6vh)';
+      later(520, function () { sw.style.transition = 'top .12s ease-in, transform .12s ease-in'; sw.style.top = (ch.top - window.innerHeight * 0.3) + 'px'; sw.style.transform = 'rotate(0deg)'; });
+      later(640, function () { col.classList.add('smashed'); sSmash(); $('scene').classList.remove('shake'); void $('scene').offsetWidth; $('scene').classList.add('shake'); debris(ch);
+        $('pk' + c).querySelectorAll('span').forEach(function (s) { s.textContent += ' 💥'; }); });
+      later(1150, function () { sw.style.transition = 'opacity .3s'; sw.style.opacity = '0'; g.classList.remove('swing'); });
+    }); });
+  }
+  function debris(r) { for (var i = 0; i < 14; i++) { var d = document.createElement('i'); d.className = 'debris'; d.style.left = (r.left + r.width / 2) + 'px'; d.style.top = (r.top + r.height * 0.7) + 'px'; d.style.setProperty('--dx', (Math.random() - 0.5) * 30 + 'vh'); d.style.setProperty('--dy', -(Math.random() * 14) + 'vh'); d.style.background = Math.random() < 0.5 ? '#8a6a3a' : '#5a5d64'; document.body.appendChild(d); setTimeout(function (x) { return function () { x.remove(); }; }(d), 1000); } }
+  function ranking() { return players.slice().sort(function (a, b) { return b.lives - a.lives || (b.outAt || 99) - (a.outAt || 99) || b.right - a.right || a.tsum - b.tsum; }); }
+  function finish() {
+    phase = 'end'; ended = true; sWin(); songStop(); tm.forEach(clearTimeout); tm = [];
+    var r = ranking(); r.forEach(function (p, i) { p.rank = i && p.lives === r[i - 1].lives && p.right === r[i - 1].right && (p.outAt || 99) === (r[i - 1].outAt || 99) ? r[i - 1].rank : i + 1; });
+    var win = r.filter(function (p) { return p.rank === 1; });
+    $('endt').textContent = '🏆 ' + win.map(function (p) { return p.name; }).join(' & ') + (win.length > 1 ? ' claim the treasure!' : ' claims the treasure!');
+    $('res').innerHTML = r.map(function (p) { return '<li class="' + (p.rank === 1 ? 'top' : '') + '"><span class="rk">' + p.rank + '</span><span class="nm">' + esc(p.name) + '</span>' + '❤️'.repeat(Math.max(0, p.lives)) + '🖤'.repeat(LIVES - Math.max(0, p.lives)) + ' · ' + p.right + ' right</li>'; }).join('');
+    say(''); setTimeout(function () { $('end').classList.remove('hidden'); }, 600); sendState(true);
+  }
+  $('go').addEventListener('click', start);
+  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); phase = 'lobby'; players = []; $('players').innerHTML = ''; $('chests').innerHTML = ''; showJoined(); sendState(true); });
+  addEventListener('keydown', function (ev) { var me = players.filter(function (p) { return p.kb; })[0]; if (!me) return; var k = +ev.key; if (!(k >= 1 && k <= 3)) return; ev.preventDefault(); choose(me, k - 1); });
+
+  function sendState(force) {
+    if (!net) return;
+    var ph = phase === 'lobby' ? 'lobby' : ended ? 'end' : phase, ps = {};
+    if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
+    else players.forEach(function (p) { if (!p.human) return; ps[p.pid] = { n: p.name, l: p.lives, pk: p.pick, ok: phase === 'after' && p.pick != null ? p.pick === puz.p : null, hurt: !!p.hurt, r: ended ? p.rank : null }; });
+    var o = { ph: ph, p: ps, rd: rd, of: ROUNDS, left: phase === 'think' ? Math.max(0, Math.ceil(tLeft)) : null, ans: phase === 'after' ? puz.p : null, lv: LIVES };
+    var s = JSON.stringify(o), now = Date.now();
+    if (!force && (s === lastState ? now - lastSent < 3000 : now - lastSent < 1000)) return;
+    lastState = s; lastSent = now; net.send('state', o);
+  }
+  setInterval(tick, 100);
+  window.__dg = { players: function () { return players; }, phase: function () { return phase; }, puz: function () { return puz; }, round: function () { return rd; }, skip: function () { T0 -= 1000 * 1000; } };
+})();
+</script>
+</body>
+</html>
