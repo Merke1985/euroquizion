@@ -101,7 +101,7 @@
     var cls = '', txt = '', m = '';
     if (s.ph === 'lobby') { txt = 'You’re in, ' + esc(name) + '!<span class="small">Wait for the host to start</span>'; lastF = 5; }
     else if (s.ph === 'end') { txt = (my.r === 1 ? '🏆 You win!' : 'You finished ' + ordinal(my.r || 0)) + '<span class="small">Look at the big screen</span>'; }
-    else if (my.s === 'out') { cls = 'out'; txt = '🌿 Your bird has landed<span class="small">No feathers left: watch the rest fly</span>'; }
+    else if (my.s === 'out') { cls = 'out'; txt = '🪶 Your bird lost all their feathers<span class="small">Watch the rest fly</span>'; }
     else if (my.s === 'fly') { cls = 'fly' + (held ? ' down' : ''); txt = 'Hold to fly up · let go to glide'; }
     else if (my.s === 'warn') { cls = 'warn'; txt = 'Get ready…<span class="small">You’re about to fly</span>'; try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
     else { txt = 'Watch the big screen'; }
