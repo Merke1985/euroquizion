@@ -94,18 +94,28 @@
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
+      SOAR_T = MUSIC + 128, PICK_T = MUSIC + 155, GRAVE_T = SOAR_T - 9, HOME_T = PICK_T + 4, END_T = HOME_T + 15, GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
+  function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing for the flower at 2:35, then away
+    var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
+    if (T < SOAR_T) return 1; if (T >= PICK_T) return 0.9 + 1.6 * ez((T - PICK_T) / 2);
+    if (T > PICK_T - 4.5) return 3 - 2.1 * ez((T - (PICK_T - 4.5)) / 3.7);
+    return 1 + 2 * ez((T - SOAR_T) / 2.5);
+  }
   function camAt(T) { return Math.max(0, T - TAKEOFF - 2.8) * SPEED; }   // (roughly where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     REVEAL0 = tAir + 3.2; order.forEach(function (b, i) { b.colT = REVEAL0 + i * 0.9; });
     MSG0 = REVEAL0 + (order.length - 1) * 0.9 + 1.4 + 2.6; MSG1 = MSG0 + 7;   // (a quiet moment after the last colour, then the how-to on screen: not voiced, so the spell isn't broken)
     PRACT0 = MSG1 + 0.8 + WARN; pgroups = []; for (var i = 0; i < order.length; i += 3) pgroups.push(order.slice(i, i + 3));   // (practice in threes: the same rhythm as the rest of the game) pgi = 0; pracDone = false;
+    PRACT_T = Math.max(6, Math.min(10, (GRAVE_T - 30 - PRACT0) / pgroups.length));   // (10 s each; a little shorter for a big flock, so there's still a game before the graveyard)
     PRACT_END = PRACT0 + pgroups.length * PRACT_T; SAFE_X = camAt(PRACT_END) + 0.3 * W / H + 0.2;
-    FOREST = SAFE_X + 40 * SPEED; DIVE0 = FOREST - 3.4; DIVE1 = FOREST + 0.9; DUR = PRACT_END + 40 + 45; XEND = camAt(DUR) + 1;
+    var sky = Math.max(3, 0.3 * (GRAVE_T - PRACT_END - 11.9)), FT = Math.min(PRACT_END + sky + 11.9, GRAVE_T - 3);   // (the time left until the graveyard: about a third sky, then the dive and the forest)
+    FOREST = camAt(FT) + 0.3 * W / H; DIVE0 = FOREST - 3.4; DIVE1 = FOREST + 0.9; GRAVE_X = camAt(GRAVE_T) + 0.3 * W / H; XEND = GRAVE_X; DUR = END_T;
   }   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
   var seed = 1;
   function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
   function diff(x) {   // the sky is the warm-up (wide, gentle, few obstacles: get used to flying); the forest gets harder and harder
+    if (x >= GRAVE_X) return 1 - 0.45 * Math.min(1, (x - GRAVE_X) / 1.5);   // (the graveyard: open sky again)
     if (x < FOREST) return 0.25 * Math.max(0, x - SAFE_X) / Math.max(1, FOREST - SAFE_X);
     return Math.min(1, 0.45 + 0.55 * (x - FOREST) / Math.max(1, XEND - FOREST));
   }
@@ -130,7 +140,7 @@
   var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
   function birdXAt(T) { return cam + SPEED * (T - t) + 0.3 * W / H; }
   function newPattern(x) {
-    var d = diff(x), forest = x >= FOREST, L = TURN * SPEED, n = 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = [];
+    var d = diff(x), forest = x >= FOREST && x < GRAVE_X, L = TURN * SPEED, n = 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = [];
     for (var i = 0; i < n; i++) p.push({ u: 0.75 + (i + 0.5 + (rnd() - 0.5) * 0.5) * (L - 1.05) / n, top: forest && rnd() < 0.5, reach: 0.32 + 0.28 * d + rnd() * 0.12, tw: rnd() });
     return p;
   }
@@ -173,13 +183,14 @@
     return sh.slice(0, Math.min(pickN, al.length));
   }
   function schedule() {
-    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && t < DUR - 4) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
+    if (t >= SOAR_T) return;
+    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick + TURN <= SOAR_T + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
       var xa = birdXAt(nextPick), xb = xa + TURN * SPEED;
       if (xb > DIVE0 - 1.8 && xa < DIVE1 + 0.3) nextPick = t + (DIVE1 + 0.4 - (cam + 0.3 * W / H)) / SPEED;
       else { plannedFor = nextPick; planTurn(nextPick); }
     }
     if (inDive(cam + 0.3 * W / H + 0.6)) { birds.forEach(function (b) { b.manual = false; }); pending = []; nextPick = Math.max(nextPick, t + WARN + 1.2); return; }   // (the dive: everyone on autopilot)
-    if (t >= nextPick - WARN && !pending.length && t < DUR - 2) {
+    if (t >= nextPick - WARN && !pending.length && nextPick + (t < PRACT_END - 1 ? 0 : TURN) <= SOAR_T + 0.3) {
       if (pgi < pgroups.length && t < PRACT_END - 1) pending = pgroups[pgi++].filter(function (b) { return !b.out; });   // (practice: the pairs in turn)
       else { if (!pracDone) { pracDone = true; nowAt = t + WARN; birds.forEach(function (b) { b.flown = 0; }); } pending = choose(); }
       warnAt = t;
@@ -207,11 +218,14 @@
   // ---------- one step ----------
   var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
   function step(dt) {
-    t += dt; if (t >= TAKEOFF) cam += SPEED * dt * Math.max(0, Math.min(1, (t - TAKEOFF - 1.6) / 2.4)); schedule();   // (the camera holds on the house while the flock rises from behind it, then sets off gently)
+    t += dt; if (t >= TAKEOFF) cam += SPEED * dt * Math.max(0, Math.min(1, (t - TAKEOFF - 1.6) / 2.4)) * spd(t); if (t >= HOME_T) cam = 0; schedule();
+    if (t >= SOAR_T && !soarOn) { soarOn = true; pending = []; birds.forEach(function (b) { b.manual = false; if (b.out) { b.out = false; b.rejoin = true; b.y = 1.15; b.vy = -0.3; b.inv = 0; } }); }   // (2:08: nobody steers any more; birds that landed rejoin the flock)
+    if (t >= PICK_T - 7 && FLOWER_X < 0) { var ld = birds.filter(function (b) { return b.lead; })[0], fx = cam + bx(ld); for (var tt = t; tt < PICK_T; tt += 0.01) fx += SPEED * spd(tt) * 0.01; FLOWER_X = fx; FLOWER_Y = cen(fx) + half(fx); }   // (the one flower, on a grave just where the lone bird will be at 2:35)   // (the camera holds on the house while the flock rises from behind it, then sets off gently)
     if (musicWant && t >= MUSIC) { musicWant = false; ytPlay(); }   // (the song starts after a moment of silence at the house)
     if (t >= TAKEOFF && !flockPlayed) { flockPlayed = true; flockSound(); }
     birds.forEach(function (b) {
       if (t < TAKEOFF) { b.flap = 0; return; }   // (still sitting on the roof)
+      if (t >= HOME_T) return;   // (home: see birdPos)
       b.flap += dt * (b.manual && (b.human ? hold : b.hold) ? 16 : 7);
       if (b.out) { b.fall += dt; b.vy = Math.min(1.2, b.vy + 1.6 * dt); b.y += b.vy * dt; return; }
       b.inv = Math.max(0, b.inv - dt); b.back = Math.max(0, b.back - dt * 0.01);
@@ -226,16 +240,21 @@
         else if (b.inv <= 0 && hits(b, X)) hit(b);
         if (!b.turnHit) b.clean += dt;
       } else {   // autopilot: back to its place in the flock, smoothly
-        var ty = cen(X + 0.12) + b.off * half(X) * 0.62, ny = b.y + (ty - b.y) * Math.min(1, dt * 3.2);
+        var ty = cen(X + 0.12) + b.off * half(X) * 0.62, rate = 3.2;
+        if (t >= SOAR_T) { b.flap += dt * 7; rate = 2.2;   // (soaring high and fast; at 2:35 the lone bird dives for the flower; then they all fly off)
+          if (t < PICK_T - 2.8) ty = 0.2 + b.off * 0.08 + 0.03 * Math.sin(t * 1.5 + b.id);
+          else if (t < PICK_T + 0.3) { ty = b.lead ? FLOWER_Y - 0.075 : 0.3 + b.off * 0.07; if (b.lead) rate = 3; }
+          else ty = 0.06 + b.off * 0.05; }
+        var ny = b.y + (ty - b.y) * Math.min(1, dt * rate);
         b.vy = (ny - b.y) / Math.max(dt, 1e-3); b.y = ny;
       }
     });
     parts = parts.filter(function (p) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.35 * dt; p.r += dt * 2.4; return p.t < 1.6; });
-    if (!ended && (t >= DUR || !alive().length)) finish();
+    if (!ended && t >= DUR) finish();
   }
   function hits(b, X) {
     var c = cen(X), h = half(X);
-    if ((X >= FOREST && b.y - R < c - h) || b.y + R > c + h) return true;   // (the sky has no ceiling: only the pines below)
+    if ((X >= FOREST && X < GRAVE_X && b.y - R < c - h) || b.y + R > c + h) return true;   // (the sky has no ceiling: only the pines below)
     for (var i = 0; i < branches.length; i++) { var r = branches[i]; if (Math.abs(r.x - X) < 0.02 + R) { if (r.top ? b.y - R < r.tip : b.y + R > r.tip) return true; } }
     return false;
   }
@@ -273,13 +292,15 @@
   /* The singer in her bedroom window: a 2D illustration in the look of the performance (blonde bob, black high-necked
      lace, dark lips). u and v run 0..1 across the box she's drawn in; she sings, blinks and sways a little. */
   function drawSinger(X0, Y0, Wd, Hd) {   // her head bowed a little, and now and then a tear
-    cx.save(); var pv = [X0 + Wd * 0.5, Y0 + Hd * 0.62]; cx.translate(pv[0], pv[1]); cx.rotate(-0.05 + Math.sin(t * 0.5) * 0.015); cx.translate(-pv[0], -pv[1] + Hd * 0.015);
+    cx.save(); var pv = [X0 + Wd * 0.5, Y0 + Hd * 0.62]; cx.translate(pv[0], pv[1]); cx.rotate(-0.05 * (1 - smileA * 0.8) + Math.sin(t * 0.5) * 0.015); cx.translate(-pv[0], -pv[1] + Hd * 0.015);
+    var home = t >= HOME_T; smileA = home ? Math.max(0, Math.min(1, (t - HOME_T - 10.4) / 2.2)) : 0; smileA = smileA * smileA * (3 - 2 * smileA);
     drawSinger0(X0, Y0, Wd, Hd);
-    var tc = (t % 7) / 7; if (tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek
+    var tc = home ? Math.min(0.74, (t - HOME_T - 8.8) / 7) : (t % 7) / 7; if (tc >= 0 && tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek   // (at home: one last, slow tear; then the smile)
     cx.restore();
   }
+  var smileA = 0;
   function drawSinger0(X0, Y0, Wd, Hd) {
-    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.sin(t * 3.1) * 0.4 + Math.sin(t * 1.3) * 0.35);   // (singing softly)
+    var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.6) * 0.005, open = Math.max(0, Math.sin(t * 3.1) * 0.4 + Math.sin(t * 1.3) * 0.35) * (1 - 0.7 * smileA);   // (singing softly)
     var M = function (u, v) { var q = P(u + sw, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u + sw, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var a = P(cu + sw, cv), b = P(u + sw, v); cx.quadraticCurveTo(a[0], a[1], b[0], b[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var p1 = P(a1 + sw, b1), p2 = P(a2 + sw, b2), p3 = P(u + sw, v); cx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); };
     // the hair behind her head
     var hg = cx.createLinearGradient(X0, Y0 + Hd * 0.12, X0, Y0 + Hd * 0.62); hg.addColorStop(0, '#f6e6b8'); hg.addColorStop(0.6, '#e2c98e'); hg.addColorStop(1, '#c9ab6c'); cx.fillStyle = hg;
@@ -298,7 +319,7 @@
     // eyes: light, outlined dark; a blink now and then
     var blink = (t % 4.3) < 0.13 ? 0.15 : 1;
     [0.435, 0.565].forEach(function (u, side) {
-      var c = P(u + sw, 0.392), ew = Wd * 0.044, eh = Hd * 0.012 * blink;   // (heavy lids)
+      var c = P(u + sw, 0.392), ew = Wd * 0.044, eh = Hd * 0.012 * blink * (1 - 0.3 * smileA);   // (heavy lids)
       cx.fillStyle = '#f4f0ee'; cx.beginPath(); cx.ellipse(c[0], c[1], ew, Math.max(0.5, eh), 0, 0, 7); cx.fill();
       if (blink > 0.5) { cx.fillStyle = '#7d9cc4'; cx.beginPath(); cx.arc(c[0] + Wd * 0.002, c[1] + Hd * 0.004, Hd * 0.012, 0, 7); cx.fill(); cx.fillStyle = '#1a1a22'; cx.beginPath(); cx.arc(c[0] + Wd * 0.002, c[1] + Hd * 0.004, Hd * 0.005, 0, 7); cx.fill(); cx.fillStyle = 'rgba(255,255,255,.9)'; cx.beginPath(); cx.arc(c[0] + Wd * 0.009, c[1] - Hd * 0.005, Hd * 0.003, 0, 7); cx.fill(); }
       cx.strokeStyle = '#1c1418'; cx.lineWidth = Math.max(1, Wd * 0.006); cx.beginPath(); cx.ellipse(c[0], c[1], ew, Math.max(0.5, eh), 0, Math.PI, 0); cx.stroke();   // eyeliner
@@ -306,12 +327,12 @@
       if (blink > 0.5) { cx.strokeStyle = '#1c1418'; cx.lineWidth = Math.max(0.6, Wd * 0.003); for (var la = 0; la < 5; la++) { var lx = c[0] + ew * (-0.8 + la * 0.4) * (side ? 1 : 1), ly = c[1] - eh * Math.sqrt(Math.max(0, 1 - Math.pow(-0.8 + la * 0.4, 2))); cx.beginPath(); cx.moveTo(lx, ly); cx.lineTo(lx + (la - 2) * Wd * 0.003 + (side ? Wd * 0.004 : -Wd * 0.004), ly - Hd * 0.009); cx.stroke(); } }   // lashes
       cx.strokeStyle = 'rgba(120,80,80,.35)'; cx.lineWidth = Math.max(0.6, Wd * 0.003); cx.beginPath(); cx.ellipse(c[0], c[1] - Hd * 0.006, ew * 1.05, Hd * 0.022, 0, Math.PI * 1.1, Math.PI * 1.9); cx.stroke();   // the crease of the eyelid
       cx.fillStyle = 'rgba(80,70,110,.18)'; cx.beginPath(); cx.ellipse(c[0], c[1] - Hd * 0.012, ew * 1.05, Hd * 0.012, 0, Math.PI, 0); cx.fill();   // a little shadow on the lid
-      var inn = side ? -1 : 1; cx.strokeStyle = '#8a6a48'; cx.lineWidth = Math.max(1, Wd * 0.007); cx.beginPath(); cx.moveTo(c[0] - inn * ew * 1.15, c[1] - Hd * 0.03); cx.quadraticCurveTo(c[0], c[1] - Hd * 0.04, c[0] + inn * ew * 1.0, c[1] - Hd * 0.06); cx.stroke();   // brows: raised in the middle, sad
+      var inn = side ? -1 : 1; cx.strokeStyle = '#8a6a48'; cx.lineWidth = Math.max(1, Wd * 0.007); cx.beginPath(); cx.moveTo(c[0] - inn * ew * 1.15, c[1] - Hd * 0.03); cx.quadraticCurveTo(c[0], c[1] - Hd * 0.04, c[0] + inn * ew * 1.0, c[1] - Hd * (0.06 - 0.022 * smileA)); cx.stroke();   // brows: raised in the middle, sad
       cx.strokeStyle = 'rgba(120,80,70,.3)'; cx.lineWidth = Math.max(0.5, Wd * 0.0025); cx.beginPath(); cx.moveTo(c[0] + inn * ew * 0.9, c[1] - Hd * 0.07); cx.lineTo(c[0] + inn * ew * 1.15, c[1] - Hd * 0.055); cx.stroke();   // a small worried line
     });
     cx.strokeStyle = 'rgba(120,80,70,.45)'; cx.lineWidth = Math.max(0.8, Wd * 0.004); cx.beginPath(); M(0.5, 0.41); Qc(0.49, 0.47, 0.51, 0.485); cx.stroke(); cx.beginPath(); M(0.48, 0.49); Qc(0.5, 0.5, 0.525, 0.488); cx.stroke();   // the nose
     // the lips: dark, open as she sings
-    cx.fillStyle = '#3a1c26'; cx.beginPath(); M(0.457, 0.545); Qc(0.5, 0.518, 0.543, 0.545); Qc(0.5, 0.54 + open * 0.025, 0.457, 0.545); cx.fill();   // (the corners turned down)
+    var cy0 = 0.545 - smileA * 0.02; cx.fillStyle = '#3a1c26'; cx.beginPath(); M(0.457 - smileA * 0.006, cy0); Qc(0.5, 0.518 + smileA * 0.01, 0.543 + smileA * 0.006, cy0); Qc(0.5, 0.54 + open * 0.025 + smileA * 0.02, 0.457 - smileA * 0.006, cy0); cx.fill();   // (the corners turned down… and at the very end, up)   // (the corners turned down)
     cx.fillStyle = 'rgba(255,220,230,.25)'; var lh = P(0.51 + sw, 0.527); cx.beginPath(); cx.ellipse(lh[0], lh[1], Wd * 0.012, Hd * 0.003, 0, 0, 7); cx.fill();   // a sheen on the lips
     if (open > 0.15) { cx.fillStyle = '#160a10'; cx.beginPath(); var mc = P(0.5 + sw, 0.536 + open * 0.008); cx.ellipse(mc[0], mc[1], Wd * 0.03, Hd * 0.005 + open * Hd * 0.012, 0, 0, 7); cx.fill(); }
     cx.fillStyle = 'rgba(60,40,40,.18)'; cx.beginPath(); M(0.35, 0.3); Qc(0.38, 0.22, 0.47, 0.2); Lq(0.47, 0.24); Qc(0.4, 0.26, 0.37, 0.4); cx.closePath(); cx.fill(); cx.beginPath(); M(0.65, 0.3); Qc(0.62, 0.22, 0.5, 0.21); Lq(0.5, 0.25); Qc(0.6, 0.26, 0.63, 0.4); cx.closePath(); cx.fill();   // shadow from the hair on her face
@@ -366,6 +387,7 @@
     var cw = Math.sin(t * 1.1) * 0.06, cw2 = Math.sin(t * 1.7 + 1) * 0.04;
     cx.fillStyle = 'rgba(215,225,255,.55)'; cx.beginPath(); cx.moveTo(W0 + Ww * 0.02, V0 + Vh * 0.02); cx.bezierCurveTo(W0 - Ww * (0.18 + cw), V0 + Vh * 0.3, W0 - Ww * (0.32 + cw2), V0 + Vh * 0.62, W0 - Ww * (0.28 + cw), V0 + Vh * 0.98); cx.lineTo(W0 + Ww * 0.06, V0 + Vh * 0.95); cx.bezierCurveTo(W0 - Ww * (0.05 + cw2), V0 + Vh * 0.6, W0 + Ww * 0.03, V0 + Vh * 0.3, W0 + Ww * 0.12, V0 + Vh * 0.02); cx.closePath(); cx.fill();   // the curtain, blowing out of the window
     cx.fillStyle = '#1d1830'; cx.fillRect(W0 - Ww * 0.06, V1, Ww * 1.12, Ww * 0.04);   // the sill
+    var dropT = HOME_T + 4; if (t >= dropT) { var fd = Math.min(1, (t - dropT) / 0.45); cx.save(); cx.translate(W0 + Ww * 0.62, V1 - (1 - fd * fd) * Vh * 0.12); cx.rotate(-1.5 * fd - 0.3 * (1 - fd)); drawRose(0, 0, Ww * 0.32, 0.5 * fd); cx.restore(); }   // (the rose, dropped on her sill)
 
   }
   /* the two hosts, left of the house in the dark: one holds a lantern, they whisper (speech bubbles for now; voices later) */
@@ -409,6 +431,36 @@
     cx.fillStyle = '#fff6d0'; cx.beginPath(); cx.ellipse(lx, ly - hh * 0.005 + Math.sin(t * 13) * hh * 0.003, hh * 0.012, hh * 0.022 * fl, 0, 0, 7); cx.fill();   // the flame
     cx.strokeStyle = '#2a2140'; cx.lineWidth = hh * 0.006; cx.beginPath(); cx.moveTo(lx, ly - hh * 0.067); cx.lineTo(lx, ly + hh * 0.05); cx.stroke();
   }
+  /* the flower: a single red rose (stem along -y from its base at 0,0; L long) */
+  function drawRose(x, y, L, glow) {
+    if (glow) { var g = cx.createRadialGradient(x, y - L, 0, x, y - L, L * 1.4); g.addColorStop(0, 'rgba(255,90,110,' + (0.45 * glow) + ')'); g.addColorStop(1, 'rgba(255,90,110,0)'); cx.fillStyle = g; cx.beginPath(); cx.arc(x, y - L, L * 1.4, 0, 7); cx.fill(); }
+    cx.strokeStyle = '#2f6b3a'; cx.lineWidth = Math.max(1, L * 0.07); cx.lineCap = 'round'; cx.beginPath(); cx.moveTo(x, y); cx.quadraticCurveTo(x + L * 0.12, y - L * 0.5, x, y - L * 0.82); cx.stroke();
+    cx.fillStyle = '#3d8a4a'; cx.beginPath(); cx.ellipse(x + L * 0.12, y - L * 0.42, L * 0.16, L * 0.06, -0.6, 0, 7); cx.fill();   // a leaf
+    var c = [x, y - L * 0.95], r0 = L * 0.22;
+    cx.fillStyle = '#9e1630'; cx.beginPath(); cx.ellipse(c[0], c[1] + r0 * 0.25, r0 * 1.05, r0 * 0.8, 0, 0, 7); cx.fill();
+    cx.fillStyle = '#d42a48'; cx.beginPath(); cx.ellipse(c[0] - r0 * 0.3, c[1], r0 * 0.6, r0 * 0.75, -0.3, 0, 7); cx.fill(); cx.beginPath(); cx.ellipse(c[0] + r0 * 0.32, c[1], r0 * 0.58, r0 * 0.72, 0.3, 0, 7); cx.fill();
+    cx.fillStyle = '#ff5a74'; cx.beginPath(); cx.ellipse(c[0], c[1] - r0 * 0.2, r0 * 0.38, r0 * 0.42, 0, 0, 7); cx.fill();
+    cx.strokeStyle = '#7a0e22'; cx.lineWidth = Math.max(0.6, L * 0.02); cx.beginPath(); cx.arc(c[0], c[1] - r0 * 0.15, r0 * 0.2, 0.5, 5.5); cx.stroke();
+  }
+  /* the graveyard after the forest: old stones and crosses along the bottom edge, dark cypresses, a little chapel */
+  function graveEdge(X) {
+    var e = cen(X) + half(X), k = Math.floor(X / 0.13), f = X / 0.13 - k, ty = Math.floor(hsh(k + 41) * 3);
+    if (ty === 0 && f > 0.22 && f < 0.62) { var u = (f - 0.42) / 0.2; return e + 0.012 + 0.02 * (1 - Math.sqrt(Math.max(0, 1 - u * u))) - 0.012; }   // a round-topped stone
+    if (ty === 1 && f > 0.47 && f < 0.53) return e - 0.004;   // a cross: the upright
+    if (ty === 1 && f > 0.36 && f < 0.64) return e + 0.014;   // and its arms
+    return e + 0.018 + 0.006 * Math.sin(X * 40);   // grass between the graves
+  }
+  function drawGraveyard(x0, x1) {
+    var g0 = Math.max(x0, GRAVE_X); if (g0 >= x1) return; var st = 0.006, X;
+    for (var q = Math.floor(g0 / 0.9) - 1; q * 0.9 < x1 + 0.3; q++) { var qx = q * 0.9 + hsh(q) * 0.4; if (qx < GRAVE_X + 0.2) continue; var px = sx(qx), base = sy(cen(qx) + half(qx) + 0.06), th = H * (0.22 + hsh(q + 7) * 0.12);   // cypresses behind the stones
+      cx.fillStyle = '#060b18'; cx.beginPath(); cx.moveTo(px, base - th); cx.quadraticCurveTo(px + th * 0.16, base - th * 0.5, px + th * 0.07, base); cx.lineTo(px - th * 0.07, base); cx.quadraticCurveTo(px - th * 0.16, base - th * 0.5, px, base - th); cx.fill();
+      if (hsh(q + 3) < 0.18) { var cw = H * 0.12, cy = base; cx.fillStyle = '#080d1d'; cx.fillRect(px + cw * 0.3, cy - cw * 0.8, cw, cw * 0.8); cx.beginPath(); cx.moveTo(px + cw * 0.22, cy - cw * 0.8); cx.lineTo(px + cw * 0.8, cy - cw * 1.35); cx.lineTo(px + cw * 1.38, cy - cw * 0.8); cx.fill(); cx.fillRect(px + cw * 0.76, cy - cw * 1.6, cw * 0.08, cw * 0.3); cx.fillRect(px + cw * 0.7, cy - cw * 1.52, cw * 0.2, cw * 0.06); cx.fillStyle = 'rgba(255,190,110,.55)'; cx.fillRect(px + cw * 0.7, cy - cw * 0.55, cw * 0.2, cw * 0.28); }   // now and then a little chapel, one window lit
+    }
+    var mg = cx.createLinearGradient(0, H * 0.55, 0, H); mg.addColorStop(0, 'rgba(150,175,230,0)'); mg.addColorStop(1, 'rgba(150,175,230,.12)'); cx.fillStyle = mg; cx.fillRect(sx(g0), H * 0.55, sx(x1) - sx(g0), H * 0.45);   // mist over the graves
+    cx.beginPath(); cx.moveTo(sx(g0), H); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.lineTo(sx(x1), H); cx.closePath(); cx.fillStyle = '#04070f'; cx.fill();
+    cx.beginPath(); for (X = g0; X <= x1; X += st) cx.lineTo(sx(X), sy(graveEdge(X))); cx.strokeStyle = 'rgba(190,205,240,.4)'; cx.lineWidth = 1.5; cx.stroke();   // moonlight on the stones
+    if (FLOWER_X > 0 && t < PICK_T && FLOWER_X > x0 - 0.2 && FLOWER_X < x1 + 0.2) drawRose(sx(FLOWER_X), sy(FLOWER_Y) - 2, H * 0.06, 0.7 + 0.3 * Math.sin(t * 3));   // the one flower, glowing
+  }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
     var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
     if (side < 0) return e - 0.018 * (Math.abs(Math.sin(X * 6.3)) + 0.6 * Math.abs(Math.sin(X * 11.7 + 2)));
@@ -417,7 +469,7 @@
   }
   /* the camera at the start: a close-up of the singer in the window, then up to the roof, then out to the whole scene */
   function camView() {
-    if (t >= INTRO) return null;
+    if (t >= INTRO && t < HOME_T) return null;
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
     var Z0 = 0.46 / (WIN.y1 - WIN.y0), lead = birds.filter(function (b) { return b.lead; })[0], lx = (lead ? lead.rx : 0.905), wx = (WIN.x0 + WIN.x1) / 2, wy = (WIN.y0 + WIN.y1) / 2;
     var Z2 = Math.min(3, (W / H) / 0.62), tx2 = (wx + lx) / 2 * H, ty2 = (wy + ROOF_Y - 0.03) / 2 * H;   // (her and the bird together)
@@ -429,10 +481,17 @@
       [CLOSE_END + TWO + HOLD2, Z2 * 0.94, tx2, ty2],
       [INTRO, 1, W / 2, H / 2]   // and out to the whole scene
     ];
+    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 4.4, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 8.6, 6.4, wx * H, (fy + 0.012) * H], [END_T + 4, 7, wx * H, (fy + 0.008) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
     for (var i = 1; i < K.length; i++) if (t < K[i][0]) { var A = K[i - 1], B = K[i], e = ez((t - A[0]) / (B[0] - A[0])); return { z: A[1] * Math.pow(B[1] / A[1], e), x: A[2] + (B[2] - A[2]) * e, y: A[3] + (B[3] - A[3]) * e }; }
     return null;
   }
   function birdPos(b) {   // where a bird is: at the take-off the lone bird goes up off the ridge; the others rise straight up from behind the house first, then out into the flock
+    if (t >= HOME_T) {   // home again: the lone bird brings the flower to her sill, the flock settles on the roof
+      var i = birds.indexOf(b), k = b.lead ? 0 : i + 1, a0 = HOME_T + (b.lead ? 0.4 : 1 + k * 0.3), du = b.lead ? 3.4 : 3.2, ha = Math.max(0, Math.min(1, (t - a0) / du)), he = 1 - Math.pow(1 - ha, 2.2);
+      var others = birds.filter(function (o) { return !o.lead; }), j = others.indexOf(b), dx = b.lead ? WIN.x1 - 0.02 : 0.2 + (others.length > 1 ? j / (others.length - 1) : 0.5) * 0.66, dy = b.lead ? WIN.y1 - 0.021 : ROOF_Y - 0.02;
+      if (b.lead && t >= HOME_T + 5) { var ua = Math.max(0, Math.min(1, (t - HOME_T - 5) / 1.8)), ue = ua * ua * (3 - 2 * ua); return { X: dx + (0.905 - dx) * ue, y: dy + (ROOF_Y - 0.02 - dy) * ue - Math.sin(Math.PI * ua) * 0.06, L: 1, home: ua < 1 ? ua : 1 }; }   // (after the drop: up to its place on the roof, leaving her the moment)
+      return { X: dx + (1.5 + k * 0.08) * (1 - he), y: dy - (0.35 + (k % 3) * 0.05) * Math.pow(1 - he, 1.3), L: 1, home: ha };
+    }
     var X = cam + bx(b), y = b.y, L = t < TAKEOFF ? 0 : Math.max(0, Math.min(1, (t - TAKEOFF - b.dl) / b.fi));
     if (L < 1) {
       if (b.lead) { var e = L * L * (3 - 2 * L); X = b.rx + (X - b.rx) * e; y = b.ry + (b.y - b.ry) * e - Math.sin(Math.PI * L) * 0.12; }
@@ -447,12 +506,13 @@
       var bp = birdPos(b), X = bp.X, py0 = bp.y, L = bp.L, landing = bp.land != null && bp.land < 1;
       var px = sx(X), py = sy(py0), s = H * 0.032;
       if (b.out && py > H + 40) return;
-      cx.save(); cx.translate(px, py); cx.rotate(landing ? 0.12 * (1 - bp.land) : t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * Math.max(L, 0.25)) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
+      cx.save(); cx.translate(px, py); cx.rotate(bp.home != null ? 0.15 * (1 - bp.home) * (bp.home < 1 ? 1 : 0) : landing ? 0.12 * (1 - bp.land) : t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * Math.max(L, 0.25)) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
       if (t < TAKEOFF && !landing) cx.translate(0, -Math.max(0, Math.sin(t * 3 + b.id * 1.7)) * s * 0.18);   // (a little hop now and then, while they wait)
       if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
       if (b.manual) { var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); }
       var warn = pending.indexOf(b) >= 0; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
-      var sitting = (t < TAKEOFF && !landing) || (b.lead && L < 0.15 && t >= TAKEOFF);
+      var sitting = (t < TAKEOFF && !landing) || (b.lead && L < 0.15 && t >= TAKEOFF) || (bp.home != null && bp.home >= 1);
+      if (bp.home != null && bp.home < 1) landing = false;
       if (sitting || L < 0.35) { cx.strokeStyle = '#3a2a1a'; cx.lineWidth = Math.max(1, s * 0.07); cx.lineCap = 'round'; var tuck = sitting ? 0 : 0.6;
         [[-0.12, 0], [0.18, 0.04]].forEach(function (lg) { var lx = s * lg[0], ly0 = s * 0.5, ly1 = s * (0.98 - tuck * 0.35) + lg[1] * s; cx.beginPath(); cx.moveTo(lx, ly0); cx.lineTo(lx - s * 0.05 * tuck, ly1); cx.stroke(); if (!tuck) { cx.beginPath(); cx.moveTo(lx - s * 0.18, ly1 + s * 0.02); cx.lineTo(lx + s * 0.22, ly1 + s * 0.02); cx.moveTo(lx, ly1); cx.lineTo(lx - s * 0.12, ly1 + s * 0.08); cx.stroke(); } });   // little legs and toes
       }
@@ -464,14 +524,15 @@
       cx.beginPath(); cx.arc(s * 0.82, -s * 0.28, s * 0.42, 0, 7); cx.fill();   // head
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(s * 1.15, -s * 0.36); cx.lineTo(s * 1.6, -s * 0.22); cx.lineTo(s * 1.15, -s * 0.12); cx.closePath(); cx.fill();   // beak
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
-      var wa = sitting ? -0.15 : landing ? Math.sin(t * (bp.land > 0.7 ? 20 : 11)) * 0.9 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
+      var wa = sitting ? -0.15 : bp.home != null ? Math.sin(t * 14 + b.id) * 0.9 : landing ? Math.sin(t * (bp.land > 0.7 ? 20 : 11)) * 0.9 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
       cx.strokeStyle = 'rgba(120,130,170,.4)'; cx.lineWidth = 1; for (var wf = 0; wf < 3; wf++) { cx.beginPath(); cx.moveTo(-s * (0.15 - wf * 0.15), -s * 0.08); cx.quadraticCurveTo(s * (0.05 + wf * 0.08), -s * (0.25 + 1.0 * wa) * (0.6 + wf * 0.15), s * (0.3 + wf * 0.04), -s * 0.06); cx.stroke(); }   // feathers on the wing
-      var colA = Math.max(0, Math.min(1, (t - b.colT) / 0.5)), pop = t - b.colT;   // (plain black blackbirds until the whole flock is in the air; then the neon lights up, one bird at a time)
+      var colA = Math.max(0, Math.min(1, (t - b.colT) / 0.5)) * (1 - Math.max(0, Math.min(1, (t - HOME_T) / 2.5))), pop = t - b.colT;   // (at home they're plain blackbirds again)   // (plain black blackbirds until the whole flock is in the air; then the neon lights up, one bird at a time)
       if (pop > 0 && pop < 0.9) { cx.strokeStyle = b.col; cx.globalAlpha = 1 - pop / 0.9; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.2 + pop * 3), 0, 7); cx.stroke(); var fl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 3); fl.addColorStop(0, b.col + '99'); fl.addColorStop(1, b.col + '00'); cx.fillStyle = fl; cx.beginPath(); cx.arc(0, 0, s * 3, 0, 7); cx.fill(); cx.globalAlpha = 1; }   // (the flash as it lights up)
       if (colA > 0) { cx.globalAlpha *= colA; cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke(); cx.globalAlpha /= colA; }   // their colour
+      if (b.lead && t >= PICK_T - 0.05 && t < HOME_T + 4 && !(t >= PICK_T + 2.4 && t < HOME_T)) { cx.save(); cx.translate(s * 1.45, -s * 0.15); cx.rotate(1.2); drawRose(0, 0, s * 0.9, 0.8); cx.restore(); }   // (the flower in its beak)
       cx.restore();
-      var intro = t > b.colT && t < b.colT + 2.8;   // (its name, for a moment, as it lights up)
-      if (!b.out && t > b.colT && (b.manual || b.human || intro || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
+      var intro = t > b.colT && t < b.colT + 2.8 && t < SOAR_T;   // (its name, for a moment, as it lights up)
+      if (!b.out && t > b.colT && t < SOAR_T && (b.manual || b.human || intro || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
   }
   function draw() {
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -486,16 +547,16 @@
     var x0 = cam - 0.1, x1 = cam + W / H + 0.1, st = 0.015, X;
     birds.forEach(function (b) { if (behind(b)) drawBird(b); });
     drawHouse();
-    var xf = Math.max(x0, FOREST);   // (the forest starts behind the house)
+    var xf = Math.max(x0, FOREST), xe = Math.min(x1, GRAVE_X);   // (the forest starts behind the house and ends at the graveyard)
     // the path through the trees: a faint glow of moonlight
-    cx.beginPath(); for (X = xf; X <= x1; X += st) cx.lineTo(sx(X), sy(cen(X) - half(X))); for (X = x1; X >= xf; X -= st) cx.lineTo(sx(X), sy(cen(X) + half(X))); cx.closePath();
+    if (xf < xe) { cx.beginPath(); for (X = xf; X <= xe; X += st) cx.lineTo(sx(X), sy(cen(X) - half(X))); for (X = xe; X >= xf; X -= st) cx.lineTo(sx(X), sy(cen(X) + half(X))); cx.closePath();
     var fx = sx(FOREST), bg = fx > -H * 0.5 ? cx.createLinearGradient(fx, 0, fx + H * 0.5, 0) : cx.createLinearGradient(0, 0, W, 0); if (fx > -H * 0.5) { bg.addColorStop(0, 'rgba(130,160,255,0)'); bg.addColorStop(1, 'rgba(150,175,255,.13)'); } else { bg.addColorStop(0, 'rgba(130,160,255,.10)'); bg.addColorStop(1, 'rgba(200,220,255,.16)'); }
-    cx.fillStyle = bg; cx.fill();   // (fades in at the entrance of the forest)
+    cx.fillStyle = bg; cx.fill(); }   // (fades in at the entrance of the forest)
     // fireflies along the path
     while (flies.length < 34) flies.push({ x: cam + Math.random() * (W / H + 0.6), o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
     flies = flies.filter(function (f) { return f.x > cam - 0.2; });
     while (flies.length < 34) flies.push({ x: cam + W / H + Math.random() * 0.4, o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
-    flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
+    flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST || f.x > GRAVE_X) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
       var fg = cx.createRadialGradient(px, py, 0, px, py, 9); fg.addColorStop(0, 'rgba(255,240,140,' + a + ')'); fg.addColorStop(1, 'rgba(255,240,140,0)'); cx.fillStyle = fg; cx.fillRect(px - 9, py - 9, 18, 18); });
     // in the sky: open above, the tops of the pines below (touch them and you lose a feather)
     var xs0 = Math.max(x0, SKY0), xs1 = Math.min(x1, FOREST + 0.02);
@@ -505,12 +566,12 @@
     }
     // the canopy above and the undergrowth below: the edges of the path (touch them and you lose a feather)
     [-1, 1].forEach(function (side) {
-      if (xf >= x1) return;
+      if (xf >= xe) return;
       cx.beginPath(); cx.moveTo(sx(xf), side < 0 ? 0 : H);
-      for (X = xf; X <= x1; X += st) cx.lineTo(sx(X), sy(edge(X, side)));
-      cx.lineTo(sx(x1), side < 0 ? 0 : H); cx.closePath();
+      for (X = xf; X <= xe; X += st) cx.lineTo(sx(X), sy(edge(X, side)));
+      cx.lineTo(sx(xe), side < 0 ? 0 : H); cx.closePath();
       var cg = cx.createLinearGradient(0, side < 0 ? 0 : H, 0, side < 0 ? H * 0.5 : H * 0.5); cg.addColorStop(0, '#02040b'); cg.addColorStop(1, side < 0 ? '#06102a' : '#071a1c'); cx.fillStyle = cg; cx.fill();
-      cx.beginPath(); for (X = xf; X <= x1; X += st) cx.lineTo(sx(X), sy(edge(X, side)));
+      cx.beginPath(); for (X = xf; X <= xe; X += st) cx.lineTo(sx(X), sy(edge(X, side)));
       cx.strokeStyle = side < 0 ? 'rgba(150,185,255,.55)' : 'rgba(140,220,170,.45)'; cx.lineWidth = 2; cx.stroke();   // (moonlight on the leaves: the edge stays visible)
       // leaves and ferns sticking out of the edge
       cx.fillStyle = side < 0 ? '#03081a' : '#04140f';
@@ -523,10 +584,16 @@
       cx.beginPath(); cx.moveTo(tx - tw * 0.5, 0); cx.lineTo(tx - tw * 0.3, sy(edge(FOREST + 0.05, -1)) - 10); cx.lineTo(tx + tw * 0.45, sy(edge(FOREST + 0.05, -1)) - 10); cx.lineTo(tx + tw * 0.6, 0); cx.closePath(); cx.fill();   // and above it
       for (var q = 0; q < 9; q++) { var qa = q / 8; cx.beginPath(); cx.ellipse(tx + (hsh(q + 3) - 0.3) * H * 0.18, sy(edge(FOREST + 0.05, -1)) - H * (0.04 + qa * 0.35), H * (0.08 + hsh(q) * 0.06), H * 0.05, 0, 0, 7); cx.fill(); }   // its crown, joining the canopy
     }
+    drawGraveyard(x0, x1);
     // the branches: bare, black, from the edge of the light into it
     branches.forEach(function (r) {
       if (r.x < x0 - 0.3 || r.x > x1 + 0.3) return;
       var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 40 : sy(cen(r.x) + half(r.x)) + 40, tip = sy(r.tip), dir = r.top ? 1 : -1;
+      if (r.x >= GRAVE_X) {   // in the graveyard: a tall old stone with a cross on top
+        var sw2 = H * 0.022; cx.fillStyle = '#0a0f1e'; cx.beginPath(); cx.moveTo(px - sw2, base); cx.lineTo(px - sw2 * 0.7, tip + H * 0.03); cx.lineTo(px + sw2 * 0.7, tip + H * 0.03); cx.lineTo(px + sw2, base); cx.closePath(); cx.fill();
+        cx.fillRect(px - H * 0.004, tip, H * 0.008, H * 0.032); cx.fillRect(px - H * 0.014, tip + H * 0.008, H * 0.028, H * 0.007); cx.strokeStyle = 'rgba(190,205,240,.35)'; cx.lineWidth = 1.2; cx.beginPath(); cx.moveTo(px - sw2 * 0.7, tip + H * 0.03); cx.lineTo(px - sw2, base); cx.stroke();
+        cx.strokeStyle = 'rgba(255,90,110,.35)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip, 0.022 * H, 0, 7); cx.stroke(); return;
+      }
       if (r.x < FOREST) {
         if (r.top) { cx.fillStyle = '#4a5898'; for (var cq = 0; cq < 6; cq++) { var cf = cq / 5, cyy = base + (tip - base) * cf, cr = H * (0.05 - 0.022 * cf); cx.beginPath(); cx.arc(px + Math.sin(cq * 1.7 + r.tw * 6) * H * 0.018, cyy - cr * 0.3, cr, 0, 7); cx.fill(); } cx.strokeStyle = 'rgba(210,225,255,.45)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip - H * 0.012, H * 0.028, 0.2, Math.PI - 0.2); cx.stroke(); }   // a trailing cloud
         else { cx.fillStyle = '#050a18'; var ph = base - tip; cx.beginPath(); for (var pq = 0; pq < 5; pq++) { var py0 = tip + ph * pq * 0.2, pw = H * (0.018 + pq * 0.016); cx.moveTo(px, py0); cx.lineTo(px - pw, py0 + ph * 0.26); cx.lineTo(px + pw, py0 + ph * 0.26); cx.closePath(); } cx.fill(); }   // a tall pine top
@@ -539,6 +606,8 @@
     });
     // the birds (the ones still rising from behind the house were drawn before it)
     birds.forEach(function (b) { if (!behind(b)) drawBird(b); });
+    var fa = t >= PICK_T + 2.4 && t < HOME_T ? (t - PICK_T - 2.4) / (HOME_T - PICK_T - 2.4) : t >= HOME_T && t < HOME_T + 1.4 ? 1 - (t - HOME_T) / 1.4 : 0;
+    if (fa > 0) { cx.save(); cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.fillStyle = 'rgba(2,3,10,' + fa + ')'; cx.fillRect(0, 0, W, H); cx.restore(); }   // (a fade to black: and we're home)
     parts.forEach(function (p) { cx.save(); cx.globalAlpha = Math.max(0, 1 - p.t / 1.6); cx.translate(sx(p.x), sy(p.y)); cx.rotate(p.r); cx.fillStyle = '#1c1c28'; cx.strokeStyle = p.col; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(0, 0, 7, 2.5, 0, 0, 7); cx.fill(); cx.stroke(); cx.restore(); });
   }
 
@@ -547,9 +616,10 @@
   function hud() {
     $('tbar').style.width = Math.min(100, t / DUR * 100) + '%';
     var k = birds.map(function (b) { return b.feathers + (b.manual ? 'm' : '') + (b.out ? 'o' : '') + (t >= b.colT ? 'r' : ''); }).join(',');
-    if (k !== sideKey) { sideKey = k; $('side').innerHTML = birds.slice().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
+    if (k !== sideKey) { sideKey = k; $('side').innerHTML = birds.slice().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out || !b.feathers ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
     var bn = $('banner'), txt = '', cls = '';
-    if (me.out) { txt = '🌿 Your bird has landed'; }
+    if (t >= SOAR_T) { txt = t < SOAR_T + 3 ? '🐦‍⬛ Soar!' : ''; }
+    else if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
     else if (t < INTRO) txt = '';
@@ -561,6 +631,8 @@
     else if (t < PRACT_END) { var fl = birds.filter(function (b) { return b.manual; }).map(function (b) { return b.name; }); txt = '✨ Practice round' + (fl.length ? ': ' + (fl.length > 1 ? fl.slice(0, -1).join(', ') + ' & ' + fl[fl.length - 1] : fl[0]) + ' flying' : '') + '. Nothing to dodge, no damage yet'; }
     else if (t < nowAt + 3.5) { txt = '⚠️ Now it counts! Mind the pine tops'; cls = 'warn'; }
     else if (inDive(cam + 0.3 * W / H + 0.6)) txt = '🐦‍⬛ Down into the forest…';
+    else if (cam + 0.3 * W / H > GRAVE_X - 0.2 && cam + 0.3 * W / H < GRAVE_X + 1.2) txt = '🕯️ Out of the forest… the old graveyard';
+    $('side').style.opacity = t >= SOAR_T ? '0' : '1';
     $('howto').className = 'howto' + (t >= MSG0 && t < MSG1 ? ' on' : '');
     bn.textContent = txt; bn.className = 'banner' + (txt ? ' on' : '') + (cls ? ' ' + cls : '');
   }
@@ -581,7 +653,7 @@
   }
   function start(music) {
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
-    t = 0; cam = 0; nextPick = 99; pending = []; parts = []; ended = false; sideKey = '';
+    t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; pending = []; parts = []; ended = false; sideKey = '';
     makeBirds(+$('nbots').value || 5); makeCourse(); nextPick = PRACT0;
     audioOn(); flockPlayed = false; musicWant = !!music; if (music) ytPrime();
     running = true; last = performance.now(); requestAnimationFrame(frame);
@@ -630,7 +702,7 @@
   function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(0, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(0, true); } yt.unMute(); } catch (e) {} }, 400); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
   function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
-  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { return { TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
+  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { return { SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();
 })();
 </script>
