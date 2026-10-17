@@ -747,8 +747,8 @@
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
     else if (t < INTRO) txt = '';
     else if (t < TAKEOFF - 2.5) txt = '🌙 A lone blackbird on her roof… listen';
-    else if (t < TAKEOFF) { txt = '🐦‍⬛ Get ready to take off…'; cls = 'warn'; }
-    else if (t < REVEAL0) txt = '🐦‍⬛ The flock takes off!';
+    else if (t < TAKEOFF) txt = '';   // (no announcement: the take-off speaks for itself)
+    else if (t < REVEAL0) txt = '';
     else if (t < MSG0 - 1.5) txt = '✨ Meet the flock…';
     else if (t < PRACT0 - WARN) txt = '';
     else if (t < PRACT_END) { var fl = birds.filter(function (b) { return b.manual; }).map(function (b) { return b.name; }); txt = '✨ Practice round' + (fl.length ? ': ' + (fl.length > 1 ? fl.slice(0, -1).join(', ') + ' & ' + fl[fl.length - 1] : fl[0]) + ' flying' : '') + '. Nothing to dodge, no damage yet'; }
