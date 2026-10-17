@@ -38,6 +38,8 @@
   .banner.warn{background:rgba(143,179,255,.9);color:#0a1033;border-color:#fff}
   .ov{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,rgba(30,40,110,.75),rgba(3,5,18,.92));z-index:5;padding:16px}
   .ov.hidden{display:none}
+  #end{background:linear-gradient(90deg,rgba(3,5,18,0) 40%,rgba(3,5,18,.8));place-items:center end;padding:4vh 4vw}   /* (the results on the right: she and the rose stay in view) */
+  #end .box{width:min(400px,36vw);min-width:260px;background:rgba(10,12,40,.82)}
   .card{max-width:620px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(12,16,46,.9);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
   .card h2{margin:0 0 .3em;font-size:clamp(1.6rem,4vw,2.4rem)}
   .card p{margin:.4em 0;color:var(--mute);line-height:1.45}
@@ -262,7 +264,7 @@
   }
   function hits(b, X) {
     var c = cen(X), h = half(X);
-    if ((X >= FOREST && X < GRAVE_X && b.y - R < c - h) || b.y + R > c + h) return true;   // (the sky has no ceiling: only the pines below)
+    if (X >= FOREST && ((X < GRAVE_X && b.y - R < c - h) || b.y + R > c + h)) return true;   // (in the sky only the pine trees hurt: no ceiling, no ground)   // (the sky has no ceiling: only the pines below)
     for (var i = 0; i < branches.length; i++) { var r = branches[i]; if (Math.abs(r.x - X) < 0.02 + R) { if (r.top ? b.y - R < r.tip : b.y + R > r.tip) return true; } }
     return false;
   }
@@ -386,8 +388,7 @@
     cx.fillStyle = '#0a0f2e'; cx.fillRect(W0 + Ww * 0.06, V0 + Vh * 0.62, Ww * 0.2, Vh * 0.4);   // the headboard of the bed
     var lp = cx.createRadialGradient(W0 + Ww * 0.88, V0 + Vh * 0.62, 0, W0 + Ww * 0.88, V0 + Vh * 0.62, Ww * 0.18); lp.addColorStop(0, 'rgba(255,200,120,.75)'); lp.addColorStop(1, 'rgba(255,200,120,0)'); cx.fillStyle = lp; cx.fillRect(W0 + Ww * 0.7, V0 + Vh * 0.4, Ww * 0.36, Vh * 0.5);   // a small bedside lamp
     cx.fillStyle = '#ffd08a'; cx.beginPath(); cx.moveTo(W0 + Ww * 0.86, V0 + Vh * 0.6); cx.lineTo(W0 + Ww * 0.9, V0 + Vh * 0.6); cx.lineTo(W0 + Ww * 0.915, V0 + Vh * 0.66); cx.lineTo(W0 + Ww * 0.845, V0 + Vh * 0.66); cx.closePath(); cx.fill();
-    var bw = Ww * 0.66, bh = bw * 1.04, sa = running || ended ? Math.max(0, Math.min(1, (t - BOTTOM + 0.5) / (UP * 0.8 + 0.5))) : 0, se = sa * sa * (3 - 2 * sa);   // (at first the room is empty; she steps into the window as the camera rises)
-    if (sa > 0) { cx.globalAlpha = Math.min(1, sa * 1.6); drawSinger(W0 + (Ww - bw) / 2 - (1 - se) * Ww * 0.45, V0 + Vh * 0.06, bw, bh); cx.globalAlpha = 1; }   // her, filling most of the window
+    var bw = Ww * 0.66, bh = bw * 1.04; drawSinger(W0 + (Ww - bw) / 2, V0 + Vh * 0.06, bw, bh);   // her, already at her window, filling most of it
     cx.restore();
     cx.fillStyle = 'rgba(255,255,255,.05)'; cx.beginPath(); cx.moveTo(W0, V0); cx.lineTo(W0 + Ww * 0.25, V0); cx.lineTo(W0, V0 + Vh * 0.5); cx.closePath(); cx.fill();   // a reflection on the glass
     cx.strokeStyle = '#1d1830'; cx.lineWidth = Math.max(1.5, Ww * 0.03); cx.strokeRect(W0, V0, Ww, Vh);   // the frame
@@ -586,7 +587,7 @@
       [CLOSE_END + TWO + HOLD2, Z2 * 0.94, tx2, ty2],
       [INTRO, 1, W / 2, H / 2]   // and out to the whole scene
     ];
-    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 13.5, 6.4, wx * H, (fy + 0.012) * H], [END_T + 4, 7, wx * H, (fy + 0.008) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
+    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 13.5, 6.4, wx * H, (fy + 0.012) * H], [END_T - 0.5, 6.9, wx * H, (fy + 0.01) * H], [END_T + 2.5, 5, (wx + (W / H) / 5 * 0.36) * H, (fy + 0.03) * H], [END_T + 60, 5.2, (wx + (W / H) / 5.2 * 0.36) * H, (fy + 0.03) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
     for (var i = 1; i < K.length; i++) if (t < K[i][0]) { var A = K[i - 1], B = K[i], e = ez((t - A[0]) / (B[0] - A[0])); return { z: A[1] * Math.pow(B[1] / A[1], e), x: A[2] + (B[2] - A[2]) * e, y: A[3] + (B[3] - A[3]) * e }; }
     return null;
   }
@@ -617,10 +618,14 @@
   function behind(b) { if (b.lead || t < TAKEOFF || cam > 1.4) return false; var p = birdPos(b); return p.L < 1 && p.y > roofTop(p.X - cam * 0) - 0.035; }   // (still below the roofline: drawn before the house, so it hides them)
   function drawBird(b) {
       if (!b.lead && t < TAKEOFF + b.dl) return;   // (the others wait out of sight behind the house)
+      if (!b.lead && t >= HOME_T) return;   // (home: only the lone blackbird comes back to her)
       var bp = birdPos(b), X = bp.X, py0 = bp.y, L = bp.L, landing = bp.land != null && bp.land < 1;
       var px = sx(X), py = sy(py0), s = H * 0.032;
       if (b.out && py > H + 40) return;
-      cx.save(); cx.translate(px, py); cx.rotate(bp.home != null ? 0.15 * (1 - bp.home) * (bp.home < 1 ? 1 : 0) : landing ? 0.12 * (1 - bp.land) : t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * Math.max(L, 0.25)) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
+      if (b.face == null) b.face = 1; var fdt = b.lastT != null ? t - b.lastT : 0;
+      if (fdt > 0) { var vx = (X - b.lastX) / fdt, ft = vx < -0.06 ? -1 : vx > 0.06 ? 1 : (b.faceT || 1); b.faceT = ft; b.face += (ft - b.face) * Math.min(1, Math.min(0.1, fdt) * 7); } b.lastX = X; b.lastT = t;   // (which way it's flying; it turns around smoothly, like a 2D flip)
+      var fs = (b.face < 0 ? -1 : 1) * Math.max(0.06, Math.abs(b.face));
+      cx.save(); cx.translate(px, py); cx.scale(fs, 1 + 0.06 * (1 - Math.abs(b.face))); cx.rotate(bp.home != null ? 0.15 * (1 - bp.home) * (bp.home < 1 ? 1 : 0) : landing ? 0.12 * (1 - bp.land) : t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * Math.max(L, 0.25)) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
       if (t < TAKEOFF && !landing) cx.translate(0, -Math.max(0, Math.sin(t * 3 + b.id * 1.7)) * s * 0.18);   // (a little hop now and then, while they wait)
       if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
       if (b.manual) { var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); }
@@ -655,7 +660,7 @@
     stars.forEach(function (s) { cx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.04) % W + W) % W, s.y * H * 0.6, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
     var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.fillStyle = mg; cx.fillRect(0, 0, W, H);
     // the forest behind, far to near, with mist between
-    var near = Math.max(0, Math.min(1, (cam + W / H - (FOREST - 1.2)) / 2.4)), low = cam < 0.6 ? 0 : (1 - near) * 0.3 * Math.min(1, (cam - 0.6) / 2);   // (high in the sky the forest sinks away below; it rises again as you come down to it)
+    var near = Math.max(0, Math.min(1, (cam + W / H - (FOREST - 1.2)) / 2.4)), low = 0;   // (high in the sky the forest sinks away below; it rises again as you come down to it)
     treeLayer(0.1, '#16224a', 0.74 + low, 0.32, 0.5, 0.08, 1); mist(0.55 + low, 0.85 + low, 0.12);
     treeLayer(0.25, '#0f1834', 0.84 + low, 0.42, 0.66, 0.12, 2); mist(0.68 + low, 0.95 + low, 0.08);
     treeLayer(0.5, '#0a1024', 0.95 + low * 0.6, 0.55, 0.85, 0.19, 3);
@@ -674,11 +679,7 @@
     flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
       var fg = cx.createRadialGradient(px, py, 0, px, py, 9); fg.addColorStop(0, 'rgba(255,240,140,' + a + ')'); fg.addColorStop(1, 'rgba(255,240,140,0)'); cx.fillStyle = fg; cx.fillRect(px - 9, py - 9, 18, 18); });
     // in the sky: open above, the tops of the pines below (touch them and you lose a feather)
-    var xs0 = Math.max(x0, SKY0), xs1 = Math.min(x1, FOREST + 0.02);
-    if (xs0 < xs1) {
-      cx.beginPath(); cx.moveTo(sx(xs0), H); for (X = xs0; X <= xs1; X += st / 2) cx.lineTo(sx(X), sy(skyEdge(X, 1))); cx.lineTo(sx(xs1), H); cx.closePath(); cx.fillStyle = '#050a18'; cx.fill();
-      cx.beginPath(); for (X = xs0; X <= xs1; X += st / 2) cx.lineTo(sx(X), sy(skyEdge(X, 1))); cx.save(); cx.shadowColor = 'rgba(185,80,255,.55)'; cx.shadowBlur = H * 0.01; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineWidth = 1.5; cx.stroke(); cx.restore();   // (the treetops below: softly purple, they hurt too)
-    }
+    // in the sky: the whole night landscape stays in view; only the pine trees (outlined in purple) are in the way
     // the canopy above and the undergrowth below: the edges of the path (touch them and you lose a feather)
     [-1, 1].forEach(function (side) {
       if (xf >= xe) return;
@@ -703,7 +704,7 @@
     // the branches: bare, black, from the edge of the light into it
     branches.forEach(function (r) {
       if (r.x < x0 - 0.3 || r.x > x1 + 0.3) return;
-      var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 40 : sy(cen(r.x) + half(r.x)) + 40, tip = sy(r.tip), dir = r.top ? 1 : -1;
+      var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 40 : r.x < FOREST ? H + 30 : sy(cen(r.x) + half(r.x)) + 40, tip = sy(r.tip), dir = r.top ? 1 : -1;
       if (r.x >= GRAVE_X) {   // by the water: a tall reed with a cattail
         cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineCap = 'round'; cx.lineWidth = H * 0.01 + 5; cx.beginPath(); cx.moveTo(px, base); cx.quadraticCurveTo(px + H * 0.01, (base + tip) / 2, px, tip); cx.stroke(); cx.restore();   // (a purple glow around it)
         cx.strokeStyle = '#123a2a'; cx.lineWidth = H * 0.01; cx.lineCap = 'round'; cx.beginPath(); cx.moveTo(px, base); cx.quadraticCurveTo(px + H * 0.01, (base + tip) / 2, px, tip + H * 0.035); cx.stroke();
@@ -713,7 +714,9 @@
       }
       if (r.x < FOREST) {
         if (r.top) { cx.fillStyle = '#4a5898'; for (var cq = 0; cq < 6; cq++) { var cf = cq / 5, cyy = base + (tip - base) * cf, cr = H * (0.05 - 0.022 * cf); cx.beginPath(); cx.arc(px + Math.sin(cq * 1.7 + r.tw * 6) * H * 0.018, cyy - cr * 0.3, cr, 0, 7); cx.fill(); } cx.strokeStyle = 'rgba(210,225,255,.45)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip - H * 0.012, H * 0.028, 0.2, Math.PI - 0.2); cx.stroke(); }   // a trailing cloud
-        else { cx.fillStyle = '#050a18'; var ph = base - tip; cx.beginPath(); for (var pq = 0; pq < 5; pq++) { var py0 = tip + ph * pq * 0.2, pw = H * (0.018 + pq * 0.016); cx.moveTo(px, py0); cx.lineTo(px - pw, py0 + ph * 0.26); cx.lineTo(px + pw, py0 + ph * 0.26); cx.closePath(); } cx.fill(); cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineWidth = 2.5; cx.stroke(); cx.restore(); }   // a tall pine top, outlined in glowing purple
+        else { var ph = base - tip, nt = Math.max(4, Math.round(ph / (H * 0.07))); cx.fillStyle = '#3a2a22'; cx.fillRect(px - H * 0.008, tip + ph * 0.5, H * 0.016, ph * 0.5);   // a whole pine tree, standing up from below: the trunk
+          cx.fillStyle = '#050a18'; cx.beginPath(); for (var pq = 0; pq < nt; pq++) { var py0 = tip + ph * 0.88 * pq / nt, pw = H * (0.02 + 0.07 * (pq + 1) / nt), th2 = ph * 0.88 / nt * 1.7; cx.moveTo(px, py0); cx.lineTo(px - pw, py0 + th2); cx.lineTo(px + pw, py0 + th2); cx.closePath(); } cx.fill();
+          cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineWidth = 2.5; cx.stroke(); cx.restore(); }   // its tiers, outlined in glowing purple
            // (the danger point)
         return;
       }
@@ -762,7 +765,7 @@
 
   // ---------- the loop ----------
   function frame(now) {
-    if (!running) return;
+    if (!running && !ended) return;   // (after the results the scene keeps living: she blinks, the curtain moves)
     var real = Math.min(0.25, (now - last) / 1000 || 0), adv = real; last = now;
     if (songAsked && t >= MUSIC && ytOk) {   // (locked to the song: the game's clock follows the video, so 2:35 in the song is 2:35 in the game)
       var st = -1, ct = 0; try { st = yt.getPlayerState(); ct = yt.getCurrentTime() || 0; } catch (e) {}
@@ -790,7 +793,7 @@
   }
   $('go').addEventListener('click', function () { start(true); });
   $('go2').addEventListener('click', function () { start(false); });
-  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); ytStop(); });
+  $('again').addEventListener('click', function () { ended = false; $('end').classList.add('hidden'); $('start').classList.remove('hidden'); ytStop(); });
 
   // ---------- holding: mouse, touch or spacebar ----------
   function down(e) { if (e.target.closest && e.target.closest('.ov')) return; hold = true; if (e.cancelable) e.preventDefault(); }
