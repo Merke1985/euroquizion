@@ -171,6 +171,12 @@
       cx.fillStyle = 'rgba(190,90,255,.35)'; cx.strokeStyle = 'rgba(215,140,255,1)'; cx.lineWidth = 2;
       if (!q[1] && !inCave(q[0])) { cx.beginPath(); cx.moveTo(px, tip); cx.lineTo(px - kx * 0.1, base); cx.lineTo(px + kx * 0.1, base); cx.closePath(); cx.fill(); cx.stroke(); }   // a pine tree
       else { cx.beginPath(); cx.moveTo(px - kx * 0.05, base); cx.lineTo(px - kx * 0.035, tip); cx.lineTo(px + kx * 0.035, tip); cx.lineTo(px + kx * 0.05, base); cx.closePath(); cx.fill(); cx.stroke(); } });   // a branch
+    var gt = gameT(), wi = gt >= K.FT - 0.5 && gt < K.ST ? Math.max(0, (spd(gt) - 1) / (K.FX - 1)) : 0;   // the wind, as on the big screen: streaks rushing past and torn leaves, the faster the more
+    if (wi > 0.02) { var hs = function (n) { var v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); }; cx.save(); cx.lineCap = 'round';
+      for (var wl = 0; wl < Math.round(30 * wi); wl++) { var wy = hs(wl + 200) * CH, wsp = CW * (1.6 + hs(wl + 300) * 1.4), wx = CW * 1.2 - ((gt * wsp + hs(wl + 400) * CW * 3) % (CW * 1.5)), wlen = CW * (0.12 + hs(wl + 500) * 0.22) * (0.6 + wi);
+        var wg = cx.createLinearGradient(wx, 0, wx + wlen, 0); wg.addColorStop(0, 'rgba(210,225,255,0)'); wg.addColorStop(1, 'rgba(210,225,255,' + (0.14 + 0.22 * hs(wl + 600)) * wi + ')'); cx.strokeStyle = wg; cx.lineWidth = 1 + hs(wl + 700) * 1.6; cx.beginPath(); cx.moveTo(wx, wy); cx.lineTo(wx + wlen, wy + Math.sin(gt * 3 + wl) * 3); cx.stroke(); }
+      for (var lf = 0; lf < Math.round(9 * wi); lf++) { var lsp = CW * (1.1 + hs(lf + 800) * 0.9), lx2 = CW * 1.1 - ((gt * lsp + hs(lf + 900) * CW * 2) % (CW * 1.3)), ly2 = hs(lf + 950) * CH + Math.sin(gt * 4 + lf) * CH * 0.03; cx.save(); cx.translate(lx2, ly2); cx.rotate(gt * (4 + lf % 5) + lf); cx.fillStyle = 'rgba(40,80,60,.9)'; cx.beginPath(); cx.ellipse(0, 0, CH * 0.011, CH * 0.005, 0, 0, 7); cx.fill(); cx.restore(); }
+      cx.restore(); }
     birdAt(sxp(X), syp(by), sc * 0.032);
     var since = gameT() - K.P0; if (since >= 0 && since < 1.3) bigText('Fly!', 1 - since / 1.3);
   }
