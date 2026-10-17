@@ -125,7 +125,7 @@
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     var FIRST_T = MUSIC - SONG0 + 47.9;   // (the first group's turn: its first tree comes at 0:49 in the song. Turns every 7 s (5 s flying, 2 s pause): 6 over the pine forest, 6 in the cave)
     MSG1 = FIRST_T - CD - 0.4; MSG0 = MSG1 - 8;   // (5 s the how-to, then 3 s: watch your phone if the stream lags)   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
-    REVEAL0 = tAir + 1.5; var gap = Math.max(0.3, Math.min(0.9, (MSG0 - 1.4 - REVEAL0) / Math.max(1, order.length - 1))); order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the neon, one bird at a time)
+    REVEAL0 = tAir + 1.5; var gap = Math.max(0.3, Math.min(0.9, (MSG1 - 8 - 1.4 - REVEAL0) / Math.max(1, order.length - 1))); MSG0 = REVEAL0;   // (the how-to card comes up as the colours appear) order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the neon, one bird at a time)
     pgroups = []; pgi = 0; pracDone = false; PRACT0 = FIRST_T; PRACT_END = FIRST_T; SAFE_X = camAt(FIRST_T) + 0.3 * W / H;   // (no practice: straight into it)
     var FT = FIRST_T + 6 * (TURN + WARN) - 1;   // (into the cave just before the 7th turn)
     FOREST = camAt(FT) + 0.3 * W / H; DIVE0 = FOREST - 3.4; DIVE1 = FOREST + 0.9; GRAVE_X = camAt(GRAVE_T) + 0.3 * W / H; XEND = GRAVE_X; DUR = END_T;
@@ -228,7 +228,7 @@
     if (t >= SOAR_T) return;
     if (planT < 0) planT = PRACT0;
     while (t >= planT - 3.6 && planT + SEG <= FAST_T + 2.2) { planTurn(planT); planT += SEG; }
-    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.2 < SOAR_T - 2; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.2), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (0.58 + rnd() * 0.04) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
+    if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.2 < SOAR_T - 2; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.2), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (0.71 + rnd() * 0.03) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
     if (t >= PRACT0 - CD && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (a 3 s countdown in the middle of the screen; the colours stay on, no blinking)
     if (t >= PRACT0 && !ctrlOver) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
@@ -286,7 +286,7 @@
         else if (b.human && !fromPhone && b.inv <= 0 && hits(b, X)) hit(b);   // (computer birds never get hit)   // (a phone decides its own hits: what the player saw)
         if (!b.turnHit) b.clean += dt;
       } else {   // autopilot: back to its place in the flock, smoothly
-        var ty = cen(X + 0.12) + b.off * half(X) * 0.62 - 0.12 * Math.max(0, Math.min(1, (MSG0 - t) / 3)), rate = 3.2;   // (after the lift-off the flock flies a bit higher, settling down to its path as the how-to card comes up)
+        var ty = cen(X + 0.12) + b.off * half(X) * 0.62 - 0.12 * Math.max(0, Math.min(1, (MSG1 - 8 - t) / 3)), rate = 3.2;   // (after the lift-off the flock flies a bit higher, settling down to its path as the how-to card comes up)
         if (b.lead && t >= tAir && t < SOAR_T) {   // the guide flies around every obstacle in smooth, graceful arcs
           var nb = branches.filter(function (r) { return r.x > X - 0.035 && r.x < X + 1.8; })[0], gy = ty, wb = 0, calm = 1;
           if (nb) { var hh2 = half(nb.x), cc = cen(nb.x), lo = nb.x < FOREST ? 0.05 : cc - hh2, hi = nb.x < FOREST ? Math.min(1 - R, cc + hh2) : cc + hh2; gy = nb.top ? (nb.tip + hi) / 2 : (lo + nb.tip) / 2;   // (the middle of the open space at that obstacle)
@@ -989,12 +989,14 @@
     var all = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; }), hum = all.some(function (b) { return b.human; }), pool = all.filter(function (b) { return b.human || !hum; });
     all.forEach(function (b) { b.rank = 0; b.win = false; });
     pool.forEach(function (b) { b.rank = 1 + pool.filter(function (o) { return o.feathers > b.feathers; }).length; b.win = b.rank === 1; });
+    if (pool.length === 1 && hum) pool[0].win = pool[0].feathers >= 5;   // (flying alone: you only 'win' with a perfect flight)
     return pool.concat(all.filter(function (b) { return pool.indexOf(b) < 0; }));
   }
   function finish() {
     ended = true; running = false; windLevel(0);   // (the song plays on to its end under the results)
     var rows = ranking(), ws = rows.filter(function (b) { return b.win; }), wn = ws.map(function (b) { return b.name; });
-    $('endt').textContent = '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + ' win' : wn[0] + ' wins'); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
+    var solo = rows.filter(function (b) { return b.human; }).length === 1 ? rows[0] : null;
+    $('endt').textContent = solo ? (solo.feathers >= 5 ? '🏆 ' + solo.name + ': a perfect flight!' : '🪶 ' + solo.name + ' kept ' + solo.feathers + ' of 5 feathers') : '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + ' win' : wn[0] + ' wins'); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
     $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (b.win ? 'top' : '') + '"><span class="rk">' + (b.rank || '·') + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + (b.rank ? '' : ' <small style="color:var(--mute);font-weight:500">computer</small>') + '</span><span class="fe" style="display:flex;gap:3px">' + featherRow(b.feathers, false) + '</span></li>'; }).join('');
     $('end').classList.remove('hidden');
   }
@@ -1101,7 +1103,7 @@
     var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {}, live = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
     else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: ctrlOver || t >= SOAR_T ? 'done' : b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; live[b.pid] = { y: +b.y.toFixed(3), x: +bx(b).toFixed(3) }; });
-    if (ph === 'end') { ranking().forEach(function (b) { if (b.human && ps[b.pid]) ps[b.pid].r = b.rank; }); }
+    if (ph === 'end') { var rkg = ranking(), one = rkg.filter(function (b) { return b.human; }).length === 1; rkg.forEach(function (b) { if (b.human && ps[b.pid]) { ps[b.pid].r = b.rank; if (one) ps[b.pid].solo = 1; } }); }
     var br = ph === 'play' ? branches.filter(function (q) { return q.x > cam - 0.3; }).map(function (q) { return [+q.x.toFixed(3), q.top ? 1 : 0, +q.tip.toFixed(3)]; }) : [];
     var s = JSON.stringify({ ph: ph, p: ps, br: br }), now = Date.now();
     if (!force && s === lastState && now - lastSent < (ph === 'play' ? 2000 : 4000)) return;   // (the clock is resent every 2 s while playing, so the phones stay in step)
