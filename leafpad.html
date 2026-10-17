@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
 <style>
-  /* Leaf on the Wind on the phone: join with the room code, then three puff buttons: to the left, straight up, to the right. */
+  /* Leaf on the Wind on the phone: join with the room code, then just the exit buttons (1 to 5). The puzzle itself is only on the big screen. */
   :root{--ink:#fff;--mute:#bfe3dc;--line:rgba(255,255,255,.16);--col:#7ff5e0}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:#031416;color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
@@ -20,17 +20,16 @@
   input{font:inherit;font-size:1.2rem;font-weight:700;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;width:min(320px,100%);text-align:center}
   button.go{font:inherit;font-size:1.15rem;font-weight:800;padding:14px 26px;border-radius:14px;border:0;background:#7ff5e0;color:#032a26}
   .top{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-weight:800}
-  .top .nm{display:flex;align-items:center;gap:8px} .top .dot{width:14px;height:14px;border-radius:50%;background:var(--col)}
-  #breath{letter-spacing:.1em}
+  .top .nm{display:flex;align-items:center;gap:8px} .top .leaf{font-size:1.3rem;filter:drop-shadow(0 0 6px var(--col))}
   #big{position:fixed;left:16px;right:16px;top:70px;text-align:center;font-size:clamp(1.4rem,7vw,2.2rem);font-weight:800;line-height:1.2}
   #big .small{display:block;font-size:1rem;font-weight:600;color:var(--mute);margin-top:8px}
-  #pads{position:fixed;left:12px;right:12px;bottom:max(16px,env(safe-area-inset-bottom));height:min(52vh,330px);display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px}
-  #pads button{font:inherit;font-size:clamp(2.4rem,13vw,4rem);font-weight:800;border-radius:24px;border:2px solid var(--line);background:rgba(255,255,255,.05);color:rgba(255,255,255,.35);transition:background .12s,transform .08s,border-color .2s}
-  body.fly #pads button{background:color-mix(in srgb,var(--col) 28%,transparent);border-color:var(--col);color:#fff;box-shadow:0 0 30px color-mix(in srgb,var(--col) 40%,transparent)}
-  body.fly #pads button:active{transform:scale(.96);background:color-mix(in srgb,var(--col) 60%,transparent)}
-  body.empty #pads,body.hit #pads{opacity:.4}
-  #gust{position:fixed;left:0;right:0;top:46%;text-align:center;font-size:2rem;font-weight:800;opacity:0;transition:opacity .2s}
-  #gust.on{opacity:1;animation:gb .5s infinite alternate} @keyframes gb{to{opacity:.4}}
+  #pads{position:fixed;left:12px;right:12px;bottom:max(16px,env(safe-area-inset-bottom));height:min(46vh,300px);display:grid;gap:10px}
+  #pads button{font:inherit;font-size:clamp(2.2rem,12vw,3.6rem);font-weight:800;border-radius:22px;border:2px solid var(--line);background:rgba(255,255,255,.05);color:rgba(255,255,255,.35);transition:background .12s,transform .08s,border-color .2s}
+  body.go #pads button{background:rgba(127,245,224,.14);border-color:rgba(127,245,224,.6);color:#fff}
+  body.go #pads button:active{transform:scale(.96)}
+  #pads button.pick{background:var(--col)!important;color:#032a26!important;border-color:#fff!important}
+  #pads button.right{box-shadow:0 0 0 4px #8dff8a,0 0 30px #8dff8a}
+  body.done #pads button:not(.pick){opacity:.3}
 </style>
 </head>
 <body>
@@ -43,10 +42,9 @@
   <p id="jmsg"></p>
 </div>
 <div class="hidden" id="game">
-  <div class="top"><span class="nm"><span class="dot" id="dot"></span><span id="me"></span></span><span id="breath"></span></div>
+  <div class="top"><span class="nm"><span class="leaf">🍃</span><span id="me"></span></span><span id="pts"></span></div>
   <div id="big">Watch the big screen</div>
-  <div id="gust"></div>
-  <div id="pads"><button data-j="-1" type="button">◀</button><button data-j="0" type="button">▲</button><button data-j="1" type="button">▶</button></div>
+  <div id="pads"></div>
 </div>
 <script src="vendor/supabase.js?v=1"></script>
 <script src="config.js?v=1"></script>
@@ -58,7 +56,7 @@
   var pid = st.get('lf-pid'); if (!pid) { pid = 'p' + Math.random().toString(36).slice(2, 10); st.set('lf-pid', pid); }
   var q = new URLSearchParams(location.search), room = (q.get('r') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
   $('name').value = st.get('lf-name') || st.get('esc-name') || ''; $('code').value = room;
-  var net = null, name = '', joinedOk = false, my = null, lastS = '';
+  var net = null, name = '', joinedOk = false, my = null, S = null, nPads = 0, lastPh = '', lastRd = 0;
   $('go').addEventListener('click', join);
   function join() {
     name = $('name').value.trim().slice(0, 14); room = $('code').value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
@@ -70,30 +68,34 @@
     hi(); setInterval(hi, 1500);   // (keep saying hello until the big screen has us)
   }
   function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+  function pads(n) {   // one big button per exit, in a row (1 to 5)
+    if (n === nPads) return; nPads = n; var box = $('pads'); box.style.gridTemplateColumns = 'repeat(' + n + ',1fr)'; box.innerHTML = '';
+    for (var i = 0; i < n; i++) { var b = document.createElement('button'); b.type = 'button'; b.textContent = String(i + 1); b.setAttribute('data-e', i); (function (b, i) { var fire = function (ev) { ev.preventDefault(); if (!net || !S || (S.ph !== 'look' && S.ph !== 'mist') || !my || my.a != null) return; net.toHost('zg', { pid: pid, e: i }); my.a = i; paint(); buzz(25); }; b.addEventListener('touchstart', fire, { passive: false }); b.addEventListener('mousedown', fire); })(b, i); box.appendChild(b); }
+  }
   function onState(s) {
     if (!s || !s.p) return;
-    my = s.p[pid] || null;
+    S = s; my = s.p[pid] || null;
     if (my && !joinedOk) { joinedOk = true; $('join').classList.add('hidden'); $('game').classList.remove('hidden'); }
     if (!joinedOk) return;
-    $('me').textContent = name;
-    var big = $('big'), txt = '', cls = '';
-    if (!my) { big.innerHTML = 'The leaves are already falling<span class="small">You’ll join the next one</span>'; document.body.className = ''; return; }
-    document.documentElement.style.setProperty('--col', my.c || '#8a93b8'); $('dot').style.background = my.c || 'rgba(255,255,255,.25)';
-    $('breath').textContent = my.s === 'fly' || my.s === 'hit' ? '💨'.repeat(my.b || 0) + '·'.repeat(4 - (my.b || 0)) : '';
-    if (s.ph === 'lobby') txt = 'You’re in, ' + esc(name) + '!<span class="small">Wait for the host to start</span>';
-    else if (s.ph === 'ready') txt = 'Find your leaf!<span class="small">Your name and colour on the big screen</span>';
-    else if (s.ph === 'end') txt = (my.r === 1 ? '🏆 Your leaf stayed up longest!' : 'You finished ' + ordinal(my.r || 0)) + '<span class="small">' + (my.tm != null ? 'In the air for ' + my.tm + ' s' : 'Still flying at the end') + '</span>';
-    else if (my.s === 'down') { txt = '🌫️ The mist took your leaf<span class="small">After ' + my.tm + ' s · ' + (s.n || 0) + ' still in the air</span>'; if (lastS !== 'down') buzz([60, 40, 160]); }
-    else if (my.s === 'hit') { cls = 'fly hit'; txt = 'Ouch, a spirit’s arm!<span class="small">Your breath is gone</span>'; if (lastS !== 'hit') buzz(150); }
-    else { cls = 'fly' + (my.b < 1 ? ' empty' : ''); txt = my.b < 1 ? 'Out of breath…' : 'Puff!'; txt += '<span class="small">◀ ▲ ▶ steers your leaf</span>'; }
-    lastS = my.s || '';
-    document.body.className = cls; big.innerHTML = txt;
-    var g = $('gust'); g.textContent = s.g > 0 ? 'Gust → coming' : s.g < 0 ? '← Gust coming' : ''; g.classList.toggle('on', !!s.g && my.s === 'fly');
+    if (s.ph === 'look' && (lastPh !== 'look' || s.rd !== lastRd)) buzz(40);
+    lastPh = s.ph; lastRd = s.rd; paint();
   }
-  [].forEach.call(document.querySelectorAll('#pads button'), function (b) {
-    var fire = function (e) { e.preventDefault(); if (!net || !my || (my.s !== 'fly' && my.s !== 'hit')) return; net.toHost('zg', { pid: pid, j: +b.getAttribute('data-j') }); buzz(12); };   // (the big screen checks the breath)
-    b.addEventListener('touchstart', fire, { passive: false }); b.addEventListener('mousedown', fire);
-  });
+  function paint() {
+    var s = S; if (!s) return; $('me').textContent = name;
+    var big = $('big'), txt = '', cls = '';
+    if (!my) { big.innerHTML = 'A game is in progress<span class="small">You’ll join the next one</span>'; document.body.className = ''; $('pads').innerHTML = ''; nPads = 0; return; }
+    document.documentElement.style.setProperty('--col', my.c || '#7ff5e0');
+    $('pts').textContent = s.ph === 'lobby' ? '' : '🍃 ' + (my.pts || 0);
+    pads(s.ph === 'lobby' || s.ph === 'intro' ? 0 : s.n || 3);
+    if (s.ph === 'lobby') txt = 'You’re in, ' + esc(name) + '!<span class="small">Wait for the host to start</span>';
+    else if (s.ph === 'intro') txt = 'Find your leaf!<span class="small">Your colour, at the top of a vine on the big screen</span>';
+    else if (s.ph === 'look' || s.ph === 'mist') { cls = my.a != null ? 'go done' : 'go'; txt = my.a != null ? 'Exit ' + (my.a + 1) + ' it is!<span class="small">Wait for the others</span>' : (s.ph === 'look' ? 'Look at the big screen!' : 'Quick, tap your exit!') + '<span class="small">Round ' + s.rd + ' of ' + s.of + (s.left != null ? ' · ' + s.left + ' s' : '') + '</span>'; }
+    else if (s.ph === 'reveal') { cls = 'done'; txt = 'Watch your leaf…'; }
+    else if (s.ph === 'after') { cls = 'done'; txt = my.ok ? '🍃 Right! Your leaf climbs' : my.a == null ? 'Too late!<span class="small">It was exit ' + ((my.e || 0) + 1) + '</span>' : 'Not this time<span class="small">It was exit ' + ((my.e || 0) + 1) + '</span>'; }
+    else if (s.ph === 'end') txt = (my.r === 1 ? '🏆 Your leaf climbed highest!' : 'You finished ' + ordinal(my.r || 0)) + '<span class="small">' + (my.pts || 0) + ' of ' + s.of + ' right</span>';
+    document.body.className = cls; big.innerHTML = txt;
+    [].forEach.call(document.querySelectorAll('#pads button'), function (b) { var e = +b.getAttribute('data-e'); b.classList.toggle('pick', my.a === e && s.ph !== 'lobby'); b.classList.toggle('right', s.ph === 'after' && my.e === e); });
+  }
   if (room.length === 4 && $('name').value) $('go').focus();
 })();
 </script>

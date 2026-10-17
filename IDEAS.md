@@ -35,11 +35,18 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
 
 ## Other party games
 
-- **Leaf on the Wind** (for Horehronie). A misty enchanted forest at night in teal, like the 2010 stage: every player
-  is one leaf drifting down between the swaying arms of two tree spirits. Phone: ◀ ▲ ▶ puffs (4 breaths, slowly
-  refilled); an arm knocks you down and empties your breath; a glowing orb refills it; gusts of wind; the mist rises
-  from the floor. Last leaf above the mist wins. **Test version built:** 🧪 Test → "🍃 Leaf on the Wind (prototype)"
-  (leaf.html, phones on leafpad.html). Still to do: the song, a stage intro, hook into the roster.
+- **Leaf on the Wind** (for Horehronie). A look-and-answer puzzle, eyes on the big screen: a misty enchanted forest at
+  night in teal, like the 2010 stage. Each player's leaf hangs at the top of a vine; the tree spirits' arms stretch
+  between the vines and a leaf crosses over at every arm it meets (a ladder puzzle). 5 s to trace it, then the mist
+  rolls in and you tap the exit (1–5) on the phone. 8 rounds, 3 → 5 vines, more arms, swaying arms at the end. Song:
+  Horehronie from YouTube. **Test version built:** 🧪 Test → "🍃 Leaf on the Wind (prototype)" (leaf.html, phones on
+  leafpad.html). Still to do: a stage intro, hook into the roster. (An earlier puffing version, steering a falling
+  leaf with ◀ ▲ ▶, was replaced: too much staring at the phone; it's in the git history.)
+- **More 5-second look-and-answer puzzles** (big screen shows it, mist covers it, answer on the phone; could join
+  Leaf on the Wind or be their own games): **The spirit's lights** (3–5 orbs light up in a 3×3 grid; tap the same on
+  the phone), **Count your colour** (a gust of leaves in everyone's colours; how many were yours?), **The odd leaf**
+  (a ring of leaves, one slightly different; tap where), **Where does the wind take it?** (gust arrows on layers;
+  where does the leaf land?).
 - **The Glitter Tower** (speed climbing). Stella, the tower keeper (a new character: lilac beehive, night-sky gown,
   crescent-moon balcony), lights the next ledge with her wand. Every floor has only two ledges (straight above you and one beside it); one is real. Tap
   ↖ ↑ ↗ on the phone fast; wrong ledge or too slow = fall 3 floors. 3 rounds of 15 s turns, 1–3 climbers at once;

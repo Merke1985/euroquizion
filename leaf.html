@@ -8,14 +8,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
 <style>
-  /* Leaf on the Wind: an early test (for Horehronie). A misty enchanted forest at night: every player is one leaf drifting down between the arms of the tree spirits; puff it up from your phone; the mist rises; the last leaf above it wins. */
+  /* Leaf on the Wind: an early test (for Horehronie). A quick look-and-answer puzzle in a misty enchanted forest at night: trace where your leaf will fall down the vines, the mist covers it after 5 seconds, tap the exit on your phone. Eyes on the big screen, not on the phone. */
   :root{--ink:#fff;--mute:#bfe3dc;--gold:#7ff5e0;--line:rgba(160,255,235,.2)}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:#031416;overflow:hidden;font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none}
   canvas{position:fixed;inset:0;width:100vw;height:100vh;display:block}
   .ov{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,rgba(20,90,90,.7),rgba(2,14,16,.93));z-index:5;padding:16px}
   .ov.hidden{display:none}
-  .card{max-width:640px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(6,32,36,.94);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .card{max-width:660px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(6,32,36,.94);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
   .card h2{margin:0 0 .3em;font-size:clamp(1.6rem,4vw,2.4rem)}
   .card p{margin:.4em 0;color:var(--mute);line-height:1.45}
   .card b{color:var(--ink)}
@@ -31,31 +31,34 @@
   ol.res{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
   ol.res li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:700}
   ol.res li.top{background:rgba(127,245,224,.18);box-shadow:0 0 0 2px var(--gold)}
+  #yt{position:fixed;left:-9999px;top:0;width:200px;height:120px}
   ol.res li .rk{width:1.6em;color:var(--gold)} ol.res li .nm{flex:1} ol.res li .dot{width:13px;height:13px;border-radius:50%} ol.res li .sm{color:var(--mute);font-weight:600;font-size:.9em}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="yt"></div>
 
 <div class="ov" id="start">
   <div class="card">
-    <h2>🍂 Leaf on the Wind</h2>
-    <p>Deep in an enchanted forest, at night, the tree spirits are dancing. <b>Every player is one leaf</b>, drifting down between their swaying arms.</p>
-    <p>Tap <b>◀ ▲ ▶</b> on your phone to puff your leaf up and to the side. Each puff costs a breath 💨 (you have 4; they come back slowly). A spirit’s arm knocks your leaf down and takes your breath away. Fly through a <b>glowing orb</b> to get all your breath back. Watch out for gusts of wind.</p>
-    <p>A mist rises from the forest floor. The <b>last leaf above the mist</b> wins.</p>
-    <div class="join"><div class="qr" id="qr"></div><div><b>📱 Fly with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="url"></span><br><span class="mute">Room</span> <b id="code" class="code"></b><div id="plist" class="plist"><span class="mute">Nobody has joined yet: the computer leaves fall alone.</span></div></div></div>
+    <h2>🍃 Leaf on the Wind</h2>
+    <p>Deep in an enchanted forest the tree spirits stretch their arms between the hanging vines. <b>Your leaf</b> (your colour) hangs at the top of one vine.</p>
+    <p>Your leaf slides down its vine, and <b>every time it meets an arm, it crosses to the next vine</b>. Where does it come out at the bottom? You have <b>5 seconds</b> to trace it with your eyes, then the mist rolls in. Tap the exit on your phone before time runs out.</p>
+    <p>A right answer lets your leaf climb a little higher on the great tree. 8 rounds, harder each time. The highest leaf wins.</p>
+    <div class="join"><div class="qr" id="qr"></div><div><b>📱 Answer with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="url"></span><br><span class="mute">Room</span> <b id="code" class="code"></b><div id="plist" class="plist"><span class="mute">Nobody has joined yet: the computer leaves play alone.</span></div></div></div>
     <div class="btns">
       <label>Computer leaves <select id="nbots"><option>0</option><option>1</option><option selected>3</option><option>5</option><option>7</option><option>9</option></select></label>
-      <label><input type="checkbox" id="kb" checked> 🧪 Me with the arrow keys</label>
+      <label><input type="checkbox" id="kb" checked> 🧪 Me with the number keys</label>
+      <label><input type="checkbox" id="song" checked> 🎵 Horehronie</label>
       <button id="go">▶ Start</button>
     </div>
   </div>
 </div>
 <div class="ov hidden" id="end">
   <div class="card">
-    <h2 id="endt">The mist has taken every leaf</h2>
+    <h2 id="endt">The highest leaf</h2>
     <ol class="res" id="res"></ol>
-    <div class="btns"><button id="again">↻ Fall again</button></div>
+    <div class="btns"><button id="again">↻ Play again</button></div>
   </div>
 </div>
 
@@ -67,43 +70,54 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var cv = $('c'), cx = cv.getContext('2d'), W = 0, H = 0, S = 1, OX = 0, OY = 0;
-  var WX = 1.6, FLOOR = 0.92, WATER = FLOOR, TL = 0.13, TR = WX - 0.13;   // (the world: 1.6 wide, 1 high; the two trunks at the sides; WATER is the top of the mist, which rises during the game)
+  var WX = 1.6, TL = 0.13, TR = WX - 0.13;   // (the world: 1.6 wide, 1 high; a tree spirit at each side)
   function size() { var d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * d; cv.height = H * d; cx.setTransform(d, 0, 0, d, 0, 0); S = Math.min(W / WX, H); OX = (W - WX * S) / 2; OY = (H - S) / 2; }
   addEventListener('resize', size); size();
   var sx = function (x) { return OX + x * S; }, sy = function (y) { return OY + y * S; };
 
   // ---------- the rules ----------
-  var BMAX = 4, BREG = 0.8, PUFF_UP = 0.06, PUFF_SIDE = 0.075, R = 0.02, CAP = 150;   // (4 breaths, one back every 1.25 s; a puff lifts the leaf about 4% of the tree; the game stops after 150 s at most)
-  function fallAt(T) { return 0.014 + 0.00025 * T; }   // (how fast leaves sink: slow at first, a little faster later)
-  function mistAt(T) { return FLOOR - Math.min(0.4, Math.max(0, T - 15) * 0.0045); }   // (the mist starts rising after 15 s, up to 40% of the forest after ~105 s)
+  var LOOK = 5, EXTRA = 4, REVEAL = 4.2, AFTER = 2.6, ROUNDS = 8;   // (5 s to look, then 4 more s under the mist to answer; the leaves slide down; the scores)
+  var LEVELS = [[3, 3], [3, 4], [4, 5], [4, 6], [5, 7], [5, 8], [5, 9, 1], [5, 10, 1]];   // (per round: vines, arms, and whether the arms sway)
   var COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43', '#f5f5f5', '#ff4d6d', '#4dd4b0', '#a3b8ff', '#e8a0ff', '#b8e05a'];
   var BOTN = ['Birch', 'Rowan', 'Aspen', 'Maple', 'Linden', 'Hazel', 'Willow', 'Alder', 'Elm', 'Beech'];
+  var BX0 = 0.42, BX1 = 1.18, BY0 = 0.24, BY1 = 0.74;   // (where the puzzle hangs)
 
   // ---------- sound (made on the spot) ----------
   var ac = null;
   function au() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); return ac; }
-  function noise(dur, f0, f1, vol, delay) { var a = au(); if (!a) return; var t0 = a.currentTime + (delay || 0), n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; var s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(); s.buffer = b; fl.type = 'bandpass'; fl.Q.value = 1.2; fl.frequency.setValueAtTime(f0, t0); fl.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + dur * 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); s.connect(fl); fl.connect(g); g.connect(a.destination); s.start(t0); }
   function tone(f0, f1, dur, type, vol, delay) { var a = au(); if (!a) return; var t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur); g.gain.setValueAtTime(vol || 0.1, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02); }
-  function sPuff() { noise(0.22, 900, 2400, 0.08); }
-  function sBranch() { tone(180, 90, 0.18, 'triangle', 0.12); noise(0.25, 3000, 800, 0.06); }
-  function sSplash() { noise(0.6, 1800, 300, 0.12); tone(900, 300, 0.25, 'sine', 0.05, 0.05); }
-  function sGust() { noise(2.2, 300, 1400, 0.07); }
-  function sOrb() { [1318, 1760, 2093].forEach(function (f, i) { tone(f, f, 0.3, 'sine', 0.05, i * 0.06); }); }
-  function sBeep(hi) { tone(hi ? 880 : 587, hi ? 880 : 587, hi ? 0.35 : 0.14, 'triangle', 0.08); }
+  function noise(dur, f0, f1, vol) { var a = au(); if (!a) return; var t0 = a.currentTime, n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0); for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; var s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(); s.buffer = b; fl.type = 'bandpass'; fl.Q.value = 1.2; fl.frequency.setValueAtTime(f0, t0); fl.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + dur * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); s.connect(fl); fl.connect(g); g.connect(a.destination); s.start(t0); }
+  function sShow() { [880, 1175, 1318].forEach(function (f, i) { tone(f, f, 0.5, 'sine', 0.05, i * 0.08); }); }
+  function sMist() { noise(1.8, 400, 1600, 0.08); }
+  function sTick() { tone(1500, 1500, 0.05, 'sine', 0.04); }
+  function sLock() { tone(700, 1000, 0.08, 'triangle', 0.05); }
+  function sRight() { [784, 1046, 1318].forEach(function (f, i) { tone(f, f, 0.3, 'triangle', 0.07, i * 0.07); }); }
   function sWin() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, f, 0.4, 'triangle', 0.08, i * 0.14); }); }
 
-  // ---------- the tree ----------
-  var branches = [], seed = 1;
-  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
-  function makeTree() {   // branches from both trunks, one at each height, always leaving a way through
-    seed = 1 + Math.floor(Math.random() * 1e6); branches = []; var left = rnd() < 0.5;
-    for (var y = 0.25; y < WATER - 0.08; y += 0.1 + rnd() * 0.035) { var len = (0.35 + rnd() * 0.42) * (TR - TL); branches.push({ y0: y, y: y, left: left, x0: left ? TL : TR - len, x1: left ? TL + len : TR, th: 0.013, tw: rnd(), amp: 0.012 + rnd() * 0.022, sp: 0.5 + rnd() * 0.5 }); left = rnd() < 0.7 ? !left : left; }   // (mostly from alternate sides: a slalom)
+  // ---------- the song: Horehronie (Kristína, 2010) from YouTube, in a hidden player; it loops and fades out at the end ----------
+  var SONG = 'j8G6byTMr0o', yt = null, ytOk = false, ytWant = false;
+  window.onYouTubeIframeAPIReady = function () { yt = new YT.Player('yt', { width: 200, height: 120, videoId: SONG, playerVars: { controls: 0, disablekb: 1, playsinline: 1, rel: 0 }, events: { onReady: function () { ytOk = true; if (ytWant) songPlay(); }, onStateChange: function (ev) { if (ev.data === 0 && ytWant) { try { yt.seekTo(0, true); yt.playVideo(); } catch (e) {} } } } }); };   // (when it ends mid-game, it starts again)
+  (function () { var sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(sc); })();
+  function songPlay() { ytWant = true; if (!ytOk) return; try { yt.unMute(); yt.setVolume(80); yt.seekTo(0, true); yt.playVideo(); } catch (e) {} }
+  function songStop() { ytWant = false; if (!ytOk) return; var v = 80, f = setInterval(function () { v -= 8; try { if (v <= 0) { clearInterval(f); yt.pauseVideo(); } else yt.setVolume(v); } catch (e) { clearInterval(f); } }, 120); }   // (a gentle fade-out)
+
+  // ---------- the puzzle: vines and the spirits' arms between them ----------
+  var N = 3, arms = [], rows = 0, swayOn = false;
+  function makePuzzle(lv) {   // one arm per row (two in a row now and then with 5 vines), never undoing the arm just above
+    N = lv[0]; rows = lv[1]; swayOn = !!lv[2]; arms = []; var prev = -9;
+    var prevs = [];
+    for (var r = 0; r < rows; r++) { var a; do { a = Math.floor(Math.random() * (N - 1)); } while (prevs.indexOf(a) >= 0 && N > 2); arms.push({ r: r, a: a, ph: Math.random() * 6 }); var now = [a];   // (never the same arm right below one: it would just cross back)
+      if (N >= 5 && Math.random() < 0.35) { var b = [0, 1, 2, 3].filter(function (k) { return Math.abs(k - a) >= 2 && prevs.indexOf(k) < 0; }); if (b.length) { var a2 = b[Math.floor(Math.random() * b.length)]; arms.push({ r: r, a: a2, ph: Math.random() * 6 }); now.push(a2); } }
+      prevs = now; }
   }
-  function sway() { branches.forEach(function (b) { b.y = b.y0 + Math.sin(t * b.sp + b.tw * 9) * b.amp; }); }   // (the spirits' arms rise and fall slowly, as if dancing)
-  var orbs = [];
-  function placeOrb(o) { for (var k = 0; k < 20; k++) { o.x = TL + 0.08 + Math.random() * (TR - TL - 0.16); o.y = 0.16 + Math.random() * Math.max(0.1, WATER - 0.3); if (!branches.some(function (b) { return Math.abs(b.y0 - o.y) < 0.05 && o.x > b.x0 - 0.03 && o.x < b.x1 + 0.03; })) break; } o.on = true; o.ph = Math.random() * 6; }
-  function makeOrbs() { orbs = []; for (var i = 0; i < 4; i++) { var o = {}; placeOrb(o); orbs.push(o); } }
-  function hitBranch(x, y) { for (var i = 0; i < branches.length; i++) { var b = branches[i]; if (x + R * 0.7 > b.x0 && x - R * 0.7 < b.x1 && Math.abs(y - b.y) < b.th + R * 0.6) return b; } return null; }
+  function vx(i) { return BX0 + (BX1 - BX0) * (N === 1 ? 0.5 : i / (N - 1)); }
+  function ry(r) { return BY0 + 0.05 + (BY1 - BY0 - 0.09) * (r + 0.5) / rows; }
+  function armY(a) { return ry(a.r) + (swayOn ? Math.sin(t * 1.3 + a.ph) * 0.006 : 0); }
+  function trace(v0) {   // where a leaf that starts on vine v0 comes out, and the points of its way down
+    var v = v0, pts = [[vx(v), BY0]];
+    for (var r = 0; r < rows; r++) arms.forEach(function (a) { if (a.r !== r) return; if (a.a === v) { pts.push([vx(v), ry(r)]); v = v + 1; pts.push([vx(v), ry(r)]); } else if (a.a + 1 === v) { pts.push([vx(v), ry(r)]); v = v - 1; pts.push([vx(v), ry(r)]); } });
+    pts.push([vx(v), BY1]); return { end: v, pts: pts };
+  }
 
   // ---------- phones ----------
   var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '', joined = [], net = null, lastState = '', lastSent = 0;
@@ -111,91 +125,63 @@
   var padUrl = new URL('leafpad.html?r=' + room, location.href).href;
   $('code').textContent = room; $('url').textContent = padUrl.replace(/^https?:\/\//, '');
   try { var qq = qrcode(0, 'M'); qq.addData(padUrl); qq.make(); $('qr').innerHTML = qq.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('qr').style.display = 'none'; }
-  function showJoined() { $('plist').innerHTML = joined.length ? joined.map(function (j) { return '<span class="pp">' + esc(j.name) + '</span>'; }).join('') : '<span class="mute">Nobody has joined yet: the computer leaves fall alone.</span>'; }
+  function showJoined() { $('plist').innerHTML = joined.length ? joined.map(function (j) { return '<span class="pp">' + esc(j.name) + '</span>'; }).join('') : '<span class="mute">Nobody has joined yet: the computer leaves play alone.</span>'; }
   try {
     net = escConnect('lf' + room); net.hostIn();
     net.on('hi', function (p) { if (!p || !p.pid) return; var nm = String(p.name || 'Leaf').trim().slice(0, 14) || 'Leaf', j = joined.filter(function (x) { return x.pid === p.pid; })[0]; if (j) j.name = nm; else if (joined.length < 12) joined.push({ pid: p.pid, name: nm }); showJoined(); sendState(true); });
-    net.on('zg', function (p) { if (!p || !p.pid || (p.j !== -1 && p.j !== 0 && p.j !== 1)) return; var l = leaves.filter(function (x) { return x.pid === p.pid; })[0]; if (l) puff(l, p.j); });   // (a puff from a phone: -1 to the left, 0 straight up, 1 to the right)
+    net.on('zg', function (p) { if (!p || !p.pid || typeof p.e !== 'number') return; var l = leaves.filter(function (x) { return x.pid === p.pid; })[0]; if (l) answer(l, p.e); });   // (an answer from a phone: the exit, 0 = the leftmost)
   } catch (e) { net = null; }
 
   // ---------- the game ----------
-  var leaves = [], phase = 'lobby', t = 0, phT = 0, T = 0, gust = 0, gustTo = 0, gustAt = 0, gustWarn = 0, nextGust = 0, ended = false, deco = [], ripples = [];
+  var leaves = [], phase = 'lobby', t = 0, phT = 0, rd = 0, ended = false, tickN = -1;
   function makeLeaves() {
     leaves = []; var nb = +$('nbots').value, k = 0;
     if ($('kb').checked) leaves.push({ name: 'You', col: COLS[k++], kb: true });
     joined.forEach(function (j) { if (leaves.length < 12) leaves.push({ name: j.name, pid: j.pid, col: COLS[k++ % COLS.length], human: true }); });
     var names = BOTN.filter(function (n) { return !leaves.some(function (p) { return p.name.toLowerCase() === n.toLowerCase(); }); });
-    for (var i = 0; i < nb && leaves.length < 12; i++) leaves.push({ name: names[i % names.length], col: COLS[k++ % COLS.length], bot: true, skill: 0.5 + Math.random() * 0.45, think: 0 });
-    var n = leaves.length; leaves.forEach(function (l, i) { l.x = TL + 0.12 + (TR - TL - 0.24) * (n === 1 ? 0.5 : i / (n - 1)); l.y = 0.07 + (i % 2) * 0.03; l.vx = 0; l.vy = 0; l.b = BMAX; l.inv = 0; l.down = null; l.hits = 0; l.ph = Math.random() * 6; l.puffT = -9; l.trail = []; });
+    for (var i = 0; i < nb && leaves.length < 12; i++) leaves.push({ name: names[i % names.length], col: COLS[k++ % COLS.length], bot: true, skill: 0.55 + Math.random() * 0.4 });
+    leaves.forEach(function (l) { l.pts = 0; l.tsum = 0; l.ok = null; l.ans = null; l.h = 0; });
   }
-  function start() { au(); makeTree(); makeOrbs(); makeLeaves(); if (!leaves.length) return; ended = false; $('start').classList.add('hidden'); $('end').classList.add('hidden'); t = 0; T = 0; gust = 0; gustTo = 0; nextGust = 14; ripples = []; setPhase('intro'); sendState(true); }
+  function start() { au(); makeLeaves(); if (!leaves.length) return; ended = false; rd = 0; if ($('song').checked) songPlay(); $('start').classList.add('hidden'); $('end').classList.add('hidden'); t = 0; setPhase('intro'); sendState(true); }
   function setPhase(p) { phase = p; phT = t; }
-  function puff(l, j) {
-    if (phase !== 'play' || l.down != null || l.b < 1 || l.inv > 0.6) return;
-    l.b -= 1; l.vy -= PUFF_UP; l.vx += j * PUFF_SIDE; l.puffT = t; l.pj = j; if (l.kb || l.human) sPuff(); sendState(true);
+  function newRound() {
+    rd++; if (rd > ROUNDS) { finish(); return; }
+    makePuzzle(LEVELS[rd - 1]);
+    var order = []; while (order.length < leaves.length) { var sh = []; for (var i = 0; i < N; i++) sh.push(i); sh.sort(function () { return Math.random() - 0.5; }); order = order.concat(sh); }   // (spread the leaves over the vines as evenly as possible)
+    leaves.forEach(function (l, i) { l.v = order[i]; l.ans = null; l.at = null; l.ok = null; l.end = trace(l.v).end; if (l.bot) { l.botAt = 1.6 + (1 - l.skill) * 3 + Math.random() * 2.5; l.botAns = Math.random() < 0.35 + l.skill * 0.6 - rd * 0.02 ? l.end : Math.floor(Math.random() * N); } });
+    setPhase('look'); sShow(); tickN = -1; sendState(true);
   }
+  function answer(l, e) { if ((phase !== 'look' && phase !== 'mist') || l.ans != null || e < 0 || e >= N) return; l.ans = e; l.at = t - phT + (phase === 'mist' ? LOOK : 0); if (l.kb || l.human) sLock(); sendState(true); }
   function step(dt) {
-    t += dt;
-    if (phase === 'intro' && t - phT > 5) { setPhase('count'); sBeep(false); step.k = 0; }
-    else if (phase === 'count') { var k = Math.floor(t - phT); if (k !== step.k) { step.k = k; if (k > 0 && k < 3) sBeep(false); if (k === 3) { sBeep(true); setPhase('play'); } } }
-    if (phase === 'play') {
-      T = t - phT;
-      if (T >= nextGust - 2 && !gustWarn) { gustWarn = 1; gustTo = (Math.random() < 0.5 ? -1 : 1) * (0.07 + Math.min(0.08, T * 0.001)); }   // (a gust: 2 s warning, then 3 s of wind, stronger later)
-      if (T >= nextGust && gustWarn === 1) { gustWarn = 2; gustAt = T; sGust(); }
-      if (gustWarn === 2 && T - gustAt > 3) { gustWarn = 0; gustTo = 0; nextGust = T + 9 + Math.random() * 6; }
-      gust += ((gustWarn === 2 ? gustTo : 0) - gust) * Math.min(1, dt * 2);
-      var fall = fallAt(T), alive = 0; WATER = mistAt(T); sway();
-      orbs.forEach(function (o) { if (!o.on && T >= o.back) placeOrb(o); });
-      leaves.forEach(function (l) {
-        if (l.down != null) return; alive++;
-        l.b = Math.min(BMAX, l.b + BREG * dt); l.inv = Math.max(0, l.inv - dt);
-        if (l.bot) bot(l, dt);
-        var breeze = 0.012 * Math.sin(t * 0.7 + l.ph);
-        l.vy += (fall - l.vy) * Math.min(1, 1.6 * dt); l.vx += (gust + breeze - l.vx) * Math.min(1, 0.9 * dt);
-        l.x += l.vx * dt; l.y += l.vy * dt;
-        if (l.x < TL + R) { l.x = TL + R; l.vx = Math.abs(l.vx) * 0.4; } if (l.x > TR - R) { l.x = TR - R; l.vx = -Math.abs(l.vx) * 0.4; }
-        if (l.y < 0.04) { l.y = 0.04; l.vy = Math.max(0, l.vy); }
-        var b = l.inv <= 0 && hitBranch(l.x, l.y);
-        if (b) { l.inv = 1.2; l.b = 0; l.hits++; l.vy = 0.13; l.vx = (b.left ? 1 : -1) * 0.05; l.bump = { t0: t, x: l.x, y: b.y }; sBranch(); sendState(true); }   // (knocked down, out of breath)
-        orbs.forEach(function (o) { if (o.on && Math.hypot(o.x - l.x, o.y - l.y) < R + 0.022) { o.on = false; o.back = T + 6; l.b = BMAX; l.glow = t; sOrb(); sendState(true); } });   // (an orb: all your breath back)
-        if (t - (l.tr || 0) > 0.06) { l.tr = t; l.trail.push([l.x, l.y]); if (l.trail.length > 14) l.trail.shift(); }
-        if (l.y >= WATER) { l.y = WATER; l.down = T; l.vx = 0.05; l.dy = WATER; ripples.push({ x: l.x, y: WATER, t0: t, col: l.col }); sSplash(); sendState(true); }
-      });
-      if (!alive || T >= CAP) finish();
-    }
+    t += dt; var e = t - phT;
+    if (phase === 'intro' && e > 5) newRound();
+    else if (phase === 'look') { leaves.forEach(function (l) { if (l.bot && l.ans == null && e >= l.botAt) answer(l, l.botAns); }); if (e >= LOOK) { setPhase('mist'); sMist(); sendState(true); } }
+    else if (phase === 'mist') { leaves.forEach(function (l) { if (l.bot && l.ans == null && e + LOOK >= l.botAt) answer(l, l.botAns); }); var k = Math.ceil(EXTRA - e); if (k !== tickN && k <= 3 && k > 0) { tickN = k; sTick(); } if (e >= EXTRA || leaves.every(function (l) { return l.ans != null; })) { setPhase('reveal'); leaves.forEach(function (l) { l.ok = l.ans === l.end; if (l.ok) { l.pts++; l.tsum += l.at; } }); sendState(true); } }
+    else if (phase === 'reveal' && e >= REVEAL) { setPhase('after'); if (leaves.some(function (l) { return l.ok; })) sRight(); sendState(true); }
+    else if (phase === 'after' && e >= AFTER) newRound();
+    leaves.forEach(function (l) { l.h += (l.pts - l.h) * Math.min(1, dt * 3); });
     sendState(false);
   }
-  function bot(l, dt) {   // computer leaves: keep to a comfortable height, steer away from the branch below, sometimes too late
-    l.think -= dt; if (l.think > 0) return; l.think = 0.35 + (1 - l.skill) * 0.7 + Math.random() * 0.4;
-    var want = Math.min(0.3 + (1 - l.skill) * 0.25, WATER - 0.2), j = 0, below = branches.filter(function (b) { return b.y > l.y && b.y < l.y + 0.16; })[0];
-    if (below && l.x > below.x0 - 0.06 && l.x < below.x1 + 0.06) j = below.left ? 1 : -1;
-    else j = l.x < (TL + TR) / 2 - 0.25 ? 1 : l.x > (TL + TR) / 2 + 0.25 ? -1 : 0;
-    var orb = orbs.filter(function (o) { return o.on && Math.abs(o.y - l.y) < 0.12 && Math.abs(o.x - l.x) < 0.3; })[0]; if (orb && Math.random() < l.skill && !below) j = orb.x > l.x + 0.03 ? 1 : orb.x < l.x - 0.03 ? -1 : 0;   // (an orb close by: go for it)
-    if (gustWarn && Math.random() < l.skill) j = gustTo > 0 ? -1 : 1;
-    if (l.y > WATER - 0.12) want = 0;   // (the mist is near: puff!)
-    if ((l.y > want || j !== 0) && Math.random() < 0.55 + l.skill * 0.4) puff(l, j);
-  }
-  function ranking() { return leaves.slice().sort(function (a, b) { var da = a.down == null ? 1e9 - a.y : a.down, db = b.down == null ? 1e9 - b.y : b.down; return db - da || a.hits - b.hits; }); }
+  function ranking() { return leaves.slice().sort(function (a, b) { return b.pts - a.pts || a.tsum - b.tsum; }); }
   function finish() {
-    phase = 'end'; ended = true; sWin();
-    var r = ranking(); r.forEach(function (l, i) { l.rank = i + 1; });
-    var surv = r.filter(function (l) { return l.down == null; });
-    $('endt').textContent = surv.length > 1 ? '🍃 ' + surv.length + ' leaves stayed above the mist!' : '🍃 ' + r[0].name + ' stayed up longest!';
-    $('res').innerHTML = r.map(function (l) { return '<li class="' + (l.rank === 1 ? 'top' : '') + '"><span class="rk">' + l.rank + '</span><span class="dot" style="background:' + l.col + '"></span><span class="nm">' + esc(l.name) + '</span>' + (l.down == null ? 'Still flying' : l.down.toFixed(1) + ' s') + ' <span class="sm">· ' + l.hits + (l.hits === 1 ? ' branch' : ' branches') + '</span></li>'; }).join('');
-    setTimeout(function () { $('end').classList.remove('hidden'); }, 1500); sendState(true);
+    phase = 'end'; ended = true; sWin(); songStop();
+    var r = ranking(); r.forEach(function (l, i) { l.rank = i && l.pts === r[i - 1].pts && Math.abs(l.tsum - r[i - 1].tsum) < 0.05 ? r[i - 1].rank : i + 1; });
+    $('endt').textContent = '🍃 ' + r[0].name + '’s leaf climbed highest!';
+    $('res').innerHTML = r.map(function (l) { return '<li class="' + (l.rank === 1 ? 'top' : '') + '"><span class="rk">' + l.rank + '</span><span class="dot" style="background:' + l.col + '"></span><span class="nm">' + esc(l.name) + '</span>' + l.pts + ' of ' + ROUNDS + ' <span class="sm">· ' + (l.pts ? (l.tsum / l.pts).toFixed(1) + ' s per answer' : '') + '</span></li>'; }).join('');
+    setTimeout(function () { $('end').classList.remove('hidden'); }, 1200); sendState(true);
   }
   $('go').addEventListener('click', start);
   $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); phase = 'lobby'; leaves = []; showJoined(); sendState(true); });
-  addEventListener('keydown', function (e) { var me = leaves.filter(function (p) { return p.kb; })[0]; if (!me) return; var j = { ArrowLeft: -1, ArrowUp: 0, ArrowRight: 1 }[e.key]; if (j == null) return; e.preventDefault(); if (!e.repeat) puff(me, j); });
+  addEventListener('keydown', function (ev) { var me = leaves.filter(function (p) { return p.kb; })[0]; if (!me) return; var k = +ev.key; if (!(k >= 1 && k <= 5)) return; ev.preventDefault(); answer(me, k - 1); });
 
   function sendState(force) {
     if (!net) return;
-    var ph = phase === 'lobby' ? 'lobby' : ended ? 'end' : phase === 'play' ? 'play' : 'ready', ps = {};
+    var ph = phase === 'lobby' ? 'lobby' : ended ? 'end' : phase, ps = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
-    else leaves.forEach(function (l) { if (!l.human) return; ps[l.pid] = { n: l.name, c: l.col, s: l.down != null ? 'down' : ph === 'play' ? (l.inv > 0.6 ? 'hit' : 'fly') : 'ready', b: Math.floor(l.b), tm: l.down != null ? +l.down.toFixed(1) : null, r: ended ? l.rank : null }; });
-    var o = { ph: ph, p: ps, g: gustWarn === 1 ? (gustTo > 0 ? 1 : -1) : 0, n: leaves.filter(function (l) { return l.down == null; }).length };
+    else leaves.forEach(function (l) { if (!l.human) return; ps[l.pid] = { n: l.name, c: l.col, a: l.ans, ok: phase === 'after' || ended ? l.ok : null, e: phase === 'after' ? l.end : null, pts: l.pts, r: ended ? l.rank : null }; });
+    var o = { ph: ph, p: ps, rd: rd, of: ROUNDS, n: N, left: phase === 'look' ? Math.ceil(LOOK + EXTRA - (t - phT)) : phase === 'mist' ? Math.ceil(EXTRA - (t - phT)) : null };
     var s = JSON.stringify(o), now = Date.now();
-    if (!force && (s === lastState ? now - lastSent < 3000 : now - lastSent < 250)) return;
+    if (!force && (s === lastState ? now - lastSent < 3000 : now - lastSent < 400)) return;
     lastState = s; lastSent = now; net.send('state', o);
   }
 
@@ -203,29 +189,18 @@
   function hs(n) { var v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); }
   function scene() {
     var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#020c10'); g.addColorStop(0.45, '#06303a'); g.addColorStop(1, '#0b4a48'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
-    for (var r = 0; r < 5; r++) { var rx = sx(0.25 + r * 0.3 + Math.sin(t * 0.1 + r) * 0.03), gr = cx.createLinearGradient(rx, 0, rx + S * 0.15, H); gr.addColorStop(0, 'rgba(120,255,230,.09)'); gr.addColorStop(1, 'rgba(120,255,230,0)'); cx.fillStyle = gr; cx.beginPath(); cx.moveTo(rx - S * 0.02, 0); cx.lineTo(rx + S * 0.05, 0); cx.lineTo(rx + S * 0.28, H); cx.lineTo(rx + S * 0.08, H); cx.closePath(); cx.fill(); }   // (beams of light from above)
-    for (var k = 0; k < 2; k++) for (var i = 0; i < 9; i++) { var tx = (i + 0.5) / 9 * WX + (hs(i + k * 20) - 0.5) * 0.12, tw = 0.03 + hs(i + 7 + k) * 0.03; cx.fillStyle = k ? 'rgba(2,20,24,.75)' : 'rgba(4,34,40,.6)'; cx.fillRect(sx(tx - tw / 2), 0, tw * S, H); }   // (far-off trunks in the dark)
-  }
-  function hangingOrbs() {   // the glowing orbs on long threads: most are decoration, the bright ones refill your breath
-    for (var i = 0; i < 14; i++) { var x = TL + hs(i + 60) * (TR - TL), y = 0.04 + hs(i + 70) * 0.14, a = 0.35 + 0.25 * Math.sin(t * 1.4 + i); cx.strokeStyle = 'rgba(160,255,240,.12)'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(sx(x), 0); cx.lineTo(sx(x), sy(y)); cx.stroke(); glowDot(x, y, 0.009, a * 0.7); }
-    orbs.forEach(function (o) { if (!o.on) return; var b = 0.006 * Math.sin(t * 1.8 + o.ph); cx.strokeStyle = 'rgba(160,255,240,.3)'; cx.lineWidth = 1.2; cx.beginPath(); cx.moveTo(sx(o.x), 0); cx.lineTo(sx(o.x), sy(o.y + b - 0.02)); cx.stroke(); glowDot(o.x, o.y + b, 0.02, 0.85 + 0.15 * Math.sin(t * 4 + o.ph)); });
+    for (var r = 0; r < 5; r++) { var rx = sx(0.25 + r * 0.3 + Math.sin(t * 0.1 + r) * 0.03), gr = cx.createLinearGradient(rx, 0, rx + S * 0.15, H); gr.addColorStop(0, 'rgba(120,255,230,.08)'); gr.addColorStop(1, 'rgba(120,255,230,0)'); cx.fillStyle = gr; cx.beginPath(); cx.moveTo(rx - S * 0.02, 0); cx.lineTo(rx + S * 0.05, 0); cx.lineTo(rx + S * 0.28, H); cx.lineTo(rx + S * 0.08, H); cx.closePath(); cx.fill(); }   // (beams of light from above)
+    for (var k = 0; k < 2; k++) for (var i = 0; i < 9; i++) { var tx = (i + 0.5) / 9 * WX + (hs(i + k * 20) - 0.5) * 0.12, tw = 0.03 + hs(i + 7 + k) * 0.03; cx.fillStyle = k ? 'rgba(2,20,24,.7)' : 'rgba(4,34,40,.55)'; cx.fillRect(sx(tx - tw / 2), 0, tw * S, H); }   // (far-off trunks in the dark)
+    for (i = 0; i < 14; i++) { var ox = TL + hs(i + 60) * (TR - TL), oy = 0.03 + hs(i + 70) * 0.1; cx.strokeStyle = 'rgba(160,255,240,.12)'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(sx(ox), 0); cx.lineTo(sx(ox), sy(oy)); cx.stroke(); glowDot(ox, oy, 0.008, 0.25 + 0.2 * Math.sin(t * 1.4 + i)); }   // (glowing orbs on threads)
   }
   function glowDot(x, y, r, a) { var g = cx.createRadialGradient(sx(x), sy(y), 0, sx(x), sy(y), r * 3 * S); g.addColorStop(0, 'rgba(200,255,245,' + a + ')'); g.addColorStop(0.3, 'rgba(110,240,220,' + a * 0.8 + ')'); g.addColorStop(1, 'rgba(60,200,190,0)'); cx.fillStyle = g; cx.beginPath(); cx.arc(sx(x), sy(y), r * 3 * S, 0, 7); cx.fill(); }
   function spirit(x0, x1, right) {   // a tree spirit at each side: a tall dark figure of bark, moss and leaves, with glowing eyes
     var g = cx.createLinearGradient(sx(x0), 0, sx(x1), 0); g.addColorStop(right ? 1 : 0, '#010708'); g.addColorStop(right ? 0 : 1, '#14261f'); cx.fillStyle = g;
     cx.beginPath(); cx.moveTo(sx(x0), sy(-0.05)); cx.lineTo(sx(x1), sy(-0.05)); for (var y = 0; y <= 1.05; y += 0.05) cx.lineTo(sx(x1 + (right ? -1 : 1) * 0.008 * Math.sin(y * 20 + t * 0.5)), sy(y)); cx.lineTo(sx(x0), sy(1.05)); cx.closePath(); cx.fill();
-    cx.strokeStyle = 'rgba(90,140,110,.18)'; cx.lineWidth = 2; for (var i = 0; i < 12; i++) { var bx = x0 + (x1 - x0) * (0.15 + 0.7 * hs(i + (right ? 20 : 0))), by = hs(i + 5) * 0.9; cx.beginPath(); cx.moveTo(sx(bx), sy(by)); cx.quadraticCurveTo(sx(bx + 0.01), sy(by + 0.06), sx(bx - 0.004), sy(by + 0.13)); cx.stroke(); }   // (bark strands)
-    for (i = 0; i < 18; i++) leafShape(x0 + (x1 - x0) * hs(i + (right ? 90 : 40)), hs(i + (right ? 95 : 45)) * 0.95, 0.011, hs(i + 3) * 6 + Math.sin(t + i) * 0.2, ['#2f6b3a', '#3f8a4a', '#24502e'][i % 3], 0.85);   // (leaves growing on it)
-    var ex = right ? x0 + 0.045 : x1 - 0.045, ey = 0.12, bl = Math.sin(t * 0.7 + (right ? 2 : 0)) > 0.97 ? 0.2 : 1;   // (now and then it blinks)
+    cx.strokeStyle = 'rgba(90,140,110,.18)'; cx.lineWidth = 2; for (var i = 0; i < 12; i++) { var bx = x0 + (x1 - x0) * (0.15 + 0.7 * hs(i + (right ? 20 : 0))), by = hs(i + 5) * 0.9; cx.beginPath(); cx.moveTo(sx(bx), sy(by)); cx.quadraticCurveTo(sx(bx + 0.01), sy(by + 0.06), sx(bx - 0.004), sy(by + 0.13)); cx.stroke(); }
+    for (i = 0; i < 18; i++) leafShape(x0 + (x1 - x0) * hs(i + (right ? 90 : 40)), hs(i + (right ? 95 : 45)) * 0.95, 0.011, hs(i + 3) * 6 + Math.sin(t + i) * 0.2, ['#2f6b3a', '#3f8a4a', '#24502e'][i % 3], 0.85);
+    var ex = right ? x0 + 0.045 : x1 - 0.045, ey = 0.12, bl = Math.sin(t * 0.7 + (right ? 2 : 0)) > 0.97 ? 0.2 : 1;
     [-1, 1].forEach(function (k) { cx.fillStyle = 'rgba(140,255,230,' + (0.8 * bl) + ')'; cx.shadowColor = '#7ff5e0'; cx.shadowBlur = 14; cx.beginPath(); cx.ellipse(sx(ex + k * 0.017), sy(ey), S * 0.007, S * 0.0035 * bl + 0.5, 0, 0, 7); cx.fill(); cx.shadowBlur = 0; });
-  }
-  function drawBranch(b) {   // a spirit's arm: knobbly bark, leafy cuffs, long twiggy fingers at the end
-    var tip = b.left ? b.x1 : b.x0, base = b.left ? b.x0 : b.x1, dir = b.left ? 1 : -1, sag = 0.015;
-    cx.strokeStyle = '#0d1a16'; cx.lineCap = 'round'; cx.lineWidth = b.th * 2.3 * S;
-    cx.beginPath(); cx.moveTo(sx(base), sy(b.y0 + (b.y - b.y0) * 0.3)); cx.quadraticCurveTo(sx((base + tip) / 2), sy(b.y + sag), sx(tip), sy(b.y)); cx.stroke();
-    cx.strokeStyle = 'rgba(110,170,140,.25)'; cx.lineWidth = 1.5; cx.beginPath(); cx.moveTo(sx(base), sy(b.y0 + (b.y - b.y0) * 0.3 - b.th * 0.6)); cx.quadraticCurveTo(sx((base + tip) / 2), sy(b.y + sag - b.th * 0.6), sx(tip), sy(b.y - b.th * 0.6)); cx.stroke();
-    cx.strokeStyle = '#0d1a16'; cx.lineWidth = b.th * 0.7 * S; for (var f = -2; f <= 2; f++) { var fa = f * 0.32 + Math.sin(t * 1.5 + b.tw * 7 + f) * 0.12, fl = 0.035 - Math.abs(f) * 0.004; cx.beginPath(); cx.moveTo(sx(tip), sy(b.y)); cx.quadraticCurveTo(sx(tip + dir * fl * 0.6), sy(b.y + Math.sin(fa) * fl * 0.3), sx(tip + dir * Math.cos(fa) * fl), sy(b.y + Math.sin(fa) * fl)); cx.stroke(); }   // (the fingers)
-    for (var i = 0; i < 8; i++) { var fx = base + (tip - base) * (0.15 + 0.7 * hs(i + b.tw * 50)), fy = b.y - 0.006 + (hs(i + 7 + b.tw * 50) - 0.5) * 0.028, sw = Math.sin(t * 1.3 + i + b.tw * 9) * 0.003; leafShape(fx + sw, fy, 0.012, hs(i + 3) * 6, ['#2f6b3a', '#4a9a52', '#24502e', '#5fb36a'][i % 4], 0.95); }   // (leaves on the arm)
   }
   function leafShape(x, y, r, rot, col, a) {   // a leaf: pointed oval with a midrib
     cx.save(); cx.globalAlpha = a == null ? 1 : a; cx.translate(sx(x), sy(y)); cx.rotate(rot); var rr = r * S;
@@ -234,44 +209,67 @@
     cx.beginPath(); cx.moveTo(0, -rr * 0.3); cx.lineTo(rr * 0.45, -rr * 0.7); cx.moveTo(0, -rr * 0.3); cx.lineTo(-rr * 0.45, -rr * 0.7); cx.moveTo(0, rr * 0.25); cx.lineTo(rr * 0.5, -rr * 0.1); cx.moveTo(0, rr * 0.25); cx.lineTo(-rr * 0.5, -rr * 0.1); cx.stroke();
     cx.restore();
   }
-  function decoLeaves() { for (var i = 0; i < 16; i++) { var sp = 0.025 + hs(i) * 0.03, y = ((hs(i + 1) + t * sp) % 1.05) - 0.03, x = TL + hs(i + 2) * (TR - TL) + Math.sin(t * 0.8 + i) * 0.03 + gust * 2 * y; leafShape(x, y, 0.008, t * (0.8 + hs(i + 4)) + i, ['#3f8a4a', '#5fb36a', '#2f6b3a'][i % 3], 0.35); } }   // (other green leaves drifting by in the background)
-  function mist() {   // the mist: soft rolling clouds, its top at WATER
-    var top = sy(WATER), g = cx.createLinearGradient(0, top - S * 0.06, 0, H); g.addColorStop(0, 'rgba(150,240,225,0)'); g.addColorStop(0.15, 'rgba(150,240,225,.45)'); g.addColorStop(0.5, 'rgba(120,220,210,.75)'); g.addColorStop(1, 'rgba(90,190,185,.9)'); cx.fillStyle = g; cx.fillRect(0, top - S * 0.06, W, H);
-    for (var i = 0; i < 22; i++) { var x = ((hs(i) * (WX + 0.4) + t * 0.015 * (hs(i + 5) - 0.5) * 4) % (WX + 0.4) + WX + 0.4) % (WX + 0.4) - 0.2, y = WATER + 0.005 + hs(i + 9) * 0.05, r = 0.05 + hs(i + 13) * 0.07, gg = cx.createRadialGradient(sx(x), sy(y), 0, sx(x), sy(y), r * S); gg.addColorStop(0, 'rgba(200,255,245,.28)'); gg.addColorStop(1, 'rgba(200,255,245,0)'); cx.fillStyle = gg; cx.beginPath(); cx.arc(sx(x), sy(y), r * S, 0, 7); cx.fill(); }
-  }
-  function playerLeaf(l) {
-    var flying = l.down == null; if (!flying && t - (l.gone || (l.gone = t)) > 2) return;   // (taken by the mist: it fades away)
-    var fade = flying ? 1 : Math.max(0, 1 - (t - l.gone) / 2), rot = flying ? Math.sin(t * 2.2 + l.ph) * 0.6 + l.vx * 6 : 1.4, blink = l.inv > 0 && Math.floor(l.inv * 10) % 2;
-    cx.save(); cx.globalAlpha = fade;
-    l.trail.forEach(function (p, i) { if (!flying) return; cx.fillStyle = l.col; cx.globalAlpha = 0.05 + i * 0.012; cx.beginPath(); cx.arc(sx(p[0]), sy(p[1]), S * 0.004, 0, 7); cx.fill(); cx.globalAlpha = 1; });
-    var gr = S * (l.glow && t - l.glow < 1 ? 0.09 : 0.05), gl = cx.createRadialGradient(sx(l.x), sy(l.y), 0, sx(l.x), sy(l.y), gr); gl.addColorStop(0, l.col + '77'); gl.addColorStop(1, l.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(sx(l.x), sy(l.y), gr, 0, 7); cx.fill();
-    leafShape(l.x, l.y + (flying ? 0 : (t - l.gone) * 0.01), R, rot, l.col, blink ? 0.35 : 1);
-    if (flying && t - l.puffT < 0.4) { var a = 1 - (t - l.puffT) / 0.4; cx.strokeStyle = 'rgba(220,255,250,' + a * 0.8 + ')'; cx.lineWidth = 2; for (var k = -1; k <= 1; k++) { var ox = l.x - l.pj * 0.03 + k * 0.012, oy = l.y + 0.035 + (1 - a) * 0.02; cx.beginPath(); cx.moveTo(sx(ox), sy(oy)); cx.quadraticCurveTo(sx(ox + 0.006), sy(oy + 0.012), sx(ox - l.pj * 0.012), sy(oy + 0.022)); cx.stroke(); } }   // (the puff of air underneath)
-    cx.font = '800 ' + Math.round(Math.max(13, S * 0.022)) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center';
-    var tw2 = cx.measureText(l.name).width + 14, ny = sy(l.y - R * 2.3); cx.fillStyle = 'rgba(2,16,18,.7)'; cx.beginPath(); cx.roundRect(sx(l.x) - tw2 / 2, ny - S * 0.022, tw2, S * 0.03, 8); cx.fill(); cx.fillStyle = l.col; cx.fillText(l.name, sx(l.x), ny);
-    if (flying) for (var bi = 0; bi < BMAX; bi++) { cx.fillStyle = bi < Math.floor(l.b) ? 'rgba(200,255,245,.95)' : 'rgba(200,255,245,.2)'; cx.beginPath(); cx.arc(sx(l.x) + (bi - (BMAX - 1) / 2) * S * 0.011, sy(l.y + R * 2), S * 0.0035, 0, 7); cx.fill(); }   // (breaths left)
+  function decoLeaves() { for (var i = 0; i < 14; i++) { var sp = 0.025 + hs(i) * 0.03, y = ((hs(i + 1) + t * sp) % 1.05) - 0.03, x = TL + hs(i + 2) * (TR - TL) + Math.sin(t * 0.8 + i) * 0.03; leafShape(x, y, 0.008, t * (0.8 + hs(i + 4)) + i, ['#3f8a4a', '#5fb36a', '#2f6b3a'][i % 3], 0.3); } }
+  function puzzle(alpha) {   // the vines hanging down, the spirits' arms between them, the exits below
+    cx.save(); cx.globalAlpha = alpha;
+    for (var i = 0; i < N; i++) { var x = vx(i);   // a vine: a wavy green strand with small leaves
+      cx.strokeStyle = '#3f8a4a'; cx.lineWidth = S * 0.007; cx.lineCap = 'round'; cx.beginPath(); cx.moveTo(sx(x), sy(BY0 - 0.04)); for (var y = BY0 - 0.04; y <= BY1; y += 0.01) cx.lineTo(sx(x + Math.sin(y * 40 + i) * 0.002), sy(y)); cx.stroke();
+      for (var k = 0; k < 8; k++) { var ly = BY0 + (BY1 - BY0) * (k + 0.5) / 8; leafShape(x + (k % 2 ? 0.01 : -0.01), ly, 0.007, k % 2 ? 0.9 : -0.9, '#5fb36a', 0.8); }
+      var ex = x, ey = BY1 + 0.045; cx.fillStyle = 'rgba(127,245,224,.14)'; cx.strokeStyle = 'rgba(127,245,224,.6)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(sx(ex), sy(ey), S * 0.026, 0, 7); cx.fill(); cx.stroke();
+      cx.fillStyle = '#eafffb'; cx.font = '800 ' + Math.round(S * 0.032) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(String(i + 1), sx(ex), sy(ey) + 1); cx.textBaseline = 'alphabetic'; }
+    arms.forEach(function (a) { var x0 = vx(a.a), x1 = vx(a.a + 1), y = armY(a);   // an arm: dark bark with a mossy glint and a few leaves
+      cx.strokeStyle = '#0b1a15'; cx.lineWidth = S * 0.016; cx.beginPath(); cx.moveTo(sx(x0), sy(y)); cx.quadraticCurveTo(sx((x0 + x1) / 2), sy(y + 0.008), sx(x1), sy(y)); cx.stroke();
+      cx.strokeStyle = 'rgba(127,245,224,.35)'; cx.lineWidth = 1.5; cx.beginPath(); cx.moveTo(sx(x0), sy(y - 0.006)); cx.quadraticCurveTo(sx((x0 + x1) / 2), sy(y + 0.002), sx(x1), sy(y - 0.006)); cx.stroke();
+      for (var k = 0; k < 3; k++) leafShape(x0 + (x1 - x0) * (0.3 + k * 0.2), y - 0.012, 0.009, (k - 1) * 0.8, '#4a9a52', 0.95); });
     cx.restore();
   }
-  function caption(txt, sub) { cx.save(); cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.font = '800 ' + Math.round(Math.min(W * 0.045, 54)) + 'px "Bricolage Grotesque",system-ui'; cx.shadowColor = 'rgba(80,240,220,.7)'; cx.shadowBlur = 18; cx.fillText(txt, W / 2, sy(0.1)); if (sub) { cx.shadowBlur = 0; cx.font = '600 ' + Math.round(Math.min(W * 0.02, 22)) + 'px "Bricolage Grotesque",system-ui'; cx.fillStyle = 'rgba(210,255,248,.85)'; cx.fillText(sub, W / 2, sy(0.1) + 34); } cx.restore(); }
+  function hanging(alpha) {   // the players' leaves at the top of their vines, with their names
+    var by = {}; leaves.forEach(function (l) { (by[l.v] = by[l.v] || []).push(l); });
+    Object.keys(by).forEach(function (v) { var g = by[v], x = vx(+v);
+      g.forEach(function (l, i) { var ox = (i - (g.length - 1) / 2) * 0.034, y = BY0 - 0.065 - (i % 2) * 0.02 + Math.sin(t * 2 + i) * 0.003;
+        cx.save(); cx.globalAlpha = alpha; var gl = cx.createRadialGradient(sx(x + ox), sy(y), 0, sx(x + ox), sy(y), S * 0.035); gl.addColorStop(0, l.col + '88'); gl.addColorStop(1, l.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(sx(x + ox), sy(y), S * 0.035, 0, 7); cx.fill(); cx.restore();
+        leafShape(x + ox, y, 0.016, Math.sin(t * 1.6 + i) * 0.3, l.col, alpha);
+        if (l.ans != null && phase !== 'reveal' && phase !== 'after') { cx.fillStyle = 'rgba(255,255,255,' + alpha + ')'; cx.font = '800 ' + Math.round(S * 0.018) + 'px system-ui'; cx.textAlign = 'center'; cx.fillText('✓', sx(x + ox), sy(y - 0.03)); } });   // (a tick: this leaf has answered)
+    });
+  }
+  function mistCover(a) { if (a <= 0) return; cx.save(); cx.globalAlpha = a; var x0 = sx(BX0 - 0.12), x1 = sx(BX1 + 0.12), y0 = sy(BY0 - 0.12), y1 = sy(BY1 + 0.08); cx.fillStyle = 'rgba(110,210,200,.82)'; cx.beginPath(); cx.roundRect(x0, y0, x1 - x0, y1 - y0, S * 0.06); cx.fill();
+    for (var i = 0; i < 26; i++) { var x = BX0 - 0.1 + hs(i) * (BX1 - BX0 + 0.2) + Math.sin(t * 0.4 + i) * 0.02, y = BY0 - 0.1 + hs(i + 9) * (BY1 - BY0 + 0.16), r = 0.05 + hs(i + 13) * 0.06, g = cx.createRadialGradient(sx(x), sy(y), 0, sx(x), sy(y), r * S); g.addColorStop(0, 'rgba(225,255,250,.55)'); g.addColorStop(1, 'rgba(225,255,250,0)'); cx.fillStyle = g; cx.beginPath(); cx.arc(sx(x), sy(y), r * S, 0, 7); cx.fill(); }
+    cx.restore(); }
+  function slide(e) {   // the reveal: one glowing leaf per vine slides down its way, the others' leaves riding along
+    var vs = {}; leaves.forEach(function (l) { vs[l.v] = 1; });
+    Object.keys(vs).forEach(function (v) { var tr = trace(+v), pts = tr.pts, segs = [], tot = 0; for (var i = 1; i < pts.length; i++) { var d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push(d); tot += d; }
+      var f = Math.min(1, e / (REVEAL - 1)), want = f * tot, x = pts[0][0], y = pts[0][1], acc = 0;
+      cx.strokeStyle = 'rgba(255,240,170,.85)'; cx.lineWidth = S * 0.006; cx.lineCap = 'round'; cx.lineJoin = 'round'; cx.beginPath(); cx.moveTo(sx(x), sy(y));
+      for (i = 1; i < pts.length; i++) { if (acc + segs[i - 1] >= want) { var k = (want - acc) / segs[i - 1]; x = pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k; y = pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k; cx.lineTo(sx(x), sy(y)); break; } acc += segs[i - 1]; x = pts[i][0]; y = pts[i][1]; cx.lineTo(sx(x), sy(y)); }
+      cx.stroke();
+      var mine = leaves.filter(function (l) { return l.v === +v; }); mine.forEach(function (l, i) { leafShape(x + (i - (mine.length - 1) / 2) * 0.02, y - 0.01, 0.014, Math.sin(t * 6 + i) * 0.4, l.col, 1); });
+    });
+  }
+  function board() {   // the great tree on the right: everyone's leaf, highest first, with how many they got right
+    var rk = ranking(), x0 = 1.27, w = 0.2, y0 = 0.2, rh = Math.min(0.055, 0.66 / Math.max(1, rk.length)); if (!rk.length) return;
+    cx.fillStyle = 'rgba(2,16,18,.55)'; cx.beginPath(); cx.roundRect(sx(x0), sy(y0 - 0.05), w * S, (rk.length * rh + 0.07) * S, 14); cx.fill();
+    cx.fillStyle = 'rgba(200,255,245,.75)'; cx.font = '800 ' + Math.round(S * 0.016) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'left'; cx.fillText('THE GREAT TREE', sx(x0 + 0.015), sy(y0 - 0.017));
+    rk.forEach(function (l, i) { var y = y0 + (i + 0.6) * rh; leafShape(x0 + 0.03, y, Math.min(0.011, rh * 0.22), Math.sin(t + i) * 0.3, l.col, 1);
+      cx.fillStyle = '#eafffb'; cx.font = '700 ' + Math.round(Math.min(S * 0.02, rh * S * 0.42)) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'left'; cx.textBaseline = 'middle'; cx.fillText(l.name, sx(x0 + 0.055), sy(y));
+      cx.textAlign = 'right'; cx.fillStyle = phase === 'after' && l.ok ? '#8dff8a' : 'rgba(234,255,251,.85)'; cx.fillText((phase === 'after' && l.ok ? '+1  ' : '') + l.pts, sx(x0 + w - 0.015), sy(y)); cx.textBaseline = 'alphabetic'; });
+  }
+  function caption(txt, sub) { cx.save(); cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.font = '800 ' + Math.round(Math.min(S * 0.05, 54)) + 'px "Bricolage Grotesque",system-ui'; cx.shadowColor = 'rgba(80,240,220,.7)'; cx.shadowBlur = 18; cx.fillText(txt, sx(WX / 2 - 0.1), sy(0.075)); if (sub) { cx.shadowBlur = 0; cx.font = '600 ' + Math.round(Math.min(S * 0.022, 22)) + 'px "Bricolage Grotesque",system-ui'; cx.fillStyle = 'rgba(210,255,248,.85)'; cx.fillText(sub, sx(WX / 2 - 0.1), sy(0.075) + S * 0.035); } cx.restore(); }
+  function ring(left, of) { var x = sx(BX0 - 0.13), y = sy(BY0 - 0.06), r = S * 0.03; cx.strokeStyle = 'rgba(255,255,255,.15)'; cx.lineWidth = S * 0.007; cx.beginPath(); cx.arc(x, y, r, 0, 7); cx.stroke(); cx.strokeStyle = left < 1.5 ? '#ff6b8b' : '#7ff5e0'; cx.beginPath(); cx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, left / of)); cx.stroke(); cx.fillStyle = '#fff'; cx.font = '800 ' + Math.round(S * 0.026) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(String(Math.ceil(left)), x, y + 1); cx.textBaseline = 'alphabetic'; }   // (the seconds left to look)
   function draw() {
-    if (phase === 'lobby') { sway(); WATER = FLOOR; }
-    scene(); hangingOrbs(); decoLeaves();
-    branches.forEach(drawBranch);
-    spirit(-0.06, TL, false); spirit(TR, WX + 0.06, true);
-    leaves.forEach(playerLeaf);
-    mist();
-    ripples.forEach(function (r) { var e = t - r.t0; if (e > 1.5) return; glowDot(r.x, (r.y || WATER), 0.02 + e * 0.03, (1 - e / 1.5) * 0.6); });   // (a puff of light where a leaf sank into the mist)
-    if (gustWarn) { var dir = gustTo > 0 ? 1 : -1, a = gustWarn === 1 ? 0.5 + 0.5 * Math.sin(t * 12) : 0.9; cx.save(); cx.globalAlpha = a; cx.fillStyle = '#fff'; cx.font = '800 ' + Math.round(S * 0.04) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillText(dir > 0 ? '💨 Gust →' : '← Gust 💨', W / 2, sy(0.2)); cx.restore();
-      if (gustWarn === 2) { cx.strokeStyle = 'rgba(200,255,245,.3)'; cx.lineWidth = 2; for (var i = 0; i < 14; i++) { var y = 0.15 + hs(i) * 0.7, x = ((hs(i + 30) * WX + dir * t * 0.9) % WX + WX) % WX; cx.beginPath(); cx.moveTo(sx(x), sy(y)); cx.lineTo(sx(x - dir * 0.12), sy(y)); cx.stroke(); } } }
-    if (phase === 'intro') caption('🍃 Leaf on the Wind', 'Find your leaf: your name and colour');
-    else if (phase === 'count') { var k = 3 - Math.floor(t - phT); caption(k > 0 ? String(k) : 'Let go!'); }
-    else if (phase === 'play') { var al = leaves.filter(function (l) { return l.down == null; }).length; cx.save(); cx.textAlign = 'center'; cx.fillStyle = 'rgba(3,40,40,.85)'; cx.font = '800 ' + Math.round(Math.min(W * 0.022, 26)) + 'px "Bricolage Grotesque",system-ui'; cx.fillText(al + (al === 1 ? ' leaf' : ' leaves') + ' in the air · ' + (T > 12 && T < 18 ? 'the mist is rising…' : Math.floor(T) + ' s'), W / 2, sy(0.975)); cx.restore(); }   // (during play, the count sits low in the mist, out of the leaves' way)
-    else if (phase === 'end') { var r0 = ranking()[0]; caption('🍃 ' + (r0 ? r0.name : '') + ' stayed up longest!'); }
+    scene(); decoLeaves(); spirit(-0.06, TL, false); spirit(TR, WX + 0.06, true);
+    var e = t - phT;
+    if (phase === 'intro') { caption('🍃 Leaf on the Wind', 'Find your leaf at the top. Follow it down: at every arm, cross over.'); if (!arms.length) makePuzzle([3, 3]); if (!leaves[0] || leaves[0].v == null) leaves.forEach(function (l, i) { l.v = i % 3; }); puzzle(0.5); hanging(0.6); }
+    else if (phase === 'look') { puzzle(Math.min(1, e * 3)); hanging(1); ring(LOOK - e, LOOK); caption('Round ' + rd + ' of ' + ROUNDS, 'Where does your leaf come out?'); }
+    else if (phase === 'mist') { puzzle(1); hanging(1); mistCover(Math.min(1, e * 1.6)); caption('The mist rolls in…', 'Tap your exit · ' + Math.max(0, Math.ceil(EXTRA - e)) + ' s'); }
+    else if (phase === 'reveal') { puzzle(Math.min(1, e * 2)); mistCover(Math.max(0, 1 - e * 1.6)); slide(e); caption('Round ' + rd + ' of ' + ROUNDS, 'Down they go…'); }
+    else if (phase === 'after') { puzzle(1); slide(REVEAL); var ok = leaves.filter(function (l) { return l.ok; }).length; caption(ok === leaves.length ? 'Everyone got it!' : ok ? ok + ' of ' + leaves.length + ' got it right' : 'Nobody got it…'); }
+    else if (phase === 'end') caption('🍃 ' + ((ranking()[0] || {}).name || '') + '’s leaf climbed highest!');
+    if (phase !== 'lobby') board();
   }
   var last = performance.now();
-  function loop(now) { var dt = Math.min(0.05, (now - last) / 1000); last = now; if (phase !== 'lobby' && phase !== 'end') step(dt); else { t += dt; } draw(); requestAnimationFrame(loop); }
-  makeTree(); makeOrbs(); requestAnimationFrame(loop);
-  window.__lf = { leaves: function () { return leaves; }, phase: function () { return phase; }, branches: function () { return branches; } };
+  function loop(now) { var dt = Math.min(0.05, (now - last) / 1000); last = now; if (phase !== 'lobby' && phase !== 'end') step(dt); else t += dt; draw(); requestAnimationFrame(loop); }
+  makePuzzle([3, 3]); requestAnimationFrame(loop);
+  window.__lf = { leaves: function () { return leaves; }, phase: function () { return phase; }, trace: trace, round: function () { return rd; } };
 })();
 </script>
 </body>
