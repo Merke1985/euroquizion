@@ -86,7 +86,8 @@
   addEventListener('resize', size); size();
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
-  var CLOSE = 16, PAN = 6, TAKEOFF = CLOSE + PAN + 4, DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
+  var BOTTOM = 8, UP = 3.5, CLOSE = 14, PAN = 6, INTRO = BOTTOM + UP + CLOSE + PAN, TAKEOFF = INTRO + 4,   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
+      DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
   var seed = 1;
   function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
   function diff(x) {   // the sky is the warm-up (wide, gentle, few obstacles: get used to flying); the forest gets harder and harder
@@ -297,6 +298,17 @@
     cx.strokeStyle = 'rgba(190,210,255,.7)'; cx.lineWidth = 2.5; cx.beginPath(); cx.moveTo(L, ey); cx.lineTo(rL, ry); cx.lineTo(rR, ry); cx.lineTo(R2, ey); cx.stroke();   // moonlight on the edge
     cx.fillStyle = '#0b0f1f'; cx.fillRect(sx(0.3), sy(0.36), sx(0.36) - sx(0.3), ry - sy(0.36)); cx.fillStyle = '#161b3a'; cx.fillRect(sx(0.29), sy(0.355), sx(0.37) - sx(0.29), H * 0.012);   // chimney
     for (var i = 0; i < 4; i++) { var a = (t * 0.25 + i / 4) % 1; cx.fillStyle = 'rgba(200,210,235,' + (0.18 * (1 - a)) + ')'; cx.beginPath(); cx.arc(sx(0.33) + a * H * 0.08 + Math.sin(a * 6 + i) * 6, sy(0.34) - a * H * 0.16, H * (0.012 + a * 0.03), 0, 7); cx.fill(); }   // smoke
+    // the bottom of the house: the ground, a path, the front door with a little lamp, steps and bushes (the hosts will whisper here)
+    cx.fillStyle = '#070b16'; cx.fillRect(sx(-0.6), sy(0.975), sx(2.2) - sx(-0.6), H);   // the ground
+    cx.fillStyle = 'rgba(120,110,95,.25)'; cx.beginPath(); cx.moveTo(sx(0.56), sy(0.975)); cx.lineTo(sx(0.66), sy(0.975)); cx.lineTo(sx(0.78), H * 1.2); cx.lineTo(sx(0.44), H * 1.2); cx.closePath(); cx.fill();   // the garden path
+    var dl0 = sx(0.565), dl1 = sx(0.655), dt0 = sy(0.765), dt1 = sy(0.955);
+    var pl = cx.createRadialGradient(sx(0.68), sy(0.79), 0, sx(0.68), sy(0.79), H * 0.12); pl.addColorStop(0, 'rgba(255,190,110,.45)'); pl.addColorStop(1, 'rgba(255,190,110,0)'); cx.fillStyle = pl; cx.fillRect(sx(0.5), sy(0.65), H * 0.3, H * 0.4);   // the porch lamp's glow
+    cx.fillStyle = '#1a1226'; cx.fillRect(dl0, dt0, dl1 - dl0, dt1 - dt0);   // the door
+    cx.strokeStyle = 'rgba(255,200,140,.25)'; cx.lineWidth = 1.5; cx.strokeRect(dl0 + (dl1 - dl0) * 0.15, dt0 + (dt1 - dt0) * 0.1, (dl1 - dl0) * 0.7, (dt1 - dt0) * 0.35); cx.strokeRect(dl0 + (dl1 - dl0) * 0.15, dt0 + (dt1 - dt0) * 0.52, (dl1 - dl0) * 0.7, (dt1 - dt0) * 0.38);   // panels
+    cx.fillStyle = '#e8b04a'; cx.beginPath(); cx.arc(dl0 + (dl1 - dl0) * 0.82, dt0 + (dt1 - dt0) * 0.55, H * 0.004, 0, 7); cx.fill();   // the handle
+    cx.fillStyle = '#ffd08a'; cx.fillRect(sx(0.672), sy(0.775), sx(0.688) - sx(0.672), sy(0.8) - sy(0.775)); cx.fillStyle = '#2a2140'; cx.fillRect(sx(0.668), sy(0.77), sx(0.692) - sx(0.668), H * 0.004);   // the little lamp
+    cx.fillStyle = '#141020'; cx.fillRect(sx(0.55), sy(0.955), sx(0.67) - sx(0.55), sy(0.975) - sy(0.955)); cx.fillRect(sx(0.54), sy(0.965), sx(0.68) - sx(0.54), sy(0.975) - sy(0.965));   // the steps
+    cx.fillStyle = '#06110d'; [[0.16, 0.05], [0.24, 0.04], [0.47, 0.045], [0.75, 0.05], [0.84, 0.06], [0.93, 0.045]].forEach(function (q) { cx.beginPath(); cx.ellipse(sx(q[0]), sy(0.975), q[1] * H, q[1] * H * 0.7, 0, Math.PI, 0); cx.fill(); });   // bushes
     // a lit window in the wall below
     var dx0 = sx(0.26), dx1 = sx(0.4), dy0 = sy(0.72), dy1 = sy(0.86); cx.fillStyle = '#c98e45'; cx.fillRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.strokeStyle = '#2a2140'; cx.lineWidth = 3; cx.strokeRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.beginPath(); cx.moveTo((dx0 + dx1) / 2, dy0); cx.lineTo((dx0 + dx1) / 2, dy1); cx.moveTo(dx0, (dy0 + dy1) / 2); cx.lineTo(dx1, (dy0 + dy1) / 2); cx.stroke();
     // her bedroom window, up in the roof right below the flock: wide open, deep blue light, the curtain blowing out into the night
@@ -328,11 +340,17 @@
   }
   /* the camera at the start: a close-up of the singer in the window, then up to the roof, then out to the whole scene */
   function camView() {
+    if (t >= INTRO) return null;
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
-    var wx = (WIN.x0 + WIN.x1) / 2 * H, wy = (WIN.y0 + WIN.y1) / 2 * H, rx = 0.68 * H, ry = (ROOF_Y + 0.03) * H, Z0 = 0.86 / (WIN.y1 - WIN.y0);
-    if (t < CLOSE) return { z: Z0, x: wx, y: wy };
-    if (t < CLOSE + 3.5) { var a = ez((t - CLOSE) / 3.5); return { z: Z0 + (2.4 - Z0) * a, x: wx + (rx - wx) * a, y: wy + (ry - wy) * a }; }   // (up from her window to the flock on the ridge)
-    if (t < CLOSE + PAN) { var b = ez((t - CLOSE - 3.5) / (PAN - 3.5)); return { z: 2.4 - 1.4 * b, x: rx + (W / 2 - rx) * b, y: ry + (H / 2 - ry) * b }; }   // (and out to the whole scene)
+    var Z0 = 0.86 / (WIN.y1 - WIN.y0), lead = birds.filter(function (b) { return b.lead; })[0], lx = (lead ? lead.rx : 0.7) * H, ly = (ROOF_Y - 0.02) * H;
+    var K = [   // [time, zoom, x, y]: the camera's stops
+      [0, 2.3, 0.5 * H, 0.85 * H], [BOTTOM, 2.3, 0.52 * H, 0.84 * H],   // the bottom of the house (drifting a touch)
+      [BOTTOM + UP, Z0, (WIN.x0 + WIN.x1) / 2 * H, (WIN.y0 + WIN.y1) / 2 * H],   // up to her window
+      [BOTTOM + UP + CLOSE, Z0 * 0.96, (WIN.x0 + WIN.x1) / 2 * H, (WIN.y0 + WIN.y1) / 2 * H],   // her, singing, sad (slowly a little closer… then away)
+      [BOTTOM + UP + CLOSE + 3.5, 3.2, lx, ly],   // up and to the right: the lone bird on the roof
+      [INTRO, 1, W / 2, H / 2]   // and out to the whole scene
+    ];
+    for (var i = 1; i < K.length; i++) if (t < K[i][0]) { var A = K[i - 1], B = K[i], e = ez((t - A[0]) / (B[0] - A[0])); return { z: A[1] + (B[1] - A[1]) * e, x: A[2] + (B[2] - A[2]) * e, y: A[3] + (B[3] - A[3]) * e }; }
     return null;
   }
   function behind(b) { return !b.lead && t >= TAKEOFF && t < TAKEOFF + b.dl + b.fi * 0.72; }   // (rising from behind the house: drawn before it, so the house hides them)
@@ -360,7 +378,7 @@
   }
   function draw() {
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04071a'); g.addColorStop(0.55, '#0b1433'); g.addColorStop(1, '#0d1a2a'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04071a'); g.addColorStop(0.55, '#0b1433'); g.addColorStop(1, '#0d1a2a'); cx.fillStyle = g; cx.fillRect(-W, -H, W * 3, H * 3);
     stars.forEach(function (s) { cx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.04) % W + W) % W, s.y * H * 0.6, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
     var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.fillStyle = mg; cx.fillRect(0, 0, W, H);
     // the forest behind, far to near, with mist between
@@ -437,7 +455,7 @@
     if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
-    else if (t < CLOSE + PAN) txt = '';
+    else if (t < INTRO) txt = '';
     else if (t < TAKEOFF - 2.5) txt = '🌙 A lone blackbird on her roof… listen';
     else if (t < TAKEOFF) { txt = '🐦‍⬛ Get ready to take off…'; cls = 'warn'; }
     else if (t < WARM) txt = '🐦‍⬛ The flock takes off!';
