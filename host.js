@@ -6197,8 +6197,9 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
       else if (p === 'flag') { u.ra.rotation.z = .55; u.ra.rotation.x = -.15; u.la.rotation.z = -pk * (2.5 + wav * .25); u.head.rotation.z = -pk * .12; }
       else { u.ra.rotation.z = pk * .8; u.ra.rotation.x = pk * .3; u.la.rotation.z = -pk * .3; u.lh.rotation.z = -pk * .1; u.rh.rotation.z = pk * .2; f.rotation.z = pk * .1; u.head.rotation.z = pk * .25; u.head.rotation.y = pk * Math.sin(ms / 600) * .2; }
       if (p !== 'hips' && p !== 'wave' && p !== 'lean') f.rotation.z = 0;
-      if (u.fpiv) u.fpiv.rotation.y = -rot + rot / (Math.PI / 2) * Math.PI;
-      if (u.flag) { var pa = u.flag.geometry.attributes.position, o0 = u.flagPos; for (var vi = 0; vi < pa.count; vi++) { var vx = o0[vi * 3]; pa.array[vi * 3 + 2] = o0[vi * 3 + 2] + Math.sin(vx * 4 - ms / 180) * .08 * (vx + .6); } pa.needsUpdate = true; }   // (the flag waves)
+      var fsd = 1 - 2 * Math.max(0, Math.min(1, rot / (Math.PI / 2)));   // (+1: beside them, facing the cameras; -1: trailing behind while they walk)
+      if (u.fpiv) { u.fpiv.rotation.y = -rot; u.flag.position.x = .61 * fsd; }   // (the flag always faces the cameras, so it never shows as just a stick while they turn; it slides from behind them to their side)
+      if (u.flag) { var pa = u.flag.geometry.attributes.position, o0 = u.flagPos; for (var vi = 0; vi < pa.count; vi++) { var vx = o0[vi * 3], fe = (vx + .6) * (1 + fsd) / 2 + (.6 - vx) * (1 - fsd) / 2; pa.array[vi * 3 + 2] = o0[vi * 3 + 2] + Math.sin(vx * 4 * (fsd < 0 ? -1 : 1) - ms / 180) * .08 * fe; } pa.needsUpdate = true; }   // (the flag waves, most at its free end)
     });
   }
   function tcSign(st, txt) {   // the roof sign of the 3D square
