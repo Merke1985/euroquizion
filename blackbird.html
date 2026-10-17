@@ -600,7 +600,7 @@
     if (SPOT_C > 0 && t >= APP_T && t < TAKE_T + 2.6 && b.capt) {   // their favourite spot: glide into the tree, sit; the lone bird hops down for the rose; then all away
       var ez2 = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); }, pp = perch(b), from = pp;
       if (t < LAND_T) { var la = (t - APP_T) / (LAND_T - APP_T), le = ez2(la); return { X: b.ax + (pp.x - b.ax) * le, y: b.ay + (pp.y - b.ay) * le - Math.sin(Math.PI * la) * 0.05, L: 1, home: Math.min(0.99, la) }; }
-      var rp = { x: FLOWER_X - 0.04, y: GY - 0.03 };
+      var rp = { x: FLOWER_X + 0.052, y: GY - 0.03 };   // (it lands just right of the rose and faces it: it came from the tree on the right)
       if (b.lead && t >= PICK_T - 1.5) { var hg = Math.max(0, Math.min(1, (t - PICK_T + 1.5) / 1.2)), he2 = ez2(hg); from = { x: pp.x + (rp.x - pp.x) * he2, y: pp.y + (rp.y - pp.y) * he2 - Math.sin(Math.PI * hg) * 0.05 }; if (t < TAKE_T) return { X: from.x, y: from.y, L: 1, home: hg < 1 ? 0.6 : 1 }; }
       if (t < TAKE_T) return { X: pp.x, y: pp.y, L: 1, home: 1 };
       var ta = Math.max(0, Math.min(1, (t - TAKE_T) / 2.6)), te = ez2(ta);
