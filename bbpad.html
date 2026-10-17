@@ -41,6 +41,7 @@
   #pad.fly .small{color:#fff}
   #pad.out{opacity:.5}
   .msg{position:fixed;left:16px;right:16px;bottom:22px;text-align:center;color:var(--mute);font-weight:600;min-height:3em}
+  .lagt{display:flex;align-items:center;gap:8px;justify-content:center;margin:4px 0 12px;font-weight:600;color:var(--mute)} .lagt input{width:20px;height:20px;margin:0}
 </style>
 </head>
 <body>
@@ -49,6 +50,7 @@
   <p>Join the flock on the big screen.</p>
   <input id="name" maxlength="14" placeholder="Your name" autocomplete="nickname">
   <input id="code" maxlength="4" placeholder="Room code" autocapitalize="characters">
+  <label class="lagt"><input type="checkbox" id="lag"> 🧪 Test: 1 second delay</label>
   <button class="go" id="go">Join</button>
   <p id="jmsg"></p>
 </div>
@@ -66,8 +68,9 @@
   var st = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   var pid = st.get('bb-pid'); if (!pid) { pid = 'p' + Math.random().toString(36).slice(2, 10); st.set('bb-pid', pid); }
   var q = new URLSearchParams(location.search), room = (q.get('r') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+  $('lag').checked = q.get('lag') === '1';
   $('name').value = st.get('bb-name') || st.get('esc-name') || ''; $('code').value = room;
-  var net = null, name = '', joinedOk = false, hiT = null, my = null, held = false, lastF = 5;
+  var name0 = '', net = null, name = '', joinedOk = false, hiT = null, my = null, held = false, lastF = 5;
   $('go').addEventListener('click', join);
   function join() {
     name = $('name').value.trim().slice(0, 14); room = $('code').value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
@@ -75,7 +78,9 @@
     if (room.length !== 4) { $('jmsg').textContent = 'The room code has 4 letters (it’s on the big screen).'; return; }
     st.set('bb-name', name); $('jmsg').textContent = 'Joining…';
     net = escConnect('bb' + room);
-    net.on('state', onState);
+    var LAG = $('lag').checked ? 500 : 0;   // (test: half a second each way, so the big screen sees this phone a full second late)
+    if (LAG) { var raw = net.toHost.bind(net); net.toHost = function (ev, d) { setTimeout(function () { raw(ev, d); }, LAG); }; name0 = ' 🧪 1 s delay'; }
+    net.on('state', LAG ? function (s) { setTimeout(function () { onState(s); }, LAG); } : onState);
     var hi = function () { if (!joinedOk) net.send('hi', { pid: pid, name: name }); };
     hi(); hiT = setInterval(hi, 1500);   // (keep saying hello until the big screen has us)
   }
@@ -90,7 +95,7 @@
     if (s.ph !== 'play') { hc = 0; fly = false; }
     if (my && !joinedOk) { joinedOk = true; $('join').classList.add('hidden'); $('game').classList.remove('hidden'); }
     if (!joinedOk) return;
-    $('me').textContent = name;
+    $('me').textContent = name + name0;
     var pad = $('pad'), big = $('big'), msg = $('msg');
     if (!my) { pad.className = ''; big.innerHTML = 'A flight is in progress<span class="small">You’ll fly in the next one</span>'; msg.textContent = ''; return; }
     document.documentElement.style.setProperty('--col', my.c || '#8a93b8');
