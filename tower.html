@@ -41,7 +41,7 @@
 <div class="ov" id="start">
   <div class="card">
     <h2>✨ The Glitter Tower</h2>
-    <p>Stella, the keeper of the tower, shows each climber the next ledge to jump to. It is always <b>straight up</b> or <b>one place to the side</b> (up and left, or up and right).</p>
+    <p>Stella, the keeper of the tower, shows each climber the next ledge to jump to. Every floor has just <b>two</b> ledges: one <b>straight above you</b> and one <b>beside it</b> (up and to the left or right). Only one is real.</p>
     <p>On your turn, tap <b>↖ ↑ ↗</b> on your phone as fast as you can. The wrong ledge crumbles, and taking too long makes you slip: either way you <b>fall 3 floors</b>. The higher you get, the less time you have.</p>
     <p>Everyone gets 3 turns of 15 seconds (with many players, 2 or 3 climb at once). Highest floor at the end wins.</p>
     <div class="join"><div class="qr" id="qr"></div><div><b>📱 Climb with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="url"></span><br><span class="mute">Room</span> <b id="code" class="code"></b><div id="plist" class="plist"><span class="mute">Nobody has joined yet: the computer climbers go alone.</span></div></div></div>
@@ -78,8 +78,9 @@
   var BOTN = ['Raven', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Magpie', 'Linnet'];
 
   // one tower for everyone: the same ledges, so every climber gets the same jumps (path[f] = the column of the real ledge on floor f)
-  var path = [1];
-  function col(f) { while (path.length <= f) { var c = path[path.length - 1], r = Math.random(), n = r < 0.4 ? c : c === 0 ? 1 : c === 2 ? 1 : (r < 0.7 ? 0 : 2); path.push(n); } return path[f]; }   // (40% straight up, otherwise to a neighbouring column)
+  var path = [1], two = [[1]];
+  function col(f) { while (path.length <= f) { var c = path[path.length - 1], sd = c === 0 ? 1 : c === 2 ? 1 : (Math.random() < 0.5 ? 0 : 2); two.push([c, sd]); path.push(Math.random() < 0.5 ? c : sd); } return path[f]; }   // (every floor has just two ledges: straight above the last real one, and one beside it; one of them is real, 50/50)
+  function pair(f) { col(f); return two[f]; }
 
   // ---------- sound (made on the spot, nothing to load) ----------
   var ac = null;
@@ -119,7 +120,7 @@
     for (var r = 0; r < ROUNDS; r++) { var order = players.slice(); if (r > 0) order.sort(function (a, b) { return a.floor - b.floor; }); for (var i = 0; i < order.length; i += per) groups.push({ round: r + 1, who: order.slice(i, i + per) }); }   // (after round 1 the lowest climbers go first)
   }
   function start() {
-    au(); path = [1]; makePlayers(); if (!players.length) return; makeGroups(); gi = -1; ended = false;
+    au(); path = [1]; two = [[1]]; makePlayers(); if (!players.length) return; makeGroups(); gi = -1; ended = false;
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
     t = 0; setPhase('intro'); sendState(true);
   }
@@ -132,10 +133,10 @@
   }
   function cue(c) { c.st = 'cue'; c.at = t; c.cue++; col(c.floor + 1); sCue(); sendState(true); if (c.bot) botPlan(c); }
   function botPlan(c) { var w = windowAt(c.floor), rt = 0.35 + (1 - c.skill) * 0.6 + Math.random() * 0.4 * (1.4 - c.skill), wrong = Math.random() < 0.03 + (1 - c.skill) * 0.08 + Math.min(0.08, c.floor * 0.002); if (Math.random() < 0.03) rt = w + 0.2; c.botAt = t + rt; c.botJ = wrong ? wrongJ(c) : col(c.floor + 1) - c.x; c.botCue = c.cue; }   // (computer climbers: a human-ish reaction time, sometimes wrong, sometimes too slow)
-  function wrongJ(c) { var ok = col(c.floor + 1) - c.x, opts = [-1, 0, 1].filter(function (j) { return j !== ok && c.x + j >= 0 && c.x + j <= 2; }); return opts[Math.floor(Math.random() * opts.length)]; }
+  function wrongJ(c) { var ok = col(c.floor + 1); return pair(c.floor + 1).filter(function (k) { return k !== ok; })[0] - c.x; }   // (the other ledge)
   function press(c, j) {
     if (phase !== 'turn' || c.st !== 'cue' || active.indexOf(c) < 0) return;
-    var to = c.x + j; if (to < 0 || to > 2) return;   // (off the side of the tower: ignored)
+    var to = c.x + j; if (pair(c.floor + 1).indexOf(to) < 0) return;   // (no ledge there: ignored)
     var ok = to === col(c.floor + 1);
     c.anim = { k: ok ? 'jump' : 'bad', t0: t, fx: c.x, ff: c.floor, tx: to, tf: c.floor + 1 }; c.st = 'air';
     if (ok) { sJump(c.floor); c.jumps++; try { navigator.vibrate && c.kb && navigator.vibrate(20); } catch (e) {} }
@@ -186,7 +187,7 @@
     var ph = phase === 'lobby' ? 'lobby' : ended ? 'end' : 'play', ps = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
     else players.forEach(function (c) { if (!c.human) return; var on = active.indexOf(c) >= 0, s = !on ? 'wait' : phase === 'ready' || phase === 'count' ? 'ready' : phase === 'turn' && c.st !== 'done' ? (c.st === 'cue' ? 'go' : c.st === 'fall' ? 'fall' : 'air') : 'wait';
-      ps[c.pid] = { n: c.name, c: c.col, s: s, f: c.floor, x: c.x, g: on && phase === 'after' ? c.gain : null, r: ended ? c.rank : null }; });
+      ps[c.pid] = { n: c.name, c: c.col, s: s, f: c.floor, x: c.x, o: pair(c.floor + 1).map(function (k) { return k - c.x; }), g: on && phase === 'after' ? c.gain : null, r: ended ? c.rank : null }; });
     var o = { ph: ph, p: ps, rd: gi >= 0 && groups[gi] ? groups[gi].round : 0, left: phase === 'turn' ? Math.max(0, Math.ceil(TURN - (t - phT))) : null };
     var s = JSON.stringify(o), now = Date.now();
     if (!force && s === lastState && now - lastSent < 3000) return;
@@ -220,7 +221,7 @@
     // the ledges: three per floor, all alike, until Stella lights the real one
     var lw = colW * 0.72, lh = Math.max(6, FH * 0.13);
     for (f = Math.max(1, f0); f <= f1; f++) { y = Y(f);
-      for (var k = 0; k < 3; k++) {
+      for (var k = 0; k < 3; k++) { if (pair(f).indexOf(k) < 0) continue;   // (only the two ledges of this floor)
         var real = col(f) === k, lit = real && f === c.floor + 1 && (c.st === 'cue' || c.st === 'air') && phase === 'turn', done = real && f <= c.floor, cr = c.crumble && c.crumble.f === f && c.crumble.x === k && t - c.crumble.t0 < 1.2;
         if (cr) { var e = t - c.crumble.t0; for (var b = 0; b < 7; b++) { cx.fillStyle = 'rgba(170,140,220,' + (1 - e / 1.2) + ')'; cx.fillRect(X(k) - lw / 2 + b * lw / 7 + Math.sin(b * 3) * e * 10, y + e * e * FH * 2.2 * (0.6 + hs(b) * 0.8), lw / 8, lh); } continue; }
         if (c.crumble && c.crumble.f === f && c.crumble.x === k) continue;   // (gone)
@@ -320,7 +321,7 @@
     targets.forEach(function (tt) { beam(wand, tt); });
     if (players.length) board(W - right + 16, top + 20, right - 32);
     var rd = gi >= 0 && groups[gi] ? groups[gi].round : 1;
-    if (phase === 'intro') { caption('✨ The Glitter Tower', 'Round 1 of ' + ROUNDS); bubble(sx + 40 * s, sy - 120 * s, 'Darlings! Welcome to my tower.\nI light the next ledge, you jump.\nWrong one? Down you go!'); }
+    if (phase === 'intro') { caption('✨ The Glitter Tower', 'Round 1 of ' + ROUNDS); bubble(sx + 40 * s, sy - 120 * s, 'Darlings! Welcome to my tower.\nTwo ledges, one is real. I light it, you jump.\nWrong one? Down you go!'); }
     else if (phase === 'ready') { caption('Round ' + rd + ' of ' + ROUNDS, list.map(function (c) { return c.name; }).join(' & ') + (list.length > 1 ? ', you’re up!' : ', you’re up!')); bubble(sx + 40 * s, sy - 120 * s, list.length > 1 ? 'Up you go, all of you.\nWatch my wand!' : 'Up you go, ' + list[0].name + '.\nWatch my wand!'); }
     else if (phase === 'count') { var k = 3 - Math.floor(t - phT); caption(k > 0 ? String(k) : 'Jump!', 'Round ' + rd + ' of ' + ROUNDS); }
     else if (phase === 'turn') { var lft = Math.max(0, TURN - (t - phT)); caption(Math.ceil(lft) + ' s', 'Round ' + rd + ' of ' + ROUNDS); cx.fillStyle = 'rgba(255,255,255,.12)'; rr(W * 0.3, H * 0.1 + 48, W * 0.4, 6, 3); cx.fill(); cx.fillStyle = lft < 4 ? '#ff4d6d' : '#ffd166'; rr(W * 0.3, H * 0.1 + 48, W * 0.4 * lft / TURN, 6, 3); cx.fill(); }

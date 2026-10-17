@@ -86,7 +86,7 @@
     else txt = 'Watch the others climb<span class="small">Round ' + (s.rd || 1) + ' of 3</span>';
     lastS = my.s || '';
     document.body.className = cls; big.innerHTML = txt;
-    [].forEach.call(document.querySelectorAll('#pads button'), function (b) { var to = (my.x == null ? 1 : my.x) + +b.getAttribute('data-j'); b.classList.toggle('off', to < 0 || to > 2); });   // (no jumping off the side of the tower)
+    [].forEach.call(document.querySelectorAll('#pads button'), function (b) { var to = (my.x == null ? 1 : my.x) + +b.getAttribute('data-j'); b.classList.toggle('off', my.o ? my.o.indexOf(+b.getAttribute('data-j')) < 0 : (to < 0 || to > 2)); });   // (only the two ledges you can jump to)
   }
   [].forEach.call(document.querySelectorAll('#pads button'), function (b) {
     var fire = function (e) { e.preventDefault(); if (!net || !my || b.classList.contains('off') || (my.s !== 'go' && my.s !== 'air')) return; net.toHost('zg', { pid: pid, j: +b.getAttribute('data-j') }); buzz(15); };   // (the jump goes straight to the big screen, which checks it)

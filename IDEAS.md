@@ -36,7 +36,7 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
 ## Other party games
 
 - **The Glitter Tower** (speed climbing). Stella, the tower keeper (a new character: lilac beehive, night-sky gown,
-  crescent-moon balcony), lights the next ledge with her wand: always straight up or one column to the side. Tap
+  crescent-moon balcony), lights the next ledge with her wand. Every floor has only two ledges (straight above you and one beside it); one is real. Tap
   ↖ ↑ ↗ on the phone fast; wrong ledge or too slow = fall 3 floors. 3 rounds of 15 s turns, 1–3 climbers at once;
   highest floor wins. **Test version built:** 🧪 Test → "✨ Glitter Tower (prototype)" (tower.html, phones on
   towerpad.html). Still to do: stage intro, hook into the roster, boutique winners; stream lag may hurt speed.
