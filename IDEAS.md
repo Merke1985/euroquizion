@@ -35,6 +35,11 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
 
 ## Other party games
 
+- **Leaf on the Wind** (for Horehronie). A misty enchanted forest at night in teal, like the 2010 stage: every player
+  is one leaf drifting down between the swaying arms of two tree spirits. Phone: ◀ ▲ ▶ puffs (4 breaths, slowly
+  refilled); an arm knocks you down and empties your breath; a glowing orb refills it; gusts of wind; the mist rises
+  from the floor. Last leaf above the mist wins. **Test version built:** 🧪 Test → "🍃 Leaf on the Wind (prototype)"
+  (leaf.html, phones on leafpad.html). Still to do: the song, a stage intro, hook into the roster.
 - **The Glitter Tower** (speed climbing). Stella, the tower keeper (a new character: lilac beehive, night-sky gown,
   crescent-moon balcony), lights the next ledge with her wand. Every floor has only two ledges (straight above you and one beside it); one is real. Tap
   ↖ ↑ ↗ on the phone fast; wrong ledge or too slow = fall 3 floors. 3 rounds of 15 s turns, 1–3 climbers at once;
