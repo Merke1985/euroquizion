@@ -66,7 +66,7 @@
     <div class="btns">
       <label>Computer birds <select id="nbots"><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
       <button id="go">▶ Start with the song</button>
-      <button class="alt" id="go2">Start without sound</button>
+      <button class="alt" id="go2">Start without the song</button>
     </div>
   </div>
 </div>
@@ -123,14 +123,19 @@
   // ---------- the flock ----------
   var COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43', '#f5f5f5', '#ff4d6d', '#4dd4b0', '#a3b8ff'];
   var NAMES = ['You', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Nightingale', 'Magpie'];
-  var birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
+  var tAir = 99, birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
   function makeBirds(nb) {
     birds = [];
     for (var i = 0; i <= nb; i++) birds.push({ id: i, name: NAMES[i], col: COLS[i % COLS.length], human: i === 0, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
       skill: 0.55 + Math.random() * 0.4, react: 0.1 + Math.random() * 0.14, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
     me = birds[0];
     var n = birds.length; birds.forEach(function (b, i) { b.off = n > 1 ? (i / (n - 1)) * 2 - 1 : 0; b.xo = -((i * 37) % n) * 0.06; });   // (a loose V: everyone their own place in the formation)
-    birds.forEach(function (b, i) { b.rx = 0.22 + (n > 1 ? i / (n - 1) : 0.5) * 0.66; b.ry = ROOF_Y - 0.02; b.y = b.ry; });   // (all in a row on the ridge of the roof)
+    var lead = birds[Math.floor(Math.random() * n)]; lead.lead = true;   // (one lone blackbird on her roof; the rest of the flock waits behind the house)
+    var others = birds.filter(function (b) { return !b.lead; });
+    var fr = birds.reduce(function (m, b) { return b.xo > m.xo ? b : m; }, birds[0]), fx0 = fr.xo, fo = fr.off; fr.xo = lead.xo; fr.off = lead.off; lead.xo = fx0; lead.off = fo;   // (the lone bird leads, at the front of the flock)
+    lead.rx = 0.7; lead.ry = ROOF_Y - 0.02; lead.y = lead.ry; lead.dl = 0; lead.fi = FLY_IN;
+    others.forEach(function (b, i) { b.rx = 0.2 + (others.length > 1 ? i / (others.length - 1) : 0.5) * 0.7; b.ry = 0.86 + (i % 2) * 0.06; b.y = b.ry; b.dl = 0.7 + i * 0.16 + Math.random() * 0.1; b.fi = 2.4; });
+    tAir = TAKEOFF + Math.max.apply(null, birds.map(function (b) { return b.dl + b.fi; }));   // (once they're all up, the colours come)
     pickN = n <= 3 ? 1 : n <= 7 ? 2 : 3;
   }
   function bx(b) { return 0.3 * W / H + b.xo - b.back; }   // the bird's place on the screen, in world units from the left edge
@@ -169,7 +174,8 @@
   // ---------- one step ----------
   var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
   function step(dt) {
-    t += dt; if (t >= TAKEOFF) cam += SPEED * dt; schedule();
+    t += dt; if (t >= TAKEOFF) cam += SPEED * dt * Math.max(0, Math.min(1, (t - TAKEOFF - 1.6) / 2.4)); schedule();   // (the camera holds on the house while the flock rises from behind it, then sets off gently)
+    if (t >= TAKEOFF && !flockPlayed) { flockPlayed = true; flockSound(); }
     birds.forEach(function (b) {
       if (t < TAKEOFF) { b.flap = 0; return; }   // (still sitting on the roof)
       b.flap += dt * (b.manual && (b.human ? hold : b.hold) ? 16 : 7);
@@ -323,11 +329,34 @@
   /* the camera at the start: a close-up of the singer in the window, then up to the roof, then out to the whole scene */
   function camView() {
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
-    var wx = (WIN.x0 + WIN.x1) / 2 * H, wy = (WIN.y0 + WIN.y1) / 2 * H, rx = 0.55 * H, ry = (ROOF_Y + 0.03) * H, Z0 = 0.86 / (WIN.y1 - WIN.y0);
+    var wx = (WIN.x0 + WIN.x1) / 2 * H, wy = (WIN.y0 + WIN.y1) / 2 * H, rx = 0.68 * H, ry = (ROOF_Y + 0.03) * H, Z0 = 0.86 / (WIN.y1 - WIN.y0);
     if (t < CLOSE) return { z: Z0, x: wx, y: wy };
     if (t < CLOSE + 3.5) { var a = ez((t - CLOSE) / 3.5); return { z: Z0 + (2.4 - Z0) * a, x: wx + (rx - wx) * a, y: wy + (ry - wy) * a }; }   // (up from her window to the flock on the ridge)
     if (t < CLOSE + PAN) { var b = ez((t - CLOSE - 3.5) / (PAN - 3.5)); return { z: 2.4 - 1.4 * b, x: rx + (W / 2 - rx) * b, y: ry + (H / 2 - ry) * b }; }   // (and out to the whole scene)
     return null;
+  }
+  function behind(b) { return !b.lead && t >= TAKEOFF && t < TAKEOFF + b.dl + b.fi * 0.72; }   // (rising from behind the house: drawn before it, so the house hides them)
+  function drawBird(b) {
+      if (!b.lead && t < TAKEOFF + b.dl) return;   // (the others wait out of sight behind the house)
+      var X = cam + bx(b), py0 = b.y, L = t < TAKEOFF ? 0 : Math.max(0, Math.min(1, (t - TAKEOFF - b.dl) / b.fi)), e = L * L * (3 - 2 * L);
+      if (L < 1) { X = b.rx + (X - b.rx) * e; py0 = b.ry + (b.y - b.ry) * e - Math.sin(Math.PI * L) * (b.lead ? 0.12 : 0.05); }   // (take-off: the lone bird up off the ridge, the others up from behind the house, into the flock)
+      var px = sx(X), py = sy(py0), s = H * 0.032;
+      if (b.out && py > H + 40) return;
+      cx.save(); cx.translate(px, py); cx.rotate(t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * Math.max(L, 0.25)) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
+      if (t < TAKEOFF) cx.translate(0, -Math.max(0, Math.sin(t * 3 + b.id * 1.7)) * s * 0.18);   // (a little hop now and then, while they wait)
+      if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
+      if (b.manual) { var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); }
+      var warn = pending.indexOf(b) >= 0; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
+      cx.fillStyle = '#0a0a12'; cx.beginPath(); cx.ellipse(0, 0, s * 1.05, s * 0.62, 0, 0, 7); cx.fill();   // body
+      cx.beginPath(); cx.moveTo(-s * 0.9, -s * 0.1); cx.lineTo(-s * 1.7, -s * 0.35); cx.lineTo(-s * 1.65, s * 0.25); cx.closePath(); cx.fill();   // tail
+      cx.beginPath(); cx.arc(s * 0.82, -s * 0.28, s * 0.42, 0, 7); cx.fill();   // head
+      cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(s * 1.15, -s * 0.36); cx.lineTo(s * 1.6, -s * 0.22); cx.lineTo(s * 1.15, -s * 0.12); cx.closePath(); cx.fill();   // beak
+      cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
+      var wa = t < TAKEOFF ? -0.15 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
+      var colA = Math.max(0, Math.min(1, (t - tAir) / 1.2));   // (plain black blackbirds until the whole flock is in the air; then their colours fade in)
+      if (colA > 0) { cx.globalAlpha *= colA; cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke(); cx.globalAlpha /= colA; }   // their colour
+      cx.restore();
+      if (!b.out && t > tAir && (b.manual || b.human || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
   }
   function draw() {
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -340,6 +369,7 @@
     treeLayer(0.25, '#0f1834', 0.84 + low, 0.42, 0.66, 0.12, 2); mist(0.68 + low, 0.95 + low, 0.08);
     treeLayer(0.5, '#0a1024', 0.95 + low * 0.6, 0.55, 0.85, 0.19, 3);
     var x0 = cam - 0.1, x1 = cam + W / H + 0.1, st = 0.015, X;
+    birds.forEach(function (b) { if (behind(b)) drawBird(b); });
     drawHouse();
     var xf = Math.max(x0, FOREST);   // (the forest starts behind the house)
     // the path through the trees: a faint glow of moonlight
@@ -392,28 +422,8 @@
       cx.lineWidth = 0.012 * H; for (var k = 1; k <= 3; k++) { var yy = base + (tip - base) * (k / 4), s = (k % 2 ? 1 : -1); cx.beginPath(); cx.moveTo(px, yy); cx.lineTo(px + s * 0.035 * H, yy + dir * 0.03 * H); cx.stroke(); }
       cx.strokeStyle = 'rgba(255,90,110,.35)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip, 0.022 * H, 0, 7); cx.stroke();   // (the danger point)
     });
-    // the birds
-    birds.forEach(function (b) {
-      var X = cam + bx(b), py0 = b.y, L = t < TAKEOFF ? 0 : Math.min(1, (t - TAKEOFF) / FLY_IN), e = L * L * (3 - 2 * L);
-      if (L < 1) { X = b.rx + (X - b.rx) * e; py0 = b.ry + (b.y - b.ry) * e - Math.sin(Math.PI * L) * 0.12; }   // (take-off: up off the ridge and into the flock)
-      var px = sx(X), py = sy(py0), s = H * 0.032;
-      if (b.out && py > H + 40) return;
-      cx.save(); cx.translate(px, py); cx.rotate(t < TAKEOFF ? 0 : L < 1 ? -0.35 * Math.sin(Math.PI * L) : Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
-      if (t < TAKEOFF) cx.translate(0, -Math.max(0, Math.sin(t * 3 + b.id * 1.7)) * s * 0.18);   // (a little hop now and then, while they wait)
-      if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
-      if (b.manual) { var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); }
-      var warn = pending.indexOf(b) >= 0; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
-      cx.fillStyle = '#0a0a12'; cx.beginPath(); cx.ellipse(0, 0, s * 1.05, s * 0.62, 0, 0, 7); cx.fill();   // body
-      cx.beginPath(); cx.moveTo(-s * 0.9, -s * 0.1); cx.lineTo(-s * 1.7, -s * 0.35); cx.lineTo(-s * 1.65, s * 0.25); cx.closePath(); cx.fill();   // tail
-      cx.beginPath(); cx.arc(s * 0.82, -s * 0.28, s * 0.42, 0, 7); cx.fill();   // head
-      cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(s * 1.15, -s * 0.36); cx.lineTo(s * 1.6, -s * 0.22); cx.lineTo(s * 1.15, -s * 0.12); cx.closePath(); cx.fill();   // beak
-      cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
-      var wa = t < TAKEOFF ? -0.15 : Math.sin(b.flap) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
-      var colA = Math.max(0, Math.min(1, (t - TAKEOFF - FLY_IN) / 1.2));   // (plain black blackbirds until the whole flock is in the air; then their colours fade in)
-      if (colA > 0) { cx.globalAlpha *= colA; cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke(); cx.globalAlpha /= colA; }   // their colour
-      cx.restore();
-      if (!b.out && t > TAKEOFF + FLY_IN && (b.manual || b.human || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
-    });
+    // the birds (the ones still rising from behind the house were drawn before it)
+    birds.forEach(function (b) { if (!behind(b)) drawBird(b); });
     parts.forEach(function (p) { cx.save(); cx.globalAlpha = Math.max(0, 1 - p.t / 1.6); cx.translate(sx(p.x), sy(p.y)); cx.rotate(p.r); cx.fillStyle = '#1c1c28'; cx.strokeStyle = p.col; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(0, 0, 7, 2.5, 0, 0, 7); cx.fill(); cx.stroke(); cx.restore(); });
   }
 
@@ -428,7 +438,7 @@
     else if (me.manual) { txt = '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
     else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
     else if (t < CLOSE + PAN) txt = '';
-    else if (t < TAKEOFF - 2.5) txt = '🌙 The flock rests on the roof… listen';
+    else if (t < TAKEOFF - 2.5) txt = '🌙 A lone blackbird on her roof… listen';
     else if (t < TAKEOFF) { txt = '🐦‍⬛ Get ready to take off…'; cls = 'warn'; }
     else if (t < WARM) txt = '🐦‍⬛ The flock takes off!';
     else if (inDive(cam + 0.3 * W / H + 0.6)) txt = '🐦‍⬛ Down into the forest…';
@@ -453,7 +463,7 @@
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
     t = 0; cam = 0; nextPick = WARM; pending = []; parts = []; ended = false; sideKey = '';
     makeCourse(); makeBirds(+$('nbots').value || 5);
-    if (music) ytPlay();
+    audioOn(); flockPlayed = false; if (music) ytPlay();
     running = true; last = performance.now(); requestAnimationFrame(frame);
   }
   $('go').addEventListener('click', function () { start(true); });
@@ -466,6 +476,31 @@
   addEventListener('pointerdown', down, { passive: false }); addEventListener('pointerup', up); addEventListener('pointercancel', up); addEventListener('blur', up);
   addEventListener('keydown', function (e) { if (e.code === 'Space') { hold = true; e.preventDefault(); } });
   addEventListener('keyup', function (e) { if (e.code === 'Space') hold = false; });
+
+  // ---------- the sound of the flock taking off: dozens of wing beats (filtered noise, fluttering) and a few calls ----------
+  var actx = null, flockPlayed = false;
+  function audioOn() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+  function flockSound() {
+    if (!actx) return; var a = actx, now = a.currentTime, len = 2.5, sr = a.sampleRate;
+    var buf = a.createBuffer(1, Math.floor(sr * len), sr), d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    var master = a.createGain(); master.gain.value = 0.9; master.connect(a.destination);
+    for (var w = 0; w < 26; w++) {   // one bird after another lifting off: each a short burst of flutters
+      var t0 = now + (w === 0 ? 0 : 0.6 + Math.random() * 1.6), src = a.createBufferSource(); src.buffer = buf;
+      var bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700 + Math.random() * 1400; bp.Q.value = 0.8;
+      var g = a.createGain(), rate = 13 + Math.random() * 8, dur = 0.7 + Math.random() * 0.9; g.gain.setValueAtTime(0, t0);
+      for (var k = 0; k < dur * rate; k++) { var tk = t0 + k / rate, amp = (w === 0 ? 0.5 : 0.22) * (1 - k / (dur * rate)) * (0.7 + Math.random() * 0.3); g.gain.linearRampToValueAtTime(amp, tk + 0.012); g.gain.exponentialRampToValueAtTime(0.001, tk + 0.6 / rate); }
+      var pan = a.createStereoPanner ? a.createStereoPanner() : null; if (pan) pan.pan.value = Math.random() * 1.6 - 0.8;
+      src.connect(bp); bp.connect(g); if (pan) { g.connect(pan); pan.connect(master); } else g.connect(master);
+      src.start(t0, Math.random() * 0.5, dur + 0.2);
+    }
+    for (var c = 0; c < 4; c++) {   // a few soft calls
+      var tc = now + 0.4 + Math.random() * 1.8, o = a.createOscillator(), gc = a.createGain(), f0 = 2200 + Math.random() * 900;
+      o.type = 'sine'; o.frequency.setValueAtTime(f0, tc); o.frequency.exponentialRampToValueAtTime(f0 * 0.62, tc + 0.18);
+      gc.gain.setValueAtTime(0, tc); gc.gain.linearRampToValueAtTime(0.05, tc + 0.02); gc.gain.exponentialRampToValueAtTime(0.0008, tc + 0.22);
+      o.connect(gc); gc.connect(master); o.start(tc); o.stop(tc + 0.3);
+    }
+  }
 
   // ---------- the song (Blackbird, Norma John, Finland 2017), quietly in the background ----------
   var yt = null, ytOk = false, ytWant = false;
