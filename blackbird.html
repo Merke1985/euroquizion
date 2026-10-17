@@ -97,7 +97,7 @@
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
-      FAST_T = MUSIC + 125, PICK_T = MUSIC + 155, SOAR_T = PICK_T - 15.7, GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 10, APP_T = PICK_T - 13.6, STOP_T = PICK_T - 10.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 6 s; the rose at PICK_T) */ END_T = HOME_T + 20, GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
+      FAST_T = MUSIC + 125, PICK_T = MUSIC + 155, SOAR_T = PICK_T - 15.7, GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 10, APP_T = PICK_T - 13.6, STOP_T = PICK_T - 10.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 6 s; the rose at PICK_T) */ END_T = MUSIC + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing to a stop at their favourite spot, then away after the rose
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
@@ -160,7 +160,7 @@
   // ---------- the flock ----------
   var COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43', '#f5f5f5', '#ff4d6d', '#4dd4b0', '#a3b8ff'];
   var NAMES = ['You', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Nightingale', 'Magpie'];
-  var TURN = 5, WARN = 1.1;
+  var TURN = 5, WARN = 2;   // (2 s of blinking before your turn)
   var tAir = 99, birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
   function makeBirds(nb) {
     birds = [];
@@ -301,9 +301,9 @@
      lace, dark lips). u and v run 0..1 across the box she's drawn in; she sings, blinks and sways a little. */
   function drawSinger(X0, Y0, Wd, Hd) {   // her head bowed a little, and now and then a tear
     cx.save(); var pv = [X0 + Wd * 0.5, Y0 + Hd * 0.62]; cx.translate(pv[0], pv[1]); cx.rotate(-0.05 * (1 - smileA * 0.8) + Math.sin(t * 0.5) * 0.015); cx.translate(-pv[0], -pv[1] + Hd * 0.015);
-    var home = t >= HOME_T; smileA = home ? Math.max(0, Math.min(1, (t - HOME_T - 13.4) / 3)) : 0; smileA = smileA * smileA * (3 - 2 * smileA);
+    var home = t >= HOME_T; smileA = home ? Math.max(0, Math.min(1, (t - HOME_T - 18.6) / 3)) : 0; smileA = smileA * smileA * (3 - 2 * smileA);
     drawSinger0(X0, Y0, Wd, Hd);
-    var tc = home ? Math.min(0.74, (t - HOME_T - 11.4) / 8) : (t % 7) / 7; if (tc >= 0 && tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek   // (at home: one last, slow tear; then the smile)
+    var tc = home ? Math.min(0.74, (t - HOME_T - 15) / 8) : (t % 7) / 7; if (tc >= 0 && tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek   // (at home: one last, slow tear; then the smile)
     cx.restore();
   }
   var smileA = 0;
@@ -586,7 +586,7 @@
       [CLOSE_END + TWO + HOLD2, Z2 * 0.94, tx2, ty2],
       [INTRO, 1, W / 2, H / 2]   // and out to the whole scene
     ];
-    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 11, 6.4, wx * H, (fy + 0.012) * H], [END_T + 4, 7, wx * H, (fy + 0.008) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
+    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 13.5, 6.4, wx * H, (fy + 0.012) * H], [END_T + 4, 7, wx * H, (fy + 0.008) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
     for (var i = 1; i < K.length; i++) if (t < K[i][0]) { var A = K[i - 1], B = K[i], e = ez((t - A[0]) / (B[0] - A[0])); return { z: A[1] * Math.pow(B[1] / A[1], e), x: A[2] + (B[2] - A[2]) * e, y: A[3] + (B[3] - A[3]) * e }; }
     return null;
   }
@@ -640,13 +640,14 @@
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
       var wa = sitting ? -0.15 : bp.home != null ? Math.sin(t * 14 + b.id) * 0.9 : landing ? Math.sin(t * (bp.land > 0.7 ? 20 : 11)) * 0.9 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
       cx.strokeStyle = 'rgba(120,130,170,.4)'; cx.lineWidth = 1; for (var wf = 0; wf < 3; wf++) { cx.beginPath(); cx.moveTo(-s * (0.15 - wf * 0.15), -s * 0.08); cx.quadraticCurveTo(s * (0.05 + wf * 0.08), -s * (0.25 + 1.0 * wa) * (0.6 + wf * 0.15), s * (0.3 + wf * 0.04), -s * 0.06); cx.stroke(); }   // feathers on the wing
-      var colA = Math.max(0, Math.min(1, (t - b.colT) / 0.5)) * (1 - Math.max(0, Math.min(1, (t - HOME_T) / 2.5))), pop = t - b.colT;   // (at home they're plain blackbirds again)   // (plain black blackbirds until the whole flock is in the air; then the neon lights up, one bird at a time)
+      var isWarn = pending.indexOf(b) >= 0, blink = Math.sin(t * 14) > 0 ? 1 : 0.12, turnA = b.manual ? 1 : isWarn ? blink : 0;   // (after the start everyone is a plain blackbird again: colour and name only on your turn, blinking for 2 s before it)
+      var colA = (t < MSG1 ? Math.max(0, Math.min(1, (t - b.colT) / 0.5)) : t < MSG1 + 0.8 ? Math.max(turnA, 1 - (t - MSG1) / 0.8) : turnA) * (1 - Math.max(0, Math.min(1, (t - HOME_T) / 2.5))), pop = t - b.colT;   // (at home they're plain blackbirds again)   // (plain black blackbirds until the whole flock is in the air; then the neon lights up, one bird at a time)
       if (pop > 0 && pop < 0.9) { cx.strokeStyle = b.col; cx.globalAlpha = 1 - pop / 0.9; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.2 + pop * 3), 0, 7); cx.stroke(); var fl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 3); fl.addColorStop(0, b.col + '99'); fl.addColorStop(1, b.col + '00'); cx.fillStyle = fl; cx.beginPath(); cx.arc(0, 0, s * 3, 0, 7); cx.fill(); cx.globalAlpha = 1; }   // (the flash as it lights up)
       if (colA > 0) { cx.globalAlpha *= colA; cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke(); cx.globalAlpha /= colA; }   // their colour
       if (b.lead && t >= PICK_T - 0.05 && t < HOME_T + 5.4 && !(t >= FADE_T && t < HOME_T)) { cx.save(); cx.translate(s * 1.45, -s * 0.15); cx.rotate(1.2); drawRose(0, 0, s * 0.9, 0.8); cx.restore(); }   // (the flower in its beak)
       cx.restore();
-      var intro = t > b.colT && t < b.colT + 2.8 && t < SOAR_T;   // (its name, for a moment, as it lights up)
-      if (!b.out && t > b.colT && t < SOAR_T && (b.manual || b.human || intro || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
+      var intro = t > b.colT && t < b.colT + 2.8 && t < MSG1;   // (its name, for a moment, as it lights up)
+      if (!b.out && t > b.colT && t < SOAR_T && (b.manual || intro || (pending.indexOf(b) >= 0 && blink > 0.5))) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
   }
   function draw() {
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -774,7 +775,7 @@
     requestAnimationFrame(frame);
   }
   function finish() {
-    ended = true; running = false; ytStop(); windLevel(0);
+    ended = true; running = false; windLevel(0);   // (the song plays on to its end under the results)
     var rows = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; });
     $('endt').textContent = rows[0].human ? '🏆 You win!' : '🏆 ' + rows[0].name + ' wins';
     $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (i === 0 ? 'top' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + '</span><span>' + (b.feathers ? '🪶'.repeat(b.feathers) : '🌿') + '</span><span style="color:var(--mute);min-width:6em;text-align:right">' + b.clean.toFixed(1) + 's clean</span></li>'; }).join('');
@@ -789,7 +790,7 @@
   }
   $('go').addEventListener('click', function () { start(true); });
   $('go2').addEventListener('click', function () { start(false); });
-  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); });
+  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); ytStop(); });
 
   // ---------- holding: mouse, touch or spacebar ----------
   function down(e) { if (e.target.closest && e.target.closest('.ov')) return; hold = true; if (e.cancelable) e.preventDefault(); }
