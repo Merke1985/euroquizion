@@ -193,7 +193,7 @@
     var others = birds.filter(function (b) { return !b.lead; });
     var fr = birds.reduce(function (m, b) { return b.xo > m.xo ? b : m; }, birds[0]), fx0 = fr.xo, fo = fr.off; fr.xo = lead.xo; fr.off = lead.off; lead.xo = fx0; lead.off = fo;   // (the lone bird leads, at the front of the flock)
     lead.rx = 0.905; lead.ry = ROOF_Y - 0.02; lead.y = lead.ry; lead.dl = 0; lead.fi = FLY_IN;
-    others.forEach(function (b, i) { b.rx = 0.28 + (others.length > 1 ? i / (others.length - 1) : 0.5) * 0.56; b.ry = 0.8 + (i % 2) * 0.07; b.y = b.ry; b.dl = 0.2 + i * 0.16 + Math.random() * 0.1; b.fi = 2.4; });
+    others.forEach(function (b, i) { b.rx = 0.28 + (others.length > 1 ? i / (others.length - 1) : 0.5) * 0.56; b.ry = 0.66 + (i % 2) * 0.05; b.y = b.ry; b.dl = 0.2 + i * 0.16 + Math.random() * 0.1; b.fi = 2.4; });
     tAir = TAKEOFF + Math.max.apply(null, birds.map(function (b) { return b.dl + b.fi; }));   // (once they're all up, the colours come)
     pickN = Math.min(3, n - 1);   // (three birds fly at a time, the whole game)
     setTimeline(players().sort(function () { return Math.random() - .5; }));
@@ -275,7 +275,7 @@
         else if (b.human && !fromPhone && b.inv <= 0 && hits(b, X)) hit(b);   // (computer birds never get hit)   // (a phone decides its own hits: what the player saw)
         if (!b.turnHit) b.clean += dt;
       } else {   // autopilot: back to its place in the flock, smoothly
-        var ty = cen(X + 0.12) + b.off * half(X) * 0.62, rate = 3.2;
+        var ty = cen(X + 0.12) + b.off * half(X) * 0.62 - 0.12 * Math.max(0, Math.min(1, (MSG0 - t) / 3)), rate = 3.2;   // (after the lift-off the flock flies a bit higher, settling down to its path as the how-to card comes up)
         if (b.lead && t >= tAir && t < SOAR_T) {   // the guide flies around every obstacle in smooth, graceful arcs
           var nb = branches.filter(function (r) { return r.x > X - 0.035 && r.x < X + 1.8; })[0], gy = ty, wb = 0, calm = 1;
           if (nb) { var hh2 = half(nb.x), cc = cen(nb.x), lo = nb.x < FOREST ? 0.05 : cc - hh2, hi = nb.x < FOREST ? Math.min(1 - R, cc + hh2) : cc + hh2; gy = nb.top ? (nb.tip + hi) / 2 : (lo + nb.tip) / 2;   // (the middle of the open space at that obstacle)
