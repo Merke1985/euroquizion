@@ -60,7 +60,7 @@
 <div class="ov" id="start">
   <div class="card">
     <h2>🐦‍⬛ Blackbird</h2>
-    <p>The whole flock flies through a dark forest along with the song. Most of the time your bird is on <b>autopilot</b> and can’t crash.</p>
+    <p>The whole flock takes off from a rooftop, flies through the night sky and then down into a dark forest, along with the song. Most of the time your bird is on <b>autopilot</b> and can’t crash.</p>
     <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you: <b>hold</b> to fly up, <b>let go</b> to glide down, and keep to the moonlit path through the dark forest: away from the leaves above, the undergrowth below and the branches.</p>
     <p>A hit costs a feather 🪶 (you have 3). No feathers left and your bird lands on a branch. Most feathers when the song ends wins.</p>
     <div class="btns">
@@ -86,10 +86,13 @@
   addEventListener('resize', size); size();
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
-  var DUR = 104, TAKEOFF = 9, FLY_IN = 2, FOREST = 1.9, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
+  var DUR = 104, TAKEOFF = 9, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
   var seed = 1;
   function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
-  function diff(x) { var d = Math.max(0, Math.min(1, x / XEND)); return d < .35 ? d / .35 * .35 : d < .72 ? .35 + (d - .35) / .37 * .3 : .65 + (d - .72) / .28 * .35; }   // calm, the middle, the climax
+  function diff(x) {   // the sky is the warm-up (wide, gentle, few obstacles: get used to flying); the forest gets harder and harder
+    if (x < FOREST) return 0.25 * Math.max(0, x) / FOREST;
+    return Math.min(1, 0.45 + 0.55 * (x - FOREST) / Math.max(1, XEND - FOREST));
+  }
   function half(x) { return 0.30 - 0.13 * diff(x); }   // half the height of the band of light
   function cen(x) {   // its middle: a slow wave that swings wider and faster as the song builds (not the real melody)
     var d = diff(x), a = 0.05 + 0.24 * d;
@@ -234,26 +237,43 @@
     // a lit window in the wall below
     var dx0 = sx(0.26), dx1 = sx(0.4), dy0 = sy(0.72), dy1 = sy(0.86); cx.fillStyle = '#e8a64f'; cx.fillRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.strokeStyle = '#2a2140'; cx.lineWidth = 3; cx.strokeRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.beginPath(); cx.moveTo((dx0 + dx1) / 2, dy0); cx.lineTo((dx0 + dx1) / 2, dy1); cx.moveTo(dx0, (dy0 + dy1) / 2); cx.lineTo(dx1, (dy0 + dy1) / 2); cx.stroke();
   }
+  function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
+    var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
+    if (side < 0) return e - 0.018 * (Math.abs(Math.sin(X * 6.3)) + 0.6 * Math.abs(Math.sin(X * 11.7 + 2)));
+    var f = (X * 9 + hsh(Math.floor(X * 9)) * 0.3) % 1, tip = 1 - Math.abs(2 * f - 1);
+    return e + 0.045 * (1 - tip) * (0.7 + 0.3 * hsh(Math.floor(X * 9) + 5));
+  }
   function draw() {
     var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04071a'); g.addColorStop(0.55, '#0b1433'); g.addColorStop(1, '#0d1a2a'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
     stars.forEach(function (s) { cx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.04) % W + W) % W, s.y * H * 0.6, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
     var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.fillStyle = mg; cx.fillRect(0, 0, W, H);
     // the forest behind, far to near, with mist between
-    treeLayer(0.1, '#16224a', 0.74, 0.32, 0.5, 0.08, 1); mist(0.55, 0.85, 0.12);
-    treeLayer(0.25, '#0f1834', 0.84, 0.42, 0.66, 0.12, 2); mist(0.68, 0.95, 0.08);
-    treeLayer(0.5, '#0a1024', 0.95, 0.55, 0.85, 0.19, 3);
+    var near = Math.max(0, Math.min(1, (cam + W / H - (FOREST - 1.2)) / 2.4)), low = cam < 0.6 ? 0 : (1 - near) * 0.3 * Math.min(1, (cam - 0.6) / 2);   // (high in the sky the forest sinks away below; it rises again as you come down to it)
+    treeLayer(0.1, '#16224a', 0.74 + low, 0.32, 0.5, 0.08, 1); mist(0.55 + low, 0.85 + low, 0.12);
+    treeLayer(0.25, '#0f1834', 0.84 + low, 0.42, 0.66, 0.12, 2); mist(0.68 + low, 0.95 + low, 0.08);
+    treeLayer(0.5, '#0a1024', 0.95 + low * 0.6, 0.55, 0.85, 0.19, 3);
     var x0 = cam - 0.1, x1 = cam + W / H + 0.1, st = 0.015, X;
     drawHouse();
     var xf = Math.max(x0, FOREST);   // (the forest starts behind the house)
     // the path through the trees: a faint glow of moonlight
     cx.beginPath(); for (X = xf; X <= x1; X += st) cx.lineTo(sx(X), sy(cen(X) - half(X))); for (X = x1; X >= xf; X -= st) cx.lineTo(sx(X), sy(cen(X) + half(X))); cx.closePath();
-    var fx = sx(FOREST), bg = fx > -H * 0.5 ? cx.createLinearGradient(fx, 0, fx + H * 0.5, 0) : cx.createLinearGradient(0, 0, W, 0); if (fx > -H * 0.5) { bg.addColorStop(0, 'rgba(130,160,255,0)'); bg.addColorStop(1, 'rgba(150,175,255,.13)'); } else { bg.addColorStop(0, 'rgba(130,160,255,.10)'); bg.addColorStop(1, 'rgba(200,220,255,.16)'); }   // (fades in at the entrance of the forest) cx.fillStyle = bg; cx.fill();
+    var fx = sx(FOREST), bg = fx > -H * 0.5 ? cx.createLinearGradient(fx, 0, fx + H * 0.5, 0) : cx.createLinearGradient(0, 0, W, 0); if (fx > -H * 0.5) { bg.addColorStop(0, 'rgba(130,160,255,0)'); bg.addColorStop(1, 'rgba(150,175,255,.13)'); } else { bg.addColorStop(0, 'rgba(130,160,255,.10)'); bg.addColorStop(1, 'rgba(200,220,255,.16)'); }
+    cx.fillStyle = bg; cx.fill();   // (fades in at the entrance of the forest)
     // fireflies along the path
     while (flies.length < 34) flies.push({ x: cam + Math.random() * (W / H + 0.6), o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
     flies = flies.filter(function (f) { return f.x > cam - 0.2; });
     while (flies.length < 34) flies.push({ x: cam + W / H + Math.random() * 0.4, o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
     flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
       var fg = cx.createRadialGradient(px, py, 0, px, py, 9); fg.addColorStop(0, 'rgba(255,240,140,' + a + ')'); fg.addColorStop(1, 'rgba(255,240,140,0)'); cx.fillStyle = fg; cx.fillRect(px - 9, py - 9, 18, 18); });
+    // in the sky: a bank of clouds above, the tops of the pines below (touch them and you lose a feather)
+    var xs0 = Math.max(x0, SKY0), xs1 = Math.min(x1, FOREST + 0.02);
+    if (xs0 < xs1) {
+      cx.beginPath(); cx.moveTo(sx(xs0), 0); for (X = xs0; X <= xs1; X += st) cx.lineTo(sx(X), sy(skyEdge(X, -1))); cx.lineTo(sx(xs1), 0); cx.closePath();
+      var cl = cx.createLinearGradient(0, 0, 0, H * 0.45); cl.addColorStop(0, '#1a2352'); cl.addColorStop(0.7, '#3a4888'); cl.addColorStop(1, '#5565a5'); cx.fillStyle = cl; cx.fill();
+      cx.beginPath(); for (X = xs0; X <= xs1; X += st) cx.lineTo(sx(X), sy(skyEdge(X, -1))); cx.strokeStyle = 'rgba(225,235,255,.85)'; cx.lineWidth = 3; cx.stroke();   // (moonlit rims)
+      cx.beginPath(); cx.moveTo(sx(xs0), H); for (X = xs0; X <= xs1; X += st / 2) cx.lineTo(sx(X), sy(skyEdge(X, 1))); cx.lineTo(sx(xs1), H); cx.closePath(); cx.fillStyle = '#050a18'; cx.fill();
+      cx.beginPath(); for (X = xs0; X <= xs1; X += st / 2) cx.lineTo(sx(X), sy(skyEdge(X, 1))); cx.strokeStyle = 'rgba(140,200,170,.35)'; cx.lineWidth = 1.5; cx.stroke();
+    }
     // the canopy above and the undergrowth below: the edges of the path (touch them and you lose a feather)
     [-1, 1].forEach(function (side) {
       if (xf >= x1) return;
@@ -278,6 +298,12 @@
     branches.forEach(function (r) {
       if (r.x < x0 - 0.3 || r.x > x1 + 0.3) return;
       var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 40 : sy(cen(r.x) + half(r.x)) + 40, tip = sy(r.tip), dir = r.top ? 1 : -1;
+      if (r.x < FOREST) {
+        if (r.top) { cx.fillStyle = '#4a5898'; for (var cq = 0; cq < 6; cq++) { var cf = cq / 5, cyy = base + (tip - base) * cf, cr = H * (0.05 - 0.022 * cf); cx.beginPath(); cx.arc(px + Math.sin(cq * 1.7 + r.tw * 6) * H * 0.018, cyy - cr * 0.3, cr, 0, 7); cx.fill(); } cx.strokeStyle = 'rgba(210,225,255,.45)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip - H * 0.012, H * 0.028, 0.2, Math.PI - 0.2); cx.stroke(); }   // a trailing cloud
+        else { cx.fillStyle = '#050a18'; var ph = base - tip; cx.beginPath(); for (var pq = 0; pq < 5; pq++) { var py0 = tip + ph * pq * 0.2, pw = H * (0.018 + pq * 0.016); cx.moveTo(px, py0); cx.lineTo(px - pw, py0 + ph * 0.26); cx.lineTo(px + pw, py0 + ph * 0.26); cx.closePath(); } cx.fill(); }   // a tall pine top
+        cx.strokeStyle = 'rgba(255,90,110,.35)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip, 0.022 * H, 0, 7); cx.stroke();   // (the danger point)
+        return;
+      }
       cx.strokeStyle = '#020309'; cx.lineCap = 'round'; cx.lineWidth = 0.032 * H; cx.beginPath(); cx.moveTo(px - 6, base); cx.quadraticCurveTo(px + 8, (base + tip) / 2, px, tip); cx.stroke();
       cx.lineWidth = 0.012 * H; for (var k = 1; k <= 3; k++) { var yy = base + (tip - base) * (k / 4), s = (k % 2 ? 1 : -1); cx.beginPath(); cx.moveTo(px, yy); cx.lineTo(px + s * 0.035 * H, yy + dir * 0.03 * H); cx.stroke(); }
       cx.strokeStyle = 'rgba(255,90,110,.35)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip, 0.022 * H, 0, 7); cx.stroke();   // (the danger point)
