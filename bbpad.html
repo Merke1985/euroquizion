@@ -106,14 +106,15 @@
     var cls = '', txt = '', m = '';
     if (s.ph === 'lobby') { txt = 'You’re in, ' + esc(name) + '!<span class="small">Wait for the host to start</span>'; lastF = 5; }
     else if (s.ph === 'end') { txt = (my.r === 1 ? '🏆 You win!' : 'You finished ' + ordinal(my.r || 0)) + '<span class="small">Look at the big screen</span>'; }
+    else if (my.s === 'done') { txt = 'Look at the big screen'; }
     else if (my.s === 'out') { cls = 'out'; txt = '🪶 Your bird lost all their feathers<span class="small">Watch the rest fly</span>'; }
     else if (my.s === 'fly') { cls = 'fly' + (held ? ' down' : ''); txt = 'Hold to fly up · let go to glide'; }
     else if (my.s === 'warn') { cls = 'warn'; txt = 'Get ready…<span class="small">You’re about to fly</span>'; try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
     else { txt = 'Watch the big screen'; }
-    if (my.c && s.ph === 'play' && my.s !== 'fly' && my.s !== 'out') m = 'This is your colour on the big screen.';
+    if (my.c && s.ph === 'play' && my.s !== 'fly' && my.s !== 'out' && my.s !== 'done') m = 'This is your colour on the big screen.';
     pre = s.ph === 'play' && !!my.c && (my.s === 'wait' || my.s === 'warn') && !!K && gameT() < K.P0 + 1;   // (before you can steer: your bird already shows, with a countdown)
     if (pre) cls += ' pre';
-    document.body.classList.toggle('neon', s.ph === 'play' && !!my.c && my.s !== 'out');
+    document.body.classList.toggle('neon', s.ph === 'play' && !!my.c && my.s !== 'out' && my.s !== 'done');
     pad.className = cls; big.innerHTML = txt; msg.textContent = m;
   }
   /* Flying on the phone: the big screen sends the course (where the path runs, when it speeds up) and the obstacles ahead;

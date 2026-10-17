@@ -223,7 +223,7 @@
     while (t >= planT - 3.6 && planT + SEG <= FAST_T + 2.2) { planTurn(planT); planT += SEG; }
     if (t >= FAST_T + 2.2 - 3.6 && !allPlanned) { allPlanned = true; var tp0 = rnd() < 0.5 ? 1 : 0; for (var k = 0; FAST_T + 2.2 + k * 1.6 < SOAR_T - 1; k++) { var x = birdXAt(FAST_T + 2.2 + k * 1.6), h = half(x), c = cen(x), top = k % 2 === tp0, reach = (1 / 2) * 2 * h; branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() }); } }   // (the fast part: from 2 s into the speed-up until the way out, every 1.6 s, top and bottom in turn; the blackbird shows the way)
     if (t >= PRACT0 - CD && t < PRACT0) { if (!allWarn) { allWarn = true; pending = alive(); } return; }   // (a 3 s countdown in the middle of the screen; the colours stay on, no blinking)
-    if (t >= PRACT0) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
+    if (t >= PRACT0 && !ctrlOver) { pending = []; alive().forEach(function (b) { if (!b.manual) { b.manual = true; b.turnStart = t; b.turnHit = false; } }); }   // (and then everyone flies)
   }
 
   // ---------- a computer bird flying itself: aims for the middle of the band (or the gap past a branch), with a little delay and the odd slip ----------
@@ -242,6 +242,9 @@
   var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
   function step(dt) {
     t += dt; if (t >= TAKEOFF) cam += SPEED * dt * Math.max(0, Math.min(1, (t - TAKEOFF - 1.6) / 2.4)) * spd(t); if (t >= HOME_T) cam = 0; schedule();
+    if (!ctrlOver && allPlanned && t > FAST_T && t < SOAR_T) {   // the last obstacle is behind every bird: hands off, look at the big screen
+      var lastX = Math.max.apply(null, branches.map(function (r) { return r.x; }).concat([-1e9])), fl = birds.filter(function (b) { return !b.npc && !b.out; });
+      if (fl.every(function (b) { return cam + bx(b) > lastX + 0.06; })) { ctrlOver = true; pending = []; birds.forEach(function (b) { b.manual = false; }); } }
     if (t >= SOAR_T && !soarOn) { soarOn = true; pending = []; birds.forEach(function (b) { b.manual = false; if (b.out) { b.out = false; b.rejoin = true; b.y = 1.15; b.vy = -0.3; b.inv = 0; } }); }   // (2:08: nobody steers any more; birds that landed rejoin the flock)
     if (soarOn && SPOT_C < 0) { var cs = cam; for (var tt = t; tt < STOP_T; tt += 0.01) cs += SPEED * spd(tt) * 0.01; SPOT_C = cs + 0.5 * W / H; FLOWER_X = SPOT_C - 0.33; FLOWER_Y = GY; }   // (where the flock will come to rest: their favourite spot)
     if (preWant && t >= MUSIC - 3) { preWant = false; ytPre(); }   // (3 s before the song: the video already runs, silently, from 3 s earlier, so it's loaded and playing when the song starts)
@@ -981,7 +984,7 @@
   }
   function start(music) {
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
-    t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; SPOT_C = -99; nextOrder = 0; songAsked = false; waitSong = 0; pending = []; parts = []; ended = false; sideKey = '';
+    t = 0; cam = 0; nextPick = 99; soarOn = false; ctrlOver = false; FLOWER_X = -9; SPOT_C = -99; nextOrder = 0; songAsked = false; waitSong = 0; pending = []; parts = []; ended = false; sideKey = '';
     makeBirds(+$('nbots').value); makeCourse(); nextPick = PRACT0; holds = {}; sendState(true);
     audioOn(); flockPlayed = false; musicWant = !!music; preWant = !!music; preOn = false; if (music) ytPrime();
     running = true; last = performance.now(); requestAnimationFrame(frame);
@@ -1038,7 +1041,7 @@
   function ytStop() { ytWant = false; preOn = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
   // ---------- phones: join with the room code, one big button to fly ----------
-  var nextOrder = 0, joined = [], holds = {}, net = null, lastState = '', lastSent = 0, BBA = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '';
+  var ctrlOver = false, nextOrder = 0, joined = [], holds = {}, net = null, lastState = '', lastSent = 0, BBA = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '';
   for (var ri = 0; ri < 4; ri++) room += BBA[Math.floor(Math.random() * BBA.length)];
   var padUrl = new URL('bbpad.html?r=' + room, location.href).href;
   $('bbcode').textContent = room; $('bburl').textContent = padUrl.replace(/^https?:\/\//, '');
@@ -1059,7 +1062,7 @@
     if (!net) return;
     var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {}, live = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
-    else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; live[b.pid] = { y: +b.y.toFixed(3), x: +bx(b).toFixed(3) }; });
+    else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: ctrlOver || t >= SOAR_T ? 'done' : b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; live[b.pid] = { y: +b.y.toFixed(3), x: +bx(b).toFixed(3) }; });
     if (ph === 'end') { var rk = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; }); rk.forEach(function (b, i) { if (b.human && ps[b.pid]) ps[b.pid].r = i + 1; }); }
     var br = ph === 'play' ? branches.filter(function (q) { return q.x > cam - 0.3; }).map(function (q) { return [+q.x.toFixed(3), q.top ? 1 : 0, +q.tip.toFixed(3)]; }) : [];
     var s = JSON.stringify({ ph: ph, p: ps, br: br }), now = Date.now();
