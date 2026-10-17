@@ -125,7 +125,7 @@
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     var FIRST_T = MUSIC - SONG0 + 47.9;   // (the first group's turn: its first tree comes at 0:49 in the song. Turns every 7 s (5 s flying, 2 s pause): 6 over the pine forest, 6 in the cave)
     MSG1 = FIRST_T - CD - 0.4; MSG0 = MSG1 - 8;   // (5 s the how-to, then 3 s: watch your phone if the stream lags)   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
-    REVEAL0 = tAir + 1.5; var gap = Math.max(0.3, Math.min(0.9, (MSG1 - 8 - 1.4 - REVEAL0) / Math.max(1, order.length - 1))); MSG0 = REVEAL0;   // (the how-to card comes up as the colours appear) order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the neon, one bird at a time)
+    REVEAL0 = tAir + 1.5; var gap = Math.max(0.25, Math.min(0.9, 4.2 / Math.max(1, order.length - 1)));   /* (one by one, all within the how-to card) */ MSG0 = REVEAL0; order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the how-to card comes up as the colours appear, and the neon lights up one bird at a time)
     pgroups = []; pgi = 0; pracDone = false; PRACT0 = FIRST_T; PRACT_END = FIRST_T; SAFE_X = camAt(FIRST_T) + 0.3 * W / H;   // (no practice: straight into it)
     var FT = FIRST_T + 6 * (TURN + WARN) - 1;   // (into the cave just before the 7th turn)
     FOREST = camAt(FT) + 0.3 * W / H; DIVE0 = FOREST - 3.4; DIVE1 = FOREST + 0.9; GRAVE_X = camAt(GRAVE_T) + 0.3 * W / H; XEND = GRAVE_X; DUR = END_T;
@@ -314,7 +314,7 @@
     var X = cam + bx(b); b.vy = (cen(X) - b.y) * 2.5;   // (bounced back towards the middle)
     for (var i = 0; i < 7; i++) parts.push({ x: X, y: b.y, vx: -0.2 - Math.random() * 0.3, vy: (Math.random() - .6) * 0.5, t: 0, r: Math.random() * 6, col: b.col });
     var nr = branches.reduce(function (m, r) { return !m || Math.abs(r.x - X) < Math.abs(m.x - X) ? r : m; }, null); hitSound(X >= FOREST ? 'rock' : nr && nr.top ? 'bramble' : 'pine', b.feathers <= 0);   // (what was hit decides the sound)
-    if (b.feathers <= 0) { b.out = true; b.manual = false; b.vy = 0.1; }
+    if (b.feathers <= 0) { b.out = true; b.manual = false; b.vy = 0.1; b.dist = Math.round(Math.max(0, cam - camAt(PRACT0)) * 25); }   // (how far it got: in metres, roughly)
     if (b.human) { try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} }
   }
 
@@ -840,7 +840,7 @@
       if (b.lead && t >= PICK_T - 0.05 && t < HOME_T + 5.4 && !(t >= FADE_T && t < HOME_T)) { cx.save(); cx.translate(s * 1.45, -s * 0.15); cx.rotate(1.2); drawRose(0, 0, s * 0.9, 0.8); cx.restore(); }   // (the flower in its beak)
       cx.restore();
       var intro = t > b.colT && t < b.colT + 2.8 && t < MSG1;   // (its name, for a moment, as it lights up)
-      if (!b.out && t > b.colT && t < SOAR_T && (b.manual || intro || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.fillText(b.name, px, py - s * 1.6); }
+      if (!b.out && t > b.colT && t < SOAR_T) {   /* (names always on, from the moment the colour shows) */ cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.fillText(b.name, px, py - s * 1.6); }
   }
   function draw() {
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -986,18 +986,20 @@
   /* the ranking: by feathers. Equal feathers, equal place: everyone with the most feathers wins (and goes shopping).
      Computer birds fly perfectly, so with people playing they're listed but never win or take a place. */
   function ranking() {
-    var all = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; }), hum = all.some(function (b) { return b.human; }), pool = all.filter(function (b) { return b.human || !hum; });
-    all.forEach(function (b) { b.rank = 0; b.win = false; });
-    pool.forEach(function (b) { b.rank = 1 + pool.filter(function (o) { return o.feathers > b.feathers; }).length; b.win = b.rank === 1; });
+    var all = players(), hum = all.some(function (b) { return b.human; }), pool = all.filter(function (b) { return b.human || !hum; });
+    var dead = pool.every(function (b) { return b.feathers <= 0; }), sc = function (b) { return dead ? (b.dist || 0) : b.feathers; };   // (everyone out of feathers: whoever flew furthest)
+    all.sort(function (a, b) { return sc(b) - sc(a) || b.feathers - a.feathers || b.clean - a.clean; }); pool.sort(function (a, b) { return sc(b) - sc(a) || b.clean - a.clean; });
+    all.forEach(function (b) { b.rank = 0; b.win = false; b.byDist = dead; });
+    pool.forEach(function (b) { b.rank = 1 + pool.filter(function (o) { return sc(o) > sc(b); }).length; b.win = b.rank === 1; });
     if (pool.length === 1 && hum) pool[0].win = pool[0].feathers >= 5;   // (flying alone: you only 'win' with a perfect flight)
     return pool.concat(all.filter(function (b) { return pool.indexOf(b) < 0; }));
   }
   function finish() {
     ended = true; running = false; windLevel(0);   // (the song plays on to its end under the results)
     var rows = ranking(), ws = rows.filter(function (b) { return b.win; }), wn = ws.map(function (b) { return b.name; });
-    var solo = rows.filter(function (b) { return b.human; }).length === 1 ? rows[0] : null;
-    $('endt').textContent = solo ? (solo.feathers >= 5 ? '🏆 ' + solo.name + ': a perfect flight!' : '🪶 ' + solo.name + ' kept ' + solo.feathers + ' of 5 feathers') : '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + ' win' : wn[0] + ' wins'); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
-    $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (b.win ? 'top' : '') + '"><span class="rk">' + (b.rank || '·') + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + (b.rank ? '' : ' <small style="color:var(--mute);font-weight:500">computer</small>') + '</span><span class="fe" style="display:flex;gap:3px">' + featherRow(b.feathers, false) + '</span></li>'; }).join('');
+    var solo = rows.filter(function (b) { return b.human; }).length === 1 ? rows[0] : null, byD = rows[0] && rows[0].byDist;
+    $('endt').textContent = solo ? (solo.feathers >= 5 ? '🏆 ' + solo.name + ': a perfect flight!' : byD ? '🪶 ' + solo.name + ' flew ' + (solo.dist || 0) + ' m' : '🪶 ' + solo.name + ' kept ' + solo.feathers + ' of 5 feathers') : '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + (byD ? ' flew furthest' : ' win') : wn[0] + (byD ? ' flew furthest' : ' wins')); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
+    $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (b.win ? 'top' : '') + '"><span class="rk">' + (b.rank || '·') + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + (b.rank ? '' : ' <small style="color:var(--mute);font-weight:500">computer</small>') + '</span>' + (b.byDist && b.rank ? '<span style="font-weight:700;color:var(--mute)">' + (b.dist || 0) + ' m</span>' : '<span class="fe" style="display:flex;gap:3px">' + featherRow(b.feathers, false) + '</span>') + '</li>'; }).join('');
     $('end').classList.remove('hidden');
   }
   function start(music) {
@@ -1103,7 +1105,7 @@
     var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {}, live = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
     else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: ctrlOver || t >= SOAR_T ? 'done' : b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; live[b.pid] = { y: +b.y.toFixed(3), x: +bx(b).toFixed(3) }; });
-    if (ph === 'end') { var rkg = ranking(), one = rkg.filter(function (b) { return b.human; }).length === 1; rkg.forEach(function (b) { if (b.human && ps[b.pid]) { ps[b.pid].r = b.rank; if (one) ps[b.pid].solo = 1; } }); }
+    if (ph === 'end') { var rkg = ranking(), one = rkg.filter(function (b) { return b.human; }).length === 1; rkg.forEach(function (b) { if (b.human && ps[b.pid]) { ps[b.pid].r = b.rank; if (one) ps[b.pid].solo = 1; if (b.byDist) ps[b.pid].d = b.dist || 0; } }); }
     var br = ph === 'play' ? branches.filter(function (q) { return q.x > cam - 0.3; }).map(function (q) { return [+q.x.toFixed(3), q.top ? 1 : 0, +q.tip.toFixed(3)]; }) : [];
     var s = JSON.stringify({ ph: ph, p: ps, br: br }), now = Date.now();
     if (!force && s === lastState && now - lastSent < (ph === 'play' ? 2000 : 4000)) return;   // (the clock is resent every 2 s while playing, so the phones stay in step)
