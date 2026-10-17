@@ -35,6 +35,11 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
 
 ## Other party games
 
+- **The Glitter Tower** (speed climbing). Stella, the tower keeper (a new character: lilac beehive, night-sky gown,
+  crescent-moon balcony), lights the next ledge with her wand: always straight up or one column to the side. Tap
+  ↖ ↑ ↗ on the phone fast; wrong ledge or too slow = fall 3 floors. 3 rounds of 15 s turns, 1–3 climbers at once;
+  highest floor wins. **Test version built:** 🧪 Test → "✨ Glitter Tower (prototype)" (tower.html, phones on
+  towerpad.html). Still to do: stage intro, hook into the roster, boutique winners; stream lag may hurt speed.
 - **Timeline.** A song card without its year; place it in the right gap on a growing timeline (Hitster-like).
   Others vote right/wrong and can steal. To decide: title shown or hidden, clip length, which eras.
 - **"Nul Points!"** (Liar's Dice with Eurovision symbols 🎤 🪩 ❤️ 🌈 👑 and a wild ⭐). 3 dice each, 5 rounds,

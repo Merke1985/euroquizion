@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>The Glitter Tower (test)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+<style>
+  /* The Glitter Tower: an early test. Stella, the keeper of the tower, lights up the next ledge; jump to it fast, or fall. */
+  :root{--ink:#fff;--mute:#c3c6ea;--gold:#ffd166;--line:rgba(255,255,255,.16)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0b0620;overflow:hidden;font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none}
+  canvas{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+  .ov{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,rgba(70,30,120,.75),rgba(8,4,24,.93));z-index:5;padding:16px}
+  .ov.hidden{display:none}
+  .card{max-width:640px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(22,12,52,.92);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .card h2{margin:0 0 .3em;font-size:clamp(1.6rem,4vw,2.4rem)}
+  .card p{margin:.4em 0;color:var(--mute);line-height:1.45}
+  .card b{color:var(--ink)}
+  .join{display:flex;gap:16px;align-items:center;margin:14px 0 4px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);line-height:1.5}
+  .join .qr{width:112px;height:112px;flex:none;background:#fff;border-radius:10px;padding:6px}
+  .join .qr svg{width:100%;height:100%;display:block}
+  .join .mute{color:var(--mute)} .join .code{font-size:1.3em;letter-spacing:.12em;color:var(--gold)}
+  .plist{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px} .plist .pp{padding:2px 10px;border-radius:99px;background:rgba(255,209,102,.18);border:1px solid rgba(255,209,102,.5);font-weight:700}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  button{font:inherit;font-weight:800;border:0;border-radius:14px;padding:12px 18px;cursor:pointer;background:var(--gold);color:#2a1a00;font-size:1.05rem}
+  button.alt{background:rgba(255,255,255,.1);color:var(--ink);border:1px solid var(--line)}
+  label{color:var(--mute);font-weight:700;display:inline-flex;gap:6px;align-items:center}
+  select{font:inherit;font-weight:700;padding:8px 10px;border-radius:10px;background:#24164e;color:#fff;border:1px solid var(--line)}
+  ol.res{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+  ol.res li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:700}
+  ol.res li.top{background:rgba(255,209,102,.2);box-shadow:0 0 0 2px var(--gold)}
+  ol.res li .rk{width:1.6em;color:var(--gold)} ol.res li .nm{flex:1} ol.res li .dot{width:13px;height:13px;border-radius:50%} ol.res li .sm{color:var(--mute);font-weight:600;font-size:.9em}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="ov" id="start">
+  <div class="card">
+    <h2>✨ The Glitter Tower</h2>
+    <p>Stella, the keeper of the tower, shows each climber the next ledge to jump to. It is always <b>straight up</b> or <b>one place to the side</b> (up and left, or up and right).</p>
+    <p>On your turn, tap <b>↖ ↑ ↗</b> on your phone as fast as you can. The wrong ledge crumbles, and taking too long makes you slip: either way you <b>fall 3 floors</b>. The higher you get, the less time you have.</p>
+    <p>Everyone gets 3 turns of 15 seconds (with many players, 2 or 3 climb at once). Highest floor at the end wins.</p>
+    <div class="join"><div class="qr" id="qr"></div><div><b>📱 Climb with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="url"></span><br><span class="mute">Room</span> <b id="code" class="code"></b><div id="plist" class="plist"><span class="mute">Nobody has joined yet: the computer climbers go alone.</span></div></div></div>
+    <div class="btns">
+      <label>Computer climbers <select id="nbots"><option>0</option><option>1</option><option selected>3</option><option>5</option><option>7</option><option>9</option></select></label>
+      <label><input type="checkbox" id="kb" checked> 🧪 Me with the arrow keys</label>
+      <button id="go">▶ Start</button>
+    </div>
+  </div>
+</div>
+<div class="ov hidden" id="end">
+  <div class="card">
+    <h2 id="endt">The top of the tower</h2>
+    <ol class="res" id="res"></ol>
+    <div class="btns"><button id="again">↻ Climb again</button></div>
+  </div>
+</div>
+
+<script src="vendor/supabase.js?v=1"></script>
+<script src="vendor/qrcode.js?v=1"></script>
+<script src="config.js?v=1"></script>
+<script src="net.js?v=2"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $('c'), cx = cv.getContext('2d'), W = 0, H = 0;
+  function size() { var d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * d; cv.height = H * d; cx.setTransform(d, 0, 0, d, 0, 0); }
+  addEventListener('resize', size); size();
+
+  // ---------- the rules ----------
+  var ROUNDS = 3, TURN = 15, FALL = 3, STUN = 0.9, JUMP_T = 0.26, FALL_T = 0.75;   // (a turn is 15 s; a mistake costs 3 floors and a short stun)
+  function windowAt(f) { return Math.max(0.85, 2.3 - f * 0.045); }   // (how long you have for a jump: 2.3 s at the bottom, down to 0.85 s from floor 32)
+  var COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43', '#f5f5f5', '#ff4d6d', '#4dd4b0', '#a3b8ff', '#e8a0ff', '#b8e05a'];
+  var BOTN = ['Raven', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Magpie', 'Linnet'];
+
+  // one tower for everyone: the same ledges, so every climber gets the same jumps (path[f] = the column of the real ledge on floor f)
+  var path = [1];
+  function col(f) { while (path.length <= f) { var c = path[path.length - 1], r = Math.random(), n = r < 0.4 ? c : c === 0 ? 1 : c === 2 ? 1 : (r < 0.7 ? 0 : 2); path.push(n); } return path[f]; }   // (40% straight up, otherwise to a neighbouring column)
+
+  // ---------- sound (made on the spot, nothing to load) ----------
+  var ac = null;
+  function au() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); return ac; }
+  function tone(f0, f1, dur, type, vol, delay) { var a = au(); if (!a) return; var t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur); g.gain.setValueAtTime(vol || 0.12, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02); }
+  function sJump(f) { tone(380 + f * 9, 760 + f * 14, 0.14, 'triangle', 0.11); }   // (a little higher with every floor)
+  function sFall() { tone(700, 90, 0.7, 'sawtooth', 0.06); tone(220, 50, 0.5, 'square', 0.05, 0.1); }
+  function sCue() { tone(1300, 1700, 0.08, 'sine', 0.05); }
+  function sBeep(hi) { tone(hi ? 1040 : 660, hi ? 1040 : 660, hi ? 0.35 : 0.14, 'square', 0.06); }
+  function sFan() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, f, 0.32, 'triangle', 0.09, i * 0.13); }); }
+
+  // ---------- phones ----------
+  var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '', joined = [], net = null, lastState = '', lastSent = 0;
+  for (var ri = 0; ri < 4; ri++) room += A[Math.floor(Math.random() * A.length)];
+  var padUrl = new URL('towerpad.html?r=' + room, location.href).href;
+  $('code').textContent = room; $('url').textContent = padUrl.replace(/^https?:\/\//, '');
+  try { var qq = qrcode(0, 'M'); qq.addData(padUrl); qq.make(); $('qr').innerHTML = qq.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $('qr').style.display = 'none'; }
+  function showJoined() { $('plist').innerHTML = joined.length ? joined.map(function (j) { return '<span class="pp">' + esc(j.name) + '</span>'; }).join('') : '<span class="mute">Nobody has joined yet: the computer climbers go alone.</span>'; }
+  try {
+    net = escConnect('tw' + room); net.hostIn();
+    net.on('hi', function (p) { if (!p || !p.pid) return; var nm = String(p.name || 'Climber').trim().slice(0, 14) || 'Climber', j = joined.filter(function (x) { return x.pid === p.pid; })[0]; if (j) j.name = nm; else if (joined.length < 12) joined.push({ pid: p.pid, name: nm }); showJoined(); sendState(true); });
+    net.on('zg', function (p) { if (!p || !p.pid || (p.j !== -1 && p.j !== 0 && p.j !== 1)) return; var c = players.filter(function (x) { return x.pid === p.pid; })[0]; if (c) press(c, p.j); });   // (a jump from a phone: -1 up-left, 0 up, 1 up-right)
+  } catch (e) { net = null; }
+
+  // ---------- the game ----------
+  var players = [], groups = [], gi = -1, phase = 'lobby', t = 0, phT = 0, active = [], ended = false, banner = '', bannerT = -9, results = [];
+  function Climber(o) { o.floor = 0; o.x = 1; o.falls = 0; o.jumps = 0; o.st = 'wait'; o.at = 0; o.cue = 0; o.anim = null; o.cam = 0; o.gain = 0; o.crumble = null; o.flash = null; return o; }
+  function makePlayers() {
+    players = []; var nb = +$('nbots').value, k = 0;
+    if ($('kb').checked) players.push(Climber({ name: 'You', col: COLS[k++], kb: true }));
+    joined.forEach(function (j) { if (players.length < 12) players.push(Climber({ name: j.name, pid: j.pid, col: COLS[k++ % COLS.length], human: true })); });
+    var names = BOTN.filter(function (n) { return !players.some(function (p) { return p.name.toLowerCase() === n.toLowerCase(); }); });
+    for (var i = 0; i < nb && players.length < 12; i++) players.push(Climber({ name: names[i % names.length], col: COLS[k++ % COLS.length], bot: true, skill: 0.55 + Math.random() * 0.4 }));
+  }
+  function makeGroups() {   // every round, everyone once; 1 at a time up to 4 players, 2 at a time up to 8, then 3
+    var per = players.length <= 4 ? 1 : players.length <= 8 ? 2 : 3; groups = [];
+    for (var r = 0; r < ROUNDS; r++) { var order = players.slice(); if (r > 0) order.sort(function (a, b) { return a.floor - b.floor; }); for (var i = 0; i < order.length; i += per) groups.push({ round: r + 1, who: order.slice(i, i + per) }); }   // (after round 1 the lowest climbers go first)
+  }
+  function start() {
+    au(); path = [1]; makePlayers(); if (!players.length) return; makeGroups(); gi = -1; ended = false;
+    $('start').classList.add('hidden'); $('end').classList.add('hidden');
+    t = 0; setPhase('intro'); sendState(true);
+  }
+  function setPhase(p) { phase = p; phT = t; }
+  function nextGroup() {
+    gi++; active.forEach(function (c) { c.st = 'wait'; });
+    if (gi >= groups.length) { finish(); return; }
+    active = groups[gi].who; active.forEach(function (c) { c.st = 'ready'; c.gain = 0; c.anim = null; c.crumble = null; c.flash = null; c.x = col(c.floor); c.cam = c.floor; });
+    setPhase('ready'); sendState(true);
+  }
+  function cue(c) { c.st = 'cue'; c.at = t; c.cue++; col(c.floor + 1); sCue(); sendState(true); if (c.bot) botPlan(c); }
+  function botPlan(c) { var w = windowAt(c.floor), rt = 0.35 + (1 - c.skill) * 0.6 + Math.random() * 0.4 * (1.4 - c.skill), wrong = Math.random() < 0.03 + (1 - c.skill) * 0.08 + Math.min(0.08, c.floor * 0.002); if (Math.random() < 0.03) rt = w + 0.2; c.botAt = t + rt; c.botJ = wrong ? wrongJ(c) : col(c.floor + 1) - c.x; c.botCue = c.cue; }   // (computer climbers: a human-ish reaction time, sometimes wrong, sometimes too slow)
+  function wrongJ(c) { var ok = col(c.floor + 1) - c.x, opts = [-1, 0, 1].filter(function (j) { return j !== ok && c.x + j >= 0 && c.x + j <= 2; }); return opts[Math.floor(Math.random() * opts.length)]; }
+  function press(c, j) {
+    if (phase !== 'turn' || c.st !== 'cue' || active.indexOf(c) < 0) return;
+    var to = c.x + j; if (to < 0 || to > 2) return;   // (off the side of the tower: ignored)
+    var ok = to === col(c.floor + 1);
+    c.anim = { k: ok ? 'jump' : 'bad', t0: t, fx: c.x, ff: c.floor, tx: to, tf: c.floor + 1 }; c.st = 'air';
+    if (ok) { sJump(c.floor); c.jumps++; try { navigator.vibrate && c.kb && navigator.vibrate(20); } catch (e) {} }
+    else { tone(300, 300, 0.05, 'square', 0.05); }
+    sendState(true);
+  }
+  function fallFrom(c, fromX, why) {   // a mistake: drop 3 floors to the real ledge there
+    var to = Math.max(0, c.floor - FALL); c.falls++;
+    c.anim = { k: 'fall', t0: t, fx: fromX, ff: c.floor + (why === 'bad' ? 1 : 0), tx: col(to), tf: to }; c.st = 'fall'; c.gain -= c.floor - to; c.floor = to; c.x = col(to);
+    c.flash = { txt: why === 'slow' ? 'Too slow!' : 'Wrong ledge!', t0: t }; sFall(); sendState(true);
+  }
+  function step(dt) {
+    t += dt;
+    if (phase === 'intro' && t - phT > 6.5) nextGroup();
+    else if (phase === 'ready' && t - phT > 2.5) { setPhase('count'); sBeep(false); }
+    else if (phase === 'count') { var k = Math.floor(t - phT); if (k !== step.k) { step.k = k; if (k > 0 && k < 3) sBeep(false); if (k === 3) { sBeep(true); setPhase('turn'); active.forEach(cue); } } }
+    else if (phase === 'turn') {
+      var left = TURN - (t - phT);
+      active.forEach(function (c) {
+        if (c.st === 'cue') { if (c.bot && c.botCue === c.cue && t >= c.botAt) press(c, c.botJ); else if (t - c.at > windowAt(c.floor)) fallFrom(c, c.x, 'slow'); }
+        else if (c.st === 'air' && t - c.anim.t0 >= JUMP_T) {
+          if (c.anim.k === 'jump') { c.floor++; c.x = c.anim.tx; c.gain++; c.anim = null; c.st = 'land'; c.at = t; }
+          else { c.crumble = { f: c.anim.tf, x: c.anim.tx, t0: t }; fallFrom(c, c.anim.tx, 'bad'); }
+        }
+        else if (c.st === 'land' && t - c.at > 0.08) { if (left > 0) cue(c); else c.st = 'done'; }
+        else if (c.st === 'fall' && t - c.anim.t0 >= FALL_T + STUN) { c.anim = null; if (left > 0) cue(c); else c.st = 'done'; }
+      });
+      if (left <= 0) { var still = active.some(function (c) { return c.st === 'air' || (c.st === 'fall' && t - c.anim.t0 < FALL_T); }); active.forEach(function (c) { if (c.st === 'cue') c.st = 'done'; }); if (!still) { active.forEach(function (c) { c.st = 'done'; c.anim = null; }); setPhase('after'); sendState(true); } }
+    }
+    else if (phase === 'after' && t - phT > 2.6) nextGroup();
+    active.forEach(function (c) { var tgt = c.anim ? (c.anim.k === 'fall' ? c.anim.tf + (c.anim.ff - c.anim.tf) * (1 - ease(Math.min(1, (t - c.anim.t0) / FALL_T))) : c.anim.ff + 0.5) : c.floor; c.cam += (tgt - c.cam) * Math.min(1, dt * 6); });
+    sendState(false);
+  }
+  function ranking() { return players.slice().sort(function (a, b) { return b.floor - a.floor || a.falls - b.falls || b.jumps - a.jumps; }); }
+  function finish() {
+    phase = 'end'; ended = true; active = []; sFan();
+    var r = ranking(), rk = 0; r.forEach(function (c, i) { rk = i && c.floor === r[i - 1].floor && c.falls === r[i - 1].falls ? rk : i + 1; c.rank = rk; });
+    $('endt').textContent = '🏆 ' + r[0].name + ' climbed highest!';
+    $('res').innerHTML = r.map(function (c) { return '<li class="' + (c.rank === 1 ? 'top' : '') + '"><span class="rk">' + c.rank + '</span><span class="dot" style="background:' + c.col + '"></span><span class="nm">' + esc(c.name) + '</span>Floor ' + c.floor + ' <span class="sm">· ' + c.falls + (c.falls === 1 ? ' fall' : ' falls') + '</span></li>'; }).join('');
+    setTimeout(function () { $('end').classList.remove('hidden'); }, 1200); sendState(true);
+  }
+  $('go').addEventListener('click', start);
+  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); phase = 'lobby'; players = []; showJoined(); sendState(true); });
+  addEventListener('keydown', function (e) { var me = players.filter(function (p) { return p.kb; })[0]; if (!me) return; var j = { ArrowLeft: -1, ArrowUp: 0, ArrowRight: 1 }[e.key]; if (j == null) return; e.preventDefault(); press(me, j); });
+
+  function sendState(force) {
+    if (!net) return;
+    var ph = phase === 'lobby' ? 'lobby' : ended ? 'end' : 'play', ps = {};
+    if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
+    else players.forEach(function (c) { if (!c.human) return; var on = active.indexOf(c) >= 0, s = !on ? 'wait' : phase === 'ready' || phase === 'count' ? 'ready' : phase === 'turn' && c.st !== 'done' ? (c.st === 'cue' ? 'go' : c.st === 'fall' ? 'fall' : 'air') : 'wait';
+      ps[c.pid] = { n: c.name, c: c.col, s: s, f: c.floor, x: c.x, g: on && phase === 'after' ? c.gain : null, r: ended ? c.rank : null }; });
+    var o = { ph: ph, p: ps, rd: gi >= 0 && groups[gi] ? groups[gi].round : 0, left: phase === 'turn' ? Math.max(0, Math.ceil(TURN - (t - phT))) : null };
+    var s = JSON.stringify(o), now = Date.now();
+    if (!force && s === lastState && now - lastSent < 3000) return;
+    if (!force && now - lastSent < 250) return;
+    lastState = s; lastSent = now; net.send('state', o);
+  }
+
+  // ---------- drawing ----------
+  function ease(a) { return a * a * (3 - 2 * a); }
+  function rr(x, y, w, h, r) { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); }
+  function hs(n) { var v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); }
+  function sky() {
+    var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#120a35'); g.addColorStop(0.6, '#2a1050'); g.addColorStop(1, '#4a1a5e'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    for (var i = 0; i < 110; i++) { var a = 0.25 + 0.6 * Math.abs(Math.sin(t * (0.6 + hs(i) * 1.6) + i)); cx.fillStyle = 'rgba(255,240,255,' + a * 0.8 + ')'; var s = hs(i + 50) < 0.1 ? 2.2 : 1.2; cx.fillRect(hs(i + 9) * W, hs(i + 17) * H * 0.9, s, s); }
+  }
+  var targets = [];   // (where Stella's beam goes this frame)
+  function panel(c, px, pw, ph, py) {   // one climber's stretch of tower, its camera on them
+    var FH = Math.min(ph / 6.2, pw * 0.36), colW = Math.min(pw / 3.2, FH * 1.7), cx0 = px + pw / 2, baseY = py + ph * 0.74;
+    var X = function (k) { return cx0 + (k - 1) * colW; }, Y = function (f) { return baseY - (f - c.cam) * FH; };
+    // the tower itself: a lilac stone column with windows of light
+    var tw = colW * 3.3, tg = cx.createLinearGradient(cx0 - tw / 2, 0, cx0 + tw / 2, 0); tg.addColorStop(0, '#2b1a4e'); tg.addColorStop(0.5, '#4a2d7a'); tg.addColorStop(1, '#2b1a4e');
+    cx.save(); rr(px, py, pw, ph, 18); cx.clip();
+    cx.fillStyle = tg; cx.fillRect(cx0 - tw / 2, py, tw, ph);
+    var f0 = Math.floor(c.cam - 2), f1 = Math.ceil(c.cam + 5.5);
+    for (var f = f0; f <= f1; f++) { if (f < 0) continue; var y = Y(f);
+      cx.strokeStyle = 'rgba(255,255,255,.05)'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(cx0 - tw / 2, y - FH / 2); cx.lineTo(cx0 + tw / 2, y - FH / 2); cx.stroke();
+      if (f % 4 === 2) { cx.fillStyle = 'rgba(255,200,120,' + (0.25 + 0.15 * Math.sin(t * 2 + f)) + ')'; rr(cx0 - tw / 2 + 8, y - FH * 0.42, 10, FH * 0.32, 5); cx.fill(); rr(cx0 + tw / 2 - 18, y - FH * 0.42, 10, FH * 0.32, 5); cx.fill(); }
+      if (f % 5 === 0) { cx.fillStyle = 'rgba(255,255,255,.35)'; cx.font = '700 ' + Math.round(FH * 0.2) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'left'; cx.fillText(String(f), cx0 + tw / 2 + 6, y + 4); }
+    }
+    cx.fillStyle = '#1a0f33'; if (Y(0) < py + ph) cx.fillRect(px, Y(0) + 6, pw, ph);   // (the ground)
+    // the ledges: three per floor, all alike, until Stella lights the real one
+    var lw = colW * 0.72, lh = Math.max(6, FH * 0.13);
+    for (f = Math.max(1, f0); f <= f1; f++) { y = Y(f);
+      for (var k = 0; k < 3; k++) {
+        var real = col(f) === k, lit = real && f === c.floor + 1 && (c.st === 'cue' || c.st === 'air') && phase === 'turn', done = real && f <= c.floor, cr = c.crumble && c.crumble.f === f && c.crumble.x === k && t - c.crumble.t0 < 1.2;
+        if (cr) { var e = t - c.crumble.t0; for (var b = 0; b < 7; b++) { cx.fillStyle = 'rgba(170,140,220,' + (1 - e / 1.2) + ')'; cx.fillRect(X(k) - lw / 2 + b * lw / 7 + Math.sin(b * 3) * e * 10, y + e * e * FH * 2.2 * (0.6 + hs(b) * 0.8), lw / 8, lh); } continue; }
+        if (c.crumble && c.crumble.f === f && c.crumble.x === k) continue;   // (gone)
+        if (lit) { var gl = cx.createRadialGradient(X(k), y, 2, X(k), y, lw); gl.addColorStop(0, 'rgba(255,220,120,.75)'); gl.addColorStop(1, 'rgba(255,220,120,0)'); cx.fillStyle = gl; cx.fillRect(X(k) - lw, y - lw, lw * 2, lw * 2); targets.push({ x: X(k), y: y }); }
+        cx.fillStyle = lit ? '#ffe28a' : done ? 'rgba(200,180,255,.55)' : '#8b74c4'; rr(X(k) - lw / 2, y, lw, lh, lh / 2); cx.fill();
+        cx.fillStyle = 'rgba(0,0,0,.25)'; cx.fillRect(X(k) - lw / 2 + 4, y + lh, lw - 8, 3);
+      }
+    }
+    // the climber
+    var ax = c.x, ay = c.floor, hop = 0, spin = 0;
+    if (c.anim) { var a = Math.min(1, (t - c.anim.t0) / (c.anim.k === 'fall' ? FALL_T : JUMP_T));
+      if (c.anim.k === 'fall') { ax = c.anim.fx + (c.anim.tx - c.anim.fx) * ease(a); ay = c.anim.ff + (c.anim.tf - c.anim.ff) * a * a; spin = a < 1 ? a * 9 : 0; }
+      else { ax = c.anim.fx + (c.anim.tx - c.anim.fx) * ease(a); ay = c.anim.ff + (c.anim.tf - c.anim.ff) * a; hop = Math.sin(a * Math.PI) * 0.55; } }
+    var stun = c.st === 'fall' && c.anim && t - c.anim.t0 > FALL_T;
+    blob(X(ax), Y(ay + hop) - 2, FH * 0.3, c.col, spin, stun, c.st === 'cue');
+    // the time bar under the lit ledge
+    if (c.st === 'cue' && phase === 'turn') { var w2 = windowAt(c.floor), left = Math.max(0, 1 - (t - c.at) / w2), ty = Y(c.floor + 1) + lh + 8; cx.fillStyle = 'rgba(255,255,255,.15)'; rr(X(col(c.floor + 1)) - lw / 2, ty, lw, 5, 3); cx.fill(); cx.fillStyle = left < 0.3 ? '#ff4d6d' : '#ffd166'; rr(X(col(c.floor + 1)) - lw / 2, ty, lw * left, 5, 3); cx.fill(); }
+    if (c.flash && t - c.flash.t0 < 1.4) { var fa = 1 - (t - c.flash.t0) / 1.4; cx.globalAlpha = fa; cx.fillStyle = '#ff6b8b'; cx.font = '800 ' + Math.round(FH * 0.36) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillText(c.flash.txt, cx0, py + ph * 0.3 - (1 - fa) * 20); cx.globalAlpha = 1; }
+    cx.restore();
+    // the name plate
+    cx.fillStyle = 'rgba(10,6,30,.75)'; rr(px + 10, py + 10, pw - 20, 44, 14); cx.fill(); cx.fillStyle = c.col; cx.beginPath(); cx.arc(px + 32, py + 32, 8, 0, 7); cx.fill();
+    cx.fillStyle = '#fff'; cx.textAlign = 'left'; cx.font = '800 20px "Bricolage Grotesque",system-ui'; cx.fillText(c.name, px + 48, py + 39);
+    if (!c.demo) { cx.textAlign = 'right'; cx.fillStyle = 'rgba(255,255,255,.8)'; cx.fillText('Floor ' + c.floor, px + pw - 22, py + 39); }
+    if (phase === 'after') { cx.textAlign = 'center'; cx.font = '800 ' + Math.round(Math.min(64, pw * 0.16)) + 'px "Bricolage Grotesque",system-ui'; cx.fillStyle = c.gain > 0 ? '#8dff8a' : c.gain < 0 ? '#ff6b8b' : '#fff'; cx.fillText((c.gain > 0 ? '+' : '') + c.gain + (Math.abs(c.gain) === 1 ? ' floor' : ' floors'), cx0, py + ph * 0.42); }
+    cx.strokeStyle = 'rgba(255,255,255,.14)'; cx.lineWidth = 2; rr(px, py, pw, ph, 18); cx.stroke();
+  }
+  function blob(x, y, r, colr, spin, stun, ready) {   // a climber: a round little figure in their colour, with eyes
+    cx.save(); cx.translate(x, y - r); cx.rotate(spin);
+    cx.fillStyle = 'rgba(0,0,0,.25)'; cx.beginPath(); cx.ellipse(0, r * 0.95, r * 0.8, r * 0.18, 0, 0, 7); cx.fill();
+    cx.fillStyle = colr; cx.beginPath(); cx.ellipse(0, 0, r * 0.82, r, 0, 0, 7); cx.fill();
+    cx.fillStyle = 'rgba(255,255,255,.3)'; cx.beginPath(); cx.ellipse(-r * 0.3, -r * 0.45, r * 0.2, r * 0.28, -0.4, 0, 7); cx.fill();
+    if (stun) { cx.strokeStyle = '#1a0f33'; cx.lineWidth = 2.5; [-1, 1].forEach(function (s) { var ex = s * r * 0.3, ey = -r * 0.15; cx.beginPath(); cx.moveTo(ex - 5, ey - 5); cx.lineTo(ex + 5, ey + 5); cx.moveTo(ex + 5, ey - 5); cx.lineTo(ex - 5, ey + 5); cx.stroke(); });
+      for (var i = 0; i < 3; i++) { var a = t * 5 + i * 2.1; cx.fillStyle = '#ffd166'; cx.font = '700 ' + Math.round(r * 0.5) + 'px system-ui'; cx.fillText('✦', Math.cos(a) * r * 0.9 - 5, -r * 1.25 + Math.sin(a) * r * 0.25); } }
+    else { [-1, 1].forEach(function (s) { cx.fillStyle = '#fff'; cx.beginPath(); cx.ellipse(s * r * 0.3, -r * 0.15, r * 0.2, r * 0.25, 0, 0, 7); cx.fill(); cx.fillStyle = '#1a0f33'; cx.beginPath(); cx.arc(s * r * 0.3, -r * 0.2 + (ready ? -r * 0.06 : 0), r * 0.1, 0, 7); cx.fill(); }); }
+    cx.restore();
+  }
+  var stella = { x: 0, y: 0, s: 1 };
+  function drawStella(sx, sy, s, tg) {   // Stella, the keeper of the tower: lilac beehive, a gown of night sky, a crescent-moon balcony and a long star wand
+    var bob = Math.sin(t * 1.6) * 6 * s; sy += bob;
+    cx.save();
+    // the crescent moon she stands on
+    cx.fillStyle = '#ffe9a8'; cx.beginPath(); cx.arc(sx, sy + 150 * s, 95 * s, 0.15 * Math.PI, 0.85 * Math.PI); cx.arc(sx, sy + 120 * s, 92 * s, 0.82 * Math.PI, 0.18 * Math.PI, true); cx.closePath(); cx.fill();
+    var mg = cx.createRadialGradient(sx, sy + 200 * s, 10, sx, sy + 200 * s, 140 * s); mg.addColorStop(0, 'rgba(255,230,160,.25)'); mg.addColorStop(1, 'rgba(255,230,160,0)'); cx.fillStyle = mg; cx.fillRect(sx - 150 * s, sy + 60 * s, 300 * s, 280 * s);
+    // the gown: deep blue, flaring out, sprinkled with stars
+    var gg = cx.createLinearGradient(0, sy - 20 * s, 0, sy + 175 * s); gg.addColorStop(0, '#2d3a9e'); gg.addColorStop(1, '#130c4a'); cx.fillStyle = gg;
+    cx.beginPath(); cx.moveTo(sx - 18 * s, sy - 10 * s); cx.quadraticCurveTo(sx - 30 * s, sy + 90 * s, sx - 70 * s, sy + 172 * s); cx.quadraticCurveTo(sx, sy + 186 * s, sx + 70 * s, sy + 172 * s); cx.quadraticCurveTo(sx + 30 * s, sy + 90 * s, sx + 18 * s, sy - 10 * s); cx.closePath(); cx.fill();
+    for (var i = 0; i < 14; i++) { var a = 0.4 + 0.6 * Math.abs(Math.sin(t * 2 + i)); cx.fillStyle = 'rgba(255,230,150,' + a + ')'; var fx = (hs(i + 3) - 0.5) * (30 + 90 * hs(i + 7)) * s, fy = sy + (10 + 160 * hs(i + 7)) * s; cx.fillRect(sx + fx * (0.3 + (fy - sy) / (180 * s)), fy, 2.4 * s, 2.4 * s); }
+    cx.fillStyle = '#ffd166'; cx.fillRect(sx - 20 * s, sy + 18 * s, 40 * s, 5 * s);   // (a golden belt)
+    // her other arm, on her hip
+    cx.strokeStyle = '#c98f6f'; cx.lineWidth = 8 * s; cx.lineCap = 'round'; cx.beginPath(); cx.moveTo(sx - 16 * s, sy); cx.quadraticCurveTo(sx - 38 * s, sy + 14 * s, sx - 20 * s, sy + 24 * s); cx.stroke();
+    // head and neck
+    cx.fillStyle = '#d9a07e'; cx.fillRect(sx - 5 * s, sy - 26 * s, 10 * s, 18 * s);
+    cx.beginPath(); cx.ellipse(sx, sy - 40 * s, 17 * s, 20 * s, 0, 0, 7); cx.fill();
+    // the beehive: tall, lilac, with a gold star pin
+    cx.fillStyle = '#c9a6ff'; cx.beginPath(); cx.ellipse(sx + 2 * s, sy - 78 * s, 26 * s, 38 * s, 0.08, 0, 7); cx.fill(); cx.beginPath(); cx.ellipse(sx, sy - 50 * s, 21 * s, 12 * s, 0, Math.PI, 0); cx.fill();
+    cx.fillStyle = 'rgba(255,255,255,.25)'; cx.beginPath(); cx.ellipse(sx - 8 * s, sy - 92 * s, 7 * s, 16 * s, 0.3, 0, 7); cx.fill();
+    star(sx + 18 * s, sy - 92 * s, 7 * s, '#ffd166');
+    // the face: eyes looking toward the tower, a red smile
+    var lk = tg ? Math.sign(tg.x - sx) : 1;
+    cx.fillStyle = '#1a0f33'; cx.beginPath(); cx.arc(sx - 6 * s + lk * 2 * s, sy - 42 * s, 2.2 * s, 0, 7); cx.arc(sx + 6 * s + lk * 2 * s, sy - 42 * s, 2.2 * s, 0, 7); cx.fill();
+    cx.strokeStyle = '#1a0f33'; cx.lineWidth = 1.5 * s; [-1, 1].forEach(function (k) { cx.beginPath(); cx.moveTo(sx + k * 6 * s - 3 * s, sy - 47 * s); cx.lineTo(sx + k * 6 * s + 3 * s, sy - 48 * s); cx.stroke(); });
+    cx.strokeStyle = '#e0335c'; cx.lineWidth = 2.5 * s; cx.beginPath(); cx.arc(sx + lk * s, sy - 33 * s, 5 * s, 0.15 * Math.PI, 0.85 * Math.PI); cx.stroke();
+    // the pointing arm and the wand
+    var shx = sx + 15 * s, shy = sy - 4 * s, ang = tg ? Math.atan2(tg.y - shy, tg.x - shx) : -0.6 + Math.sin(t) * 0.1, al = 40 * s, hx = shx + Math.cos(ang) * al, hy = shy + Math.sin(ang) * al, wl = 46 * s, wx = hx + Math.cos(ang) * wl, wy = hy + Math.sin(ang) * wl;
+    cx.strokeStyle = '#c98f6f'; cx.lineWidth = 8 * s; cx.beginPath(); cx.moveTo(shx, shy); cx.lineTo(hx, hy); cx.stroke();
+    cx.strokeStyle = '#f2f2ff'; cx.lineWidth = 3.5 * s; cx.beginPath(); cx.moveTo(hx, hy); cx.lineTo(wx, wy); cx.stroke();
+    star(wx, wy, 9 * s + Math.sin(t * 8) * 1.5 * s, '#fff3b0');
+    cx.restore();
+    return { x: wx, y: wy };
+  }
+  function star(x, y, r, colr) { cx.fillStyle = colr; cx.beginPath(); for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, rr2 = i % 2 ? r * 0.45 : r; cx.lineTo(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2); } cx.closePath(); cx.fill(); }
+  function beam(from, to) {   // the light from her wand to the ledge
+    var g = cx.createLinearGradient(from.x, from.y, to.x, to.y); g.addColorStop(0, 'rgba(255,243,176,.9)'); g.addColorStop(1, 'rgba(255,220,120,.35)');
+    cx.strokeStyle = g; cx.lineWidth = 3; cx.setLineDash([2, 10]); cx.lineDashOffset = -t * 60; cx.beginPath(); cx.moveTo(from.x, from.y); cx.quadraticCurveTo((from.x + to.x) / 2, Math.min(from.y, to.y) - 60, to.x, to.y - 6); cx.stroke(); cx.setLineDash([]);
+    for (var i = 0; i < 4; i++) { var a = ((t * 1.6 + i / 4) % 1); var bx = (1 - a) * (1 - a) * from.x + 2 * (1 - a) * a * (from.x + to.x) / 2 + a * a * to.x, by = (1 - a) * (1 - a) * from.y + 2 * (1 - a) * a * (Math.min(from.y, to.y) - 60) + a * a * (to.y - 6); star(bx, by, 4, 'rgba(255,240,170,.9)'); }
+  }
+  function board(x, y, w) {   // everyone's floor, on the right
+    var r = ranking(), rh = Math.min(38, (H - y - 20) / Math.max(1, r.length));
+    cx.fillStyle = 'rgba(255,255,255,.7)'; cx.font = '800 15px "Bricolage Grotesque",system-ui'; cx.textAlign = 'left'; cx.fillText('THE TOWER', x + 4, y - 10);
+    r.forEach(function (c, i) { var yy = y + i * rh, on = active.indexOf(c) >= 0;
+      cx.fillStyle = on ? 'rgba(255,209,102,.18)' : 'rgba(20,10,50,.6)'; rr(x, yy, w, rh - 5, 10); cx.fill(); if (on) { cx.strokeStyle = 'rgba(255,209,102,.7)'; cx.lineWidth = 1.5; rr(x, yy, w, rh - 5, 10); cx.stroke(); }
+      cx.fillStyle = c.col; cx.beginPath(); cx.arc(x + 16, yy + (rh - 5) / 2, 6, 0, 7); cx.fill();
+      cx.fillStyle = '#fff'; cx.font = '700 ' + Math.round(rh * 0.42) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'left'; cx.fillText(c.name, x + 30, yy + (rh - 5) / 2 + rh * 0.15);
+      cx.textAlign = 'right'; cx.fillStyle = 'rgba(255,255,255,.85)'; cx.fillText(String(c.floor), x + w - 12, yy + (rh - 5) / 2 + rh * 0.15); });
+  }
+  function caption(txt, sub, a) { cx.save(); cx.globalAlpha = a == null ? 1 : a; cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.font = '800 ' + Math.round(Math.min(W * 0.045, 54)) + 'px "Bricolage Grotesque",system-ui'; cx.shadowColor = 'rgba(200,120,255,.7)'; cx.shadowBlur = 18; cx.fillText(txt, W / 2, H * 0.1); if (sub) { cx.shadowBlur = 0; cx.font = '600 ' + Math.round(Math.min(W * 0.02, 22)) + 'px "Bricolage Grotesque",system-ui'; cx.fillStyle = 'rgba(235,230,255,.85)'; cx.fillText(sub, W / 2, H * 0.1 + 34); } cx.restore(); }
+  function bubble(x, y, txt) { cx.font = '700 ' + Math.round(Math.min(20, W * 0.016)) + 'px "Bricolage Grotesque",system-ui'; var lines = txt.split('\n'), w = Math.max.apply(null, lines.map(function (l) { return cx.measureText(l).width; })) + 28, h = lines.length * 24 + 18; cx.fillStyle = 'rgba(255,255,255,.95)'; rr(x, y - h, w, h, 14); cx.fill(); cx.beginPath(); cx.moveTo(x + 18, y); cx.lineTo(x + 30, y); cx.lineTo(x + 12, y + 14); cx.fill(); cx.fillStyle = '#2a1050'; cx.textAlign = 'left'; lines.forEach(function (l, i) { cx.fillText(l, x + 14, y - h + 28 + i * 24); }); }
+
+  function draw() {
+    sky(); targets = [];
+    var left = W * 0.2, right = W * 0.2, top = H * 0.17, ph = H * 0.79;
+    var list = phase === 'lobby' || phase === 'intro' || phase === 'end' ? [] : active, n = list.length || 1, gap = 18, pw = Math.min((W - left - right - gap * (n - 1)) / n, ph * 0.75), tot = pw * n + gap * (n - 1), x0 = left + (W - left - right - tot) / 2;
+    list.forEach(function (c, i) { panel(c, x0 + i * (pw + gap), pw, ph, top); });
+    if (!list.length) { var demo = { cam: 3 + Math.sin(t * 0.3) * 0.3, floor: 3, x: col(3), st: 'wait', col: '#ffd166', name: 'The Glitter Tower', anim: null, demo: true }; panel(demo, W / 2 - Math.min(W * 0.3, ph * 0.38), Math.min(W * 0.6, ph * 0.76), ph, top); }
+    var s = Math.min(1.25, H / 760), sx = W * 0.1, sy = H * 0.5;
+    var tg = targets[0] || null, wand = drawStella(sx, sy, s, tg);
+    targets.forEach(function (tt) { beam(wand, tt); });
+    if (players.length) board(W - right + 16, top + 20, right - 32);
+    var rd = gi >= 0 && groups[gi] ? groups[gi].round : 1;
+    if (phase === 'intro') { caption('✨ The Glitter Tower', 'Round 1 of ' + ROUNDS); bubble(sx + 40 * s, sy - 120 * s, 'Darlings! Welcome to my tower.\nI light the next ledge, you jump.\nWrong one? Down you go!'); }
+    else if (phase === 'ready') { caption('Round ' + rd + ' of ' + ROUNDS, list.map(function (c) { return c.name; }).join(' & ') + (list.length > 1 ? ', you’re up!' : ', you’re up!')); bubble(sx + 40 * s, sy - 120 * s, list.length > 1 ? 'Up you go, all of you.\nWatch my wand!' : 'Up you go, ' + list[0].name + '.\nWatch my wand!'); }
+    else if (phase === 'count') { var k = 3 - Math.floor(t - phT); caption(k > 0 ? String(k) : 'Jump!', 'Round ' + rd + ' of ' + ROUNDS); }
+    else if (phase === 'turn') { var lft = Math.max(0, TURN - (t - phT)); caption(Math.ceil(lft) + ' s', 'Round ' + rd + ' of ' + ROUNDS); cx.fillStyle = 'rgba(255,255,255,.12)'; rr(W * 0.3, H * 0.1 + 48, W * 0.4, 6, 3); cx.fill(); cx.fillStyle = lft < 4 ? '#ff4d6d' : '#ffd166'; rr(W * 0.3, H * 0.1 + 48, W * 0.4 * lft / TURN, 6, 3); cx.fill(); }
+    else if (phase === 'after') caption('Time!', 'Round ' + rd + ' of ' + ROUNDS);
+    else if (phase === 'end') { caption('🏆 ' + (ranking()[0] || {}).name + ' climbed highest!'); bubble(sx + 40 * s, sy - 120 * s, 'Magnificent, darling.\nThe view up there suits you.'); }
+  }
+  var last = performance.now();
+  function loop(now) { var dt = Math.min(0.05, (now - last) / 1000); last = now; if (phase !== 'lobby' && phase !== 'end') step(dt); else t += dt; draw(); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+  window.__tw = { players: function () { return players; }, phase: function () { return phase; }, path: function () { return path; }, skip: function (s) { t += s; }, start: start };
+})();
+</script>
+</body>
+</html>
