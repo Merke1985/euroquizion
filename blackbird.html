@@ -314,7 +314,7 @@
     var X = cam + bx(b); b.vy = (cen(X) - b.y) * 2.5;   // (bounced back towards the middle)
     for (var i = 0; i < 7; i++) parts.push({ x: X, y: b.y, vx: -0.2 - Math.random() * 0.3, vy: (Math.random() - .6) * 0.5, t: 0, r: Math.random() * 6, col: b.col });
     var nr = branches.reduce(function (m, r) { return !m || Math.abs(r.x - X) < Math.abs(m.x - X) ? r : m; }, null); hitSound(X >= FOREST ? 'rock' : nr && nr.top ? 'bramble' : 'pine', b.feathers <= 0);   // (what was hit decides the sound)
-    if (b.feathers <= 0) { b.out = true; b.manual = false; b.vy = 0.1; b.dist = Math.round(Math.max(0, cam - camAt(PRACT0)) * 25); }   // (how far it got: in metres, roughly)
+    if (b.feathers <= 0) { b.out = true; b.manual = false; b.vy = 0.1; var c0 = camAt(PRACT0); b.dist = Math.round(Math.max(0, Math.min(1, (cam - c0) / (camAt(SOAR_T) - c0))) * 10000); }   // (how far it got: the whole flight, from the countdown to the cave exit, is 10 km)
     if (b.human) { try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} }
   }
 
@@ -830,7 +830,8 @@
       cx.strokeStyle = 'rgba(120,130,170,.35)'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(-s * 0.95, -s * 0.02); cx.lineTo(-s * 1.6, -s * 0.12); cx.stroke();
       cx.beginPath(); cx.arc(s * 0.82, -s * 0.28, s * 0.42, 0, 7); cx.fill();   // head
       cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(s * 1.15, -s * 0.36); cx.lineTo(s * 1.6, -s * 0.22); cx.lineTo(s * 1.15, -s * 0.12); cx.closePath(); cx.fill();   // beak
-      cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
+      if (b.lead && t > HOME_T + 5.95 && t < HOME_T + 6.13) { cx.strokeStyle = '#ffb000'; cx.lineWidth = Math.max(1, s * 0.06); cx.lineCap = 'round'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.43, s * 0.08, 0.2 * Math.PI, 0.8 * Math.PI); cx.stroke(); }   // (just after it dropped the rose: one slow, content blink)
+      else { cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill(); }   // eye ring
       var wa = sitting ? -0.15 : bp.home != null ? Math.sin(t * 14 + b.id) * 0.9 : landing ? Math.sin(t * (bp.land > 0.7 ? 20 : 11)) * 0.9 : Math.sin(b.flap * (L < 1 ? 1.8 : 1)) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
       cx.strokeStyle = 'rgba(120,130,170,.4)'; cx.lineWidth = 1; for (var wf = 0; wf < 3; wf++) { cx.beginPath(); cx.moveTo(-s * (0.15 - wf * 0.15), -s * 0.08); cx.quadraticCurveTo(s * (0.05 + wf * 0.08), -s * (0.25 + 1.0 * wa) * (0.6 + wf * 0.15), s * (0.3 + wf * 0.04), -s * 0.06); cx.stroke(); }   // feathers on the wing
       var isWarn = pending.indexOf(b) >= 0, blink = Math.sin(t * 14) > 0 ? 1 : 0.12, turnA = b.manual || isWarn ? 1 : glowA;   // (after the start everyone is a plain blackbird again: colour and name only on your turn, blinking for 2 s before it)
@@ -985,6 +986,7 @@
   }
   /* the ranking: by feathers. Equal feathers, equal place: everyone with the most feathers wins (and goes shopping).
      Computer birds fly perfectly, so with people playing they're listed but never win or take a place. */
+  function km(d) { d = d || 0; return d >= 1000 ? (d / 1000).toFixed(2) + ' km' : d + ' m'; }   // (distances: metres, or km past 1000 m)
   function ranking() {
     var all = players(), hum = all.some(function (b) { return b.human; }), pool = all.filter(function (b) { return b.human || !hum; });
     var dead = pool.every(function (b) { return b.feathers <= 0; }), sc = function (b) { return dead ? (b.dist || 0) : b.feathers; };   // (everyone out of feathers: whoever flew furthest)
@@ -998,8 +1000,8 @@
     ended = true; running = false; windLevel(0);   // (the song plays on to its end under the results)
     var rows = ranking(), ws = rows.filter(function (b) { return b.win; }), wn = ws.map(function (b) { return b.name; });
     var solo = rows.filter(function (b) { return b.human; }).length === 1 ? rows[0] : null, byD = rows[0] && rows[0].byDist;
-    $('endt').textContent = solo ? (solo.feathers >= 5 ? '🏆 ' + solo.name + ': a perfect flight!' : byD ? '🪶 ' + solo.name + ' flew ' + (solo.dist || 0) + ' m' : '🪶 ' + solo.name + ' kept ' + solo.feathers + ' of 5 feathers') : '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + (byD ? ' flew furthest' : ' win') : wn[0] + (byD ? ' flew furthest' : ' wins')); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
-    $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (b.win ? 'top' : '') + '"><span class="rk">' + (b.rank || '·') + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + (b.rank ? '' : ' <small style="color:var(--mute);font-weight:500">computer</small>') + '</span>' + (b.byDist && b.rank ? '<span style="font-weight:700;color:var(--mute)">' + (b.dist || 0) + ' m</span>' : '<span class="fe" style="display:flex;gap:3px">' + featherRow(b.feathers, false) + '</span>') + '</li>'; }).join('');
+    $('endt').textContent = solo ? (solo.feathers >= 5 ? '🏆 ' + solo.name + ': a perfect flight!' : byD ? '🪶 ' + solo.name + ' flew ' + km(solo.dist) : '🪶 ' + solo.name + ' kept ' + solo.feathers + ' of 5 feathers') : '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + (byD ? ' flew furthest' : ' win') : wn[0] + (byD ? ' flew furthest' : ' wins')); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
+    $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (b.win ? 'top' : '') + '"><span class="rk">' + (b.rank || '·') + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + (b.rank ? '' : ' <small style="color:var(--mute);font-weight:500">computer</small>') + '</span>' + (b.byDist && b.rank ? '<span style="font-weight:700;color:var(--mute)">' + km(b.dist) + '</span>' : '<span class="fe" style="display:flex;gap:3px">' + featherRow(b.feathers, false) + '</span>') + '</li>'; }).join('');
     $('end').classList.remove('hidden');
   }
   function start(music) {
