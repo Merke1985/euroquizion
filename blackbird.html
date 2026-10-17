@@ -97,9 +97,9 @@
   addEventListener('resize', size); size();
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
-  var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 8, TWO = 6, HOLD2 = 2, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 2,   /* (take-off at 0:30 in the song) */   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
+  var MUSIC = 10.6, SONG0 = 7, BOTTOM = 11.4, UP = 6, CLOSE = 4, TWO = 4.5, HOLD2 = 1.5, OUT = 4.2, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 2,   /* (take-off at 0:30 in the song: the song starts at 0:07, so 7 s less intro) */   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
-      FAST_T = MUSIC + 125, PICK_T = MUSIC + 155, SOAR_T = PICK_T - 15.7, GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 10, APP_T = PICK_T - 13.6, STOP_T = PICK_T - 10.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 6 s; the rose at PICK_T) */ END_T = MUSIC + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
+      FAST_T = MUSIC - SONG0 + 125, PICK_T = MUSIC - SONG0 + 155, SOAR_T = PICK_T - 15.7, GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 10, APP_T = PICK_T - 13.6, STOP_T = PICK_T - 10.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 6 s; the rose at PICK_T) */ END_T = MUSIC - SONG0 + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing to a stop at their favourite spot, then away after the rose
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
@@ -110,7 +110,7 @@
   var FASTX = 2.3;   // (how much faster from 2:05)
   function camAt(T) { var x = 0; for (var tt = TAKEOFF; tt < T; tt += 0.02) x += SPEED * 0.02 * Math.max(0, Math.min(1, (tt - TAKEOFF - 1.6) / 2.4)) * spd(tt); return x; }   // (where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
-    var FIRST_T = MUSIC + 49.9;   // (the first group's turn: its first tree comes at 0:52 in the song)
+    var FIRST_T = MUSIC - SONG0 + 49.9;   // (the first group's turn: its first tree comes at 0:52 in the song)
     MSG1 = FIRST_T - WARN - 0.4; MSG0 = MSG1 - 6;   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
     REVEAL0 = tAir + 1.5; var gap = Math.max(0.3, Math.min(0.9, (MSG0 - 1.4 - REVEAL0) / Math.max(1, order.length - 1))); order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the neon, one bird at a time)
     pgroups = []; pgi = 0; pracDone = false; PRACT0 = FIRST_T; PRACT_END = FIRST_T; SAFE_X = camAt(FIRST_T) + 0.3 * W / H;   // (no practice: straight into it)
@@ -139,8 +139,8 @@
     var h = half(x); return Math.max(h + 0.05, Math.min(1 - h - 0.05, y));
   }
   var branches = [];
-  var patternNo = 0;
-  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
+  var patternNo = 0, lastPlanT = -99;
+  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; patternNo = 0; lastPlanT = -99; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
   /* Fair turns: every group in a round meets exactly the same obstacles (how many, from which side, where in the turn and
      how deep). Each new round gets a new pattern, a little harder. */
   var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
@@ -193,10 +193,10 @@
   }
   function schedule() {
     if (t >= SOAR_T) return;
-    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick + TURN <= SOAR_T + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
+    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick >= lastPlanT + TURN - 0.3 && nextPick + TURN <= SOAR_T + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
       var xa = birdXAt(nextPick), xb = xa + TURN * SPEED;
       if (xb > DIVE0 - 1.8 && xa < DIVE1 + 0.3) nextPick = t + (DIVE1 + 0.4 - (cam + 0.3 * W / H)) / (SPEED * spd(t));
-      else { plannedFor = nextPick; planTurn(nextPick); }
+      else { plannedFor = nextPick; lastPlanT = nextPick; planTurn(nextPick); }
     }
     if (inDive(cam + 0.3 * W / H + 0.6)) { birds.forEach(function (b) { b.manual = false; }); pending = []; nextPick = Math.max(nextPick, t + WARN + 1.2); return; }   // (the dive: everyone on autopilot)
     if (t >= nextPick - WARN && !pending.length && nextPick + (t < PRACT_END - 1 ? 0 : TURN) <= SOAR_T + 0.3) {
@@ -305,7 +305,7 @@
     cx.save(); var pv = [X0 + Wd * 0.5, Y0 + Hd * 0.62]; cx.translate(pv[0], pv[1]); cx.rotate(-0.05 * (1 - smileA * 0.8) + Math.sin(t * 0.5) * 0.015); cx.translate(-pv[0], -pv[1] + Hd * 0.015);
     var home = t >= HOME_T; smileA = home ? Math.max(0, Math.min(1, (t - HOME_T - 18.6) / 3)) : 0; smileA = smileA * smileA * (3 - 2 * smileA);
     drawSinger0(X0, Y0, Wd, Hd);
-    var tc = home ? Math.min(0.74, (t - HOME_T - 15) / 8) : (t % 7) / 7; if (tc >= 0 && tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek   // (at home: one last, slow tear; then the smile)
+    var tc = home ? Math.min(0.74, (t - HOME_T - 15) / 8) : -1; if (tc >= 0 && tc < 0.75) { var tx = X0 + Wd * 0.43, ty = Y0 + Hd * (0.415 + tc * 0.12), ta = tc < 0.1 ? tc / 0.1 : tc > 0.6 ? (0.75 - tc) / 0.15 : 1; cx.fillStyle = 'rgba(210,230,255,' + (0.8 * ta) + ')'; cx.beginPath(); cx.moveTo(tx, ty - Hd * 0.012); cx.quadraticCurveTo(tx + Wd * 0.008, ty, tx, ty + Hd * 0.006); cx.quadraticCurveTo(tx - Wd * 0.008, ty, tx, ty - Hd * 0.012); cx.fill(); cx.strokeStyle = 'rgba(210,230,255,' + (0.25 * ta) + ')'; cx.lineWidth = Math.max(0.5, Wd * 0.003); cx.beginPath(); cx.moveTo(tx, Y0 + Hd * 0.41); cx.lineTo(tx, ty - Hd * 0.01); cx.stroke(); }   // a tear running down her cheek   // (at home: one last, slow tear; then the smile)
     cx.restore();
   }
   var smileA = 0;
@@ -658,7 +658,11 @@
     var cv0 = camView(); if (cv0) cx.setTransform(DPR * cv0.z, 0, 0, DPR * cv0.z, DPR * (W / 2 - cv0.z * cv0.x), DPR * (H / 2 - cv0.z * cv0.y)); else cx.setTransform(DPR, 0, 0, DPR, 0, 0);
     var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#04071a'); g.addColorStop(0.55, '#0b1433'); g.addColorStop(1, '#0d1a2a'); cx.fillStyle = g; cx.fillRect(-W, -H, W * 3, H * 3);
     stars.forEach(function (s) { cx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.04) % W + W) % W, s.y * H * 0.6, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
-    var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.fillStyle = mg; cx.fillRect(0, 0, W, H);
+    var bxn = cam + 0.3 * W / H, cl1 = Math.max(0, Math.min(1, (bxn - (FOREST - 2.2)) / 2)), cl2 = Math.max(0, Math.min(1, (bxn - (GRAVE_X - 1.4)) / 1.8)), cloudA = t >= HOME_T ? 0 : cl1 * (1 - cl2); cloudA = cloudA * cloudA * (3 - 2 * cloudA);   // (in the forest a cloud covers the moon; it drifts off as they reach their spot)
+    var mg = cx.createRadialGradient(W * 0.8, H * 0.16, 0, W * 0.8, H * 0.16, H * 0.3); mg.addColorStop(0, 'rgba(255,248,225,1)'); mg.addColorStop(0.12, 'rgba(255,248,225,.85)'); mg.addColorStop(0.14, 'rgba(255,248,225,.35)'); mg.addColorStop(1, 'rgba(255,248,225,0)'); cx.globalAlpha = 1 - 0.8 * cloudA; cx.fillStyle = mg; cx.fillRect(0, 0, W, H); cx.globalAlpha = 1;
+    if (cloudA > 0.01) { var ccx = W * 0.8 + (1 - cloudA) * W * 0.55, ccy = H * 0.16;   // the cloud, drifting in front of the moon: dark, with a silver lining
+      [[0, 0, 0.17, 0.075], [-0.13, 0.025, 0.12, 0.06], [0.14, 0.02, 0.13, 0.06], [-0.05, -0.045, 0.1, 0.06], [0.07, -0.05, 0.09, 0.055]].forEach(function (c) { var ex = ccx + c[0] * H, ey = ccy + c[1] * H; cx.fillStyle = 'rgba(205,215,245,' + (0.28 * cloudA) + ')'; cx.beginPath(); cx.ellipse(ex, ey - 2, c[2] * H + 2, c[3] * H + 2, 0, 0, 7); cx.fill(); });
+      [[0, 0, 0.17, 0.075], [-0.13, 0.025, 0.12, 0.06], [0.14, 0.02, 0.13, 0.06], [-0.05, -0.045, 0.1, 0.06], [0.07, -0.05, 0.09, 0.055]].forEach(function (c) { cx.fillStyle = 'rgba(22,28,52,' + Math.min(1, cloudA * 1.2) + ')'; cx.beginPath(); cx.ellipse(ccx + c[0] * H, ccy + c[1] * H, c[2] * H, c[3] * H, 0, 0, 7); cx.fill(); }); }
     // the forest behind, far to near, with mist between
     var near = Math.max(0, Math.min(1, (cam + W / H - (FOREST - 1.2)) / 2.4)), low = 0;   // (high in the sky the forest sinks away below; it rises again as you come down to it)
     treeLayer(0.1, '#16224a', 0.74 + low, 0.32, 0.5, 0.08, 1); mist(0.55 + low, 0.85 + low, 0.12);
@@ -672,12 +676,14 @@
     if (xf < xe) { cx.beginPath(); for (X = xf; X <= xe; X += st) cx.lineTo(sx(X), sy(cen(X) - half(X))); for (X = xe; X >= xf; X -= st) cx.lineTo(sx(X), sy(cen(X) + half(X))); cx.closePath();
     var fx = sx(FOREST), bg = fx > -H * 0.5 ? cx.createLinearGradient(fx, 0, fx + H * 0.5, 0) : cx.createLinearGradient(0, 0, W, 0); if (fx > -H * 0.5) { bg.addColorStop(0, 'rgba(130,160,255,0)'); bg.addColorStop(1, 'rgba(150,175,255,.13)'); } else { bg.addColorStop(0, 'rgba(130,160,255,.10)'); bg.addColorStop(1, 'rgba(200,220,255,.16)'); }
     cx.fillStyle = bg; cx.fill(); }   // (fades in at the entrance of the forest)
+    if (cloudA > 0.01) { cx.fillStyle = 'rgba(2,4,14,' + (0.42 * cloudA) + ')'; cx.fillRect(-W, -H, W * 3, H * 3); }   // (without the moon the forest goes darker: the fireflies light the way)
     // fireflies along the path
-    while (flies.length < 34) flies.push({ x: cam + Math.random() * (W / H + 0.6), o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
-    flies = flies.filter(function (f) { return f.x > cam - 0.2; });
-    while (flies.length < 34) flies.push({ x: cam + W / H + Math.random() * 0.4, o: Math.random() * 1.6 - 0.8, p: Math.random() * 6, v: 0.02 + Math.random() * 0.05 });
-    flies.forEach(function (f) { f.x += f.v * 0.016; if (f.x < FOREST) return; var y = cen(f.x) + (f.o + 0.12 * Math.sin(t * 1.7 + f.p)) * half(f.x), a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.3 + f.p * 3)), px = sx(f.x), py = sy(y);
-      var fg = cx.createRadialGradient(px, py, 0, px, py, 9); fg.addColorStop(0, 'rgba(255,240,140,' + a + ')'); fg.addColorStop(1, 'rgba(255,240,140,0)'); cx.fillStyle = fg; cx.fillRect(px - 9, py - 9, 18, 18); });
+    for (var fk = Math.floor(Math.max(x0, FOREST) / 0.045); fk * 0.045 < x1; fk++) {   // fireflies all along the path through the forest (and on into their favourite spot), each with its own drift and glow
+      var fx0 = (fk + hsh(fk * 3 + 1)) * 0.045 + Math.sin(t * 0.4 + fk) * 0.02; if (fx0 < FOREST) continue;
+      var fo = hsh(fk * 5 + 2) * 1.7 - 0.85, fy0 = cen(fx0) + (fo + 0.1 * Math.sin(t * 1.3 + fk * 1.7)) * half(fx0), fa = Math.min(1, (0.25 + 0.75 * Math.max(0, Math.sin(t * (1.6 + hsh(fk) * 1.4) + fk * 2.1))) * (1 + 0.35 * cloudA));
+      var fpx = sx(fx0), fpy = sy(fy0), fr2 = H * (0.012 + hsh(fk + 9) * 0.01) * (1 + 0.5 * cloudA);
+      var fg = cx.createRadialGradient(fpx, fpy, 0, fpx, fpy, fr2); fg.addColorStop(0, 'rgba(255,245,170,' + fa + ')'); fg.addColorStop(0.25, 'rgba(255,230,120,' + (fa * 0.55) + ')'); fg.addColorStop(1, 'rgba(255,220,100,0)'); cx.fillStyle = fg; cx.fillRect(fpx - fr2, fpy - fr2, fr2 * 2, fr2 * 2);
+    }
     // in the sky: open above, the tops of the pines below (touch them and you lose a feather)
     // in the sky: the whole night landscape stays in view; only the pine trees (outlined in purple) are in the way
     // the canopy above and the undergrowth below: the edges of the path (touch them and you lose a feather)
@@ -769,12 +775,12 @@
     var real = Math.min(0.25, (now - last) / 1000 || 0), adv = real; last = now;
     if (songAsked && t >= MUSIC && ytOk) {   // (locked to the song: the game's clock follows the video, so 2:35 in the song is 2:35 in the game)
       var st = -1, ct = 0; try { st = yt.getPlayerState(); ct = yt.getCurrentTime() || 0; } catch (e) {}
-      if (st === 1 && ct > 0.05) { var df = MUSIC + ct - t; adv = Math.abs(df) > 1.5 ? Math.max(0, Math.min(1.5, df)) : Math.max(0, real + df * 0.4); waitSong = 0; }   // (catch up or wait a moment; a big jump is caught up within a second or two)
-      else if ((st === 3 || st === -1 || st === 5 || (st === 1 && ct <= 0.05)) && waitSong < 5) { waitSong += real; adv = 0; }   // (the song is loading: wait for it, for at most 5 s)
+      if (st === 1 && ct > SONG0 - 0.5) { var df = MUSIC - SONG0 + ct - t; adv = Math.abs(df) > 1.5 ? Math.max(0, Math.min(1.5, df)) : Math.max(0, real + df * 0.4); waitSong = 0; }   // (catch up or wait a moment; a big jump is caught up within a second or two)
+      else if ((st === 3 || st === -1 || st === 5 || (st === 1 && ct <= SONG0 - 0.5)) && waitSong < 5) { waitSong += real; adv = 0; }   // (the song is loading: wait for it, for at most 5 s)
     }
     while (adv > 1e-6) { var sd = Math.min(0.05, adv); step(sd); adv -= sd; }   // (small steps, so a slow frame never loses time)
     draw(); hud();
-    var sc = $('songclock'); if (sc) { var sgt = Math.max(0, t - MUSIC); sc.textContent = t >= MUSIC ? '♪ ' + Math.floor(sgt / 60) + ':' + ('0' + Math.floor(sgt % 60)).slice(-2) : ''; }
+    var sc = $('songclock'); if (sc) { var sgt = Math.max(0, t - MUSIC + SONG0); sc.textContent = t >= MUSIC ? '♪ ' + Math.floor(sgt / 60) + ':' + ('0' + Math.floor(sgt % 60)).slice(-2) : ''; }
     requestAnimationFrame(frame);
   }
   function finish() {
@@ -837,8 +843,8 @@
   window.onYouTubeIframeAPIReady = function () { yt = new YT.Player('yt', { width: 200, height: 120, videoId: 'qTLczT5h9Lo', playerVars: { controls: 0, disablekb: 1, playsinline: 1, rel: 0 }, events: { onReady: function () { ytOk = true; if (ytWant) ytPlay(); } } }); };
   (function () { var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
   var songAsked = false, waitSong = 0;
-  function ytPlay() { songAsked = true; waitSong = 0; ytWant = true; if (!ytOk) return; try { yt.seekTo(0, true); yt.setVolume(80); yt.unMute(); yt.playVideo(); } catch (e) {} }
-  function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(0, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(0, true); } yt.unMute(); } catch (e) {} }, 400); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
+  function ytPlay() { songAsked = true; waitSong = 0; ytWant = true; if (!ytOk) return; try { yt.seekTo(SONG0, true); yt.setVolume(80); yt.unMute(); yt.playVideo(); } catch (e) {} }
+  function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(SONG0, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(SONG0, true); } yt.unMute(); } catch (e) {} }, 400); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
   function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
   window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
