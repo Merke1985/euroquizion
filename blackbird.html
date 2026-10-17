@@ -26,6 +26,11 @@
   .row.fly{background:rgba(255,209,102,.22);box-shadow:0 0 0 2px var(--gold),0 0 16px rgba(255,209,102,.45)}
   .row.out{opacity:.4}
   .banner{position:fixed;left:50%;bottom:7vh;transform:translateX(-50%) scale(.9);padding:14px 26px;border-radius:999px;font-weight:800;font-size:clamp(1.1rem,2.6vw,1.9rem);background:rgba(10,14,40,.75);border:2px solid var(--line);opacity:0;transition:opacity .25s,transform .25s,background .25s,border-color .25s;pointer-events:none;white-space:nowrap}
+  .howto{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%) scale(.96);width:max-content;max-width:92vw;padding:26px 34px;border-radius:24px;text-align:center;background:rgba(8,12,36,.78);border:1px solid rgba(190,210,255,.28);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 60px rgba(120,150,255,.12);opacity:0;transition:opacity 1s,transform 1s;pointer-events:none;z-index:4}
+  .howto.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .howto p{margin:0;text-wrap:balance;font-weight:700;font-size:clamp(1.15rem,2.7vw,2rem);line-height:1.3;color:#eef1ff}
+  .howto p+p{margin-top:12px;font-size:clamp(.95rem,2vw,1.4rem);color:#b9c4ef;font-weight:600}
+  .howto .glow{display:inline-block;padding:0 .25em;border-radius:.4em;color:#ffd166;text-shadow:0 0 18px rgba(255,209,102,.8)}
   .banner.on{opacity:1;transform:translateX(-50%) scale(1)}
   .banner.me{background:rgba(255,209,102,.95);color:#2a1a00;border-color:#fff;box-shadow:0 0 40px rgba(255,209,102,.6)}
   .banner.warn{background:rgba(143,179,255,.9);color:#0a1033;border-color:#fff}
@@ -54,6 +59,7 @@
 <div class="hud"><h1>🐦‍⬛ Blackbird <small>test</small></h1><div class="bar"><i id="tbar"></i></div></div>
 <div class="side" id="side"></div>
 <div class="banner" id="banner"></div>
+<div class="howto" id="howto"><p>When your <span class="glow">colour and name</span> light up,<br>it’s your time to fly.</p><p>📱 Use the controls on your phone.</p></div>
 <div class="hint">Hold the mouse button, your finger or the spacebar to fly up · let go to glide down</div>
 <div id="yt"></div>
 
@@ -87,12 +93,13 @@
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, BOTTOM = 11.4, UP = 6, CLOSE = 14, TWO = 6, HOLD2 = 4, OUT = 5, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 4,   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
-      PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99,   // (after the take-off: the neon colours one by one, then practice in pairs (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
+      PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in pairs (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function camAt(T) { return Math.max(0, T - TAKEOFF - 2.8) * SPEED; }   // (roughly where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     REVEAL0 = tAir + 3.2; order.forEach(function (b, i) { b.colT = REVEAL0 + i * 0.9; });
-    PRACT0 = REVEAL0 + (order.length - 1) * 0.9 + 1.4 + WARN; pgroups = []; for (var i = 0; i < order.length; i += 2) pgroups.push(order.slice(i, i + 2)); pgi = 0; pracDone = false;
+    MSG0 = REVEAL0 + (order.length - 1) * 0.9 + 1.4 + 2.6; MSG1 = MSG0 + 7;   // (a quiet moment after the last colour, then the how-to on screen: not voiced, so the spell isn't broken)
+    PRACT0 = MSG1 + 0.8 + WARN; pgroups = []; for (var i = 0; i < order.length; i += 2) pgroups.push(order.slice(i, i + 2)); pgi = 0; pracDone = false;
     PRACT_END = PRACT0 + pgroups.length * PRACT_T; SAFE_X = camAt(PRACT_END) + 0.3 * W / H + 0.2;
     FOREST = SAFE_X + 40 * SPEED; DIVE0 = FOREST - 3.4; DIVE1 = FOREST + 0.9; DUR = PRACT_END + 40 + 45; XEND = camAt(DUR) + 1;
   }   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
@@ -538,10 +545,12 @@
     else if (t < TAKEOFF - 2.5) txt = '🌙 A lone blackbird on her roof… listen';
     else if (t < TAKEOFF) { txt = '🐦‍⬛ Get ready to take off…'; cls = 'warn'; }
     else if (t < REVEAL0) txt = '🐦‍⬛ The flock takes off!';
-    else if (t < PRACT0 - WARN) txt = '✨ Meet the flock…';
+    else if (t < MSG0 - 1.5) txt = '✨ Meet the flock…';
+    else if (t < PRACT0 - WARN) txt = '';
     else if (t < PRACT_END) { var fl = birds.filter(function (b) { return b.manual; }).map(function (b) { return b.name; }); txt = '✨ Practice round' + (fl.length ? ': ' + fl.join(' & ') + ' flying' : '') + '. Nothing to dodge, no damage yet'; }
     else if (t < nowAt + 3.5) { txt = '⚠️ Now it counts! Mind the pine tops'; cls = 'warn'; }
     else if (inDive(cam + 0.3 * W / H + 0.6)) txt = '🐦‍⬛ Down into the forest…';
+    $('howto').className = 'howto' + (t >= MSG0 && t < MSG1 ? ' on' : '');
     bn.textContent = txt; bn.className = 'banner' + (txt ? ' on' : '') + (cls ? ' ' + cls : '');
   }
 
