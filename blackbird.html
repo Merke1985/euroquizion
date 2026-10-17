@@ -160,18 +160,18 @@
   function birdXAt(T) { var x = cam; for (var tt = t; tt < T; tt += 0.02) x += SPEED * 0.02 * spd(tt); return x + 0.3 * W / H; }
   function newPattern(x) {
     var d = diff(x), forest = x >= FOREST && x < GRAVE_X, fast = arguments[1], oak = arguments[3], n = fast ? 3 : oak ? 2 : patternNo === 0 ? 3 : 1 + (d > 0.55 ? 1 : 0), p = [], p0 = rnd() < 0.5 ? 0 : 1; patternNo++;   // (the first round: three trees each)   // (the fast part: more to dodge)
-    for (var i = 0; i < n; i++) p.push({ tau: (arguments[2] ? 1.6 : 0.3) + (i + 0.5 + (rnd() - 0.5) * 0.2) / n * (arguments[2] ? TURN - 2.1 : SEG - 0.6), top: oak || (forest && (fast ? i % 2 === p0 : rnd() < 0.5)), reach: oak ? 0.3 + rnd() * 0.12 : forest ? (fast ? 1 / 2 : 1 / 3) + (rnd() - 0.5) * 0.04 : (0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)   // (in the cave: a third of the way across, in the fast part half, from top and bottom in turn; evenly spread)
+    for (var i = 0; i < n; i++) p.push({ tau: (arguments[2] ? 1.6 : 0.3) + (i + 0.5 + (rnd() - 0.5) * 0.2) / n * (arguments[2] ? TURN - 2.1 : SEG - 0.6), top: oak ? rnd() < 0.45 : (forest && (fast ? i % 2 === p0 : rnd() < 0.5)), reach: oak ? 0.3 + rnd() * 0.12 : forest ? (fast ? 1 / 2 : 1 / 3) + (rnd() - 0.5) * 0.04 : (0.28 + 0.22 * d) + rnd() * 0.08, tw: rnd() });   // (when in the turn each one comes)   // (in the cave: a third of the way across, in the fast part half, from top and bottom in turn; evenly spread)
     p.fast = fast; p.oak = oak; return p;
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
     var x0 = birdXAt(T);
-    var fast = T >= FAST_T - 0.5, oakSeg = x0 < FOREST - 1 && T >= PRACT0 + 3 * SEG - 0.01 && T < PRACT0 + 5 * SEG - 0.01;   // (two stretches under the enormous oak: its branches hang down from above)
+    var fast = T >= FAST_T - 0.5, oakSeg = x0 < FOREST - 1 && T > PRACT0 + 0.01;   // (over the pines, after the first stretch: pine trees from below mixed with branches hanging down from clumps of leaves)
     if (roundTurn >= roundLen || !pattern || pattern.fast !== fast || !!pattern.oak !== oakSeg) { pattern = newPattern(x0, fast, T <= PRACT0 + 0.01, oakSeg); roundTurn = 0; roundLen = 1; }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
     pattern.forEach(function (o) { var at = T + o.tau; if (at > FAST_T - 3 && at < FAST_T + 2) return;
       var gapMin = fast ? 1.3 : 1.5; if (at - lastArr < gapMin) at = lastArr + gapMin; if (at > T + SEG + 0.2) return; lastArr = at;   // (never two too close together)
       o = { tau: at - T, top: o.top, reach: o.reach, tw: o.tw };   // (a calm moment: nothing in the 3 s before the speed-up and its first 2 s)
-      var x = birdXAt(T + o.tau), h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw, oak: oakSeg }); if (oakSeg) { OAK_A = Math.min(OAK_A, x); OAK_B = Math.max(OAK_B, x); } });
+      var x = birdXAt(T + o.tau), h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw, oak: oakSeg && o.top }); if (oakSeg) { OAK_A = Math.min(OAK_A, x); OAK_B = Math.max(OAK_B, x); } });
     branches = branches.filter(function (r) { return r.x > cam - 1; });
   }
 
