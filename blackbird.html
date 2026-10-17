@@ -190,7 +190,7 @@
     var others = birds.filter(function (b) { return !b.lead; });
     var fr = birds.reduce(function (m, b) { return b.xo > m.xo ? b : m; }, birds[0]), fx0 = fr.xo, fo = fr.off; fr.xo = lead.xo; fr.off = lead.off; lead.xo = fx0; lead.off = fo;   // (the lone bird leads, at the front of the flock)
     lead.rx = 0.905; lead.ry = ROOF_Y - 0.02; lead.y = lead.ry; lead.dl = 0; lead.fi = FLY_IN;
-    others.forEach(function (b, i) { b.rx = 0.28 + (others.length > 1 ? i / (others.length - 1) : 0.5) * 0.56; b.ry = 0.8 + (i % 2) * 0.07; b.y = b.ry; b.dl = 0.7 + i * 0.16 + Math.random() * 0.1; b.fi = 2.4; });
+    others.forEach(function (b, i) { b.rx = 0.28 + (others.length > 1 ? i / (others.length - 1) : 0.5) * 0.56; b.ry = 0.8 + (i % 2) * 0.07; b.y = b.ry; b.dl = 0.2 + i * 0.16 + Math.random() * 0.1; b.fi = 2.4; });
     tAir = TAKEOFF + Math.max.apply(null, birds.map(function (b) { return b.dl + b.fi; }));   // (once they're all up, the colours come)
     pickN = Math.min(3, n - 1);   // (three birds fly at a time, the whole game)
     setTimeline(players().sort(function () { return Math.random() - .5; }));
@@ -308,10 +308,9 @@
     cx.fillStyle = col; cx.beginPath();
     for (var i = i0; i <= i1; i++) {
       var r = hsh(i + kind * 1000), x = i * step - off + (r - .5) * step * .7, h = (hmin + (hmax - hmin) * hsh(i * 3.1 + kind * 7)) * H, w = h * (0.22 + 0.1 * r), by = base * H;
-      for (var k = 0; k < 4; k++) { var ty = by - h + k * h * 0.2, ww = w * (0.3 + k * 0.24); cx.moveTo(x, ty); cx.lineTo(x - ww, ty + h * 0.36); cx.lineTo(x + ww, ty + h * 0.36); cx.closePath(); }
-      cx.rect(x - w * 0.05, by - h * 0.15, w * 0.1, h * 0.15);
+      for (var k = 0; k < 5; k++) { var ty = by - h + k * h * 0.21, ww = w * (0.3 + k * 0.2); cx.moveTo(x, ty); cx.lineTo(x - ww, ty + h * 0.38); cx.lineTo(x + ww, ty + h * 0.38); cx.closePath(); }   // (five tiers, the lowest reaching the ground)
     }
-    cx.fill(); cx.fillRect(0, base * H - 1, W, H);
+    cx.fill(); cx.fillRect(0, base * H + H * 0.02, W, H);   // (the forest floor, just below the lowest branches)
   }
   function mist(y0, y1, a) { var m = cx.createLinearGradient(0, y0 * H, 0, y1 * H); m.addColorStop(0, 'rgba(150,175,230,0)'); m.addColorStop(0.5, 'rgba(150,175,230,' + a + ')'); m.addColorStop(1, 'rgba(150,175,230,0)'); cx.fillStyle = m; cx.fillRect(0, y0 * H, W, (y1 - y0) * H); }
   var flies = [];
@@ -655,8 +654,10 @@
     var X = cam + bx(b), y = b.y, L = t < TAKEOFF ? 0 : Math.max(0, Math.min(1, (t - TAKEOFF - b.dl) / b.fi));
     if (L < 1) {
       if (b.lead) { var e = L * L * (3 - 2 * L); X = b.rx + (X - b.rx) * e; y = b.ry + (b.y - b.ry) * e - Math.sin(Math.PI * L) * 0.12; }
-      else { var ey = 1 - Math.pow(1 - L, 2.2), ex = Math.pow(L, 1.8); X = b.rx + (X - b.rx) * ex; y = b.ry + (b.y - 0.06 - b.ry) * ey + 0.06 * ex; }
+      else { var ez3 = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); }, upY = ROOF_Y - 0.1;   // (first straight up behind the house until clear of the roof, only then off to join the flock)
+        if (L < 0.42) { X = b.rx; y = b.ry + (upY - b.ry) * ez3(L / 0.42); } else { var u2 = ez3((L - 0.42) / 0.58); X = b.rx + (X - b.rx) * u2; y = upY + (b.y - upY) * u2; } }
     }
+    if (t >= TAKEOFF && t < TAKEOFF + 12 && X > 0.04 && X < 1.06) y = Math.min(y, roofTop(X) - 0.05);   // (never in front of the house: over its roof until they're past it)
     return { X: X, y: y, L: L };
   }
   function roofTop(x) { if (x < 0.08 || x > 1.02) return 2; if (x < 0.16) return 0.63 - (x - 0.08) / 0.08 * 0.16; if (x > 0.94) return 0.47 + (x - 0.94) / 0.08 * 0.16; return ROOF_Y; }
@@ -780,9 +781,10 @@
            // (the danger point)
         return;
       }
-      cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineCap = 'round'; cx.lineWidth = 0.032 * H + 5; cx.beginPath(); cx.moveTo(px - 6, base); cx.quadraticCurveTo(px + 8, (base + tip) / 2, px, tip); cx.stroke(); cx.restore();   // (a purple glow around it)
-      cx.strokeStyle = '#020309'; cx.lineCap = 'round'; cx.lineWidth = 0.032 * H; cx.beginPath(); cx.moveTo(px - 6, base); cx.quadraticCurveTo(px + 8, (base + tip) / 2, px, tip); cx.stroke();
-      cx.lineWidth = 0.012 * H; for (var k = 1; k <= 3; k++) { var yy = base + (tip - base) * (k / 4), s = (k % 2 ? 1 : -1); cx.beginPath(); cx.moveTo(px, yy); cx.lineTo(px + s * 0.035 * H, yy + dir * 0.03 * H); cx.stroke(); }
+      var sw3 = H * 0.034, rk = function () { cx.beginPath(); cx.moveTo(px - sw3, base); cx.quadraticCurveTo(px - sw3 * 0.55, (base + tip) / 2, px - sw3 * 0.08, tip - dir * H * 0.008); cx.quadraticCurveTo(px, tip + dir * H * 0.004, px + sw3 * 0.08, tip - dir * H * 0.008); cx.quadraticCurveTo(px + sw3 * 0.6, (base + tip) / 2, px + sw3 * 1.05, base); cx.closePath(); };   // a stalactite (from the roof of the cave) or a stalagmite (from its floor): a tapering spike of rock
+      rk(); var rg = cx.createLinearGradient(px - sw3, 0, px + sw3, 0); rg.addColorStop(0, '#0b0a14'); rg.addColorStop(0.45, '#1c1a2a'); rg.addColorStop(1, '#07060c'); cx.fillStyle = rg; cx.fill();
+      cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018; cx.strokeStyle = 'rgba(205,125,255,.95)'; cx.lineWidth = 2.5; rk(); cx.stroke(); cx.restore();   // outlined in glowing purple
+      cx.strokeStyle = 'rgba(160,150,200,.18)'; cx.lineWidth = 1; for (var k = 1; k <= 4; k++) { var yy = base + (tip - base) * (k / 5), hw = sw3 * (1 - k / 5) * 0.8; cx.beginPath(); cx.moveTo(px - hw, yy); cx.quadraticCurveTo(px, yy + dir * H * 0.006, px + hw, yy); cx.stroke(); }   // rings of dripstone
          // (the danger point)
     });
     // the birds (the ones still rising from behind the house were drawn before it)
@@ -866,7 +868,7 @@
     if (!actx) return;
     if (!windG) { if (v <= 0) return; var a = actx, sr = a.sampleRate, buf = a.createBuffer(1, sr * 2, sr), d = buf.getChannelData(0), last = 0; for (var i = 0; i < d.length; i++) { last = last * 0.97 + (Math.random() * 2 - 1) * 0.03; d[i] = last * 6; }
       var src = a.createBufferSource(); src.buffer = buf; src.loop = true; var bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.6; windG = a.createGain(); windG.gain.value = 0; src.connect(bp); bp.connect(windG); windG.connect(a.destination); src.start(); windG.bp = bp; }
-    windG.gain.setTargetAtTime(v * 0.5, actx.currentTime, 0.25); windG.bp.frequency.setTargetAtTime(380 + v * 300, actx.currentTime, 0.3);
+    windG.gain.setTargetAtTime(v * 0.35, actx.currentTime, 0.25); windG.bp.frequency.setTargetAtTime(380 + v * 300, actx.currentTime, 0.3);
   }
   function flockSound() {
     if (!actx) return; var a = actx, now = a.currentTime, len = 2.5, sr = a.sampleRate;
