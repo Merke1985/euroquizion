@@ -23,7 +23,7 @@
   .row{display:flex;align-items:center;gap:10px;padding:8px 13px;border-radius:12px;background:rgba(10,14,40,.5);border:1px solid rgba(255,255,255,.08);font-weight:600;font-size:1.05rem;color:rgba(235,238,255,.9);transition:background .3s,box-shadow .3s,opacity .3s}
   .row .dot{width:13px;height:13px;border-radius:50%;flex:none}
   .row .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .row .fe{display:flex;gap:3px;align-items:center} .row .fe i{display:block;width:9px;height:20px} .row .fe .fea{width:100%;height:100%;display:block} .row .fe .on{color:rgba(225,230,255,.78)} .row .fe .off{color:rgba(225,230,255,.13)}
+  .fe{display:flex;gap:3px;align-items:center} .fe i{display:block;width:9px;height:20px} .fe .fea{width:100%;height:100%;display:block} .fe .on{color:rgba(225,230,255,.78)} .fe .off{color:rgba(225,230,255,.13)}
   .row.fly{background:rgba(16,22,56,.58)}
   .row.out{opacity:.4}
   .banner{position:fixed;left:50%;bottom:7vh;transform:translateX(-50%) scale(.9);padding:14px 26px;border-radius:999px;font-weight:800;font-size:clamp(1.1rem,2.6vw,1.9rem);background:rgba(10,14,40,.75);border:2px solid var(--line);opacity:0;transition:opacity .25s,transform .25s,background .25s,border-color .25s;pointer-events:none;white-space:nowrap}
@@ -983,11 +983,19 @@
     var sc = $('songclock'); if (sc) { var sgt = Math.max(0, t - MUSIC + SONG0); sc.textContent = t >= MUSIC ? '♪ ' + Math.floor(sgt / 60) + ':' + ('0' + Math.floor(sgt % 60)).slice(-2) : ''; }
     requestAnimationFrame(frame);
   }
+  /* the ranking: by feathers. Equal feathers, equal place: everyone with the most feathers wins (and goes shopping).
+     Computer birds fly perfectly, so with people playing they're listed but never win or take a place. */
+  function ranking() {
+    var all = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; }), hum = all.some(function (b) { return b.human; }), pool = all.filter(function (b) { return b.human || !hum; });
+    all.forEach(function (b) { b.rank = 0; b.win = false; });
+    pool.forEach(function (b) { b.rank = 1 + pool.filter(function (o) { return o.feathers > b.feathers; }).length; b.win = b.rank === 1; });
+    return pool.concat(all.filter(function (b) { return pool.indexOf(b) < 0; }));
+  }
   function finish() {
     ended = true; running = false; windLevel(0);   // (the song plays on to its end under the results)
-    var rows = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; });
-    $('endt').textContent = '🏆 ' + rows[0].name + ' wins'; sendState(true);
-    $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (i === 0 ? 'top' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + '</span><span>' + (b.feathers ? '🪶'.repeat(b.feathers) : '🌿') + '</span><span style="color:var(--mute);min-width:6em;text-align:right">' + b.clean.toFixed(1) + 's clean</span></li>'; }).join('');
+    var rows = ranking(), ws = rows.filter(function (b) { return b.win; }), wn = ws.map(function (b) { return b.name; });
+    $('endt').textContent = '🏆 ' + (wn.length > 1 ? wn.slice(0, -1).join(', ') + ' & ' + wn[wn.length - 1] + ' win' : wn[0] + ' wins'); sendState(true);   // (equal feathers at the top: they all win, and later they all go to the shop)
+    $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (b.win ? 'top' : '') + '"><span class="rk">' + (b.rank || '·') + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + (b.rank ? '' : ' <small style="color:var(--mute);font-weight:500">computer</small>') + '</span><span class="fe" style="display:flex;gap:3px">' + featherRow(b.feathers, false) + '</span></li>'; }).join('');
     $('end').classList.remove('hidden');
   }
   function start(music) {
@@ -1093,7 +1101,7 @@
     var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {}, live = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
     else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: ctrlOver || t >= SOAR_T ? 'done' : b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; live[b.pid] = { y: +b.y.toFixed(3), x: +bx(b).toFixed(3) }; });
-    if (ph === 'end') { var rk = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; }); rk.forEach(function (b, i) { if (b.human && ps[b.pid]) ps[b.pid].r = i + 1; }); }
+    if (ph === 'end') { ranking().forEach(function (b) { if (b.human && ps[b.pid]) ps[b.pid].r = b.rank; }); }
     var br = ph === 'play' ? branches.filter(function (q) { return q.x > cam - 0.3; }).map(function (q) { return [+q.x.toFixed(3), q.top ? 1 : 0, +q.tip.toFixed(3)]; }) : [];
     var s = JSON.stringify({ ph: ph, p: ps, br: br }), now = Date.now();
     if (!force && s === lastState && now - lastSent < (ph === 'play' ? 2000 : 4000)) return;   // (the clock is resent every 2 s while playing, so the phones stay in step)
