@@ -6331,15 +6331,16 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
   // by themselves. When it's over it tells us who won: they get the party-game points, and so a trip to the boutique.
   var bbSafe = null;
   // Sofia's wardrobe: when the presenters come back on stage, there's a chance she has changed into another gown
-  var DRESS_P = 0.3;
+  var DRESS_P = 0.3, herWorn = {};
   function herChange() {
     if (REMOTE || !HER_LOOKS.length || Math.random() >= DRESS_P) return false;
-    var h = hostsEl(), her = h && h.querySelector('.ehost.her'); if (!her || her.classList.contains('aut') && herLook === 0) return false;
-    var k; do { k = Math.floor(Math.random() * HER_LOOKS.length); } while (k === herLook && HER_LOOKS.length > 1);
+    var h = hostsEl(), her = h && h.querySelector('.ehost.her'); if (!her || her.classList.contains('coat')) return false;   // (the coat is only for the forest)
+    herWorn[herLook] = 1; var fresh = HER_LOOKS.map(function (x, i) { return i; }).filter(function (i) { return !herWorn[i]; }); if (!fresh.length) return false;   // (never the same gown twice in one game)
+    var k = fresh[Math.floor(Math.random() * fresh.length)]; herWorn[k] = 1;
     herLook = k; HOST_HER = HER_LOOKS[k]; her.outerHTML = HOST_HER; return true;
   }
   function bbDress(aut) {   // the presenters on the studio stage: in their autumn coats, or back in their show outfits
-    var h = hostsEl(); if (!h) return; var him = h.querySelector('.ehost.him'), her = h.querySelector('.ehost.her'); if (!him || !her || him.classList.contains('aut') === !!aut) return;
+    var h = hostsEl(); if (!h) return; var him = h.querySelector('.ehost.him'), her = h.querySelector('.ehost.her'); if (!him || !her || him.classList.contains('coat') === !!aut) return;
     him.outerHTML = aut ? HOST_HIM_AUT : HOST_HIM; her.outerHTML = aut ? HOST_HER_AUT : HOST_HER;
   }
   function bbStage() {
@@ -9328,14 +9329,14 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     HOST_HIM = strip(HOST_HIM); HOST_HER = strip(HOST_HER);
     HOST_HIM = HOST_HIM.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HIM_SIDE + HOST_HIM_BACK + '</svg>'; });   // (front and side view in one drawing: the side view while walking)
     HOST_HER = HOST_HER.replace(/^(<svg[^>]*>)([\s\S]*)<\/svg>$/, function (m, a, b) { return a + '<g class="ehfront">' + b + '</g>' + HOST_HER_SIDE + HOST_HER_BACK + '</svg>'; });
-    HOST_HIM_AUT = strip(HOST_HIM.replace('class="ehost him"', 'class="ehost him aut"').replace('<rect x="91" y="116"', COAT_HIM + '<rect x="91" y="116"').replace('</g>' + HOST_HIM_SIDE, SCARF_HIM + '</g>' + HOST_HIM_SIDE));   // (in their autumn coats, for Blackbird)
+    HOST_HIM_AUT = strip(HOST_HIM.replace('class="ehost him"', 'class="ehost him aut coat"').replace('<rect x="91" y="116"', COAT_HIM + '<rect x="91" y="116"').replace('</g>' + HOST_HIM_SIDE, SCARF_HIM + '</g>' + HOST_HIM_SIDE));   // (in their autumn coats, for Blackbird)
     HER_LOOKS = [HOST_HER].concat(HER_OUTFITS.map(function (o) {   // Sofia's other gowns, built on the same drawing
       var h = HOST_HER.replace('class="ehost her"', 'class="ehost her aut"').replace(/fill="url\(#ehgown\)"/, 'fill="url(#ehgown' + o.id + ')"').replace('stroke="#ff9ad0" stroke-width="2.2"', 'stroke="' + o.trim + '" stroke-width="2.2"');
       h = h.replace('<path d="M70 230 Q100 242 130 230 L131 238 Q100 250 69 238 Z" fill="#ffd23f"/><path d="M95 234 L100 229 L105 234 L100 245 Z" fill="#ff9ad0" stroke="#fff6c8" stroke-width="1"/>', o.belt);
       h = h.replace('<path d="M74 150 Q100 142 126 150 L132 232', o.behind + '<path d="M74 150 Q100 142 126 150 L132 232');
       return strip('<svg><defs>' + o.defs + '</defs></svg>') && h;
     }));
-    HOST_HER_AUT = strip(HOST_HER.replace('class="ehost her"', 'class="ehost her aut"').replace('<rect x="93" y="116"', COAT_HER + '<rect x="93" y="116"').replace('</g>' + HOST_HER_SIDE, SCARF_HER + '</g>' + HOST_HER_SIDE)); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
+    HOST_HER_AUT = strip(HOST_HER.replace('class="ehost her"', 'class="ehost her aut coat"').replace('<rect x="93" y="116"', COAT_HER + '<rect x="93" y="116"').replace('</g>' + HOST_HER_SIDE, SCARF_HER + '</g>' + HOST_HER_SIDE)); SHOPKEEPER = strip(SHOPKEEPER); JULIET = strip(JULIET);
     try { var box = document.createElement('div'); box.innerHTML = '<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"><defs>' + defs + '</defs></svg>'; document.body.appendChild(box.firstChild); } catch (e) {}
   })();
   function jmRoute() {   // the way to the balcony: never straight back the way you came, mostly northwards
@@ -11036,6 +11037,7 @@ var BAG_SVG = '<svg class="bagico" viewBox="0 0 24 24" aria-hidden="true"><defs>
     });
   }
   function beginGame() {
+    herWorn = {}; herWorn[herLook] = 1;   // (a new game: what she's wearing now counts as worn)
     if (G.phase !== 'lobby') return false;
     looksFill();
     G.era = $('s-era').value; G.cat = $('s-cat').value; G.robin = $('s-atype').value === 'robin'; G.atype = G.robin ? 'mc' : $('s-atype').value; G.subject = $('s-subject').value; G.finalMode = $('s-final').value; G.scoring = $('s-atype').value === 'party' ? 'correct' : $('s-atype').value === 'mc' && $('s-qmode').value === 'ladder' ? 'ladder' : $('s-scoring').value || 'correct'; G.showScore = 'always';   /* the scores are always in view (only the Big Five hides them) */
