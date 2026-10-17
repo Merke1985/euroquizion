@@ -247,15 +247,17 @@
       if (b.manual) {
         b.flown += dt;
         if (!b.human) botSteer(b, dt);
-        var up = b.human ? !!holds[b.pid] : b.hold;   // (a player: their phone's button)
-        b.vy += (up ? -LIFT : GRAV) * dt; b.vy = Math.max(-VMAX, Math.min(VMAX, b.vy)); b.y += b.vy * dt;
+        var fromPhone = b.human && b.netT && Date.now() - b.netT < 1200;   // (the phone flies this bird itself and tells us where it is)
+        if (fromPhone) { var ny2 = b.netY + b.netVy * Math.min(0.3, (Date.now() - b.netT) / 1000); b.vy = (ny2 - b.y) / Math.max(dt, 1e-3) * Math.min(1, dt * 9); b.y += (ny2 - b.y) * Math.min(1, dt * 9); }
+        else { var up = b.human ? !!holds[b.pid] : b.hold;   // (no word from the phone: its button, here)
+        b.vy += (up ? -LIFT : GRAV) * dt; b.vy = Math.max(-VMAX, Math.min(VMAX, b.vy)); b.y += b.vy * dt; }
         if (b.y < R) { b.y = R; b.vy = 0; } if (b.y > 1 - R) { b.y = 1 - R; b.vy = 0; }
         if (t < PRACT_END) { var bot = cen(X) + half(X) - R; if (b.y > bot) { b.y = bot; b.vy = -0.3; } }   // (practice: no damage, the pine tops bounce you back up)
-        else if (b.inv <= 0 && hits(b, X)) hit(b);
+        else if (!fromPhone && b.inv <= 0 && hits(b, X)) hit(b);   // (a phone decides its own hits: what the player saw)
         if (!b.turnHit) b.clean += dt;
       } else {   // autopilot: back to its place in the flock, smoothly
         var ty = cen(X + 0.12) + b.off * half(X) * 0.62, rate = 3.2;
-        if (b.lead && t >= ALL_T - 2 && t < SOAR_T) { var nb = branches.filter(function (r) { return r.x > X - 0.02 && r.x < X + 0.8; })[0]; ty = cen(X + 0.1); if (nb) { var hh2 = half(nb.x), cc = cen(nb.x); ty = nb.top ? (nb.tip + cc + hh2) / 2 : (cc - hh2 + nb.tip) / 2; } rate = 2.6; }   // (follow me: the blackbird flies the safe way through)
+        if (b.lead && t >= FAST_T - 2 && t < SOAR_T) { var nb = branches.filter(function (r) { return r.x > X - 0.02 && r.x < X + 0.8; })[0]; ty = cen(X + 0.1); if (nb) { var hh2 = half(nb.x), cc = cen(nb.x); ty = nb.top ? (nb.tip + cc + hh2) / 2 : (cc - hh2 + nb.tip) / 2; } rate = 2.6; }   // (follow me: the blackbird flies the safe way through)
         if (t >= SOAR_T) { b.flap += dt * 7; rate = 2.2;   // (soaring high and fast; at 2:40 the lone bird picks the rose; then they all fly off)
           if (t < TAKE_T) ty = 0.2 + b.off * 0.08 + 0.03 * Math.sin(t * 1.5 + b.id);
           else ty = 0.06 + b.off * 0.05; }
@@ -623,7 +625,7 @@
   function drawBird(b) {
       if (!b.lead && t < TAKEOFF + b.dl) return;   // (the others wait out of sight behind the house)
       if (!b.lead && t >= HOME_T) return;
-      if (b.lead && t >= ALL_T - 2.2 && t < ALL_T + 2.2) { var fa2 = Math.min(1, (t - ALL_T + 2.2) / 0.3, (ALL_T + 2.2 - t) / 0.4), fbp = birdPos(b), fpx = sx(fbp.X), fpy = sy(fbp.y) - H * 0.075; cx.save(); cx.globalAlpha = fa2; cx.font = 'italic 800 ' + Math.round(H * 0.03) + 'px "Bricolage Grotesque",system-ui'; var fw = cx.measureText('Follow me!').width + H * 0.04, fh = H * 0.052; cx.fillStyle = 'rgba(255,255,255,.95)'; cx.beginPath(); if (cx.roundRect) cx.roundRect(fpx - fw / 2, fpy - fh, fw, fh, fh / 2); else cx.rect(fpx - fw / 2, fpy - fh, fw, fh); cx.fill(); cx.beginPath(); cx.moveTo(fpx - H * 0.01, fpy - 1); cx.lineTo(fpx, fpy + H * 0.018); cx.lineTo(fpx + H * 0.012, fpy - 1); cx.fill(); cx.fillStyle = '#14102a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('Follow me!', fpx, fpy - fh / 2); cx.restore(); }   // (the blackbird calls the flock)   // (home: only the lone blackbird comes back to her)
+      if (b.lead && t >= FAST_T - 2.4 && t < FAST_T + 1.8) { var fa2 = Math.min(1, (t - FAST_T + 2.4) / 0.3, (FAST_T + 1.8 - t) / 0.4), fbp = birdPos(b), fpx = sx(fbp.X), fpy = sy(fbp.y) - H * 0.075; cx.save(); cx.globalAlpha = fa2; cx.font = 'italic 800 ' + Math.round(H * 0.03) + 'px "Bricolage Grotesque",system-ui'; var fw = cx.measureText('Follow me!').width + H * 0.04, fh = H * 0.052; cx.fillStyle = 'rgba(255,255,255,.95)'; cx.beginPath(); if (cx.roundRect) cx.roundRect(fpx - fw / 2, fpy - fh, fw, fh, fh / 2); else cx.rect(fpx - fw / 2, fpy - fh, fw, fh); cx.fill(); cx.beginPath(); cx.moveTo(fpx - H * 0.01, fpy - 1); cx.lineTo(fpx, fpy + H * 0.018); cx.lineTo(fpx + H * 0.012, fpy - 1); cx.fill(); cx.fillStyle = '#14102a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('Follow me!', fpx, fpy - fh / 2); cx.restore(); }   // (the blackbird calls the flock)   // (home: only the lone blackbird comes back to her)
       var bp = birdPos(b), X = bp.X, py0 = bp.y, L = bp.L, landing = bp.land != null && bp.land < 1;
       var px = sx(X), py = sy(py0), s = H * 0.032;
       if (b.out && py > H + 40) return;
@@ -861,17 +863,26 @@
   try {
     net = escConnect('bb' + room); net.hostIn();
     net.on('hi', function (p) { if (!p || !p.pid) return; var nm = String(p.name || 'Bird').trim().slice(0, 14) || 'Bird', j = joined.filter(function (x) { return x.pid === p.pid; })[0]; if (j) j.name = nm; else if (joined.length < 10) joined.push({ pid: p.pid, name: nm }); showJoined(); sendState(true); });
-    net.on('zg', function (p) { if (p && p.pid) holds[p.pid] = !!p.h; });
+    net.on('zg', function (p) {
+      if (!p || !p.pid) return; holds[p.pid] = !!p.h;
+      var b = birds.filter(function (x) { return x.human && x.pid === p.pid; })[0]; if (!b || !running) return;
+      if (p.y != null && b.manual) { b.netY = +p.y; b.netVy = +p.vy || 0; b.netT = Date.now(); }
+      if (p.hc != null) { if (b.hcSeen == null) b.hcSeen = 0; while (b.hcSeen < p.hc && !b.out && b.manual) { b.hcSeen++; hit(b); } b.hcSeen = Math.max(b.hcSeen, p.hc); }   // (hits the phone saw, each counted once)
+    });
   } catch (e) { net = null; }
-  function sendState(force) {   // (what each phone needs to know: its colour, and whether it's waiting, about to fly, flying or out; sent only when something changes)
+  function sendState(force) {   // (what each phone needs: its colour and state, plus, while flying, the course and the obstacles ahead so it can fly its bird itself)
     if (!net) return;
-    var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {};
+    var ph = ended ? 'end' : running ? 'play' : 'lobby', ps = {}, live = {};
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
-    else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; });
+    else birds.forEach(function (b) { if (!b.human) return; ps[b.pid] = { n: b.name, c: t >= b.colT ? b.col : '', s: b.out ? 'out' : b.manual ? 'fly' : pending.indexOf(b) >= 0 ? 'warn' : 'wait', f: b.feathers, w: t >= MSG0 && t < MSG1 ? 1 : 0 }; live[b.pid] = { y: +b.y.toFixed(3), x: +bx(b).toFixed(3) }; });
     if (ph === 'end') { var rk = players().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; }); rk.forEach(function (b, i) { if (b.human && ps[b.pid]) ps[b.pid].r = i + 1; }); }
-    var s = JSON.stringify({ ph: ph, p: ps }), now = Date.now();
-    if (!force && s === lastState && now - lastSent < 4000) return;
-    lastState = s; lastSent = now; net.send('state', { ph: ph, p: ps });
+    var br = ph === 'play' ? branches.filter(function (q) { return q.x > cam - 0.3; }).map(function (q) { return [+q.x.toFixed(3), q.top ? 1 : 0, +q.tip.toFixed(3)]; }) : [];
+    var s = JSON.stringify({ ph: ph, p: ps, br: br }), now = Date.now();
+    if (!force && s === lastState && now - lastSent < (ph === 'play' ? 2000 : 4000)) return;   // (the clock is resent every 2 s while playing, so the phones stay in step)
+    lastState = s; lastSent = now;
+    var msg = { ph: ph, p: ps, br: br };
+    if (ph === 'play') { msg.t = +t.toFixed(3); msg.cam = +cam.toFixed(4); msg.live = live; msg.k = { F: FOREST, D0: DIVE0, D1: DIVE1, G: GRAVE_X, XE: XEND, S0: SAFE_X, SP: SPEED, FX: FASTX, FT: FAST_T, ST: STOP_T, TK: TAKE_T, SO: SOAR_T }; }
+    net.send('state', msg);
   }
   window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, cam: cam, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, holds: function () { return holds; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { var xt = function (X) { for (var T = TAKEOFF; T < 400; T += 0.1) if (camAt(T) + 0.3 * W / H >= X) return T; return -1; }; return { MSG0: MSG0, MSG1: MSG1, diveT: xt(DIVE0 - 1.6), forestT: xt(FOREST), spotT: xt(GRAVE_X), FAST_T: FAST_T, LAND_T: LAND_T, APP_T: APP_T, TAKE_T: TAKE_T, FADE_T: FADE_T, END_T: END_T, SOAR_T: SOAR_T, PICK_T: PICK_T, HOME_T: HOME_T, GRAVE_T: GRAVE_T, GRAVE_X: GRAVE_X, PRACT_T: PRACT_T, TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();

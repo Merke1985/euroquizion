@@ -23,6 +23,11 @@
   .top .nm{display:flex;align-items:center;gap:8px} .top .dot{width:14px;height:14px;border-radius:50%;background:var(--col)}
   .fe{letter-spacing:-.1em}
   #pad{position:fixed;left:16px;right:16px;top:64px;bottom:96px;border-radius:32px;display:grid;place-items:center;background:rgba(255,255,255,.04);border:2px solid var(--line);transition:background .2s,box-shadow .2s,border-color .2s}
+  #view{position:absolute;inset:0;width:100%;height:100%;border-radius:30px;display:none}
+  #pad.fly #view{display:block}
+  #pad.fly .big{position:absolute;left:0;right:0;bottom:14px;font-size:1rem;opacity:.75;pointer-events:none}
+  #pad.fly .big .small{display:none}
+  #pad{overflow:hidden}
   #pad .big{font-size:clamp(1.4rem,7vw,2.4rem);font-weight:800;line-height:1.2;padding:0 16px}
   #pad .small{display:block;font-size:1rem;font-weight:600;color:var(--mute);margin-top:8px}
   #pad.warn{border-color:var(--col);animation:blink .28s steps(2) infinite}
@@ -46,7 +51,7 @@
 </div>
 <div class="hidden" id="game">
   <div class="top"><span class="nm"><span class="dot" id="dot"></span><span id="me"></span></span><span class="fe" id="fe"></span></div>
-  <div id="pad"><div class="big" id="big">You’re in!<span class="small">Watch the big screen</span></div></div>
+  <div id="pad"><canvas id="view"></canvas><div class="big" id="big">You’re in!<span class="small">Watch the big screen</span></div></div>
   <div class="msg" id="msg"></div>
 </div>
 <script src="vendor/supabase.js?v=1"></script>
@@ -74,6 +79,12 @@
   function onState(s) {
     if (!s || !s.p) return;
     my = s.p[pid] || null;
+    if (s.k) K = s.k; if (s.br) br = s.br;
+    if (s.t != null) { var at = now(); clk = { t: s.t, at: at, cam: s.cam, ct: s.t }; }
+    live = s.live && s.live[pid] || null;
+    var wasFly = fly; fly = s.ph === 'play' && !!my && my.s === 'fly';
+    if (fly && !wasFly && live) { by = live.y; bvy = 0; inv = 0; }   // (taking over: start where the big screen has your bird)
+    if (s.ph !== 'play') { hc = 0; fly = false; }
     if (my && !joinedOk) { joinedOk = true; $('join').classList.add('hidden'); $('game').classList.remove('hidden'); }
     if (!joinedOk) return;
     $('me').textContent = name;
@@ -88,14 +99,73 @@
     if (s.ph === 'lobby') { txt = 'You’re in, ' + esc(name) + '!<span class="small">Wait for the host to start</span>'; lastF = 5; }
     else if (s.ph === 'end') { txt = (my.r === 1 ? '🏆 You win!' : 'You finished ' + ordinal(my.r || 0)) + '<span class="small">Look at the big screen</span>'; }
     else if (my.s === 'out') { cls = 'out'; txt = '🌿 Your bird has landed<span class="small">No feathers left: watch the rest fly</span>'; }
-    else if (my.s === 'fly') { cls = 'fly' + (held ? ' down' : ''); txt = 'HOLD to fly up<span class="small">Let go to glide down</span>'; }
-    else if (my.s === 'warn') { cls = 'warn'; txt = 'Get ready…<span class="small">Your turn is coming</span>'; try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
-    else { txt = my.c ? 'Watch the big screen<span class="small">When your colour lights up, it’s your turn</span>' : 'Watch the big screen<span class="small">The flock is about to take off</span>'; }
-    if (my.c && s.ph === 'play' && my.s !== 'fly') m = 'Your bird glows in this colour when it’s your turn.';
+    else if (my.s === 'fly') { cls = 'fly' + (held ? ' down' : ''); txt = 'Hold to fly up · let go to glide'; }
+    else if (my.s === 'warn') { cls = 'warn'; txt = 'Get ready…<span class="small">You’re about to fly</span>'; try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
+    else { txt = my.c ? 'Watch the big screen<span class="small">Find your colour: soon everyone flies</span>' : 'Watch the big screen<span class="small">The flock is about to take off</span>'; }
+    if (my.c && s.ph === 'play' && my.s !== 'fly' && my.s !== 'out') m = 'This is your colour on the big screen.';
     pad.className = cls; big.innerHTML = txt; msg.textContent = m;
   }
+  /* Flying on the phone: the big screen sends the course (where the path runs, when it speeds up) and the obstacles ahead;
+     the phone flies your bird itself, straight from your finger, and tells the big screen where it is and when it was hit.
+     So a slow connection only delays what the big screen shows, never your own flight. (The course maths is a copy of the
+     big screen's: keep them the same.) */
+  var K = null, br = [], clk = null, live = null, fly = false, by = 0.5, bvy = 0, inv = 0, hc = 0, lastSend = 0, back = 0;
+  var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
+  function ez(a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); }
+  function diff(x) { if (x >= K.G) return 1 - 0.45 * Math.min(1, (x - K.G) / 1.5); if (x < K.F) return 0.25 * Math.max(0, x - K.S0) / Math.max(1, K.F - K.S0); return Math.min(0.8, 0.4 + 0.4 * (x - K.F) / Math.max(1, K.XE - K.F)); }
+  function half(x) { return 0.30 - 0.06 * diff(x); }
+  function cen0(x) { var d = diff(x), a = 0.05 + 0.12 * d, y = 0.5 + a * (0.62 * Math.sin(0.85 * x) + 0.28 * Math.sin(2.05 * x + 1.3) + 0.1 * Math.sin((3.6 + 2 * d) * x + 0.4)), h = half(x); return Math.max(h + 0.05, Math.min(1 - h - 0.05, y)); }
+  function cen(x) { var c = cen0(x), top = half(x) + 0.03; if (x > K.D0 - 1.6 && x <= K.D0) c = c + (top - c) * ez((x - (K.D0 - 1.6)) / 1.6); else if (x > K.D0 && x < K.F + 0.4) c = top + (cen0(K.F + 0.4) - top) * ez((x - K.D0) / (K.F + 0.4 - K.D0)); return c; }
+  function spd(T) { if (T < K.FT) return 1; if (T >= K.TK) return 2.5 * ez((T - K.TK) / 3); if (T >= K.ST) return 0; var D0 = K.ST - 3.3; if (T > D0) return K.FX * (1 - ez((T - D0) / (K.ST - D0))); return 1 + (K.FX - 1) * ez((T - K.FT) / 2.5); }
+  function hits(X, y) { var c = cen(X), h = half(X); if (X >= K.F && ((X < K.G && y - R < c - h) || y + R > c + h)) return true; for (var i = 0; i < br.length; i++) { var q = br[i]; if (Math.abs(q[0] - X) < 0.02 + R && (q[1] ? y - R < q[2] : y + R > q[2])) return true; } return false; }
+  function now() { return performance.now() / 1000; }
+  function gameT() { return clk ? clk.t + (now() - clk.at) : 0; }
+  function camNow() { if (!clk) return 0; var T = gameT(); while (clk.ct < T) { var d = Math.min(0.02, T - clk.ct); clk.cam += K.SP * d * spd(clk.ct); clk.ct += d; } return clk.cam; }
+  var cv = $('view'), cx = cv.getContext('2d'), CW = 0, CH = 0;
+  function size() { var r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); CW = r.width; CH = r.height; cv.width = CW * d; cv.height = CH * d; cx.setTransform(d, 0, 0, d, 0, 0); }
+  addEventListener('resize', size);
+  var lastF0 = now();
+  function loop() {
+    requestAnimationFrame(loop);
+    var tn = now(), dt = Math.min(0.05, tn - lastF0); lastF0 = tn;
+    if (!fly || !K || !clk) return;
+    if (!CW) size();
+    var cam = camNow(), bx0 = (live && live.x) || 0.53, X = cam + bx0;   // (the big screen's place for your bird, including any knock-back)
+    inv = Math.max(0, inv - dt); back = Math.max(0, back - dt * 0.01);
+    bvy += (held ? -LIFT : GRAV) * dt; bvy = Math.max(-VMAX, Math.min(VMAX, bvy)); by += bvy * dt;
+    if (by < R) { by = R; bvy = 0; } if (by > 1 - R) { by = 1 - R; bvy = 0; }
+    if (inv <= 0 && hits(X, by)) { hc++; inv = 1.5; back = Math.min(0.25, back + 0.06); bvy = (cen(X) - by) * 2.5; try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} send(true); }   // (a hit: you saw it, so it counts)
+    if (tn - lastSend > 0.2) send(false);   // (5 times a second: where your bird is)
+    draw(X);
+  }
+  function send(now2) { lastSend = now(); if (net) net.toHost('zg', { pid: pid, h: held ? 1 : 0, y: +by.toFixed(3), vy: +bvy.toFixed(3), hc: hc }); }
+  function draw(X) {
+    var H2 = CH, sc = H2, x0 = X - 0.35, x1 = X + 2.1, kx = CW / (x1 - x0), sxp = function (x) { return (x - x0) * kx; }, syp = function (y) { return y * H2; };   // (squeezed sideways, so you see about two seconds ahead)
+    cx.clearRect(0, 0, CW, CH); cx.fillStyle = '#0a1030'; cx.fillRect(0, 0, CW, CH);
+    var x, st = 0.02, inCave = function (x) { return x >= K.F && x < K.G; };
+    // the path: in the cave the walls above and below; over the pine forest the ground is safe
+    cx.fillStyle = '#03050f';
+    cx.beginPath(); cx.moveTo(sxp(x0), 0); for (x = x0; x <= x1; x += st) cx.lineTo(sxp(x), inCave(x) ? syp(cen(x) - half(x)) : 0); cx.lineTo(sxp(x1), 0); cx.closePath(); cx.fill();
+    cx.beginPath(); cx.moveTo(sxp(x0), H2); for (x = x0; x <= x1; x += st) cx.lineTo(sxp(x), inCave(x) ? syp(cen(x) + half(x)) : H2); cx.lineTo(sxp(x1), H2); cx.closePath(); cx.fill();
+    cx.strokeStyle = 'rgba(200,120,255,.8)'; cx.lineWidth = 2;
+    [-1, 1].forEach(function (sd) { cx.beginPath(); var on = false; for (x = x0; x <= x1; x += st) { if (!inCave(x)) { on = false; continue; } var yy = syp(cen(x) + sd * half(x)); if (!on) { cx.moveTo(sxp(x), yy); on = true; } else cx.lineTo(sxp(x), yy); } cx.stroke(); });
+    // the obstacles: trees and branches, in purple
+    br.forEach(function (q) { if (q[0] < x0 - 0.1 || q[0] > x1 + 0.1) return; var px = sxp(q[0]), tip = syp(q[2]), base = q[1] ? (inCave(q[0]) ? syp(cen(q[0]) - half(q[0])) : 0) : (inCave(q[0]) ? syp(cen(q[0]) + half(q[0])) : H2);
+      cx.fillStyle = 'rgba(190,90,255,.35)'; cx.strokeStyle = 'rgba(215,140,255,1)'; cx.lineWidth = 2;
+      if (!q[1] && !inCave(q[0])) { cx.beginPath(); cx.moveTo(px, tip); cx.lineTo(px - kx * 0.1, base); cx.lineTo(px + kx * 0.1, base); cx.closePath(); cx.fill(); cx.stroke(); }   // a pine tree
+      else { cx.beginPath(); cx.moveTo(px - kx * 0.05, base); cx.lineTo(px - kx * 0.035, tip); cx.lineTo(px + kx * 0.035, tip); cx.lineTo(px + kx * 0.05, base); cx.closePath(); cx.fill(); cx.stroke(); } });   // a branch
+    // your bird
+    var bxp = sxp(X), byp = syp(by), col = getComputedStyle(document.documentElement).getPropertyValue('--col') || '#ffd166', s2 = sc * 0.032;
+    var g = cx.createRadialGradient(bxp, byp, 0, bxp, byp, s2 * 2.6); g.addColorStop(0, col.trim() + '88'); g.addColorStop(1, col.trim() + '00'); cx.fillStyle = g; cx.beginPath(); cx.arc(bxp, byp, s2 * 2.6, 0, 7); cx.fill();
+    if (inv > 0 && Math.floor(inv * 10) % 2) cx.globalAlpha = 0.35;
+    cx.fillStyle = '#0b0b14'; cx.strokeStyle = col.trim(); cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(bxp, byp, s2 * 1.05, s2 * 0.62, Math.max(-0.5, Math.min(0.5, bvy * 0.6)), 0, 7); cx.fill(); cx.stroke();
+    var wa = held ? Math.sin(performance.now() / 40) : Math.sin(performance.now() / 120) * 0.4; cx.fillStyle = '#1a1a26'; cx.beginPath(); cx.moveTo(bxp - s2 * 0.3, byp - s2 * 0.1); cx.quadraticCurveTo(bxp + s2 * 0.1, byp - s2 * (0.4 + 1.3 * wa), bxp + s2 * 0.45, byp - s2 * 0.05); cx.closePath(); cx.fill();
+    cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(bxp + s2 * 1.0, byp - s2 * 0.25); cx.lineTo(bxp + s2 * 1.5, byp - s2 * 0.1); cx.lineTo(bxp + s2 * 1.0, byp + s2 * 0.05); cx.closePath(); cx.fill();
+    cx.globalAlpha = 1;
+  }
+  requestAnimationFrame(loop);
   // the one button: hold anywhere on the pad
-  function press(v) { if (held === v) return; held = v; $('pad').classList.toggle('down', v && $('pad').classList.contains('fly')); if (net) net.toHost('zg', { pid: pid, h: v ? 1 : 0 }); }
+  function press(v) { if (held === v) return; held = v; $('pad').classList.toggle('down', v && $('pad').classList.contains('fly')); if (net) { if (fly) send(true); else net.toHost('zg', { pid: pid, h: v ? 1 : 0 }); } }
   var pad = $('pad');
   pad.addEventListener('touchstart', function (e) { e.preventDefault(); press(true); }, { passive: false });
   pad.addEventListener('touchend', function (e) { e.preventDefault(); press(false); }, { passive: false });
