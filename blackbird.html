@@ -165,7 +165,7 @@
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
     var x0 = birdXAt(T);
-    var fast = T >= FAST_T - 0.5, mixSeg = false && x0 < FOREST - 1 && T > PRACT0 + 0.01,   /* (branches from above: switched off for now) */ oakSeg = false && mixSeg && T >= PRACT0 + 3 * SEG - 0.01 && T < PRACT0 + 5 * SEG - 0.01;   // (the oak: switched off for now)   // (over the pines, after the first stretch: pines from below mixed with branches from clumps of leaves; and two stretches under an enormous oak, its limbs reaching down)
+    var fast = T >= FAST_T - 0.5, mixSeg = x0 < FOREST - 1 && T > PRACT0 + 0.01,   /* (over the pines, after the first stretch: pines from below, mixed with brambles hanging down from above) */ oakSeg = false && mixSeg && T >= PRACT0 + 3 * SEG - 0.01 && T < PRACT0 + 5 * SEG - 0.01;   // (the oak: switched off for now)   // (over the pines, after the first stretch: pines from below mixed with branches from clumps of leaves; and two stretches under an enormous oak, its limbs reaching down)
     if (roundTurn >= roundLen || !pattern || pattern.fast !== fast || pattern.mix !== mixSeg + '' + oakSeg) { pattern = newPattern(x0, fast, T <= PRACT0 + 0.01, mixSeg, oakSeg); roundTurn = 0; roundLen = 1; }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
     pattern.forEach(function (o) { var at = T + o.tau; if (at > FAST_T - 3 && at < FAST_T + 2) return;
@@ -705,6 +705,39 @@
     drawOakLimb(px, tip, sd);
     for (var k = 0; k < 6; k++) { var a2 = hsh(sd * 50 + k), b2 = hsh(sd * 70 + k * 3); foliage(px + (a2 - 0.5) * H * 0.5, H * (0.0 + b2 * 0.09) * (1 - Math.abs(a2 - 0.5)), H * (0.07 + hsh(sd * 90 + k) * 0.04), sd * 200 + k * 17, 4); }   // (a big clump of leaves at the top of the screen)
   }
+  /* brambles: a thorny thicket along the top of the screen, one long cane arching down out of it (that cane, outlined in
+     purple, hurts; the thicket itself doesn't) */
+  function cane(x0, y0, x1, y1, bend, w, sd, col) {   // a thorny bramble cane: a bending curve with little hooked thorns
+    var cxp = (x0 + x1) / 2 + bend, cyp = Math.min(y0, y1) + (Math.abs(y1 - y0)) * 0.15, pt = function (u) { var v = 1 - u; return [v * v * x0 + 2 * v * u * cxp + u * u * x1, v * v * y0 + 2 * v * u * cyp + u * u * y1]; };
+    cx.strokeStyle = col; cx.lineCap = 'round'; cx.lineWidth = w; cx.beginPath(); cx.moveTo(x0, y0); cx.quadraticCurveTo(cxp, cyp, x1, y1); cx.stroke();
+    cx.fillStyle = col; for (var i = 1; i < 12; i++) { var u = i / 12, p = pt(u), q = pt(u + 0.01), an = Math.atan2(q[1] - p[1], q[0] - p[0]), sd2 = i % 2 ? 1 : -1, tl = w * (1.6 + hsh(sd + i) * 0.8);   // (thorns, pointing back along the cane)
+      cx.beginPath(); cx.moveTo(p[0] + Math.cos(an + sd2 * 1.57) * w * 0.4, p[1] + Math.sin(an + sd2 * 1.57) * w * 0.4); cx.lineTo(p[0] + Math.cos(an + sd2 * 2.4) * tl, p[1] + Math.sin(an + sd2 * 2.4) * tl); cx.lineTo(p[0] - Math.cos(an) * w * 0.6, p[1] - Math.sin(an) * w * 0.6); cx.closePath(); cx.fill(); }
+    return pt;
+  }
+  function brLeaf(x, y, sz, an, lit) {   // a bramble leaf: three toothed leaflets
+    cx.save(); cx.translate(x, y); cx.rotate(an);
+    [[0, -1, 1], [-0.75, -0.35, 0.8], [0.75, -0.35, 0.8]].forEach(function (l) { cx.save(); cx.translate(l[0] * sz * 0.55, l[1] * sz * 0.55); cx.rotate(l[0] * 0.9); var a = sz * 0.55 * l[2], b = sz * 0.3 * l[2];
+      cx.fillStyle = lit ? '#2b4466' : '#1a2b45'; cx.beginPath(); cx.moveTo(0, a); for (var k = 0; k <= 8; k++) { var t2 = Math.PI * k / 8, rr = (k % 2 ? 1 : 0.86); cx.lineTo(Math.sin(t2) * b * rr, Math.cos(t2) * a * rr); } for (k = 8; k >= 0; k--) { var t3 = Math.PI * k / 8, r3 = (k % 2 ? 1 : 0.86); cx.lineTo(-Math.sin(t3) * b * r3, Math.cos(t3) * a * r3); } cx.fill();
+      cx.strokeStyle = 'rgba(120,150,210,.25)'; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(0, a * 0.9); cx.lineTo(0, -a * 0.9); cx.stroke(); cx.restore(); });
+    cx.restore();
+  }
+  function berries(x, y, r, ripe) {   // a little cluster of blackberries (some still red)
+    for (var i = 0; i < 7; i++) { var an = i / 6 * 6.28, d = i === 6 ? 0 : r * 0.55; cx.fillStyle = ripe ? '#24102e' : '#6a1830'; cx.beginPath(); cx.arc(x + Math.cos(an) * d, y + Math.sin(an) * d, r * 0.48, 0, 7); cx.fill(); cx.fillStyle = ripe ? 'rgba(170,150,230,.55)' : 'rgba(255,170,190,.5)'; cx.beginPath(); cx.arc(x + Math.cos(an) * d - r * 0.15, y + Math.sin(an) * d - r * 0.15, r * 0.13, 0, 7); cx.fill(); }
+  }
+  function drawBramble(px, tip, sd) {
+    var k, side = sd < 0.5 ? -1 : 1, dk = '#2a3156', w = H * 0.007;
+    for (k = 0; k < 14; k++) { var a = hsh(sd * 40 + k), b2 = hsh(sd * 60 + k), x0 = px + (a - 0.5) * H * 0.6, x1 = x0 + (b2 - 0.5) * H * 0.3, y1 = H * (0.08 + hsh(sd * 80 + k) * 0.14) * (1 - Math.abs(a - 0.5));   // (the thicket: canes arching over each other)
+      cane(x0 - H * 0.08, -H * 0.02, x1, y1, (b2 - 0.5) * H * 0.1, w * 0.8, sd * 9 + k, dk); }
+    for (k = 0; k < 30; k++) { var a4 = hsh(sd * 13 + k), b4 = hsh(sd * 17 + k); brLeaf(px + (a4 - 0.5) * H * 0.6, H * (0.02 + b4 * 0.14) * (1 - Math.abs(a4 - 0.5) * 1.2), H * (0.04 + hsh(k + sd) * 0.025), a4 * 6, b4 < 0.4); }   // (thick with leaves)
+    for (k = 0; k < 5; k++) berries(px + (hsh(sd * 23 + k) - 0.5) * H * 0.45, H * (0.07 + hsh(sd * 29 + k) * 0.08), H * 0.013, k % 3 !== 1);
+    // the long cane, arching out of the thicket and hanging down: the danger
+    var sx0 = px - side * H * 0.12, sy0 = H * 0.04, ex = px, ey = tip;
+    cx.save(); cx.shadowColor = 'rgba(185,80,255,.95)'; cx.shadowBlur = H * 0.018;
+    var pt = cane(sx0, sy0, ex, ey, side * H * 0.09, w * 1.5, sd * 31, 'rgba(205,125,255,.95)');   // (the glowing outline)
+    cx.restore(); cane(sx0, sy0, ex, ey, side * H * 0.09, w * 0.9, sd * 31, '#26203f');
+    [0.3, 0.5, 0.72].forEach(function (u, i) { var p = pt(u); brLeaf(p[0] + side * H * 0.015, p[1], H * 0.03, side * 1.2 + i, i === 0); });   // (a couple of leaves along it)
+    cx.save(); cx.shadowColor = 'rgba(185,80,255,.9)'; cx.shadowBlur = H * 0.016; berries(ex, ey + H * 0.008, H * 0.016, true); cx.restore();   // (and blackberries at its end)
+  }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
     var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
     if (side < 0) return e - 0.018 * (Math.abs(Math.sin(X * 6.3)) + 0.6 * Math.abs(Math.sin(X * 11.7 + 2)));
@@ -871,7 +904,7 @@
       }
       if (r.x < FOREST) {
         if (r.top && r.oak) { drawOakLimb(px, tip, r.tw); return; }
-        if (r.top && r.clump) { drawBough(px, tip, r.tw); return; }
+        if (r.top && r.clump) { drawBramble(px, tip, r.tw); return; }
         if (r.top) { cx.fillStyle = '#4a5898'; for (var cq = 0; cq < 6; cq++) { var cf = cq / 5, cyy = base + (tip - base) * cf, cr = H * (0.05 - 0.022 * cf); cx.beginPath(); cx.arc(px + Math.sin(cq * 1.7 + r.tw * 6) * H * 0.018, cyy - cr * 0.3, cr, 0, 7); cx.fill(); } cx.strokeStyle = 'rgba(210,225,255,.45)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip - H * 0.012, H * 0.028, 0.2, Math.PI - 0.2); cx.stroke(); }   // a trailing cloud
         else { var ph = base - tip, nt = Math.max(4, Math.round(ph / (H * 0.07))); cx.fillStyle = '#3a2a22'; cx.fillRect(px - H * 0.008, tip + ph * 0.5, H * 0.016, ph * 0.5);   // a whole pine tree, standing up from below: the trunk
           cx.fillStyle = '#050a18'; cx.beginPath(); for (var pq = 0; pq < nt; pq++) { var py0 = tip + ph * 0.88 * pq / nt, pw = H * (0.02 + 0.07 * (pq + 1) / nt), th2 = ph * 0.88 / nt * 1.7; cx.moveTo(px, py0); cx.lineTo(px - pw, py0 + th2); cx.lineTo(px + pw, py0 + th2); cx.closePath(); } cx.fill();
