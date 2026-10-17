@@ -36,7 +36,7 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
   not knowing (a spelling round was tried and dropped for that reason). An odd one out plays alone with both buttons.
   **Test version built:** 🧪 Test → "💞 Odd Couples (prototype)" (duo.html, phones on duopad.html). Still to do:
   music, a stage intro, hook into the roster.
-- **The Guardian's Vault** (logic riddles, after Blue Prince's Parlor puzzle). A stone Guardian with a sword, three
+- **The Guardian's Vault** (logic riddles, after Blue Prince's Parlor puzzle). The Guardian, an original warrior in black with big feathered shoulders, long black hair and a huge sword (styled after the stage of Warrior, Georgia 2015), in white and blue light rays, three
   chests (gold, silver, bronze) with statements; at least one chest tells only the truth, at least one only lies;
   one holds the treasure. Pick a chest on the phone (can change until time's up, 30 → 58 s); the Guardian smashes
   the two wrong ones. 2 lives each, 8 riddles, last ones standing win; if everyone left would be knocked out at
