@@ -675,14 +675,15 @@
     var X = cam + bx(b), y = b.y, L = t < TAKEOFF ? 0 : Math.max(0, Math.min(1, (t - TAKEOFF - b.dl) / b.fi));
     if (L < 1) {
       if (b.lead) { var e = L * L * (3 - 2 * L); X = b.rx + (X - b.rx) * e; y = b.ry + (b.y - b.ry) * e - Math.sin(Math.PI * L) * 0.12; }
-      else { var ez3 = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); }, upY = ROOF_Y - 0.1;   // (first straight up behind the house until clear of the roof, only then off to join the flock)
-        if (L < 0.42) { X = b.rx; y = b.ry + (upY - b.ry) * ez3(L / 0.42); } else { var u2 = ez3((L - 0.42) / 0.58); X = b.rx + (X - b.rx) * u2; y = upY + (b.y - upY) * u2; } }
+      else { var ey = 1 - Math.pow(1 - L, 2.2), ex = Math.pow(L, 1.8); X = b.rx + (X - b.rx) * ex; y = b.ry + (b.y - 0.06 - b.ry) * ey + 0.06 * ex; }
     }
-    if (t >= TAKEOFF && t < TAKEOFF + 12 && X > 0.04 && X < 1.06) y = Math.min(y, roofTop(X) - 0.05);   // (never in front of the house: over its roof until they're past it)
     return { X: X, y: y, L: L };
   }
   function roofTop(x) { if (x < 0.08 || x > 1.02) return 2; if (x < 0.16) return 0.63 - (x - 0.08) / 0.08 * 0.16; if (x > 0.94) return 0.47 + (x - 0.94) / 0.08 * 0.16; return ROOF_Y; }
-  function behind(b) { if (b.lead || t < TAKEOFF || cam > 1.4) return false; var p = birdPos(b); return p.L < 1 && p.y > roofTop(p.X - cam * 0) - 0.035; }   // (still below the roofline: drawn before the house, so it hides them)
+  function behind(b) {   // (a bird where the house is, below its roof line, is drawn behind the house: it flies past behind it, never through it)
+    if (b.lead || t < TAKEOFF || cam > 1.4) return false; var p = birdPos(b), x = p.X;
+    if (p.y <= roofTop(x) - 0.035) return false;
+    return p.y > 0.63 ? x > 0.12 && x < 0.98 : x > 0.08 && x < 1.02; }
   function drawBird(b) {
       if (!b.lead && t < TAKEOFF + b.dl) return;   // (the others wait out of sight behind the house)
       if (!b.lead && t >= HOME_T) return;
