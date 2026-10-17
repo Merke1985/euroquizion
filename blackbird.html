@@ -768,7 +768,6 @@
     else if (t < REVEAL0) txt = '';
     else if (t < MSG0 - 1.5) txt = '✨ Meet the flock…';
     else if (t < PRACT0 - WARN) txt = '';
-    else if (cam + 0.3 * W / H > GRAVE_X - 0.2 && cam + 0.3 * W / H < GRAVE_X + 1.2) txt = '🌸 Out of the forest… a quiet, beautiful place';
     $('side').style.opacity = t >= SOAR_T ? '0' : '1';
     $('howto').className = 'howto' + (t >= MSG0 && t < MSG1 ? ' on' : '');
     bn.textContent = txt; bn.className = 'banner' + (txt ? ' on' : '') + (cls ? ' ' + cls : '');
