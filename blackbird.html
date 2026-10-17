@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Blackbird (test)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+<style>
+  /* Blackbird: an early test of the flock game. One computer: your own bird (hold to fly) and a few computer birds. */
+  :root{--ink:#fff;--mute:#b9c3e6;--gold:#ffd166;--line:rgba(255,255,255,.16)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#050819;overflow:hidden;font-family:"Bricolage Grotesque",system-ui,sans-serif;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+  .hud{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;gap:14px;padding:12px 16px;pointer-events:none}
+  .hud h1{margin:0;font-size:clamp(1rem,2vw,1.5rem);font-weight:800;letter-spacing:.01em}
+  .hud h1 small{font-weight:600;color:var(--mute);font-size:.7em;margin-left:.4em}
+  .bar{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fb3ff,#ffd166);border-radius:99px}
+  .side{position:fixed;right:12px;top:48px;display:flex;flex-direction:column;gap:6px;pointer-events:none;min-width:190px}
+  .row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:rgba(10,14,40,.62);border:1px solid var(--line);font-weight:700;font-size:.92rem;transition:background .3s,box-shadow .3s,opacity .3s}
+  .row .dot{width:12px;height:12px;border-radius:50%;flex:none}
+  .row .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .fe{letter-spacing:-.15em;font-size:.95rem}
+  .row.fly{background:rgba(255,209,102,.22);box-shadow:0 0 0 2px var(--gold),0 0 16px rgba(255,209,102,.45)}
+  .row.out{opacity:.4}
+  .banner{position:fixed;left:50%;bottom:7vh;transform:translateX(-50%) scale(.9);padding:14px 26px;border-radius:999px;font-weight:800;font-size:clamp(1.1rem,2.6vw,1.9rem);background:rgba(10,14,40,.75);border:2px solid var(--line);opacity:0;transition:opacity .25s,transform .25s,background .25s,border-color .25s;pointer-events:none;white-space:nowrap}
+  .banner.on{opacity:1;transform:translateX(-50%) scale(1)}
+  .banner.me{background:rgba(255,209,102,.95);color:#2a1a00;border-color:#fff;box-shadow:0 0 40px rgba(255,209,102,.6)}
+  .banner.warn{background:rgba(143,179,255,.9);color:#0a1033;border-color:#fff}
+  .ov{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,rgba(30,40,110,.75),rgba(3,5,18,.92));z-index:5;padding:16px}
+  .ov.hidden{display:none}
+  .card{max-width:620px;width:100%;padding:26px 28px;border-radius:22px;background:rgba(12,16,46,.9);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .card h2{margin:0 0 .3em;font-size:clamp(1.6rem,4vw,2.4rem)}
+  .card p{margin:.4em 0;color:var(--mute);line-height:1.45}
+  .card b{color:var(--ink)}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  button{font:inherit;font-weight:800;border:0;border-radius:14px;padding:12px 18px;cursor:pointer;background:var(--gold);color:#2a1a00;font-size:1.05rem}
+  button.alt{background:rgba(255,255,255,.1);color:var(--ink);border:1px solid var(--line)}
+  label{color:var(--mute);font-weight:700}
+  select{font:inherit;font-weight:700;padding:8px 10px;border-radius:10px;background:#141a44;color:#fff;border:1px solid var(--line)}
+  ol.res{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+  ol.res li{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:700}
+  ol.res li.top{background:rgba(255,209,102,.2);box-shadow:0 0 0 2px var(--gold)}
+  ol.res li .rk{width:1.6em;color:var(--gold)}
+  ol.res li .nm{flex:1}
+  #yt{position:fixed;left:-9999px;top:0;width:200px;height:120px}
+  .hint{position:fixed;left:16px;bottom:12px;color:var(--mute);font-size:.85rem;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud"><h1>🐦‍⬛ Blackbird <small>test</small></h1><div class="bar"><i id="tbar"></i></div></div>
+<div class="side" id="side"></div>
+<div class="banner" id="banner"></div>
+<div class="hint">Hold the mouse button, your finger or the spacebar to fly up · let go to glide down</div>
+<div id="yt"></div>
+
+<div class="ov" id="start">
+  <div class="card">
+    <h2>🐦‍⬛ Blackbird</h2>
+    <p>The whole flock flies along with the song. Most of the time your bird is on <b>autopilot</b> and can’t crash.</p>
+    <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you: <b>hold</b> to fly up, <b>let go</b> to glide down, and stay inside the band of light, away from the branches.</p>
+    <p>A hit costs a feather 🪶 (you have 3). No feathers left and your bird lands on a branch. Most feathers when the song ends wins.</p>
+    <div class="btns">
+      <label>Computer birds <select id="nbots"><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
+      <button id="go">▶ Start with the song</button>
+      <button class="alt" id="go2">Start without sound</button>
+    </div>
+  </div>
+</div>
+<div class="ov hidden" id="end">
+  <div class="card">
+    <h2 id="endt">The flock has landed</h2>
+    <ol class="res" id="res"></ol>
+    <div class="btns"><button id="again">↻ Fly again</button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $('c'), cx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
+  function size() { DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  addEventListener('resize', size); size();
+
+  // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
+  var DUR = 95, SPEED = 0.42, XEND = DUR * SPEED, WARM = 3;   // (an early test: 95 seconds; the real game would follow the whole song)
+  var seed = 1;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  function diff(x) { var d = Math.max(0, Math.min(1, x / XEND)); return d < .35 ? d / .35 * .35 : d < .72 ? .35 + (d - .35) / .37 * .3 : .65 + (d - .72) / .28 * .35; }   // calm, the middle, the climax
+  function half(x) { return 0.30 - 0.13 * diff(x); }   // half the height of the band of light
+  function cen(x) {   // its middle: a slow wave that swings wider and faster as the song builds (not the real melody)
+    var d = diff(x), a = 0.05 + 0.24 * d;
+    var y = 0.5 + a * (0.62 * Math.sin(0.85 * x) + 0.28 * Math.sin(2.05 * x + 1.3) + 0.1 * Math.sin((3.6 + 2 * d) * x + 0.4));
+    var h = half(x); return Math.max(h + 0.05, Math.min(1 - h - 0.05, y));
+  }
+  var branches = [];
+  function makeCourse() {
+    seed = 1 + Math.floor(Math.random() * 1e6); branches = [];
+    var x = 6;
+    while (x < XEND - 2) {
+      var d = diff(x), top = rnd() < 0.5, h = half(x), c = cen(x), reach = (0.32 + 0.28 * d + rnd() * 0.12) * 2 * h;   // how far into the band it sticks
+      branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() });
+      x += (2.6 - 1.3 * d) + rnd() * (1.4 - 0.6 * d);
+    }
+  }
+
+  // ---------- the flock ----------
+  var COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43', '#f5f5f5', '#ff4d6d', '#4dd4b0', '#a3b8ff'];
+  var NAMES = ['You', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Nightingale', 'Magpie'];
+  var birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
+  function makeBirds(nb) {
+    birds = [];
+    for (var i = 0; i <= nb; i++) birds.push({ id: i, name: NAMES[i], col: COLS[i % COLS.length], human: i === 0, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
+      skill: 0.55 + Math.random() * 0.4, react: 0.1 + Math.random() * 0.14, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
+    me = birds[0];
+    var n = birds.length; birds.forEach(function (b, i) { b.off = n > 1 ? (i / (n - 1)) * 2 - 1 : 0; b.xo = -((i * 37) % n) * 0.06; });   // (a loose V: everyone their own place in the formation)
+    birds.forEach(function (b) { b.y = cen(cam + bx(b)) + b.off * half(cam) * 0.62; });
+    pickN = n <= 3 ? 1 : n <= 7 ? 2 : 3;
+  }
+  function bx(b) { return 0.3 * W / H + b.xo - b.back; }   // the bird's place on the screen, in world units from the left edge
+  function alive() { return birds.filter(function (b) { return !b.out; }); }
+
+  // ---------- picking who flies (fair: whoever has flown least goes first, random among equals) ----------
+  var TURN = 5, WARN = 1.1;
+  function choose() {
+    var al = alive(); if (!al.length) return [];
+    var sh = al.slice().sort(function () { return Math.random() - .5; }).sort(function (a, b) { return a.flown - b.flown; });
+    return sh.slice(0, Math.min(pickN, al.length));
+  }
+  function schedule() {
+    if (t >= nextPick - WARN && !pending.length && t < DUR - 2) { pending = choose(); warnAt = t; }
+    if (t >= nextPick && pending.length) {
+      birds.forEach(function (b) { b.manual = false; });
+      pending.forEach(function (b) { if (!b.out) { b.manual = true; b.turnStart = t; b.turnHit = false; } });
+      pending = []; nextPick = t + TURN;
+    }
+    if (t >= DUR - 2) birds.forEach(function (b) { b.manual = false; });
+  }
+
+  // ---------- a computer bird flying itself: aims for the middle of the band (or the gap past a branch), with a little delay and the odd slip ----------
+  function botSteer(b, dt) {
+    b.decide -= dt; if (b.decide > 0) return;
+    b.decide = b.react * (0.7 + Math.random() * 0.6);
+    var X = cam + bx(b), look = 0.22 + 0.25 * b.skill, tgt = cen(X + look);
+    var br = branches.filter(function (r) { return r.x > X - 0.05 && r.x < X + 0.7; })[0];
+    if (br) { var h = half(br.x), c = cen(br.x); tgt = br.top ? (br.tip + (c + h)) / 2 : ((c - h) + br.tip) / 2; }
+    var err = (Math.random() - .5) * 0.14 * (1.2 - b.skill), pred = b.y + b.vy * 0.25;
+    b.hold = pred > tgt + err;
+    if (Math.random() < 0.025 * (1.1 - b.skill)) b.hold = !b.hold;   // (a slip now and then)
+  }
+
+  // ---------- one step ----------
+  var GRAV = 1.45, LIFT = 1.75, VMAX = 0.78, R = 0.026;
+  function step(dt) {
+    t += dt; cam += SPEED * dt; schedule();
+    birds.forEach(function (b) {
+      b.flap += dt * (b.manual && (b.human ? hold : b.hold) ? 16 : 7);
+      if (b.out) { b.fall += dt; b.vy = Math.min(1.2, b.vy + 1.6 * dt); b.y += b.vy * dt; return; }
+      b.inv = Math.max(0, b.inv - dt); b.back = Math.max(0, b.back - dt * 0.01);
+      var X = cam + bx(b);
+      if (b.manual) {
+        b.flown += dt;
+        if (!b.human) botSteer(b, dt);
+        var up = b.human ? hold : b.hold;
+        b.vy += (up ? -LIFT : GRAV) * dt; b.vy = Math.max(-VMAX, Math.min(VMAX, b.vy)); b.y += b.vy * dt;
+        if (b.y < R) { b.y = R; b.vy = 0; } if (b.y > 1 - R) { b.y = 1 - R; b.vy = 0; }
+        if (b.inv <= 0 && hits(b, X)) hit(b);
+        if (!b.turnHit) b.clean += dt;
+      } else {   // autopilot: back to its place in the flock, smoothly
+        var ty = cen(X + 0.12) + b.off * half(X) * 0.62, ny = b.y + (ty - b.y) * Math.min(1, dt * 3.2);
+        b.vy = (ny - b.y) / Math.max(dt, 1e-3); b.y = ny;
+      }
+    });
+    parts = parts.filter(function (p) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.35 * dt; p.r += dt * 2.4; return p.t < 1.6; });
+    if (!ended && (t >= DUR || !alive().length)) finish();
+  }
+  function hits(b, X) {
+    var c = cen(X), h = half(X);
+    if (b.y - R < c - h || b.y + R > c + h) return true;
+    for (var i = 0; i < branches.length; i++) { var r = branches[i]; if (Math.abs(r.x - X) < 0.02 + R) { if (r.top ? b.y - R < r.tip : b.y + R > r.tip) return true; } }
+    return false;
+  }
+  function hit(b) {
+    b.feathers--; b.inv = 1.5; b.turnHit = true; b.back = Math.min(0.25, b.back + 0.06);
+    var X = cam + bx(b); b.vy = (cen(X) - b.y) * 2.5;   // (bounced back towards the middle)
+    for (var i = 0; i < 7; i++) parts.push({ x: X, y: b.y, vx: -0.2 - Math.random() * 0.3, vy: (Math.random() - .6) * 0.5, t: 0, r: Math.random() * 6, col: b.col });
+    if (b.feathers <= 0) { b.out = true; b.manual = false; b.vy = 0.1; }
+    if (b.human) { try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} }
+  }
+
+  // ---------- drawing ----------
+  var stars = []; for (var i = 0; i < 140; i++) stars.push({ x: Math.random(), y: Math.random() * 0.8, r: Math.random() * 1.4 + .3, p: Math.random() * 6 });
+  function sx(x) { return (x - cam) * H; } function sy(y) { return y * H; }
+  function draw() {
+    var g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#060a24'); g.addColorStop(0.6, '#0e1640'); g.addColorStop(1, '#1b1636'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    stars.forEach(function (s) { cx.globalAlpha = 0.4 + 0.4 * Math.sin(t * 1.3 + s.p); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(((s.x * W - cam * H * 0.08) % W + W) % W, s.y * H, s.r, 0, 7); cx.fill(); }); cx.globalAlpha = 1;
+    var mg = cx.createRadialGradient(W * 0.82, H * 0.2, 0, W * 0.82, H * 0.2, H * 0.22); mg.addColorStop(0, 'rgba(255,248,220,.9)'); mg.addColorStop(0.25, 'rgba(255,248,220,.5)'); mg.addColorStop(1, 'rgba(255,248,220,0)'); cx.fillStyle = mg; cx.fillRect(0, 0, W, H);
+    // the band of light
+    var x0 = cam - 0.1, x1 = cam + W / H + 0.1, st = 0.02, X;
+    cx.beginPath(); for (X = x0; X <= x1; X += st) cx.lineTo(sx(X), sy(cen(X) - half(X))); for (X = x1; X >= x0; X -= st) cx.lineTo(sx(X), sy(cen(X) + half(X))); cx.closePath();
+    var bg = cx.createLinearGradient(0, 0, W, 0); bg.addColorStop(0, 'rgba(120,150,255,.16)'); bg.addColorStop(1, 'rgba(255,209,102,.2)'); cx.fillStyle = bg; cx.fill();
+    [[-1, 'rgba(160,190,255,'], [1, 'rgba(255,215,140,']].forEach(function (e) {
+      cx.beginPath(); for (X = x0; X <= x1; X += st) cx.lineTo(sx(X), sy(cen(X) + e[0] * half(X)));
+      cx.strokeStyle = e[1] + '.18)'; cx.lineWidth = 10; cx.stroke(); cx.strokeStyle = e[1] + '.85)'; cx.lineWidth = 2; cx.stroke();
+    });
+    // the branches: bare, black, from the edge of the light into it
+    branches.forEach(function (r) {
+      if (r.x < x0 - 0.3 || r.x > x1 + 0.3) return;
+      var px = sx(r.x), base = r.top ? sy(cen(r.x) - half(r.x)) - 30 : sy(cen(r.x) + half(r.x)) + 30, tip = sy(r.tip), dir = r.top ? 1 : -1;
+      cx.strokeStyle = '#05060f'; cx.lineCap = 'round'; cx.lineWidth = 0.032 * H; cx.beginPath(); cx.moveTo(px - 6, base); cx.quadraticCurveTo(px + 8, (base + tip) / 2, px, tip); cx.stroke();
+      cx.lineWidth = 0.012 * H; for (var k = 1; k <= 3; k++) { var yy = base + (tip - base) * (k / 4), s = (k % 2 ? 1 : -1); cx.beginPath(); cx.moveTo(px, yy); cx.lineTo(px + s * 0.035 * H, yy + dir * 0.03 * H); cx.stroke(); }
+      cx.strokeStyle = 'rgba(255,90,110,.35)'; cx.lineWidth = 2; cx.beginPath(); cx.arc(px, tip, 0.022 * H, 0, 7); cx.stroke();   // (the danger point)
+    });
+    // the birds
+    birds.forEach(function (b) {
+      var X = cam + bx(b), px = sx(X), py = sy(b.y), s = H * 0.032;
+      if (b.out && py > H + 40) return;
+      cx.save(); cx.translate(px, py); cx.rotate(Math.max(-0.5, Math.min(0.5, b.vy * 0.6)));
+      if (b.inv > 0 && Math.floor(b.inv * 10) % 2) cx.globalAlpha = 0.35; if (b.out) cx.globalAlpha = Math.max(0, 0.8 - b.fall * 0.4);
+      if (b.manual) { var gl = cx.createRadialGradient(0, 0, 0, 0, 0, s * 2.6); gl.addColorStop(0, b.col + 'aa'); gl.addColorStop(1, b.col + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, s * 2.6, 0, 7); cx.fill(); }
+      var warn = pending.indexOf(b) >= 0; if (warn) { cx.strokeStyle = b.col; cx.lineWidth = 3; cx.beginPath(); cx.arc(0, 0, s * (1.6 + 0.3 * Math.sin(t * 18)), 0, 7); cx.stroke(); }
+      cx.fillStyle = '#0a0a12'; cx.beginPath(); cx.ellipse(0, 0, s * 1.05, s * 0.62, 0, 0, 7); cx.fill();   // body
+      cx.beginPath(); cx.moveTo(-s * 0.9, -s * 0.1); cx.lineTo(-s * 1.7, -s * 0.35); cx.lineTo(-s * 1.65, s * 0.25); cx.closePath(); cx.fill();   // tail
+      cx.beginPath(); cx.arc(s * 0.82, -s * 0.28, s * 0.42, 0, 7); cx.fill();   // head
+      cx.fillStyle = '#ffb000'; cx.beginPath(); cx.moveTo(s * 1.15, -s * 0.36); cx.lineTo(s * 1.6, -s * 0.22); cx.lineTo(s * 1.15, -s * 0.12); cx.closePath(); cx.fill();   // beak
+      cx.fillStyle = '#ffb000'; cx.beginPath(); cx.arc(s * 0.92, -s * 0.38, s * 0.1, 0, 7); cx.fill(); cx.fillStyle = '#000'; cx.beginPath(); cx.arc(s * 0.94, -s * 0.38, s * 0.05, 0, 7); cx.fill();   // eye ring
+      var wa = Math.sin(b.flap) * 0.9; cx.fillStyle = '#16161f'; cx.beginPath(); cx.moveTo(-s * 0.3, -s * 0.1); cx.quadraticCurveTo(s * 0.1, -s * (0.4 + 1.3 * wa), s * 0.45, -s * 0.05); cx.closePath(); cx.fill();   // wing
+      cx.strokeStyle = b.col; cx.lineWidth = 2.5; cx.beginPath(); cx.ellipse(0, 0, s * 1.08, s * 0.66, 0, 0, 7); cx.stroke();   // their colour
+      cx.restore();
+      if (!b.out && (b.manual || b.human || pending.indexOf(b) >= 0)) { cx.font = '700 ' + Math.round(H * 0.022) + 'px "Bricolage Grotesque",system-ui'; cx.textAlign = 'center'; cx.fillStyle = b.manual ? '#fff' : 'rgba(255,255,255,.55)'; cx.fillText(b.name + ' ' + '🪶'.repeat(b.feathers), px, py - s * 1.6); }
+    });
+    parts.forEach(function (p) { cx.save(); cx.globalAlpha = Math.max(0, 1 - p.t / 1.6); cx.translate(sx(p.x), sy(p.y)); cx.rotate(p.r); cx.fillStyle = '#1c1c28'; cx.strokeStyle = p.col; cx.lineWidth = 1; cx.beginPath(); cx.ellipse(0, 0, 7, 2.5, 0, 0, 7); cx.fill(); cx.stroke(); cx.restore(); });
+  }
+
+  // ---------- the side list and the banner ----------
+  var sideKey = '';
+  function hud() {
+    $('tbar').style.width = Math.min(100, t / DUR * 100) + '%';
+    var k = birds.map(function (b) { return b.feathers + (b.manual ? 'm' : '') + (b.out ? 'o' : ''); }).join(',');
+    if (k !== sideKey) { sideKey = k; $('side').innerHTML = birds.slice().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
+    var bn = $('banner'), txt = '', cls = '';
+    if (me.out) { txt = '🌿 Your bird has landed'; }
+    else if (me.manual) { txt = '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
+    else if (pending.indexOf(me) >= 0) { txt = '👆 Get ready… you fly in ' + Math.max(1, Math.ceil(nextPick - t)); cls = 'warn'; }
+    else if (t < WARM) txt = 'The flock takes off…';
+    bn.textContent = txt; bn.className = 'banner' + (txt ? ' on' : '') + (cls ? ' ' + cls : '');
+  }
+
+  // ---------- the loop ----------
+  function frame(now) {
+    if (!running) return;
+    var dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
+    step(dt); draw(); hud();
+    requestAnimationFrame(frame);
+  }
+  function finish() {
+    ended = true; running = false; ytStop();
+    var rows = birds.slice().sort(function (a, b) { return b.feathers - a.feathers || b.clean - a.clean; });
+    $('endt').textContent = rows[0].human ? '🏆 You win!' : '🏆 ' + rows[0].name + ' wins';
+    $('res').innerHTML = rows.map(function (b, i) { return '<li class="' + (i === 0 ? 'top' : '') + '"><span class="rk">' + (i + 1) + '</span><span class="dot" style="width:12px;height:12px;border-radius:50%;background:' + b.col + '"></span><span class="nm">' + b.name + '</span><span>' + (b.feathers ? '🪶'.repeat(b.feathers) : '🌿') + '</span><span style="color:var(--mute);min-width:6em;text-align:right">' + b.clean.toFixed(1) + 's clean</span></li>'; }).join('');
+    $('end').classList.remove('hidden');
+  }
+  function start(music) {
+    $('start').classList.add('hidden'); $('end').classList.add('hidden');
+    t = 0; cam = 0; nextPick = WARM; pending = []; parts = []; ended = false; sideKey = '';
+    makeCourse(); makeBirds(+$('nbots').value || 5);
+    if (music) ytPlay();
+    running = true; last = performance.now(); requestAnimationFrame(frame);
+  }
+  $('go').addEventListener('click', function () { start(true); });
+  $('go2').addEventListener('click', function () { start(false); });
+  $('again').addEventListener('click', function () { $('end').classList.add('hidden'); $('start').classList.remove('hidden'); });
+
+  // ---------- holding: mouse, touch or spacebar ----------
+  function down(e) { if (e.target.closest && e.target.closest('.ov')) return; hold = true; if (e.cancelable) e.preventDefault(); }
+  function up() { hold = false; }
+  addEventListener('pointerdown', down, { passive: false }); addEventListener('pointerup', up); addEventListener('pointercancel', up); addEventListener('blur', up);
+  addEventListener('keydown', function (e) { if (e.code === 'Space') { hold = true; e.preventDefault(); } });
+  addEventListener('keyup', function (e) { if (e.code === 'Space') hold = false; });
+
+  // ---------- the song (Blackbird, Norma John, Finland 2017), quietly in the background ----------
+  var yt = null, ytOk = false, ytWant = false;
+  window.onYouTubeIframeAPIReady = function () { yt = new YT.Player('yt', { width: 200, height: 120, videoId: 'Ufba0nOz0fQ', playerVars: { controls: 0, disablekb: 1, playsinline: 1, rel: 0 }, events: { onReady: function () { ytOk = true; if (ytWant) ytPlay(); } } }); };
+  (function () { var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
+  function ytPlay() { ytWant = true; if (!ytOk) return; try { yt.seekTo(0, true); yt.setVolume(80); yt.unMute(); yt.playVideo(); } catch (e) {} }
+  function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
+
+  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; } };   // (for testing)
+  draw();
+})();
+</script>
+</body>
+</html>
