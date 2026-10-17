@@ -165,7 +165,7 @@
   }
   function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
     var x0 = birdXAt(T);
-    var fast = T >= FAST_T - 0.5, mixSeg = x0 < FOREST - 1 && T > PRACT0 + 0.01, oakSeg = false && mixSeg && T >= PRACT0 + 3 * SEG - 0.01 && T < PRACT0 + 5 * SEG - 0.01;   // (the oak: switched off for now)   // (over the pines, after the first stretch: pines from below mixed with branches from clumps of leaves; and two stretches under an enormous oak, its limbs reaching down)
+    var fast = T >= FAST_T - 0.5, mixSeg = false && x0 < FOREST - 1 && T > PRACT0 + 0.01,   /* (branches from above: switched off for now) */ oakSeg = false && mixSeg && T >= PRACT0 + 3 * SEG - 0.01 && T < PRACT0 + 5 * SEG - 0.01;   // (the oak: switched off for now)   // (over the pines, after the first stretch: pines from below mixed with branches from clumps of leaves; and two stretches under an enormous oak, its limbs reaching down)
     if (roundTurn >= roundLen || !pattern || pattern.fast !== fast || pattern.mix !== mixSeg + '' + oakSeg) { pattern = newPattern(x0, fast, T <= PRACT0 + 0.01, mixSeg, oakSeg); roundTurn = 0; roundLen = 1; }
     roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
     pattern.forEach(function (o) { var at = T + o.tau; if (at > FAST_T - 3 && at < FAST_T + 2) return;
