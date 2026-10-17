@@ -33,6 +33,7 @@
   .w.dim{opacity:.35}
   .w.typo{border-color:#ff4d6d;box-shadow:0 0 30px rgba(255,77,109,.6);background:rgba(255,77,109,.15)}
   .w.typo s{color:#ff8fa3;text-decoration-thickness:.08em}
+  .pair{display:flex;flex-direction:column;gap:3.5vh;width:100%} .pair .row{display:flex;flex-wrap:wrap;justify-content:center;gap:1.4vw 1.2vw}
   @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
   .verdict{font-size:clamp(2rem,6vw,5.5rem);font-weight:800;min-height:1.2em;text-shadow:0 0 30px rgba(255,209,102,.8);color:var(--gold)}
   .src{color:var(--mute);font-weight:600;font-size:clamp(.9rem,1.5vw,1.3rem);min-height:1.4em}
@@ -91,7 +92,7 @@
     <h2>💞 Odd Couples</h2>
     <p>You play in <b>pairs</b>. A long Eurovision song title appears on the big screen. Does it have an <b>even</b> or an <b>odd</b> number of words?</p>
     <p>In every pair <b>one partner has the EVEN button</b> and the other <b>the ODD button</b>, so only the right partner can answer. Decide together who presses! A wrong press locks your pair out for that round. Now and then the buttons <b>swap</b>.</p>
-    <p>In a <b>spelling round</b> a foreign title appears, spelled right or with one sneaky typo: EVEN means correct, ODD means misspelt.</p>
+    <p>In a <b>spot-the-difference round</b> the title appears twice: is the bottom copy exactly the same, or is one tiny thing different? EVEN means same, ODD means different.</p>
     <p>First correct pair: <b>3 points</b>. Every other correct pair: 1 point. 12 rounds.</p>
     <div class="join"><div class="qr" id="qr"></div><div><b>📱 Join with your phone</b><br><span class="mute">Scan the code, or open</span> <span id="url"></span><br><span class="mute">Room</span> <b id="code" class="code"></b><div id="plist" class="plist"><span class="mute">Nobody has joined yet: the computer pairs play alone.</span></div></div></div>
     <div class="btns">
@@ -117,11 +118,11 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var ROUNDS = 12, AFTER_ALL = 7, STEP = 0.75, COUNT = 0.22;   // (12 rounds; 7 s to answer once the whole title is there; build-up rounds add a word every 0.75 s; the count at the reveal)
-  var PLAN = [{}, {}, {}, { spell: 1 }, { swap: 1 }, { build: 1 }, { build: 1 }, { spell: 1, swap: 1 }, { build: 1 }, { spell: 1 }, { letter: 1 }, { letter: 1, swap: 1 }];   // (what each round adds: the buttons swap, the title builds up word by word, only words with a certain letter count, or a spelling round: a foreign title, right or with one typo)
+  var PLAN = [{}, {}, {}, { spot: 1 }, { swap: 1 }, { build: 1 }, { build: 1 }, { spot: 1, swap: 1 }, { build: 1 }, { spot: 1 }, { letter: 1 }, { letter: 1, swap: 1 }];   // (what each round adds: the buttons swap, the title builds up word by word, only words with a certain letter count, or spot the difference: the title twice, the second the same or with one tiny change)
   var TCOLS = ['#ff4fa3', '#5ee0ff', '#ffd166', '#8dff8a', '#c58bff', '#ff9f43', '#4dd4b0', '#ff6b6b'];
   var BOTN = [['Loreen', 'Käärijä'], ['Abba', 'Lordi'], ['Conchita', 'Verka'], ['Emmy', 'Joost']];
-  var songs = [], spellSongs = [], countries = {};
-  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries || {}; songs = (d.songs || []).filter(function (s) { var n = words(s[3]).length; return n >= 5 && n <= 10; }); spellSongs = (d.songs || []).filter(function (s) { var w = words(s[3]); return s[10] && s[10] !== 'english' && w.length >= 2 && w.length <= 7 && w.some(function (x) { return /\p{L}{5,}/u.test(x); }); }); }).catch(function () {});
+  var songs = [], spotSongs = [], countries = {};
+  fetch('songs.json').then(function (r) { return r.json(); }).then(function (d) { countries = d.countries || {}; songs = (d.songs || []).filter(function (s) { var n = words(s[3]).length; return n >= 5 && n <= 10; }); spotSongs = (d.songs || []).filter(function (s) { var w = words(s[3]); return w.length >= 3 && w.length <= 7 && w.some(function (x) { return /\p{L}{5,}/u.test(x); }); }); }).catch(function () {});
   function words(title) { return String(title || '').replace(/\s*\([^)]*\)\s*/g, ' ').split(/\s+/).filter(function (w) { return /[\p{L}\p{N}]/u.test(w); }); }   // (the translation in brackets goes; a lone dash isn't a word)
 
   // ---------- sound ----------
@@ -161,7 +162,7 @@
   function start() { au(); if (!songs.length) { alert('The song list is still loading, try again in a second.'); return; } makeTeams(); if (!teams.length) return; ended = false; rd = 0; $('start').classList.add('hidden'); $('end').classList.add('hidden'); t = 0; nextRound(); }
   function setPhase(p) { phase = p; phT = t; }
   var PLAIN = { 'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a', 'å': 'a', 'ã': 'a', 'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e', 'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i', 'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o', 'õ': 'o', 'ø': 'o', 'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u', 'ç': 'c', 'ñ': 'n', 'š': 's', 'č': 'c', 'ž': 'z', 'ć': 'c', 'ý': 'y', 'ř': 'r', 'ł': 'l', 'ș': 's', 'ț': 't' };
-  function typo(w) {   // one sneaky typo in a word: two letters swapped, a letter doubled or dropped, a vowel changed, or an accent left off (never the first letter)
+  function typo(w) {   // one tiny change in a word: two letters swapped, a letter doubled or dropped, a vowel changed, or an accent left off (never the first letter)
     var m = w.match(/\p{L}{5,}/u); if (!m) return null; var a = m.index, L = m[0], tries = 0, out;
     var vow = { a: 'e', e: 'a', i: 'e', o: 'u', u: 'o' };
     do { var k = 1 + Math.floor(Math.random() * (L.length - 2)), c = L[k], op = Math.floor(Math.random() * 5), x = L;
@@ -178,7 +179,7 @@
   function nextRound() {
     rd++; if (rd > ROUNDS) { finish(); return; }
     var pl = PLAN[rd - 1], s, ws, L = null, tries = 0;
-    if (pl.spell && spellSongs.length) { spellRound(pl); return; }
+    if (pl.spot && spotSongs.length) { spotRound(pl); return; }
     do { s = songs[Math.floor(Math.random() * songs.length)]; ws = words(s[3]); if (pl.letter) L = pickLetter(ws); tries++; } while (pl.letter && !L && tries < 50);
     var counted = L ? ws.map(function (w) { return w.toUpperCase().indexOf(L) >= 0; }) : ws.map(function () { return true; }), n = counted.filter(Boolean).length;
     cur = { s: s, ws: ws, L: L, counted: counted, n: n, odd: n % 2 === 1, build: !!pl.build, first: null };
@@ -191,16 +192,16 @@
     if (pl.swap) sSwap();
     setPhase('pre'); paintTeams(); sendState(true);
   }
-  function spellRound(pl) {   // a foreign title, spelled right or with one typo: EVEN partner = CORRECT, ODD partner = MISSPELT
-    var s = spellSongs[Math.floor(Math.random() * spellSongs.length)], ws = words(s[3]), bad = Math.random() < 0.5, at = -1, fix = null;
+  function spotRound(pl) {   // spot the difference: the title twice, the bottom copy the same or with one tiny change; EVEN partner = SAME, ODD partner = DIFFERENT
+    var s = spotSongs[Math.floor(Math.random() * spotSongs.length)], ws = words(s[3]), bad = Math.random() < 0.5, at = -1, fix = null;
     if (bad) { var cand = []; ws.forEach(function (w, i) { if (/\p{L}{5,}/u.test(w)) cand.push(i); }); at = cand[Math.floor(Math.random() * cand.length)]; var tw = typo(ws[at]); if (tw) { fix = ws[at]; ws = ws.slice(); ws[at] = tw; } else { bad = false; at = -1; } }
-    cur = { s: s, ws: ws, spell: true, bad: at, fix: fix, n: 0, odd: bad, counted: ws.map(function () { return false; }), build: false, first: null };
+    cur = { s: s, ws: fix != null ? words(s[3]) : ws, ws2: ws, spot: true, bad: at, fix: fix, n: 0, odd: bad, counted: ws.map(function () { return false; }), build: false, first: null };
     if (pl.swap) teams.forEach(function (tm) { tm.flip = !tm.flip; });
     teams.forEach(function (tm) { tm.ans = null; tm.who = null; tm.at = null; tm.got = 0; if (tm.bot) { tm.botAt = 2 + (1 - tm.skill) * 3 + Math.random() * 2.5; tm.botV = Math.random() < 0.45 + tm.skill * 0.4 ? (bad ? 1 : 0) : (bad ? 0 : 1); } });
     $('words').innerHTML = ''; $('verdict').textContent = ''; $('src').innerHTML = ''; shown = 0;
     $('rd').textContent = 'Round ' + rd + ' of ' + ROUNDS;
-    $('twist').textContent = '✍️ Spelling round' + (pl.swap ? ' · 🔄 Swap!' : ''); $('twist').classList.remove('hidden'); $('twist').classList.add('hot');
-    $('q').innerHTML = 'Spelled right, or is there a typo? <b>EVEN</b> = correct · <b>ODD</b> = misspelt';
+    $('twist').textContent = '🔍 Spot the difference' + (pl.swap ? ' · 🔄 Swap!' : ''); $('twist').classList.remove('hidden'); $('twist').classList.add('hot');
+    $('q').innerHTML = 'Is the bottom one exactly the same? <b>EVEN</b> = same · <b>ODD</b> = different';
     if (pl.swap) sSwap(); else sFirst();
     setPhase('pre'); paintTeams(); sendState(true);
   }
@@ -212,20 +213,21 @@
     paintTeams(); sendState(true);
     if (teams.every(function (x) { return x.ans != null; })) toReveal();
   }
-  function toReveal() { if (phase !== 'show') return; while (shown < cur.ws.length) addWord(); setPhase('reveal'); teams.forEach(function (tm) { tm.pts += tm.got; }); paintTeams(); sendState(true); }
+  function toReveal() { if (phase !== 'show') return; while (!cur.spot && shown < cur.ws.length) addWord(); setPhase('reveal'); teams.forEach(function (tm) { tm.pts += tm.got; }); paintTeams(); sendState(true); }
+  function pairTiles() { var row = function (ws) { return '<div class="row">' + ws.map(function (w, i) { return '<span class="w" data-i="' + i + '"><span class="n"></span>' + esc(w) + '</span>'; }).join('') + '</div>'; }; $('words').innerHTML = '<div class="pair">' + row(cur.ws) + row(cur.ws2) + '</div>'; cur.ws.forEach(function (w, i) { var two = document.querySelectorAll('.pair .w[data-i="' + i + '"]'), mx = Math.max(two[0].offsetWidth, two[1].offsetWidth); [].forEach.call(two, function (b) { b.style.width = mx + 'px'; }); }); }   /* (every pair of tiles exactly as wide, so a shifted row gives nothing away) */   // (the original above, the copy below)
   function addWord() { var i = shown++, el = document.createElement('span'); el.className = 'w'; el.innerHTML = '<span class="n"></span>' + esc(cur.ws[i]); $('words').appendChild(el); if (cur.build) sWord(); }
   function step(dt) {
     t += dt; var e = t - phT;
-    if (phase === 'pre' && e > 2) { setPhase('show'); if (!cur.build) { while (shown < cur.ws.length) addWord(); sWord(); } fullAt = cur.build ? STEP * cur.ws.length : 0; sendState(true); }
+    if (phase === 'pre' && e > 2) { setPhase('show'); if (cur.spot) { pairTiles(); shown = cur.ws.length; sWord(); } else if (!cur.build) { while (shown < cur.ws.length) addWord(); sWord(); } fullAt = cur.build ? STEP * cur.ws.length : 0; sendState(true); }
     else if (phase === 'show') {
       if (cur.build) while (shown < cur.ws.length && e >= shown * STEP) addWord();
       teams.forEach(function (tm) { if (tm.bot && tm.ans == null && e >= fullAt * 0.85 + tm.botAt) press(tm, tm.botV === 0 ? (role(tm, 0) === 'even' ? 0 : 1) : (role(tm, 0) === 'odd' ? 0 : 1), tm.botV); });
       var left = fullAt + AFTER_ALL - e; $('bar').style.width = Math.max(0, Math.min(1, left / AFTER_ALL)) * 100 + '%';
       if (left <= 0) toReveal();
     }
-    else if (phase === 'reveal' && cur.spell) {   // (the spelling round: the typo is shown and put right)
-      if (e >= 0.8 && !$('verdict').textContent) { var els2 = $('words').children; if (cur.bad >= 0) { var b = els2[cur.bad]; b.classList.add('typo'); b.innerHTML = '<span class="n"></span><s>' + esc(cur.ws[cur.bad]) + '</s> ' + esc(cur.fix); sPress(false); } else { [].forEach.call(els2, function (x) { x.classList.add('cnt'); }); sCount(4); }
-        $('verdict').textContent = cur.bad >= 0 ? '✗ MISSPELT' : '✓ CORRECT'; $('src').innerHTML = '<img src="https://flagcdn.com/w40/' + esc(cur.s[1]) + '.png" alt="">' + esc(countries[cur.s[1]] || '') + ' ' + cur.s[0] + ' · ' + esc(cur.s[2]) + ' · <i>' + esc(cur.s[3]) + '</i>'; paintTeams(true); sendState(true); }
+    else if (phase === 'reveal' && cur.spot) {   // (spot the difference: the changed word lights up, in both copies)
+      if (e >= 0.8 && !$('verdict').textContent) { if (cur.bad >= 0) { [].forEach.call(document.querySelectorAll('.pair .w[data-i="' + cur.bad + '"]'), function (b) { b.classList.add('typo'); }); sPress(false); } else { [].forEach.call(document.querySelectorAll('.pair .w'), function (x) { x.classList.add('cnt'); }); sCount(4); }
+        $('verdict').textContent = cur.bad >= 0 ? '≠ DIFFERENT' : '= SAME'; $('src').innerHTML = '<img src="https://flagcdn.com/w40/' + esc(cur.s[1]) + '.png" alt="">' + esc(countries[cur.s[1]] || '') + ' ' + cur.s[0] + ' · ' + esc(cur.s[2]) + ' · <i>' + esc(cur.s[3]) + '</i>'; paintTeams(true); sendState(true); }
       if (e >= 4.6) nextRound();
     }
     else if (phase === 'reveal') {   // (the words are counted one by one, then the verdict)
@@ -242,7 +244,7 @@
       var rl = tm.m.map(function (m, i) { var r = role(tm, i); return esc(m.name) + ' <b>' + label(r) + '</b>'; }).join(' · ');
       return '<div class="' + cls + '" style="--c:' + tm.col + '"><div class="hd"><div class="nm" style="color:' + tm.col + '">' + esc(tm.name) + (tm.ans != null && !$('verdict').textContent ? ' ✓' : '') + '</div><span class="pt">' + tm.pts + (phase === 'reveal' && $('verdict').textContent && tm.got ? '<span class="plus">+' + tm.got + '</span>' : '') + '</span></div><div class="rl">' + rl + '</div></div>'; }).join('');
   }
-  function label(r) { var sp = cur && cur.spell; return r === 'both' ? (sp ? 'BOTH' : 'EVEN+ODD') : sp ? (r === 'even' ? 'EVEN · CORRECT' : 'ODD · MISSPELT') : r.toUpperCase(); }
+  function label(r) { var sp = cur && cur.spot; return r === 'both' ? (sp ? 'BOTH' : 'EVEN+ODD') : sp ? (r === 'even' ? 'EVEN · SAME' : 'ODD · DIFFERENT') : r.toUpperCase(); }
   function finish() {
     phase = 'end'; ended = true; sWin();
     var r = teams.slice().sort(function (a, b) { return b.pts - a.pts; }); r.forEach(function (tm, i) { tm.rank = i && tm.pts === r[i - 1].pts ? r[i - 1].rank : i + 1; });
@@ -259,7 +261,7 @@
     var ph = phase === 'lobby' ? 'lobby' : ended ? 'end' : phase, ps = {}, rev = phase === 'reveal' && !!$('verdict').textContent;
     if (ph === 'lobby') joined.forEach(function (j) { ps[j.pid] = { n: j.name, s: 'lobby' }; });
     else teams.forEach(function (tm) { tm.m.forEach(function (m, i) { if (!m.pid) return; var mate = tm.m[1 - i]; ps[m.pid] = { n: m.name, c: tm.col, role: role(tm, i), mate: mate ? mate.name : null, mr: mate ? role(tm, 1 - i) : null, ans: tm.ans, who: tm.who === i ? 'me' : tm.who != null ? 'mate' : null, got: rev ? tm.got : null, pts: tm.pts, r: ended ? tm.rank : null }; }); });
-    var o = { ph: ph, p: ps, rd: rd, of: ROUNDS, md: cur && cur.spell ? 'spell' : 'count', sw: rd && PLAN[rd - 1] && PLAN[rd - 1].swap ? 1 : 0, rev: rev ? (cur.odd ? 1 : 0) : null };
+    var o = { ph: ph, p: ps, rd: rd, of: ROUNDS, md: cur && cur.spot ? 'spot' : 'count', sw: rd && PLAN[rd - 1] && PLAN[rd - 1].swap ? 1 : 0, rev: rev ? (cur.odd ? 1 : 0) : null };
     var s = JSON.stringify(o), now = Date.now();
     if (!force && (s === lastState ? now - lastSent < 3000 : now - lastSent < 300)) return;
     lastState = s; lastSent = now; net.send('state', o);

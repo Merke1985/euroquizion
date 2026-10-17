@@ -31,8 +31,9 @@ Ideas talked through but not built yet. Nothing here is in the game; pick one up
 - **Odd Couples** (duo, eyes on the big screen). A long Eurovision title appears as word tiles: even or odd number of
   words? In each pair one partner has only the EVEN button, the other only ODD, so the pair decides who presses; a
   wrong press locks the pair out. First correct pair 3 points, other correct pairs 1. Twists: buttons swap, the title
-  builds up word by word, only count words with a certain letter, and spelling rounds (a foreign title, right or
-  with one sneaky typo: EVEN = correct, ODD = misspelt). An odd one out plays alone with both buttons.
+  builds up word by word, only count words with a certain letter, and spot-the-difference rounds (the title twice;
+  the bottom copy the same or with one tiny change: EVEN = same, ODD = different). Rounds are about figuring out,
+  not knowing (a spelling round was tried and dropped for that reason). An odd one out plays alone with both buttons.
   **Test version built:** 🧪 Test → "💞 Odd Couples (prototype)" (duo.html, phones on duopad.html). Still to do:
   music, a stage intro, hook into the roster.
 - **Douze Points Code** (Mastermind): guess the hidden order of 4 countries; feedback is 12/10/8 points for right

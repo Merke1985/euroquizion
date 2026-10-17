@@ -70,9 +70,9 @@
     hi(); setInterval(hi, 1500);   // (keep saying hello until the big screen has us)
   }
   function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
-  function pads(r, sp) {   // your button(s): EVEN or ODD (in a spelling round CORRECT or MISSPELT), or both when you play alone
+  function pads(r, sp) {   // your button(s): EVEN or ODD (in a spot-the-difference round SAME or DIFFERENT), or both when you play alone
     if (r + sp === padsFor) return; padsFor = r + sp; var box = $('pads'); box.innerHTML = '';
-    (r === 'both' ? [[0, sp ? '✓ CORRECT' : 'EVEN'], [1, sp ? '✗ MISSPELT' : 'ODD']] : r === 'even' ? [[0, sp ? '✓ CORRECT' : 'EVEN']] : r === 'odd' ? [[1, sp ? '✗ MISSPELT' : 'ODD']] : []).forEach(function (x) { var b = document.createElement('button'); b.type = 'button'; b.textContent = x[1]; b.setAttribute('data-v', x[0]);
+    (r === 'both' ? [[0, sp ? '= SAME' : 'EVEN'], [1, sp ? '≠ DIFFERENT' : 'ODD']] : r === 'even' ? [[0, sp ? '= SAME' : 'EVEN']] : r === 'odd' ? [[1, sp ? '≠ DIFFERENT' : 'ODD']] : []).forEach(function (x) { var b = document.createElement('button'); b.type = 'button'; b.textContent = x[1]; b.setAttribute('data-v', x[0]);
       var fire = function (ev) { ev.preventDefault(); if (!net || !S || S.ph !== 'show' || !my || my.ans != null) return; net.toHost('zg', { pid: pid, v: x[0] }); my.ans = x[0]; my.who = 'me'; paint(); buzz(30); };
       b.addEventListener('touchstart', fire, { passive: false }); b.addEventListener('mousedown', fire); box.appendChild(b); });
   }
@@ -88,13 +88,13 @@
     if (!my) { big.innerHTML = 'A game is in progress<span class="small">You’ll join the next one</span>'; document.body.className = ''; pads(''); $('mate').textContent = ''; return; }
     document.documentElement.style.setProperty('--col', my.c || '#ff4fa3');
     $('pts').textContent = s.ph === 'lobby' ? '' : (my.pts || 0) + ' pts';
-    $('mate').innerHTML = my.mate ? 'Your partner: <b style="color:#fff">' + esc(my.mate) + '</b> has ' + (s.md === 'spell' ? (my.mr === 'even' ? 'CORRECT' : 'MISSPELT') : (my.mr || '').toUpperCase()) : s.ph === 'lobby' ? '' : 'You play alone: both buttons are yours';
-    var sp = s.md === 'spell' ? 's' : ''; pads(s.ph === 'lobby' ? '' : my.role, sp);
+    $('mate').innerHTML = my.mate ? 'Your partner: <b style="color:#fff">' + esc(my.mate) + '</b> has ' + (s.md === 'spot' ? (my.mr === 'even' ? 'SAME' : 'DIFFERENT') : (my.mr || '').toUpperCase()) : s.ph === 'lobby' ? '' : 'You play alone: both buttons are yours';
+    var sp = s.md === 'spot' ? 's' : ''; pads(s.ph === 'lobby' ? '' : my.role, sp);
     if (my.role !== lastRole && lastRole && s.ph === 'pre') { cls = 'swap'; buzz([60, 40, 60]); }
     lastRole = my.role || lastRole;
     if (s.ph === 'lobby') txt = 'You’re in, ' + esc(name) + '!<span class="small">Wait for the host to start</span>';
     else if (s.ph === 'pre') txt = (s.sw ? '🔄 Swap! You now have ' + (my.role === 'both' ? 'both' : my.role.toUpperCase()) : 'Get ready…') + '<span class="small">Round ' + s.rd + ' of ' + s.of + '</span>';
-    else if (s.ph === 'show') { cls += ' go' + (my.ans != null ? ' locked' : ''); txt = my.ans != null ? (my.who === 'me' ? 'Locked in!' : esc(my.mate || 'Your partner') + ' pressed ' + (sp ? (my.ans ? 'MISSPELT' : 'CORRECT') : my.ans ? 'ODD' : 'EVEN')) : sp ? 'Spelled right?<span class="small">Correct or misspelt? Decide together who presses</span>' : 'Count the words!<span class="small">Even or odd? Decide together who presses</span>'; }
+    else if (s.ph === 'show') { cls += ' go' + (my.ans != null ? ' locked' : ''); txt = my.ans != null ? (my.who === 'me' ? 'Locked in!' : esc(my.mate || 'Your partner') + ' pressed ' + (sp ? (my.ans ? 'DIFFERENT' : 'SAME') : my.ans ? 'ODD' : 'EVEN')) : sp ? 'Same or different?<span class="small">Compare the two lines; decide together who presses</span>' : 'Count the words!<span class="small">Even or odd? Decide together who presses</span>'; }
     else if (s.ph === 'reveal') { cls += ' locked'; txt = my.got == null ? 'Counting…' : my.got === 3 ? '🥇 First and right! +3' : my.got ? '✅ Right! +1' : my.ans == null ? 'No answer…' : '❌ Wrong one'; if (my.got != null && lastPh !== 'rev') { buzz(my.got ? 40 : [100, 60, 100]); lastPh = 'rev'; } }
     else if (s.ph === 'end') txt = (my.r === 1 ? '🏆 You won!' : 'You finished ' + ordinal(my.r || 0)) + '<span class="small">' + (my.pts || 0) + ' points</span>';
     if (s.ph !== 'reveal') lastPh = s.ph;
