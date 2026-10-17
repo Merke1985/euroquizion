@@ -65,17 +65,17 @@
 <div class="songclock" id="songclock"></div>
 <div class="banner" id="banner"></div>
 <div class="howto" id="howto"><p>When your <span class="glow">colour and name</span> light up,<br>it’s your time to fly.</p><p>📱 Use the controls on your phone.</p></div>
-<div class="hint">Hold the mouse button, your finger or the spacebar to fly up · let go to glide down</div>
+<div class="hint">Preview: every bird flies itself here. Players will steer from their phones.</div>
 <div id="yt"></div>
 
 <div class="ov" id="start">
   <div class="card">
     <h2>🐦‍⬛ Blackbird</h2>
-    <p>The whole flock takes off from a rooftop, flies through the night sky and then down into a dark forest, along with the song. Most of the time your bird is on <b>autopilot</b> and can’t crash.</p>
+    <p>The whole flock takes off from a rooftop, flies through the night sky and then down into a dark forest, along with the song. Most of the time every bird is on <b>autopilot</b> and can’t crash. <i>(Preview: all birds fly themselves; phone controls come later.)</i></p>
     <p>Every few seconds a few birds are picked at random to fly <b>themselves</b>. When it’s you: <b>hold</b> to fly up, <b>let go</b> to glide down, and keep to the moonlit path through the dark forest: away from the leaves above, the undergrowth below and the branches.</p>
     <p>A hit costs a feather 🪶 (you have 3). No feathers left and your bird lands on a branch. Most feathers when the song ends wins.</p>
     <div class="btns">
-      <label>Computer birds <select id="nbots"><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
+      <label>Birds <select id="nbots"><option>2</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
       <button id="go">▶ Start with the song</button>
       <button class="alt" id="go2">Start without the song</button>
     </div>
@@ -161,14 +161,14 @@
 
   // ---------- the flock ----------
   var COLS = ['#ffd166', '#ff6fb5', '#5ee0ff', '#8dff8a', '#c58bff', '#ff9f43', '#f5f5f5', '#ff4d6d', '#4dd4b0', '#a3b8ff'];
-  var NAMES = ['You', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Nightingale', 'Magpie'];
+  var NAMES = ['Raven', 'Robin', 'Wren', 'Starling', 'Swift', 'Lark', 'Finch', 'Sparrow', 'Nightingale', 'Magpie'];
   var TURN = 5, WARN = 2;   // (2 s of blinking before your turn)
   var tAir = 99, birds = [], me = null, t = 0, cam = 0, running = false, last = 0, hold = false, nextPick = WARM, warnAt = 0, pickN = 1, pending = [], parts = [], ended = false;
   function makeBirds(nb) {
     birds = [];
-    for (var i = 0; i <= nb; i++) birds.push({ id: i, name: NAMES[i], col: COLS[i % COLS.length], human: i === 0, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
+    for (var i = 0; i <= nb; i++) birds.push({ id: i, name: NAMES[i], col: COLS[i % COLS.length], human: false,   /* (no controls in the browser: on the big screen every bird flies itself; players will steer from their phones) */ feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0,
       skill: 0.55 + Math.random() * 0.4, react: 0.1 + Math.random() * 0.14, decide: 0, hold: false, flap: Math.random() * 6, slot: i });
-    me = birds[0];
+    me = {};   // (nobody plays on this screen)
     birds.push({ id: nb + 1, name: '', col: '#000000', npc: true, human: false, feathers: 3, out: false, manual: false, y: 0.5, vy: 0, flown: 0, clean: 0, inv: 0, back: 0, fall: 0, skill: 1, react: 0.1, decide: 0, hold: false, flap: 0, slot: nb + 1, colT: 1e9 });   // (the lone blackbird: our guide. Nobody steers it, it can't crash; we all follow it)
     var n = birds.length; birds.forEach(function (b, i) { b.off = n > 1 ? (i / (n - 1)) * 2 - 1 : 0; b.xo = -((i * 37) % n) * 0.06; });   // (a loose V: everyone their own place in the formation)
     var lead = birds[n - 1]; lead.lead = true;   // (one lone blackbird on her roof; the rest of the flock waits behind the house)
@@ -798,9 +798,7 @@
   // ---------- holding: mouse, touch or spacebar ----------
   function down(e) { if (e.target.closest && e.target.closest('.ov')) return; hold = true; if (e.cancelable) e.preventDefault(); }
   function up() { hold = false; }
-  addEventListener('pointerdown', down, { passive: false }); addEventListener('pointerup', up); addEventListener('pointercancel', up); addEventListener('blur', up);
-  addEventListener('keydown', function (e) { if (e.code === 'Space') { hold = true; e.preventDefault(); } });
-  addEventListener('keyup', function (e) { if (e.code === 'Space') hold = false; });
+  // (no mouse, touch or spacebar controls here any more: this is the big screen; the phones will steer)
 
   // ---------- the sound of the flock taking off: dozens of wing beats (filtered noise, fluttering) and a few calls ----------
   var actx = null, flockPlayed = false;
