@@ -195,10 +195,8 @@
     if (t >= SOAR_T) return;
     if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && nextPick >= lastPlanT + TURN - 0.3 && nextPick + TURN <= SOAR_T + 0.3) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
       var xa = birdXAt(nextPick), xb = xa + TURN * SPEED;
-      if (xb > DIVE0 - 1.8 && xa < DIVE1 + 0.3) nextPick = t + (DIVE1 + 0.4 - (cam + 0.3 * W / H)) / (SPEED * spd(t));
-      else { plannedFor = nextPick; lastPlanT = nextPick; planTurn(nextPick); }
+      plannedFor = nextPick; lastPlanT = nextPick; planTurn(nextPick);   // (turns go on right up to the forest: no pause for the dive any more)
     }
-    if (inDive(cam + 0.3 * W / H + 0.6)) { birds.forEach(function (b) { b.manual = false; }); pending = []; nextPick = Math.max(nextPick, t + WARN + 1.2); return; }   // (the dive: everyone on autopilot)
     if (t >= nextPick - WARN && !pending.length && nextPick + (t < PRACT_END - 1 ? 0 : TURN) <= SOAR_T + 0.3) {
       if (pgi < pgroups.length && t < PRACT_END - 1) pending = pgroups[pgi++].filter(function (b) { return !b.out; });   // (practice: the pairs in turn)
       else { if (!pracDone) { pracDone = true; nowAt = t + WARN; birds.forEach(function (b) { b.flown = 0; }); } pending = choose(); }
@@ -762,7 +760,6 @@
     else if (t < REVEAL0) txt = '';
     else if (t < MSG0 - 1.5) txt = '✨ Meet the flock…';
     else if (t < PRACT0 - WARN) txt = '';
-    else if (inDive(cam + 0.3 * W / H + 0.6)) txt = '🐦‍⬛ Down into the forest…';
     else if (cam + 0.3 * W / H > GRAVE_X - 0.2 && cam + 0.3 * W / H < GRAVE_X + 1.2) txt = '🌸 Out of the forest… a quiet, beautiful place';
     $('side').style.opacity = t >= SOAR_T ? '0' : '1';
     $('howto').className = 'howto' + (t >= MSG0 && t < MSG1 ? ' on' : '');
