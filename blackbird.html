@@ -110,7 +110,7 @@
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
   var MUSIC = 10.6, SONG0 = 7, BOTTOM = 11.4, UP = 6, CLOSE = 4, TWO = 3.5, HOLD2 = 1.5, OUT = 3.2, CLOSE_END = BOTTOM + UP + CLOSE, INTRO = CLOSE_END + TWO + HOLD2 + OUT, TAKEOFF = INTRO + 1,   /* (take-off at 0:30 in the song: the song starts at 0:07, so 7 s less intro) */   // (the opening: the bottom of the house, a bit to the left; the song starts at MUSIC; up to her window; her close-up; back out to her and the bird that has just landed; out to the whole scene)
       PRACT_T = 10, REVEAL0 = 99, PRACT0 = 99, PRACT_END = 99, SAFE_X = 6, pgroups = [], pgi = 0, pracDone = false, nowAt = -99, MSG0 = 99, MSG1 = 99,   // (after the take-off: the neon colours one by one, then practice in threes (10 s each, nothing to dodge, no damage), then it counts)   // (the camera: the bottom of the house (the hosts whisper there, later), up to her window, her close-up, up and right to the lone bird, out; then a moment before the take-off)
-      FAST_T = MUSIC - SONG0 + 125, PICK_T = MUSIC - SONG0 + 159, SOAR_T = PICK_T - 16.7, ALL_T = MUSIC - SONG0 + 130.9,   /* (2:11: the wind drops, the blackbird says 'Follow me!' and everyone steers at once until they leave the cave) */ GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 13, APP_T = PICK_T - 16.4, STOP_T = PICK_T - 13.4, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 4 s, 1 s after the landing; the rose at PICK_T) */ END_T = MUSIC - SONG0 + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
+      FAST_T = MUSIC - SONG0 + 125, PICK_T = MUSIC - SONG0 + 158, SOAR_T = PICK_T - 15.7, ALL_T = MUSIC - SONG0 + 130.9,   /* (2:11: the wind drops, the blackbird says 'Follow me!' and everyone steers at once until they leave the cave) */ GRAVE_T = SOAR_T - 0.5,   /* (2:05 the flock speeds up: the hardest part. SOAR_T: control ends as they burst out of the forest into their favourite spot (GRAVE_*)) */ TAKE_T = PICK_T + 1.6, FADE_T = PICK_T + 4.4, HOME_T = PICK_T + 6.4, LAND_T = PICK_T - 11.5, APP_T = PICK_T - 15.4, STOP_T = PICK_T - 11.9, SPOT_C = -99, GY = 0.87,   /* (the flock glides in and lands in the tree at LAND_T; the lovers show for 4 s, 1 s after the landing; the rose at PICK_T) */ END_T = MUSIC - SONG0 + 190,   /* (the results at 3:10, just before the song ends at 3:13) */ GRAVE_X = 1e9, FLOWER_X = -9, FLOWER_Y = 0.8, soarOn = false,   // (song moments: 2:08 the flock soars, 2:35 the flower is picked; then home to her window)
       DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;
   function spd(T) {   // how fast the camera (and the flock) goes: soaring from 2:08, slowing to a stop at their favourite spot, then away after the rose
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
@@ -193,7 +193,12 @@
     pickN = Math.min(3, n - 1);   // (three birds fly at a time, the whole game)
     setTimeline(players().sort(function () { return Math.random() - .5; }));
   }
-  function bx(b) { var lift = t < TAKEOFF ? 0.5 : 0.5 * (1 - Math.max(0, Math.min(1, (t - TAKEOFF - 2) / 6))); return 0.3 * W / H + b.xo - b.back + lift; }   // (at the take-off the flock heads off to the right, and settles into its place as the camera follows)   // the bird's place on the screen, in world units from the left edge
+  function reorder() {   // players with the worst delay fly at the back of the flock, the quickest phones at the front (computer birds keep their places)
+    var hs = birds.filter(function (b) { return b.human && !b.out; }); if (hs.length < 2) return;
+    var slots = hs.map(function (b) { return b.xo; }).sort(function (a, c) { return c - a; });
+    hs.slice().sort(function (a, c) { return (a.lag || 0) - (c.lag || 0); }).forEach(function (b, i) { b.xo = slots[i]; });
+  }
+  function bx(b) { if (b.xoC == null) b.xoC = b.xo; var lift = t < TAKEOFF ? 0.5 : 0.5 * (1 - Math.max(0, Math.min(1, (t - TAKEOFF - 2) / 6))); return 0.3 * W / H + b.xoC - b.back + lift; }   // (at the take-off the flock heads off to the right, and settles into its place as the camera follows)   // the bird's place on the screen, in world units from the left edge
   function players() { return birds.filter(function (b) { return !b.npc; }); }
   function alive() { return birds.filter(function (b) { return !b.out && !b.npc; }); }
 
@@ -235,6 +240,8 @@
     if (t >= SOAR_T && !soarOn) { soarOn = true; pending = []; birds.forEach(function (b) { b.manual = false; if (b.out) { b.out = false; b.rejoin = true; b.y = 1.15; b.vy = -0.3; b.inv = 0; } }); }   // (2:08: nobody steers any more; birds that landed rejoin the flock)
     if (soarOn && SPOT_C < 0) { var cs = cam; for (var tt = t; tt < STOP_T; tt += 0.01) cs += SPEED * spd(tt) * 0.01; SPOT_C = cs + 0.5 * W / H; FLOWER_X = SPOT_C - 0.33; FLOWER_Y = GY; }   // (where the flock will come to rest: their favourite spot)
     if (musicWant && t >= MUSIC) { musicWant = false; ytPlay(); }
+    if (t >= PRACT0 + 4 && t < SOAR_T && t >= nextOrder) { nextOrder = t + 10; reorder(); }
+    birds.forEach(function (b) { if (b.xoC != null) b.xoC += (b.xo - b.xoC) * Math.min(1, dt * 0.8); });   // (gliding to a new place in the flock)
     windLevel(t >= FAST_T - 0.5 && t < STOP_T ? Math.max(0, (spd(t) - 1) / (FASTX - 1)) : 0);   // (the rush of the wind)   // (the song starts after a moment of silence at the house)
     if (t >= TAKEOFF && !flockPlayed) { flockPlayed = true; flockSound(); }
     birds.forEach(function (b) {
@@ -524,7 +531,7 @@
   /* the lovers: a memory of her and her love, standing by the water, forehead to forehead in an embrace. They appear as
      the flock settles in the tree, stay for three seconds, then dissolve into light. */
   function drawLovers(px, base) {
-    var a0 = LAND_T + 1, a = t < a0 ? 0 : t < a0 + 0.6 ? (t - a0) / 0.6 : t < a0 + 4.6 ? 1 : Math.max(0, 1 - (t - a0 - 4.6) / 0.9), dis = Math.max(0, Math.min(1, (t - a0 - 4.6) / 1.2));   // (1 s after the flock lands; 4 s; then they dissolve)
+    var a0 = LAND_T + 1.5, a = t < a0 ? 0 : t < a0 + 0.6 ? (t - a0) / 0.6 : t < a0 + 4.6 ? 1 : Math.max(0, 1 - (t - a0 - 4.6) / 0.9), dis = Math.max(0, Math.min(1, (t - a0 - 4.6) / 1.2));   // (1 s after the flock lands; 4 s; then they dissolve)
     if (a <= 0 && (dis <= 0 || dis >= 1)) return;
     var hh = H * 0.3, P = function (u, v) { return [px + u * hh, base - v * hh]; }, M = function (u, v) { var q = P(u, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var q1 = P(cu, cv), q2 = P(u, v); cx.quadraticCurveTo(q1[0], q1[1], q2[0], q2[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var q1 = P(a1, b1), q2 = P(a2, b2), q3 = P(u, v); cx.bezierCurveTo(q1[0], q1[1], q2[0], q2[1], q3[0], q3[1]); };
     var halo = cx.createRadialGradient(px, base - hh * 0.55, 0, px, base - hh * 0.55, hh * 0.75); halo.addColorStop(0, 'rgba(190,215,255,' + (0.28 * a) + ')'); halo.addColorStop(1, 'rgba(190,215,255,0)'); cx.fillStyle = halo; cx.fillRect(px - hh, base - hh * 1.4, hh * 2, hh * 1.5);
@@ -783,7 +790,7 @@
     var k = birds.map(function (b) { return b.feathers + (b.manual ? 'm' : '') + (b.out ? 'o' : '') + (t >= b.colT ? 'r' : ''); }).join(',');
     if (k !== sideKey) { sideKey = k; $('side').innerHTML = players().sort(function (a, b) { return b.feathers - a.feathers || a.id - b.id; }).map(function (b) { return '<div class="row' + (b.manual ? ' fly' : '') + (b.out ? ' out' : '') + '"' + (t < b.colT ? ' style="display:none"' : '') + '><span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.name + (b.manual ? ' ✈️' : '') + '</span><span class="fe">' + (b.out || !b.feathers ? '🌿 landed' : '🪶'.repeat(b.feathers)) + '</span></div>'; }).join(''); }
     var bn = $('banner'), txt = '', cls = '';
-    if (t >= SOAR_T) { txt = t >= LAND_T + 0.8 && t < LAND_T + 6.6 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
+    if (t >= SOAR_T) { txt = t >= LAND_T + 1.3 && t < LAND_T + 7.1 ? '💞 Their favourite spot…' : ''; if (txt.indexOf('favourite') >= 0) cls = 'top'; }
     else if (t >= PRACT0 - WARN && t < PRACT0 + 2.5) { txt = '🐦‍⬛ Everyone, fly!'; cls = 'warn'; }
     else if (me.out) { txt = '🌿 Your bird has landed'; }
     else if (me.manual) { txt = t < PRACT_END ? '🐦‍⬛ Practice! Hold to rise, let go to glide (no damage yet)' : '🐦‍⬛ You’re flying! Hold to rise, let go to glide'; cls = 'me'; }
@@ -822,7 +829,7 @@
   }
   function start(music) {
     $('start').classList.add('hidden'); $('end').classList.add('hidden');
-    t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; SPOT_C = -99; songAsked = false; waitSong = 0; pending = []; parts = []; ended = false; sideKey = '';
+    t = 0; cam = 0; nextPick = 99; soarOn = false; FLOWER_X = -9; SPOT_C = -99; nextOrder = 0; songAsked = false; waitSong = 0; pending = []; parts = []; ended = false; sideKey = '';
     makeBirds(+$('nbots').value); makeCourse(); nextPick = PRACT0; holds = {}; sendState(true);
     audioOn(); flockPlayed = false; musicWant = !!music; if (music) ytPrime();
     running = true; last = performance.now(); requestAnimationFrame(frame);
@@ -878,7 +885,7 @@
   function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
   // ---------- phones: join with the room code, one big button to fly ----------
-  var joined = [], holds = {}, net = null, lastState = '', lastSent = 0, BBA = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '';
+  var nextOrder = 0, joined = [], holds = {}, net = null, lastState = '', lastSent = 0, BBA = 'ABCDEFGHJKLMNPQRSTUVWXYZ', room = '';
   for (var ri = 0; ri < 4; ri++) room += BBA[Math.floor(Math.random() * BBA.length)];
   var padUrl = new URL('bbpad.html?r=' + room, location.href).href;
   $('bbcode').textContent = room; $('bburl').textContent = padUrl.replace(/^https?:\/\//, '');
@@ -891,6 +898,7 @@
       if (!p || !p.pid) return; holds[p.pid] = !!p.h;
       var b = birds.filter(function (x) { return x.human && x.pid === p.pid; })[0]; if (!b || !running) return;
       if (p.y != null && b.manual) { b.netY = +p.y; b.netVy = +p.vy || 0; b.netT = Date.now(); }
+      if (p.e != null) { var lg = Math.max(0, t - p.e); b.lag = b.lag == null ? lg : b.lag * 0.85 + lg * 0.15; }   // (this phone's delay, round trip, smoothed)
       if (p.hc != null) { if (b.hcSeen == null) b.hcSeen = 0; while (b.hcSeen < p.hc && !b.out && b.manual) { b.hcSeen++; hit(b); } b.hcSeen = Math.max(b.hcSeen, p.hc); }   // (hits the phone saw, each counted once)
     });
   } catch (e) { net = null; }

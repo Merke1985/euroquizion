@@ -138,7 +138,7 @@
     if (tn - lastSend > 0.2) send(false);   // (5 times a second: where your bird is)
     draw(X);
   }
-  function send(now2) { lastSend = now(); if (net) net.toHost('zg', { pid: pid, h: held ? 1 : 0, y: +by.toFixed(3), vy: +bvy.toFixed(3), hc: hc }); }
+  function send(now2) { lastSend = now(); if (net) net.toHost('zg', { pid: pid, h: held ? 1 : 0, y: +by.toFixed(3), vy: +bvy.toFixed(3), hc: hc, e: +gameT().toFixed(2) }); }   // (e: the moment of the game this phone is at; the big screen works out the delay from it)
   function draw(X) {
     var H2 = CH, sc = H2, x0 = X - 0.35, x1 = X + 2.1, kx = CW / (x1 - x0), sxp = function (x) { return (x - x0) * kx; }, syp = function (y) { return y * H2; };   // (squeezed sideways, so you see about two seconds ahead)
     cx.clearRect(0, 0, CW, CH); cx.fillStyle = '#0a1030'; cx.fillRect(0, 0, CW, CH);
