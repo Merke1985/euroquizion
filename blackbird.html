@@ -255,14 +255,20 @@
       var X = cam + bx(b);
       if (b.manual) {
         b.flown += dt;
-        if (!b.human) botSteer(b, dt);
+        if (!b.human) {   // a computer bird flies perfectly: the ideal line through the next gap, smoothly
+          var nb2 = branches.filter(function (r) { return r.x > X - 0.03 && r.x < X + 0.75; })[0], ty3 = cen(X + 0.15);
+          if (X < FOREST && !nb2) ty3 = 0.42 + b.off * 0.08;   // (over the pine forest, nothing near: a calm height)
+          if (nb2) { var hh3 = half(nb2.x), cc3 = cen(nb2.x); ty3 = nb2.top ? (nb2.tip + Math.min(1 - R, cc3 + hh3)) / 2 : (Math.max(R, nb2.x < FOREST ? 0.05 : cc3 - hh3) + nb2.tip) / 2; }
+          if (X >= FOREST || nb2) ty3 += b.off * (nb2 ? 0.03 : 0.07);   // (each its own height, so they don't bunch up)
+          var ny3 = b.y + (ty3 - b.y) * Math.min(1, dt * 3.4); b.vy = (ny3 - b.y) / Math.max(dt, 1e-3); b.y = ny3; b.hold = b.vy < 0;
+        }
         var fromPhone = b.human && b.netT && Date.now() - b.netT < 1200;   // (the phone flies this bird itself and tells us where it is)
         if (fromPhone) { var ny2 = b.netY + b.netVy * Math.min(0.3, (Date.now() - b.netT) / 1000); b.vy = (ny2 - b.y) / Math.max(dt, 1e-3) * Math.min(1, dt * 9); b.y += (ny2 - b.y) * Math.min(1, dt * 9); }
-        else { var up = b.human ? !!holds[b.pid] : b.hold;   // (no word from the phone: its button, here)
+        else if (b.human) { var up = !!holds[b.pid];   // (no word from the phone: its button, here)
         b.vy += (up ? -LIFT : GRAV) * dt; b.vy = Math.max(-VMAX, Math.min(VMAX, b.vy)); b.y += b.vy * dt; }
         if (b.y < R) { b.y = R; b.vy = 0; } if (b.y > 1 - R) { b.y = 1 - R; b.vy = 0; }
         if (t < PRACT_END) { var bot = cen(X) + half(X) - R; if (b.y > bot) { b.y = bot; b.vy = -0.3; } }   // (practice: no damage, the pine tops bounce you back up)
-        else if (!fromPhone && b.inv <= 0 && hits(b, X)) hit(b);   // (a phone decides its own hits: what the player saw)
+        else if (b.human && !fromPhone && b.inv <= 0 && hits(b, X)) hit(b);   // (computer birds never get hit)   // (a phone decides its own hits: what the player saw)
         if (!b.turnHit) b.clean += dt;
       } else {   // autopilot: back to its place in the flock, smoothly
         var ty = cen(X + 0.12) + b.off * half(X) * 0.62, rate = 3.2;
