@@ -587,7 +587,7 @@
       [CLOSE_END + TWO + HOLD2, Z2 * 0.94, tx2, ty2],
       [INTRO, 1, W / 2, H / 2]   // and out to the whole scene
     ];
-    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 13.5, 6.4, wx * H, (fy + 0.012) * H], [END_T - 0.5, 6.9, wx * H, (fy + 0.01) * H], [END_T + 2.5, 5, (wx + (W / H) / 5 * 0.36) * H, (fy + 0.03) * H], [END_T + 60, 5.2, (wx + (W / H) / 5.2 * 0.36) * H, (fy + 0.03) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
+    if (t >= HOME_T) { var bh = (WIN.x1 - WIN.x0) * 0.66 * 1.04, fy = WIN.y0 + (WIN.y1 - WIN.y0) * 0.06 + bh * 0.45; K = [[HOME_T, Z2 * 0.85, tx2, ty2], [HOME_T + 5.8, Z2 * 1.1, (wx + 0.04) * H, (WIN.y1 - 0.04) * H], [HOME_T + 13.5, 6.4, wx * H, (fy + 0.012) * H], [END_T - 0.5, 6.9, wx * H, (fy + 0.01) * H], [END_T + 2.5, 5, (wx + (W / H) / 5 * 0.22) * H, (fy + 0.03) * H], [END_T + 60, 5.2, (wx + (W / H) / 5.2 * 0.22) * H, (fy + 0.03) * H]]; }   // (home: her and the bird with the flower; then slowly in, to her face and the rose on the sill)
     for (var i = 1; i < K.length; i++) if (t < K[i][0]) { var A = K[i - 1], B = K[i], e = ez((t - A[0]) / (B[0] - A[0])); return { z: A[1] * Math.pow(B[1] / A[1], e), x: A[2] + (B[2] - A[2]) * e, y: A[3] + (B[3] - A[3]) * e }; }
     return null;
   }
