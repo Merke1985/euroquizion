@@ -86,7 +86,7 @@
   addEventListener('resize', size); size();
 
   // ---------- the course (world units: the screen is 1 high; x runs on with the flock) ----------
-  var CLOSE = 10, PAN = 5, DUR = 114, TAKEOFF = CLOSE + PAN + 4, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
+  var CLOSE = 16, PAN = 6, TAKEOFF = CLOSE + PAN + 4, DUR = TAKEOFF + 95, FLY_IN = 2, SKY0 = 1.9, FOREST = 1.9 + 60 * 0.42, SPEED = 0.42, XEND = (DUR - TAKEOFF) * SPEED, WARM = TAKEOFF + 4.6;   // (an early test: about 1.5 minutes. First the flock sits on the roof; at TAKEOFF (in the real game: a moment in the song) they all lift off. The forest starts at FOREST)
   var seed = 1;
   function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
   function diff(x) {   // the sky is the warm-up (wide, gentle, few obstacles: get used to flying); the forest gets harder and harder
@@ -217,23 +217,20 @@
     return e + side * bump;
   }
   /* the start: a house at the edge of the forest, the flock in a row on the ridge of its roof; a roof window stands open, warm light inside */
-  var ROOF_Y = 0.47, WIN = { x0: 0.2, x1: 0.46, y0: 0.665, y1: 0.935 };
-  /* The singer in the window: a 2D illustration in the look of the performance (blonde bob, black high-necked lace,
-     dark lips, a microphone, deep blue light). u and v run 0..1 across the window; she sings, blinks and sways a little. */
+  var ROOF_Y = 0.47, WIN = { x0: 0.6, x1: 0.8, y0: 0.49, y1: 0.618 };
+  /* The singer in her bedroom window: a 2D illustration in the look of the performance (blonde bob, black high-necked
+     lace, dark lips). u and v run 0..1 across the box she's drawn in; she sings, blinks and sways a little. */
   function drawSinger(X0, Y0, Wd, Hd) {
     var P = function (u, v) { return [X0 + u * Wd, Y0 + v * Hd]; }, sw = Math.sin(t * 0.9) * 0.006, open = t < CLOSE + PAN + 6 ? Math.max(0, Math.sin(t * 5.2) * 0.5 + Math.sin(t * 2.3) * 0.5) : 0.3;
     var M = function (u, v) { var q = P(u + sw, v); cx.moveTo(q[0], q[1]); }, Lq = function (u, v) { var q = P(u + sw, v); cx.lineTo(q[0], q[1]); }, Qc = function (cu, cv, u, v) { var a = P(cu + sw, cv), b = P(u + sw, v); cx.quadraticCurveTo(a[0], a[1], b[0], b[1]); }, Bz = function (a1, b1, a2, b2, u, v) { var p1 = P(a1 + sw, b1), p2 = P(a2 + sw, b2), p3 = P(u + sw, v); cx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]); };
-    // the room: deep stage blue, a soft light from above
-    var bg = cx.createRadialGradient(X0 + Wd * 0.62, Y0 + Hd * 0.15, 0, X0 + Wd * 0.5, Y0 + Hd * 0.4, Wd * 0.9); bg.addColorStop(0, '#2a4bd0'); bg.addColorStop(0.5, '#142a8c'); bg.addColorStop(1, '#060f3e'); cx.fillStyle = bg; cx.fillRect(X0, Y0, Wd, Hd);
-    for (var k = 0; k < 3; k++) { cx.fillStyle = 'rgba(120,160,255,' + (0.05 + 0.02 * k) + ')'; cx.beginPath(); M(0.55 + k * 0.12, 0); Lq(0.75 + k * 0.12, 0); Lq(0.95 + k * 0.1, 1); Lq(0.6 + k * 0.1, 1); cx.closePath(); cx.fill(); }   // haze in the light
     // the hair behind her head
     var hg = cx.createLinearGradient(X0, Y0 + Hd * 0.12, X0, Y0 + Hd * 0.62); hg.addColorStop(0, '#f6e6b8'); hg.addColorStop(0.6, '#e2c98e'); hg.addColorStop(1, '#c9ab6c'); cx.fillStyle = hg;
     cx.beginPath(); M(0.5, 0.11); Bz(0.7, 0.1, 0.77, 0.3, 0.74, 0.6); Qc(0.62, 0.64, 0.5, 0.62); Qc(0.38, 0.64, 0.26, 0.6); Bz(0.23, 0.3, 0.3, 0.1, 0.5, 0.11); cx.fill();
     // the body: black high-necked lace, shoulders
-    var bodyPath = function () { cx.beginPath(); M(0.43, 0.6); Lq(0.57, 0.6); Lq(0.58, 0.76); Bz(0.75, 0.78, 0.9, 0.84, 0.95, 1.02); Lq(0.05, 1.02); Bz(0.1, 0.84, 0.25, 0.78, 0.42, 0.76); cx.closePath(); };
+    var bodyPath = function () { cx.beginPath(); M(0.43, 0.6); Lq(0.57, 0.6); Lq(0.58, 0.76); Bz(0.75, 0.78, 0.9, 0.84, 0.95, 1.02); Lq(0.98, 2.2); Lq(0.02, 2.2); Lq(0.05, 1.02); Bz(0.1, 0.84, 0.25, 0.78, 0.42, 0.76); cx.closePath(); };
     bodyPath(); cx.fillStyle = '#0b0a12'; cx.fill();
     cx.save(); bodyPath(); cx.clip(); cx.strokeStyle = 'rgba(90,90,120,.55)'; cx.lineWidth = Math.max(0.6, Wd * 0.0035);
-    for (var lu = 0; lu < 1.1; lu += 0.055) for (var lv = 0.58; lv < 1.05; lv += 0.05) { var c0 = P(lu + ((lv * 20) % 2) * 0.027, lv), rr = Wd * (0.009 + hsh(lu * 31 + lv * 17) * 0.008); cx.beginPath(); for (var pe = 0; pe < 5; pe++) { var an = pe / 5 * 6.283; cx.moveTo(c0[0], c0[1]); cx.quadraticCurveTo(c0[0] + Math.cos(an + 0.6) * rr * 1.6, c0[1] + Math.sin(an + 0.6) * rr * 1.6, c0[0] + Math.cos(an) * rr * 1.9, c0[1] + Math.sin(an) * rr * 1.9); } cx.stroke(); }   // lace flowers
+    for (var lu = 0; lu < 1.1; lu += 0.055) for (var lv = 0.58; lv < 2.2; lv += 0.05) { var c0 = P(lu + ((lv * 20) % 2) * 0.027, lv), rr = Wd * (0.009 + hsh(lu * 31 + lv * 17) * 0.008); cx.beginPath(); for (var pe = 0; pe < 5; pe++) { var an = pe / 5 * 6.283; cx.moveTo(c0[0], c0[1]); cx.quadraticCurveTo(c0[0] + Math.cos(an + 0.6) * rr * 1.6, c0[1] + Math.sin(an + 0.6) * rr * 1.6, c0[0] + Math.cos(an) * rr * 1.9, c0[1] + Math.sin(an) * rr * 1.9); } cx.stroke(); }   // lace flowers
     cx.restore();
     // the face
     var fc = P(0.5 + sw, 0.4), fg = cx.createRadialGradient(fc[0] - Wd * 0.04, fc[1] - Hd * 0.04, 0, fc[0], fc[1], Wd * 0.22); fg.addColorStop(0, '#f2d0bb'); fg.addColorStop(0.7, '#dcae95'); fg.addColorStop(1, '#a8806e'); cx.fillStyle = fg;
@@ -254,7 +251,7 @@
       cx.strokeStyle = '#8a6a48'; cx.lineWidth = Math.max(1, Wd * 0.007); cx.beginPath(); cx.moveTo(c[0] - ew * 1.1, c[1] - Hd * 0.035); cx.quadraticCurveTo(c[0], c[1] - Hd * 0.05, c[0] + ew * 1.15, c[1] - Hd * 0.038); cx.stroke();   // brows
     });
     cx.strokeStyle = 'rgba(120,80,70,.45)'; cx.lineWidth = Math.max(0.8, Wd * 0.004); cx.beginPath(); M(0.5, 0.41); Qc(0.49, 0.47, 0.51, 0.485); cx.stroke(); cx.beginPath(); M(0.48, 0.49); Qc(0.5, 0.5, 0.525, 0.488); cx.stroke();   // the nose
-    // the lips: dark, open as she sings (the microphone covers one side)
+    // the lips: dark, open as she sings
     cx.fillStyle = '#3a1c26'; cx.beginPath(); M(0.455, 0.535); Qc(0.5, 0.515, 0.545, 0.535); Qc(0.5, 0.548 + open * 0.03, 0.455, 0.535); cx.fill();
     cx.fillStyle = 'rgba(255,220,230,.25)'; var lh = P(0.51 + sw, 0.527); cx.beginPath(); cx.ellipse(lh[0], lh[1], Wd * 0.012, Hd * 0.003, 0, 0, 7); cx.fill();   // a sheen on the lips
     if (open > 0.15) { cx.fillStyle = '#160a10'; cx.beginPath(); var mc = P(0.5 + sw, 0.538 + open * 0.008); cx.ellipse(mc[0], mc[1], Wd * 0.03, Hd * 0.005 + open * Hd * 0.012, 0, 0, 7); cx.fill(); }
@@ -266,19 +263,6 @@
     cx.strokeStyle = 'rgba(255,250,225,.55)'; cx.lineWidth = Math.max(0.6, Wd * 0.003);   // strands catching the light
     for (var hs = 0; hs < 7; hs++) { var o = hs * 0.012; cx.beginPath(); M(0.47 - o * 0.5, 0.13); Bz(0.4 - o, 0.15, 0.33 - o * 0.6, 0.3, 0.32 - o * 0.4, 0.5); cx.stroke(); cx.beginPath(); M(0.49 + o * 0.5, 0.13); Bz(0.6 + o, 0.14, 0.68 + o * 0.6, 0.28, 0.69 + o * 0.3, 0.5); cx.stroke(); }
     cx.strokeStyle = 'rgba(140,110,60,.4)'; cx.beginPath(); M(0.47, 0.115); Lq(0.475, 0.2); cx.stroke();   // the parting
-    // the hand with the microphone, in front of her chin; the lace sleeve below
-    cx.fillStyle = '#0b0a12'; cx.beginPath(); M(0.38, 1.02); Lq(0.36, 0.8); Qc(0.37, 0.72, 0.43, 0.7); Lq(0.5, 0.74); Lq(0.5, 1.02); cx.closePath(); cx.fill();
-    cx.save(); cx.translate(P(0.47 + sw, 0.6)[0], P(0.47, 0.6)[1]); cx.rotate(-0.28);
-    var mw = Wd * 0.05, mh = Hd * 0.26; var mg2 = cx.createLinearGradient(-mw / 2, 0, mw / 2, 0); mg2.addColorStop(0, '#3a3d46'); mg2.addColorStop(0.45, '#c9ccd6'); mg2.addColorStop(1, '#2a2c33'); cx.fillStyle = mg2;
-    cx.beginPath(); cx.moveTo(-mw * 0.5, -mh * 0.12); cx.lineTo(mw * 0.5, -mh * 0.12); cx.lineTo(mw * 0.3, mh * 0.7); cx.lineTo(-mw * 0.3, mh * 0.7); cx.closePath(); cx.fill();   // the handle
-    cx.fillStyle = '#16171c'; cx.beginPath(); cx.ellipse(0, -mh * 0.17, mw * 0.72, mw * 0.6, 0, 0, 7); cx.fill(); cx.strokeStyle = 'rgba(200,205,220,.35)'; cx.lineWidth = 1; for (var gl = -2; gl <= 2; gl++) { cx.beginPath(); cx.moveTo(gl * mw * 0.22, -mh * 0.17 - mw * 0.5); cx.lineTo(gl * mw * 0.22, -mh * 0.17 + mw * 0.5); cx.stroke(); }   // the grille
-    cx.restore();
-    var sk = cx.createLinearGradient(X0, Y0 + Hd * 0.55, X0, Y0 + Hd * 0.75); sk.addColorStop(0, '#e8c3ab'); sk.addColorStop(1, '#c49680'); cx.fillStyle = sk;
-    cx.beginPath(); M(0.425, 0.6); Bz(0.44, 0.57, 0.53, 0.58, 0.545, 0.62); Bz(0.555, 0.66, 0.54, 0.71, 0.5, 0.735); Lq(0.44, 0.72); Bz(0.415, 0.69, 0.41, 0.63, 0.425, 0.6); cx.fill();   // the hand
-    cx.strokeStyle = 'rgba(120,70,60,.45)'; cx.lineWidth = Math.max(0.8, Wd * 0.004); [0.625, 0.655, 0.685].forEach(function (v) { cx.beginPath(); M(0.43, v); Qc(0.49, v - 0.01, 0.545, v + 0.005); cx.stroke(); });   // fingers
-    cx.fillStyle = '#5a2a35'; [0.62, 0.65, 0.68].forEach(function (v) { var c = P(0.545 + sw, v + 0.004); cx.beginPath(); cx.ellipse(c[0], c[1], Wd * 0.008, Hd * 0.006, 0.3, 0, 7); cx.fill(); });   // nails
-    // the curtain at the side, moving in the night air
-    cx.fillStyle = 'rgba(200,215,255,.22)'; cx.beginPath(); M(0, 0); Lq(0.16 + 0.03 * Math.sin(t * 1.2), 0); Qc(0.1, 0.5, 0.18 + 0.03 * Math.sin(t * 1.2 + 1), 1); Lq(0, 1); cx.closePath(); cx.fill();
   }
   function drawHouse() {
     if (cam > 1.4) return;
@@ -289,20 +273,28 @@
     cx.strokeStyle = 'rgba(190,210,255,.7)'; cx.lineWidth = 2.5; cx.beginPath(); cx.moveTo(L, ey); cx.lineTo(rL, ry); cx.lineTo(rR, ry); cx.lineTo(R2, ey); cx.stroke();   // moonlight on the edge
     cx.fillStyle = '#0b0f1f'; cx.fillRect(sx(0.3), sy(0.36), sx(0.36) - sx(0.3), ry - sy(0.36)); cx.fillStyle = '#161b3a'; cx.fillRect(sx(0.29), sy(0.355), sx(0.37) - sx(0.29), H * 0.012);   // chimney
     for (var i = 0; i < 4; i++) { var a = (t * 0.25 + i / 4) % 1; cx.fillStyle = 'rgba(200,210,235,' + (0.18 * (1 - a)) + ')'; cx.beginPath(); cx.arc(sx(0.33) + a * H * 0.08 + Math.sin(a * 6 + i) * 6, sy(0.34) - a * H * 0.16, H * (0.012 + a * 0.03), 0, 7); cx.fill(); }   // smoke
-    // the open roof window: warm light, the pane swung up, a curtain moving in the night air
-    var wx0 = sx(0.62), wx1 = sx(0.77), wy0 = ry + (ey - ry) * 0.25, wy1 = ry + (ey - ry) * 0.8;
-    var glow = cx.createRadialGradient((wx0 + wx1) / 2, (wy0 + wy1) / 2, 0, (wx0 + wx1) / 2, (wy0 + wy1) / 2, H * 0.22); glow.addColorStop(0, 'rgba(255,190,90,.35)'); glow.addColorStop(1, 'rgba(255,190,90,0)'); cx.fillStyle = glow; cx.fillRect(wx0 - H * .22, wy0 - H * .22, wx1 - wx0 + H * .44, wy1 - wy0 + H * .44);
-    cx.fillStyle = '#ffc56b'; cx.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0);
-    cx.fillStyle = 'rgba(255,240,215,.85)'; cx.beginPath(); cx.moveTo(wx0, wy0); cx.quadraticCurveTo(wx0 + (wx1 - wx0) * (0.35 + 0.08 * Math.sin(t * 1.4)), (wy0 + wy1) / 2, wx0 + (wx1 - wx0) * 0.2, wy1); cx.lineTo(wx0, wy1); cx.closePath(); cx.fill();   // curtain
-    cx.strokeStyle = '#2a2140'; cx.lineWidth = 3; cx.strokeRect(wx0, wy0, wx1 - wx0, wy1 - wy0); cx.beginPath(); cx.moveTo((wx0 + wx1) / 2, wy0); cx.lineTo((wx0 + wx1) / 2, wy1); cx.stroke();
-    cx.fillStyle = 'rgba(160,190,255,.25)'; cx.strokeStyle = '#2a2140'; cx.beginPath(); cx.moveTo(wx0, wy0); cx.lineTo(wx1, wy0); cx.lineTo(wx1 + 6, wy0 - (wy1 - wy0) * 0.75); cx.lineTo(wx0 + 6, wy0 - (wy1 - wy0) * 0.75); cx.closePath(); cx.fill(); cx.stroke();   // the pane, swung open
-    // the big window below the roof: the singer, in the deep blue light of her room
-    var W0 = sx(WIN.x0), W1 = sx(WIN.x1), V0 = sy(WIN.y0), V1 = sy(WIN.y1);
-    var wg = cx.createRadialGradient((W0 + W1) / 2, (V0 + V1) / 2, 0, (W0 + W1) / 2, (V0 + V1) / 2, H * 0.3); wg.addColorStop(0, 'rgba(60,110,255,.28)'); wg.addColorStop(1, 'rgba(60,110,255,0)'); cx.fillStyle = wg; cx.fillRect(W0 - H * .3, V0 - H * .3, W1 - W0 + H * .6, V1 - V0 + H * .6);
-    cx.save(); cx.beginPath(); cx.rect(W0, V0, W1 - W0, V1 - V0); cx.clip(); drawSinger(W0, V0, W1 - W0, V1 - V0); cx.restore();
-    cx.fillStyle = 'rgba(255,255,255,.05)'; cx.beginPath(); cx.moveTo(W0, V0); cx.lineTo(W0 + (W1 - W0) * 0.35, V0); cx.lineTo(W0, V0 + (V1 - V0) * 0.45); cx.closePath(); cx.fill();   // a reflection on the glass
-    cx.strokeStyle = '#1d1830'; cx.lineWidth = Math.max(2, (W1 - W0) * 0.035); cx.strokeRect(W0, V0, W1 - W0, V1 - V0);   // the frame
-    cx.fillStyle = '#1d1830'; cx.fillRect(W0 - (W1 - W0) * 0.06, V1, (W1 - W0) * 1.12, (W1 - W0) * 0.05);   // the sill
+    // a lit window in the wall below
+    var dx0 = sx(0.26), dx1 = sx(0.4), dy0 = sy(0.72), dy1 = sy(0.86); cx.fillStyle = '#c98e45'; cx.fillRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.strokeStyle = '#2a2140'; cx.lineWidth = 3; cx.strokeRect(dx0, dy0, dx1 - dx0, dy1 - dy0); cx.beginPath(); cx.moveTo((dx0 + dx1) / 2, dy0); cx.lineTo((dx0 + dx1) / 2, dy1); cx.moveTo(dx0, (dy0 + dy1) / 2); cx.lineTo(dx1, (dy0 + dy1) / 2); cx.stroke();
+    // her bedroom window, up in the roof right below the flock: wide open, deep blue light, the curtain blowing out into the night
+    var W0 = sx(WIN.x0), W1 = sx(WIN.x1), V0 = sy(WIN.y0), V1 = sy(WIN.y1), Ww = W1 - W0, Vh = V1 - V0;
+    var wg = cx.createRadialGradient((W0 + W1) / 2, (V0 + V1) / 2, 0, (W0 + W1) / 2, (V0 + V1) / 2, H * 0.25); wg.addColorStop(0, 'rgba(70,120,255,.32)'); wg.addColorStop(1, 'rgba(70,120,255,0)'); cx.fillStyle = wg; cx.fillRect(W0 - H * .25, V0 - H * .25, Ww + H * .5, Vh + H * .5);
+    cx.fillStyle = '#0d1126'; cx.fillRect(W0 - Ww * 0.08, V0 - Vh * 0.16, Ww * 1.16, Vh * 1.22); cx.fillStyle = '#161b3a'; cx.fillRect(W0 - Ww * 0.11, V0 - Vh * 0.2, Ww * 1.22, Vh * 0.08);   // the dormer around it, and its little roof
+    cx.save(); cx.beginPath(); cx.rect(W0, V0, Ww, Vh); cx.clip();
+    var rb = cx.createRadialGradient(W0 + Ww * 0.7, V0 + Vh * 0.1, 0, W0 + Ww * 0.5, V0 + Vh * 0.5, Ww * 0.9); rb.addColorStop(0, '#2f52d8'); rb.addColorStop(0.5, '#152b8f'); rb.addColorStop(1, '#060f3e'); cx.fillStyle = rb; cx.fillRect(W0, V0, Ww, Vh);   // the room in blue light
+    cx.fillStyle = 'rgba(5,10,40,.55)'; cx.beginPath(); cx.moveTo(W0, V0); cx.lineTo(W0 + Ww * 0.3, V0); cx.lineTo(W0, V0 + Vh * 0.5); cx.closePath(); cx.fill();   // the sloping attic ceiling
+    for (var hz = 0; hz < 3; hz++) { cx.fillStyle = 'rgba(120,160,255,' + (0.05 + 0.02 * hz) + ')'; cx.beginPath(); cx.moveTo(W0 + Ww * (0.5 + hz * 0.13), V0); cx.lineTo(W0 + Ww * (0.68 + hz * 0.13), V0); cx.lineTo(W0 + Ww * (0.9 + hz * 0.1), V1); cx.lineTo(W0 + Ww * (0.55 + hz * 0.1), V1); cx.closePath(); cx.fill(); }   // haze in the light
+    cx.fillStyle = '#0a0f2e'; cx.fillRect(W0 + Ww * 0.06, V0 + Vh * 0.62, Ww * 0.2, Vh * 0.4);   // the headboard of the bed
+    var lp = cx.createRadialGradient(W0 + Ww * 0.88, V0 + Vh * 0.62, 0, W0 + Ww * 0.88, V0 + Vh * 0.62, Ww * 0.18); lp.addColorStop(0, 'rgba(255,200,120,.75)'); lp.addColorStop(1, 'rgba(255,200,120,0)'); cx.fillStyle = lp; cx.fillRect(W0 + Ww * 0.7, V0 + Vh * 0.4, Ww * 0.36, Vh * 0.5);   // a small bedside lamp
+    cx.fillStyle = '#ffd08a'; cx.beginPath(); cx.moveTo(W0 + Ww * 0.86, V0 + Vh * 0.6); cx.lineTo(W0 + Ww * 0.9, V0 + Vh * 0.6); cx.lineTo(W0 + Ww * 0.915, V0 + Vh * 0.66); cx.lineTo(W0 + Ww * 0.845, V0 + Vh * 0.66); cx.closePath(); cx.fill();
+    var bw = Ww * 0.5, bh = bw * 1.04; drawSinger(W0 + (Ww - bw) / 2, V0 + Vh * 0.1, bw, bh);   // her, a little smaller in the frame
+    cx.restore();
+    cx.fillStyle = 'rgba(255,255,255,.05)'; cx.beginPath(); cx.moveTo(W0, V0); cx.lineTo(W0 + Ww * 0.25, V0); cx.lineTo(W0, V0 + Vh * 0.5); cx.closePath(); cx.fill();   // a reflection on the glass
+    cx.strokeStyle = '#1d1830'; cx.lineWidth = Math.max(1.5, Ww * 0.03); cx.strokeRect(W0, V0, Ww, Vh);   // the frame
+    cx.fillStyle = 'rgba(150,180,255,.18)'; cx.strokeStyle = '#1d1830'; cx.lineWidth = Math.max(1, Ww * 0.02); cx.beginPath(); cx.moveTo(W1, V0); cx.lineTo(W1 + Ww * 0.32, V0 + Vh * 0.12); cx.lineTo(W1 + Ww * 0.32, V1 + Vh * 0.02); cx.lineTo(W1, V1); cx.closePath(); cx.fill(); cx.stroke();   // the casement, swung wide open
+    var cw = Math.sin(t * 1.1) * 0.06, cw2 = Math.sin(t * 1.7 + 1) * 0.04;
+    cx.fillStyle = 'rgba(215,225,255,.55)'; cx.beginPath(); cx.moveTo(W0 + Ww * 0.02, V0 + Vh * 0.02); cx.bezierCurveTo(W0 - Ww * (0.18 + cw), V0 + Vh * 0.3, W0 - Ww * (0.32 + cw2), V0 + Vh * 0.62, W0 - Ww * (0.28 + cw), V0 + Vh * 0.98); cx.lineTo(W0 + Ww * 0.06, V0 + Vh * 0.95); cx.bezierCurveTo(W0 - Ww * (0.05 + cw2), V0 + Vh * 0.6, W0 + Ww * 0.03, V0 + Vh * 0.3, W0 + Ww * 0.12, V0 + Vh * 0.02); cx.closePath(); cx.fill();   // the curtain, blowing out of the window
+    cx.fillStyle = '#1d1830'; cx.fillRect(W0 - Ww * 0.06, V1, Ww * 1.12, Ww * 0.04);   // the sill
+
   }
   function skyEdge(X, side) {   // above: round, puffy clouds; below: the pointed tops of the pines (their highest points touch the edge)
     var e = side < 0 ? cen(X) - half(X) : cen(X) + half(X);
@@ -315,8 +307,8 @@
     var ez = function (a) { a = Math.max(0, Math.min(1, a)); return a * a * (3 - 2 * a); };
     var wx = (WIN.x0 + WIN.x1) / 2 * H, wy = (WIN.y0 + WIN.y1) / 2 * H, rx = 0.55 * H, ry = (ROOF_Y + 0.03) * H, Z0 = 0.86 / (WIN.y1 - WIN.y0);
     if (t < CLOSE) return { z: Z0, x: wx, y: wy };
-    if (t < CLOSE + 3) { var a = ez((t - CLOSE) / 3); return { z: Z0 + (2 - Z0) * a, x: wx + (rx - wx) * a, y: wy + (ry - wy) * a }; }
-    if (t < CLOSE + PAN) { var b = ez((t - CLOSE - 3) / (PAN - 3)); return { z: 2 - b, x: rx + (W / 2 - rx) * b, y: ry + (H / 2 - ry) * b }; }
+    if (t < CLOSE + 3.5) { var a = ez((t - CLOSE) / 3.5); return { z: Z0 + (2.4 - Z0) * a, x: wx + (rx - wx) * a, y: wy + (ry - wy) * a }; }   // (up from her window to the flock on the ridge)
+    if (t < CLOSE + PAN) { var b = ez((t - CLOSE - 3.5) / (PAN - 3.5)); return { z: 2.4 - 1.4 * b, x: rx + (W / 2 - rx) * b, y: ry + (H / 2 - ry) * b }; }   // (and out to the whole scene)
     return null;
   }
   function draw() {
