@@ -124,16 +124,22 @@
     var h = half(x); return Math.max(h + 0.05, Math.min(1 - h - 0.05, y));
   }
   var branches = [];
-  function makeCourse() {
-    seed = 1 + Math.floor(Math.random() * 1e6); branches = [];
-    var x = SAFE_X + 0.6;   // (nothing to dodge during the practice)
-    while (x < XEND - 2) {
-      if (x > DIVE0 - 2.2 && x < DIVE1 + 0.6) { x = DIVE1 + 0.6; continue; }   // (nothing in the way during the dive)
-      var d = diff(x), top = x >= FOREST && rnd() < 0.5, h = half(x),   // (in the sky only pine tops from below; in the forest branches from both sides)
-         hx = h, c = cen(x), reach = (0.32 + 0.28 * d + rnd() * 0.12) * 2 * h;   // how far into the band it sticks
-      branches.push({ x: x, top: top, tip: top ? c - h + reach : c + h - reach, tw: rnd() });
-      x += (2.6 - 1.3 * d) + rnd() * (1.4 - 0.6 * d);
-    }
+  function makeCourse() { seed = 1 + Math.floor(Math.random() * 1e6); branches = []; turnNo = 0; roundTurn = 99; pattern = null; plannedFor = -1; }   // (the obstacles are laid out turn by turn, see planTurn)
+  /* Fair turns: every group in a round meets exactly the same obstacles (how many, from which side, where in the turn and
+     how deep). Each new round gets a new pattern, a little harder. */
+  var planLog = [], turnNo = 0, roundTurn = 99, roundLen = 1, pattern = null, plannedFor = -1;
+  function birdXAt(T) { return cam + SPEED * (T - t) + 0.3 * W / H; }
+  function newPattern(x) {
+    var d = diff(x), forest = x >= FOREST, L = TURN * SPEED, n = 1 + (d > 0.35 ? 1 : 0) + (d > 0.7 ? 1 : 0), p = [];
+    for (var i = 0; i < n; i++) p.push({ u: 0.75 + (i + 0.5 + (rnd() - 0.5) * 0.5) * (L - 1.05) / n, top: forest && rnd() < 0.5, reach: 0.32 + 0.28 * d + rnd() * 0.12, tw: rnd() });
+    return p;
+  }
+  function planTurn(T) {   // lay out the obstacles for the turn that starts at time T
+    var x0 = birdXAt(T);
+    if (roundTurn >= roundLen) { pattern = newPattern(x0); roundTurn = 0; roundLen = Math.max(1, Math.ceil(alive().length / pickN)); }
+    roundTurn++; turnNo++; planLog.push({ T: T, x0: x0, round: pattern, n: roundTurn });
+    pattern.forEach(function (o) { var x = x0 + o.u, h = half(x), c = cen(x), reach = o.reach * 2 * h; branches.push({ x: x, top: o.top, tip: o.top ? c - h + reach : c + h - reach, tw: o.tw }); });
+    branches = branches.filter(function (r) { return r.x > cam - 1; });
   }
 
   // ---------- the flock ----------
@@ -167,6 +173,11 @@
     return sh.slice(0, Math.min(pickN, al.length));
   }
   function schedule() {
+    if (t >= PRACT_END - 4 && t >= nextPick - 3.6 && plannedFor !== nextPick && t < DUR - 4) {   // (a game turn coming up: keep it clear of the dive, then lay out its obstacles out of sight ahead)
+      var xa = birdXAt(nextPick), xb = xa + TURN * SPEED;
+      if (xb > DIVE0 - 1.8 && xa < DIVE1 + 0.3) nextPick = t + (DIVE1 + 0.4 - (cam + 0.3 * W / H)) / SPEED;
+      else { plannedFor = nextPick; planTurn(nextPick); }
+    }
     if (inDive(cam + 0.3 * W / H + 0.6)) { birds.forEach(function (b) { b.manual = false; }); pending = []; nextPick = Math.max(nextPick, t + WARN + 1.2); return; }   // (the dive: everyone on autopilot)
     if (t >= nextPick - WARN && !pending.length && t < DUR - 2) {
       if (pgi < pgroups.length && t < PRACT_END - 1) pending = pgroups[pgi++].filter(function (b) { return !b.out; });   // (practice: the pairs in turn)
@@ -619,7 +630,7 @@
   function ytPrime() { if (!ytOk) return; try { yt.mute(); yt.seekTo(0, true); yt.playVideo(); setTimeout(function () { try { if (musicWant) { yt.pauseVideo(); yt.seekTo(0, true); } yt.unMute(); } catch (e) {} }, 400); } catch (e) {} }   // (a silent start on the click, so the browser lets the song play a few seconds later)
   function ytStop() { ytWant = false; try { if (yt && ytOk) yt.pauseVideo(); } catch (e) {} }
 
-  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { return { TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
+  window.__bb = { birds: function () { return birds; }, state: function () { return { t: t, running: running, ended: ended }; }, fast: function (k) { DUR = k; }, plans: function () { return planLog; }, jump: function (T) { while (t < T) step(0.05); }, times: function () { return { TAKEOFF: TAKEOFF, CLOSE_END: CLOSE_END, INTRO: INTRO, tAir: tAir, REVEAL0: REVEAL0, PRACT0: PRACT0, PRACT_END: PRACT_END, FOREST: FOREST, DUR: DUR, SAFE_X: SAFE_X }; } };   // (for testing)
   draw();
 })();
 </script>
