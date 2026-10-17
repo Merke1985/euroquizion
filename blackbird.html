@@ -69,6 +69,7 @@
 <div class="side" id="side"></div>
 <div class="songclock" id="songclock"></div>
 <div class="banner" id="banner"></div>
+<div class="howto" id="howto2"><p>📺 If the stream lags behind too much,<br>watch your <span class="glow">phone screen</span> instead.</p></div>
 <div class="howto" id="howto"><p>Look for your <span class="glow">colour and name</span>:<br>that’s your bird.</p><p>🪶 You have 5 feathers. You lose one on every impact.</p><p>📱 Hold the button on your phone to fly up, let go to glide.</p></div>
 <div class="hint">Players steer their own bird with their phone; the computer birds fly themselves.</div>
 <div id="yt"></div>
@@ -121,7 +122,7 @@
   function camAt(T) { var x = 0; for (var tt = TAKEOFF; tt < T; tt += 0.02) x += SPEED * 0.02 * Math.max(0, Math.min(1, (tt - TAKEOFF - 1.6) / 2.4)) * spd(tt); return x; }   // (where the camera is at time T)
   function setTimeline(order) {   // the neon reveal, the practice pairs and the course all follow from the size of the flock
     var FIRST_T = MUSIC - SONG0 + 46.9;   // (the first group's turn: its first tree comes at 0:49 in the song. Turns every 7 s (5 s flying, 2 s pause): 6 over the pine forest, 6 in the cave)
-    MSG1 = FIRST_T - WARN - 0.4; MSG0 = MSG1 - 6;   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
+    MSG1 = FIRST_T - WARN - 0.4; MSG0 = MSG1 - 8;   // (5 s the how-to, then 3 s: watch your phone if the stream lags)   // (the how-to on screen, just before; not voiced, so the spell isn't broken)
     REVEAL0 = tAir + 1.5; var gap = Math.max(0.3, Math.min(0.9, (MSG0 - 1.4 - REVEAL0) / Math.max(1, order.length - 1))); order.forEach(function (b, i) { b.colT = REVEAL0 + i * gap; });   // (the neon, one bird at a time)
     pgroups = []; pgi = 0; pracDone = false; PRACT0 = FIRST_T; PRACT_END = FIRST_T; SAFE_X = camAt(FIRST_T) + 0.3 * W / H;   // (no practice: straight into it)
     var FT = FIRST_T + 6 * (TURN + WARN) - 1;   // (into the cave just before the 7th turn)
@@ -412,25 +413,48 @@
     var lx = sx(-0.075), ly = gy - hh * 0.5;   // the lantern
     var lg = cx.createRadialGradient(lx, ly, 0, lx, ly, hh * 1.6); lg.addColorStop(0, 'rgba(255,190,100,' + (0.42 * fl) + ')'); lg.addColorStop(0.35, 'rgba(255,160,70,' + (0.16 * fl) + ')'); lg.addColorStop(1, 'rgba(255,150,60,0)'); cx.fillStyle = lg; cx.fillRect(lx - hh * 1.6, ly - hh * 1.6, hh * 3.2, hh * 3.2);
     var gl = cx.createRadialGradient(lx, gy, 0, lx, gy, hh * 0.9); gl.addColorStop(0, 'rgba(255,180,90,' + (0.3 * fl) + ')'); gl.addColorStop(1, 'rgba(255,180,90,0)'); cx.fillStyle = gl; cx.beginPath(); cx.ellipse(lx, gy + 2, hh * 0.9, hh * 0.12, 0, 0, 7); cx.fill();   // its light on the grass
-    [{ x: -0.13, coat: '#1f4a52', hair: '#2a1b12', face: 1, scarf: '#d8b45a' }, { x: -0.02, coat: '#5a1f35', hair: '#c9a46a', face: -1, scarf: '#9fc3d8' }].forEach(function (h, i) {
-      var X = sx(h.x), top = gy - hh, talk = say && say[2] === i, warm = i === 0 ? 1 : 0.6;
-      cx.fillStyle = '#05070f'; [-0.09, 0.05].forEach(function (o) { cx.fillRect(X + o * hh, gy - hh * 0.3, hh * 0.07, hh * 0.3); });   // legs
-      cx.fillStyle = h.coat; cx.beginPath(); cx.moveTo(X - hh * 0.13, top + hh * 0.24); cx.lineTo(X + hh * 0.13, top + hh * 0.24); cx.lineTo(X + hh * 0.18, gy - hh * 0.22); cx.lineTo(X - hh * 0.18, gy - hh * 0.22); cx.closePath(); cx.fill();   // a long coat
-      cx.fillStyle = 'rgba(255,170,80,' + (0.25 * warm * fl) + ')'; cx.beginPath(); cx.moveTo(X + h.face * hh * 0.02, top + hh * 0.26); cx.lineTo(X + h.face * hh * 0.13, top + hh * 0.24); cx.lineTo(X + h.face * hh * 0.18, gy - hh * 0.22); cx.lineTo(X + h.face * hh * 0.04, gy - hh * 0.22); cx.closePath(); if (i === 0) cx.fill();   // lantern light on the coat
-      cx.fillStyle = h.scarf; cx.fillRect(X - hh * 0.1, top + hh * 0.2, hh * 0.2, hh * 0.06); cx.fillRect(X + h.face * -hh * 0.06, top + hh * 0.24, hh * 0.05, hh * 0.16);   // a scarf
-      cx.fillStyle = '#e2b892'; cx.beginPath(); cx.ellipse(X + h.face * hh * 0.01, top + hh * 0.11, hh * 0.075, hh * 0.09, 0, 0, 7); cx.fill();   // head
-      cx.fillStyle = 'rgba(10,15,40,.45)'; cx.beginPath(); cx.ellipse(X - h.face * hh * 0.03, top + hh * 0.11, hh * 0.055, hh * 0.09, 0, 0, 7); cx.fill();   // the far side of the face in shadow
+    /* the two presenters of the game, recognisable but dressed for an autumn night: him with his brown quiff and a red
+       scarf (his red bow tie), in a long navy wool coat, holding the lantern; her with her long copper waves and gold
+       earrings, in a long plum-pink coat (her pink gown) with a mustard scarf */
+    [{ x: -0.13, coat: '#1f2a5e', coatHi: '#33408a', hair: '#4a3222', hairHi: '#7a5638', skin: '#f0c6a2', face: 1, scarf: '#d81e45', legs: '#10143a' },
+     { x: -0.02, coat: '#9a2a74', coatHi: '#c24a98', hair: '#9a4420', hairHi: '#c86a3a', skin: '#e6b48c', face: -1, scarf: '#e8b84a', legs: '#1a0f1c' }].forEach(function (h, i) {
+      var X = sx(h.x), top = gy - hh, talk = say && say[2] === i, warm = i === 0 ? 1 : 0.6, f = h.face, hx = X + f * hh * 0.01, hy = top + hh * 0.11;
+      var P = function (u, v) { return [X + f * u * hh, top + v * hh]; }, mv = function (u, v) { var q = P(u, v); cx.moveTo(q[0], q[1]); }, ln = function (u, v) { var q = P(u, v); cx.lineTo(q[0], q[1]); }, qc = function (a, b, u, v) { var q1 = P(a, b), q2 = P(u, v); cx.quadraticCurveTo(q1[0], q1[1], q2[0], q2[1]); };
+      if (i === 1) { cx.fillStyle = h.hair; cx.beginPath(); mv(0.02, 0.0); qc(-0.13, 0.02, -0.12, 0.2); qc(-0.13, 0.33, -0.05, 0.37); qc(0.0, 0.3, 0.03, 0.22); qc(0.1, 0.12, 0.02, 0.0); cx.fill();   // her long waves, behind her shoulders
+        cx.strokeStyle = h.hairHi; cx.lineWidth = Math.max(1, hh * 0.006); cx.beginPath(); mv(-0.06, 0.06); qc(-0.12, 0.18, -0.07, 0.34); cx.stroke(); }
+      cx.fillStyle = h.legs; [-0.08, 0.04].forEach(function (o) { cx.fillRect(X + o * hh, gy - hh * 0.3, hh * 0.06, hh * 0.29); });   // legs
+      cx.fillStyle = '#07060b'; [-0.08, 0.04].forEach(function (o) { cx.beginPath(); cx.ellipse(X + (o + 0.03) * hh + f * hh * 0.01, gy - hh * 0.012, hh * 0.042, hh * 0.016, 0, 0, 7); cx.fill(); });   // shoes / boots
+      var cg = cx.createLinearGradient(X - hh * 0.15, 0, X + hh * 0.15, 0); cg.addColorStop(f > 0 ? 0 : 1, h.coat); cg.addColorStop(f > 0 ? 1 : 0, h.coatHi); cx.fillStyle = cg;
+      cx.beginPath(); cx.moveTo(X - hh * 0.12, top + hh * 0.23); cx.lineTo(X + hh * 0.12, top + hh * 0.23); cx.quadraticCurveTo(X + hh * 0.15, top + hh * 0.5, X + hh * 0.18, gy - hh * 0.2); cx.lineTo(X - hh * 0.18, gy - hh * 0.2); cx.quadraticCurveTo(X - hh * 0.15, top + hh * 0.5, X - hh * 0.12, top + hh * 0.23); cx.closePath(); cx.fill();   // the long wool coat
+      cx.strokeStyle = 'rgba(0,0,0,.35)'; cx.lineWidth = Math.max(1, hh * 0.005); cx.beginPath(); mv(0.02, 0.24); ln(0.05, 0.8); cx.stroke();   // its opening
+      cx.strokeStyle = 'rgba(255,255,255,.12)'; cx.beginPath(); mv(0.06, 0.25); ln(0.0, 0.42); ln(0.04, 0.44); cx.stroke();   // a lapel
+      if (i === 0) { cx.fillStyle = '#d9b04a'; [0.5, 0.6, 0.7].forEach(function (v) { var q = P(0.035, v); cx.beginPath(); cx.arc(q[0], q[1], hh * 0.006, 0, 7); cx.fill(); }); }   // his gold buttons
+      else { cx.fillStyle = h.coat; cx.fillRect(X - hh * 0.13, top + hh * 0.5, hh * 0.26, hh * 0.03); cx.fillStyle = h.coatHi; var kq = P(0.05, 0.515); cx.beginPath(); cx.ellipse(kq[0], kq[1], hh * 0.02, hh * 0.012, 0, 0, 7); cx.fill(); }   // her tied belt
+      cx.fillStyle = 'rgba(255,170,80,' + (0.25 * warm * fl) + ')'; cx.beginPath(); cx.moveTo(X + f * hh * 0.02, top + hh * 0.26); cx.lineTo(X + f * hh * 0.13, top + hh * 0.24); cx.lineTo(X + f * hh * 0.18, gy - hh * 0.22); cx.lineTo(X + f * hh * 0.04, gy - hh * 0.22); cx.closePath(); if (i === 0) cx.fill();   // lantern light on the coat
+      cx.fillStyle = h.skin; cx.fillRect(X - hh * 0.025 + f * hh * 0.005, top + hh * 0.17, hh * 0.05, hh * 0.06);   // neck
+      cx.fillStyle = h.scarf; cx.beginPath(); cx.ellipse(X + f * hh * 0.005, top + hh * 0.225, hh * 0.085, hh * 0.035, 0, 0, 7); cx.fill(); cx.beginPath(); mv(-0.05, 0.23); ln(-0.02, 0.23); ln(-0.03, 0.42); ln(-0.065, 0.41); cx.closePath(); cx.fill();   // the scarf, wound round, one end hanging
+      cx.strokeStyle = 'rgba(0,0,0,.18)'; cx.lineWidth = Math.max(1, hh * 0.004); cx.beginPath(); mv(-0.06, 0.3); ln(-0.025, 0.3); mv(-0.062, 0.36); ln(-0.028, 0.36); cx.stroke();   // its stripes / fringe
+      if (i === 0) { cx.fillStyle = h.skin; var eq = P(-0.06, 0.115); cx.beginPath(); cx.ellipse(eq[0], eq[1], hh * 0.014, hh * 0.022, 0, 0, 7); cx.fill(); }   // his ear
+      var sk = cx.createRadialGradient(hx + f * hh * 0.02, hy - hh * 0.02, 0, hx, hy, hh * 0.1); sk.addColorStop(0, h.skin); sk.addColorStop(1, i === 0 ? '#d89b72' : '#b9805a'); cx.fillStyle = sk;
+      cx.beginPath(); cx.ellipse(hx, hy, hh * 0.072, hh * 0.088, 0, 0, 7); cx.fill();   // head
+      cx.fillStyle = 'rgba(10,15,40,.35)'; cx.beginPath(); cx.ellipse(X - f * hh * 0.035, hy, hh * 0.05, hh * 0.085, 0, 0, 7); cx.fill();   // the far side of the face in shadow
       cx.fillStyle = h.hair; cx.beginPath();
-      if (i === 0) { cx.ellipse(X, top + hh * 0.05, hh * 0.085, hh * 0.05, -0.2, 0, 7); cx.fill(); cx.beginPath(); cx.ellipse(X - h.face * hh * 0.05, top + hh * 0.09, hh * 0.035, hh * 0.06, 0, 0, 7); }   // short, swept
-      else { for (var c = 0; c < 6; c++) { var a = Math.PI * (1.05 + c * 0.18); cx.moveTo(X + Math.cos(a) * hh * 0.07, top + hh * 0.08 + Math.sin(a) * hh * 0.07); cx.arc(X + Math.cos(a) * hh * 0.07, top + hh * 0.08 + Math.sin(a) * hh * 0.07, hh * 0.035, 0, 7); } }   // curls
-      cx.fill();
-      cx.fillStyle = '#1a1020'; cx.beginPath(); cx.arc(X + h.face * hh * 0.04, top + hh * 0.1, hh * 0.009, 0, 7); cx.fill();   // eye
-      cx.fillRect(X + h.face * hh * 0.035, top + hh * 0.15, h.face * hh * 0.025, hh * (talk ? 0.008 + 0.008 * Math.abs(Math.sin(t * 9)) : 0.005));   // mouth, moving when whispering
+      if (i === 0) { mv(-0.07, 0.12); qc(-0.08, 0.0, 0.0, -0.005); qc(0.08, -0.02, 0.1, 0.03); qc(0.06, 0.02, 0.05, 0.06); qc(0.0, 0.04, -0.04, 0.08); qc(-0.05, 0.1, -0.055, 0.14); cx.closePath(); cx.fill();   // his quiff, swept up and forward
+        cx.strokeStyle = h.hairHi; cx.lineWidth = Math.max(1, hh * 0.006); cx.beginPath(); mv(-0.03, 0.03); qc(0.03, -0.005, 0.08, 0.02); cx.stroke(); }
+      else { mv(-0.075, 0.16); qc(-0.09, 0.0, 0.01, -0.005); qc(0.09, 0.0, 0.085, 0.09); qc(0.06, 0.03, 0.0, 0.05); qc(-0.03, 0.08, -0.045, 0.16); cx.closePath(); cx.fill();   // her side-swept waves
+        cx.beginPath(); mv(-0.05, 0.12); qc(-0.08, 0.22, -0.04, 0.3); qc(-0.02, 0.24, -0.03, 0.14); cx.closePath(); cx.fill();   // a wave over her shoulder
+        cx.strokeStyle = h.hairHi; cx.lineWidth = Math.max(1, hh * 0.006); cx.beginPath(); mv(-0.04, 0.02); qc(0.03, 0.0, 0.07, 0.05); cx.stroke();
+        cx.fillStyle = '#ffd23f'; var ea = P(-0.045, 0.15); cx.beginPath(); cx.arc(ea[0], ea[1], hh * 0.008, 0, 7); cx.fill(); cx.beginPath(); cx.moveTo(ea[0], ea[1]); cx.lineTo(ea[0] - hh * 0.006, ea[1] + hh * 0.018); cx.lineTo(ea[0] + hh * 0.006, ea[1] + hh * 0.018); cx.closePath(); cx.fill(); }   // her gold drop earring
+      cx.fillStyle = '#1a1020'; var ey2 = P(0.04, 0.1); cx.beginPath(); cx.arc(ey2[0], ey2[1], hh * 0.009, 0, 7); cx.fill();   // eye
+      cx.strokeStyle = i === 0 ? '#2b1d14' : '#4a1a08'; cx.lineWidth = Math.max(1, hh * 0.006); cx.beginPath(); mv(0.025, 0.083); qc(0.04, 0.076, 0.058, 0.082); cx.stroke();   // brow
+      if (i === 1) { cx.strokeStyle = '#1a0a06'; cx.lineWidth = Math.max(1, hh * 0.004); cx.beginPath(); mv(0.05, 0.097); ln(0.06, 0.092); cx.stroke(); cx.fillStyle = 'rgba(255,122,138,.35)'; var bl = P(0.035, 0.135); cx.beginPath(); cx.ellipse(bl[0], bl[1], hh * 0.015, hh * 0.008, 0, 0, 7); cx.fill(); }   // her lashes and blush
+      cx.strokeStyle = 'rgba(120,70,40,.6)'; cx.lineWidth = Math.max(1, hh * 0.004); cx.beginPath(); mv(0.065, 0.11); ln(0.078, 0.13); ln(0.066, 0.135); cx.stroke();   // nose
+      cx.fillStyle = i === 1 ? '#d42a5c' : '#7a3b2a'; cx.fillRect(X + f * hh * 0.035, top + hh * 0.155, f * hh * 0.028, hh * (talk ? 0.008 + 0.009 * Math.abs(Math.sin(t * 9)) : 0.005));   // mouth, moving when whispering
       cx.strokeStyle = h.coat; cx.lineWidth = hh * 0.055; cx.lineCap = 'round'; cx.beginPath();
       if (i === 0) { cx.moveTo(X + hh * 0.08, top + hh * 0.3); cx.lineTo(X + hh * 0.17, top + hh * 0.42); cx.lineTo(sx(-0.075) - hh * 0.01, ly - hh * 0.11); }   // the arm holding the lantern
       else { cx.moveTo(X - hh * 0.08, top + hh * 0.3); cx.lineTo(X - hh * 0.12, top + hh * 0.36); cx.lineTo(X - hh * 0.07, top + hh * 0.17); }   // a hand to the mouth: whispering
       cx.stroke();
-      cx.fillStyle = '#e2b892'; cx.beginPath(); if (i === 0) cx.arc(sx(-0.075) - hh * 0.01, ly - hh * 0.11, hh * 0.025, 0, 7); else cx.arc(X - hh * 0.065, top + hh * 0.165, hh * 0.025, 0, 7); cx.fill();   // hands
+      cx.fillStyle = h.skin; cx.beginPath(); if (i === 0) cx.arc(sx(-0.075) - hh * 0.01, ly - hh * 0.11, hh * 0.025, 0, 7); else cx.arc(X - hh * 0.065, top + hh * 0.165, hh * 0.025, 0, 7); cx.fill();   // hands
       if (talk) {   // the whisper, in a soft bubble above their head
         var a0 = Math.min(1, (t - say[0]) / 0.4, (say[1] - t) / 0.4); cx.globalAlpha = Math.max(0, a0);
         cx.font = 'italic 600 ' + Math.round(H * 0.024) + 'px "Bricolage Grotesque",system-ui'; var tw = cx.measureText(say[3]).width, bx0 = X - tw / 2 + h.face * hh * 0.1, by0 = top - hh * 0.32, pw = tw + H * 0.03, ph = H * 0.045;
@@ -771,7 +795,7 @@
     else if (t < MSG0 - 1.5) txt = '✨ Meet the flock…';
     else if (t < PRACT0 - WARN) txt = '';
     $('side').style.opacity = t >= SOAR_T ? '0' : '1';
-    $('howto').className = 'howto' + (t >= MSG0 && t < MSG1 ? ' on' : '');
+    $('howto').className = 'howto' + (t >= MSG0 && t < MSG0 + 5 ? ' on' : ''); $('howto2').className = 'howto' + (t >= MSG0 + 5.3 && t < MSG1 ? ' on' : '');
     bn.textContent = txt; bn.className = 'banner' + (txt ? ' on' : '') + (cls ? ' ' + cls : '');
   }
 
